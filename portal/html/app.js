@@ -2504,7 +2504,7 @@ async function renderCustomArt() {
       <div class="row" style="gap:14px;align-items:flex-start;flex-wrap:wrap">
         ${pictures(r)}
         <div style="flex:1;min-width:220px">
-          <h3 style="margin:0">${esc(r.name)} <span class="badge ${ART_BADGE[r.status]}">${esc(r.status)}</span></h3>
+          <h3 style="margin:0"><span style="white-space:pre">${esc(r.name)}</span> <span class="badge ${ART_BADGE[r.status]}">${esc(r.status)}</span></h3>
           <div class="muted" style="font-size:.86rem">${r.kind === "club" ? "Club" : "Player"} · ${esc(r.label)} · ${r.mods.map(esc).join(" + ")}</div>
           <div style="font-size:.86rem;margin-top:4px"><a href="mailto:${esc(r.email)}">${esc(r.email)}</a> · ${new Date(r.created_at).toLocaleString()}</div>
           ${r.note ? `<p style="margin:6px 0 0;font-size:.88rem">${esc(r.note)}</p>` : ""}
