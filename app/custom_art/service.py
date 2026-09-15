@@ -1,15 +1,23 @@
 """Custom art requests: intake, the review queue, and the emails that answer them.
 
-Nothing is kept but what was asked for, the picture, and the address the answer
+A player request carries a profile picture. A club request carries a club picture,
+a club banner, or both. A profile or club picture is square; a banner is from
+square up to five times as wide as it is tall. The page crops to those shapes and
+this checks them again, so nothing of the wrong shape reaches the queue.
+
+Nothing is kept but what was asked for, the pictures, and the address the answer
 goes to. The name rules mirror TroveUI's ``custom_art.py``: the name becomes the
 picture's file name there, so anything that cannot be one is refused here, where
 the person asking can still fix it.
 """
+import asyncio
 import html
+import io
 import logging
 from collections import Counter
 
 from email_validator import EmailNotValidError, validate_email
+from PIL import Image
 
 from app.auth.disposable import is_disposable_email
 from app.core.captcha import verify_captcha
@@ -17,15 +25,18 @@ from app.core.config import settings
 from app.core.email_outbox import queue_email
 from app.core.errors import APIError, ErrorCode
 from app.core.utils import iso, to_oid, utcnow
-from app.custom_art.models import ArtRequest
+from app.custom_art.models import ArtPicture, ArtRequest
 from app.trove.mods_hub import store
 
 logger = logging.getLogger("kiwi.custom_art")
 
 CHAT = "Zakros UI - Chat"
 NAMEPLATE = "Zakros UI - Nameplate"
-MODS = {"pfp": (CHAT,), "club": (CHAT,), "banner": (CHAT, NAMEPLATE)}
-LABELS = {"pfp": "profile picture", "club": "club picture", "banner": "club banner"}
+SLOTS = {"player": ("pfp",), "club": ("pfp", "banner")}
+LANES = {("player", "pfp"): "pfp", ("club", "pfp"): "club", ("club", "banner"): "banner"}
+LANE_MODS = {"pfp": (CHAT,), "club": (CHAT,), "banner": (CHAT, NAMEPLATE)}
+LANE_LABELS = {"pfp": "profile picture", "club": "club picture", "banner": "club banner"}
+WIDEST = 5
 CHANGELOG_MAX = 240
 
 _BANNED = set('\t\n\r",\\/:*?<>|')
@@ -52,55 +63,111 @@ def clean_email(email: str | None) -> str:
     return address
 
 
+def check_shape(kind: str, slot: str, width: int, height: int) -> None:
+    label = LANE_LABELS[LANES[(kind, slot)]]
+    if slot == "pfp" and width != height:
+        raise APIError(400, ErrorCode.validation_error,
+                       f"A {label} has to be square - that one is {width}×{height}.")
+    if slot == "banner" and not height <= width <= WIDEST * height:
+        raise APIError(400, ErrorCode.validation_error,
+                       f"A {label} has to be from square up to {WIDEST} times as wide as it is "
+                       f"tall - that one is {width}×{height}.")
+
+
+def lanes(request) -> list[str]:
+    return [LANES[(request.kind, slot)] for slot in SLOTS[request.kind] if slot in request.pictures]
+
+
+def mods_of(request) -> list[str]:
+    return [mod for mod in (CHAT, NAMEPLATE) if any(mod in LANE_MODS[lane] for lane in lanes(request))]
+
+
+def what(request, mod: str | None = None) -> str:
+    """The pictures a request carries, in words - only those that ship in ``mod``."""
+    shown = [lane for lane in lanes(request) if mod is None or mod in LANE_MODS[lane]]
+    if shown == ["club", "banner"]:
+        return "club picture and banner"
+    return LANE_LABELS[shown[0]]
+
+
 def _join(parts: list[str]) -> str:
     return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
 
 
-def changelog(requests: list[ArtRequest]) -> str:
-    """What a player reads in the update list. Every picture by name when that fits,
-    otherwise a count per kind."""
-    text = "Added " + _join([f"a {LABELS[r.kind]} for {r.name}" for r in requests]) + "."
+def changelog(requests: list, mod: str) -> str:
+    """What a player reads in ``mod``'s update list. Every request by name when that
+    fits, otherwise a count per kind of picture."""
+    mine = [r for r in requests if mod in mods_of(r)]
+    text = "Added " + _join([f"a {what(r, mod)} for {r.name}" for r in mine]) + "."
     if len(text) <= CHANGELOG_MAX:
         return text
-    counts = Counter(r.kind for r in requests)
-    return "Added " + _join([f"{n} {LABELS[k]}{'' if n == 1 else 's'}"
-                             for k, n in counts.items()]) + "."
+    counts = Counter(lane for r in mine for lane in lanes(r) if mod in LANE_MODS[lane])
+    return "Added " + _join([f"{n} {LANE_LABELS[lane]}{'' if n == 1 else 's'}"
+                             for lane, n in counts.items()]) + "."
 
 
 def view(r: ArtRequest) -> dict:
     return {
-        "id": str(r.id), "kind": r.kind, "label": LABELS[r.kind], "name": r.name,
-        "email": r.email, "note": r.note, "width": r.width, "height": r.height,
-        "mods": list(MODS[r.kind]), "status": r.status, "reason": r.reason,
-        "log": r.log, "versions": r.versions, "steam_pending": r.steam_pending,
-        "created_at": iso(r.created_at), "decided_at": iso(r.decided_at),
-        "released_at": iso(r.released_at),
+        "id": str(r.id), "kind": r.kind, "label": what(r), "name": r.name,
+        "email": r.email, "note": r.note, "mods": mods_of(r),
+        "pictures": {slot: {"width": p.width, "height": p.height} for slot, p in r.pictures.items()},
+        "status": r.status, "reason": r.reason, "log": r.log, "versions": r.versions,
+        "steam_pending": r.steam_pending, "created_at": iso(r.created_at),
+        "decided_at": iso(r.decided_at), "released_at": iso(r.released_at),
     }
 
 
 # -- Intake -------------------------------------------------------------------
 
-async def submit(*, kind: str, name: str, email: str, note: str | None, data: bytes,
-                 captcha_token: str | None, ip: str | None) -> ArtRequest:
+def _measure(data: bytes) -> tuple[str, int, int] | None:
+    sniffed = store.sniff_image(data)
+    if sniffed is None:
+        return None
+    try:
+        with Image.open(io.BytesIO(data)) as im:
+            return sniffed[0], im.width, im.height
+    except Exception:
+        return None
+
+
+async def submit(*, kind: str, name: str, email: str, note: str | None,
+                 files: dict[str, bytes], captcha_token: str | None,
+                 ip: str | None) -> ArtRequest:
     """Everything a person can correct is checked before the captcha, because a
     captcha token is spent the moment it is verified."""
     name = clean_name(name)
     address = clean_email(email)
-    if len(data) > settings.mods_image_max_bytes:
-        mb = settings.mods_image_max_bytes // (1024 * 1024)
-        raise APIError(413, ErrorCode.bad_request, f"That picture is over the {mb} MB limit.")
-    sniffed = store.sniff_image(data)
-    if sniffed is None:
-        raise APIError(400, ErrorCode.bad_request, "Send a PNG, JPEG, WebP or GIF picture.")
+    files = {slot: data for slot, data in files.items() if data}
+    if not files:
+        raise APIError(400, ErrorCode.validation_error,
+                       "Add a profile picture." if kind == "player"
+                       else "Add a club picture, a club banner, or both.")
+    if set(files) - set(SLOTS[kind]):
+        raise APIError(400, ErrorCode.validation_error,
+                       "A player request carries a profile picture only.")
+    limit = settings.custom_art_image_max_bytes
+    measured = {}
+    for slot, data in files.items():
+        label = LANE_LABELS[LANES[(kind, slot)]]
+        if len(data) > limit:
+            raise APIError(413, ErrorCode.bad_request,
+                           f"The {label} is over the {limit // (1024 * 1024)} MB limit.")
+        found = await asyncio.to_thread(_measure, data)
+        if found is None:
+            raise APIError(400, ErrorCode.bad_request,
+                           f"The {label} has to be a PNG, JPEG, WebP or GIF picture.")
+        check_shape(kind, slot, found[1], found[2])
+        measured[slot] = found
     if not await verify_captcha(captcha_token, ip):
         raise APIError(400, ErrorCode.captcha_failed, "The captcha check didn't pass. Try it again.")
-    content_type, width, height = sniffed
-    sha, _ = await store.put_blob(data)
+    pictures = {}
+    for slot, (content_type, width, height) in measured.items():
+        sha, _ = await store.put_blob(files[slot])
+        pictures[slot] = ArtPicture(sha=sha, content_type=content_type, width=width, height=height)
     request = ArtRequest(kind=kind, name=name, email=address,
-                         note=(note or "").strip()[:500] or None, image_sha=sha,
-                         content_type=content_type, width=width, height=height)
+                         note=(note or "").strip()[:500] or None, pictures=pictures)
     await request.insert()
-    logger.info("custom art request %s: %s %r", request.id, kind, name)
+    logger.info("custom art request %s: %s %r (%s)", request.id, kind, name, ", ".join(pictures))
     return request
 
 
@@ -119,12 +186,13 @@ async def _get(request_id: str) -> ArtRequest:
     return request
 
 
-async def image(request_id: str) -> tuple[bytes, str]:
+async def image(request_id: str, slot: str) -> tuple[bytes, str]:
     request = await _get(request_id)
-    data = await store.get_blob(request.image_sha)
+    picture = request.pictures.get(slot)
+    data = await store.get_blob(picture.sha) if picture else None
     if data is None:
-        raise APIError(404, ErrorCode.not_found, "That picture is missing from the store.")
-    return data, request.content_type
+        raise APIError(404, ErrorCode.not_found, "That picture isn't there.")
+    return data, picture.content_type
 
 
 async def approve(request_id: str, name: str | None) -> dict:
@@ -191,16 +259,16 @@ async def _send(to: str, subject: str, text: str, body: str) -> None:
 
 
 async def _notify_denied(request: ArtRequest) -> None:
-    what = f"{LABELS[request.kind]} for {request.name}"
-    subject = f"Your {LABELS[request.kind]} request wasn't added"
+    asked = f"{what(request)} for {request.name}"
+    subject = "Your custom art request wasn't added"
     text = "\n".join([
-        f"Your request for a {what} in Zakros UI wasn't added.", "",
+        f"Your request for a {asked} in Zakros UI wasn't added.", "",
         f"Reason: {request.reason}", "",
         "You're welcome to send a new request with that sorted out.",
         f"{settings.app_url.rstrip('/')}/custom-art", "",
         "- Better Trove Tools",
     ])
-    body = (f"<p>Your request for a {html.escape(what)} in Zakros UI wasn't added.</p>"
+    body = (f"<p>Your request for a {html.escape(asked)} in Zakros UI wasn't added.</p>"
             "<p style='margin:16px 0 4px;color:#9aa4b2'>Reason</p>"
             "<p style='background:#161b22;border:1px solid #232a33;border-radius:8px;"
             f"padding:12px 14px'>{html.escape(request.reason or '')}</p>"
@@ -209,17 +277,18 @@ async def _notify_denied(request: ArtRequest) -> None:
 
 
 async def notify_released(request: ArtRequest, pages: dict[str, str]) -> None:
-    what = f"{LABELS[request.kind]} for {request.name}"
-    subject = f"Your {LABELS[request.kind]} is in Zakros UI"
-    shipped = [f"{mod} {request.versions[mod]}: {pages.get(mod, '')}".rstrip(": ")
-               for mod in MODS[request.kind]]
-    text = "\n".join([f"Your {what} has been added. It's in:", "", *shipped, "",
+    asked = f"{what(request)} for {request.name}"
+    subject = "Your custom art is in Zakros UI"
+    mods = mods_of(request)
+    shipped = [f"{mod} {request.versions[mod]}" + (f": {pages[mod]}" if pages.get(mod) else "")
+               for mod in mods]
+    text = "\n".join([f"Your {asked} has been added. It's in:", "", *shipped, "",
                       "Update the mod to see it.", "", "- Better Trove Tools"])
     items = "".join(
         f"<li>{html.escape(mod)} {html.escape(request.versions[mod])}"
         + (f" - <a href='{html.escape(pages[mod])}' style='color:#569cff'>mod page</a>"
            if pages.get(mod) else "") + "</li>"
-        for mod in MODS[request.kind])
-    body = (f"<p>Your {html.escape(what)} has been added. It's in:</p><ul>{items}</ul>"
+        for mod in mods)
+    body = (f"<p>Your {html.escape(asked)} has been added. It's in:</p><ul>{items}</ul>"
             "<p>Update the mod to see it.</p>")
     await _send(request.email, subject, text, body)

@@ -26,9 +26,9 @@ async def custom_art_list() -> dict:
     return {"items": await service.list_requests()}
 
 
-@router.get("/custom-art/{request_id}/image")
-async def custom_art_image(request_id: str) -> Response:
-    data, content_type = await service.image(request_id)
+@router.get("/custom-art/{request_id}/image/{slot}")
+async def custom_art_image(request_id: str, slot: str) -> Response:
+    data, content_type = await service.image(request_id, slot)
     return Response(data, media_type=content_type, headers={"Cache-Control": "no-store"})
 
 

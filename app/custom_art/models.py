@@ -3,31 +3,36 @@ from datetime import datetime
 from typing import Literal
 
 from beanie import Document
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymongo import ASCENDING, DESCENDING, IndexModel
 
 from app.core.utils import utcnow
 
-ArtKind = Literal["pfp", "club", "banner"]
+ArtKind = Literal["player", "club"]
 ArtStatus = Literal["pending", "approved", "queued", "building", "released", "failed", "denied"]
 
 
-class ArtRequest(Document):
-    """One picture someone asked to have added.
+class ArtPicture(BaseModel):
+    sha: str
+    content_type: str
+    width: int
+    height: int
 
-    ``pending`` waits for a decision; ``approved`` waits for the master's release;
-    ``queued`` and ``building`` belong to the worker; ``versions`` records each mod
-    version the picture shipped in, so a retried batch never re-releases a mod
-    that already carries it."""
+
+class ArtRequest(Document):
+    """One request: a player's profile picture, or a club's picture, banner or both.
+
+    ``pictures`` is keyed by slot, ``pfp`` and ``banner``. ``pending`` waits for a
+    decision; ``approved`` waits for the master's release; ``queued`` and
+    ``building`` belong to the worker; ``versions`` records each mod version the
+    request shipped in, so a retried batch never re-releases a mod that already
+    carries it."""
 
     kind: ArtKind
     name: str
     email: str
     note: str | None = None
-    image_sha: str
-    content_type: str
-    width: int | None = None
-    height: int | None = None
+    pictures: dict[str, ArtPicture]
 
     status: ArtStatus = "pending"
     reason: str | None = None

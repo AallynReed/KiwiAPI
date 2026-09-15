@@ -370,6 +370,8 @@ class Settings(BaseSettings):
     custom_art_env_file: str = "data/troveui.env"
     custom_art_branch: str = "live-us"
     custom_art_poll_seconds: int = 15
+    # Per picture. A club request carries two, and both fit under max_request_body_bytes.
+    custom_art_image_max_bytes: int = 3 * 1024 * 1024
 
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.

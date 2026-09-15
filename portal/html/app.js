@@ -2494,13 +2494,18 @@ async function renderCustomArt() {
     if (r.status === "failed") return `<button class="btn small" data-retry="${r.id}">Retry</button>`;
     return "";
   };
+  const pictures = (r) => Object.entries(r.pictures).map(([slot, p]) => `
+    <figure style="margin:0;text-align:center;flex:none">
+      <img data-art="${r.id}" data-slot="${slot}" alt="" style="width:${slot === "banner" ? 200 : 96}px;height:96px;object-fit:contain;background:#0b0f15;border-radius:6px">
+      <figcaption class="muted" style="font-size:.76rem">${slot === "banner" ? "banner" : r.kind === "club" ? "club picture" : "profile picture"} · ${p.width}×${p.height}</figcaption>
+    </figure>`).join("");
   const card = (r) => `
     <div class="card" style="margin-bottom:12px">
       <div class="row" style="gap:14px;align-items:flex-start;flex-wrap:wrap">
-        <img data-art="${r.id}" alt="" style="width:96px;height:96px;object-fit:contain;background:#0b0f15;border-radius:6px;flex:none">
+        ${pictures(r)}
         <div style="flex:1;min-width:220px">
           <h3 style="margin:0">${esc(r.name)} <span class="badge ${ART_BADGE[r.status]}">${esc(r.status)}</span></h3>
-          <div class="muted" style="font-size:.86rem">${esc(r.label)} · ${r.mods.map(esc).join(" + ")} · ${r.width || "?"}×${r.height || "?"}</div>
+          <div class="muted" style="font-size:.86rem">${r.kind === "club" ? "Club" : "Player"} · ${esc(r.label)} · ${r.mods.map(esc).join(" + ")}</div>
           <div style="font-size:.86rem;margin-top:4px"><a href="mailto:${esc(r.email)}">${esc(r.email)}</a> · ${new Date(r.created_at).toLocaleString()}</div>
           ${r.note ? `<p style="margin:6px 0 0;font-size:.88rem">${esc(r.note)}</p>` : ""}
           ${r.reason ? `<p class="muted" style="margin:6px 0 0;font-size:.86rem">Denied: ${esc(r.reason)}</p>` : ""}
@@ -2577,7 +2582,7 @@ async function renderCustomArt() {
 
 // The picture is bearer-authenticated, so it can't be a plain <img src>.
 async function loadArtImage(img) {
-  const get = () => fetch(`${API_BASE}/admin/custom-art/${img.dataset.art}/image`,
+  const get = () => fetch(`${API_BASE}/admin/custom-art/${img.dataset.art}/image/${img.dataset.slot}`,
     { headers: { Authorization: "Bearer " + API.token } });
   try {
     let res = await get();

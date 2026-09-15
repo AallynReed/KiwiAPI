@@ -1,43 +1,85 @@
 /* /custom-art - the request form. Built on drop.css (the same one-card page);
-   only the kind picker, the preview and the captcha slot are its own. */
+   the player/club switch, the picture slots and the in-place cropper are its own. */
 
-.art-kinds {
+.art-modes {
   margin: 0 0 20px;
   padding: 0;
   border: 0;
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-.art-kinds legend { margin-bottom: 8px; }
+.art-modes legend { margin-bottom: 8px; }
 
-.art-kind {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 12px;
-  row-gap: 2px;
+.art-mode {
+  position: relative;
+  display: block;
   padding: 12px 14px;
+  text-align: center;
+  font-weight: 650;
   cursor: pointer;
   border-radius: var(--radius-sm);
   border: 1px solid var(--bg-line);
   background: var(--bg-deep);
   transition: border-color .18s var(--ease-out);
 }
-.art-kind:hover { border-color: var(--accent-blue); }
-.art-kind:has(input:checked) { border-color: var(--accent-blue); background: var(--bg-card-hi); }
-.art-kind:focus-within { box-shadow: 0 0 0 3px var(--accent-soft); }
-.art-kind input { grid-row: span 2; margin: 3px 0 0; accent-color: var(--accent-blue); }
-.art-kind-title { font-weight: 650; }
-.art-kind-hint { font-size: .88rem; color: var(--text-mute); line-height: 1.5; }
+.art-mode input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.art-mode:hover { border-color: var(--accent-blue); }
+.art-mode:has(input:checked) { border-color: var(--accent-blue); background: var(--bg-card-hi); }
+.art-mode:focus-within { box-shadow: 0 0 0 3px var(--accent-soft); }
 
-.art-preview {
-  max-width: 160px;
-  max-height: 120px;
-  object-fit: contain;
+.art-club-note { margin: -8px 0 16px; }
+
+.art-slot { margin-bottom: 22px; }
+.art-slot > .drop-label { margin: 0 0 4px; }
+.art-slot .drop-zone { margin-bottom: 0; }
+.art-slot-status { margin: 10px 0 0; }
+
+.art-crop-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 10px;
+  border-radius: var(--radius-sm);
+  touch-action: none;
+  cursor: move;
+  background: repeating-conic-gradient(#1b212b 0 25%, #11161e 0 50%) 0 0 / 16px 16px;
 }
+.art-crop-canvas:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+.art-crop-help { text-align: center; }
 
-.art-captcha { margin: 0 0 14px; min-height: 0; }
+.art-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.art-actions .drop-go { width: auto; padding: 10px 18px; }
+.art-actions .drop-clear { margin: 0; }
+
+.art-ready {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  flex-wrap: wrap;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-blue);
+  background: var(--bg-deep);
+}
+.art-preview {
+  max-width: 200px;
+  max-height: 96px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: repeating-conic-gradient(#1b212b 0 25%, #11161e 0 50%) 0 0 / 16px 16px;
+}
+.art-ready-info { flex: 1; min-width: 120px; font-size: .9rem; color: var(--text-mute); }
+
+.art-captcha { margin: 0 0 14px; }
 .art-captcha:empty { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .art-kind { transition: none; }
+  .art-mode { transition: none; }
 }

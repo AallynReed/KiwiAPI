@@ -138,13 +138,16 @@ async def _place(tree: Path, requests: list[ArtRequest], run: Run) -> None:
     shutil.rmtree(incoming, ignore_errors=True)
     incoming.mkdir(parents=True)
     for request in requests:
-        data = await store.get_blob(request.image_sha)
-        if data is None:
-            raise BuildFailed(f"the picture for {request.name!r} is missing from the store")
-        source = incoming / str(request.id)
-        source.write_bytes(data)
-        await asyncio.to_thread(run, [sys.executable, "custom_art.py", request.kind,
-                                      request.name, str(source)], tree)
+        for slot, picture in request.pictures.items():
+            lane = service.LANES[(request.kind, slot)]
+            data = await store.get_blob(picture.sha)
+            if data is None:
+                raise BuildFailed(f"the {service.LANE_LABELS[lane]} for {request.name!r} "
+                                  f"is missing from the store")
+            source = incoming / f"{request.id}-{slot}"
+            source.write_bytes(data)
+            await asyncio.to_thread(run, [sys.executable, "custom_art.py", lane,
+                                          request.name, str(source)], tree)
 
 
 def _commit(run: Run, tree: Path, paths: list[str], message: str) -> None:
@@ -180,7 +183,7 @@ async def _publish(tree: Path, mod: str, requests: list[ArtRequest], run: Run) -
     project = await ModProject.find_one(ModProject.title == mod)
     if project is None:
         raise BuildFailed(f"no hub project titled {mod!r}")
-    note = service.changelog(requests)
+    note = service.changelog(requests, mod)
     await asyncio.to_thread(run, [sys.executable, "release.py", mod, "-m", note,
                                   "--silent", "--no-steam"], tree)
     version = _version(tree, mod)
@@ -210,7 +213,7 @@ async def _process(requests: list[ArtRequest]) -> None:
         await _place(tree, requests, run)
         await asyncio.to_thread(_commit, run, tree, list(ART), _art_message(requests))
         for mod in (service.CHAT, service.NAMEPLATE):
-            mine = [r for r in requests if mod in service.MODS[r.kind] and mod not in r.versions]
+            mine = [r for r in requests if mod in service.mods_of(r) and mod not in r.versions]
             if mine:
                 pages[mod] = await _publish(tree, mod, mine, run)
     except BuildFailed as exc:
@@ -222,7 +225,7 @@ async def _process(requests: list[ArtRequest]) -> None:
     log = run.text()
     for request in requests:
         request.log = log
-        if all(mod in request.versions for mod in service.MODS[request.kind]):
+        if all(mod in request.versions for mod in service.mods_of(request)):
             request.status = "released"
             request.steam_pending = True
             request.released_at = utcnow()
