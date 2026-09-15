@@ -10,7 +10,7 @@
   const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const num = (n) => (n == null ? '-' : Number(n).toLocaleString());
 
-  const total = (m) => m.hub.top_release + (m.steam ? m.steam.lifetime_subscriptions : 0);
+  const total = (m) => m.hub.top_release + (m.steam ? m.steam.subscriptions : 0);
 
   const COLUMNS = [
     { key: 'title', label: 'Mod', value: (m) => m.title.toLowerCase() },
@@ -32,7 +32,7 @@
   let sortDesc = true;
 
   function renderTotals(t) {
-    const all = t.hub_top_release + t.steam_lifetime_subscriptions;
+    const all = t.hub_top_release + t.steam_subscriptions;
     const cells = [
       ['Total', all, true],
       ['Mods Hub top releases', t.hub_top_release],
@@ -52,7 +52,7 @@
   function renderHistory(history) {
     if (history.length < 2) return;
     const W = 800, H = 220, L = 64, R = 12, T = 12, B = 28;
-    const values = history.map((d) => d.hub_top_release + d.steam_lifetime_subscriptions);
+    const values = history.map((d) => d.hub_top_release + d.steam_subscriptions);
     const lo = Math.min(...values), hi = Math.max(...values);
     const span = hi - lo || 1;
     const x = (i) => L + (i * (W - L - R)) / (history.length - 1);
