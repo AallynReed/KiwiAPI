@@ -1,4 +1,4 @@
-"""Daily statistics for one creator's mods on the Mods Hub, Trovesaurus and Steam Workshop.
+"""Statistics for one creator's Zakros UI mods on the Mods Hub, Trovesaurus and Steam Workshop.
 
 The hub's counts come from Mongo. A project's ``download_count`` adds up every release,
 so a player who takes each update counts once per update; the hub figure here is the
@@ -14,6 +14,7 @@ each day's last numbers.
 import asyncio
 import json
 import logging
+import re
 from datetime import timedelta
 
 import httpx
@@ -30,6 +31,7 @@ logger = logging.getLogger("kiwi.mod_stats")
 TROVESAURUS_CATALOG_URL = "https://trovesaurus.com/api/mods-all"
 STEAM_DETAILS_URL = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
 HISTORY_DAYS = 365
+TITLE_PREFIX = "Zakros UI - "
 FRESH = timedelta(minutes=50)
 
 
@@ -120,7 +122,8 @@ async def _steam_details(ids: list[int]) -> list[dict]:
 
 async def collect() -> list[dict]:
     projects = await ModProject.find(
-        {"owner_handle": settings.mod_stats_handle, "visibility": "public", "taken_down": False},
+        {"owner_handle": settings.mod_stats_handle, "visibility": "public", "taken_down": False,
+         "title": {"$regex": f"^{re.escape(TITLE_PREFIX)}"}},
     ).to_list()
     top_rows = await ModRelease.aggregate([
         {"$match": {"project_id": {"$in": [p.id for p in projects]}, "status": "published"}},
