@@ -370,6 +370,14 @@ async def file_drop_page(request: Request, slug: str) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "drop.html", {"slug": slug})
 
 
+@router.get("/custom-art", response_class=HTMLResponse)
+async def custom_art_page(request: Request) -> HTMLResponse:
+    """Ask for a profile picture, a club picture or a club banner in the Zakros UI
+    Chat and Nameplate mods. The form posts to ``/site/custom-art`` on the API; the
+    captcha key comes from ``/site/custom-art/config``."""
+    return _TEMPLATES.TemplateResponse(request, "custom-art.html", {})
+
+
 @router.get("/gems-guide", response_class=HTMLResponse)
 async def gems_guide_page(request: Request) -> HTMLResponse:
     """How Gems Work - an interactive, animated explainer of Trove's gem system

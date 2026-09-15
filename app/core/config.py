@@ -361,6 +361,16 @@ class Settings(BaseSettings):
     # container from `./.drops` (user content, kept out of git and the image).
     drops_store_dir: str = "data/drops"
 
+    # Custom art release worker (app/custom_art/builder.py): its TroveUI checkout, the
+    # bare repo that checkout pulls from and pushes to, where lib/ comes from, the .env
+    # the release scripts read their tokens from, and the archive branch it builds against.
+    custom_art_workspace: str = "data/custom-art"
+    custom_art_remote: str = "data/troveui.git"
+    custom_art_lib_remote: str = "https://github.com/AallynReed/KiwiZUI.git"
+    custom_art_env_file: str = "data/troveui.env"
+    custom_art_branch: str = "live-us"
+    custom_art_poll_seconds: int = 15
+
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
     site_root: str = "site"

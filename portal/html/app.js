@@ -335,8 +335,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "creators", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
-const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"]);
+const TABS = ["tokens", "creators", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "customart", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
+const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "customart", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -353,6 +353,7 @@ const ICONS = {
   leaderboards: '<rect x="3" y="11" width="5" height="9" rx="1"/><rect x="9.5" y="5" width="5" height="15" rx="1"/><rect x="16" y="14" width="5" height="6" rx="1"/>',
   ingest:       '<path d="M12 3v11m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
   drops:        '<path d="M12 3v9m0 0 3.5-3.5M12 12 8.5 8.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+  customart:    '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
   giveaways:    '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13"/><path d="M12 8S11 4 8.5 4a2 2 0 1 0 0 4H12zM12 8s1-4 3.5-4a2 2 0 1 1 0 4H12z"/>',
   discord:      '<path d="M4 6h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/><circle cx="9.5" cy="11.5" r="1"/><circle cx="14.5" cy="11.5" r="1"/>',
   supporters:   '<path d="M12 20.3 4.6 12.9a4.4 4.4 0 0 1 6.2-6.2l1.2 1.2 1.2-1.2a4.4 4.4 0 0 1 6.2 6.2L12 20.3Z"/>',
@@ -387,6 +388,7 @@ const TAB_META = {
   marketitems:  { group: "Admin panel · Modules", label: "Market items" },
   giveaways:    { group: "Admin panel · Modules", label: "Giveaways" },
   drops:        { group: "Admin panel · Modules", label: "File drops" },
+  customart:    { group: "Admin panel · Modules", label: "Custom art" },
   discord:      { group: "Admin panel · Modules", label: "Discord" },
   supporters:   { group: "Admin panel · Modules", label: "Supporters" },
   claims:       { group: "Admin panel · Modules", label: "Trove claims" },
@@ -436,6 +438,7 @@ function renderDashboard() {
           ${navItem("marketitems", true)}
           ${navItem("giveaways", true)}
           ${navItem("drops", true)}
+          ${navItem("customart", true)}
           ${navItem("discord", true)}
           ${navItem("supporters", true)}
           ${navItem("claims", true)}
@@ -511,6 +514,7 @@ function selectTab() {
   else if (state.tab === "marketitems") renderMarketItems();
   else if (state.tab === "giveaways") renderGiveaways();
   else if (state.tab === "drops") renderDrops();
+  else if (state.tab === "customart") renderCustomArt();
   else if (state.tab === "discord") renderDiscord();
   else if (state.tab === "supporters") renderSupporters();
   else if (state.tab === "claims") renderClaims();
@@ -2455,6 +2459,131 @@ function openDropExtend(dropId) {
     toast("Deadline extended.", "ok");
     renderDrops();
   }, "Extend");
+}
+
+
+// ── Admin · Modules · Custom art ────────────────────────────────────────────
+// Requests from trove.aallyn.net/custom-art for Zakros UI Chat + Nameplate. Approve
+// or deny each one (a denial emails its reason), then Release hands every approved
+// request to the worker on the server, which builds and publishes silently. Steam
+// is pushed by hand, so released requests stay listed until marked done.
+
+const ART_BADGE = { pending: "warn", approved: "ok", queued: "muted", building: "muted",
+                    released: "ok", failed: "warn", denied: "muted" };
+let _artRefresh = null;
+
+async function renderCustomArt() {
+  clearTimeout(_artRefresh);
+  const pane = document.getElementById("tab-body");
+  pane.innerHTML = `<div class="loading">Loading…</div>`;
+  let items;
+  try { items = (await API.call("/admin/custom-art")).items; }
+  catch (ex) { pane.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
+
+  const by = (...statuses) => items.filter((r) => statuses.includes(r.status));
+  const pending = by("pending"), approved = by("approved"), running = by("queued", "building");
+  const failed = by("failed"), finished = by("released", "denied").slice(0, 30);
+  const steam = [...new Set(items.filter((r) => r.steam_pending)
+    .flatMap((r) => Object.entries(r.versions).map(([mod, v]) => `${mod} ${v}`)))];
+
+  const actions = (r) => {
+    if (r.status === "pending") return `
+      <button class="btn small primary" data-approve="${r.id}" data-name="${esc(r.name)}">Approve</button>
+      <button class="btn small danger" data-deny="${r.id}">Deny</button>`;
+    if (r.status === "approved") return `<button class="btn small danger" data-deny="${r.id}">Deny</button>`;
+    if (r.status === "failed") return `<button class="btn small" data-retry="${r.id}">Retry</button>`;
+    return "";
+  };
+  const card = (r) => `
+    <div class="card" style="margin-bottom:12px">
+      <div class="row" style="gap:14px;align-items:flex-start;flex-wrap:wrap">
+        <img data-art="${r.id}" alt="" style="width:96px;height:96px;object-fit:contain;background:#0b0f15;border-radius:6px;flex:none">
+        <div style="flex:1;min-width:220px">
+          <h3 style="margin:0">${esc(r.name)} <span class="badge ${ART_BADGE[r.status]}">${esc(r.status)}</span></h3>
+          <div class="muted" style="font-size:.86rem">${esc(r.label)} · ${r.mods.map(esc).join(" + ")} · ${r.width || "?"}×${r.height || "?"}</div>
+          <div style="font-size:.86rem;margin-top:4px"><a href="mailto:${esc(r.email)}">${esc(r.email)}</a> · ${new Date(r.created_at).toLocaleString()}</div>
+          ${r.note ? `<p style="margin:6px 0 0;font-size:.88rem">${esc(r.note)}</p>` : ""}
+          ${r.reason ? `<p class="muted" style="margin:6px 0 0;font-size:.86rem">Denied: ${esc(r.reason)}</p>` : ""}
+          ${Object.keys(r.versions).length ? `<p class="muted" style="margin:6px 0 0;font-size:.86rem">Shipped in ${Object.entries(r.versions).map(([m, v]) => esc(`${m} ${v}`)).join(", ")}</p>` : ""}
+          ${r.log ? `<details style="margin-top:6px"><summary style="cursor:pointer">Worker log</summary><pre class="mono" style="max-height:320px;overflow:auto;font-size:.76rem;white-space:pre-wrap">${esc(r.log)}</pre></details>` : ""}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${actions(r)}</div>
+      </div>
+    </div>`;
+  const section = (title, rows, extra = "") => rows.length || extra ? `
+    <div class="row" style="align-items:center;margin:18px 0 10px">
+      <h3 style="flex:1;margin:0">${title} (${rows.length})</h3>${extra}
+    </div>${rows.map(card).join("")}` : "";
+
+  pane.innerHTML = `
+    <h2 style="margin:0 0 6px">Custom art</h2>
+    <p class="hint">Requests from <a href="https://trove.aallyn.net/custom-art" target="_blank" rel="noopener">/custom-art</a>. Approve or deny each one - a denial emails the reason. <b>Release</b> hands every approved request to the worker, which adds the pictures, rebuilds Chat (and Nameplate for banners) and publishes silently to the hub and Trovesaurus. Steam stays with you.</p>
+    ${steam.length ? `
+      <div class="card" style="margin:12px 0">
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="flex:1"><b>Steam still to push:</b> ${steam.map(esc).join(", ")}</div>
+          <button class="btn small" id="art-steam">Steam done</button>
+        </div>
+      </div>` : ""}
+    ${section("Pending", pending)}
+    ${section("Approved", approved, approved.length ? `<button class="btn primary small" id="art-release">Release ${approved.length} approved</button>` : "")}
+    ${section("Releasing", running)}
+    ${section("Failed", failed)}
+    ${section("Recent", finished)}
+    ${items.length ? "" : `<p class="muted">No requests yet.</p>`}`;
+
+  pane.querySelectorAll("img[data-art]").forEach((img) => loadArtImage(img));
+  document.getElementById("art-release")?.addEventListener("click", () => modal(
+    "Release approved art?",
+    `<p>${approved.length} picture(s) go into a silent release of every mod they belong to. The page updates as the worker runs.</p>`,
+    async () => {
+      const res = await API.call("/admin/custom-art/release", { method: "POST" });
+      toast(`${res.queued} queued for release.`, "ok"); renderCustomArt();
+    }, "Release"));
+  document.getElementById("art-steam")?.addEventListener("click", async () => {
+    try { await API.call("/admin/custom-art/steam-done", { method: "POST" }); toast("Cleared.", "ok"); renderCustomArt(); }
+    catch (ex) { toast(ex.message, "err"); }
+  });
+  pane.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => modal(
+    "Approve this request",
+    `<label>Name <span class="muted">(the file name the mods match on - fix it here if it's off)</span></label>
+     <input id="art-approve-name" value="${b.dataset.name}" maxlength="64">`,
+    async () => {
+      const name = document.getElementById("art-approve-name").value.trim();
+      await API.call(`/admin/custom-art/${b.dataset.approve}/approve`, { method: "POST", body: { name } });
+      toast("Approved.", "ok"); renderCustomArt();
+    }, "Approve")));
+  pane.querySelectorAll("[data-deny]").forEach((b) => b.addEventListener("click", () => modal(
+    "Deny this request",
+    `<label>Reason <span class="muted">(emailed to the person who asked)</span></label>
+     <textarea id="art-deny-reason" rows="4" maxlength="2000"></textarea>`,
+    async () => {
+      const reason = document.getElementById("art-deny-reason").value.trim();
+      if (reason.length < 3) throw new Error("Give a reason - it's what they'll read.");
+      await API.call(`/admin/custom-art/${b.dataset.deny}/deny`, { method: "POST", body: { reason } });
+      toast("Denied and emailed.", "ok"); renderCustomArt();
+    }, "Deny")));
+  pane.querySelectorAll("[data-retry]").forEach((b) => b.addEventListener("click", async () => {
+    try {
+      const res = await API.call(`/admin/custom-art/${b.dataset.retry}/retry`, { method: "POST" });
+      toast(`${res.queued} queued again.`, "ok"); renderCustomArt();
+    } catch (ex) { toast(ex.message, "err"); }
+  }));
+
+  if (running.length) {
+    _artRefresh = setTimeout(() => { if (state.tab === "customart") renderCustomArt(); }, 10000);
+  }
+}
+
+// The picture is bearer-authenticated, so it can't be a plain <img src>.
+async function loadArtImage(img) {
+  const get = () => fetch(`${API_BASE}/admin/custom-art/${img.dataset.art}/image`,
+    { headers: { Authorization: "Bearer " + API.token } });
+  try {
+    let res = await get();
+    if (res.status === 401 && await API._tryRefresh()) res = await get();
+    if (res.ok) img.src = URL.createObjectURL(await res.blob());
+  } catch (_) {}
 }
 
 

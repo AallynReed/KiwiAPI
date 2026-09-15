@@ -25,6 +25,12 @@ data/
 # File drops - whatever people upload through a one-off PIN link (bind mount target, user content)
 .drops/
 
+# Custom art worker - Flex SDK, TroveUI checkout, bare repo and release tokens (server-only)
+.flex/
+.custom-art/
+.troveui.git/
+.troveui.env
+
 # BetterTroveTools showcase site - binary assets are ~20 MB of screenshots,
 # copied to the server by hand rather than git. Templates + CSS + JS are tracked.
 # assets/data/ is the exception: hand-maintained stat tables the /calculators

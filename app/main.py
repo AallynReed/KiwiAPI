@@ -49,6 +49,8 @@ from app.core.observability import add_request_context_middleware, configure_log
 from app.core.postgres import close_postgres, init_postgres
 from app.core.redis import close_redis, init_redis
 from app.core.scopes import catalog as scope_catalog
+from app.custom_art.admin import router as custom_art_admin_router
+from app.custom_art.router import router as custom_art_router
 from app.discord.router import router as discord_router
 from app.dm_subs.delivery import start_dm_delivery, stop_dm_delivery
 from app.dm_subs.router import router as dm_subs_router
@@ -382,6 +384,10 @@ app.include_router(giveaways_public_router, dependencies=_GIVEAWAYS_GATE)   # pu
 app.include_router(drops_admin_router, include_in_schema=False)
 app.include_router(drops_router, include_in_schema=False,
                    dependencies=[Depends(require_file_drops_enabled)])
+# Custom art requests for Zakros UI Chat + Nameplate: an open request form and the
+# master's review queue (released by app/custom_art/builder.py in its own container).
+app.include_router(custom_art_router, include_in_schema=False)
+app.include_router(custom_art_admin_router, include_in_schema=False)
 app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema
 app.include_router(discord_bot_router, include_in_schema=False)  # User Dashboard "Discord Bot" tab (site_auth)
 app.include_router(  # User Dashboard "DM Alerts" tab (site_auth); inbound Discord DM subscriptions

@@ -298,6 +298,50 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
+  # Custom art release worker (app/custom_art/builder.py). Builds Zakros UI Chat and
+  # Nameplate from a TroveUI checkout with the Flex SDK in ./.flex and publishes them
+  # silently. ./.troveui.git is the bare repo the author pushes TroveUI to and pulls
+  # the worker's commits from; ./.troveui.env holds API_TOKEN and the Trovesaurus login.
+  builder:
+    image: trove-app:latest   # built by the api service (same image, different command)
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
+      MONGO_DB: ${MONGO_DB:-kiwi}
+      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
+      SMTP_HOST: ${SMTP_HOST:-}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@aallyn.net}
+      MODS_STORE_DIR: /data/mods
+      TROVE_UPDATE_STORE_DIR: /data/updates
+      CUSTOM_ART_WORKSPACE: /data/custom-art
+      CUSTOM_ART_REMOTE: /data/troveui.git
+      CUSTOM_ART_ENV_FILE: /run/troveui.env
+      TROVEAPI: /app
+      PYTHONPATH: /app
+      FFDEC: /opt/ffdec/ffdec.jar
+      AS3_SDK: /flex
+      GIT_AUTHOR_NAME: ${GIT_AUTHOR_NAME:-Aallyn}
+      GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL:-support@aallyn.net}
+      GIT_COMMITTER_NAME: ${GIT_AUTHOR_NAME:-Aallyn}
+      GIT_COMMITTER_EMAIL: ${GIT_AUTHOR_EMAIL:-support@aallyn.net}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - ./site:/app/site:ro
+      - ./.mods:/data/mods:ro
+      - ./.game_updates:/data/updates:ro
+      - ./.flex:/flex:ro
+      - ./.custom-art:/data/custom-art
+      - ./.troveui.git:/data/troveui.git
+      - ./.troveui.env:/run/troveui.env:ro
+    command: ["python", "-m", "app.custom_art.builder"]
+    mem_limit: 2g
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
   # Developer portal SPA at dev.aallyn.net: serves the static app only. The SPA
   # calls api.aallyn.net directly (cross-origin; CORS-enabled).
   portal:

@@ -17,7 +17,7 @@ WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         fonts-dejavu-core fonts-noto-cjk fonts-noto-core libgl1 libglib2.0-0 \
-        default-jre-headless \
+        default-jre-headless git \
     && rm -rf /var/lib/apt/lists/*
 
 # JPEXS FFDec, the ActionScript decompiler behind the Mods Hub code view (see

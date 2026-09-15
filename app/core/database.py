@@ -13,6 +13,7 @@ from app.bot.models import Club, GuildConfig, TrackedAnnouncement
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.core.utils import utcnow
+from app.custom_art.models import ArtRequest
 from app.dm_subs.models import DmSubscription
 from app.drops.models import DropUpload, FileDrop
 from app.giveaways.models import Giveaway, GiveawayEntry, PrizeCode, VaultItem
@@ -100,6 +101,7 @@ DOCUMENT_MODELS = [
     DmSubscription,                      # inbound (Discord) DM alert subscriptions
     ImageDesign,                         # user-designed images (image studio)
     FileDrop, DropUpload,                # one-off PIN upload links + what arrived on them
+    ArtRequest,                          # custom art requests for Zakros UI Chat + Nameplate
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

@@ -41,7 +41,7 @@ _PAGE_PATHS = frozenset({
     "/gems-guide", "/abilities", "/gem-abilities", "/guides", "/gem-tools", "/allies", "/fishing-guide",
     "/loot-collector-guide", "/dressing-room", "/sound-studio", "/mod-workshop", "/tomes",
     "/blueprint-editor", "/unlock-debug", "/unlock_debug",
-    "/search",
+    "/search", "/custom-art",
 })
 
 # Dynamic site page subtrees (parameterised routes like /mods/{slug},

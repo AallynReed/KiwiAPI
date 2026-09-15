@@ -735,6 +735,26 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=10, max_value=86400,
         description="Sliding-window length for the file-drop buckets, in seconds.",
     ),
+    "art_request_rate_limit_max": _t(
+        key="art_request_rate_limit_max",
+        default=5,
+        type="int",
+        category="api_rate_limits",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP cap on custom art requests (POST /site/custom-art). Anyone can "
+            "send one without an account, so this and the captcha are what keep the "
+            "review queue from filling with junk."
+        ),
+    ),
+    "art_request_rate_limit_window_seconds": _t(
+        key="art_request_rate_limit_window_seconds",
+        default=3600,
+        type="int",
+        category="api_rate_limits",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the custom art request bucket, in seconds.",
+    ),
     "blueprint_editor_rate_limit_max": _t(
         key="blueprint_editor_rate_limit_max",
         default=90,
