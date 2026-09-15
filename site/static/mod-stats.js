@@ -10,13 +10,11 @@
   const tr = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
   const num = (n) => (n == null ? '-' : Number(n).toLocaleString());
 
-  const total = (m) => m.hub.downloads
-    + (m.trovesaurus ? m.trovesaurus.downloads : 0)
-    + (m.steam ? m.steam.lifetime_subscriptions : 0);
+  const total = (m) => m.hub.top_release + (m.steam ? m.steam.lifetime_subscriptions : 0);
 
   const COLUMNS = [
     { key: 'title', label: 'Mod', value: (m) => m.title.toLowerCase() },
-    { key: 'hub_downloads', group: 'hub', label: 'Downloads', value: (m) => m.hub.downloads },
+    { key: 'hub_top', group: 'hub', label: 'Top release', value: (m) => m.hub.top_release },
     { key: 'hub_7d', group: 'hub', label: '7 days', value: (m) => m.hub.downloads_7d },
     { key: 'hub_stars', group: 'hub', label: 'Stars', value: (m) => m.hub.stars },
     { key: 'ts_downloads', group: 'trovesaurus', label: 'Downloads', value: (m) => m.trovesaurus && m.trovesaurus.downloads },
@@ -34,10 +32,10 @@
   let sortDesc = true;
 
   function renderTotals(t) {
-    const all = t.hub_downloads + t.trovesaurus_downloads + t.steam_lifetime_subscriptions;
+    const all = t.hub_top_release + t.steam_lifetime_subscriptions;
     const cells = [
       ['Total', all, true],
-      ['Mods Hub downloads', t.hub_downloads],
+      ['Mods Hub top releases', t.hub_top_release],
       ['Trovesaurus downloads', t.trovesaurus_downloads],
       ['Steam subscribers', t.steam_subscriptions],
       ['Steam lifetime subscriptions', t.steam_lifetime_subscriptions],
@@ -54,7 +52,7 @@
   function renderHistory(history) {
     if (history.length < 2) return;
     const W = 800, H = 220, L = 64, R = 12, T = 12, B = 28;
-    const values = history.map((d) => d.hub_downloads + d.trovesaurus_downloads + d.steam_lifetime_subscriptions);
+    const values = history.map((d) => d.hub_top_release + d.steam_lifetime_subscriptions);
     const lo = Math.min(...values), hi = Math.max(...values);
     const span = hi - lo || 1;
     const x = (i) => L + (i * (W - L - R)) / (history.length - 1);
@@ -62,7 +60,7 @@
     const points = values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
     const last = history.length - 1;
     const svg = `
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(tr('Total downloads per day'))}">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(tr('Total per day'))}">
         <line class="ms-axis" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"></line>
         <text class="ms-tick" x="${L - 8}" y="${y(hi) + 4}" text-anchor="end">${num(hi)}</text>
         <text class="ms-tick" x="${L - 8}" y="${y(lo) + 4}" text-anchor="end">${num(lo)}</text>

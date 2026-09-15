@@ -1,6 +1,9 @@
 """Daily statistics for one creator's mods on the Mods Hub, Trovesaurus and Steam Workshop.
 
-The hub's counts come from Mongo. Trovesaurus's come from its ``/api/mods-all``
+The hub's counts come from Mongo. A project's ``download_count`` adds up every release,
+so a player who takes each update counts once per update; the hub figure here is the
+most-downloaded single release instead, which no player downloads twice.
+Trovesaurus's come from its ``/api/mods-all``
 catalog and Steam's from ``GetPublishedFileDetails``, which needs no key for public
 items. Neither platform can be searched by our title, so the ids are TroveUI's own
 ``trovesaurus_ids.json`` and ``steam_ids.json``, keyed by mod title and read out of
@@ -18,7 +21,7 @@ from app.core.http import KIWI_UA, fetch
 from app.core.refresher import PeriodicRefresher
 from app.core.utils import iso, utcnow
 from app.mod_stats.models import ModStatsSnapshot
-from app.trove.mods_hub.models import ModProject
+from app.trove.mods_hub.models import ModProject, ModRelease
 
 logger = logging.getLogger("kiwi.mod_stats")
 
@@ -57,7 +60,7 @@ def build_rows(
             "handle": p["owner_handle"],
             "slug": p["slug"],
             "hub": {
-                "downloads": p.get("download_count", 0),
+                "top_release": p.get("top_release", 0),
                 "downloads_7d": p.get("downloads_7d", 0),
                 "stars": p.get("star_count", 0),
             },
@@ -84,7 +87,7 @@ def totals(rows: list[dict]) -> dict:
         return sum((r[platform] or {}).get(field, 0) for r in rows)
 
     return {
-        "hub_downloads": total("hub", "downloads"),
+        "hub_top_release": total("hub", "top_release"),
         "trovesaurus_downloads": total("trovesaurus", "downloads"),
         "steam_subscriptions": total("steam", "subscriptions"),
         "steam_lifetime_subscriptions": total("steam", "lifetime_subscriptions"),
@@ -116,13 +119,19 @@ async def collect() -> list[dict]:
     projects = await ModProject.find(
         {"owner_handle": settings.mod_stats_handle, "visibility": "public", "taken_down": False},
     ).to_list()
+    top_rows = await ModRelease.aggregate([
+        {"$match": {"project_id": {"$in": [p.id for p in projects]}, "status": "published"}},
+        {"$group": {"_id": "$project_id", "top": {"$max": "$download_count"}}},
+    ]).to_list()
+    top = {r["_id"]: int(r["top"]) for r in top_rows}
     trovesaurus_ids = await _repo_ids("trovesaurus_ids.json")
     steam_ids = await _repo_ids("steam_ids.json")
     catalog = (await fetch(TROVESAURUS_CATALOG_URL, timeout=60)).json()
     titles = {p.title for p in projects}
     details = await _steam_details([v for k, v in steam_ids.items() if k in titles])
     return build_rows(
-        [p.model_dump() for p in projects], trovesaurus_ids, steam_ids,
+        [p.model_dump() | {"top_release": top.get(p.id, 0)} for p in projects],
+        trovesaurus_ids, steam_ids,
         catalog if isinstance(catalog, list) else [], details,
     )
 
