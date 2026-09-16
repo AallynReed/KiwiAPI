@@ -2,8 +2,7 @@
 
    A player request carries a profile picture; a club request carries a club
    picture, a club banner, or both. A profile or club picture is square and a
-   banner is from square up to five times as wide as it is tall, and every picture
-   is at least 128px tall. A picture too small for that is refused. A picture that
+   banner is from square up to five times as wide as it is tall. A picture that
    doesn't fit the shape, or is too big to send, opens a cropper in place and is
    sent as the cropped PNG, no bigger than 768px on its long side. The API checks
    the same rules again.
@@ -19,8 +18,9 @@
     "use strict";
 
     var OUTPUT_MAX = 768;
+    var MIN_SIDE = 8;
 
-    var config = { max_bytes: 3 * 1024 * 1024, widest: 5, min_height: 128, captcha_sitekey: null, captcha_provider: "turnstile" };
+    var config = { max_bytes: 3 * 1024 * 1024, widest: 5, captcha_sitekey: null, captcha_provider: "turnstile" };
     var captcha = { lib: null, id: null, token: null };
     var busy = false;
 
@@ -77,8 +77,7 @@
             status.hidden = !message;
         }
 
-        function fits(w, h) { return h >= config.min_height && (square ? w === h : h <= w && w <= config.widest * h); }
-        function croppable(w, h) { return Math.min(w, h) >= config.min_height; }
+        function fits(w, h) { return square ? w === h : h <= w && w <= config.widest * h; }
 
         function show(which) {
             zone.hidden = which !== "zone";
@@ -139,14 +138,6 @@
                 var size = w + " × " + h;
                 if (fits(w, h) && file.size <= config.max_bytes) {
                     accept(file, w, h, url, img);
-                    return;
-                }
-                if (!croppable(w, h)) {
-                    var small = square
-                        ? ttf("This picture is {size}. It has to be at least {min}px tall and wide, so pick a bigger one.", { size: size, min: config.min_height })
-                        : ttf("This picture is {size}. It has to be at least {min}px tall, so pick a bigger one.", { size: size, min: config.min_height });
-                    reset();
-                    note(small, "bad");
                     return;
                 }
                 openCrop();
@@ -252,7 +243,7 @@
                     if (w < h) { if (h <= roomW) w = h; else h = w; }
                     if (w > config.widest * h) { if (w / config.widest <= roomH) h = w / config.widest; else w = config.widest * h; }
                 }
-                h = Math.max(h, config.min_height);
+                h = Math.max(h, MIN_SIDE);
                 w = square ? h : Math.max(w, h);
                 rect.w = w; rect.h = h;
                 rect.x = clamp(px >= drag.ax ? drag.ax : drag.ax - w, 0, W - w);
@@ -278,11 +269,11 @@
             } else {
                 var grow = d[0] > 0 || d[1] < 0 ? step : -step;
                 if (square) {
-                    rect.w = rect.h = clamp(rect.w + grow, config.min_height, Math.min(W - rect.x, H - rect.y));
+                    rect.w = rect.h = clamp(rect.w + grow, MIN_SIDE, Math.min(W - rect.x, H - rect.y));
                 } else if (d[0] !== 0) {
                     rect.w = clamp(rect.w + grow, rect.h, Math.min(W - rect.x, config.widest * rect.h));
                 } else {
-                    rect.h = clamp(rect.h + grow, Math.max(config.min_height, Math.ceil(rect.w / config.widest)), Math.min(H - rect.y, rect.w));
+                    rect.h = clamp(rect.h + grow, Math.max(MIN_SIDE, Math.ceil(rect.w / config.widest)), Math.min(H - rect.y, rect.w));
                 }
             }
             draw();
@@ -299,7 +290,7 @@
 
         function useCrop() {
             var r = whole();
-            var k = Math.min(1, Math.max(OUTPUT_MAX / Math.max(r.w, r.h), config.min_height / r.h));
+            var k = Math.min(1, OUTPUT_MAX / Math.max(r.w, r.h));
             var ow = Math.max(1, Math.round(r.w * k)), oh = Math.max(1, Math.round(r.h * k));
             if (square) ow = oh = Math.min(ow, oh);
             else { if (ow < oh) oh = ow; if (ow > config.widest * oh) ow = config.widest * oh; }

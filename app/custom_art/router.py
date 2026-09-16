@@ -24,7 +24,6 @@ async def form_config(response: Response) -> dict:
         "captcha_sitekey": settings.captcha_sitekey,
         "max_bytes": settings.custom_art_image_max_bytes,
         "widest": service.WIDEST,
-        "min_height": service.MIN_HEIGHT,
     }
 
 
