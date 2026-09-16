@@ -52,8 +52,11 @@
 
     // ── One picture slot: pick, check, crop, preview ─────────────────────────
 
-    function makeSlot(root, square) {
+    function makeSlot(root, square, laneOf) {
         var q = function (sel) { return root.querySelector(sel); };
+        var mockWrap = q(".art-mock-wrap");
+        var mock = q(".art-mock");
+        var mocked = null, accepted = null, mockDue = false;
         var input = q("input[type=file]");
         var zone = q(".drop-zone");
         var crop = q(".art-crop");
@@ -83,6 +86,17 @@
             ready.hidden = which !== "ready";
         }
 
+        function mockOf(src, rect) {
+            mocked = src ? { src: src, rect: rect } : null;
+            mockWrap.hidden = !mocked || !window.ArtMock;
+            if (mockWrap.hidden || mockDue) return;
+            mockDue = true;
+            requestAnimationFrame(function () {
+                mockDue = false;
+                if (mocked) window.ArtMock.render(mock, laneOf(), mocked.src, mocked.rect, nameEl.value);
+            });
+        }
+
         function dropPreview() {
             if (previewUrl && previewUrl !== sourceUrl) URL.revokeObjectURL(previewUrl);
             previewUrl = null;
@@ -91,19 +105,22 @@
         function reset() {
             dropPreview();
             if (sourceUrl) URL.revokeObjectURL(sourceUrl);
-            sourceUrl = null; image = null; rect = null; slot.file = null;
+            sourceUrl = null; image = null; rect = null; slot.file = null; accepted = null;
             input.value = "";
             show("zone");
             note("");
+            mockOf(null);
         }
 
-        function accept(file, w, h, url) {
+        function accept(file, w, h, url, src) {
             dropPreview();
             previewUrl = url;
             slot.file = file;
             preview.src = url;
             info.textContent = w + " × " + h + " · " + humanSize(file.size);
             show("ready");
+            accepted = { src: src, rect: { x: 0, y: 0, w: w, h: h } };
+            mockOf(accepted.src, accepted.rect);
         }
 
         function load(file) {
@@ -121,7 +138,7 @@
                 var w = img.naturalWidth, h = img.naturalHeight;
                 var size = w + " × " + h;
                 if (fits(w, h) && file.size <= config.max_bytes) {
-                    accept(file, w, h, url);
+                    accept(file, w, h, url, img);
                     return;
                 }
                 if (!croppable(w, h)) {
@@ -189,6 +206,7 @@
             ctx.strokeRect(x + 1, y + 1, Math.max(0, w - 2), Math.max(0, h - 2));
             ctx.fillStyle = "#569cff";
             corners().forEach(function (c) { ctx.fillRect(c[0] * s - 5, c[1] * s - 5, 10, 10); });
+            mockOf(image, whole());
         }
 
         function toSource(e) {
@@ -293,7 +311,7 @@
                 if (!blob) { note(t("That crop couldn't be made. Try another picture."), "bad"); return; }
                 if (blob.size > config.max_bytes) { note(t("That crop is still over the limit. Pick a smaller area."), "bad"); return; }
                 var stem = sourceName.replace(/\.[^.]*$/, "") || "picture";
-                accept(new File([blob], stem + "-crop.png", { type: "image/png" }), ow, oh, URL.createObjectURL(blob));
+                accept(new File([blob], stem + "-crop.png", { type: "image/png" }), ow, oh, URL.createObjectURL(blob), out);
                 note("");
             }, "image/png");
         }
@@ -317,17 +335,28 @@
 
         q(".art-crop-use").addEventListener("click", useCrop);
         q(".art-crop-cancel").addEventListener("click", function () {
-            if (slot.file) { show("ready"); note(""); } else { reset(); }
+            if (slot.file) {
+                show("ready");
+                note("");
+                mockOf(accepted.src, accepted.rect);
+            } else {
+                reset();
+            }
         });
         q(".art-recrop").addEventListener("click", function () { if (image) { openCrop(); note(""); } });
         q(".art-remove").addEventListener("click", reset);
 
         slot.cropping = function () { return !crop.hidden; };
+        slot.refresh = function () { if (mocked) mockOf(mocked.src, mocked.rect); };
         return slot;
     }
 
-    var pfp = makeSlot(document.getElementById("art-slot-pfp"), true);
-    var banner = makeSlot(document.getElementById("art-slot-banner"), false);
+    var pfp = makeSlot(document.getElementById("art-slot-pfp"), true,
+                       function () { return kind() === "club" ? "club" : "pfp"; });
+    var banner = makeSlot(document.getElementById("art-slot-banner"), false,
+                          function () { return "banner"; });
+
+    nameEl.addEventListener("input", function () { pfp.refresh(); });
 
     // ── Player or club ───────────────────────────────────────────────────────
 
@@ -340,6 +369,7 @@
         var club = kind() === "club";
         form.querySelectorAll(".art-if-player").forEach(function (el) { el.hidden = club; });
         form.querySelectorAll(".art-if-club").forEach(function (el) { el.hidden = !club; });
+        pfp.refresh();
         say("");
     }
 

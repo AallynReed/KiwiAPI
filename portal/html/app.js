@@ -2498,6 +2498,7 @@ async function renderCustomArt() {
     <figure style="margin:0;text-align:center;flex:none">
       <img data-art="${r.id}" data-slot="${slot}" alt="" style="width:${slot === "banner" ? 200 : 96}px;height:96px;object-fit:contain;background:#0b0f15;border-radius:6px">
       <figcaption class="muted" style="font-size:.76rem">${slot === "banner" ? "banner" : r.kind === "club" ? "club picture" : "profile picture"} · ${p.width}×${p.height}</figcaption>
+      <div class="art-mock" data-lane="${slot === "banner" ? "banner" : r.kind === "club" ? "club" : "pfp"}" data-name="${esc(r.name)}" style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:6px"></div>
     </figure>`).join("");
   const card = (r) => `
     <div class="card" style="margin-bottom:12px">
@@ -2580,14 +2581,29 @@ async function renderCustomArt() {
   }
 }
 
-// The picture is bearer-authenticated, so it can't be a plain <img src>.
+// The picture is bearer-authenticated, so it can't be a plain <img src>. It is read in as a
+// data: URL - the portal's CSP allows images from 'self' and data: only, so a blob: URL is
+// blocked. The in-game preview under it comes from art-mock.js, the site's own file,
+// served to the portal by nginx (portal/nginx.conf).
 async function loadArtImage(img) {
   const get = () => fetch(`${API_BASE}/admin/custom-art/${img.dataset.art}/image/${img.dataset.slot}`,
     { headers: { Authorization: "Bearer " + API.token } });
   try {
     let res = await get();
     if (res.status === 401 && await API._tryRefresh()) res = await get();
-    if (res.ok) img.src = URL.createObjectURL(await res.blob());
+    if (!res.ok) return;
+    const blob = await res.blob();
+    img.src = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+    await img.decode();
+    const mock = img.parentElement.querySelector(".art-mock");
+    if (mock && window.ArtMock) {
+      window.ArtMock.render(mock, mock.dataset.lane, img,
+        { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight }, mock.dataset.name);
+    }
   } catch (_) {}
 }
 

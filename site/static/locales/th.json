@@ -3146,5 +3146,6 @@
   "Who is it for": "สำหรับใคร",
   "or click to pick one. A banner outside that shape can be cropped here.": "หรือคลิกเพื่อเลือก แบนเนอร์ที่สัดส่วนไม่ตรงสามารถครอบตัดได้ที่นี่",
   "or click to pick one. A picture that isn't square can be cropped here.": "หรือคลิกเพื่อเลือก รูปที่ไม่ใช่สี่เหลี่ยมจัตุรัสสามารถครอบตัดได้ที่นี่",
-  "Crop area. Arrow keys move it; Shift with arrow keys resizes it.": "พื้นที่ครอบตัด ปุ่มลูกศรใช้ย้าย กด Shift พร้อมปุ่มลูกศรเพื่อปรับขนาด"
+  "Crop area. Arrow keys move it; Shift with arrow keys resizes it.": "พื้นที่ครอบตัด ปุ่มลูกศรใช้ย้าย กด Shift พร้อมปุ่มลูกศรเพื่อปรับขนาด",
+  "How it looks in game, at its real size.": "หน้าตาในเกม ขนาดจริง"
 }

@@ -77,6 +77,11 @@
 }
 .art-ready-info { flex: 1; min-width: 120px; font-size: .9rem; color: var(--text-mute); }
 
+.art-mock-wrap { margin-top: 12px; }
+.art-mock-wrap .drop-hint { margin-bottom: 8px; }
+.art-mock { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.art-mock canvas { display: block; max-width: 100%; border-radius: 4px; }
+
 .art-captcha { margin: 0 0 14px; }
 .art-captcha:empty { margin: 0; }
 

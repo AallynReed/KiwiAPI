@@ -356,6 +356,7 @@ services:
     volumes:
       - ./portal/html:/usr/share/nginx/html:ro
       - ./portal/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./site/static/art-mock.js:/usr/share/nginx/shared/art-mock.js:ro
     depends_on:
       - api
 

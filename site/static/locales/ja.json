@@ -3323,5 +3323,6 @@
   "Who is it for": "対象",
   "or click to pick one. A banner outside that shape can be cropped here.": "またはクリックして選択。形が合わないバナーはここで切り抜けます。",
   "or click to pick one. A picture that isn't square can be cropped here.": "またはクリックして選択。正方形でない画像はここで切り抜けます。",
-  "Crop area. Arrow keys move it; Shift with arrow keys resizes it.": "切り抜き範囲。矢印キーで移動、Shift と矢印キーでサイズ変更。"
+  "Crop area. Arrow keys move it; Shift with arrow keys resizes it.": "切り抜き範囲。矢印キーで移動、Shift と矢印キーでサイズ変更。",
+  "How it looks in game, at its real size.": "ゲーム内での見た目（実寸）。"
 }
