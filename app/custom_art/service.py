@@ -2,7 +2,7 @@
 
 A player request carries a profile picture. A club request carries a club picture,
 a club banner, or both. A profile or club picture is square; a banner is from
-square up to five times as wide as it is tall. The page crops to those shapes and
+square up to six times as wide as it is tall. The page crops to those shapes and
 this checks them again, so nothing of the wrong shape reaches the queue.
 
 Nothing is kept but what was asked for, the pictures, and the address the answer
@@ -36,7 +36,7 @@ SLOTS = {"player": ("pfp",), "club": ("pfp", "banner")}
 LANES = {("player", "pfp"): "pfp", ("club", "pfp"): "club", ("club", "banner"): "banner"}
 LANE_MODS = {"pfp": (CHAT,), "club": (CHAT,), "banner": (CHAT, NAMEPLATE)}
 LANE_LABELS = {"pfp": "profile picture", "club": "club picture", "banner": "club banner"}
-WIDEST = 5
+WIDEST = 6
 CHANGELOG_MAX = 240
 
 _BANNED = set('\t\n\r",\\/:*?<>|')

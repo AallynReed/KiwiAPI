@@ -2,7 +2,7 @@
 
    A player request carries a profile picture; a club request carries a club
    picture, a club banner, or both. A profile or club picture is square and a
-   banner is from square up to five times as wide as it is tall. A picture that
+   banner is from square up to six times as wide as it is tall. A picture that
    doesn't fit the shape, or is too big to send, opens a cropper in place and is
    sent as the cropped PNG, no bigger than 768px on its long side. The API checks
    the same rules again.
@@ -20,7 +20,7 @@
     var OUTPUT_MAX = 768;
     var MIN_SIDE = 8;
 
-    var config = { max_bytes: 3 * 1024 * 1024, widest: 5, captcha_sitekey: null, captcha_provider: "turnstile" };
+    var config = { max_bytes: 3 * 1024 * 1024, widest: 6, captcha_sitekey: null, captcha_provider: "turnstile" };
     var captcha = { lib: null, id: null, token: null };
     var busy = false;
 
