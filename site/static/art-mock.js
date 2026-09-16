@@ -1,4 +1,5 @@
-/* How a requested picture looks in Zakros UI, drawn on canvas at in-game size.
+/* How a requested picture looks in Zakros UI, drawn on canvas at in-game size and
+   shown zoomed 2x.
 
    Shared by the request page (/zakros-ui-requests) and the dev portal's custom art
    queue, which serves this same file. Sizes and colours are the Chat and Nameplate
@@ -11,10 +12,13 @@
                       on a nameplate, left-aligned with the name (Nameplate ui/Banner.as)
 
    The chrome around each picture is a likeness of the default look, not the game's
-   own rendering; the picture itself is scaled exactly as the mods scale it. */
+   own rendering; the picture itself is scaled exactly as the mods scale it. Each canvas
+   holds one pixel per game pixel and is enlarged with nearest-neighbour, so the zoom
+   shows the real pixels rather than a sharper redraw. */
 (function () {
     "use strict";
 
+    var ZOOM = 2;
     var FONT = "'Open Sans', Inter, system-ui, sans-serif";
     var BACKDROP = "#27303A";
     var PANEL = "rgba(11, 12, 14, 0.745)";
@@ -28,14 +32,13 @@
 
     function surface(host, w, h, panel) {
         var c = document.createElement("canvas");
-        var ratio = window.devicePixelRatio || 1;
-        c.width = Math.round(w * ratio);
-        c.height = Math.round(h * ratio);
-        c.style.width = w + "px";
-        c.style.height = h + "px";
+        c.width = w;
+        c.height = h;
+        c.style.width = w * ZOOM + "px";
+        c.style.height = h * ZOOM + "px";
+        c.style.imageRendering = "pixelated";
         host.appendChild(c);
         var ctx = c.getContext("2d");
-        ctx.scale(ratio, ratio);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.fillStyle = BACKDROP;
@@ -103,7 +106,7 @@
     }
 
     function nameplate(host, src, r) {
-        var w = 320;
+        var w = 280;
         var scale = Math.min(26 / r.h, (w - 16) / r.w);
         var ctx = surface(host, w, 50 + Math.ceil(r.h * scale) + 8, false);
         ctx.font = "700 30px " + FONT;
