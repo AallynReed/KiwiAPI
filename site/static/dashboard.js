@@ -505,9 +505,10 @@
         ? `<span class="dash-tag">${esc(t('unlisted'))}</span>`
         : `<span class="dash-tag dash-tag-unverified">${esc(t('draft'))}</span>`;
     const collab = p.is_collaborator ? `<span class="dash-tag">${esc(t('collaborator'))}</span>` : '';
+    const removed = p.taken_down ? `<span class="dash-tag dash-tag-removed">${esc(t('removed'))}</span>` : '';
     return `
       <a class="dash-mod-card" href="/modpacks/${encodeURIComponent(p.handle)}/${encodeURIComponent(p.slug)}">
-        <span class="dash-mod-title">${esc(p.title)} ${vis} ${collab}</span>
+        <span class="dash-mod-title">${esc(p.title)} ${removed} ${vis} ${collab}</span>
         <span class="dash-mod-meta">
           <i class="fa-solid fa-cube" aria-hidden="true"></i> ${Number(p.mod_count || 0)}
           · <i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}
@@ -746,9 +747,10 @@
         : `<span class="dash-tag dash-tag-unverified">${esc(t('draft'))}</span>`;
     const modeTag = p.mode === 'releases' ? `<span class="dash-tag">${esc(t('releases-only'))}</span>` : '';
     const collab = p.is_collaborator ? `<span class="dash-tag">${esc(t('collaborator'))}</span>` : '';
+    const removed = p.taken_down ? `<span class="dash-tag dash-tag-removed">${esc(t('removed'))}</span>` : '';
     return `
       <a class="dash-mod-card" href="/mods/${encodeURIComponent(p.handle)}/${encodeURIComponent(p.slug)}">
-        <span class="dash-mod-title">${esc(p.title)} ${vis} ${modeTag} ${collab}</span>
+        <span class="dash-mod-title">${esc(p.title)} ${removed} ${vis} ${modeTag} ${collab}</span>
         <span class="dash-mod-meta">
           <i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}
           · <i class="fa-solid fa-star" aria-hidden="true"></i> ${Number(p.star_count || 0).toLocaleString()}

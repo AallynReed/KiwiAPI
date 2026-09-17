@@ -491,10 +491,30 @@
         paint();
     }
 
+    // ─── Takedown notice ───────────────────────────────────────────────
+    // What the owner sees on a mod, modpack or profile a moderator removed.
+    // Only owners and collaborators can open taken-down content, so this is
+    // always addressed to them.
+    function takedownNotice(headline, reason) {
+        const t = (s) => (window.BTTi18n ? window.BTTi18n.t(s) : s);
+        const why = reason
+            ? `<p class="mp-takedown-label">${esc(t("Reason"))}</p><p class="mp-takedown-reason">${esc(reason)}</p>`
+            : "";
+        return `<div class="mp-takedown" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <div class="mp-takedown-body">
+                <p class="mp-takedown-head">${esc(headline)}</p>
+                <p class="mp-takedown-note">${esc(t("It's hidden from everyone else. Only you and your collaborators can still see it."))}</p>
+                ${why}
+                <p class="mp-takedown-note">${esc(t("Think this was a mistake?"))} <a href="mailto:support@aallyn.net">support@aallyn.net</a></p>
+            </div>
+        </div>`;
+    }
+
     window.BTTUtil = {
         esc, apiUrl, getJSON, fetchJSON, copy, debounce, timeAgo, getFocusable, trapFocus,
         segmentGaps, boardIconName, boardIconImg, crownHtml,
         delveKind, delveDepth, delveRunMinutes, delveClock, delveReading, delveGap,
-        siteLang, textVersions, pickLang, localized, modeHint,
+        siteLang, textVersions, pickLang, localized, modeHint, takedownNotice,
     };
 })();

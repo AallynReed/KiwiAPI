@@ -227,6 +227,7 @@
   border-radius: 999px; padding: 2px 8px;
 }
 .mh-badge-draft { color: #ffce6b; background: rgba(255,206,107,.14); }
+.mh-badge-removed { color: #ff8fa0; background: rgba(255,107,129,.14); }
 .mh-badge-unlisted { color: var(--text-soft); background: rgba(255,255,255,.07); }
 .mh-badge-uploaded { color: #7fd4c8; background: rgba(127,212,200,.14); }
 .mh-badge-beta { color: #c4a2ff; background: rgba(163,113,247,.16); }

@@ -126,7 +126,7 @@
       : d.visibility === 'unlisted'
         ? `<span class="mp-badge mp-badge-unlisted">${esc(t('Unlisted'))}</span>` : '';
     const taken = d.taken_down
-      ? `<div class="mp-takedown"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('This modpack has been taken down.'))} ${d.takedown_reason ? esc(d.takedown_reason) : ''}</div>` : '';
+      ? BTTUtil.takedownNotice(t('This modpack has been taken down.'), d.takedown_reason) : '';
     const ownerCtl = d.is_owner ? `
       <button type="button" class="mp-btn mp-btn-sm" id="mpk-edit"><i class="fa-solid fa-pen"></i> ${esc(t('Edit details'))}</button>
       <button type="button" class="mp-btn mp-btn-sm" id="mpk-banner"><i class="fa-solid fa-image"></i> ${esc(t('Banner'))}</button>

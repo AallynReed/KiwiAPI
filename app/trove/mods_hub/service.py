@@ -260,6 +260,7 @@ def project_card(p: ModProject) -> dict:
         "tags": p.tags,
         "owner_username": p.owner_username,
         "visibility": p.visibility,
+        "taken_down": p.taken_down,
         # The creator's own "still in development" flag - a badge for players, not
         # a visibility state (a beta mod is public and downloadable like any other).
         "is_beta": p.is_beta,

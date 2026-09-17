@@ -97,7 +97,7 @@
   function render() {
     const p = state.profile;
     const taken = p.taken_down
-      ? `<div class="mp-takedown"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('This profile has been removed by a moderator.'))} ${p.takedown_reason ? esc(p.takedown_reason) : ''}</div>` : '';
+      ? BTTUtil.takedownNotice(t('This profile has been removed by a moderator.'), p.takedown_reason) : '';
     const main = readmeHTML(p) + modsHTML(p);
     const side = aboutHTML(p) + featuredHTML(p);
     $root.innerHTML = headerHTML(p) + taken + `<div class="mpf-layout">
@@ -246,7 +246,8 @@
       ? `<img class="mh-card-banner" src="${imageUrl(cardSha, 708)}" alt="" loading="lazy" decoding="async">`
       : `<div class="mh-card-banner placeholder"><i class="fa-solid fa-cube" aria-hidden="true"></i></div>`;
     const tags = (m.tags || []).slice(0, 4).map((tg) => `<span class="mh-card-tag">${esc(tg)}</span>`).join('');
-    const badge = m.visibility === 'draft' ? `<span class="mh-badge mh-badge-draft">${esc(t('Draft'))}</span>`
+    const badge = m.taken_down ? `<span class="mh-badge mh-badge-removed">${esc(t('Removed'))}</span>`
+      : m.visibility === 'draft' ? `<span class="mh-badge mh-badge-draft">${esc(t('Draft'))}</span>`
       : m.visibility === 'unlisted' ? `<span class="mh-badge mh-badge-unlisted">${esc(t('Unlisted'))}</span>` : '';
     // "Beta" says the creator is still working on it - shown to every visitor.
     const betaBadge = m.is_beta ? `<span class="mh-badge mh-badge-beta">${esc(t('Beta'))}</span>` : '';

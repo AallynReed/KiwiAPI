@@ -288,7 +288,7 @@
       ? `<span class="mp-badge mp-badge-beta"><i class="fa-solid fa-flask"></i> ${esc(t('Beta'))}</span>` : '';
     const tags = (d.tags || []).map((x) => `<span class="mp-tag">${esc(catName(x))}</span>`).join('');
     const taken = d.taken_down
-      ? `<div class="mp-takedown"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(t('This mod has been removed by a moderator.'))} ${d.takedown_reason ? esc(d.takedown_reason) : ''}</div>` : '';
+      ? BTTUtil.takedownNotice(t('This mod has been removed by a moderator.'), d.takedown_reason) : '';
     // Header download: a direct link for a single release, but a dropdown to pick
     // when there are several (so it never silently grabs just the latest).
     const published = (d.releases || []).filter((r) => r.status === 'published');

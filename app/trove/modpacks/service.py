@@ -241,6 +241,7 @@ def pack_card(p: ModpackProject) -> dict:
         "tags": p.tags,
         "owner_username": p.owner_username,
         "visibility": p.visibility,
+        "taken_down": p.taken_down,
         "banner_sha": p.banner_sha,
         # First preview so a card with no banner can fall back to it (cards only).
         "preview_sha": p.preview_shas[0] if p.preview_shas else None,

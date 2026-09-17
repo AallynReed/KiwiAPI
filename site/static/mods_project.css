@@ -336,9 +336,18 @@
 .mp-beta-note i { color: #c4a2ff; }
 
 .mp-takedown {
+  display: flex; gap: 12px; align-items: flex-start;
   border: 1px solid rgba(255,107,129,.4); background: rgba(255,107,129,.08);
-  color: var(--accent-red); border-radius: var(--radius); padding: 12px 14px; font-size: .9rem;
+  border-radius: var(--radius); padding: 14px 16px; font-size: .9rem;
 }
+.mp-takedown > i { color: var(--accent-red); font-size: 1.1rem; margin-top: 2px; }
+.mp-takedown-body { min-width: 0; }
+.mp-takedown-body p { margin: 0; }
+.mp-takedown-head { color: var(--accent-red); font-weight: 700; }
+.mp-takedown-note { color: var(--text-mute); margin-top: 4px !important; }
+.mp-takedown-label { color: var(--text-mute); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; margin-top: 10px !important; }
+.mp-takedown-reason { color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 2px !important; }
+.mp-takedown a { color: var(--accent); }
 
 /* Attribution banner - keeps the original work prominently credited. */
 .mp-attribution {

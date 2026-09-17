@@ -545,6 +545,10 @@
   background: rgba(249,199,79,.12);
   color: #f9c74f;
 }
+.dash-tag-removed {
+  background: rgba(255,107,129,.14);
+  color: #ff8fa0;
+}
 .dash-tag-verified {
   background: rgba(93,208,120,.14);
   color: #5dd078;
@@ -829,7 +833,7 @@
 }
 /* Neutral pill for the bare .dash-tag (off) - the verified/unverified
    modifiers supply their own colours. */
-.dash-tag:not(.dash-tag-verified):not(.dash-tag-unverified) {
+.dash-tag:not(.dash-tag-verified):not(.dash-tag-unverified):not(.dash-tag-removed) {
   background: rgba(255,255,255,.06);
   color: var(--text-mute);
 }

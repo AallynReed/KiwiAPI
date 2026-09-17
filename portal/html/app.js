@@ -4139,6 +4139,29 @@ async function renderClaims() {
   loadUnames();
 }
 
+// Asks for the reason a moderator is removing something; the owner sees it on the
+// content page (and by email if they opted in). Resolves true once it's taken down.
+function openTakedown(kind, label, path) {
+  return new Promise((resolve) => {
+    const overlay = modal(`Take down ${kind}`, `
+      <p class="hint" style="margin:0 0 10px"><strong>${esc(label)}</strong> will disappear from public view.
+        The owner can still open it and will see this reason, plus how to appeal.</p>
+      <label for="takedown-reason">Reason shown to the owner</label>
+      <textarea id="takedown-reason" rows="4" maxlength="2000" required
+        placeholder="e.g. Contains assets copied from another creator's mod without permission."></textarea>`,
+      async (ov) => {
+        const reason = ov.querySelector("#takedown-reason").value.trim();
+        if (reason.length < 3) throw new Error("Give the owner a reason.");
+        await API.call(path, { method: "POST", body: { reason } });
+        toast(`${kind[0].toUpperCase()}${kind.slice(1)} taken down`, "ok");
+        resolve(true);
+      }, "Take down");
+    new MutationObserver((_, obs) => {
+      if (!overlay.isConnected) { obs.disconnect(); resolve(false); }
+    }).observe(document.body, { childList: true });
+  });
+}
+
 // Mods hub moderation (master). "Take down" drops the project from all public
 // listings + detail reads (the owner still sees it, flagged); "Restore" reverses
 // it. Backed by /admin/mods/* (see app/admin/router.py).
@@ -4268,23 +4291,25 @@ async function renderModsModeration() {
       }
       listEl.innerHTML = data.items.map((r) => {
         const when = r.created_at ? new Date(r.created_at).toLocaleString() : "—";
+        const label = r.target_label || r.target_url;
         return `<div class="row" style="align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
             <div style="flex:1;min-width:0">
               <div style="font-weight:600">
-                <a href="https://trove.aallyn.net/mods/${encodeURIComponent(r.project_handle || "")}/${encodeURIComponent(r.project_slug)}" target="_blank" rel="noopener">${esc(r.project_slug)}</a>
+                <span class="badge muted">${esc(r.target_type)}</span>
+                <a href="https://trove.aallyn.net${esc(r.target_url)}" target="_blank" rel="noopener">${esc(label)}</a>
                 ${r.resolved ? '<span style="color:#5dd078;font-size:.74rem;font-weight:700">· resolved</span>' : ''}
               </div>
-              <div class="muted" style="font-size:.8rem">by ${esc(r.reporter_username)} · ${esc(when)}</div>
+              <div class="muted" style="font-size:.8rem">${esc(r.target_url)} · ${esc(when)}</div>
               <div style="font-size:.86rem;margin-top:3px">${esc(r.reason)}</div>
             </div>
             <div class="row" style="gap:6px;flex:0 0 auto">
-              ${r.resolved ? "" : `<button class="btn small" data-dismiss="${esc(r.id)}" data-label="${esc(r.project_slug)}">Dismiss</button>`}
-              <button class="btn small danger" data-takedown="${esc(r.project_id)}" data-label="${esc(r.project_slug)}">Take down</button>
+              ${r.resolved ? "" : `<button class="btn small" data-dismiss="${esc(r.id)}" data-label="${esc(label)}">Dismiss</button>`}
+              ${r.resolved ? "" : `<button class="btn small danger" data-takedown="${esc(r.target_id)}" data-kind="${esc(r.target_type)}" data-label="${esc(label)}">Take down</button>`}
             </div>
           </div>`;
       }).join("");
       listEl.querySelectorAll("[data-takedown]").forEach((b) =>
-        b.addEventListener("click", () => takedown(b.dataset.takedown, b.dataset.label)));
+        b.addEventListener("click", () => takedown(b.dataset.takedown, b.dataset.label, b.dataset.kind)));
       listEl.querySelectorAll("[data-dismiss]").forEach((b) =>
         b.addEventListener("click", () => dismissReport(b.dataset.dismiss, b.dataset.label)));
     } catch (ex) {
@@ -4301,14 +4326,14 @@ async function renderModsModeration() {
     } catch (ex) { toast(ex.message, "err"); }
   }
 
-  async function takedown(id, label = "", reason = "") {
-    if (!window.confirm(`Take down "${label || id}"? It will disappear from public view.`)) return;
-    try {
-      await API.call(`/admin/mods/projects/${encodeURIComponent(id)}/takedown`,
-        { method: "POST", body: { reason } });
-      toast("Mod taken down", "ok");
-      load();
-    } catch (ex) { toast(ex.message, "err"); }
+  const TAKEDOWN_PATHS = {
+    mod: (id) => `/admin/mods/projects/${encodeURIComponent(id)}/takedown`,
+    modpack: (id) => `/admin/modpacks/${encodeURIComponent(id)}/takedown`,
+    profile: (id) => `/admin/mods/profiles/${encodeURIComponent(id)}/takedown`,
+  };
+
+  async function takedown(id, label = "", kind = "mod") {
+    if (await openTakedown(kind, label || id, TAKEDOWN_PATHS[kind](id))) load();
   }
 
   async function restore(id) {
@@ -4544,7 +4569,10 @@ async function renderModsModeration() {
     } catch (ex) { el.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
   }
   async function modpackAction(id, action, label = "") {
-    if (action === "takedown" && !window.confirm(`Take down "${label || id}"? It will disappear from public view.`)) return;
+    if (action === "takedown") {
+      if (await openTakedown("modpack", label || id, `/admin/modpacks/${encodeURIComponent(id)}/takedown`)) loadModpacks();
+      return;
+    }
     try {
       await API.call(`/admin/modpacks/${encodeURIComponent(id)}/${action}`, { method: "POST" });
       toast(action === "takedown" ? "Modpack taken down" : "Modpack restored", "ok");
