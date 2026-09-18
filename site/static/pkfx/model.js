@@ -546,6 +546,7 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
       flipV: node.props.FlipV === true,
       rotateTexture: node.props.RotateTexture === true,
       repeat: node.props.TextureRepeat === true,
+      correct: toSym(node.props.Quality) === 'CorrectDeformation',
       softness: num(node.props.SoftnessDistance, 1),
       alphaRemap: node.props.AlphaRemapper || null,
       alphaCursorField: fieldName(node.props.AlphaCursorField, null),

@@ -386,6 +386,9 @@ export function mount(container, { releaseId, path, endpoint }) {
      linked newest first. The width is a half width. Without a TextureUField the texture
      tiles once per segment; with one, U is that field's raw value. */
   const RIB_CORNER = [[0, 1], [1, 1], [1, 0], [0, 0]];
+  const ONE4 = [1, 1, 1, 1], ID_SO = [1, 1, 0, 0];
+  const dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+  const ratio = (a, b) => { const x = a / b; return isFinite(x) && x > 0 ? x : 1; };
   const RIB_ROWS = [[3, 0, 2, 1], [2, 1, 3, 0], [0, 3, 1, 2], [1, 2, 0, 3], [0, 1, 3, 2], [3, 2, 0, 1], [1, 0, 2, 3], [2, 3, 1, 0]];
   function packRibbon(ls, r, eye, items) {
     const n = ls.count; if (n < 2) return;
@@ -403,12 +406,22 @@ export function mount(container, { releaseId, path, endpoint }) {
     const axisOk = r.axisField && ls.field(r.axisField);
     let o = 0;
     const cap = rib.length - 6 * RIBBON_FLOATS_PER_VERT;
-    const push = (p, u, v, c, cur, rc) => {
+    // quad-local corners and per-vertex UVFactors / UVScaleAndOffset (CorrectDeformation)
+    const QUV = [[0, 0], [0, 1], [1, 0], [1, 1]];
+    let fac = null, so = null;
+    const push = (p, u, v, c, cur, rc, q) => {
       if (rc) { u = rc[0] + u * (rc[2] - rc[0]); v = rc[1] + v * (rc[3] - rc[1]); }
       rib[o++] = p[0]; rib[o++] = p[1]; rib[o++] = p[2]; rib[o++] = u; rib[o++] = v;
       rib[o++] = sat(c[0] ?? 1); rib[o++] = sat(c[1] ?? 1); rib[o++] = sat(c[2] ?? 1); rib[o++] = sat(c[3] ?? 1);
       rib[o++] = cur;
+      rib[o++] = QUV[q][0]; rib[o++] = QUV[q][1];
+      const f = fac ? fac[q] : ONE4;
+      rib[o++] = f[0]; rib[o++] = f[1]; rib[o++] = f[2]; rib[o++] = f[3];
+      const s = so || ID_SO;
+      rib[o++] = s[0]; rib[o++] = s[1]; rib[o++] = s[2]; rib[o++] = s[3];
     };
+    const sU = r.flipU ? -1 : 1, oU = r.flipU ? 1 : 0;
+    const vf = r.flipV !== r.rotateTexture, sV = vf ? -1 : 1, oV = vf ? 1 : 0;
     for (const list of groups.values()) {
       if (list.length < 2) continue;
       list.sort((a, b) => ls.getAt(b, '__sid')[0] - ls.getAt(a, '__sid')[0]);
@@ -442,12 +455,26 @@ export function mount(container, { releaseId, path, endpoint }) {
             ? [[0, 1 - a.t], [1, 1 - a.t], [0, 1 - b.t], [1, 1 - b.t]]
             : [[f(a.t), v0], [f(a.t), v1], [f(b.t), v0], [f(b.t), v1]];
         } else uv = row.map((j) => RIB_CORNER[j]);
-        push(a.P, uv[0][0], uv[0][1], a.col, a.cur, a.rc); push(a.M, uv[1][0], uv[1][1], a.col, a.cur, a.rc); push(b.P, uv[2][0], uv[2][1], b.col, b.cur, a.rc);
-        push(a.M, uv[1][0], uv[1][1], a.col, a.cur, a.rc); push(b.M, uv[3][0], uv[3][1], b.col, b.cur, a.rc); push(b.P, uv[2][0], uv[2][1], b.col, b.cur, a.rc);
+        if (r.correct) {
+          /* CRibbonBillboarder UVFactors (FUN_1808abff0) over v0 a+, v1 a-, v2 b+, v3 b-:
+             f0 = |v3-v1| / |v2-v0|, f1 = |v3-v2| / |v1-v0|; and the UV remap job's
+             per-quad scale/offset (FUN_1808ab5e0 / FUN_1808ab850), atlas folded in. */
+          const f0 = ratio(dist(b.M, a.M), dist(b.P, a.P)), f1 = ratio(dist(b.M, b.P), dist(a.M, a.P));
+          fac = [ONE4, [f0, 1, 1, 1 / f1], [1, f1, 1 / f0, 1], ONE4];
+          let s;
+          if (readU) {
+            const d = b.t - a.t;
+            s = r.rotateTexture ? [sU, d * sV, oU, a.t * sV + oV] : [d * sU, sV, a.t * sU + oU, oV];
+          } else s = [sU, sV, oU, oV];
+          const rc = a.rc;
+          so = rc ? [s[0] * (rc[2] - rc[0]), s[1] * (rc[3] - rc[1]), rc[0] + s[2] * (rc[2] - rc[0]), rc[1] + s[3] * (rc[3] - rc[1])] : s;
+        }
+        push(a.P, uv[0][0], uv[0][1], a.col, a.cur, a.rc, 0); push(a.M, uv[1][0], uv[1][1], a.col, a.cur, a.rc, 1); push(b.P, uv[2][0], uv[2][1], b.col, b.cur, a.rc, 2);
+        push(a.M, uv[1][0], uv[1][1], a.col, a.cur, a.rc, 1); push(b.M, uv[3][0], uv[3][1], b.col, b.cur, a.rc, 3); push(b.P, uv[2][0], uv[2][1], b.col, b.cur, a.rc, 2);
       }
     }
     if (!o) return;
-    items.push({ type: 'ribbon', texture: r._tex, remapTexture: r._remap, kind: r._kind, soft: r._soft, repeat: r.repeat, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
+    items.push({ type: 'ribbon', texture: r._tex, remapTexture: r._remap, kind: r._kind, soft: r._soft, repeat: r.repeat, correct: r.correct, rotate: r.rotateTexture, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
   }
 
   const autofit = { active: true, scale: 0, t: 0, floor: null };

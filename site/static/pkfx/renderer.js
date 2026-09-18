@@ -208,11 +208,31 @@ layout(location=0) in vec3 aPos;
 layout(location=1) in vec2 aUV;
 layout(location=2) in vec4 aColor;
 layout(location=3) in float aCursor;
+layout(location=4) in vec2 aQuv;      // quad corner (0/1), CorrectDeformation only
+layout(location=5) in vec4 aFac;      // UVFactors
+layout(location=6) in vec4 aSO;       // UVScaleAndOffset
 uniform mat4 uView, uProj;
 out vec2 vUV; out vec2 vUV2; out vec4 vColor; out float vBlend; out float vCursor;
-void main(){ gl_Position = uProj*uView*vec4(aPos,1.0); vUV=aUV; vUV2=aUV; vColor=aColor; vBlend=0.0; vCursor=aCursor; }`;
+out vec2 vQuv; out vec4 vFac; out vec4 vSO;
+void main(){ gl_Position = uProj*uView*vec4(aPos,1.0); vUV=aUV; vUV2=aUV; vColor=aColor; vBlend=0.0; vCursor=aCursor;
+  vQuv=aQuv; vFac=aFac; vSO=aSO; }`;
 
-export const RIBBON_FLOATS_PER_VERT = 10; // pos3, uv2, color4, cursor1
+/* Ribbon Quality = CorrectDeformation, from the Sprites_Ribbons.hbo graph: the corner
+   UV is divided by the interpolated UVFactors per triangle of the quad (split along
+   u+v = 1), which undoes the affine stretch across a trapezoid, then RotateUV swaps
+   and UVScaleAndOffset maps it onto the texture. */
+const RFRAG = FRAG
+  .replace('in vec2 vUV; in vec2 vUV2;', 'in vec2 vUV; in vec2 vUV2; in vec2 vQuv; in vec4 vFac; in vec4 vSO;\nuniform int uCorrect; uniform int uRotate;')
+  .replace('vec4 t = mix(texture(uTex, vUV), texture(uTex, vUV2), vBlend);', `vec2 ruv = vUV;
+  if (uCorrect == 1) {
+    float tri = clamp(1e10 * (vQuv.x + vQuv.y - 1.0), 0.0, 1.0);
+    vec2 c = mix(vQuv / vFac.xy, vec2(1.0) - (vec2(1.0) - vQuv) / vFac.zw, tri);
+    if (uRotate == 1) c = c.yx;
+    ruv = c * vSO.xy + vSO.zw;
+  }
+  vec4 t = texture(uTex, ruv);`);
+
+export const RIBBON_FLOATS_PER_VERT = 20; // pos3, uv2, color4, cursor1, quv2, fac4, so4
 
 // Mesh program: instanced textured geometry with a per-instance basis (orientation*scale).
 const MVERT = `#version 300 es
@@ -313,9 +333,9 @@ export class Renderer {
     gl.bindVertexArray(null);
 
     // ribbon program + its own VAO/buffer
-    this.rprog = makeProgram(gl, RVERT, FRAG);
+    this.rprog = makeProgram(gl, RVERT, RFRAG);
     const ru = (n) => gl.getUniformLocation(this.rprog, n);
-    this.ru = { view: ru('uView'), proj: ru('uProj'), tex: ru('uTex'), remap: ru('uRemap'), hasRemap: ru('uHasRemap'), kind: ru('uKind'), depth: ru('uDepth'), soft: ru('uSoft'), dissolve: ru('uDissolve'), invRes: ru('uInvRes'), clip: ru('uClip') };
+    this.ru = { view: ru('uView'), proj: ru('uProj'), tex: ru('uTex'), remap: ru('uRemap'), hasRemap: ru('uHasRemap'), kind: ru('uKind'), depth: ru('uDepth'), soft: ru('uSoft'), dissolve: ru('uDissolve'), invRes: ru('uInvRes'), clip: ru('uClip'), correct: ru('uCorrect'), rotate: ru('uRotate') };
     // TextureRepeat ribbons wrap instead of clamping
     this.repeatSampler = gl.createSampler();
     gl.samplerParameteri(this.repeatSampler, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -331,6 +351,9 @@ export class Renderer {
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, rstride, 12);
     gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, rstride, 20);
     gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 1, gl.FLOAT, false, rstride, 36);
+    gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 2, gl.FLOAT, false, rstride, 40);
+    gl.enableVertexAttribArray(5); gl.vertexAttribPointer(5, 4, gl.FLOAT, false, rstride, 48);
+    gl.enableVertexAttribArray(6); gl.vertexAttribPointer(6, 4, gl.FLOAT, false, rstride, 64);
     gl.bindVertexArray(null);
 
     // mesh program (geometries are created per mesh via makeMeshGeometry)
@@ -438,7 +461,7 @@ export class Renderer {
 
   // items: mixed draw list, each { type: 'billboard'|'ribbon'|'mesh', drawOrder, ... }
   //   billboard: { texture, remapTexture?, kind, mode, instances, count }
-  //   ribbon:    { texture, remapTexture?, kind, soft, repeat, vertices, count }   (count = vertices)
+  //   ribbon:    { texture, remapTexture?, kind, soft, repeat, correct, rotate, vertices, count }   (count = vertices)
   //   mesh:      { geom, texture, lit, kind, instances, count }
   draw(items) {
     const gl = this.gl; this.resize();
@@ -550,6 +573,8 @@ export class Renderer {
         gl.uniform1i(u.kind, d.kind || 0);
         gl.uniform1f(u.soft, d.soft || 0);
         gl.uniform1i(u.hasRemap, d.remapTexture ? 1 : 0);
+        gl.uniform1i(u.correct, d.correct ? 1 : 0);
+        gl.uniform1i(u.rotate, d.rotate ? 1 : 0);
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, d.remapTexture || this.white);
         gl.activeTexture(gl.TEXTURE0);
