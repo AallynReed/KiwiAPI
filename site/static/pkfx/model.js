@@ -170,7 +170,8 @@ function buildLayer(ctx, desc, spawner) {
   if (se && typeof se.props.Expression === 'string') spawnScript = tryCompile(se.props.Expression);
 
   // ---- evolvers (ordered tree; localspace keeps its children nested) ----
-  const layerCtx = { ctx, samplers, fieldIndex, addField, spawnerAcc: 0 };
+  // samplerRefs: LimitDistance binds its sampler by object, not by name
+  const layerCtx = { ctx, samplers, fieldIndex, addField, spawnerAcc: 0, samplerRefs: new Set(desc.props.Samplers || []) };
   const evolvers = [];
   const state = deref(doc, (desc.props.States || [])[0]);
   if (state) for (const ref of state.props.Evolvers || []) addEvolver(layerCtx, deref(doc, ref), evolvers);
@@ -378,7 +379,50 @@ function addEvolver(lc, ev, out) {
       });
       break;
     }
-    // LimitDistance, Flocking, etc: unsupported
+    case 'CParticleEvolver_LimitDistance': {
+      // pulls Position toward the shape's surface: hard clamp of the signed distance to
+      // [HardMin, HardMax], soft relaxation toward [MinDistance, MaxDistance]
+      const ref = ev.props.DistanceSampler;
+      const so = typeof ref === 'string' && lc.samplerRefs.has(ref) ? deref(doc, ref) : null;
+      out.push({
+        type: 'limitdist',
+        sampler: (so && so.props.SamplerName) || null,
+        posField: fieldName(ev.props.PositionField, 'Position'),
+        h: num(ev.props.ParticleSamplingDistance, 0.01),
+        softness: num(ev.props.DistancesSoftness, 5),
+        max: num(ev.props.MaxDistance, 0),
+        min: num(ev.props.MinDistance, -Infinity),
+        hardMax: num(ev.props.HardMaxDistance, Infinity),
+        hardMin: num(ev.props.HardMinDistance, -Infinity),
+      });
+      break;
+    }
+    case 'CParticleEvolver_SpatialInsertion': {
+      const sl = spatialLayer(doc, ev.props.SpatialLayer);
+      if (sl) out.push({ type: 'spatialinsert', layer: sl.name, fields: sl.fields, posField: fieldName(ev.props.PositionField, 'Position') });
+      break;
+    }
+    case 'CParticleEvolver_Flocking': {
+      const sl = spatialLayer(doc, ev.props.SpatialLayer);
+      if (!sl) break;                                   // engine: must be bound to a spatial layer
+      const F = num(ev.props.ForceMagnitude, 7);
+      let mn = num(ev.props.MinSpeed, 1), mx = num(ev.props.MaxSpeed, 2);
+      if (mx < mn) [mn, mx] = [mx, mn];
+      const cosHalf = (deg) => Math.cos(deg * Math.PI / 360);
+      const rS = num(ev.props.SeparationSearchRadius, 0.8), rA = num(ev.props.AlignmentSearchRadius, 1), rC = num(ev.props.CohesionSearchRadius, 1.7);
+      out.push({
+        type: 'flocking', layer: sl.name, minSpeed: mn, maxSpeed: mx,
+        wS: num(ev.props.SeparationFactor, 0.5) * F, wA: num(ev.props.AlignmentFactor, 0.33) * F, wC: num(ev.props.CohesionFactor, 0.33) * F,
+        r2: [rS * rS, rA * rA, rC * rC], rMax: Math.max(rS, rA, rC),
+        cs: [cosHalf(num(ev.props.SeparationSearchAngle, 270)), cosHalf(num(ev.props.AlignmentSearchAngle, 90)), cosHalf(num(ev.props.CohesionSearchAngle, 190))],
+        maxN: num(ev.props.MaxNeighborCount, -1),
+        posField: fieldName(ev.props.PositionField, 'Position'),
+        velField: fieldName(ev.props.VelocityField, 'Velocity'),
+        meanField: fieldName(ev.props.MeanNeighborDirectionField, 'MeanNeighborDirection'),
+      });
+      break;
+    }
+    // unsupported evolvers are recorded and skipped
     default:
       out.push({ type: 'unsupported', cls: ev.className });
   }
@@ -411,6 +455,16 @@ function collideSpec(p, physics, collider) {
     fricField: fieldName(p.ContactFrictionField, 'Friction'),
     countField: fieldName(p.CollisionCountField, 'CollisionCount'),
   };
+}
+
+// CParticleSpatialDescriptor -> { name, fields }: the stored fields besides Position
+function spatialLayer(doc, ref) {
+  const d = deref(doc, ref);
+  const name = d && d.props.LayerName;
+  if (!name) return null;
+  const fields = [];
+  for (const r of d.props.CustomFields || []) { const f = deref(doc, r); if (f && f.props.FieldName) fields.push(f.props.FieldName); }
+  return { name, fields };
 }
 
 // a prop that names a field; empty strings and absent -> fallback

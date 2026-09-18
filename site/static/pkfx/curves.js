@@ -321,6 +321,27 @@ export class ShapeSampler {
     if (pc) r.pc = pc;
     return r;
   }
+  // signed distance to the surface (descriptor DistanceField); null for other shapes
+  distance(q) {
+    if (this.subs) return null;
+    const T = this.pos, d = [q[0] - T[0], q[1] - T[1], q[2] - T[2]];
+    if (this.type === 'SPHERE') {                   // rotation ignored; InnerRadius makes a shell
+      const m = Math.hypot(d[0], d[1], d[2]);
+      return this.inner > 0 ? Math.max(m - this.radius, this.inner - m) : m - this.radius;
+    }
+    if (this.type === 'BOX') {
+      const l = this.rot ? mat3tmul(this.rot, d) : d;
+      const qx = Math.abs(l[0]) - this.dim[0] * 0.5, qy = Math.abs(l[1]) - this.dim[1] * 0.5, qz = Math.abs(l[2]) - this.dim[2] * 0.5;
+      return Math.hypot(Math.max(qx, 0), Math.max(qy, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qy, qz), 0);
+    }
+    if (this.type === 'CYLINDER') {
+      const l = this.rot ? mat3tmul(this.rot, d) : d, r = Math.hypot(l[0], l[2]);
+      let v = Math.max(Math.abs(l[1]) - this.height * 0.5, r - this.radius);
+      if (this.inner > 0) v = Math.max(v, this.inner - r);
+      return v;
+    }
+    return null;
+  }
   projectPCoords(q) { const r = this.project(q, true); return r && r.pc ? r.pc : [0, 0, 0]; }
   /* Ray query for a Collider shape: nearest hit along o + d*t, t in [0, len], from
      either side of the surface. Sphere/ellipsoid only (the one corpus Collider). */

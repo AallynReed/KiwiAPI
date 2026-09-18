@@ -41,6 +41,7 @@ function lineCol(src, pos) {
  * @returns {{version:string|null, generator:string|null, order:string[], objects:Object<string,{className:string,id:string,props:Object}>}}
  */
 export function parsePkfx(src) {
+  if (src.charCodeAt(0) === 0xfeff) src = src.slice(1);   // UTF-8 BOM from some mod tools
   const p = new Cursor(src);
   const doc = { version: null, generator: null, order: [], objects: Object.create(null) };
 

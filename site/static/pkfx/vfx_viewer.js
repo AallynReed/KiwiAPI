@@ -175,6 +175,13 @@ export function mount(container, { releaseId, path, endpoint }) {
     renderer = new Renderer(canvas);
     const man = await (await fetch(urls.manifest(path))).json();
     if (disposed) return;
+    // Mods switch an effect off by shipping it as an empty file; nothing plays in game.
+    if (!/\S/.test(man.pkfx || '')) {
+      loading.style.display = 'none';
+      note.textContent = 'This effect is empty. The mod switches it off, so nothing plays in game.';
+      note.style.display = 'block';
+      return;
+    }
     const doc = parsePkfx(man.pkfx);
     const effect = buildEffect(doc, Math.random);
 

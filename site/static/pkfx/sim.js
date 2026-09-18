@@ -53,6 +53,9 @@ export class System {
     for (const ls of this.layers) for (const s of Object.values(ls.L.samplers)) if (s instanceof TurbulenceSampler) this._turb.push(s);
     this.time = 0;
     this.clock = 0;   // scene.Time: total seconds, not reset when the effect restarts
+    // spatial layers (SpatialInsertion fills, Flocking and spatialLayers.* scripts query):
+    // name -> [{ p, f }], refilled every frame
+    this.spatial = new Map();
     this.nextId = 0;  // SelfIDs, and (negated) spawner-instance ids for ribbon grouping
     this.reset();
   }
@@ -90,6 +93,7 @@ export class System {
     this.emitterDelta[2] = this.emitter[2] - this._emitterPrev[2];
     this._emitterPrev.set(this.emitter);
     for (const t of this._turb) t.time = this.time;
+    this.spatial.clear();
 
     for (const l of this.layers) l.spawnTick(dt);
     for (const l of this.layers) l.update(dt, false);
@@ -642,6 +646,77 @@ class LayerSim {
         }
         break;
       }
+      case 'limitdist': {
+        // CParticleKernelCPU_Evolver_LimitDistance: direction to the surface from 6 distance
+        // samples, move by the larger of the hard and soft corrections; Position only
+        if (!(dt > 0)) break;
+        const s = ev.sampler ? this.L.samplers[ev.sampler] : null;
+        if (!s || !s.distance) break;
+        const p = this.getAt(i, ev.posField), h = ev.h, V = [0, 0, 0];
+        let dp = 0, dm = 0, ok = true;
+        for (let k = 0; k < 3 && ok; k++) {
+          const a = [p[0], p[1], p[2]], b = [p[0], p[1], p[2]];
+          a[k] += h; b[k] -= h;
+          dp = s.distance(a); dm = s.distance(b);
+          if (dp == null || dm == null) ok = false;
+          else V[k] = (dm * dm - dp * dp) / (4 * h);
+        }
+        if (!ok) break;
+        const d = (dp + dm) * 0.5;                  // the engine keeps the z pair's mean
+        const sg = d < 0 || Object.is(d, -0) ? -1 : 1;
+        const hard = sg * (Math.max(0, d - ev.hardMax) - Math.max(0, ev.hardMin - d));
+        const soft = sg * (Math.max(0, d - ev.max) - Math.max(0, ev.min - d)) * (1 - Math.exp(-ev.softness * dt));
+        const amt = Math.max(hard, soft);
+        const L2 = V[0] * V[0] + V[1] * V[1] + V[2] * V[2];
+        if (!(L2 > 0) || !isFinite(L2) || !amt) break;
+        const k = amt / Math.sqrt(L2);
+        this.setAt(i, ev.posField, [p[0] + V[0] * k, p[1] + V[1] * k, p[2] + V[2] * k]);
+        break;
+      }
+      case 'spatialinsert': {
+        let list = this.sys.spatial.get(ev.layer);
+        if (!list) this.sys.spatial.set(ev.layer, list = []);
+        const f = {};
+        for (const n of ev.fields) if (this.field(n)) f[n] = this.getAt(i, n);
+        list.push({ p: this.getAt(i, ev.posField), f, self: this.getAt(i, '__sid')[0] });
+        break;
+      }
+      case 'flocking': {
+        // CParticleKernelCPU_Evolver_Flocking: separation / alignment / cohesion over the
+        // spatial layer's entries in range, added to Velocity, then speed-clamped
+        const list = this.sys.spatial.get(ev.layer);
+        if (!list || !list.length) break;
+        const P = this.getAt(i, ev.posField), V = this.getAt(i, ev.velField), self = this.getAt(i, '__sid')[0];
+        const vl = Math.hypot(V[0], V[1], V[2]);
+        if (!(vl > 0)) break;                         // engine: cos angle is NaN, nothing counts
+        const sep = [0, 0, 0], ali = [0, 0, 0], coh = [0, 0, 0], mean = [0, 0, 0];
+        let nS = 0, nA = 0, nC = 0, nAll = 0, left = ev.maxN;
+        const R2 = ev.rMax * ev.rMax;
+        for (const e of list) {
+          if (left === 0) break;
+          if (e.self === self) continue;
+          const dx = e.p[0] - P[0], dy = e.p[1] - P[1], dz = e.p[2] - P[2], dsq = dx * dx + dy * dy + dz * dz;
+          if (dsq > R2) continue;
+          if (left > 0) left--;
+          const inv = 1 / Math.sqrt(dsq + 1e-8), dir = [dx * inv, dy * inv, dz * inv];
+          const cosA = (dir[0] * V[0] + dir[1] * V[1] + dir[2] * V[2]) / vl;
+          if (dsq <= ev.r2[0] && cosA >= ev.cs[0]) { sep[0] -= dx / dsq; sep[1] -= dy / dsq; sep[2] -= dz / dsq; nS++; }
+          if (dsq <= ev.r2[1] && cosA >= ev.cs[1]) { const vn = e.f.Velocity || [0, 0, 0]; ali[0] += vn[0]; ali[1] += vn[1]; ali[2] += vn[2]; nA++; }
+          if (dsq <= ev.r2[2] && cosA >= ev.cs[2]) { coh[0] += e.p[0]; coh[1] += e.p[1]; coh[2] += e.p[2]; nC++; }
+          mean[0] += dir[0]; mean[1] += dir[1]; mean[2] += dir[2]; nAll++;
+        }
+        if (!nAll) break;
+        const nrm = (v) => { const l = Math.hypot(v[0], v[1], v[2]); return l > 0 ? [v[0] / l, v[1] / l, v[2] / l] : [0, 0, 0]; };
+        const S = nS ? nrm(sep.map((x) => x / nS)) : [0, 0, 0];
+        const A = nA ? nrm(ali.map((x, k) => x / nA - V[k])) : [0, 0, 0];
+        const C = nC ? nrm(coh.map((x, k) => x / nC - P[k])) : [0, 0, 0];
+        const nv = V.map((x, k) => x + dt * (ev.wS * S[k] + ev.wA * A[k] + ev.wC * C[k]));
+        const sp = Math.hypot(nv[0], nv[1], nv[2]);
+        const clamp = sp > ev.maxSpeed ? ev.maxSpeed / sp : sp < ev.minSpeed && sp > 0 ? ev.minSpeed / sp : 1;
+        this.setAt(i, ev.velField, nv.map((x) => x * clamp));
+        if (this.field(ev.meanField)) this.setAt(i, ev.meanField, [mean[0] / nAll, mean[1] / nAll, mean[2] / nAll, 1 / nAll]);
+        break;
+      }
       case 'script': {
         if (ev.disabled) break;
         try { ev.script.run(ctx); }
@@ -723,6 +798,14 @@ class LayerSim {
         return [rho * Math.cos(t), y, rho * Math.sin(t)];
       },
       sceneField(name) { return name === 'Time' ? [self.sys.clock] : [0]; },
+      // spatialLayers.<Layer>.neighborCount(pos, radius): entries within radius
+      spatialCount(layer, pos, r) {
+        const list = self.sys.spatial.get(layer);
+        if (!list || !pos) return 0;
+        let n = 0; const r2 = r * r;
+        for (const e of list) { const dx = e.p[0] - pos[0], dy = e.p[1] - pos[1], dz = e.p[2] - pos[2]; if (dx * dx + dy * dy + dz * dz <= r2) n++; }
+        return n;
+      },
       kill() { self._ctx._dead = true; },
       trigger() {},
     };
