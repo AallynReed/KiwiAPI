@@ -92,7 +92,7 @@ export function mount(container, { releaseId, path, endpoint }) {
   loading.innerHTML = '<span class="pkfx-spinner"></span> Loading VFX preview…';
   container.appendChild(loading);
 
-  let renderer, system, current, raf = 0, disposed = false, glowTex = null;
+  let renderer, system, current, raf = 0, disposed = false;
   const texCache = new Map(), atlasCache = new Map(), meshCache = new Map();
 
   const assetUrl = (ref) => urls.asset(ref);
@@ -123,7 +123,11 @@ export function mount(container, { releaseId, path, endpoint }) {
     if (atlasCache.has(ref)) return atlasCache.get(ref);
     try {
       const txt = await (await fetch(assetUrl(ref))).text();
-      const rects = txt.trim().split(/\r?\n/).map((l) => l.split(',').map((n) => parseFloat(n.trim())));
+      // each rect is sorted to [umin, vmin, umax, vmax]: a reversed rect does not flip
+      const rects = txt.trim().split(/\r?\n/).map((l) => {
+        const [a, b, c, d] = l.split(',').map((n) => parseFloat(n.trim()));
+        return [Math.min(a, c), Math.min(b, d), Math.max(a, c), Math.max(b, d)];
+      });
       atlasCache.set(ref, rects); return rects;
     } catch { atlasCache.set(ref, null); return null; }
   }
@@ -169,7 +173,6 @@ export function mount(container, { releaseId, path, endpoint }) {
 
   async function load() {
     renderer = new Renderer(canvas);
-    glowTex = makeGlowTexture(renderer.gl);
     const man = await (await fetch(urls.manifest(path))).json();
     if (disposed) return;
     const doc = parsePkfx(man.pkfx);
@@ -179,6 +182,8 @@ export function mount(container, { releaseId, path, endpoint }) {
     for (const layer of effect.layers) {
       for (const r of layer.renderers) {
         if (r.kind === 'billboard') {
+          // distortion only offsets the scene behind it; it writes no colour of its own
+          if (/Distortion/i.test(r.material)) { r._skip = true; continue; }
           r._tex = await loadTexture(r.diffuse);
           r._atlas = await loadAtlas(r.atlas);
           r._remap = r.alphaRemap ? await loadTexture(r.alphaRemap) : null;
@@ -188,9 +193,9 @@ export function mount(container, { releaseId, path, endpoint }) {
         } else if (r.kind === 'ribbon') {
           r._tex = await loadTexture(r.diffuse);
           r._atlas = await loadAtlas(r.atlas);
+          r._remap = r.alphaRemap ? await loadTexture(r.alphaRemap) : null;
           r._kind = kindFor(r.material);
-        } else if (r.kind === 'light') {
-          r._tex = glowTex; r._kind = 1;
+          r._soft = /_Soft/i.test(r.material) ? Math.max(r.softness, 1e-3) : 0;
         } else if (r.kind === 'mesh') {
           r._geom = await loadMesh(r.mesh);
           r._tex = await loadTexture(r.diffuse);
@@ -220,11 +225,14 @@ export function mount(container, { releaseId, path, endpoint }) {
   const rib = new Float32Array(60000 * RIBBON_FLOATS_PER_VERT);
   const mbuf = new Float32Array(4000 * MESH_FLOATS_PER_INSTANCE);
 
-  function frameRect(r, tid, alen) {
+  // TextureID -> atlas frame, clamped the way CBillboarder::FillTexcoordsFromAtlas does
+  function atlasFrame(tid, alen) {
+    let f = Math.abs(tid); if (!isFinite(f)) f = 0;
+    return Math.min(f, alen - 1);
+  }
+  function frameRect(r, f, alen) {
     // atlas rects are [u0,v0,u1,v1]; VFlipUVs mirrors v
-    let f = Math.floor(tid); if (!isFinite(f)) f = 0;
-    f = ((f % alen) + alen) % alen;
-    const rc = r._atlas[f];
+    const rc = r._atlas[Math.min(f | 0, alen - 1)];
     if (r.vflip) return [rc[0], rc[3], rc[2] - rc[0], rc[1] - rc[3]];
     return [rc[0], rc[1], rc[2] - rc[0], rc[3] - rc[1]];
   }
@@ -238,16 +246,17 @@ export function mount(container, { releaseId, path, endpoint }) {
       const i = order ? order[k] : k;
       const p = ls.getAt(i, r.positionField);
       if (!isFinite(p[0]) || !isFinite(p[1]) || !isFinite(p[2])) continue;
-      const sz = ls.getAt(i, r.sizeField), col = ls.getAt(i, r.colorField);
+      const sz = r.constantRadius > 0 ? [r.constantRadius, r.constantRadius] : ls.getAt(i, r.sizeField);
+      const col = ls.getAt(i, r.colorField);
       const rot = ls.getAt(i, r.rotationField)[0] || 0;
       let u0 = 0, v0 = r.vflip ? 1 : 0, du = 1, dv = r.vflip ? -1 : 1;
       let u02 = u0, v02 = v0, du2 = du, dv2 = dv, blend = 0;
       if (alen) {
-        const tid = ls.getAt(i, r.textureIDField)[0] || 0;
-        [u0, v0, du, dv] = frameRect(r, tid, alen);
+        const t = atlasFrame(ls.getAt(i, r.textureIDField)[0] || 0, alen), fa = t | 0;
+        [u0, v0, du, dv] = frameRect(r, fa, alen);
         if (r.softAnim) {
-          [u02, v02, du2, dv2] = frameRect(r, tid + 1, alen);
-          blend = tid - Math.floor(tid);
+          [u02, v02, du2, dv2] = frameRect(r, Math.min(fa + 1, alen - 1), alen);
+          blend = t - fa;
         } else { u02 = u0; v02 = v0; du2 = du; dv2 = dv; }
       }
       // stretch axis: the axis-aligned modes stretch along AxisField, planar uses both axis fields
@@ -280,7 +289,10 @@ export function mount(container, { releaseId, path, endpoint }) {
           : (ls.getAt(i, 'Age')[0] / (ls.getAt(i, 'Life')[0] || 1));
       }
       inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
-      inst[o++] = (sz[0] ?? 1) * sxScale; inst[o++] = (sz[1] ?? sz[0] ?? 1) * r.aspect;
+      // AspectRatio only shapes screen-aligned quads: a <= 1 narrows X, a > 1 shortens Y
+      let ar = 1, br = 1;
+      if (mode === 0) { const a = Math.max(r.aspect, 0); if (a <= 1) ar = a; else br = 1 / a; }
+      inst[o++] = (sz[0] ?? 1) * sxScale * ar; inst[o++] = (sz[1] ?? sz[0] ?? 1) * br;
       /* Saturate to 0..1. CBillboarder::FillColors packs the vertex colour to RGBA8
          with a saturating byte pack, so the engine can never see a channel above 1.
          Scripts and curves routinely produce more - the portals carry alpha 1.26 and
@@ -300,51 +312,29 @@ export function mount(container, { releaseId, path, endpoint }) {
     items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder, soft: r._soft, dissolve: r.dissolve });
   }
 
-  function packLight(ls, r, items) {
-    const n = ls.count; if (!n) return;
-    let o = 0;
-    for (let i = 0; i < n; i++) {
-      const p = ls.getAt(i, 'Position'); const col = ls.getAt(i, r.colorField);
-      if (!isFinite(p[0])) continue;
-      const sz = (r.radius || 1) * 0.5;
-      inst[o++] = p[0]; inst[o++] = p[1]; inst[o++] = p[2];
-      inst[o++] = sz; inst[o++] = sz;
-      inst[o++] = sat(col[0] ?? 1); inst[o++] = sat(col[1] ?? 1); inst[o++] = sat(col[2] ?? 1); inst[o++] = sat(col[3] ?? 1);
-      inst[o++] = 0;
-      inst[o++] = 0; inst[o++] = 0; inst[o++] = 1; inst[o++] = 1;
-      inst[o++] = 0; inst[o++] = 0; inst[o++] = 1; inst[o++] = 1;
-      inst[o++] = 0;
-      inst[o++] = 0; inst[o++] = 0; inst[o++] = 0;
-      inst[o++] = 0; inst[o++] = 1; inst[o++] = 0;
-      inst[o++] = 0;
-    }
-    const count = o / FLOATS_PER_INSTANCE;
-    if (!count) return;
-    items.push({ type: 'billboard', texture: glowTex, kind: 1, mode: 0, instances: inst.slice(0, o), count, drawOrder: r.drawOrder });
-  }
-
-  // orientation basis for a mesh particle (rotation columns scaled per-axis)
-  function meshBasis(ls, i, r, out) {
-    // start from axis fields when present, else identity
+  /* Mesh orientation, composed as SMatrixBuilder::BuildWorldMatrix does:
+     world = Forward * AxisAngle * Euler * StaticOrientation * scale, the static position
+     offset rotated but not scaled. Writes the scaled basis to `out`, the unscaled
+     rotation to `rot`. */
+  function meshBasis(ls, i, r, out, rot) {
     let m = IDENT;
     if (r.forwardAxisField && ls.field(r.forwardAxisField)) {
       const f = ls.getAt(i, r.forwardAxisField);
       const up = r.upAxisField && ls.field(r.upAxisField) ? ls.getAt(i, r.upAxisField) : [0, 1, 0];
       m = basisFromForwardUp(f, up);
-    } else if (r.upAxisField && ls.field(r.upAxisField)) {
-      m = basisFromForwardUp([0, 0, 1], ls.getAt(i, r.upAxisField));
     }
-    if (r.eulerRotationField && ls.field(r.eulerRotationField)) {
-      m = mat3mulm(m, eulerRad(ls.getAt(i, r.eulerRotationField))); // scripts write radians
-    }
-    if (r.rotationAxisField && ls.field(r.rotationAxisField)) {
-      const axis = ls.getAt(i, r.rotationAxisField);
+    const axis = r.rotationAxisField && ls.field(r.rotationAxisField) ? ls.getAt(i, r.rotationAxisField) : r.staticRotationAxis;
+    if (axis && (axis[0] || axis[1] || axis[2])) {
       const ang = r.rotationAxisAngleField && ls.field(r.rotationAxisAngleField)
         ? (ls.getAt(i, r.rotationAxisAngleField)[0] || 0)
         : (ls.getAt(i, 'Rotation')[0] || 0);
       m = mat3mulm(m, axisAngle(axis, ang));
     }
+    if (r.eulerRotationField && ls.field(r.eulerRotationField)) {
+      m = mat3mulm(m, eulerRad(ls.getAt(i, r.eulerRotationField))); // scripts write radians
+    }
     if (r.staticOrientation) m = mat3mulm(m, eulerDeg(r.staticOrientation));
+    for (let k = 0; k < 9; k++) rot[k] = m[k];
     // scale each column
     let sx = r.scale[0], sy = r.scale[1], sz = r.scale[2];
     if (r.scaleField && ls.field(r.scaleField)) {
@@ -357,7 +347,8 @@ export function mount(container, { releaseId, path, endpoint }) {
     out[6] = m[2] * sz; out[7] = m[5] * sz; out[8] = m[8] * sz;
   }
   const IDENT = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-  const BASIS = new Float32Array(9);
+  const BASIS = new Float32Array(9), ROT = new Float32Array(9);
+  const WHITE = [1, 1, 1, 1];
 
   function packMesh(ls, r, items) {
     const n = ls.count; if (!n) return;
@@ -365,14 +356,14 @@ export function mount(container, { releaseId, path, endpoint }) {
     for (let i = 0; i < n && o + MESH_FLOATS_PER_INSTANCE <= mbuf.length; i++) {
       const p = ls.getAt(i, r.positionField);
       if (!isFinite(p[0]) || !isFinite(p[1]) || !isFinite(p[2])) continue;
-      meshBasis(ls, i, r, BASIS);
-      const col = ls.getAt(i, r.colorField);
+      meshBasis(ls, i, r, BASIS, ROT);
+      const col = r.colorField && ls.field(r.colorField) ? ls.getAt(i, r.colorField) : WHITE;
       let px = p[0], py = p[1], pz = p[2];
       if (r.staticPosition) {
-        // offset is in mesh-local space
-        px += BASIS[0] * r.staticPosition[0] + BASIS[3] * r.staticPosition[1] + BASIS[6] * r.staticPosition[2];
-        py += BASIS[1] * r.staticPosition[0] + BASIS[4] * r.staticPosition[1] + BASIS[7] * r.staticPosition[2];
-        pz += BASIS[2] * r.staticPosition[0] + BASIS[5] * r.staticPosition[1] + BASIS[8] * r.staticPosition[2];
+        const [a, b, c] = r.staticPosition;
+        px += ROT[0] * a + ROT[1] * b + ROT[2] * c;
+        py += ROT[3] * a + ROT[4] * b + ROT[5] * c;
+        pz += ROT[6] * a + ROT[7] * b + ROT[8] * c;
       }
       for (let k = 0; k < 9; k++) mbuf[o++] = BASIS[k];
       mbuf[o++] = px; mbuf[o++] = py; mbuf[o++] = pz;
@@ -384,34 +375,72 @@ export function mount(container, { releaseId, path, endpoint }) {
     items.push({ type: 'mesh', geom: r._geom, texture: r._tex, lit: r._lit, kind: r._kind, instances: mbuf.slice(0, o), count, drawOrder: r.drawOrder });
   }
 
+  /* Ribbons (CRibbonBillboarder): one strip per spawner instance / parent particle,
+     linked newest first. The width is a half width. Without a TextureUField the texture
+     tiles once per segment; with one, U is that field's raw value. */
+  const RIB_CORNER = [[0, 1], [1, 1], [1, 0], [0, 0]];
+  const RIB_ROWS = [[3, 0, 2, 1], [2, 1, 3, 0], [0, 3, 1, 2], [1, 2, 0, 3], [0, 1, 3, 2], [3, 2, 0, 1], [1, 0, 2, 3], [2, 3, 1, 0]];
   function packRibbon(ls, r, eye, items) {
     const n = ls.count; if (n < 2) return;
-    // order the layer's particles oldest -> newest (the ribbon follows their path)
-    const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => ls.getAt(b, 'Age')[0] - ls.getAt(a, 'Age')[0]);
-    const C = order.map((i) => ls.getAt(i, r.positionField));
-    let o = 0;
-    const push = (p, u, v, c) => { rib[o++] = p[0]; rib[o++] = p[1]; rib[o++] = p[2]; rib[o++] = u; rib[o++] = v; rib[o++] = sat(c[0] ?? 1); rib[o++] = sat(c[1] ?? 1); rib[o++] = sat(c[2] ?? 1); rib[o++] = sat(c[3] ?? 1); };
-    const edge = (k) => {
-      const i = order[k], c = C[k];
-      const prev = C[k - 1] || c, next = C[k + 1] || c;
-      const tan = norm(sub(next, prev));
-      const toEye = norm(sub(eye, c));
-      let side = norm(cross(tan, toEye));
-      if (!isFinite(side[0]) || (side[0] === 0 && side[1] === 0 && side[2] === 0)) side = [1, 0, 0];
-      const hw = (ls.getAt(i, r.sizeField)[0] || r.width || 0.2) * 0.5;
-      const life = ls.getAt(i, 'Age')[0] / (ls.getAt(i, 'Life')[0] || 1);
-      const u = r.textureUField === 'LifeRatio' ? life : k / (n - 1);
-      const col = ls.getAt(i, r.colorField);
-      return { L: add(c, mul(side, hw)), R: sub2(c, mul(side, hw)), u, col };
-    };
-    let a = edge(0);
-    for (let k = 1; k < n; k++) {
-      const b = edge(k);
-      push(a.L, a.u, 0, a.col); push(a.R, a.u, 1, a.col); push(b.L, b.u, 0, b.col);
-      push(a.R, a.u, 1, a.col); push(b.R, b.u, 1, b.col); push(b.L, b.u, 0, b.col);
-      a = b;
+    const groups = new Map();
+    for (let i = 0; i < n; i++) {
+      const g = ls.getAt(i, '__grp')[0];
+      let list = groups.get(g); if (!list) groups.set(g, list = []);
+      list.push(i);
     }
-    items.push({ type: 'ribbon', texture: r._tex, kind: r._kind, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
+    const alen = r._atlas ? r._atlas.length : 0;
+    const row = RIB_ROWS[(r.flipU ? 1 : 0) + (r.flipV ? 2 : 0) + (r.rotateTexture ? 4 : 0)];
+    const lifeRatio = (i) => ls.getAt(i, 'Age')[0] / (ls.getAt(i, 'Life')[0] || 1);
+    const readU = r.textureUField === 'LifeRatio' ? lifeRatio
+      : r.textureUField && ls.field(r.textureUField) ? (i) => ls.getAt(i, r.textureUField)[0] : null;
+    const axisOk = r.axisField && ls.field(r.axisField);
+    let o = 0;
+    const cap = rib.length - 6 * RIBBON_FLOATS_PER_VERT;
+    const push = (p, u, v, c, cur, rc) => {
+      if (rc) { u = rc[0] + u * (rc[2] - rc[0]); v = rc[1] + v * (rc[3] - rc[1]); }
+      rib[o++] = p[0]; rib[o++] = p[1]; rib[o++] = p[2]; rib[o++] = u; rib[o++] = v;
+      rib[o++] = sat(c[0] ?? 1); rib[o++] = sat(c[1] ?? 1); rib[o++] = sat(c[2] ?? 1); rib[o++] = sat(c[3] ?? 1);
+      rib[o++] = cur;
+    };
+    for (const list of groups.values()) {
+      if (list.length < 2) continue;
+      list.sort((a, b) => ls.getAt(b, '__sid')[0] - ls.getAt(a, '__sid')[0]);
+      const C = list.map((i) => ls.getAt(i, r.positionField));
+      const E = list.map((i, k) => {
+        const c = C[k], tan = sub(C[k + 1] || c, C[k - 1] || c);
+        const w = r.widthField ? (ls.getAt(i, r.widthField)[0] || 0) : r.width;
+        let side;
+        if (r.mode === 'SideAxisAligned' && axisOk) side = norm(ls.getAt(i, r.axisField));
+        else if (r.mode === 'NormalAxisAligned' && axisOk) side = norm(cross(tan, ls.getAt(i, r.axisField)));
+        else side = norm(cross(sub(c, eye), tan));
+        if (!isFinite(side[0])) side = [1, 0, 0];
+        const cur = r._remap
+          ? (r.alphaCursorField && ls.field(r.alphaCursorField) ? ls.getAt(i, r.alphaCursorField)[0] : lifeRatio(i))
+          : 0;
+        let rc = null;
+        if (alen) {
+          const tid = r.textureIDField && ls.field(r.textureIDField) ? ls.getAt(i, r.textureIDField)[0] : r.textureID;
+          rc = r._atlas[atlasFrame(tid || 0, alen) | 0];
+        }
+        return { P: add(c, mul(side, w)), M: sub(c, mul(side, w)), col: ls.getAt(i, r.colorField), cur, rc, t: readU ? readU(i) : 0 };
+      });
+      for (let k = 0; k + 1 < E.length && o < cap; k++) {
+        const a = E[k], b = E[k + 1];
+        let uv;
+        if (readU) {
+          // [a+, a-, b+, b-]
+          const f = (t) => (r.flipU ? 1 - t : t);
+          const v0 = r.flipV ? 1 : 0, v1 = 1 - v0;
+          uv = r.rotateTexture
+            ? [[0, 1 - a.t], [1, 1 - a.t], [0, 1 - b.t], [1, 1 - b.t]]
+            : [[f(a.t), v0], [f(a.t), v1], [f(b.t), v0], [f(b.t), v1]];
+        } else uv = row.map((j) => RIB_CORNER[j]);
+        push(a.P, uv[0][0], uv[0][1], a.col, a.cur, a.rc); push(a.M, uv[1][0], uv[1][1], a.col, a.cur, a.rc); push(b.P, uv[2][0], uv[2][1], b.col, b.cur, a.rc);
+        push(a.M, uv[1][0], uv[1][1], a.col, a.cur, a.rc); push(b.M, uv[3][0], uv[3][1], b.col, b.cur, a.rc); push(b.P, uv[2][0], uv[2][1], b.col, b.cur, a.rc);
+      }
+    }
+    if (!o) return;
+    items.push({ type: 'ribbon', texture: r._tex, remapTexture: r._remap, kind: r._kind, soft: r._soft, repeat: r.repeat, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
   }
 
   const autofit = { active: true, scale: 0, t: 0, floor: null };
@@ -430,6 +459,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     // effect plays in place, the way it does in the PopcornFX editor. Trails and
     // localspace-attached layers therefore look exactly as authored.
     if (system) {
+      system.camPos = renderer.eyePosition();
       try { system.update(dt); }
       catch (e) { if (!system._crashWarned) { system._crashWarned = true; console.warn('pkfx sim error:', e); } }
     }
@@ -445,10 +475,10 @@ export function mount(container, { releaseId, path, endpoint }) {
           const r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2]; if (r2 > maxR2 && isFinite(r2)) maxR2 = r2;
         }
         for (const r of ls.L.renderers) {
+          if (r._skip) continue;
           if (r.kind === 'billboard') packBillboards(ls, r, eye, items);
           else if (r.kind === 'ribbon') packRibbon(ls, r, eye, items);
           else if (r.kind === 'mesh') packMesh(ls, r, items);
-          else if (r.kind === 'light') packLight(ls, r, items);
         }
       }
     }
@@ -618,16 +648,13 @@ const clamp = (x, a, b) => Math.min(Math.max(x, a), b);
 function eulerDeg(deg) {
   return eulerRad([(deg[0] || 0) * Math.PI / 180, (deg[1] || 0) * Math.PI / 180, (deg[2] || 0) * Math.PI / 180]);
 }
+// engine Euler builder (FUN_180609e80): yaw about Y first, then X, then Z: Rz * Rx * Ry
 function eulerRad(v) {
-  const r = [v[0] || 0, v[1] || 0, v[2] || 0];
-  const cx = Math.cos(r[0]), sx = Math.sin(r[0]);
-  const cy = Math.cos(r[1]), sy = Math.sin(r[1]);
-  const cz = Math.cos(r[2]), sz = Math.sin(r[2]);
-  return [
-    cy * cz, -cy * sz, sy,
-    sx * sy * cz + cx * sz, -sx * sy * sz + cx * cz, -sx * cy,
-    -cx * sy * cz + sx * sz, cx * sy * sz + sx * cz, cx * cy,
-  ];
+  const x = v[0] || 0, y = v[1] || 0, z = v[2] || 0;
+  const Ry = [Math.cos(y), 0, Math.sin(y), 0, 1, 0, -Math.sin(y), 0, Math.cos(y)];
+  const Rx = [1, 0, 0, 0, Math.cos(x), -Math.sin(x), 0, Math.sin(x), Math.cos(x)];
+  const Rz = [Math.cos(z), -Math.sin(z), 0, Math.sin(z), Math.cos(z), 0, 0, 0, 1];
+  return mat3mulm(mat3mulm(Rz, Rx), Ry);
 }
 function axisAngle(axis, ang) {
   const l = Math.hypot(axis[0] || 0, axis[1] || 0, axis[2] || 0) || 1;
@@ -654,19 +681,6 @@ function mat3mulm(a, b) {
     o[i * 3 + j] = a[i * 3] * b[j] + a[i * 3 + 1] * b[3 + j] + a[i * 3 + 2] * b[6 + j];
   }
   return o;
-}
-
-// soft radial-gradient texture used as the stand-in glow for Light particles
-function makeGlowTexture(gl, size = 64) {
-  const rgba = new Uint8ClampedArray(size * size * 4);
-  const c = (size - 1) / 2;
-  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-    const d = Math.hypot(x - c, y - c) / c;
-    const a = Math.max(0, 1 - d); const v = a * a * 255;
-    const o = (y * size + x) * 4;
-    rgba[o] = 255; rgba[o + 1] = 255; rgba[o + 2] = 255; rgba[o + 3] = v;
-  }
-  return makeTexture(gl, size, size, rgba);
 }
 
 if (typeof window !== 'undefined') window.PkfxViewer = { open, mount };

@@ -44,8 +44,8 @@ void main(){
        screen extent, the quad still spans |S| both ways and settles into a round blob
        instead of collapsing to a sliver.
 
-       Size.x is the HALF width here, not the full one - the axial family is the
-       exception to the 0.5 the screen and planar billboarders apply. Size.y is not
+       Size.x is the HALF width here, as it is for screen quads; only the planar
+       billboarder applies a 0.5. Size.y is not
        read at all, and the length comes purely from the axis vector, which already
        carries AxisScale (see packBillboards). */
     float L = length(aAxis);
@@ -86,11 +86,13 @@ void main(){
     vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), fwd));
     if (length(cross(vec3(0.0,1.0,0.0), fwd)) < 1e-4) right = vec3(1.0, 0.0, 0.0);
     vec3 up = cross(fwd, right);
-    world = aCenter + right*(rot.x*aSize.x) + up*(rot.y*aSize.y);
+    world = aCenter + right*(rot.x*2.0*aSize.x) + up*(rot.y*2.0*aSize.y);
   } else {
+    /* CScreenBillboarderQuad (FUN_18089d520): corners = P +- Size*(right +- up) on the
+       unit camera axes, so Size is the HALF extent. aCorner is +-0.5, hence the 2. */
     vec3 right = vec3(uView[0][0], uView[1][0], uView[2][0]);
     vec3 up    = vec3(uView[0][1], uView[1][1], uView[2][1]);
-    world = aCenter + right*(rot.x*aSize.x) + up*(rot.y*aSize.y);
+    world = aCenter + right*(rot.x*2.0*aSize.x) + up*(rot.y*2.0*aSize.y);
   }
   gl_Position = uProj * uView * vec4(world, 1.0);
   vUV = aUVRect.xy + aUV * aUVRect.zw;
@@ -183,22 +185,19 @@ void main(){
   frag = vec4(mix(vec3(0.05,0.05,0.07), vec3(0.115,0.115,0.145), d*d), 1.0);
 }`;
 
-// Ribbon program: generic textured triangles in world space.
+// Ribbon program: world-space triangles shaded by the billboard fragment shader, so
+// ribbons get the same material kinds, soft fade and alpha remapper.
 const RVERT = `#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
 layout(location=1) in vec2 aUV;
 layout(location=2) in vec4 aColor;
+layout(location=3) in float aCursor;
 uniform mat4 uView, uProj;
-out vec2 vUV; out vec4 vColor;
-void main(){ gl_Position = uProj*uView*vec4(aPos,1.0); vUV=aUV; vColor=aColor; }`;
+out vec2 vUV; out vec2 vUV2; out vec4 vColor; out float vBlend; out float vCursor;
+void main(){ gl_Position = uProj*uView*vec4(aPos,1.0); vUV=aUV; vUV2=aUV; vColor=aColor; vBlend=0.0; vCursor=aCursor; }`;
 
-const RFRAG = `#version 300 es
-precision highp float;
-in vec2 vUV; in vec4 vColor; uniform sampler2D uTex; out vec4 frag;
-void main(){ vec4 c = texture(uTex,vUV)*vColor; if(c.a<0.003) discard; frag=c; }`;
-
-export const RIBBON_FLOATS_PER_VERT = 9; // pos3, uv2, color4
+export const RIBBON_FLOATS_PER_VERT = 10; // pos3, uv2, color4, cursor1
 
 // Mesh program: instanced textured geometry with a per-instance basis (orientation*scale).
 const MVERT = `#version 300 es
@@ -282,10 +281,15 @@ export class Renderer {
     gl.bindVertexArray(null);
 
     // ribbon program + its own VAO/buffer
-    this.rprog = makeProgram(gl, RVERT, RFRAG);
-    this.ruView = gl.getUniformLocation(this.rprog, 'uView');
-    this.ruProj = gl.getUniformLocation(this.rprog, 'uProj');
-    this.ruTex = gl.getUniformLocation(this.rprog, 'uTex');
+    this.rprog = makeProgram(gl, RVERT, FRAG);
+    const ru = (n) => gl.getUniformLocation(this.rprog, n);
+    this.ru = { view: ru('uView'), proj: ru('uProj'), tex: ru('uTex'), remap: ru('uRemap'), hasRemap: ru('uHasRemap'), kind: ru('uKind'), depth: ru('uDepth'), soft: ru('uSoft'), dissolve: ru('uDissolve'), invRes: ru('uInvRes'), clip: ru('uClip') };
+    // TextureRepeat ribbons wrap instead of clamping
+    this.repeatSampler = gl.createSampler();
+    gl.samplerParameteri(this.repeatSampler, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.samplerParameteri(this.repeatSampler, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.samplerParameteri(this.repeatSampler, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.samplerParameteri(this.repeatSampler, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     this.rvao = gl.createVertexArray();
     gl.bindVertexArray(this.rvao);
     this.rbuf = gl.createBuffer();
@@ -294,6 +298,7 @@ export class Renderer {
     gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, rstride, 0);
     gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, rstride, 12);
     gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, rstride, 20);
+    gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 1, gl.FLOAT, false, rstride, 36);
     gl.bindVertexArray(null);
 
     // mesh program (geometries are created per mesh via makeMeshGeometry)
@@ -401,7 +406,7 @@ export class Renderer {
 
   // items: mixed draw list, each { type: 'billboard'|'ribbon'|'mesh', drawOrder, ... }
   //   billboard: { texture, remapTexture?, kind, mode, instances, count }
-  //   ribbon:    { texture, kind, vertices, count }   (count = vertices)
+  //   ribbon:    { texture, remapTexture?, kind, soft, repeat, vertices, count }   (count = vertices)
   //   mesh:      { geom, texture, lit, kind, instances, count }
   draw(items) {
     const gl = this.gl; this.resize();
@@ -496,17 +501,31 @@ export class Renderer {
         gl.bufferData(gl.ARRAY_BUFFER, d.instances.subarray(0, d.count * FLOATS_PER_INSTANCE), gl.DYNAMIC_DRAW);
         gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, d.count);
       } else if (d.type === 'ribbon') {
+        const u = this.ru;
         if (prog !== 'r') { prog = 'r';
           gl.useProgram(this.rprog);
-          gl.uniformMatrix4fv(this.ruView, false, view);
-          gl.uniformMatrix4fv(this.ruProj, false, proj);
-          gl.uniform1i(this.ruTex, 0);
+          gl.uniformMatrix4fv(u.view, false, view);
+          gl.uniformMatrix4fv(u.proj, false, proj);
+          gl.uniform1i(u.tex, 0);
+          gl.uniform1i(u.remap, 1);
+          gl.uniform1i(u.depth, 2);
+          gl.uniform2f(u.invRes, 1 / W, 1 / H);
+          gl.uniform2f(u.clip, NEAR, FAR);
+          gl.uniform1f(u.dissolve, 0);
           gl.bindVertexArray(this.rvao);
         }
+        gl.uniform1i(u.kind, d.kind || 0);
+        gl.uniform1f(u.soft, d.soft || 0);
+        gl.uniform1i(u.hasRemap, d.remapTexture ? 1 : 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, d.remapTexture || this.white);
+        gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, d.texture || this.white);
+        gl.bindSampler(0, d.repeat ? this.repeatSampler : null);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.rbuf);
         gl.bufferData(gl.ARRAY_BUFFER, d.vertices.subarray(0, d.count * RIBBON_FLOATS_PER_VERT), gl.DYNAMIC_DRAW);
         gl.drawArrays(gl.TRIANGLES, 0, d.count);
+        gl.bindSampler(0, null);
       } else if (d.type === 'mesh') {
         prog = null;
         gl.useProgram(this.mprog);

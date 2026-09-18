@@ -10,6 +10,11 @@
 // entry point is Eval when present.
 
 const PI = Math.PI;
+const CONSTS = {
+  pi: [PI], PI: [PI], phi: [(1 + Math.sqrt(5)) / 2], true: [1], false: [0], infinity: [Infinity],
+  _AxisX: [1, 0, 0], _AxisY: [0, 1, 0], _AxisZ: [0, 0, 1],
+};
+const fmod = (x, y) => (Math.abs(y) <= 1e-10 ? 0 : x % y);
 
 // ---------------- Values ----------------
 const S = (x) => [x];
@@ -281,7 +286,7 @@ function applyCompound(op, cur, rhs) {
     case '-=': return vsub(cur, rhs);
     case '*=': return vmul(cur, rhs);
     case '/=': return vdiv(cur, rhs);
-    case '%=': return ew(cur, rhs, (x, y) => x % y);
+    case '%=': return ew(cur, rhs, fmod);
   }
 }
 
@@ -289,7 +294,7 @@ function evalExpr(e, ctx, locals, st) {
   switch (e.k) {
     case 'num': return [e.v];
     case 'neg': return vneg(evalExpr(e.e, ctx, locals, st));
-    case 'not': return [evalExpr(e.e, ctx, locals, st)[0] ? 0 : 1];
+    case 'not': return evalExpr(e.e, ctx, locals, st).map((x) => (x ? 0 : 1));
     case 'id': return evalId(e.name, ctx, locals);
     case 'bin': return evalBin(e, ctx, locals, st);
     case 'cond': return evalExpr(e.c, ctx, locals, st)[0] ? evalExpr(e.a, ctx, locals, st) : evalExpr(e.b, ctx, locals, st);
@@ -301,7 +306,7 @@ function evalExpr(e, ctx, locals, st) {
 }
 function evalId(name, ctx, locals) {
   if (locals.has(name)) return locals.get(name);
-  if (name === 'pi' || name === 'PI') return [PI];
+  if (name in CONSTS) return CONSTS[name].slice();
   const f = ctx.getField(name);
   if (f) return f;
   const a = ctx.attribute ? ctx.attribute(name) : null;
@@ -313,17 +318,19 @@ function evalBin(e, ctx, locals, st) {
   switch (e.op) {
     case '+': return vadd(a, b); case '-': return vsub(a, b);
     case '*': return vmul(a, b); case '/': return vdiv(a, b);
-    case '%': return ew(a, b, (x, y) => x % y);
-    case '<': return [a[0] < b[0] ? 1 : 0]; case '>': return [a[0] > b[0] ? 1 : 0];
-    case '<=': return [a[0] <= b[0] ? 1 : 0]; case '>=': return [a[0] >= b[0] ? 1 : 0];
-    case '==': return [a[0] === b[0] ? 1 : 0]; case '!=': return [a[0] !== b[0] ? 1 : 0];
-    case '&&': return [a[0] && b[0] ? 1 : 0]; case '||': return [a[0] || b[0] ? 1 : 0];
+    case '%': return ew(a, b, fmod);
+    // comparisons and logic are per lane (bool vectors)
+    case '<': return ew(a, b, (x, y) => (x < y ? 1 : 0)); case '>': return ew(a, b, (x, y) => (x > y ? 1 : 0));
+    case '<=': return ew(a, b, (x, y) => (x <= y ? 1 : 0)); case '>=': return ew(a, b, (x, y) => (x >= y ? 1 : 0));
+    case '==': return ew(a, b, (x, y) => (x === y ? 1 : 0)); case '!=': return ew(a, b, (x, y) => (x !== y ? 1 : 0));
+    case '&&': return ew(a, b, (x, y) => (x && y ? 1 : 0)); case '||': return ew(a, b, (x, y) => (x || y ? 1 : 0));
   }
 }
 function evalMember(e, ctx, locals, st) {
   // parent.Field / spawner.Field  OR  vectorValue.swizzle
   if (e.obj.k === 'id' && e.obj.name === 'parent') return ctx.parentField ? (ctx.parentField(e.member) ?? [0]) : [0];
   if (e.obj.k === 'id' && e.obj.name === 'spawner') return ctx.spawnerField ? (ctx.spawnerField(e.member) ?? [0]) : [0];
+  if (e.obj.k === 'id' && e.obj.name === 'scene' && !locals.has('scene')) return ctx.sceneField ? (ctx.sceneField(e.member) ?? [0]) : [0];
   const base = evalExpr(e.obj, ctx, locals, st);
   const sw = swizzle(base, e.member);
   if (sw) return sw;
@@ -353,10 +360,15 @@ function evalCall(e, ctx, locals, st) {
   if (st.funcs.has(e.name)) { execBlock(st.funcs.get(e.name), ctx, new Map(locals), st); return [0]; }
   const fn = INTRINSICS[e.name];
   const args = e.args.map((a) => evalExpr(a, ctx, locals, st));
-  if (e.name === 'rand') return [ctx.rand(args[0] ? args[0][0] : 0, args[1] ? args[1][0] : 1)];
-  if (e.name === 'vrand') return ctx.vrand(args[0] ? args[0][0] : -1, args[1] ? args[1][0] : 1);
-  if (e.name === 'randsel') { const idx = Math.floor(ctx.rand(0, args.length)); return args[Math.min(idx, args.length - 1)]; }
-  if (e.name === 'kill') { ctx.kill(); return [0]; }
+  if (e.name === 'rand') {
+    const lo = args[0] || [0], hi = args[1] || [1];
+    if (lo.length > 1 || hi.length > 1) return ew(lo, hi, (a, b) => ctx.rand(a, b));
+    return [ctx.rand(lo[0], hi[0])];
+  }
+  if (e.name === 'vrand') return ctx.vrand(args[0] ? args[0][0] : 1, args[1] ? args[1][0] : 1);
+  // randsel(a, b[, p]): b with probability p (default 0.5)
+  if (e.name === 'randsel') { const p = args[2] ? args[2][0] : 0.5; return (ctx.rand(0, 1) < p ? args[1] : args[0]) || [0]; }
+  if (e.name === 'kill') { if (!args.length || args[0].some((x) => x)) ctx.kill(); return [0]; }
   if (e.name === 'trigger') { if (ctx.trigger) ctx.trigger(args); return [0]; }
   if (fn) return fn(...args);
   // unknown function: warn once, keep the simulation alive
@@ -378,9 +390,11 @@ function vcross(a, b) {
 function mklerp(a, b, t) { const [x, y, n] = broadcast(a, b); const tt = t.length === 1 ? new Array(n).fill(t[0]) : t; const o = new Array(n); for (let i = 0; i < n; i++) o[i] = x[i] + (y[i] - x[i]) * tt[i]; return o; }
 function smoothstep1(a, b, x) { const t = clamp1((x - a) / ((b - a) || 1e-9), 0, 1); return t * t * (3 - 2 * t); }
 
+function keepAlpha(src, rgb) { return src.length > 3 ? [rgb[0], rgb[1], rgb[2], src[3]] : rgb; }
 function rgb2hsv(c) {
   const r = c[0], g = c[1], b = c[2];
   const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  if (d <= 1e-6) return [0, 0, mx];
   let h = 0; if (d !== 0) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; }
   h /= 6; if (h < 0) h += 1;
   const s = mx === 0 ? 0 : d / mx;
@@ -388,7 +402,7 @@ function rgb2hsv(c) {
 }
 function hsv2rgb(c) {
   const h0 = Number.isFinite(c[0]) ? c[0] : 0;
-  const h = ((h0 % 1) + 1) % 1, s = c[1] || 0, v = c[2] || 0;
+  const h = ((h0 % 1) + 1) % 1, s = clamp1(c[1] || 0, 0, 1), v = c[2] || 0;
   const i = Math.floor(h * 6), f = h * 6 - i;
   const p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
   const m = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][i % 6];
@@ -408,30 +422,40 @@ const INTRINSICS = {
   asin: (a) => a.map(Math.asin), acos: (a) => a.map(Math.acos), atan: (a) => a.map(Math.atan),
   atan2: (a, b) => ew(a, b, Math.atan2),
   abs: (a) => a.map(Math.abs), floor: (a) => a.map(Math.floor), ceil: (a) => a.map(Math.ceil),
-  sign: (a) => a.map(Math.sign), sqrt: (a) => a.map(Math.sqrt), frac: (a) => a.map((x) => x - Math.floor(x)),
+  sign: (a) => a.map((x) => (x < 0 || Object.is(x, -0) ? -1 : 1)), sqrt: (a) => a.map(Math.sqrt), frac: (a) => a.map((x) => x % 1),
   exp: (a) => a.map(Math.exp), log: (a) => a.map(Math.log),
   pow: (a, b) => ew(a, b, (x, y) => Math.pow(x, y)),
   min: (a, b) => ew(a, b, Math.min), max: (a, b) => ew(a, b, Math.max),
   clamp: (a, lo, hi) => { const [x1, l1, n] = broadcast(a, lo); const hh = hi.length === 1 ? new Array(n).fill(hi[0]) : hi; return x1.map((x, i) => clamp1(x, l1[i], hh[i])); },
   saturate: (a) => sat(a),
   lerp: (a, b, t) => mklerp(a, b, t),
-  smoothlerp: (a, b, t) => mklerp(a, b, [smoothstep1(0, 1, t[0])]),
-  smoothstep: (a, b, x) => [smoothstep1(a[0], b[0], x[0])],
+  smoothlerp: (a, b, t) => mklerp(a, b, t.map((x) => x * x * (3 - 2 * x))),
+  smoothstep: (a, b, x) => ew(ew(a, b, (p, q) => q - p), ew(x, a, (p, q) => p - q), (d, v) => { const t = clamp1(v / d, 0, 1); return t * t * (3 - 2 * t); }),
   normalize: (a) => vnorm(a),
   length: (a) => [vlen(a)],
   dot: (a, b) => vdot(a, b),
   cross: (a, b) => vcross(a, b),
   distance: (a, b) => [vlen(vsub(a, b))],
   deg2rad: (a) => a.map((x) => x * PI / 180), rad2deg: (a) => a.map((x) => x * 180 / PI),
-  rgb2hsv: (a) => rgb2hsv(a), hsv2rgb: (a) => hsv2rgb(a),
+  rgb2hsv: (a) => keepAlpha(a, rgb2hsv(a)), hsv2rgb: (a) => keepAlpha(a, hsv2rgb(a)),
   linear2srgb: (a) => a.map((x) => x <= 0.0031308 ? x * 12.92 : 1.055 * Math.pow(x, 1 / 2.4) - 0.055),
   srgb2linear: (a) => a.map((x) => x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)),
-  bias: (x, e) => x.map((v) => Math.pow(clamp1(v, 0, 1), Math.pow(2, -e[0]))), // bias is defined on [0,1]
-  select: (c, a, b) => (c[0] ? a : b),
-  iif: (c, a, b) => (c[0] ? a : b),
-  rotate: (v, axis, angle) => rotateAxis(v, vnorm(axis), angle[0]),
-  wavesq: (a) => a.map((x) => ((x - Math.floor(x)) < 0.5 ? 1 : -1)), // unit square wave
+  bias: (x, e) => ew(x, e, (v, k) => Math.pow(v, (1 - k) / (1 + k))),
+  // select(a, b, c) = c ? b : a, per lane when c is a vector
+  select: (a, b, c) => pickc(c, b, a),
+  iif: (c, a, b) => pickc(c, a, b),
+  rotate: (v, axis, angle) => rotateAxis(v, axis, angle[0]),   // the axis is NOT normalized
+  wavesq: (a) => a.map((x) => { let r = x % 2; if (r < 0) r += 2; return r < 1 ? 1 : -1; }),
+  wavesaw: (a) => a.map((x) => x - Math.floor(x)),
+  wavetri: (a) => a.map((x) => Math.abs(Math.abs((x - 0.5) % 2) - 1) * 2),
+  float3suf: (...a) => mkvec(a, 3),
 };
+function pickc(c, a, b) {
+  if (c.length === 1) return c[0] ? a : b;
+  const [x, y, n] = broadcast(a, b); const o = new Array(n);
+  for (let i = 0; i < n; i++) o[i] = c[Math.min(i, c.length - 1)] ? x[i] : y[i];
+  return o;
+}
 function mkvec(args, n) {
   // float3(a) -> broadcast scalar; float3(x,y,z) -> components; float4(vec3, w) -> concat
   const flat = [];
