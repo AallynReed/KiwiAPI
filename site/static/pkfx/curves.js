@@ -279,7 +279,9 @@ export class ShapeSampler {
   }
   samplePosition(pc) { return this._eval(pcoords(pc) || this._u()).p; }
   sampleNormal(pc) { return this._eval(pcoords(pc) || this._u()).n; }
-  samplePCoords() { return this._u(); }
+  // pcoords are opaque (our 3 uniforms, the engine's packed int3): .pc keeps int
+  // declarations and int fields from truncating them
+  samplePCoords() { const u = this._u(); u.pc = true; return u; }
   /* Closest point on the SURFACE (descriptor Project, shared by the Projection and
      Attractor evolvers): [offset xyz, signed distance (negative inside)], plus .pc
      (uniforms that _eval maps back to the same point) when asked. The sphere ignores
@@ -342,7 +344,7 @@ export class ShapeSampler {
     }
     return null;
   }
-  projectPCoords(q) { const r = this.project(q, true); return r && r.pc ? r.pc : [0, 0, 0]; }
+  projectPCoords(q) { const r = this.project(q, true); const pc = r && r.pc ? r.pc.slice() : [0, 0, 0]; pc.pc = true; return pc; }
   /* Ray query for a Collider shape: nearest hit along o + d*t, t in [0, len], from
      either side of the surface. Sphere/ellipsoid only (the one corpus Collider). */
   intersect(o, d, len) {

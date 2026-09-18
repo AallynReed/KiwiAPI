@@ -15,6 +15,19 @@ const CONSTS = {
   _AxisX: [1, 0, 0], _AxisY: [0, 1, 0], _AxisZ: [0, 0, 1],
 };
 const fmod = (x, y) => (Math.abs(y) <= 1e-10 ? 0 : x % y);
+/* Integer values carry `.i`: int literals (no '.', exponent or f suffix), int()/intN(),
+   int-typed locals and fields, spawner.EmittedCount. int op int stays int, so '/'
+   truncates and '%' is the C remainder; anything with a float in it is float. */
+const I = (v) => { v.i = true; return v; };
+const keepI = (a, b, r) => (a.i && b.i ? I(r.map(Math.trunc)) : r);
+function vdivT(a, b) {
+  if (a.i && b.i) return I(ew(a, b, (x, y) => (y === 0 ? 0 : Math.trunc(x / y))));
+  return vdiv(a, b);
+}
+function vmodT(a, b) {
+  if (a.i && b.i) return I(ew(a, b, (x, y) => (y === 0 ? 0 : x % y)));
+  return ew(a, b, fmod);
+}
 
 // ---------------- Values ----------------
 const S = (x) => [x];
@@ -60,8 +73,9 @@ function tokenize(src) {
       const text = src.slice(i, j);
       let numv = Number(text);
       if (Number.isNaN(numv)) numv = parseFloat(text) || 0; // tolerate typos like "0.5.0"
-      push('num', numv);
-      if (j < n && (src[j] === 'f' || src[j] === 'F') && !/[A-Za-z0-9_]/.test(src[j + 1] || '')) j++; // C float suffix
+      const fsuf = j < n && (src[j] === 'f' || src[j] === 'F') && !/[A-Za-z0-9_]/.test(src[j + 1] || '');
+      toks.push({ t: 'num', v: numv, int: !fsuf && !/[.eE]/.test(text) });
+      if (fsuf) j++; // C float suffix
       i = j; continue;
     }
     if (/[A-Za-z_]/.test(c)) {
@@ -132,12 +146,12 @@ class Parser {
     if (this.is('op', ';')) { this.next(); return { k: 'empty' }; }
     // declaration: TYPE IDENT ('=' expr)? terminator
     if (this.is('id') && TYPE_KEYWORDS.has(this.peek().v) && this.peek(1).t === 'id') {
-      this.next(); // type
+      const type = this.next().v;
       const name = this.eat('id').v;
       let init = null;
       if (this.is('op', '=')) { this.next(); init = this.parseExpr(); }
       this.endStatement();
-      return { k: 'decl', name, init };
+      return { k: 'decl', name, init, int: /^int/.test(type) };
     }
     // assignment or expression
     const lhs = this.parseExpr();
@@ -206,7 +220,7 @@ class Parser {
     return args;
   }
   parsePrimary() {
-    if (this.is('num')) return { k: 'num', v: this.next().v };
+    if (this.is('num')) { const tk = this.next(); return { k: 'num', v: tk.v, int: tk.int }; }
     if (this.is('op', '(')) { this.next(); const e = this.parseExpr(); this.eat('op', ')'); return e; }
     if (this.is('id')) {
       const name = this.next().v;
@@ -249,7 +263,11 @@ function execStmt(s, ctx, locals, st) {
   switch (s.k) {
     case 'block': return execBlock(s, ctx, new Map(locals), st);
     case 'empty': return;
-    case 'decl': { const v = s.init ? evalExpr(s.init, ctx, locals, st) : [0]; locals.set(s.name, v.slice()); return; }
+    case 'decl': {
+      const v = s.init ? evalExpr(s.init, ctx, locals, st) : [0];
+      locals.set(s.name, s.int ? I(v.pc ? v.slice() : v.map(Math.trunc)) : v.slice());
+      return;
+    }
     case 'exprstmt': evalExpr(s.expr, ctx, locals, st); return;
     case 'assign': return execAssign(s, ctx, locals, st);
   }
@@ -276,7 +294,8 @@ function execAssign(s, ctx, locals, st) {
   } else {
     next = applyCompound(s.op, cur, rhs);
   }
-  if (locals.has(name)) locals.set(name, next.slice());
+  // an int-typed local stays an int
+  if (locals.has(name)) locals.set(name, cur.i ? I(rhs.pc && s.op === '=' ? next.slice() : next.map(Math.trunc)) : next.slice());
   else ctx.setField(name, next);
 }
 function applyCompound(op, cur, rhs) {
@@ -285,15 +304,15 @@ function applyCompound(op, cur, rhs) {
     case '+=': return vadd(cur, rhs);
     case '-=': return vsub(cur, rhs);
     case '*=': return vmul(cur, rhs);
-    case '/=': return vdiv(cur, rhs);
-    case '%=': return ew(cur, rhs, fmod);
+    case '/=': return vdivT(cur, rhs);
+    case '%=': return vmodT(cur, rhs);
   }
 }
 
 function evalExpr(e, ctx, locals, st) {
   switch (e.k) {
-    case 'num': return [e.v];
-    case 'neg': return vneg(evalExpr(e.e, ctx, locals, st));
+    case 'num': return e.int ? I([e.v]) : [e.v];
+    case 'neg': { const a = evalExpr(e.e, ctx, locals, st); const r = vneg(a); return a.i ? I(r) : r; }
     case 'not': return evalExpr(e.e, ctx, locals, st).map((x) => (x ? 0 : 1));
     case 'id': return evalId(e.name, ctx, locals);
     case 'bin': return evalBin(e, ctx, locals, st);
@@ -316,9 +335,9 @@ function evalId(name, ctx, locals) {
 function evalBin(e, ctx, locals, st) {
   const a = evalExpr(e.left, ctx, locals, st), b = evalExpr(e.right, ctx, locals, st);
   switch (e.op) {
-    case '+': return vadd(a, b); case '-': return vsub(a, b);
-    case '*': return vmul(a, b); case '/': return vdiv(a, b);
-    case '%': return ew(a, b, fmod);
+    case '+': return keepI(a, b, vadd(a, b)); case '-': return keepI(a, b, vsub(a, b));
+    case '*': return keepI(a, b, vmul(a, b)); case '/': return vdivT(a, b);
+    case '%': return vmodT(a, b);
     // comparisons and logic are per lane (bool vectors)
     case '<': return ew(a, b, (x, y) => (x < y ? 1 : 0)); case '>': return ew(a, b, (x, y) => (x > y ? 1 : 0));
     case '<=': return ew(a, b, (x, y) => (x <= y ? 1 : 0)); case '>=': return ew(a, b, (x, y) => (x >= y ? 1 : 0));
@@ -333,7 +352,7 @@ function evalMember(e, ctx, locals, st) {
   if (e.obj.k === 'id' && e.obj.name === 'scene' && !locals.has('scene')) return ctx.sceneField ? (ctx.sceneField(e.member) ?? [0]) : [0];
   const base = evalExpr(e.obj, ctx, locals, st);
   const sw = swizzle(base, e.member);
-  if (sw) return sw;
+  if (sw) return base.i ? I(sw) : sw;
   return [0];
 }
 function evalMethod(e, ctx, locals, st) {
@@ -419,10 +438,10 @@ const INTRINSICS = {
   float2: (...a) => mkvec(a, 2),
   float3: (...a) => mkvec(a, 3),
   float4: (...a) => mkvec(a, 4),
-  int: (a) => [Math.trunc(a ? a[0] : 0)],
-  int2: (...a) => mkvec(a, 2).map(Math.trunc),
-  int3: (...a) => mkvec(a, 3).map(Math.trunc),
-  int4: (...a) => mkvec(a, 4).map(Math.trunc),
+  int: (a) => I([Math.trunc(a ? a[0] : 0)]),
+  int2: (...a) => I(mkvec(a, 2).map(Math.trunc)),
+  int3: (...a) => I(mkvec(a, 3).map(Math.trunc)),
+  int4: (...a) => I(mkvec(a, 4).map(Math.trunc)),
   sin: (a) => a.map(Math.sin), cos: (a) => a.map(Math.cos), tan: (a) => a.map(Math.tan),
   asin: (a) => a.map(Math.asin), acos: (a) => a.map(Math.acos), atan: (a) => a.map(Math.atan),
   atan2: (a, b) => ew(a, b, Math.atan2),

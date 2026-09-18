@@ -149,15 +149,15 @@ function buildLayer(ctx, desc, spawner) {
   const { doc, rng, globalSamplers } = ctx;
   // ---- fields ----
   const fields = []; const fieldIndex = {};
-  const addField = (name, comp, tf) => {
+  const addField = (name, comp, tf, isInt) => {
     if (fieldIndex[name]) { if (tf && !fieldIndex[name].tf) fieldIndex[name].tf = tf; return; }
-    fieldIndex[name] = { offset: 0, comp, tf: tf || null }; fields.push({ name, comp });
+    fieldIndex[name] = { offset: 0, comp, tf: tf || null, int: !!isInt }; fields.push({ name, comp });
   };
   for (const [name, comp] of Object.entries(BUILTINS)) addField(name, comp);
   for (const ref of desc.props.CustomFields || []) {
     const f = deref(doc, ref); if (!f) continue;
     const comp = FIELD_COMP[toSym(f.props.FieldType)] ?? 1;
-    addField(f.props.FieldName, comp, toSym(f.props.TransformFilter));
+    addField(f.props.FieldName, comp, toSym(f.props.TransformFilter), /^int/.test(toSym(f.props.FieldType) || ''));
   }
 
   // ---- samplers (descriptor-local + global) ----

@@ -761,9 +761,14 @@ class LayerSim {
         if (name === 'LifeRatio') return [self._ctx._lr];
         if (name === 'dt') return [self._ctx._dt];
         const fi = self.L.fieldIndex[name]; if (!fi) return null;
-        return self.getAt(self._ctx._i, name);
+        const v = self.getAt(self._ctx._i, name);
+        if (fi.int) v.i = true;
+        return v;
       },
-      setField(name, val) { self.setAt(self._ctx._i, name, val); },
+      setField(name, val) {
+        const fi = self.L.fieldIndex[name];
+        self.setAt(self._ctx._i, name, fi && fi.int && !val.pc ? val.map(Math.trunc) : val);
+      },
       hasField(name) { return !!self.L.fieldIndex[name]; },
       sampler(name) { return self.L.samplers[name] || null; },
       attribute(name) { return (self.attributes && self.attributes[name]) || null; },
@@ -777,7 +782,7 @@ class LayerSim {
       spawnerField(name) {
         const c = self._ctx;
         if (name === 'LifeRatio') return self.getAt(c._i, '__sLR');
-        if (name === 'EmittedCount') return self.getAt(c._i, '__sEC');
+        if (name === 'EmittedCount') { const v = self.getAt(c._i, '__sEC'); v.i = true; return v; }
         if (name === 'Age') return self.getAt(c._i, '__sAge');
         if (name === 'SpawnCount') return [c._spawnCount || (self.L.spawn ? self.L.spawn.count : 0)];
         return [0];
