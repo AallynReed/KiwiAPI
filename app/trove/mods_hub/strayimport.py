@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import UTC, datetime
 
 import httpx
 
@@ -168,10 +169,19 @@ async def _fetch_release(client: httpx.AsyncClient, dl: dict) -> dict | None:
         "fileid": fileid, "fmt": fmt, "data": data,
         "tag": str(dl.get("version") or fileid),
         "changelog": dl.get("changes") or "",
+        "published_at": _upload_time(dl),
         "props": props,
         "title_prop": (props.get("title") or "").strip(),
         "tmod_author": (props.get("author") or "").strip() or None,
     }
+
+
+def _upload_time(dl: dict) -> datetime | None:
+    try:
+        ts = int(dl.get("date") or 0)
+    except (TypeError, ValueError):
+        return None
+    return datetime.fromtimestamp(ts, UTC) if ts > 0 else None
 
 
 def _resolve_author(parsed: dict | None, fallback: str) -> str:
@@ -191,16 +201,19 @@ async def _write_release(proj: ModProject, parsed: dict) -> None:
     filename = (f"{parsed['title_prop']}.tmod" if fmt == "tmod" and parsed["title_prop"]
                 else f"{_slugify(proj.title)}.{fmt}")
     rel = await ModRelease.find_one(ModRelease.project_id == proj.id)   # one release per stray mod
+    published_at = parsed["published_at"] or utcnow()
+    proj.last_release_at = published_at
     if rel is None:
         await ModRelease(
             project_id=proj.id, owner_id=None, tag=parsed["tag"], branch="main", title="",
             changelog=parsed["changelog"], release_format=fmt, tmod_sha=sha, tmod_size=len(data),
             tmod_filename=filename, tmod_properties=parsed["props"],
-            status="published", published_at=utcnow(),
+            status="published", published_at=published_at,
         ).insert()
     else:
         rel.tag, rel.release_format, rel.tmod_sha = parsed["tag"], fmt, sha
         rel.tmod_size, rel.tmod_filename, rel.tmod_properties = len(data), filename, parsed["props"]
+        rel.published_at = published_at
         if parsed["changelog"]:
             rel.changelog = parsed["changelog"]
         rel.updated_at = utcnow()
@@ -270,6 +283,7 @@ async def _upsert_mod(client: httpx.AsyncClient, mod: dict, *, resync: bool) -> 
     )
     await proj.insert()
     await _write_release(proj, parsed)
+    await proj.save()
     return "pending" if status == "pending" else "imported"
 
 
