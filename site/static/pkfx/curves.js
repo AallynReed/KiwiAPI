@@ -110,24 +110,29 @@ function clampLimits(o, min, max) {
   return o;
 }
 
-// A baked motion path: `AnimResource` names a mesh, but what the baker actually
-// wrote is the sibling `.pkan` (the corpus's spline .hcf configs say
-// `Geometry = false; Animation = true;`, so several have no .pkmm at all).
-//
-// A .pkan is the same text HBO format as a .pkfx, so the effect parser reads it:
+// A baked motion path (CParticleSamplerAnimTrack): `AnimResource` names a mesh, but the
+// animation lives in the sibling `.pkan`, a text HBO file:
 //   CAnimationClip { EntityStreams -> CAnimationTrack { Channels -> CSamplerCurve } }
-// with one curve per BindingSemantic (Translation / Rotation / Scale).
+// with one curve per BindingSemantic (Translation / Rotation as euler degrees / Scale).
+// The resource arrives over the network: construction records the path, the viewer
+// parses the .pkan and calls load(); until then samplePosition returns the placement.
 //
-// The resource arrives over the network, so construction only records the path;
-// the viewer parses the .pkan and calls `load()`. Until then every channel reads
-// zero, which is what the sampler did before it was implemented.
+// samplePosition(u): time = t0 + u*(t1 - t0) over the track's key range (the curves
+// clamp at the ends), point = T(t) + R(t)*(S(t) * 0), then the sampler's own placement
+// Position + Euler * (Scale * point); TransformTranslate/Rotate/Scale switch those
+// stages off.
 export class AnimTrackSampler {
   constructor(obj) {
-    this.resource = typeof obj.props.AnimResource === 'string' ? obj.props.AnimResource : null;
-    this.length = 1;      // clip duration in seconds
-    this.channels = null;
+    const p = obj.props;
+    this.resource = typeof p.AnimResource === 'string' ? p.AnimResource : null;
+    this.trackIndex = Math.max(0, Math.trunc(num(p.AnimTrackIndex, 0)));
+    this.mode = (p.TransformTranslate !== false ? 1 : 0) | (p.TransformRotate !== false ? 2 : 0) | (p.TransformScale !== false ? 4 : 0);
+    const eul = toNums(p.EulerOrientation) || [0, 0, 0];
+    this.locT = toNums(p.Position) || [0, 0, 0];
+    this.locR = eul[0] || eul[1] || eul[2] ? eulerMatrix(eul) : null;
+    this.locS = toNums(p.Scale) || [1, 1, 1];
+    this.tracks = [];
   }
-  // The animation always lives in the .pkan beside the named mesh.
   resourceRef() {
     return this.resource ? this.resource.replace(/\.[^.\\/]+$/, '.pkan') : null;
   }
@@ -135,38 +140,52 @@ export class AnimTrackSampler {
     let clip = null;
     for (const id of doc.order) if (doc.objects[id].className === 'CAnimationClip') { clip = doc.objects[id]; break; }
     if (!clip) return false;
-    this.length = Math.max(num(clip.props.LengthInSeconds, 1), 1e-6);
-    const channels = {};
+    this.tracks = [];
     for (const tref of clip.props.EntityStreams || []) {
       const track = deref(doc, tref);
       if (!track) continue;
+      const slot = {};
       for (const cref of track.props.Channels || []) {
         const ch = deref(doc, cref);
         if (!ch) continue;
-        const sem = typeof ch.props.BindingSemantic === 'string' ? ch.props.BindingSemantic : '';
+        const sem = ch.props.BindingSemantic;
+        if (sem !== 'Translation' && sem !== 'Rotation' && sem !== 'Scale') continue;
         const times = toNums(ch.props.Times) || [];
-        if (!sem || !times.length || channels[sem]) continue;   // first track to define a channel wins
-        const values = toNums(ch.props.FloatValues) || [];
-        const tangents = toNums(ch.props.FloatTangents) || [];
-        const comp = compCount(ch.props.ValueType, times, values);
-        channels[sem] = new Curve(times, values, tangents, comp, toSym(ch.props.Interpolator) === 'Linear');
+        const c = new Curve(times, toNums(ch.props.FloatValues) || [], toNums(ch.props.FloatTangents) || [], 3, toSym(ch.props.Interpolator) === 'Linear');
+        c.tMin = times.length ? Math.min(...times) : 0;
+        c.tMax = times.length ? Math.max(...times) : 1;
+        c.ok = times.length > 1;
+        slot[sem] = c;
       }
+      const cs = [slot.Translation, slot.Rotation, slot.Scale].filter(Boolean);
+      if (!cs.length) continue;
+      this.tracks.push({ T: slot.Translation, R: slot.Rotation, S: slot.Scale,
+        t0: Math.min(...cs.map((c) => c.tMin)), t1: Math.max(...cs.map((c) => c.tMax)) });
     }
-    this.channels = channels;
-    return Object.keys(channels).length > 0;
+    return this.tracks.length > 0;
   }
-  // Scripts pass a 0..1 cursor (`samplePosition(LifeRatio)`) — traverse the whole
-  // clip over that range rather than treating the argument as seconds.
-  _sample(sem, cursor, absent) {
-    const c = this.channels && this.channels[sem];
-    if (!c) return absent.slice();
-    const u = cursor == null ? 0 : (cursor[0] ?? cursor);
-    return c.sample(u * this.length);
+  _transform(cursor, p0, mode) {
+    if (!mode) return p0.slice();
+    let p = p0.slice();
+    const tr = this.tracks.length ? this.tracks[Math.min(this.trackIndex, this.tracks.length - 1)] : null;
+    if (tr) {
+      const u = cursor == null ? 0 : (cursor[0] ?? cursor);
+      const span = tr.t1 - tr.t0;
+      const t = Number.isFinite(span) && span !== 0 ? tr.t0 + span * u : u;
+      if (mode & 4 && tr.S && tr.S.ok) { const sc = tr.S.sample(t); p = [p[0] * sc[0], p[1] * sc[1], p[2] * sc[2]]; }
+      if (mode & 2 && tr.R && tr.R.ok) p = mat3mul(eulerMatrix(tr.R.sample(t)), p);
+      if (mode & 1 && tr.T && tr.T.ok) { const d = tr.T.sample(t); p = [p[0] + d[0], p[1] + d[1], p[2] + d[2]]; }
+    }
+    if (mode & 4) p = [p[0] * this.locS[0], p[1] * this.locS[1], p[2] * this.locS[2]];
+    if (mode & 2 && this.locR) p = mat3mul(this.locR, p);
+    if (mode & 1) p = [p[0] + this.locT[0], p[1] + this.locT[1], p[2] + this.locT[2]];
+    return p;
   }
-  samplePosition(cursor) { return this._sample('Translation', cursor, [0, 0, 0]); }
-  sampleRotation(cursor) { return this._sample('Rotation', cursor, [0, 0, 0]); }
-  sampleScale(cursor) { return this._sample('Scale', cursor, [1, 1, 1]); }
-  sampleNormal() { return [0, 1, 0]; }
+  samplePosition(cursor) { return this._transform(cursor, [0, 0, 0], this.mode); }
+  // the rotation-only path the axis methods take
+  axisSide(c) { return this._transform(c, [1, 0, 0], this.mode & 2); }
+  axisUp(c) { return this._transform(c, [0, 1, 0], this.mode & 2); }
+  axisForward(c) { return this._transform(c, [0, 0, 1], this.mode & 2); }
   sample(cursor) { return this.samplePosition(cursor); }
 }
 
