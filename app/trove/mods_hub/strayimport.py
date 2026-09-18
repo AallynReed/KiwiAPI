@@ -17,6 +17,8 @@ Per the chosen policy (see the modder/admin decisions):
     the shared CAS.
   - A later **resync** refreshes download counts + re-mirrors changed files on existing
     mods, and adds newly-discovered mods as **pending** (hidden) for admin approval.
+  - An **author-scoped** import brings in only one upstream author's mods (approved) and,
+    given a site user, hands each one straight to them.
 
 The run is a throttled, resumable background job (idempotent by ``source_id``; a file is
 only re-fetched when its Trovesaurus ``fileid`` changes), with progress in
@@ -31,6 +33,7 @@ import logging
 import httpx
 
 from app.core.utils import iso, utcnow
+from app.site_auth.models import SiteUser
 from app.trove import tmod
 from app.trove.mods_hub import store
 from app.trove.mods_hub.models import (
@@ -44,6 +47,7 @@ from app.trove.mods_hub.service import (
     _clean_tags,
     _slugify,
     _unique_slug,
+    handover_stray,
 )
 
 logger = logging.getLogger("kiwi.mods_hub.strayimport")
@@ -271,7 +275,8 @@ async def _upsert_mod(client: httpx.AsyncClient, mod: dict, *, resync: bool) -> 
 
 # --- the job ---------------------------------------------------------------
 
-async def run(resync: bool) -> None:
+async def run(resync: bool, author_id: str | None = None,
+              owner: SiteUser | None = None) -> None:
     st = await _state()
     st.running = True
     st.phase = "resyncing" if resync else "importing"
@@ -288,6 +293,9 @@ async def run(resync: bool) -> None:
             data = r.json()
             mods = list(data.values()) if isinstance(data, dict) else data
             mods = [m for m in mods if isinstance(m, dict) and m.get("id")]
+            if author_id:
+                mods = [m for m in mods
+                        if str((m.get("author") or {}).get("ID") or "") == author_id]
             st.total = len(mods)
             await st.save()
             for i, mod in enumerate(mods):
@@ -301,6 +309,8 @@ async def run(resync: bool) -> None:
                         st.pending_added += 1
                     elif outcome == "failed":
                         st.failed += 1
+                    if owner is not None:
+                        await _hand_to(owner, str(mod.get("id")))
                 except Exception:
                     st.failed += 1
                     logger.warning("trovesaurus: mod %s failed", mod.get("id"), exc_info=True)
@@ -320,14 +330,26 @@ async def run(resync: bool) -> None:
         await st.save()
 
 
-async def start(resync: bool, *, force: bool = False) -> dict:
+async def _hand_to(owner: SiteUser, source_id: str) -> None:
+    proj = await ModProject.find_one(
+        ModProject.source == SOURCE, ModProject.source_id == source_id)
+    if proj is not None and proj.is_stray and proj.stray_status != "rejected":
+        await handover_stray(proj, owner)
+
+
+async def start(resync: bool, *, force: bool = False, author_id: str | None = None,
+                owner: SiteUser | None = None) -> dict:
     """Kick off an import/resync as a background task. Refuses if one is already
-    running (unless ``force``, or the running flag is stale from a crash)."""
+    running (unless ``force``, or the running flag is stale from a crash). With
+    ``author_id`` only that upstream author's mods are imported (as a bulk import),
+    each handed to ``owner`` when given."""
     global _task
     st = await _state()
     if st.running and not force:
         age = (utcnow() - st.started_at).total_seconds() if st.started_at else 1e9
         if age < _STALE_RUN_SECONDS:
             return {"started": False, "reason": "An import is already running.", **state_dto(st)}
-    _task = asyncio.create_task(run(resync))
-    return {"started": True, "resync": resync}
+    if author_id:
+        resync = False
+    _task = asyncio.create_task(run(resync, author_id, owner))
+    return {"started": True, "resync": resync, "author_id": author_id}

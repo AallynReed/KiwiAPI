@@ -4223,6 +4223,7 @@ async function renderModsModeration() {
       <div class="row" style="gap:8px">
         <button type="button" class="btn small" data-act="stray-import">Bulk import</button>
         <button type="button" class="btn small" data-act="stray-resync">Resync</button>
+        <button type="button" class="btn small" data-act="stray-author">Import one author…</button>
       </div>
     </div>
     <div class="card">
@@ -4426,6 +4427,18 @@ async function renderModsModeration() {
       loadStrayState();
     } catch (ex) { toast(ex.message, "err"); }
   }
+  async function startAuthorImport() {
+    const author = (window.prompt("Source author ID (the number in their user= profile link):") || "").trim();
+    if (!author) return;
+    const owner = (window.prompt("Hand their mods to User ID (blank = leave them stray):") || "").trim();
+    const params = new URLSearchParams({ author_id: author });
+    if (owner) params.set("owner_id", owner);
+    try {
+      const r = await API.call(`/admin/mods/stray/import?${params.toString()}`, { method: "POST" });
+      toast(r.started ? "Author import started" : (r.reason || "Already running"), r.started ? "ok" : "err");
+      loadStrayState();
+    } catch (ex) { toast(ex.message, "err"); }
+  }
   async function loadPending() {
     const el = document.getElementById("stray-pending");
     const statusEl = document.getElementById("stray-status");
@@ -4613,6 +4626,7 @@ async function renderModsModeration() {
   document.querySelector('[data-act="stray-refresh"]').addEventListener("click", loadStrayState);
   document.querySelector('[data-act="stray-import"]').addEventListener("click", () => startImport(false));
   document.querySelector('[data-act="stray-resync"]').addEventListener("click", () => startImport(true));
+  document.querySelector('[data-act="stray-author"]').addEventListener("click", startAuthorImport);
   document.querySelector('[data-act="stray-pending-refresh"]').addEventListener("click", loadPending);
   document.getElementById("stray-status").addEventListener("change", loadPending);
   let _strayQT;

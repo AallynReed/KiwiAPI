@@ -1195,11 +1195,22 @@ async def stray_import_state() -> dict:
 async def stray_import_start(
     resync: bool = Query(default=False, description="Refresh existing + queue new mods as pending, vs a fresh bulk import."),
     force: bool = Query(default=False, description="Start even if a run looks in-progress (clears a stale flag)."),
+    author_id: str | None = Query(default=None, description="Only import this upstream author's mods."),
+    owner_id: str | None = Query(default=None, description="Site user to hand that author's mods to."),
 ) -> dict:
     """Kick off the stray-mod import (``resync=false`` = bulk import, visible;
-    ``resync=true`` = refresh + queue new mods for approval). Runs in the background."""
+    ``resync=true`` = refresh + queue new mods for approval). ``author_id`` limits it
+    to one upstream author and ``owner_id`` hands those mods to a site user. Runs in
+    the background."""
     from app.trove.mods_hub import strayimport
-    return await strayimport.start(resync, force=force)
+    author_id = (author_id or "").strip() or None
+    owner = None
+    if owner_id and owner_id.strip():
+        if author_id is None:
+            raise APIError(status_code=400, code=ErrorCode.bad_request,
+                           message="An owner needs an author id.")
+        owner = await _load_site_user_or_404(owner_id.strip(), "No such user.")
+    return await strayimport.start(resync, force=force, author_id=author_id, owner=owner)
 
 
 @router.get("/mods/stray")
