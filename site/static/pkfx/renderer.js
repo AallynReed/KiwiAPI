@@ -22,13 +22,28 @@ layout(location=10) in vec3 aAxis2;   // planar normal
 layout(location=11) in float aCursor; // alpha-remap cursor
 uniform mat4 uView, uProj;
 uniform vec3 uEye;
-uniform int uMode;  // 0 screen, 1 viewpos, 2 axis, 3 spheroid, 4 planar
+uniform int uMode;  // 0 screen, 1 viewpos, 2 axis, 3 spheroid, 4 planar, 5 capsule
 out vec2 vUV; out vec2 vUV2; out vec4 vColor; out float vBlend; out float vCursor;
 void main(){
   float s = sin(aRot), c = cos(aRot);
   vec2 rot = vec2(aCorner.x*c - aCorner.y*s, aCorner.x*s + aCorner.y*c);
   vec3 world;
-  if (uMode == 3) {
+  if (uMode == 5) {
+    /* CAxialBillboarderCapsule (FUN_1808a3650): an axial quad plus a pointed cap at
+       each end. N = normalize(P - eye), S = normalize(cross(axis, N)) * Size.x,
+       U = cross(N, S) (the axis flattened onto the screen, length Size.x).
+       aCorner.x is the vertex role: 0 Top+S, 1 Bot+S, 2 Bot-S, 3 Top-S, 4 Top+U, 5 Bot-U,
+       with Top/Bot = P +- 0.5*axis (axis already carries AxisScale). */
+    vec3 N = normalize(aCenter - uEye);
+    vec3 S = cross(aAxis, N);
+    float sl = length(S);
+    S = sl > 1e-4 ? S / sl : normalize(cross(N, vec3(uView[0][0], uView[1][0], uView[2][0])));
+    S *= aSize.x;
+    vec3 U = cross(N, S);
+    vec3 top = aCenter + 0.5*aAxis, bot = aCenter - 0.5*aAxis;
+    int r = int(aCorner.x + 0.5);
+    world = r == 0 ? top + S : r == 1 ? bot + S : r == 2 ? bot - S : r == 3 ? top - S : r == 4 ? top + U : bot - U;
+  } else if (uMode == 3) {
     /* Spheroidal, transcribed from CAxialBillboarderSpheroidal's position generator
        (FUN_1808a25a0 in HH-Bridge_r.dll). The engine computes, per particle:
 
@@ -239,6 +254,11 @@ void main(){
 }`;
 export const MESH_FLOATS_PER_INSTANCE = 16; // basis 9, center 3, color 4
 
+// Capsule: 4 triangles over 6 roles (the engine's index list), role + diagonal UV per
+// vertex: the +S edge maps to (1,1), -S to (0,0), the top tip (1,0), the bottom tip (0,1).
+const CAPSULE_UV = [[1, 1], [1, 1], [0, 0], [0, 0], [1, 0], [0, 1]];
+const CAPSULE = new Float32Array([0, 1, 2, 2, 3, 0, 3, 4, 0, 1, 5, 2].flatMap((r) => [r, 0, CAPSULE_UV[r][0], CAPSULE_UV[r][1]]));
+
 const QUAD = new Float32Array([
   // corner.xy, uv.xy
   -0.5, -0.5, 0, 1,
@@ -278,6 +298,18 @@ export class Renderer {
     setup(9, 3, 76);       // axis
     setup(10, 3, 88);      // axis2
     setup(11, 1, 100);     // cursor
+    gl.bindVertexArray(null);
+    // capsule billboards: same instance data, their own 12-vertex shape
+    this.cvao = gl.createVertexArray();
+    gl.bindVertexArray(this.cvao);
+    const capBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, capBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, CAPSULE, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
+    setup(2, 3, 0); setup(3, 2, 12); setup(4, 4, 20); setup(5, 1, 36); setup(6, 4, 40);
+    setup(7, 4, 56); setup(8, 1, 72); setup(9, 3, 76); setup(10, 3, 88); setup(11, 1, 100);
     gl.bindVertexArray(null);
 
     // ribbon program + its own VAO/buffer
@@ -486,8 +518,8 @@ export class Renderer {
           gl.uniform1i(this.u.depth, 2);
           gl.uniform2f(this.u.invRes, 1 / W, 1 / H);
           gl.uniform2f(this.u.clip, NEAR, FAR);
-          gl.bindVertexArray(this.vao);
         }
+        gl.bindVertexArray(d.mode === 5 ? this.cvao : this.vao);
         gl.uniform1i(this.u.mode, d.mode || 0);
         gl.uniform1i(this.u.kind, d.kind || 0);
         gl.uniform1f(this.u.soft, d.soft || 0);
@@ -499,7 +531,8 @@ export class Renderer {
         gl.bindTexture(gl.TEXTURE_2D, d.texture || this.white);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.instBuf);
         gl.bufferData(gl.ARRAY_BUFFER, d.instances.subarray(0, d.count * FLOATS_PER_INSTANCE), gl.DYNAMIC_DRAW);
-        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, d.count);
+        if (d.mode === 5) gl.drawArraysInstanced(gl.TRIANGLES, 0, 12, d.count);
+        else gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, d.count);
       } else if (d.type === 'ribbon') {
         const u = this.ru;
         if (prog !== 'r') { prog = 'r';

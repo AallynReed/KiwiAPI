@@ -22,10 +22,10 @@ const FIELD_COMP = { float: 1, float2: 2, float3: 3, float4: 4, int: 1, int2: 2,
 const BUILTINS = { Life: 1, Age: 1, Position: 3, Velocity: 3, Size: 2, Color: 4, Rotation: 1, TextureID: 1, __rand: 1, __sLR: 1, __sEC: 1, __sAge: 1, __born: 1, __dt: 1, __sid: 1, __grp: 1 };
 
 // Billboard mode -> renderer geometry program:
-// 0 screen-aligned, 1 viewpos-aligned, 2 axis-stretched, 3 axis-spheroidal, 4 planar
+// 0 screen-aligned, 1 viewpos-aligned, 2 axis-stretched, 3 axis-spheroidal, 4 planar, 5 capsule
 const BB_MODE = {
   ScreenAlignedQuad: 0, ScreenPoint: 0, ViewposAlignedQuad: 1,
-  VelocityAxisAligned: 2, VelocityCapsuleAlign: 2, VelocitySpheroidalAlign: 3,
+  VelocityAxisAligned: 2, VelocityCapsuleAlign: 5, VelocitySpheroidalAlign: 3,
   PlanarAlignedQuad: 4, NormalAxisAligned: 2, SideAxisAligned: 2,
 };
 

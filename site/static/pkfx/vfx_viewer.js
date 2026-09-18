@@ -268,7 +268,7 @@ export function mount(container, { releaseId, path, endpoint }) {
       }
       // stretch axis: the axis-aligned modes stretch along AxisField, planar uses both axis fields
       let ax = 0, ay = 0, az = 0, bx = 0, by = 1, bz = 0, sxScale = 1;
-      if (mode === 2 || mode === 3) {
+      if (mode === 2 || mode === 3 || mode === 5) {
         /* BillboardMode picks the billboarder; AxisField picks the data it stretches along,
            and Velocity is only its default. Forcing Velocity whenever the mode name started
            with "Velocity" threw away 2,307 authored AxisFields - and those layers usually have
@@ -451,13 +451,17 @@ export function mount(container, { releaseId, path, endpoint }) {
   }
 
   const autofit = { active: true, scale: 0, t: 0, floor: null };
-  function frame() {
+  // Real elapsed time per frame, so the effect plays at game speed on any refresh rate
+  // (a fixed 1/60 per frame ran 2.4x fast at 144 Hz). Capped so a paused tab doesn't jump.
+  let lastT = 0;
+  function frame(now) {
     if (disposed) return;
-    tick();
+    const dt = lastT && now > lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60;
+    lastT = now;
+    tick(dt);
     raf = requestAnimationFrame(frame);
   }
-  function tick() {
-    const dt = Math.min(0.05, 1 / 60);
+  function tick(dt = 1 / 60) {
     autofit.t += dt;
     // Opening window used to gauge the effect's footprint for the initial framing.
     const measuring = autofit.t < 1.5;
