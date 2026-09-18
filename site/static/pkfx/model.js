@@ -255,6 +255,11 @@ function addEvolver(lc, ev, out) {
         forceField: fieldName(ev.props.ForceField, 'Force'),
         windField: fieldName(ev.props.VelocityFieldField, 'VelocityField'),
       });
+      // WorldInteractionMode appends the shared collision kernel right after physics
+      if ({ OneWay: 1, TwoWay: 2 }[toSym(ev.props.WorldInteractionMode)]) {
+        lc.addField('__cflags', 1); lc.addField('__prev', 3);
+        out.push(collideSpec(ev.props, true, null));
+      }
       break;
     case 'CParticleEvolver_Field': {
       const curve = makeSampler(doc, deref(doc, ev.props.Evaluator), rng);
@@ -357,10 +362,55 @@ function addEvolver(lc, ev, out) {
         forceField: fieldName(ev.props.ForceField, 'Force'),
       });
       break;
-    // Collisions, Projection, Flocking, etc: unsupported
+    case 'CParticleEvolver_Collisions':
+      lc.addField('__cflags', 1); lc.addField('__prev', 3);
+      out.push(collideSpec(ev.props, false, typeof ev.props.Collider === 'string' && ev.props.Collider ? ev.props.Collider : null));
+      break;
+    case 'CParticleEvolver_Projection': {
+      // moves Position onto the shape's surface each frame; optional int3 pcoords out
+      const pcField = fieldName(ev.props.OutputParametricCoordsField, null);
+      if (pcField) lc.addField(pcField, 3);
+      out.push({
+        type: 'projection',
+        shape: typeof ev.props.Shape === 'string' ? ev.props.Shape : null,
+        posField: fieldName(ev.props.PositionField, 'Position'),
+        pcField,
+      });
+      break;
+    }
+    // LimitDistance, Flocking, etc: unsupported
     default:
       out.push({ type: 'unsupported', cls: ev.className });
   }
+}
+
+// Collision response settings (CParticleEvolver_Collisions, or Physics' own collision
+// props). Defaults differ between the two: ContactFriction 0.7 vs 0, DefaultMass vs Mass.
+function collideSpec(p, physics, collider) {
+  return {
+    type: 'collide', collider,
+    die: p.DieOnContact === true,
+    maxBounces: num(p.BouncesBeforeDeath, 1),
+    rest: num(p.BounceRestitution, 0.5),
+    coulomb: toSym(p.ContactFrictionModel) === 'Coulomb',
+    friction: num(p.ContactFriction, physics ? 0 : 0.7),
+    restCombine: toSym(p.RestitutionCombineMode) || 'Surface',
+    fricCombine: toSym(p.FrictionCombineMode) || 'Surface',
+    ignoreSurface: p.IgnoreSurfaceProperties === true,
+    offset: num(p.BounceOffset, 0.002),
+    ndotv: p.WeightBounceWithNdotV === true,
+    maxIter: Math.max(1, Math.min(6, Math.round(num(p.MaxIterations, 1)))),
+    stopFinal: p.StopIfFinalIterationHits === true,
+    event: typeof p.EventOnCollide === 'string' && p.EventOnCollide ? p.EventOnCollide : 'OnCollide',
+    eventPostVel: p.EventUsesPostContactVelocity === true,
+    mass: physics ? num(p.Mass, 1) : num(p.DefaultMass, 1),
+    posField: fieldName(p.PositionField, 'Position'),
+    velField: fieldName(p.VelocityField, 'Velocity'),
+    massField: fieldName(p.MassField, 'Mass'),
+    restField: fieldName(p.BounceResitutionField, 'BounceRestitution'),
+    fricField: fieldName(p.ContactFrictionField, 'Friction'),
+    countField: fieldName(p.CollisionCountField, 'CollisionCount'),
+  };
 }
 
 // a prop that names a field; empty strings and absent -> fallback

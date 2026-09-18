@@ -280,31 +280,70 @@ export class ShapeSampler {
   samplePosition(pc) { return this._eval(pcoords(pc) || this._u()).p; }
   sampleNormal(pc) { return this._eval(pcoords(pc) || this._u()).n; }
   samplePCoords() { return this._u(); }
-  // Attractor projection: [offset to nearest surface point (xyz), signed distance
-  // (negative inside)]. Sphere and cylinder only; anything else returns null.
-  project(q) {
+  /* Closest point on the SURFACE (descriptor Project, shared by the Projection and
+     Attractor evolvers): [offset xyz, signed distance (negative inside)], plus .pc
+     (uniforms that _eval maps back to the same point) when asked. The sphere ignores
+     rotation; the cylinder targets its side wall only, never the caps. */
+  project(q, wantPC) {
     if (this.subs) return null;
-    let l = [q[0] - this.pos[0], q[1] - this.pos[1], q[2] - this.pos[2]];
-    if (this.rot) l = mat3tmul(this.rot, l);
-    let off, d;
+    const T = this.pos, d = [q[0] - T[0], q[1] - T[1], q[2] - T[2]];
+    let off, dist, pc = null;
     if (this.type === 'SPHERE' || this.type === 'COMPLEX_ELLIPSOID') {
-      const m = Math.hypot(l[0], l[1], l[2]);
-      const n = m > 1e-9 ? [l[0] / m, l[1] / m, l[2] / m] : [0, 1, 0];
-      d = m - this.radius;
-      off = [n[0] * -d, n[1] * -d, n[2] * -d];
+      const m = Math.hypot(d[0], d[1], d[2]), R = this.radius;
+      const n = m * m < 1e-12 ? [0, 1, 0] : [d[0] / m, d[1] / m, d[2] / m];
+      dist = m - R;
+      off = [n[0] * R - d[0], n[1] * R - d[1], n[2] * R - d[2]];
+      if (wantPC) {
+        const nl = this.rot ? mat3tmul(this.rot, n) : n;
+        pc = [(nl[2] + 1) / 2, fract(Math.atan2(nl[1], nl[0]) / (2 * Math.PI)), 1 - 1e-7];
+      }
+    } else if (this.type === 'BOX') {
+      const l = this.rot ? mat3tmul(this.rot, d) : d, h = this.dim.map((x) => x * 0.5);
+      const sg = l.map((x) => (x < 0 || Object.is(x, -0) ? -1 : 1));
+      const gap = [h[0] - Math.abs(l[0]), h[1] - Math.abs(l[1]), h[2] - Math.abs(l[2])];
+      const m = Math.min(gap[0], gap[1], gap[2]), inside = m > 0;
+      // inside: out through the nearest face; outside: clamp onto the box
+      const o = inside ? gap.map((g, k) => (g === m ? g : 0) * sg[k])
+                       : l.map((x, k) => Math.min(h[k], Math.abs(x)) * sg[k] - x);
+      dist = Math.hypot(o[0], o[1], o[2]) * (inside ? -1 : 1);
+      off = this.rot ? mat3mul(this.rot, o) : o;
     } else if (this.type === 'CYLINDER') {
-      const h = this.height * 0.5, m = Math.hypot(l[0], l[2]);
-      const dr = m - this.radius, dy = Math.abs(l[1]) - h;
-      const rx = m > 1e-9 ? l[0] / m : 1, rz = m > 1e-9 ? l[2] / m : 0;
-      if (dr > 0 || dy > 0) {
-        const cr = Math.min(m, this.radius), cy = Math.max(-h, Math.min(h, l[1]));
-        off = [rx * cr - l[0], cy - l[1], rz * cr - l[2]];
-        d = Math.hypot(off[0], off[1], off[2]);
-      } else if (dr > dy) { off = [rx * -dr, 0, rz * -dr]; d = dr; }
-      else { off = [0, (l[1] < 0 ? -h : h) - l[1], 0]; d = dy; }
+      const l = this.rot ? mat3tmul(this.rot, d) : d, hh = this.height * 0.5, R = this.radius;
+      const rm = Math.hypot(l[0], l[2]);
+      const rx = rm * rm > 1e-12 ? l[0] / rm : 1, rz = rm * rm > 1e-12 ? l[2] / rm : 0;
+      const cy = Math.max(-hh, Math.min(hh, l[1]));
+      const o = [rx * R - l[0], cy - l[1], rz * R - l[2]];
+      dist = Math.hypot(o[0], o[1], o[2]) * (rm < R && Math.abs(l[1]) < hh ? -1 : 1);
+      off = this.rot ? mat3mul(this.rot, o) : o;
+      if (wantPC) pc = [fract(Math.atan2(rz, rx) / (2 * Math.PI)), this.height > 0 ? Math.min(Math.max(cy / this.height + 0.5, 0), 1 - 1e-7) : 0.5, 1 - 1e-7];
     } else return null;
-    if (this.rot) off = mat3mul(this.rot, off);
-    return [off[0], off[1], off[2], d];
+    const r = [off[0], off[1], off[2], dist];
+    if (pc) r.pc = pc;
+    return r;
+  }
+  projectPCoords(q) { const r = this.project(q, true); return r && r.pc ? r.pc : [0, 0, 0]; }
+  /* Ray query for a Collider shape: nearest hit along o + d*t, t in [0, len], from
+     either side of the surface. Sphere/ellipsoid only (the one corpus Collider). */
+  intersect(o, d, len) {
+    if (this.subs || !(this.type === 'SPHERE' || this.type === 'COMPLEX_ELLIPSOID')) return null;
+    const sc = this.scale || [1, 1, 1], R = this.radius;
+    let lo = [o[0] - this.pos[0], o[1] - this.pos[1], o[2] - this.pos[2]], ld = d;
+    if (this.rotate && this.rot) { lo = mat3tmul(this.rot, lo); ld = mat3tmul(this.rot, d); }
+    const so = [lo[0] / sc[0], lo[1] / sc[1], lo[2] / sc[2]], sd = [ld[0] / sc[0], ld[1] / sc[1], ld[2] / sc[2]];
+    const A = sd[0] * sd[0] + sd[1] * sd[1] + sd[2] * sd[2];
+    const B = so[0] * sd[0] + so[1] * sd[1] + so[2] * sd[2];
+    const C = so[0] * so[0] + so[1] * so[1] + so[2] * so[2] - R * R;
+    const disc = B * B - A * C;
+    if (!(A > 0) || disc < 0) return null;
+    const sq = Math.sqrt(disc);
+    let t = (-B - sq) / A;
+    if (t < 0) t = (-B + sq) / A;
+    if (!(t >= 0 && t <= len)) return null;
+    const hp = [so[0] + sd[0] * t, so[1] + sd[1] * t, so[2] + sd[2] * t];
+    let n = [hp[0] / sc[0], hp[1] / sc[1], hp[2] / sc[2]];
+    if (C < 0) n = [-n[0], -n[1], -n[2]];        // hit from inside: the normal faces in
+    if (this.rotate && this.rot) n = mat3mul(this.rot, n);
+    return { t, n: vnorm(n) };
   }
   position() { return [this.pos[0], this.pos[1], this.pos[2]]; }     // shape centre
   direction() { return this.rot ? mat3mul(this.rot, [0, 1, 0]) : [0, 1, 0]; }
@@ -383,5 +422,6 @@ function mat3tmul(m, v) {
   ];
 }
 
+function fract(x) { return x - Math.floor(x); }
 function vnorm(v) { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
 function num(v, d) { return typeof v === 'number' ? v : (v == null ? d : (toNums(v)?.[0] ?? d)); }

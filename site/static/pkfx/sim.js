@@ -11,6 +11,19 @@
 import { TurbulenceSampler } from './curves.js';
 
 const MAX = 20000;      // per-layer particle cap
+
+// Collision surface properties the engine uses when the scene supplies none
+// (IParticleScene defaults): restitution 1 combined by Multiply, friction 0 by Average.
+const SURF = { rest: 1, fS: 0, fK: 0, restMode: 'Multiply', fricMode: 'Average' };
+function combine(mode, a, b) {
+  switch (mode) {
+    case 'Average': return (a + b) * 0.5;
+    case 'Multiply': return a * b;
+    case 'Min': return Math.min(a, b);
+    case 'Max': return Math.max(a, b);
+    default: return a;
+  }
+}
 const MAX_EMISSIONS = 128;
 
 export class System {
@@ -24,6 +37,15 @@ export class System {
     this.emitterDelta = new Float32Array(3);
     // camera position, set by the viewer; axial Rotation evolvers read it
     this.camPos = null;
+    /* The game world stands in for as an invisible ground at the effect's origin: the
+       engine asks its scene for the first hit along a ray, and world collisions (the
+       Collisions evolver without a Collider, Physics WorldInteractionMode) land here. */
+    this.sceneIntersect = (o, d, len) => {
+      const y0 = this.emitter[1];
+      if (!(d[1] < 0) || o[1] < y0) return null;
+      const t = (o[1] - y0) / -d[1];
+      return t <= len ? { t, n: [0, 1, 0] } : null;
+    };
     this.attributes = effect.attributes || {};
     this.layers = effect.layers.map((l) => { const ls = new LayerSim(l, rng); ls.sys = this; ls.attributes = this.attributes; return ls; });
     // every turbulence sampler needs the running time for animation
@@ -312,7 +334,7 @@ class LayerSim {
   // Queue this layer's event emissions for particle i (OnSpawn/OnDeath + script events).
   // The parent's fields are snapshotted so child spawn scripts can read parent.<field>
   // even after the parent dies. OnSpawn carries no velocity, so it inherits nothing.
-  fireEvent(name, i, at) {
+  fireEvent(name, i, at, over) {
     const targets = this.L.events && this.L.events[name];
     if (!targets) return;
     const pos = at && at.length >= 3 ? at : this.getAt(i, 'Position');
@@ -323,6 +345,7 @@ class LayerSim {
       if (!snap) {
         snap = {}; for (const f of this.L.fields) snap[f.name] = this.getAt(i, f.name);
         snap.LifeRatio = [snap.Age[0] / (snap.Life[0] || 1)];
+        if (over) Object.assign(snap, over);
       }
       let vel0 = null;
       if (child.L.inheritVelocity && name !== 'OnSpawn') {
@@ -537,6 +560,86 @@ class LayerSim {
           }
         }
         this.setAt(i, ev.forceField, [vx * g, vy * g, vz * g]);
+        break;
+      }
+      case 'projection': {
+        // CParticleKernelCPU_Evolver_Projection: Position onto the shape's surface
+        if (!(dt > 0)) break;
+        const s = ev.shape ? this.L.samplers[ev.shape] : null;
+        if (!s || !s.project) break;
+        const p = this.getAt(i, ev.posField);
+        const pr = s.project(p, !!ev.pcField);
+        if (!pr) break;
+        this.setAt(i, ev.posField, [p[0] + pr[0], p[1] + pr[1], p[2] + pr[2]]);
+        if (ev.pcField && pr.pc) this.setAt(i, ev.pcField, pr.pc);
+        break;
+      }
+      case 'collide': {
+        // CParticleKernelCPU_Evolver_PhysicsCollisions: ray from last frame's position to
+        // this one; on a hit, bounce with restitution/friction and move on for the rest
+        // of the frame. Velocity is derived from the positions, not read.
+        if (!(dt > 0)) break;
+        let query = null;
+        if (ev.collider) {
+          const s = this.L.samplers[ev.collider];
+          if (s && s.intersect) query = (o, d, l) => s.intersect(o, d, l);
+        } else query = this.sys.sceneIntersect;
+        if (!query) break;
+        let P0 = this.getAt(i, '__prev'), P1 = this.getAt(i, ev.posField), rdt = dt;
+        for (let it = 0; it < ev.maxIter; it++) {
+          const dx = P1[0] - P0[0], dy = P1[1] - P0[1], dz = P1[2] - P0[2], len = Math.hypot(dx, dy, dz);
+          let flags = this.getAt(i, '__cflags')[0] | 0;
+          const dir = len * len > 1e-12 ? [dx / len, dy / len, dz / len] : null;
+          const hit = dir ? query(P0, dir, len) : null;
+          if (!hit || !(hit.t <= len)) { this.setAt(i, '__cflags', [flags & 0x7f]); break; }
+          const t = hit.t, nl = Math.hypot(hit.n[0], hit.n[1], hit.n[2]) || 1;
+          const N = [hit.n[0] / nl, hit.n[1] / nl, hit.n[2] / nl];
+          const H = [P0[0] + dir[0] * t, P0[1] + dir[1] * t, P0[2] + dir[2] * t];
+          const V = [dx / rdt, dy / rdt, dz / rdt], vl = Math.hypot(V[0], V[1], V[2]);
+          const Vd = vl > 0 ? [V[0] / vl, V[1] / vl, V[2] / vl] : [0, 0, 0];
+          const rem = (1 - t / len) * rdt;
+          const m = this.field(ev.massField) ? this.getAt(i, ev.massField)[0] : ev.mass;
+          // the counter rises on every hit; the particle dies on hit BouncesBeforeDeath+1
+          let die = ev.die, first = true;
+          if (!die) {
+            if (ev.maxBounces !== 0) { if ((flags & 0x7f) < ev.maxBounces) flags++; else die = true; }
+            first = !(flags & 0x80);
+          }
+          this.setAt(i, '__cflags', [flags | 0x80]);
+          const Pn = [H[0] + N[0] * ev.offset, H[1] + N[1] * ev.offset, H[2] + N[2] * ev.offset];
+          let e = (this.field(ev.restField) ? this.getAt(i, ev.restField)[0] : 1) * ev.rest;
+          const mu = (this.field(ev.fricField) ? this.getAt(i, ev.fricField)[0] : 1) * ev.friction;
+          let muS = mu, muK = mu;
+          if (!ev.ignoreSurface) {
+            const rm = ev.restCombine === 'Surface' ? SURF.restMode : ev.restCombine;
+            const fm = ev.fricCombine === 'Surface' ? SURF.fricMode : ev.fricCombine;
+            e = combine(rm, e, SURF.rest); muS = combine(fm, mu, SURF.fS); muK = combine(fm, mu, SURF.fK);
+          }
+          e = Math.max(e, 0);
+          if (ev.ndotv) e *= -(Vd[0] * N[0] + Vd[1] * N[1] + Vd[2] * N[2]);
+          const Vn = V[0] * N[0] + V[1] * N[1] + V[2] * N[2];
+          const Vt = [V[0] - Vn * N[0], V[1] - Vn * N[1], V[2] - Vn * N[2]], vt = Math.hypot(Vt[0], Vt[1], Vt[2]);
+          const T = vt > 1e-8 ? [Vt[0] / vt, Vt[1] / vt, Vt[2] / vt] : [0, 0, 0];
+          const im = m > 1e-8 ? 1 / m : m;
+          const jn = (1 + e) * Vn * im;
+          let jt = vt * im;
+          if (ev.coulomb) { const a = Math.abs(Vn * im); if (a * muS < jt) jt = a * muK; } else jt *= 1 - e;
+          const J = [(jn * N[0] + jt * T[0]) * m, (jn * N[1] + jt * T[1]) * m, (jn * N[2] + jt * T[2]) * m];
+          const vs = this.getAt(i, ev.velField);
+          const vPost = [vs[0] - J[0], vs[1] - J[1], vs[2] - J[2]];
+          this.setAt(i, ev.velField, vPost);
+          let P = Pn;
+          if (!die && !(it === ev.maxIter - 1 && ev.stopFinal)) {
+            P = [Pn[0] + (V[0] - J[0]) * rem, Pn[1] + (V[1] - J[1]) * rem, Pn[2] + (V[2] - J[2]) * rem];
+          }
+          this.setAt(i, ev.posField, P);
+          if (first) {
+            if (this.field(ev.countField)) this.setAt(i, ev.countField, [this.getAt(i, ev.countField)[0] + 1]);
+            this.fireEvent(ev.event, i, Pn, { Velocity: ev.eventPostVel ? vPost : V });
+          }
+          if (die) { ctx._dead = true; break; }
+          P0 = Pn; P1 = P; rdt = rem;
+        }
         break;
       }
       case 'script': {
