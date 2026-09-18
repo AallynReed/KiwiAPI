@@ -254,7 +254,7 @@ export function mount(container, { releaseId, path, endpoint }) {
       const p = ls.getAt(i, r.positionField);
       if (!isFinite(p[0]) || !isFinite(p[1]) || !isFinite(p[2])) continue;
       const sz = r.constantRadius > 0 ? [r.constantRadius, r.constantRadius] : ls.getAt(i, r.sizeField);
-      const col = ls.getAt(i, r.colorField);
+      const col = ls.field(r.colorField) ? ls.getAt(i, r.colorField) : WHITE;   // unresolved Color draws white
       const rot = ls.getAt(i, r.rotationField)[0] || 0;
       let u0 = 0, v0 = r.vflip ? 1 : 0, du = 1, dv = r.vflip ? -1 : 1;
       let u02 = u0, v02 = v0, du2 = du, dv2 = dv, blend = 0;
@@ -442,7 +442,7 @@ export function mount(container, { releaseId, path, endpoint }) {
           const tid = r.textureIDField && ls.field(r.textureIDField) ? ls.getAt(i, r.textureIDField)[0] : r.textureID;
           rc = r._atlas[atlasFrame(tid || 0, alen) | 0];
         }
-        return { P: add(c, mul(side, w)), M: sub(c, mul(side, w)), col: ls.getAt(i, r.colorField), cur, rc, t: readU ? readU(i) : 0 };
+        return { P: add(c, mul(side, w)), M: sub(c, mul(side, w)), col: ls.field(r.colorField) ? ls.getAt(i, r.colorField) : WHITE, cur, rc, t: readU ? readU(i) : 0 };
       });
       for (let k = 0; k + 1 < E.length && o < cap; k++) {
         const a = E[k], b = E[k + 1];

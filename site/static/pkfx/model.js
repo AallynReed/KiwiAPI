@@ -150,7 +150,9 @@ function buildLayer(ctx, desc, spawner) {
   // ---- fields ----
   const fields = []; const fieldIndex = {};
   const addField = (name, comp, tf, isInt) => {
-    if (fieldIndex[name]) { if (tf && !fieldIndex[name].tf) fieldIndex[name].tf = tf; return; }
+    if (!name) return;
+    // a field added twice keeps its type; the transform filters combine
+    if (fieldIndex[name]) { const f = fieldIndex[name]; if (tf && f.tf !== tf) f.tf = f.tf ? 'full' : tf; return; }
     fieldIndex[name] = { offset: 0, comp, tf: tf || null, int: !!isInt }; fields.push({ name, comp });
   };
   for (const [name, comp] of Object.entries(BUILTINS)) addField(name, comp);
@@ -159,6 +161,8 @@ function buildLayer(ctx, desc, spawner) {
     const comp = FIELD_COMP[toSym(f.props.FieldType)] ?? 1;
     addField(f.props.FieldName, comp, toSym(f.props.TransformFilter), /^int/.test(toSym(f.props.FieldType) || ''));
   }
+  // renderers create the fields they draw from (scripts never create fields)
+  declareRendererFields(doc, deref(doc, desc.props.Renderer), addField, fieldIndex);
 
   // ---- samplers (descriptor-local + global) ----
   const samplers = Object.assign({}, globalSamplers);
@@ -240,6 +244,8 @@ function addEvolver(lc, ev, out) {
   const { doc, rng } = ctx;
   switch (ev.className) {
     case 'CParticleEvolver_Physics':
+      lc.addField(fieldName(ev.props.PositionField, 'Position'), 3);
+      lc.addField(fieldName(ev.props.VelocityField, 'Velocity'), 3);
       // Mass is INVERSE mass (1/m) and 0 means no drag; a layer field named by MassField
       // overrides it per particle. Accel and Force fields add to the acceleration.
       out.push({
@@ -455,6 +461,44 @@ function collideSpec(p, physics, collider) {
     fricField: fieldName(p.ContactFrictionField, 'Friction'),
     countField: fieldName(p.CollisionCountField, 'CollisionCount'),
   };
+}
+
+/* Fields a renderer adds to its layer's declaration before any script compiles
+   (the renderers' SetupParticleDeclaration step): Position always float3 with a full
+   transform filter, a missing Size as float, TextureID only with an atlas; Ribbon and
+   Mesh likewise for their own fields. Color, Rotation and the axes are only checked. */
+function declareRendererFields(doc, node, addField, fieldIndex, depth = 0) {
+  if (!node || depth > 8) return;
+  const p = node.props, s = (v, d) => (typeof v === 'string' && v ? v : d);
+  const hasAtlas = typeof p.AtlasDefinition === 'string' && p.AtlasDefinition !== '';
+  switch (node.className) {
+    case 'CParticleRenderer_List':
+      for (const r of p.Renderers || []) declareRendererFields(doc, deref(doc, r), addField, fieldIndex, depth + 1);
+      return;
+    case 'CParticleRenderer_Billboard': {
+      addField(s(p.PositionField, 'Position'), 3, 'full');
+      const size = s(p.SizeField, 'Size');
+      if (!fieldIndex[size]) addField(size, 1);
+      if (hasAtlas) addField(s(p.TextureIDField, 'TextureID'), 1);
+      return;
+    }
+    case 'CParticleRenderer_Ribbon':
+      addField(s(p.PositionField, 'Position'), 3, 'full');
+      if (typeof p.WidthField === 'string' && p.WidthField) addField(p.WidthField, 1);
+      if (hasAtlas) addField(s(p.TextureIDField, 'TextureID'), 1);
+      return;
+    case 'CParticleRenderer_Mesh':
+      addField(s(p.MeshIdField, ''), 1);
+      addField(s(p.PositionField, 'Position'), 3, 'full');
+      addField(s(p.PositionOffsetField, ''), 3);
+      addField(s(p.ForwardAxisField, ''), 3, 'rotate');
+      addField(s(p.UpAxisField, ''), 3, 'rotate');
+      addField(s(p.EulerRotationField, ''), 3);
+      if (s(p.RotationAxisField, '') && s(p.RotationAxisAngleField, '')) {
+        addField(p.RotationAxisField, 3); addField(p.RotationAxisAngleField, 1);
+      }
+      return;
+  }
 }
 
 // CParticleSpatialDescriptor -> { name, fields }: the stored fields besides Position
