@@ -57,11 +57,12 @@ export class System {
     for (const ls of this.layers) for (const s of Object.values(ls.L.samplers)) if (s instanceof TurbulenceSampler) this._turb.push(s);
     this.time = 0;
     this.clock = 0;   // scene.Time: total seconds, not reset when the effect restarts
-    // spatial layers (SpatialInsertion fills, Flocking and spatialLayers.* scripts query):
-    // name -> [{ p, f }], refilled every frame. Read-before-insert within a frame matches the
-    // PopcornFX editor on La Creatura (legs keep spawning), although the engine's storage
-    // swaps two grids per frame - the reason the swap doesn't show was not traced.
+    // spatial layers: name -> [{ p, f }]. Double-buffered like CParticleSpatialStorage_MainMemory
+    // ::Update: SpatialInsertion writes `_spatialNext` while Flocking and spatialLayers.* read
+    // `spatial`, the previous frame's inserts; the buffers swap at the start of each frame.
+    // (La Creatura: the editor caps its legs at 10, which only the swap reproduces.)
     this.spatial = new Map();
+    this._spatialNext = new Map();
     this.nextId = 0;  // SelfIDs, and (negated) spawner-instance ids for ribbon grouping
     this.reset();
   }
@@ -99,7 +100,7 @@ export class System {
     this.emitterDelta[2] = this.emitter[2] - this._emitterPrev[2];
     this._emitterPrev.set(this.emitter);
     for (const t of this._turb) t.time = this.time;
-    this.spatial.clear();
+    const sp = this.spatial; this.spatial = this._spatialNext; this._spatialNext = sp; sp.clear();
 
     for (const l of this.layers) l.spawnTick(dt);
     for (const l of this.layers) l.update(dt, false);
@@ -691,8 +692,8 @@ class LayerSim {
         break;
       }
       case 'spatialinsert': {
-        let list = this.sys.spatial.get(ev.layer);
-        if (!list) this.sys.spatial.set(ev.layer, list = []);
+        let list = this.sys._spatialNext.get(ev.layer);
+        if (!list) this.sys._spatialNext.set(ev.layer, list = []);
         const f = {};
         for (const n of ev.fields) if (this.field(n)) f[n] = this.getAt(i, n);
         list.push({ p: this.getAt(i, ev.posField), f, self: this.getAt(i, '__sid')[0] });
