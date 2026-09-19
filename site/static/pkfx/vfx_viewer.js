@@ -191,6 +191,9 @@ export function mount(container, { releaseId, path, endpoint }) {
         if (r.kind === 'billboard') {
           // distortion only offsets the scene behind it; it writes no colour of its own
           if (/Distortion/i.test(r.material)) { r._skip = true; continue; }
+          // No Diffuse at all: the engine falls back to its magenta "missing texture"
+          // debug sprite, which the game does not show, so draw nothing.
+          if (!r.diffuse) { r._skip = true; continue; }
           r._tex = await loadTexture(r.diffuse);
           r._atlas = await loadAtlas(r.atlas);
           r._remap = r.alphaRemap ? await loadTexture(r.alphaRemap) : null;
@@ -198,6 +201,7 @@ export function mount(container, { releaseId, path, endpoint }) {
           // a _Soft material fades where it meets the ground; anything else is hard-edged
           r._soft = /_Soft/i.test(r.material) ? Math.max(r.softness, 1e-3) : 0;
         } else if (r.kind === 'ribbon') {
+          if (!r.diffuse) { r._skip = true; continue; }
           r._tex = await loadTexture(r.diffuse);
           r._atlas = await loadAtlas(r.atlas);
           r._remap = r.alphaRemap ? await loadTexture(r.alphaRemap) : null;
