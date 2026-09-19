@@ -132,6 +132,19 @@ class LayerSim {
   }
   clear() { this.count = 0; this.emissions = []; }
 
+  // Position plus every float3 field with a translate/full transform filter: what the
+  // spawn transform and Localspace move
+  tfFields() {
+    return this._tfFields || (this._tfFields = this.L.fields.map((f) => f.name).filter((n) => {
+      const fi = this.L.fieldIndex[n];
+      return n === 'Position' || (fi.comp >= 3 && (fi.tf === 'full' || fi.tf === 'translate'));
+    }));
+  }
+  offsetTf(i, o) {
+    if (!(o[0] || o[1] || o[2])) return;
+    for (const n of this.tfFields()) { const v = this.getAt(i, n); this.setAt(i, n, [v[0] + o[0], v[1] + o[1], v[2] + o[2]]); }
+  }
+
   // last frame's value of every position field a collision or trail spawner reads
   savePrev(i) { for (const [pf, name] of this._prev) this.setAt(i, name, this.getAt(i, pf)); }
 
@@ -307,10 +320,7 @@ class LayerSim {
       const m = this.sys.emitter, d = this.sys.emitterDelta, back = e.spec.interpolate ? 1 - lerpT : 0;
       base = [m[0] - d[0] * back, m[1] - d[1] * back, m[2] - d[2] * back];
     }
-    if (base[0] || base[1] || base[2]) {
-      const p = this.getAt(i, 'Position');
-      this.setAt(i, 'Position', [p[0] + base[0], p[1] + base[1], p[2] + base[2]]);
-    }
+    this.offsetTf(i, base);   // spawn-script positions are relative to the spawn point
     if (e.vel0) {
       const v = this.getAt(i, 'Velocity');
       this.setAt(i, 'Velocity', [v[0] + e.vel0[0], v[1] + e.vel0[1], v[2] + e.vel0[2]]);
@@ -332,8 +342,7 @@ class LayerSim {
       if (ctx._dead) { this.count--; return; }
     }
     if (!(this.getAt(i, 'Life')[0] > 0)) { this.count--; return; }
-    const p = this.getAt(i, 'Position');
-    this.setAt(i, 'Position', [p[0] + pos[0], p[1] + pos[1], p[2] + pos[2]]);
+    this.offsetTf(i, pos);
     if (this.L.inheritVelocity && parentLS) {
       const pv = parentLS.getAt(parentIdx, 'Velocity');
       const v = this.getAt(i, 'Velocity');
@@ -539,8 +548,7 @@ class LayerSim {
         const enterCur = ev.enterCur || this.getAt(i, '__born')[0] > 0;
         const ex = enterCur ? 0 : d[0], ey = enterCur ? 0 : d[1], ez = enterCur ? 0 : d[2];
         const lx = ev.leaveCur ? 0 : d[0], ly = ev.leaveCur ? 0 : d[1], lz = ev.leaveCur ? 0 : d[2];
-        const tf = this._tfFields || (this._tfFields = this.L.fields.map((f) => f.name)
-          .filter((n) => { const t = this.L.fieldIndex[n].tf; return n === 'Position' || (this.L.fieldIndex[n].comp >= 3 && (t === 'full' || t === 'translate')); }));
+        const tf = this.tfFields();
         if (!ev.children.length) {
           // no children: only the enter/leave difference moves anything
           const mx = ex - lx, my = ey - ly, mz = ez - lz;
