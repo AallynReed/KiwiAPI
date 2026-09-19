@@ -358,18 +358,17 @@ function addEvolver(lc, ev, out) {
       break;
     }
     case 'CParticleEvolver_Localspace': {
-      // particles inside the block live in emitter space. With the default
-      // enter=Previous / leave=Current transforms, each frame applies the emitter's
-      // movement delta -> the particles are attached to (follow) the emitter. An
-      // explicitly written mode pair cancels out (local axes only, no attachment).
+      // Transform-filtered fields go world -> emitter space with the enter transform, the
+      // child evolvers run there, then local -> world with the leave transform. The default
+      // Previous/Current pair therefore carries particles along with the emitter.
       const children = [];
       for (const ref of ev.props.ChildList || []) addEvolver(lc, deref(doc, ref), children);
-      const enterPrev = toSym(ev.props.ModeEnter) !== 'WorldToLocal_Current';
-      const leaveCur = toSym(ev.props.ModeLeave) !== 'LocalToWorld_Previous';
-      const neutral = ev.props.UseEffectTransforms === false || ev.props.TransformTranslate === false;
-      // per-frame delta factor: leaveTransform - enterTransform
-      const attach = neutral ? 0 : (enterPrev && leaveCur) ? 1 : (!enterPrev && !leaveCur) ? -1 : 0;
-      out.push({ type: 'localspace', children, attach });
+      out.push({
+        type: 'localspace', children,
+        enterCur: toSym(ev.props.ModeEnter) === 'WorldToLocal_Current',
+        leaveCur: toSym(ev.props.ModeLeave) !== 'LocalToWorld_Previous',
+        neutral: ev.props.UseEffectTransforms === false || ev.props.TransformTranslate === false,
+      });
       break;
     }
     case 'CParticleEvolver_Attractor':

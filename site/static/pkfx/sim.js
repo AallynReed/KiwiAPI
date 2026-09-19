@@ -531,25 +531,25 @@ class LayerSim {
         break;
       }
       case 'localspace': {
-        // apply the emitter's per-frame movement delta to transform-filtered fields
-        // (Position + custom full/translate fields) -> attached to the emitter
-        // newborns enter with the Current transform, so they take no delta
-        if (ev.attach && !this.getAt(i, '__born')[0]) {
-          const d = this.sys.emitterDelta;
-          if (d[0] || d[1] || d[2]) {
-            const s = ev.attach;
-            const p = this.getAt(i, 'Position');
-            this.setAt(i, 'Position', [p[0] + d[0] * s, p[1] + d[1] * s, p[2] + d[2] * s]);
-            for (const f of this.L.fields) {
-              const fi = this.L.fieldIndex[f.name];
-              if (fi.tf === 'full' || fi.tf === 'translate') {
-                const v = this.getAt(i, f.name);
-                this.setAt(i, f.name, [(v[0] || 0) + d[0] * s, (v[1] || 0) + d[1] * s, (v[2] || 0) + d[2] * s]);
-              }
-            }
-          }
+        // CParticleKernelCPU_Evolver_Localspace: the viewer only translates the emitter, so
+        // local = world - E(enter), children run on local values, world = local + E(leave).
+        // E(Previous) is last frame's emitter; newborns always enter with Current.
+        if (ev.neutral) { if (ev.children.length) this.runEvolvers(ev.children, i, dt, lifeRatio, ctx); break; }
+        const E = this.sys.emitter, d = this.sys.emitterDelta;
+        const enterCur = ev.enterCur || this.getAt(i, '__born')[0] > 0;
+        const ex = enterCur ? 0 : d[0], ey = enterCur ? 0 : d[1], ez = enterCur ? 0 : d[2];
+        const lx = ev.leaveCur ? 0 : d[0], ly = ev.leaveCur ? 0 : d[1], lz = ev.leaveCur ? 0 : d[2];
+        const tf = this._tfFields || (this._tfFields = this.L.fields.map((f) => f.name)
+          .filter((n) => { const t = this.L.fieldIndex[n].tf; return n === 'Position' || (this.L.fieldIndex[n].comp >= 3 && (t === 'full' || t === 'translate')); }));
+        if (!ev.children.length) {
+          // no children: only the enter/leave difference moves anything
+          const mx = ex - lx, my = ey - ly, mz = ez - lz;
+          if (mx || my || mz) for (const n of tf) { const v = this.getAt(i, n); this.setAt(i, n, [v[0] + mx, v[1] + my, v[2] + mz]); }
+          break;
         }
-        if (ev.children.length) this.runEvolvers(ev.children, i, dt, lifeRatio, ctx);
+        for (const n of tf) { const v = this.getAt(i, n); this.setAt(i, n, [v[0] - (E[0] - ex), v[1] - (E[1] - ey), v[2] - (E[2] - ez)]); }
+        this.runEvolvers(ev.children, i, dt, lifeRatio, ctx);
+        for (const n of tf) { const v = this.getAt(i, n); this.setAt(i, n, [v[0] + (E[0] - lx), v[1] + (E[1] - ly), v[2] + (E[2] - lz)]); }
         break;
       }
       case 'attractor': {
