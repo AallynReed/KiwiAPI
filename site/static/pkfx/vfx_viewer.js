@@ -243,7 +243,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     note.textContent = partials.length ? 'Partial preview — ' + partials.join(' · ') : '';
     note.style.display = partials.length ? 'block' : 'none';
 
-    autofit.active = true; autofit.scale = 0; autofit.t = 0; autofit.floor = null;
+    autofit.active = true; autofit.scale = 0; autofit.t = 0; autofit.floor = null; autofit.y1 = null;
     loading.style.display = 'none';
     raf = requestAnimationFrame(frame);
   }
@@ -497,7 +497,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     items.push({ type: 'ribbon', texture: r._tex, remapTexture: r._remap, kind: r._kind, soft: r._soft, repeat: r.repeat, correct: r.correct, rotate: r.rotateTexture, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder, center: boundsCenter(ls, r.positionField) });
   }
 
-  const autofit = { active: true, scale: 0, t: 0, floor: null };
+  const autofit = { active: true, scale: 0, t: 0, floor: null, y1: null };
   // Real elapsed time per frame, so the effect plays at game speed on any refresh rate
   // (a fixed 1/60 per frame ran 2.4x fast at 144 Hz). Capped so a paused tab doesn't jump.
   let lastT = 0;
@@ -525,12 +525,13 @@ export function mount(container, { releaseId, path, endpoint }) {
 
     const items = [];
     const eye = renderer.eyePosition();
-    let sumY = 0, cnt = 0, maxR2 = 0, minY = Infinity;
+    let cnt = 0, maxR2 = 0, minY = Infinity, maxY = -Infinity;
     if (system) {
       for (const ls of system.layers) {
         for (let i = 0; i < ls.count; i++) {
-          const p = ls.getAt(i, 'Position'); sumY += p[1]; cnt++;
+          const p = ls.getAt(i, 'Position'); cnt++;
           if (p[1] < minY && isFinite(p[1])) minY = p[1];
+          if (p[1] > maxY && isFinite(p[1])) maxY = p[1];
           const r2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2]; if (r2 > maxR2 && isFinite(r2)) maxR2 = r2;
         }
         for (const r of ls.L.renderers) {
@@ -541,7 +542,10 @@ export function mount(container, { releaseId, path, endpoint }) {
         }
       }
     }
-    if (cnt && measuring) autofit.scale = Math.max(autofit.scale, Math.sqrt(maxR2));
+    if (cnt && measuring) {
+      autofit.scale = Math.max(autofit.scale, Math.sqrt(maxR2));
+      autofit.y1 = Math.max(autofit.y1 ?? -Infinity, maxY);
+    }
 
     /* No ground. It was added to give soft particles something to fade against, but
        an effect is authored to be seen against the world, not against a slab we
@@ -552,10 +556,13 @@ export function mount(container, { releaseId, path, endpoint }) {
        ever added. */
     if (cnt && measuring) autofit.floor = Math.min(autofit.floor ?? Infinity, minY);
 
-    // Camera centres on the particle centroid; auto-distance only until the user interacts.
-    if (cnt && autofit.active) {
-      renderer.cam.dist += (clamp((autofit.scale || Math.sqrt(maxR2)) * 2.2 + 0.6, 2, 60) - renderer.cam.dist) * 0.1;
-      renderer.cam.target[1] += (sumY / cnt - renderer.cam.target[1]) * 0.1;
+    /* Framing: during the opening window only, ease toward the middle of the measured
+       height range and a distance from the measured extent, then hold still. Following
+       the live particles after that made the whole view bob as sparks rose and fell, so
+       static effects looked like they were drifting. */
+    if (autofit.active && measuring && autofit.scale > 0 && isFinite(autofit.floor) && isFinite(autofit.y1)) {
+      renderer.cam.dist += (clamp(autofit.scale * 2.2 + 0.6, 2, 60) - renderer.cam.dist) * 0.15;
+      renderer.cam.target[1] += ((autofit.floor + autofit.y1) / 2 - renderer.cam.target[1]) * 0.15;
     }
     renderer.draw(items);
   }
