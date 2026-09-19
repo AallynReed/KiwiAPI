@@ -472,7 +472,16 @@ export class Renderer {
 
     // opaque (lit solid) meshes first with depth write, then everything else sorted
     const solid = items.filter((d) => d.type === 'mesh' && d.lit);
-    const trans = items.filter((d) => !(d.type === 'mesh' && d.lit)).sort((a, b) => (a.drawOrder || 0) - (b.drawOrder || 0));
+    /* Batch order, as CRenderList::Render (FUN_1803427d0) keys it: DrawOrder first; within
+       one DrawOrder, materials with SortMode BackToFront (every alpha-blended kind) add
+       -distance^2 from the camera to the batch position in the low bits, so additive
+       batches (no sort, low bits 0) go first and blended ones follow farthest first. */
+    const d2 = (d) => d.center ? (d.center[0] - eye[0]) ** 2 + (d.center[1] - eye[1]) ** 2 + (d.center[2] - eye[2]) ** 2 : 0;
+    const sorted = (d) => d.kind === 0 || d.kind === 2 || d.kind === 4;
+    const trans = items.filter((d) => !(d.type === 'mesh' && d.lit)).sort((a, b) =>
+      ((a.drawOrder || 0) - (b.drawOrder || 0)) ||
+      ((sorted(a) ? 1 : 0) - (sorted(b) ? 1 : 0)) ||
+      (sorted(a) ? d2(b) - d2(a) : 0));
 
     /* The opaque geometry is drawn twice: once into the offscreen target purely to
        fill a depth texture the particle shader can sample, then again on screen for

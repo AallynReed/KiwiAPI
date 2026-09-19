@@ -68,6 +68,19 @@ export function billboardOrder(ls, r, n, eye) {
   return order;
 }
 
+// Centre of a layer's particle bounds: the batch position the engine sorts draws by.
+function boundsCenter(ls, field) {
+  let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
+  for (let i = 0; i < ls.count; i++) {
+    const p = ls.getAt(i, field);
+    if (!isFinite(p[0] + p[1] + p[2])) continue;
+    if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0];
+    if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1];
+    if (p[2] < z0) z0 = p[2]; if (p[2] > z1) z1 = p[2];
+  }
+  return x0 <= x1 ? [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2] : [0, 0, 0];
+}
+
 // the engine stores vertex colours as RGBA8, so every channel saturates at 0..1
 const sat = (x) => (x > 1 ? 1 : x < 0 ? 0 : x);
 
@@ -323,7 +336,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     }
     const count = o / FLOATS_PER_INSTANCE;
     if (!count) return;
-    items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder, soft: r._soft, dissolve: r.dissolve });
+    items.push({ type: 'billboard', texture: r._tex, remapTexture: r._remap, kind: r._kind, mode, instances: inst.slice(0, o), count, drawOrder: r.drawOrder, soft: r._soft, dissolve: r.dissolve, center: boundsCenter(ls, r.positionField) });
   }
 
   /* Mesh orientation, composed as SMatrixBuilder::BuildWorldMatrix does:
@@ -386,7 +399,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     }
     const count = o / MESH_FLOATS_PER_INSTANCE;
     if (!count) return;
-    items.push({ type: 'mesh', geom: r._geom, texture: r._tex, lit: r._lit, kind: r._kind, instances: mbuf.slice(0, o), count, drawOrder: r.drawOrder });
+    items.push({ type: 'mesh', geom: r._geom, texture: r._tex, lit: r._lit, kind: r._kind, instances: mbuf.slice(0, o), count, drawOrder: r.drawOrder, center: boundsCenter(ls, r.positionField) });
   }
 
   /* Ribbons (CRibbonBillboarder): one strip per spawner instance / parent particle,
@@ -481,7 +494,7 @@ export function mount(container, { releaseId, path, endpoint }) {
       }
     }
     if (!o) return;
-    items.push({ type: 'ribbon', texture: r._tex, remapTexture: r._remap, kind: r._kind, soft: r._soft, repeat: r.repeat, correct: r.correct, rotate: r.rotateTexture, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder });
+    items.push({ type: 'ribbon', texture: r._tex, remapTexture: r._remap, kind: r._kind, soft: r._soft, repeat: r.repeat, correct: r.correct, rotate: r.rotateTexture, vertices: rib.slice(0, o), count: o / RIBBON_FLOATS_PER_VERT, drawOrder: r.drawOrder, center: boundsCenter(ls, r.positionField) });
   }
 
   const autofit = { active: true, scale: 0, t: 0, floor: null };
