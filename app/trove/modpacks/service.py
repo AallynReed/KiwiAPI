@@ -8,6 +8,7 @@ live Mods Hub at download time, so unlocked ones track the latest published buil
 
 from __future__ import annotations
 
+import asyncio
 import io
 import json
 import logging
@@ -856,19 +857,61 @@ async def _collect_builds(variant: ModpackVariant) -> tuple[list[tuple[str, byte
     return downloadable, manifest
 
 
+async def _collect_configs(
+    downloadable: list[tuple[str, bytes, dict]], manifest: list[dict],
+) -> list[tuple[str, bytes]]:
+    """The ``ModCfgs/`` side of a modpack: ``(filename, bytes)`` for every bundled mod
+    that has settings to configure.
+
+    A mod's ``.tmod`` goes in ``mods/``, but its settings file does NOT - the game
+    reads that from ``ModCfgs/<Mod Title>.cfg``. Shipping only the ``.tmod`` left
+    every Flash-UI mod in a pack unconfigurable until the player went and fetched the
+    config from each mod's page, so a pack now carries both halves.
+
+    Each file is the mod's own packed config where it has one, and otherwise a
+    skeleton naming the sections its ``.swf`` files read (see
+    ``mods_service.pack_config_for_artifact``). Names collide only if two bundled
+    mods share a title, in which case the first wins - two mods with one title would
+    fight over the same file in the game's folder too, so there is no second file to
+    write."""
+    out: list[tuple[str, bytes]] = []
+    seen: set[str] = set()
+    by_filename = {m.get("filename"): m for m in manifest if m.get("filename")}
+    for name, data, _ in downloadable:
+        made = await asyncio.to_thread(mods_service.pack_config_for_artifact, data)
+        if made is None:
+            continue
+        cfg_name, cfg_data = made
+        if cfg_name.lower() in seen:
+            continue
+        seen.add(cfg_name.lower())
+        out.append((cfg_name, cfg_data))
+        record = by_filename.get(name)
+        if record is not None:
+            record["config"] = cfg_name
+    return out
+
+
 async def build_artifact(
     pack: ModpackProject, variant_name: str | None, fmt: str,
 ) -> tuple[bytes, str, str]:
     """Build the modpack artifact for a variant. ``fmt`` is ``tpack`` (API; a
-    ``.tmod``-style container packing each mod's ``.tmod``) or ``zip`` (website; the
-    ``.tmod`` files + a ``modpack.json`` manifest). Returns ``(bytes, filename,
-    media_type)``. Raises 400 if nothing in the variant resolves to a build."""
+    ``.tmod``-style container packing each mod's ``.tmod``), ``zip`` (website; the
+    ``.tmod`` files + their configs + a ``modpack.json`` manifest) or ``configs``
+    (the configs on their own, for a player who already has the mods). Returns
+    ``(bytes, filename, media_type)``. Raises 400 if nothing in the variant resolves
+    to a build.
+
+    Both full formats carry the configs under ``ModCfgs/`` - the game folder they
+    belong in - next to the ``mods/`` half, so the two folders in the archive mirror
+    the two folders in the Trove install."""
     variant = _find_variant(pack, variant_name)
     downloadable, manifest = await _collect_builds(variant)
     if not downloadable:
         raise APIError(400, ErrorCode.bad_request,
                        "This modpack has no downloadable mods right now "
                        "(every entry is missing a published build).")
+    configs = await _collect_configs(downloadable, manifest)
 
     safe = _safe_filename(pack.title)
     suffix = "" if variant.name == _DEFAULT_VARIANT else f"-{variant.name}"
@@ -881,6 +924,17 @@ async def build_artifact(
         "mods": manifest,
     }
 
+    if fmt == "configs":
+        if not configs:
+            raise APIError(400, ErrorCode.bad_request,
+                           "None of the mods in this modpack have settings to configure.")
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("modpack.json", json.dumps(manifest_doc, indent=2))
+            for cfg_name, cfg_data in configs:
+                zf.writestr(f"ModCfgs/{cfg_name}", cfg_data)
+        return buf.getvalue(), f"{safe}{suffix}-configs.zip", "application/zip"
+
     if fmt == "zip":
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -890,6 +944,8 @@ async def build_artifact(
             # IS that filename - do not rename.
             for name, data, _ in downloadable:
                 zf.writestr(f"mods/{name}", data)
+            for cfg_name, cfg_data in configs:
+                zf.writestr(f"ModCfgs/{cfg_name}", cfg_data)
         return buf.getvalue(), f"{safe}{suffix}.zip", "application/zip"
 
     # default: .tpack container (same format as a .tmod)
@@ -901,7 +957,11 @@ async def build_artifact(
         "notes": pack.warnings or "",
         "manifest": json.dumps(manifest_doc),
     }
+    # The configs ride along under the same ``ModCfgs/`` prefix the .zip uses, so a
+    # consumer splits a .tpack's entries by that one prefix: everything else is a
+    # .tmod for the mods folder.
     inner = [(name, data) for name, data, _ in downloadable]
+    inner += [(f"ModCfgs/{cfg_name}", cfg_data) for cfg_name, cfg_data in configs]
     blob = tmod.build_tpack(1, properties, inner)
     return blob, f"{safe}{suffix}.tpack", "application/octet-stream"
 
@@ -983,6 +1043,9 @@ async def _public_variant(p: ModpackProject, variant: ModpackVariant) -> dict:
         "available_count": sum(1 for m in mods if m["available"]),
         "download_url": f"{base}&format=tpack",   # API default: a .tpack
         "zip_url": f"{base}&format=zip",
+        # The ModCfgs/ half on its own - for a player who already has the mods and
+        # only wants the settings files.
+        "configs_url": f"{base}&format=configs",
         "mods": mods,
     }
 

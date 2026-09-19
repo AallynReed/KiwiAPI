@@ -81,11 +81,11 @@ async def get_modpack(handle: str, slug: str, ctx: AccessContext = _PUB) -> dict
 async def download_modpack(
     handle: str, slug: str, background: BackgroundTasks, ctx: AccessContext = _PUB,
     variant: str | None = Query(default=None, max_length=80),
-    format: str = Query(default="tpack", pattern="^(tpack|zip)$"),
+    format: str = Query(default="tpack", pattern="^(tpack|zip|configs)$"),
 ) -> Response:
-    """Download a modpack variant: a ``.tpack`` (default) or a ``.zip``. Public;
-    bumps the download count (after the response). Unlocked entries resolve to the
-    latest build."""
+    """Download a modpack variant: a ``.tpack`` (default), a ``.zip``, or ``configs``
+    (the ``ModCfgs/`` settings files on their own). Public; bumps the download count
+    (after the response). Unlocked entries resolve to the latest build."""
     pack = await service.get_for_view(handle, slug, None)
     blob, filename, media = await service.build_artifact(pack, variant, format)
     background.add_task(service.record_download, pack)
@@ -259,12 +259,13 @@ async def download_modpack_public(
     handle: str, slug: str, background: BackgroundTasks, ctx: AccessContext = _PUB,
     variant: str | None = Query(default=None, max_length=80,
                                 description="Which variant to download; defaults to the pack's default."),
-    format: str = Query(default="tpack", pattern="^(tpack|zip)$",
-                        description="tpack (a .tmod-style bundle, default) or zip."),
+    format: str = Query(default="tpack", pattern="^(tpack|zip|configs)$",
+                        description="tpack (a .tmod-style bundle, default), zip, or "
+                                    "configs (a zip of just the ModCfgs/ files)."),
 ) -> Response:
-    """Download a modpack variant as a ``.tpack`` (default) or ``.zip``. Built on the
-    fly; unlocked mods resolve to their latest published build. Bumps the count
-    (after the response)."""
+    """Download a modpack variant as a ``.tpack`` (default), a ``.zip``, or a configs
+    zip. Built on the fly; unlocked mods resolve to their latest published build.
+    Bumps the count (after the response)."""
     pack = await service.get_for_view(handle, slug, None)
     blob, filename, media = await service.build_artifact(pack, variant, format)
     background.add_task(service.record_download, pack)

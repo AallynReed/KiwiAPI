@@ -238,6 +238,7 @@
     const dis = ok ? '' : 'disabled';
     return `<div class="mpk-dl">
       <button type="button" class="mp-btn mp-btn-primary" data-dl="zip" ${dis}><i class="fa-solid fa-download"></i> ${esc(t('Download .zip'))}</button>
+      <button type="button" class="mp-btn mp-btn-ghost mp-btn-sm" data-dl="configs" ${dis} title="${esc(t('Just the settings files, for the ModCfgs folder'))}"><i class="fa-solid fa-sliders"></i> ${esc(t('Settings only'))}</button>
       <button type="button" class="mp-btn mp-btn-ghost mp-btn-sm" data-dl="tpack" ${dis} title=".tpack">.tpack</button>
     </div>`;
   }
@@ -436,11 +437,18 @@
       + encodeURIComponent(v.name) + '&format=' + encodeURIComponent(fmt);
     try {
       const r = await siteGET(url);
-      if (!r.ok) { toast(t('Download failed.'), 'error'); return; }
+      if (!r.ok) {
+        // The settings-only download is refused when no mod in the pack has any,
+        // and that reason is worth reading - the generic failure isn't.
+        let why = '';
+        try { why = ((await r.json()).error || {}).message || ''; } catch (_) { /* not JSON */ }
+        toast(why || t('Download failed.'), 'error');
+        return;
+      }
       const blob = await r.blob();
       const cd = r.headers.get('Content-Disposition') || '';
       const m = /filename="?([^"]+)"?/.exec(cd);
-      const name = m ? m[1] : (state.detail.slug + '.' + fmt);
+      const name = m ? m[1] : (state.detail.slug + (fmt === 'tpack' ? '.tpack' : '.zip'));
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = name;

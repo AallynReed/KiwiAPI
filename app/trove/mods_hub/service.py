@@ -2090,6 +2090,57 @@ async def attach_config_to_release(
     return {**_release_dto(release), "changed": True}
 
 
+def _generated_config(swf_paths: list[str]) -> bytes:
+    """A skeleton config for a build that packs a Flash UI but no ``.cfg``: one
+    ``[<name>.swf]`` section per packed ``.swf``, and no keys.
+
+    That IS what a shipped config with no overrides looks like - the store scraper's
+    own ``StoreLog.cfg`` is exactly one empty section - and a key the mod doesn't
+    find falls back to the default baked into its own ``.swf``. So the file is an
+    editable starting point that names every section the mod reads, never a guess at
+    values we have no way to know."""
+    names = sorted({p.replace("\\", "/").rsplit("/", 1)[-1].lower() for p in swf_paths})
+    return "".join(f"[{n}]\n" for n in names).encode("utf-8")
+
+
+def pack_config_for_artifact(data: bytes) -> tuple[str, bytes] | None:
+    """The config to ship alongside one packed ``.tmod`` - ``(filename, bytes)``, or
+    ``None`` when the build has nothing that would read one.
+
+    The name is ALWAYS ``<title>.cfg`` from the artifact's own header title: the game
+    reads a mod's settings from ``ModCfgs/<Mod Title>.cfg`` whatever the packed file
+    was called, so any other name is a file the game never opens.
+
+    The contents come from the build's own config when it has one - the path its
+    ``configPath`` declares, else its single packed ``.cfg`` - and otherwise from
+    :func:`_generated_config`. A build that packs several ``.cfg`` files and declares
+    none is not guessed at: which one is THE config is unanswerable, so it falls
+    through to the generated skeleton like any other.
+
+    Sync and pure (callers hand it to a thread): a modpack download builds one of
+    these per bundled mod."""
+    try:
+        parsed = tmod.read_tmod(data)
+    except tmod.TmodError:
+        return None
+    props = {str(k): str(v) for k, v in parsed.get("properties", {}).items()}
+    title = props.get("title", "").strip()
+    if not title:
+        return None
+    files = parsed["files"]
+    swfs = [f["path"] for f in files if f["path"].lower().endswith(".swf")]
+    cfgs = [f for f in files if f["path"].lower().endswith(".cfg")]
+    declared = _declared_config_path(props)
+    chosen = next((f for f in cfgs if f["path"].lower() == declared), None)
+    if chosen is None and len(cfgs) == 1:
+        chosen = cfgs[0]
+    if chosen is not None and "content_base64" in chosen:
+        return f"{_safe_filename(title)}.cfg", base64.b64decode(chosen["content_base64"])
+    if not swfs:
+        return None                      # no Flash UI, no config to read one
+    return f"{_safe_filename(title)}.cfg", _generated_config(swfs)
+
+
 async def download_release_cfg(release: ModRelease, path: str) -> tuple[bytes, str]:
     """Bytes of ONE packed ``.cfg``, extracted from the .tmod on the fly. Returns
     ``(data, download_filename)``."""

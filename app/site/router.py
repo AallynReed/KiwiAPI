@@ -4171,7 +4171,7 @@ async def site_modpacks_for_mod(handle: str, slug: str) -> JSONResponse:
 async def site_modpack_download(
     handle: str, slug: str, background: BackgroundTasks,
     variant: str | None = Query(default=None, max_length=80),
-    format: str = Query(default="zip", pattern="^(tpack|zip)$"),
+    format: str = Query(default="zip", pattern="^(tpack|zip|configs)$"),
     viewer: SiteUser | None = Depends(get_optional_site_user),
 ) -> Response:
     """Download a modpack variant (the website defaults to a ``.zip``). Public; the
