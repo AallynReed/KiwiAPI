@@ -43,7 +43,7 @@ function endpointsFor({ releaseId, endpoint }) {
    Exported for tests. */
 let sortIdx = new Int32Array(0), sortKey = new Float32Array(0);
 export function billboardOrder(ls, r, n, eye) {
-  if (r._kind === 1 || r._kind === 3) return null;            // additive: order-free
+  if (r._kind === 1 || r._kind === 3 || r._kind === 4) return null;   // additive: order-free
   // Every field-sort in the corpus keys on LifeRatio, which is virtual (Age/Life)
   // rather than a stored field, so resolve it the way the script context does. A
   // field we cannot resolve falls back to camera distance, not to no sort at all.
@@ -71,10 +71,13 @@ export function billboardOrder(ls, r, n, eye) {
 // the engine stores vertex colours as RGBA8, so every channel saturates at 0..1
 const sat = (x) => (x > 1 ? 1 : x < 0 ? 0 : x);
 
-// BillboardingMaterial -> blend kind (0 alpha, 1 additive, 2 alphablend+additive, 3 additive-noalpha)
-function kindFor(material) {
+/* BillboardingMaterial -> blend kind (0 alpha, 1 additive, 2 alphablend+additive,
+   3 additive-noalpha, 4 alpha-weighted add). Trove's D3D11 and GL renderers agree on
+   AlphaBlend_Additive*: billboards draw it SRC_ALPHA,ONE with no premultiply flag,
+   ribbons ONE,INV_SRC_ALPHA. */
+function kindFor(material, ribbon) {
   if (/Additive_NoAlpha/i.test(material)) return 3;
-  if (/^AlphaBlend_Additive/i.test(material)) return 2;
+  if (/^AlphaBlend_Additive/i.test(material)) return ribbon ? 2 : 4;
   if (/^Additive/i.test(material)) return 1;
   return 0;
 }
@@ -205,8 +208,8 @@ export function mount(container, { releaseId, path, endpoint }) {
           r._tex = await loadTexture(r.diffuse);
           r._atlas = await loadAtlas(r.atlas);
           r._remap = r.alphaRemap ? await loadTexture(r.alphaRemap) : null;
-          r._kind = kindFor(r.material);
-          r._soft = /_Soft/i.test(r.material) ? Math.max(r.softness, 1e-3) : 0;
+          r._kind = kindFor(r.material, true);
+          r._soft = 0;   // Trove's ribbon shaders never read depth, so ribbons have no soft fade
         } else if (r.kind === 'mesh') {
           r._geom = await loadMesh(r.mesh);
           r._tex = await loadTexture(r.diffuse);
@@ -502,6 +505,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     // localspace-attached layers therefore look exactly as authored.
     if (system) {
       system.camPos = renderer.eyePosition();
+      system.camTarget = renderer.cam.target;
       try { system.update(dt); }
       catch (e) { if (!system._crashWarned) { system._crashWarned = true; console.warn('pkfx sim error:', e); } }
     }

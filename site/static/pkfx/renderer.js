@@ -122,7 +122,7 @@ uniform sampler2D uTex;
 uniform sampler2D uRemap;
 uniform sampler2D uDepth;
 uniform int uHasRemap;
-uniform int uKind;   // 0 alpha, 1 additive, 2 alphablend_additive, 3 additive_noalpha
+uniform int uKind;   // 0 alpha, 1 additive, 2 alphablend_additive, 3 additive_noalpha, 4 alpha-weighted add
 uniform float uSoft;     // SoftnessDistance in world units; 0 = not a _Soft material
 uniform float uDissolve; // DissolveWidth from the renderer's UserData; 0 = plain alpha
 uniform vec2 uInvRes;
@@ -169,7 +169,7 @@ void main(){
   // Additive_NoAlpha zeroes alpha outright, so dissolve cannot reach the output here
   if (uKind == 3) { frag = vec4(c.rgb * soft, 1.0); return; }
   c.a *= soft;
-  if (uKind == 2) { frag = vec4(c.rgb * soft, c.a); return; }
+  if (uKind == 2 || uKind == 4) { frag = vec4(c.rgb * soft, c.a); return; }
   if (uKind == 1) { frag = c; return; }
   if (c.a < 0.002) discard;   // AlphaTestMode GreaterOrEqual, AlphaTestValue 0.002
   frag = c;
@@ -253,24 +253,17 @@ void main(){
   gl_Position = uProj*uView*vec4(world,1.0);
   vN = B * aNormal; vUV = aUV; vColor = aColor;
 }`;
+/* Trove's particle mesh pixel shader is unlit: texture * colour, nothing else. Solid
+   draws opaque with depth write and no alpha test; the additive kinds use _blend(). */
 const MFRAG = `#version 300 es
 precision highp float;
 in vec3 vN; in vec2 vUV; in vec4 vColor;
 uniform sampler2D uTex;
-uniform int uLit;      // Solid -> lit + alpha cutout; additive -> unlit
+uniform int uLit;      // 1 = Solid (opaque)
 out vec4 frag;
 void main(){
-  vec4 t = texture(uTex, vUV);
-  vec4 c = t * vColor;
-  if (uLit == 1) {
-    if (c.a < 0.5) discard;
-    vec3 n = normalize(vN);
-    float l = max(dot(n, normalize(vec3(0.4,0.85,0.5))),0.0)*0.6 + 0.45;
-    frag = vec4(c.rgb*l, 1.0);
-  } else {
-    if (c.a < 0.003 && dot(c.rgb, vec3(1.0)) < 0.01) discard;
-    frag = c;
-  }
+  vec4 c = texture(uTex, vUV) * vColor;
+  frag = uLit == 1 ? vec4(c.rgb, 1.0) : c;
 }`;
 export const MESH_FLOATS_PER_INSTANCE = 16; // basis 9, center 3, color 4
 
@@ -455,6 +448,7 @@ export class Renderer {
     const gl = this.gl;
     if (kind === 1) gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     else if (kind === 2) gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    else if (kind === 4) gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     else if (kind === 3) gl.blendFunc(gl.ONE, gl.ONE);
     else gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
