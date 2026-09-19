@@ -103,14 +103,18 @@ export class System {
     const sp = this.spatial; this.spatial = this._spatialNext; this._spatialNext = sp; sp.clear();
 
     for (const l of this.layers) l.spawnTick(dt);
+    /* Events raised while layers evolve (script triggers, OnDeath, collisions) start their
+       action at once: the executor runs an instance whose start time has come immediately
+       (FUN_1805e81a0), so its particles spawn this frame and get their newborn evolve now. */
+    this._inFrame = true;
     for (const l of this.layers) l.update(dt, false);
-    // children spawned into a layer that had already updated this frame still get
-    // their newborn evolve now, not a frame late
     for (let pass = 0; pass < 4; pass++) {
       let any = false;
+      for (const l of this.layers) if (l._fresh) { l._fresh = false; l.spawnTick(0, true); }
       for (const l of this.layers) if (l._bornPending) { l._bornPending = false; any = true; l.update(dt, true); }
       if (!any) break;
     }
+    this._inFrame = false;
     let anyAlive = false, anyPending = false;
     for (const l of this.layers) {
       if (l.count > 0) anyAlive = true;
@@ -171,7 +175,9 @@ class LayerSim {
       origin: origin ? [origin[0], origin[1], origin[2]] : null,
       vel0: vel0 || null,
       parentSnap: parentSnap || null,
+      fresh: !!this.sys._inFrame,
     });
+    if (this.sys._inFrame) this._fresh = true;
   }
 
   _curveI(spec) {
@@ -214,9 +220,12 @@ class LayerSim {
     return spec.fluxDiscrete ? sum : sum / f;
   }
 
-  spawnTick(dt) {
+  // `freshOnly`: run just the emissions events queued during this frame's evolve, at dt 0
+  spawnTick(dt, freshOnly) {
     const done = [];
     for (const e of this.emissions) {
+      if (freshOnly && !e.fresh) continue;
+      e.fresh = false;
       const before = e.t;
       e.t += dt;
       if (e.t < 0) continue;
