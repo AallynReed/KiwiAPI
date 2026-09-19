@@ -253,8 +253,9 @@ function addEvolver(lc, ev, out) {
   const { doc, rng } = ctx;
   switch (ev.className) {
     case 'CParticleEvolver_Physics':
-      lc.addField(fieldName(ev.props.PositionField, 'Position'), 3);
-      lc.addField(fieldName(ev.props.VelocityField, 'Velocity'), 3);
+      // engine flags: position full (0x3009), velocity rotate (0x2009)
+      lc.addField(fieldName(ev.props.PositionField, 'Position'), 3, 'full');
+      lc.addField(fieldName(ev.props.VelocityField, 'Velocity'), 3, 'rotate');
       // Mass is INVERSE mass (1/m) and 0 means no drag; a layer field named by MassField
       // overrides it per particle. Accel and Force fields add to the acceleration.
       out.push({
@@ -353,6 +354,11 @@ function addEvolver(lc, ev, out) {
           flux: samplerFor(doc, ev.props.FluxFunction, rng),
           tile: num(ev.props.FluxFunctionTiledRelativeDuration, 1),
           accField, countField,
+          // UseOrientedSpawnMatrix: children spawn in a frame whose +Z is the parent's
+          // ForwardAxisField (default Velocity), up from UpAxisField or world Y
+          oriented: ev.props.UseOrientedSpawnMatrix === true,
+          fwdField: fieldName(ev.props.ForwardAxisField, 'Velocity'),
+          upField: fieldName(ev.props.UpAxisField, null),
         });
       }
       break;
@@ -388,6 +394,8 @@ function addEvolver(lc, ev, out) {
       break;
     case 'CParticleEvolver_Collisions':
       lc.addField('__cflags', 1);
+      lc.addField(fieldName(ev.props.PositionField, 'Position'), 3, 'full');
+      lc.addField(fieldName(ev.props.VelocityField, 'Velocity'), 3, 'rotate');
       out.push(collideSpec(ev.props, false, typeof ev.props.Collider === 'string' && ev.props.Collider ? ev.props.Collider : null, lc));
       break;
     case 'CParticleEvolver_Projection': {

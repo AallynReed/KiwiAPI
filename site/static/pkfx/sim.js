@@ -150,6 +150,43 @@ class LayerSim {
     for (const n of this.tfFields()) { const v = this.getAt(i, n); this.setAt(i, n, [v[0] + o[0], v[1] + o[1], v[2] + o[2]]); }
   }
 
+  // Position plus every float3 field with a rotate/full filter: what a spawn rotation turns
+  rotFields() {
+    return this._rotFields || (this._rotFields = this.L.fields.map((f) => f.name).filter((n) => {
+      const fi = this.L.fieldIndex[n];
+      return n === 'Position' || (fi.comp >= 3 && (fi.tf === 'full' || fi.tf === 'rotate'));
+    }));
+  }
+  // rows r0, r1, r2 are where local X, Y, Z land
+  rotateTf(i, [r0, r1, r2]) {
+    for (const n of this.rotFields()) {
+      const v = this.getAt(i, n), x = v[0] || 0, y = v[1] || 0, z = v[2] || 0;
+      this.setAt(i, n, [x * r0[0] + y * r1[0] + z * r2[0], x * r0[1] + y * r1[1] + z * r2[1], x * r0[2] + y * r1[2] + z * r2[2]]);
+    }
+  }
+  /* Oriented spawn matrix for a trail child (Y-up frame): FUN_180608690 with a forward
+     axis only, FUN_180608320 with forward + up. Z = normalize(forward); with no up axis,
+     Y = world Y minus its forward part (Z nudged by 0.01 so a vertical forward still
+     resolves), X = cross(Y, Z); with one, X = normalize(cross(up, Z)), Y = cross(Z, X).
+     No usable forward axis: the engine spawns unrotated. */
+  spawnBasis(i, ev) {
+    const fi = this.field(ev.fwdField);
+    if (!fi || fi.comp < 3) return null;
+    const f0 = this.getAt(i, ev.fwdField), fl = Math.hypot(f0[0], f0[1], f0[2]);
+    if (!(fl > 3.2e-7)) return null;
+    const f = [f0[0] / fl, f0[1] / fl, f0[2] / fl];
+    const ui = ev.upField && this.field(ev.upField);
+    const norm = (v) => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+    const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    if (ui && ui.comp >= 3) {
+      const u = norm(this.getAt(i, ev.upField));
+      const x = norm(cross(u, f));
+      return [x, cross(f, x), f];
+    }
+    const y = norm([-f[0] * f[1], (f[2] + 0.01) * f[2] + f[0] * f[0], -(f[2] + 0.01) * f[1]]);
+    return [cross(y, f), y, f];
+  }
+
   // last frame's value of every position field a collision or trail spawner reads
   savePrev(i) { for (const [pf, name] of this._prev) this.setAt(i, name, this.getAt(i, pf)); }
 
@@ -341,7 +378,7 @@ class LayerSim {
 
   // spawn a particle at a parent particle's world position (trail child). The child's
   // spawn script may read parent.<field>; its Position is relative to the parent.
-  spawnAt(pos, parentLS, parentIdx, seq, lr, sAge, preAge) {
+  spawnAt(pos, parentLS, parentIdx, seq, lr, sAge, preAge, rot) {
     if (this.count >= MAX) return;
     const i = this._newParticle(lr, seq, sAge, preAge, parentLS ? parentLS.getAt(parentIdx, '__sid')[0] : 0);
     if (this.L.spawnScript) {
@@ -352,6 +389,7 @@ class LayerSim {
       if (ctx._dead) { this.count--; return; }
     }
     if (!(this.getAt(i, 'Life')[0] > 0)) { this.count--; return; }
+    if (rot) this.rotateTf(i, rot);
     this.offsetTf(i, pos);
     if (this.L.inheritVelocity && parentLS) {
       const pv = parentLS.getAt(parentIdx, 'Velocity');
@@ -539,12 +577,13 @@ class LayerSim {
         const child = this.sys.layers[ev.child];
         if (!child) break;
         const p = this.getAt(i, ev.posField), q = this.getAt(i, ev.prevField);
+        const rot = ev.oriented ? this.spawnBasis(i, ev) : null;
         const life = this.getAt(i, 'Life')[0] || 1, age0 = this.getAt(i, 'Age')[0] - dt;
         let sEC = this.getAt(i, ev.countField)[0];
         for (let k = 0; k < n; k++) {
           const f = (k + 1 - acc0) / count, tk = Math.min(f * dt, dt);
           const pos = [q[0] + (p[0] - q[0]) * f, q[1] + (p[1] - q[1]) * f, q[2] + (p[2] - q[2]) * f];
-          child.spawnAt(pos, this, i, sEC++, (age0 + tk) / life, age0 + tk, dt - tk);
+          child.spawnAt(pos, this, i, sEC++, (age0 + tk) / life, age0 + tk, dt - tk, rot);
         }
         this.setAt(i, ev.countField, [sEC]);
         break;
