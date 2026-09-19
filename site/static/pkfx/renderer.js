@@ -282,7 +282,9 @@ const QUAD = new Float32Array([
 
 export class Renderer {
   constructor(canvas) {
-    const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: false, antialias: true });
+    // Opaque like the game's back buffer: blending also writes destination alpha, and an
+    // alpha canvas let every additive quad (alpha 1 edge to edge) show through as a square.
+    const gl = canvas.getContext('webgl2', { alpha: false, antialias: true });
     if (!gl) throw new Error('WebGL2 not available');
     this.gl = gl; this.canvas = canvas;
 
