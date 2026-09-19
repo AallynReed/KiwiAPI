@@ -3145,5 +3145,10 @@
   "How it looks in game, zoomed to twice its size.": "หน้าตาในเกม ขยายเป็นสองเท่า",
   "Square. Shows on the whisper tab for a conversation with that player, in Chat.": "สี่เหลี่ยมจัตุรัส แสดงบนแท็บกระซิบของบทสนทนากับผู้เล่นคนนั้นใน Chat",
   "Square. Shows on the club's channel tab, in Chat.": "สี่เหลี่ยมจัตุรัส แสดงบนแท็บช่องแชทของคลับใน Chat",
-  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "โลโก้ตัวอักษรของคลับ ตั้งแต่สี่เหลี่ยมจัตุรัสจนถึงกว้างเป็นหกเท่าของความสูง แสดงหน้าข้อความของคลับนั้นใน Chat และแทนชื่อคลับบน Nameplate"
+  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "โลโก้ตัวอักษรของคลับ ตั้งแต่สี่เหลี่ยมจัตุรัสจนถึงกว้างเป็นหกเท่าของความสูง แสดงหน้าข้อความของคลับนั้นใน Chat และแทนชื่อคลับบน Nameplate",
+  "Reason": "เหตุผล",
+  "It's hidden from everyone else. Only you and your collaborators can still see it.": "เนื้อหานี้ถูกซ่อนจากผู้อื่นแล้ว มีเพียงคุณและผู้ร่วมงานเท่านั้นที่ยังมองเห็นได้",
+  "Think this was a mistake?": "คิดว่านี่เป็นความผิดพลาดใช่ไหม",
+  "Settings only": "เฉพาะไฟล์ตั้งค่า",
+  "Just the settings files, for the ModCfgs folder": "เฉพาะไฟล์ตั้งค่า สำหรับโฟลเดอร์ ModCfgs"
 }

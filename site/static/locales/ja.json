@@ -3322,5 +3322,10 @@
   "How it looks in game, zoomed to twice its size.": "ゲーム内での見た目（2倍に拡大）。",
   "Square. Shows on the whisper tab for a conversation with that player, in Chat.": "正方形。Chat のそのプレイヤーとのささやきタブに表示されます。",
   "Square. Shows on the club's channel tab, in Chat.": "正方形。Chat のクラブのチャンネルタブに表示されます。",
-  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "クラブのロゴ文字。正方形から横幅が高さの 6 倍まで。Chat ではそのクラブのメッセージの前に、Nameplate ではクラブ名の代わりに表示されます。"
+  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "クラブのロゴ文字。正方形から横幅が高さの 6 倍まで。Chat ではそのクラブのメッセージの前に、Nameplate ではクラブ名の代わりに表示されます。",
+  "Reason": "理由",
+  "It's hidden from everyone else. Only you and your collaborators can still see it.": "他のユーザーには表示されません。引き続き閲覧できるのは、あなたと共同編集者だけです。",
+  "Think this was a mistake?": "間違いだと思われる場合は",
+  "Settings only": "設定ファイルのみ",
+  "Just the settings files, for the ModCfgs folder": "設定ファイルだけをまとめたもの。ModCfgs フォルダーに入れてください"
 }

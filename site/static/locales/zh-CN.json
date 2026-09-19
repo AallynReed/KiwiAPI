@@ -3322,5 +3322,10 @@
   "How it looks in game, zoomed to twice its size.": "游戏中的实际效果（放大两倍）。",
   "Square. Shows on the whisper tab for a conversation with that player, in Chat.": "正方形。显示在 Chat 中与该玩家私聊的标签上。",
   "Square. Shows on the club's channel tab, in Chat.": "正方形。显示在 Chat 中俱乐部的频道标签上。",
-  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "俱乐部的文字标志，从正方形到宽度为高度的六倍。在 Chat 中显示在该俱乐部的消息前面，在 Nameplate 中代替俱乐部名称显示。"
+  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "俱乐部的文字标志，从正方形到宽度为高度的六倍。在 Chat 中显示在该俱乐部的消息前面，在 Nameplate 中代替俱乐部名称显示。",
+  "Reason": "原因",
+  "It's hidden from everyone else. Only you and your collaborators can still see it.": "其他人已无法看到。只有你和你的协作者仍然可以查看。",
+  "Think this was a mistake?": "认为这是误判？",
+  "Settings only": "仅设置文件",
+  "Just the settings files, for the ModCfgs folder": "只包含设置文件，放入 ModCfgs 文件夹"
 }

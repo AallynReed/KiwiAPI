@@ -3322,5 +3322,10 @@
   "How it looks in game, zoomed to twice its size.": "Así se ve en el juego, ampliado al doble de tamaño.",
   "Square. Shows on the whisper tab for a conversation with that player, in Chat.": "Cuadrada. Aparece en la pestaña de susurros de las conversaciones con ese jugador, en Chat.",
   "Square. Shows on the club's channel tab, in Chat.": "Cuadrada. Aparece en la pestaña del canal del club, en Chat.",
-  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "El logotipo del club, de cuadrado a seis veces más ancho que alto. Aparece delante de los mensajes de ese club en Chat y en lugar del nombre del club en Nameplate."
+  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "El logotipo del club, de cuadrado a seis veces más ancho que alto. Aparece delante de los mensajes de ese club en Chat y en lugar del nombre del club en Nameplate.",
+  "Reason": "Motivo",
+  "It's hidden from everyone else. Only you and your collaborators can still see it.": "Está oculto para todos los demás. Solo tú y tus colaboradores podéis seguir viéndolo.",
+  "Think this was a mistake?": "¿Crees que se trata de un error?",
+  "Settings only": "Solo ajustes",
+  "Just the settings files, for the ModCfgs folder": "Solo los archivos de ajustes, para la carpeta ModCfgs"
 }

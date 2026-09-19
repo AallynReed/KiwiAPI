@@ -3322,5 +3322,10 @@
   "How it looks in game, zoomed to twice its size.": "게임에서 보이는 모습 (2배 확대).",
   "Square. Shows on the whisper tab for a conversation with that player, in Chat.": "정사각형. Chat에서 그 플레이어와의 귓속말 탭에 표시됩니다.",
   "Square. Shows on the club's channel tab, in Chat.": "정사각형. Chat의 클럽 채널 탭에 표시됩니다.",
-  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "클럽의 워드마크. 정사각형부터 너비가 높이의 6배까지. Chat에서는 그 클럽의 메시지 앞에, Nameplate에서는 클럽 이름 대신 표시됩니다."
+  "The club's wordmark, from square up to six times as wide as it is tall. Shows in front of that club's messages in Chat, and in place of the club's name on Nameplate.": "클럽의 워드마크. 정사각형부터 너비가 높이의 6배까지. Chat에서는 그 클럽의 메시지 앞에, Nameplate에서는 클럽 이름 대신 표시됩니다.",
+  "Reason": "사유",
+  "It's hidden from everyone else. Only you and your collaborators can still see it.": "다른 사람에게는 보이지 않습니다. 본인과 공동 작업자만 계속 볼 수 있습니다.",
+  "Think this was a mistake?": "잘못된 조치라고 생각하시나요?",
+  "Settings only": "설정만",
+  "Just the settings files, for the ModCfgs folder": "설정 파일만 모은 것. ModCfgs 폴더에 넣으세요"
 }
