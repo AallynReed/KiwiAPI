@@ -253,6 +253,8 @@ function addEvolver(lc, ev, out) {
         accel: toNums(ev.props.ConstantAcceleration) || [0, 0, 0],
         drag: num(ev.props.Drag, 0),
         mass: num(ev.props.Mass, 1),
+        strategy: toSym(ev.props.IntegrationStrategy) || 'Adaptive',
+        dtThresh: num(ev.props.IntegrationDtTreshold, 0.02),
         constVel: toNums(ev.props.ConstantVelocityField) || null,
         velField: typeof ev.props.VelocityFieldSampler === 'string' ? ev.props.VelocityFieldSampler : null,
         posField: fieldName(ev.props.PositionField, 'Position'),
@@ -296,11 +298,17 @@ function addEvolver(lc, ev, out) {
       });
       break;
     }
-    case 'CParticleEvolver_Rotation':
-      // rotation speed is a per-particle FIELD (radians/s), scaled by ScreenspaceRotationCoeff
+    case 'CParticleEvolver_Rotation': {
+      // rotation speed is a per-particle FIELD (radians/s), scaled by ScreenspaceRotationCoeff.
+      // vf6 declares the angle field and the speed field itself (float, or float3 when Axial),
+      // so a script writing ScalarRotationSpeed lands in a real field.
+      const axial = toSym(ev.props.RotationMode) === 'Axial';
+      lc.addField(fieldName(ev.props.RotationAngleField, 'Rotation'), 1);
+      if (axial) lc.addField(fieldName(ev.props.AxialRotationSpeedField, 'RotationSpeed'), 3);
+      else lc.addField(fieldName(ev.props.ScalarRotationSpeedField, 'ScalarRotationSpeed'), 1);
       out.push({
         type: 'rotation',
-        axial: toSym(ev.props.RotationMode) === 'Axial',
+        axial,
         coeff: num(ev.props.ScreenspaceRotationCoeff, 1),
         speedField: fieldName(ev.props.ScalarRotationSpeedField, 'ScalarRotationSpeed'),
         axialField: fieldName(ev.props.AxialRotationSpeedField, 'RotationSpeed'),
@@ -308,6 +316,7 @@ function addEvolver(lc, ev, out) {
         posField: fieldName(ev.props.PositionField, 'Position'),
       });
       break;
+    }
     case 'CParticleEvolver_Damper':
       // ExpDampingTime is a RATE (v *= exp(-rate*dt)); 0 = no damping. MinSpeed is a floor.
       out.push({

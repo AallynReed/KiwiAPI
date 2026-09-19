@@ -35,8 +35,9 @@ export class System {
     this.emitter = new Float32Array(3);
     this._emitterPrev = new Float32Array(3);
     this.emitterDelta = new Float32Array(3);
-    // camera position, set by the viewer; axial Rotation evolvers read it
+    // camera position and target, set by the viewer; axial Rotation and view.* read them
     this.camPos = null;
+    this.camTarget = null;
     /* The game world stands in for as an invisible ground at the effect's origin: the
        engine asks its scene for the first hit along a ray, and world collisions (the
        Collisions evolver without a Collider, Physics WorldInteractionMode) land here. */
@@ -386,11 +387,10 @@ class LayerSim {
     }
   }
 
+  // A kill() does not stop the frame: the engine runs every remaining evolver (so a later
+  // trail Spawner still emits) and removes the particle in its post pass.
   runEvolvers(list, i, dt, lifeRatio, ctx) {
-    for (const ev of list) {
-      this.runEvolver(ev, i, dt, lifeRatio, ctx);
-      if (ctx._dead) return;
-    }
+    for (const ev of list) this.runEvolver(ev, i, dt, lifeRatio, ctx);
   }
 
   runEvolver(ev, i, dt, lifeRatio, ctx) {
@@ -398,14 +398,15 @@ class LayerSim {
       case 'physics': {
         // CParticleKernelCPU_Evolver_Physics. k = Drag * inverse mass; Drag 0 ignores wind.
         // Adaptive strategy: Fast at dt <= IntegrationDtTreshold (0.02), Stable otherwise
-        // and always for particles evolved in their spawn frame.
+        // and always for particles evolved in their spawn frame. Fast/Stable force one.
         const v = this.getAt(i, ev.velName), p = this.getAt(i, ev.posField);
         const im = this.field(ev.massField) ? this.getAt(i, ev.massField)[0] : ev.mass;
         let ax = ev.accel[0], ay = ev.accel[1], az = ev.accel[2];
         if (this.field(ev.accelField)) { const q = this.getAt(i, ev.accelField); ax += q[0]; ay += q[1]; az += q[2]; }
         if (this.field(ev.forceField)) { const q = this.getAt(i, ev.forceField); ax += im * q[0]; ay += im * q[1]; az += im * q[2]; }
         const k = ev.drag * im;
-        const stable = dt > 0.02 || this.getAt(i, '__born')[0] > 0;
+        const stable = ev.strategy === 'Stable' ||
+          (ev.strategy !== 'Fast' && (dt > ev.dtThresh || this.getAt(i, '__born')[0] > 0));
         if (ev.drag === 0 || k === 0) {
           const v0x = v[0], v0y = v[1], v0z = v[2];
           v[0] += ax * dt; v[1] += ay * dt; v[2] += az * dt;
@@ -803,6 +804,18 @@ class LayerSim {
         return [rho * Math.cos(t), y, rho * Math.sin(t)];
       },
       sceneField(name) { return name === 'Time' ? [self.sys.clock] : [0]; },
+      // view.direction()/position()/distance(p): the preview camera (set by the viewer)
+      view(member, args) {
+        const e = self.sys.camPos, t = self.sys.camTarget;
+        if (!e) return [0];
+        if (member === 'position') return [e[0], e[1], e[2]];
+        if (member === 'distance') { const p = args[0] || [0, 0, 0]; return [Math.hypot((p[0] || 0) - e[0], (p[1] || 0) - e[1], (p[2] || 0) - e[2])]; }
+        if (member === 'direction' && t) {
+          const d = [t[0] - e[0], t[1] - e[1], t[2] - e[2]], l = Math.hypot(d[0], d[1], d[2]) || 1;
+          return [d[0] / l, d[1] / l, d[2] / l];
+        }
+        return [0];
+      },
       // spatialLayers.<Layer>.neighborCount(pos, radius): entries within radius
       spatialCount(layer, pos, r) {
         const list = self.sys.spatial.get(layer);

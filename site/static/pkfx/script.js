@@ -364,6 +364,7 @@ function evalMethod(e, ctx, locals, st) {
     if (e.member === 'neighborCount' && ctx.spatialCount) return [ctx.spatialCount(e.obj.member, args[0], args[1] ? args[1][0] : 0)];
     return [0];
   }
+  if (objName === 'view' && ctx.view) return ctx.view(e.member, args);
   if (objName === 'scene' || objName === 'fast') {
     const fn = SCENE[e.member] || INTRINSICS[e.member];
     if (fn) return fn(...args);
