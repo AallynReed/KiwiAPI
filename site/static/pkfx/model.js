@@ -175,7 +175,15 @@ function buildLayer(ctx, desc, spawner) {
 
   // ---- evolvers (ordered tree; localspace keeps its children nested) ----
   // samplerRefs: LimitDistance binds its sampler by object, not by name
-  const layerCtx = { ctx, samplers, fieldIndex, addField, spawnerAcc: 0, samplerRefs: new Set(desc.props.Samplers || []) };
+  // Collisions and trail spawners read last frame's value of THEIR position field (which
+  // is not always Position), so each such field gets its own "__prev:<field>" slot.
+  const prevFields = new Map();
+  const prevOf = (posField) => {
+    const name = `__prev:${posField}`;
+    if (!prevFields.has(posField)) { prevFields.set(posField, name); addField(name, 3); }
+    return name;
+  };
+  const layerCtx = { ctx, samplers, fieldIndex, addField, prevOf, spawnerAcc: 0, samplerRefs: new Set(desc.props.Samplers || []) };
   const evolvers = [];
   const state = deref(doc, (desc.props.States || [])[0]);
   if (state) for (const ref of state.props.Evolvers || []) addEvolver(layerCtx, deref(doc, ref), evolvers);
@@ -205,6 +213,7 @@ function buildLayer(ctx, desc, spawner) {
     name: (spawner ? spawner.node.id : desc.id).replace('$LOCAL$/', ''),
     isChild: !spawner,
     fields, fieldIndex, stride,
+    prevFields: [...prevFields],   // [positionField, "__prev:<field>"]
     samplers, spawnScript, evolvers, events, renderers,
     spawn: spawner ? spawnSpec(ctx, spawner) : null,
     inheritVelocity: num(desc.props.InheritInitialVelocity, 0),
@@ -266,8 +275,8 @@ function addEvolver(lc, ev, out) {
       });
       // WorldInteractionMode appends the shared collision kernel right after physics
       if ({ OneWay: 1, TwoWay: 2 }[toSym(ev.props.WorldInteractionMode)]) {
-        lc.addField('__cflags', 1); lc.addField('__prev', 3);
-        out.push(collideSpec(ev.props, true, null));
+        lc.addField('__cflags', 1);
+        out.push(collideSpec(ev.props, true, null, lc));
       }
       break;
     case 'CParticleEvolver_Field': {
@@ -335,9 +344,9 @@ function addEvolver(lc, ev, out) {
         const accField = `__sp${n}`, countField = `__spc${n}`;
         lc.addField(accField, 1);
         lc.addField(countField, 1);
-        lc.addField('__prev', 3);
+        const posField = fieldName(ev.props.PositionField, 'Position');
         out.push({
-          type: 'spawner', child,
+          type: 'spawner', child, posField, prevField: lc.prevOf(posField),
           metric: toSym(ev.props.SpawnMetric) || 'Distance',
           interval: Math.max(num(ev.props.SpawnInterval, 0.1), 1e-5),
           firstDelay: Math.min(Math.max(num(ev.props.FirstSpawnDelay, 1), 0), 1),   // fraction of one interval
@@ -379,8 +388,8 @@ function addEvolver(lc, ev, out) {
       });
       break;
     case 'CParticleEvolver_Collisions':
-      lc.addField('__cflags', 1); lc.addField('__prev', 3);
-      out.push(collideSpec(ev.props, false, typeof ev.props.Collider === 'string' && ev.props.Collider ? ev.props.Collider : null));
+      lc.addField('__cflags', 1);
+      out.push(collideSpec(ev.props, false, typeof ev.props.Collider === 'string' && ev.props.Collider ? ev.props.Collider : null, lc));
       break;
     case 'CParticleEvolver_Projection': {
       // moves Position onto the shape's surface each frame; optional int3 pcoords out
@@ -445,8 +454,10 @@ function addEvolver(lc, ev, out) {
 
 // Collision response settings (CParticleEvolver_Collisions, or Physics' own collision
 // props). Defaults differ between the two: ContactFriction 0.7 vs 0, DefaultMass vs Mass.
-function collideSpec(p, physics, collider) {
+function collideSpec(p, physics, collider, lc) {
+  const posField = fieldName(p.PositionField, 'Position');
   return {
+    prevField: lc.prevOf(posField),
     type: 'collide', collider,
     die: p.DieOnContact === true,
     maxBounces: num(p.BouncesBeforeDeath, 1),
@@ -463,7 +474,7 @@ function collideSpec(p, physics, collider) {
     event: typeof p.EventOnCollide === 'string' && p.EventOnCollide ? p.EventOnCollide : 'OnCollide',
     eventPostVel: p.EventUsesPostContactVelocity === true,
     mass: physics ? num(p.Mass, 1) : num(p.DefaultMass, 1),
-    posField: fieldName(p.PositionField, 'Position'),
+    posField,
     velField: fieldName(p.VelocityField, 'Velocity'),
     massField: fieldName(p.MassField, 'Mass'),
     restField: fieldName(p.BounceResitutionField, 'BounceRestitution'),

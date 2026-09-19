@@ -25,6 +25,7 @@ function combine(mode, a, b) {
   }
 }
 const MAX_EMISSIONS = 128;
+const FLOOR_DROP = 1;   // preview ground, this far below the emitter
 
 export class System {
   constructor(effect, rng = Math.random) {
@@ -38,11 +39,13 @@ export class System {
     // camera position and target, set by the viewer; axial Rotation and view.* read them
     this.camPos = null;
     this.camTarget = null;
-    /* The game world stands in for as an invisible ground at the effect's origin: the
+    /* The game world stands in for as an invisible ground 1 unit below the effect: the
        engine asks its scene for the first hit along a ray, and world collisions (the
-       Collisions evolver without a Collider, Physics WorldInteractionMode) land here. */
+       Collisions evolver without a Collider, Physics WorldInteractionMode) land here.
+       Effects sit on a character or mount, above the ground; a floor at the effect's own
+       height caught anything launched downward at the origin. */
     this.sceneIntersect = (o, d, len) => {
-      const y0 = this.emitter[1];
+      const y0 = this.emitter[1] - FLOOR_DROP;
       if (!(d[1] < 0) || o[1] < y0) return null;
       const t = (o[1] - y0) / -d[1];
       return t <= len ? { t, n: [0, 1, 0] } : null;
@@ -54,9 +57,11 @@ export class System {
     for (const ls of this.layers) for (const s of Object.values(ls.L.samplers)) if (s instanceof TurbulenceSampler) this._turb.push(s);
     this.time = 0;
     this.clock = 0;   // scene.Time: total seconds, not reset when the effect restarts
-    // spatial layers (SpatialInsertion fills, Flocking and spatialLayers.* scripts query):
-    // name -> [{ p, f }], refilled every frame
+    // spatial layers: name -> [{ p, f }]. Double-buffered like CParticleSpatialStorage_MainMemory
+    // ::Update: SpatialInsertion writes `_spatialNext` while Flocking and spatialLayers.* read
+    // `spatial`, the previous frame's inserts; the buffers swap at the start of each frame.
     this.spatial = new Map();
+    this._spatialNext = new Map();
     this.nextId = 0;  // SelfIDs, and (negated) spawner-instance ids for ribbon grouping
     this.reset();
   }
@@ -94,7 +99,7 @@ export class System {
     this.emitterDelta[2] = this.emitter[2] - this._emitterPrev[2];
     this._emitterPrev.set(this.emitter);
     for (const t of this._turb) t.time = this.time;
-    this.spatial.clear();
+    const sp = this.spatial; this.spatial = this._spatialNext; this._spatialNext = sp; sp.clear();
 
     for (const l of this.layers) l.spawnTick(dt);
     for (const l of this.layers) l.update(dt, false);
@@ -121,11 +126,14 @@ class LayerSim {
     this.data = new Float32Array(MAX * this.stride);
     this.count = 0;
     this.emissions = [];
-    this._needsPrev = !!layer.fieldIndex.__prev;
+    this._prev = layer.prevFields || [];
     this._bornPending = false;
     this._ctx = this.makeCtx();
   }
   clear() { this.count = 0; this.emissions = []; }
+
+  // last frame's value of every position field a collision or trail spawner reads
+  savePrev(i) { for (const [pf, name] of this._prev) this.setAt(i, name, this.getAt(i, pf)); }
 
   field(name) { return this.L.fieldIndex[name]; }
 
@@ -307,7 +315,7 @@ class LayerSim {
       const v = this.getAt(i, 'Velocity');
       this.setAt(i, 'Velocity', [v[0] + e.vel0[0], v[1] + e.vel0[1], v[2] + e.vel0[2]]);
     }
-    if (this._needsPrev) this.setAt(i, '__prev', this.getAt(i, 'Position'));
+    this.savePrev(i);
     this.fireEvent('OnSpawn', i);
   }
 
@@ -332,7 +340,7 @@ class LayerSim {
       const f = this.L.inheritVelocity;
       this.setAt(i, 'Velocity', [v[0] + pv[0] * f, v[1] + pv[1] * f, v[2] + pv[2] * f]);
     }
-    if (this._needsPrev) this.setAt(i, '__prev', this.getAt(i, 'Position'));
+    this.savePrev(i);
     this.fireEvent('OnSpawn', i);
   }
 
@@ -382,7 +390,7 @@ class LayerSim {
       const pp = this.getAt(i, 'Position');
       if (!isFinite(pp[0]) || !isFinite(pp[1]) || !isFinite(pp[2]) ||
           Math.abs(pp[0]) > 1e5 || Math.abs(pp[1]) > 1e5 || Math.abs(pp[2]) > 1e5) { this.kill(i); i--; continue; }
-      if (this._needsPrev) this.setAt(i, '__prev', pp);
+      this.savePrev(i);
       if (born) this.setAt(i, '__born', [0]);
     }
   }
@@ -495,7 +503,7 @@ class LayerSim {
         let m;
         if (ev.metric === 'Time') m = dt;
         else if (ev.metric === 'Distance') {
-          const p = this.getAt(i, 'Position'), q = this.getAt(i, '__prev');
+          const p = this.getAt(i, ev.posField), q = this.getAt(i, ev.prevField);
           m = Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
         } else break;
         let flux = 1;
@@ -511,7 +519,7 @@ class LayerSim {
         if (!n) break;
         const child = this.sys.layers[ev.child];
         if (!child) break;
-        const p = this.getAt(i, 'Position'), q = this.getAt(i, '__prev');
+        const p = this.getAt(i, ev.posField), q = this.getAt(i, ev.prevField);
         const life = this.getAt(i, 'Life')[0] || 1, age0 = this.getAt(i, 'Age')[0] - dt;
         let sEC = this.getAt(i, ev.countField)[0];
         for (let k = 0; k < n; k++) {
@@ -590,7 +598,7 @@ class LayerSim {
           if (s && s.intersect) query = (o, d, l) => s.intersect(o, d, l);
         } else query = this.sys.sceneIntersect;
         if (!query) break;
-        let P0 = this.getAt(i, '__prev'), P1 = this.getAt(i, ev.posField), rdt = dt;
+        let P0 = this.getAt(i, ev.prevField), P1 = this.getAt(i, ev.posField), rdt = dt;
         for (let it = 0; it < ev.maxIter; it++) {
           const dx = P1[0] - P0[0], dy = P1[1] - P0[1], dz = P1[2] - P0[2], len = Math.hypot(dx, dy, dz);
           let flags = this.getAt(i, '__cflags')[0] | 0;
@@ -675,8 +683,8 @@ class LayerSim {
         break;
       }
       case 'spatialinsert': {
-        let list = this.sys.spatial.get(ev.layer);
-        if (!list) this.sys.spatial.set(ev.layer, list = []);
+        let list = this.sys._spatialNext.get(ev.layer);
+        if (!list) this.sys._spatialNext.set(ev.layer, list = []);
         const f = {};
         for (const n of ev.fields) if (this.field(n)) f[n] = this.getAt(i, n);
         list.push({ p: this.getAt(i, ev.posField), f, self: this.getAt(i, '__sid')[0] });
