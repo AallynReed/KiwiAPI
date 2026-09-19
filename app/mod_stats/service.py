@@ -1,4 +1,4 @@
-"""Statistics for one creator's Zakros UI mods on the Mods Hub, Trovesaurus and Steam Workshop.
+"""Statistics for one creator's Zakros mods on the Mods Hub, Trovesaurus and Steam Workshop.
 
 The hub's counts come from Mongo. A project's ``download_count`` adds up every release,
 so a player who takes each update counts once per update; the hub figure here is the
@@ -31,7 +31,8 @@ logger = logging.getLogger("kiwi.mod_stats")
 TROVESAURUS_CATALOG_URL = "https://trovesaurus.com/api/mods-all"
 STEAM_DETAILS_URL = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/"
 HISTORY_DAYS = 365
-TITLE_PREFIX = "Zakros UI - "
+# Every Zakros line, not just "Zakros UI - ": "Zakros FX - " counts too.
+TITLE_PREFIX = "Zakros "
 FRESH = timedelta(minutes=50)
 
 
