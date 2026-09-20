@@ -203,6 +203,12 @@ _CONTEXT_OPEN_RE = re.compile(rb"\x1e[\x14\x24]\x00([\x00\x02\x04\x06])\xbe\x01\
 _CONTEXT_MOUNT_RE = re.compile(rb"\xbe\x01\xae\x01\x00\x04\x00\x10\x10\x04\x24$", re.DOTALL)
 # A continuation record inside an already-open block; group 1 is its own stat id.
 _CONTEXT_CONT_RE = re.compile(rb"\x1e[\x14\x24]\x00([\x00-\x7f])\x10[\x02\x04]\x24$", re.DOTALL)
+# `3e AE …` opens the collection-UNLOCK block: the bonuses a dragon grants for being
+# unlocked at all, which apply whether or not it is equipped. Slot blocks open under
+# marker `BE 01`; this one opens under `3e`, and carries no slot byte because it has no
+# slot. Without it the block inherited whichever slot was open last - on every dragon
+# that is the wings block, so "+1000 Max Health" rendered as a Wings bonus.
+_CONTEXT_UNLOCK_RE = re.compile(rb"\x3e\xae.\x00\x04\x00.\x10.\x24$", re.DOTALL)
 
 _SLOT_BY_CONTEXT: dict[int, str] = {
     0x00: "$EquipmentSlot_Mount",
@@ -216,7 +222,9 @@ def _slot_context(prefix: bytes, current: str | None) -> tuple[str | None, bool,
     """`(slot key, opened a new block, continuation stat id)` for one record.
 
     `prefix` is the bytes leading up to the record's float. A block opener sets the
-    slot for itself and every record after it until the next opener; a continuation
+    slot for itself and every record after it until the next opener - including an
+    opener that states no slot, which CLEARS it rather than leaving the last one
+    standing; a continuation
     inherits the open slot and, critically, carries its OWN stat id - the header byte
     a continuation record would otherwise be read from belongs to the block, so
     without this every record after the first in a block reports the first one's stat.
@@ -227,6 +235,8 @@ def _slot_context(prefix: bytes, current: str | None) -> tuple[str | None, bool,
         return _SLOT_BY_CONTEXT.get(match.group(1)[0]), True, None
     if _CONTEXT_MOUNT_RE.search(before_float):
         return "$EquipmentSlot_Mount", True, None
+    if _CONTEXT_UNLOCK_RE.search(before_float):
+        return None, True, None
     cont = _CONTEXT_CONT_RE.search(before_float)
     if cont:
         return current, False, unzig(cont.group(1)[0])
