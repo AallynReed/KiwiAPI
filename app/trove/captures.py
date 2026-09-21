@@ -181,12 +181,16 @@ async def list_luxion_history(
     )
 
 
-async def list_luxion_starts() -> list[int]:
-    """Every captured Luxion run-start anchor (unix seconds), newest first. Used to
-    place recorded appearances on the yearly calendar (they can't be computed).
-    Appearances are sparse (~one per 4 weeks), so fetching all is cheap."""
+async def list_luxion_runs() -> list[dict]:
+    """Every captured Luxion run, newest first, as ``schedule_for`` keyword args.
+
+    The anchor alone is not enough: a run that ended early has fewer windows than
+    the projection, so the sighting and end data has to travel with it or the
+    calendar draws windows that never happened. Appearances are sparse (~one per 4
+    weeks), so fetching all is cheap."""
     docs = await LuxionAppearance.find_all().sort("-started_at").to_list()
-    return [d.started_at for d in docs]
+    return [{"day_anchor": d.started_at, "first_seen": d.first_seen_at,
+             "last_seen": d.last_seen_at, "ended": d.ended_at} for d in docs]
 
 
 # --- Hourly challenge ------------------------------------------------------

@@ -685,7 +685,7 @@ async def site_calendar_yearly() -> JSONResponse:
     Stampy, plus any recorded Luxion runs, as one flat, start-sorted list. Same
     compute as ``/v1`` rotations calendar - tokenless and long-cached (everything
     but Luxion is deterministic; Luxion shows only known past/current runs)."""
-    luxion_runs = await trove_captures.list_luxion_starts()
+    luxion_runs = await trove_captures.list_luxion_runs()
     return JSONResponse(
         trove_calendar.yearly_calendar(luxion_runs=luxion_runs),
         headers={"Cache-Control": "public, max-age=300"},

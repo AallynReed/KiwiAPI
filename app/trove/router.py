@@ -594,7 +594,7 @@ async def get_calendar(ctx: AccessContext = _ROT) -> YearlyCalendar:
     weekly buffs, Corruxion/Fluxion, gardening, Wild Mana, Stampy - plus any
     recorded Luxion runs, as one flat, start-sorted timeline. (Invasion is
     excluded; Luxion is captured, so only known past/current runs appear.)"""
-    luxion_runs = await captures.list_luxion_starts()
+    luxion_runs = await captures.list_luxion_runs()
     return YearlyCalendar(**trove_calendar.yearly_calendar(luxion_runs=luxion_runs))
 
 

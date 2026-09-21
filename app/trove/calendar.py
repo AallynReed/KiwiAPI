@@ -132,7 +132,7 @@ def _mana(ws: datetime, we: datetime) -> list[dict]:
     return out
 
 
-def _luxion(runs: list[int], ws: datetime, we: datetime) -> list[dict]:
+def _luxion(runs: list[dict], ws: datetime, we: datetime) -> list[dict]:
     """Recorded Luxion runs, expanded into their 3-hour merchant windows.
 
     Unlike every other generator here, Luxion's *placement* is NOT computed - its
@@ -140,14 +140,14 @@ def _luxion(runs: list[int], ws: datetime, we: datetime) -> list[dict]:
     actually captured (past appearances + the current one); future runs can't be
     projected. The windows within a run are computed, off a global 27h grid, so we
     emit one short event per window (its own timeline row, rendered as bare
-    coloured pills). ``runs`` are the captured start-DAY anchors from
-    ``LuxionAppearance.started_at``; ``schedule_for`` returns the grid slots that
-    fall inside each run."""
+    coloured pills). ``runs`` are captured runs as ``schedule_for`` keyword args
+    (see ``captures.list_luxion_runs``) - the whole run, not just its anchor, so a
+    run the bot saw END early stops at the last window it really had."""
     from app.trove.luxion import schedule_for
 
     out = []
-    for started_at in runs:
-        for w in schedule_for(started_at):
+    for run in runs:
+        for w in schedule_for(**run):
             s = datetime.fromtimestamp(w["starts_at"], server_time.UTC)
             e = datetime.fromtimestamp(w["ends_at"], server_time.UTC)
             if _overlaps(s, e, ws, we):
@@ -156,12 +156,13 @@ def _luxion(runs: list[int], ws: datetime, we: datetime) -> list[dict]:
 
 
 def yearly_calendar(now: datetime | None = None,
-                    luxion_runs: list[int] | None = None) -> dict:
+                    luxion_runs: list[dict] | None = None) -> dict:
     """All recurring events across ±365 days, as one flat list sorted by start.
 
-    ``luxion_runs`` (run-start anchors, unix seconds) are passed in by the caller
-    rather than computed - Luxion is captured, not deterministic. Omitting it just
-    leaves Luxion off the timeline; everything else stays pure + unit-testable."""
+    ``luxion_runs`` (captured runs, as ``schedule_for`` keyword args) are passed in
+    by the caller rather than computed - Luxion is captured, not deterministic.
+    Omitting it just leaves Luxion off the timeline; everything else stays pure +
+    unit-testable."""
     real, ws, we = _window(now)
     events: list[dict] = []
     events += _weekly_buffs(ws, we)
