@@ -45,8 +45,9 @@ logger = logging.getLogger("kiwi.custom_art.builder")
 VANILLA = {
     service.CHAT: ("ui/chat.swf", "chat.vanilla.swf"),
     service.NAMEPLATE: ("ui/nameplate.swf", "nameplate.vanilla.swf"),
+    service.CLUBS: ("ui/clubs.swf", "clubs.vanilla.swf"),
 }
-ART = (f"{service.CHAT}/art", f"{service.NAMEPLATE}/art", "originals")
+ART = tuple(f"{mod}/art" for mod in service.MODS) + ("originals",)
 _TIMEOUT = 1800
 _LOG_MAX = 60_000
 
@@ -216,7 +217,7 @@ async def _process(requests: list[ArtRequest]) -> None:
         await _game_files(tree, run)
         await _place(tree, requests, run)
         await asyncio.to_thread(_commit, run, tree, list(ART), _art_message(requests))
-        for mod in (service.CHAT, service.NAMEPLATE):
+        for mod in service.MODS:
             mine = [r for r in requests if mod in service.mods_of(r) and mod not in r.versions]
             if mine:
                 pages[mod] = await _publish(tree, mod, mine, run)

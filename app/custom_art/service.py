@@ -32,9 +32,11 @@ logger = logging.getLogger("kiwi.custom_art")
 
 CHAT = "Zakros UI - Chat"
 NAMEPLATE = "Zakros UI - Nameplate"
+CLUBS = "Zakros UI - Clubs"
+MODS = (CHAT, NAMEPLATE, CLUBS)
 SLOTS = {"player": ("pfp",), "club": ("pfp", "banner")}
 LANES = {("player", "pfp"): "pfp", ("club", "pfp"): "club", ("club", "banner"): "banner"}
-LANE_MODS = {"pfp": (CHAT,), "club": (CHAT,), "banner": (CHAT, NAMEPLATE)}
+LANE_MODS = {"pfp": (CHAT,), "club": (CHAT, CLUBS), "banner": (CHAT, NAMEPLATE, CLUBS)}
 LANE_LABELS = {"pfp": "profile picture", "club": "club picture", "banner": "club banner"}
 WIDEST = 6
 CHANGELOG_MAX = 240
@@ -79,7 +81,7 @@ def lanes(request) -> list[str]:
 
 
 def mods_of(request) -> list[str]:
-    return [mod for mod in (CHAT, NAMEPLATE) if any(mod in LANE_MODS[lane] for lane in lanes(request))]
+    return [mod for mod in MODS if any(mod in LANE_MODS[lane] for lane in lanes(request))]
 
 
 def what(request, mod: str | None = None) -> str:
