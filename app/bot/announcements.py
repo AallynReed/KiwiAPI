@@ -42,6 +42,10 @@ class AnnouncementType:
     # The current occurrence's end (unix), used as the auto-delete time. None means
     # "no natural end" - supersede-only (e.g. server status: replaced on each change).
     expiry: ExpiryFn | None = None
+    # Embed keys merged over the generated banner (auto_manage types only). The
+    # banner is a PNG, so a type whose value is a list of exact times supplies them
+    # here as Discord <t:> markup instead.
+    caption: EmbedFn | None = None
 
 
 # Anchor fns import lazily (inside each fn) so importing this module stays cheap and
@@ -115,9 +119,20 @@ async def _fluxion_anchor() -> str | None:
 
 
 async def _luxion_anchor() -> str | None:
+    """Fires when a run starts AND again as each 3-hour rotation opens.
+
+    ``active`` means the RUN is on - a full trove week - while the merchant is only
+    buyable inside a rotation, so anchoring on the run start alone posted up to a
+    day before anyone could trade and then stayed silent through every real opening.
+    The anchor only ever moves forward, so a rotation closing cannot re-post the
+    run announcement."""
     from app.trove.luxion import get_luxion
     l = await get_luxion()
-    return str(l["starts_at"]) if l.get("active") else None
+    if not (l.get("active") and l.get("starts_at")):
+        return None
+    now = int(time.time())
+    opened = [w for w in (l.get("schedule") or []) if w["starts_at"] <= now]
+    return f"{l['starts_at']}:{opened[-1]['starts_at']}" if opened else str(l["starts_at"])
 
 
 async def _news_anchor() -> str | None:
@@ -274,10 +289,10 @@ ANNOUNCEMENT_TYPES: tuple[AnnouncementType, ...] = (
         "Rotations", embeds.fluxion_embed, _fluxion_anchor,
         auto_manage=True, expiry=_fluxion_expiry),
     AnnouncementType(
-        "luxion", "Luxion merchant",
-        "Post when Luxion arrives for its visit.",
+        "luxion", "Trials of Luxion",
+        "Post when the Trials of Luxion start, then again as each rotation opens.",
         "Rotations", embeds.luxion_embed, _luxion_anchor,
-        auto_manage=True, expiry=_luxion_expiry),
+        auto_manage=True, expiry=_luxion_expiry, caption=embeds.luxion_caption),
     AnnouncementType(
         "trove_news", "Trove news",
         "Post each new Trove news article from the official feed.",

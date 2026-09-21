@@ -408,38 +408,72 @@ def fluxion_embed() -> dict:
 
 # ── /luxion ────────────────────────────────────────────────────────────────
 
+# How many upcoming rotations a Luxion post lists. A run holds 6-7 of them.
+_LUXION_ROTATIONS = 7
+
+
+def _luxion_rotations(schedule: list[dict], now: int) -> list[str]:
+    """The run's rotations that have not finished yet, soonest first, as
+    ``opens - closes · relative`` lines."""
+    return [f"{_ts(w['starts_at'], 'F')} - {_ts(w['ends_at'], 'F')}  ·  {_ts(w['starts_at'], 'R')}"
+            for w in schedule if (w.get("ends_at") or 0) > now][:_LUXION_ROTATIONS]
+
+
 async def luxion_embed() -> dict:
-    """Luxion: here from the moment the bot sees him in-game until the run's end,
-    with a 3-hour merchant window that shifts +3h each day. Captured from the game,
-    so we only know the current run."""
+    """The Trials of Luxion: the run is live from the moment the bot sees him
+    in-game until it ends, and a 3-hour rotation opens inside it every 27 hours.
+    Captured from the game, so we only know the current run."""
     l = await get_luxion()
     now = int(time.time())
     if l.get("active"):
-        desc = (t("**Luxion is here!**") + "\n"
-                + t("Leaves {when}", when=_ts(l['ends_at'], 'R')) + f" · {_ts(l['ends_at'], 'f')}")
-        win = l.get("current_window") or l.get("next_window")
-        if l.get("merchant_open") and win:
-            desc += "\n" + t("**Open now** — closes {when}", when=_ts(win['ends_at'], 'R'))
-        elif win:
-            desc += "\n" + t("Next window {when}", when=_ts(win['starts_at'], 'R')) + f" · {_ts(win['starts_at'], 'f')}"
+        win = l.get("current_window")
+        if win:
+            desc = (t("**A rotation is open!**") + "\n"
+                    + t("Closes {when}", when=_ts(win['ends_at'], 'R')) + f" · {_ts(win['ends_at'], 'f')}")
+        else:
+            # Between rotations the run is well underway, so don't call the next one
+            # the first - only a run whose opening rotation is still ahead gets that.
+            opened = any(w["starts_at"] <= now for w in (l.get("schedule") or []))
+            desc = (t("**The Trials of Luxion are live**") if opened
+                    else t("**Trials of Luxion started**"))
+            nxt = l.get("next_window")
+            if nxt:
+                desc += ("\n" + (t("Next rotation {when}", when=_ts(nxt['starts_at'], 'R')) if opened
+                                 else t("First rotation {when}", when=_ts(nxt['starts_at'], 'R')))
+                         + f" · {_ts(nxt['starts_at'], 'f')}")
+        desc += "\n" + t("Ends {when}", when=_ts(l['ends_at'], 'R'))
     else:
-        desc = t("Luxion is away — it returns roughly every 4 weeks (dev-set, unpredictable).")
+        desc = t("The Trials of Luxion are away — they return roughly every 4 weeks "
+                 "(dev-set, unpredictable).")
     fields = []
-    upcoming = [w for w in (l.get("schedule") or []) if (w.get("ends_at") or 0) > now][:6]
-    if upcoming:
-        lines = [f"{w.get('state', '')} · {_ts(w['starts_at'], 'f')} → {_ts(w['ends_at'], 't')}"
-                 for w in upcoming]
-        fields.append({"name": t("Daily windows"), "value": "\n".join(lines), "inline": False})
+    rotations = _luxion_rotations(l.get("schedule") or [], now)
+    if rotations:
+        fields.append({"name": t("Next rotations"), "value": "\n".join(rotations), "inline": False})
     embed = {
-        "title": t("🐉 Luxion"),
+        "title": t("🐉 Trials of Luxion"),
         "color": 0xF5C542,
         "description": desc,
         "fields": fields,
-        "footer": {"text": t("Luxion merchant · a 3-hour window each day")},
+        "footer": {"text": t("Trials of Luxion · a 3-hour rotation every 27 hours")},
     }
     if l.get("active"):
         embed["image"] = {"url": f"{_ASSET}/announce.png?kind=luxion&v={l.get('starts_at') or 0}"}
     return embed
+
+
+async def luxion_caption() -> dict:
+    """Embed text posted with the Luxion announcement banner. The banner is a PNG
+    and cannot carry Discord timestamps, so the rotation times ride along here."""
+    l = await get_luxion()
+    if not l.get("active"):
+        return {}
+    win = l.get("current_window")
+    desc = (t("**A rotation is open** — closes {when}", when=_ts(win['ends_at'], 'R')) if win
+            else t("**Trials of Luxion started**"))
+    rotations = _luxion_rotations(l.get("schedule") or [], int(time.time()))
+    if rotations:
+        desc += "\n\n" + t("Next rotations:") + "\n" + "\n".join(rotations)
+    return {"description": desc}
 
 
 # ── /stampy ────────────────────────────────────────────────────────────────

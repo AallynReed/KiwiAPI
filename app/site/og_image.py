@@ -686,7 +686,7 @@ _ANN_TITLE = {
     "daily_bonuses": "Daily Bonus", "longshade": "Depth-15 Biomes",
     "wild_mana": "Wild Mana", "stampy": "Stampy Event",
     "corruxion": "Corruxion Merchant", "fluxion": "Fluxion Merchant",
-    "luxion": "Luxion Merchant",
+    "luxion": "Trials of Luxion",
     "server_status": "Trove Server Status", "game_update": "Trove Update",
     "challenge_collection": "Collection Challenge", "challenge_rampage": "Rampage Alert",
     "challenge_racing": "Racing Challenge", "challenge_target": "Target Challenge",
@@ -766,13 +766,15 @@ async def _announcement_content(kind: str) -> tuple[str, tuple, list[str]]:
         from app.trove.luxion import get_luxion
         m = await get_luxion()
         if m.get("active"):
-            win = m.get("current_window") or m.get("next_window")
-            if m.get("merchant_open") and win:
-                lines = [t("Here now · open"), t("Closes {when}", when=_rel_coarse(win.get("ends_at")))]
-            elif win:
-                lines = [t("Here now"), t("Next window {when}", when=_rel_coarse(win.get("starts_at")))]
+            win = m.get("current_window")
+            nxt = m.get("next_window")
+            if win:
+                lines = [t("Rotation open"), t("Closes {when}", when=_rel_coarse(win.get("ends_at")))]
+            elif nxt:
+                lines = [t("Trials started"),
+                         t("Next rotation {when}", when=_rel_coarse(nxt.get("starts_at")))]
             else:
-                lines = [t("Here now"), t("Leaves {when}", when=_rel_coarse(m.get("ends_at")))]
+                lines = [t("Trials started"), t("Ends {when}", when=_rel_coarse(m.get("ends_at")))]
         else:
             lines = [t("Away"), t("Returns every ~4 weeks")]
     elif kind == "server_status":

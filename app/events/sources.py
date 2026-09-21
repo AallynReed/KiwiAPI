@@ -70,11 +70,17 @@ async def _luxion_data() -> dict:
 
 
 def _luxion_sig(d: dict) -> str | None:
-    # Signature = the run start, which is the FIRST sighting and never moves while
-    # the run is open - so the event fires once per appearance and every hourly
-    # re-sighting collapses into it, even ones past the projected end. Away -> None
-    # (no event), so the next run has to actually begin before this fires again.
-    return str(d["starts_at"]) if d.get("active") and d.get("starts_at") else None
+    # Signature = the run start plus the most recently OPENED rotation, so the event
+    # fires when the run is detected and again as each 3-hour window opens. The run
+    # start never moves while the run is open, so the hourly re-sightings still
+    # collapse; the second half only ever moves FORWARD (a closed rotation keeps the
+    # last opening), so a window ending cannot re-fire the run-start event. Away ->
+    # None (no event), so the next run has to actually begin before this fires again.
+    if not (d.get("active") and d.get("starts_at")):
+        return None
+    now = int(time.time())
+    opened = [w for w in (d.get("schedule") or []) if w["starts_at"] <= now]
+    return f"{d['starts_at']}:{opened[-1]['starts_at']}" if opened else str(d["starts_at"])
 
 
 # ── time-driven: merchants ──────────────────────────────────────────────────

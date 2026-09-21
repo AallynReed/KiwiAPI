@@ -259,8 +259,10 @@ async def _announce_one(bot: discord.Client, atype, configs: list[GuildConfig]) 
                 expires = await atype.expiry()
             token = _refresh_token(expires, int(time.time()))
             for lang in langs:
-                embeds_by_lang[lang] = discord.Embed.from_dict(
-                    _image_embed_dict(atype.key, token, lang))
+                d = _image_embed_dict(atype.key, token, lang)
+                if atype.caption is not None:
+                    d.update(await _build_embed(atype.caption, lang))
+                embeds_by_lang[lang] = discord.Embed.from_dict(d)
         else:
             for lang in langs:
                 embeds_by_lang[lang] = discord.Embed.from_dict(
