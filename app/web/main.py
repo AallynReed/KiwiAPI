@@ -24,6 +24,7 @@ from app.core.middleware import (
     add_static_compression_middleware,
 )
 from app.core.observability import add_request_context_middleware, configure_logging
+from app.pageviews.beacon import add_pageview_beacon_middleware, beacon
 from app.web.meta import router as meta_router
 from app.web.pages import router as pages_router
 
@@ -37,7 +38,11 @@ async def lifespan(app: FastAPI):
     configure_logging(logging.DEBUG if settings.debug else logging.INFO)
     logger.info("website container up (api=%s, internal=%s)",
                 settings.api_url, settings.internal_api_url)
+    # Page views are hashed here and beaconed to the api's internal ingest - the
+    # one thing the presentation tier reports back (see app/pageviews/beacon.py).
+    beacon.start()
     yield
+    await beacon.stop()
 
 
 app = FastAPI(
@@ -57,12 +62,13 @@ register_error_handlers(app)   # themed HTML 404 for pages (branches on Accept +
 #     exceptions into the standard envelope.
 #   • security: applies the relaxed _SITE_CSP to pages/static + the body cap.
 #   • head innermost: flips HEAD→GET for routing only.
-# Omitted vs the API: CORS (pages are same-origin), pageview/usage/idempotency
-# accounting (no DB here), and the api-host redirect (the website IS the
-# canonical host).
+# Omitted vs the API: CORS (pages are same-origin), usage/idempotency accounting
+# (no DB here), and the api-host redirect (the website IS the canonical host).
+# The pageview layer IS here, but as a beacon to the api rather than a DB write.
 # Compression sits outermost: the edge proxy only gzips text/html, so /static
 # CSS, JS and locale JSON are compressed here or not at all.
 add_head_method_middleware(app)
+add_pageview_beacon_middleware(app)
 add_security_middleware(app)
 add_request_context_middleware(app)
 add_static_compression_middleware(app)

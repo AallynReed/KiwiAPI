@@ -67,6 +67,7 @@ from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
 from app.images.router import router as images_router
 from app.mod_stats.router import router as mod_stats_router
 from app.mod_stats.service import start_mod_stats_refresher, stop_mod_stats_refresher
+from app.pageviews.ingest import router as pageview_ingest_router
 from app.pageviews.middleware import add_pageview_middleware
 from app.pageviews.recorder import recorder as pageview_recorder
 from app.scanning.router import router as scanning_router
@@ -372,6 +373,7 @@ app.include_router(discord_router, include_in_schema=False)
 app.include_router(site_auth_router, include_in_schema=False)
 app.include_router(site_account_router, include_in_schema=False)  # GDPR export + self-delete (site_auth)
 app.include_router(moderation_router, include_in_schema=False)  # public notice-and-action reports (DSA)
+app.include_router(pageview_ingest_router)  # website-container page-view beacon (shared-secret)
 app.include_router(site_oauth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)

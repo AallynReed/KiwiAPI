@@ -115,6 +115,9 @@ services:
       POSTGRES_DSN: ${POSTGRES_DSN:-postgresql://${POSTGRES_USER:-kiwi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-kiwi_lb}}
       # Override these in a .env file (see .env.example) - do NOT ship the defaults.
       SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
+      # Shared secret for the internal page-view ingest the web container posts to.
+      # Same value on api + web, or Site Analytics records nothing.
+      INTERNAL_KEY: ${INTERNAL_KEY:-}
       CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-turnstile}
       CAPTCHA_SECRET: ${CAPTCHA_SECRET:-}
       CAPTCHA_SITEKEY: ${CAPTCHA_SITEKEY:-}
@@ -279,6 +282,9 @@ services:
       # Read-side data from the api over the compose network. Deliberately NO
       # Mongo/Redis/Postgres/SECRET_KEY: the website has no DB and issues no tokens.
       INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+      # Signs the page-view beacon to the api's internal ingest (and salts the
+      # cookieless visitor hash, which is why it matches the api's value).
+      INTERNAL_KEY: ${INTERNAL_KEY:-}
       # Discord OAuth toggle. The website performs no token exchange (the /login
       # button links to the api's OAuth start endpoint); it needs these only so
       # settings.discord_oauth_enabled is true and the sign-in button renders

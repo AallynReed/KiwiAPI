@@ -413,6 +413,13 @@ class Settings(BaseSettings):
     # no Postgres. Defaults to the compose service name; override in dev if needed.
     internal_api_url: str = "http://api:8000"
 
+    # Shared secret for the internal-only endpoints the DB-less website container
+    # posts to (currently the page-view beacon). The api host is proxied by a
+    # catch-all `location /`, so those paths ARE publicly reachable and the header
+    # is what keeps them closed: unset means the endpoint 404s and nothing is
+    # recorded. Set the SAME value on the api and web services.
+    internal_key: str = ""
+
     # Mongo connection - inside Docker the host is the compose service name.
     mongo_uri: str = "mongodb://localhost:27016"
     mongo_db: str = "kiwi"
