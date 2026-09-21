@@ -12,9 +12,11 @@
                       on a nameplate, left-aligned with the name (Nameplate ui/Banner.as)
 
    The chrome around each picture is a likeness of the default look, not the game's
-   own rendering; the picture itself is scaled exactly as the mods scale it. Each canvas
-   holds one pixel per game pixel and is enlarged with nearest-neighbour, so the zoom
-   shows the real pixels rather than a sharper redraw. */
+   own rendering; the picture itself is scaled exactly as the mods scale it. The canvas
+   is drawn at the zoom rather than enlarged after the fact, because the mods reach these
+   three lanes through a filtered bitmap fill and Iggy puts the whole screen through
+   globalScale - so in game the picture is resampled smoothly, never by whole pixels, and
+   a nearest-neighbour zoom here would show a harder edge than the game ever draws. */
 (function () {
     "use strict";
 
@@ -32,13 +34,13 @@
 
     function surface(host, w, h, panel) {
         var c = document.createElement("canvas");
-        c.width = w;
-        c.height = h;
+        c.width = w * ZOOM;
+        c.height = h * ZOOM;
         c.style.width = w * ZOOM + "px";
         c.style.height = h * ZOOM + "px";
-        c.style.imageRendering = "pixelated";
         host.appendChild(c);
         var ctx = c.getContext("2d");
+        ctx.scale(ZOOM, ZOOM);
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
         ctx.fillStyle = BACKDROP;
