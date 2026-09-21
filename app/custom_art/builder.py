@@ -6,7 +6,11 @@ queued and, for the whole batch:
 1. brings its TroveUI checkout to the tip of the bare repo, and ``lib`` to KiwiZUI,
 2. puts the game's own vanilla SWFs and English language files in from the updates
    archive, so the builds verify against what the live client ships,
-3. places each picture with TroveUI's ``custom_art.py``, commits and pushes that,
+3. places each picture with TroveUI's ``custom_art.py``, commits and pushes that
+   together with the untouched file that was submitted, which ``custom_art.py`` keeps
+   under ``originals/`` - the shipped picture is a lossy render and nothing can be
+   re-derived from it, so the original is the only way a later quality change goes
+   either way,
 4. releases each affected mod silently to the hub, and to Trovesaurus unless the
    mod is beta, then commits and pushes the version bump,
 5. marks each request released and emails the person who asked.
@@ -42,7 +46,7 @@ VANILLA = {
     service.CHAT: ("ui/chat.swf", "chat.vanilla.swf"),
     service.NAMEPLATE: ("ui/nameplate.swf", "nameplate.vanilla.swf"),
 }
-ART = (f"{service.CHAT}/art", f"{service.NAMEPLATE}/art")
+ART = (f"{service.CHAT}/art", f"{service.NAMEPLATE}/art", "originals")
 _TIMEOUT = 1800
 _LOG_MAX = 60_000
 
