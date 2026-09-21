@@ -185,10 +185,10 @@ class LuxionAppearance(Document):
 
     ``first_seen_at`` is when the run went live - the sighting is a direct read of
     the game, so it is taken at face value. ``started_at`` is the Trove-day that
-    sighting fell on (00:00 = 11:00 UTC); the run ends at the daily reset
-    ``LUXION_RUN_DAYS`` later. The 3-hour merchant windows inside the run sit on a
-    global 27h grid (3h open + 24h away) that never resets, so the first one
-    normally lands hours after the sighting. See ``app.trove.luxion``.
+    sighting fell on (00:00 = 11:00 UTC); the run ends when the last of its
+    ``LUXION_ROTATIONS`` windows closes. Those 3-hour windows sit on a global 27h
+    grid (3h open + 24h away) that never resets, so the first one normally lands
+    hours after the sighting. See ``app.trove.luxion``.
 
     Upsert by ``started_at``: re-sightings within the run just refresh
     ``last_seen_at``; the next run (weeks later) is a new row. A run stays OPEN

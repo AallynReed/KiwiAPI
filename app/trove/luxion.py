@@ -16,13 +16,14 @@ the game was already advertising him, so the dashboard read "Away" all day.
 - ``run_bounds(day, first_seen, last_seen, ended)`` -> the run: the sighting, to
   the run's end.
 - The end is the bot reporting Luxion ABSENT from the welcome screen when it has
-  one; otherwise the daily reset ``LUXION_RUN_DAYS`` after the start day, stretched
-  if we are still seeing him past it. A run is a full trove week: the 2026-08 run
-  opened on the Monday reset and runs to the next one. The 2026-07 run died on the
-  07-27 reset - present at 10:40, gone at 11:40 - which is that same Monday
-  boundary reached early, because that run did not open until the Tuesday
-  afternoon (absent 07-21 14:40, present 15:06). The projection is what the bot
-  falls back on when it has gone quiet; an observed absence always wins.
+  one; otherwise the close of the run's LAST rotation, stretched if we are still
+  seeing him past it. A run is always ``LUXION_ROTATIONS`` windows, so its length
+  is a consequence of the grid (6 x 27h + 3h from the first slot) rather than a
+  day count - which is why the 2026-07 run, whose first slot did not land until
+  the Tuesday afternoon (absent 07-21 14:40, present 15:06), ran to a different
+  clock time than one opening on a reset. That run was then cut short on the 07-27
+  reset - present at 10:40, gone at 11:40 - an observed absence, which always
+  wins. The projection is only what the bot falls back on when it has gone quiet.
 
 A run keeps its identity for as long as it is open, and that is deliberate: the
 SSE signature and the Discord announcer are both edge-triggered on ``starts_at``,
@@ -55,10 +56,10 @@ from datetime import datetime, timezone
 
 from app.trove import server_time
 
-# Trove-days from the start day's reset to the run's end reset. A run opening on a
-# Monday reset therefore ends on the next one - a full trove week. See the module
-# docstring for the capture data behind this.
-LUXION_RUN_DAYS = 7
+# Merchant windows in a run. A run is ALWAYS exactly this many rotations - that is
+# the observed shape of the event, not a projection - so the run's end is derived
+# from them rather than from a day count. See the module docstring.
+LUXION_ROTATIONS = 7
 _WINDOW = 3 * 3600          # 3-hour merchant window
 # How long a sighting keeps the run alive PAST its projected end. Only reached
 # when the projection was short and the game is still showing him, so it just has
@@ -113,44 +114,52 @@ def run_bounds(day_anchor: int,
     The end, in order of how much we trust it:
 
     1. ``ended`` - the bot read the welcome screen and Luxion was not on it. That
-       is an observation, so it wins outright.
+       is an observation, so it wins outright, and a run cut short this way simply
+       advertises fewer than ``LUXION_ROTATIONS`` windows.
     2. ``last_seen`` past the projected end - we are still SEEING him, so the run
-       is demonstrably longer than ``LUXION_RUN_DAYS``. Stretch to that sighting
-       plus ``_SIGHTING_HOLD`` rather than declaring him gone while the game says
-       otherwise; each hourly report slides it forward again.
-    3. the projection - ``LUXION_RUN_DAYS`` after the start day's reset. Used when
-       the bot has gone quiet, so a dead scraper still lets the run lapse."""
+       outlasted its last rotation. Stretch to that sighting plus ``_SIGHTING_HOLD``
+       rather than declaring him gone while the game says otherwise; each hourly
+       report slides it forward again. This never adds an eighth rotation - the
+       grid is fixed, so a stretched run just holds its last one open.
+    3. the projection - the close of the run's ``LUXION_ROTATIONS``-th window. Used
+       when the bot has gone quiet, so a dead scraper still lets the run lapse."""
     start = _ts(first_seen)
+    if start is None:
+        start = day_anchor
     over = _ts(ended)
     if over is not None:
-        end = over
-    else:
-        end = day_anchor + LUXION_RUN_DAYS * 86400
-        seen = _ts(last_seen)
-        if seen is not None and seen + _SIGHTING_HOLD > end:
-            end = seen + _SIGHTING_HOLD
-    return (day_anchor if start is None else start), end
+        return start, over
+    # The run IS its rotations, so it closes when the last of them does.
+    end = next_grid_slot(start) + (LUXION_ROTATIONS - 1) * _CYCLE + _WINDOW
+    seen = _ts(last_seen)
+    if seen is not None and seen + _SIGHTING_HOLD > end:
+        end = seen + _SIGHTING_HOLD
+    return start, end
 
 
 def schedule_for(day_anchor: int,
                  first_seen: datetime | int | None = None,
                  last_seen: datetime | int | None = None,
                  ended: datetime | int | None = None) -> list[dict]:
-    """The 3-hour merchant windows inside the run that started on ``day_anchor``,
-    soonest first. These are the global 27h-grid slots that fall within the run -
-    CLIPPED to it, so a finished run stops advertising windows it never had.
-    ``state`` carries the run-day label ("Day 1", "Day 2", …) so a consumer can
-    show the rotation without recomputing it."""
+    """The run's 3-hour merchant windows, soonest first - the ``LUXION_ROTATIONS``
+    global 27h-grid slots from the run's start.
+
+    A full run always yields all of them. The only thing that shortens the list is
+    an OBSERVED end (the bot reported Luxion absent), which clips it, so a run that
+    died early stops advertising windows it never had. ``state`` carries the
+    rotation label ("Day 1", "Day 2", …) so a consumer can show it without
+    recomputing."""
     start, end = run_bounds(day_anchor, first_seen, last_seen, ended)
-    out, opens, day = [], next_grid_slot(start), 1
-    while opens < end:
+    out, opens = [], next_grid_slot(start)
+    for day in range(1, LUXION_ROTATIONS + 1):
+        if opens >= end:
+            break                       # an observed absence cut the run short
         out.append({
             "starts_at": opens,
             "ends_at": opens + _WINDOW,
             "state": f"Day {day}",
         })
         opens += _CYCLE
-        day += 1
     return out
 
 

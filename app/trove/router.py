@@ -362,7 +362,7 @@ async def get_luxion(ctx: AccessContext = _ROT) -> Luxion:
     Unlike Corruxion/Fluxion, *which* run is live is dev-set and unpredictable, so
     the run is CAPTURED from the game (welcome screen) rather than computed.
     ``active`` goes true at the first sighting and stays true until the run's end
-    (the daily reset ``LUXION_RUN_DAYS`` after the start day) - the sighting is a
+    (the close of the last of its ``LUXION_ROTATIONS`` windows) - the sighting is a
     direct read of the live game, so it is taken at face value. ``merchant_open``
     is the separate, deterministic part: a 27-hour cycle (3h open, 24h away)
     running continuously since a fixed epoch, so the run's first window normally
