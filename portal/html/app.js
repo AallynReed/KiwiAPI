@@ -1,7 +1,7 @@
 "use strict";
 
 const app = document.getElementById("app");
-const state = { config: null, user: null, tab: "tokens" };
+const state = { config: null, user: null, tab: "tokens", pending: null };
 
 // The frontend (dev.aallyn.net) talks to the API (api.aallyn.net) cross-origin.
 const API_BASE = "https://api.aallyn.net";
@@ -118,6 +118,9 @@ const API = {
       throw { code: "session_expired", message: "Session expired" };
     }
     if (!res.ok) throw (data && data.error) || { code: String(res.status), message: `HTTP ${res.status}` };
+    // Any admin write can empty (or fill) a review queue, so re-count the sidebar
+    // badges once the panel settles - one hook instead of a call per handler.
+    if (method !== "GET" && path.startsWith("/admin/")) queuePendingRefresh();
     return data;
   },
 };
@@ -423,7 +426,7 @@ function renderDashboard() {
   if (!TABS.includes(state.tab)) state.tab = "tokens";
 
   const navItem = (tab, sub) =>
-    `<button class="nav-item${sub ? " nav-sub" : ""}" data-tab="${tab}" role="tab">${icon(tab)}<span>${TAB_META[tab].label}</span></button>`;
+    `<button class="nav-item${sub ? " nav-sub" : ""}" data-tab="${tab}" role="tab">${icon(tab)}<span class="nav-label">${TAB_META[tab].label}</span></button>`;
   const adminNav = u.is_superuser ? `
           <p class="nav-group">Admin panel <span class="badge muted">master</span></p>
           ${navItem("overview")}
@@ -488,6 +491,8 @@ function renderDashboard() {
 function selectTab() {
   const bodyEl = document.getElementById("tab-body");
   if (!bodyEl) return;  // dashboard not mounted (e.g. logged out)
+  paintPendingBadges();  // repaint from cache, then re-count in the background
+  refreshPending();
   app.querySelectorAll(".nav-item").forEach((b) => {
     const on = b.dataset.tab === state.tab;
     b.classList.toggle("active", on);
@@ -523,6 +528,51 @@ function selectTab() {
   else if (state.tab === "updates") renderUpdatesAdmin();
   else if (state.tab === "botstats") renderBotStats();
   else renderTokens();
+}
+
+// --- Review-queue badges ---------------------------------------------------
+// Modules that hold a queue (custom art, Trove claims, Mods hub) report how many
+// items are waiting on a master decision; the sidebar shows the count so nothing
+// sits unnoticed. One cheap counts call, refreshed on every tab switch.
+
+let _pendingTimer = null;
+function queuePendingRefresh() {
+  clearTimeout(_pendingTimer);
+  _pendingTimer = setTimeout(refreshPending, 400);
+}
+
+async function refreshPending() {
+  if (!state.user?.is_superuser) return;
+  try { state.pending = await API.call("/admin/pending"); }
+  catch (_) { return; }  // a failed count must never break the panel
+  paintPendingBadges();
+}
+
+function paintPendingBadges() {
+  const counts = state.pending?.counts || {};
+  const detail = state.pending?.detail || {};
+  app.querySelectorAll(".nav-item").forEach((b) => {
+    const tab = b.dataset.tab;
+    const n = counts[tab] || 0;
+    const label = TAB_META[tab].label;
+    let pill = b.querySelector(".nav-count");
+    if (!n) {
+      pill?.remove();
+      b.removeAttribute("title");
+      b.removeAttribute("aria-label");
+      return;
+    }
+    if (!pill) {
+      pill = document.createElement("span");
+      pill.className = "nav-count";
+      pill.setAttribute("aria-hidden", "true");   // the count is in the button's label
+      b.appendChild(pill);
+    }
+    pill.textContent = n > 99 ? "99+" : String(n);
+    const lines = (detail[tab] || []).map((d) => `${d.count} ${d.label}`);
+    b.title = lines.join("\n");
+    b.setAttribute("aria-label", `${label} - ${lines.join(", ")}`);
+  });
 }
 
 // Browser back/forward (and manual hash edits) switch tabs when logged in.

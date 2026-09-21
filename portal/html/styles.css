@@ -154,6 +154,14 @@ body.app-shell #app { height: 100vh; display: flex; flex-direction: column; }
 .nav-item.active { background: rgba(88,166,255,.12); color: var(--accent); border-color: rgba(88,166,255,.28); }
 .nav-item svg { width: 16px; height: 16px; flex: 0 0 16px; }
 .nav-item.nav-sub { margin-left: 14px; padding: 7px 11px; font-size: .88rem; }
+.nav-item .nav-label { flex: 1 1 auto; min-width: 0; }
+/* Review-queue count: how many items in that module are waiting on a decision. */
+.nav-count {
+  flex: 0 0 auto; min-width: 20px; padding: 1px 6px; border-radius: 20px;
+  background: rgba(210,153,34,.18); color: var(--amber);
+  font-size: .72rem; font-weight: 700; line-height: 1.5; text-align: center;
+}
+[data-theme="light"] .nav-count { background: rgba(154,103,0,.14); }
 .main { flex: 1 1 auto; min-width: 0; overflow-y: auto; padding: 26px 30px 80px; }
 .crumb { font-size: .82rem; color: var(--faint); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
 .crumb .crumb-sep { color: var(--border); }

@@ -4,7 +4,7 @@ from beanie import PydanticObjectId
 from beanie.operators import Set
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 
-from app.admin import ingest_log, runtime_config
+from app.admin import ingest_log, pending, runtime_config
 from app.admin.schemas import (
     ActivityOverview,
     AdminTokenView,
@@ -256,6 +256,15 @@ async def list_events(
         next_cursor=next_cursor,
         has_more=has_more,
     )
+
+
+# --- Review queues (sidebar badges) ----------------------------------------
+
+@router.get("/pending")
+async def pending_review_counts() -> dict:
+    """How many items each admin module has waiting on a master decision, for the
+    dev-portal sidebar badges. See ``app.admin.pending`` to add a queue."""
+    return await pending.pending_counts()
 
 
 # --- Global activity -------------------------------------------------------
