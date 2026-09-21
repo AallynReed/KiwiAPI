@@ -7,7 +7,8 @@ master having to open every module to find out. Everything here is a
 switch.
 
 Adding a queue: append an entry to ``_SOURCES`` keyed by the portal tab id. The
-label is what the sidebar tooltip shows, so write it as a plural noun phrase.
+labels are what the sidebar tooltip shows - a singular and a plural phrase that
+each read on from the count ("1 request to review", "3 requests to review").
 """
 from collections.abc import Awaitable, Callable
 from typing import NamedTuple
@@ -15,7 +16,8 @@ from typing import NamedTuple
 
 class _Source(NamedTuple):
     tab: str                              # portal tab id (TABS in portal/html/app.js)
-    label: str                            # tooltip wording, e.g. "2 requests to review"
+    one: str                              # tooltip wording for a count of 1
+    many: str                             # ... and for any other count
     count: Callable[[], Awaitable[int]]
 
 
@@ -58,15 +60,21 @@ async def _mod_claims() -> int:
 
 
 _SOURCES: tuple[_Source, ...] = (
-    _Source("customart", "requests to review", lambda: _art("pending")),
-    _Source("customart", "approved, waiting on a release", lambda: _art("approved")),
-    _Source("customart", "failed builds to retry", lambda: _art("failed")),
-    _Source("customart", "waiting on a Steam push", _art_steam),
-    _Source("claims", "name claims to verify", _trove_claims),
-    _Source("claims", "username change requests", _username_requests),
-    _Source("mods", "open content reports", _mod_reports),
-    _Source("mods", "stray mods awaiting approval", _stray_mods),
-    _Source("mods", "mod claim requests", _mod_claims),
+    _Source("customart", "request to review", "requests to review",
+            lambda: _art("pending")),
+    _Source("customart", "approved request waiting on a release",
+            "approved requests waiting on a release", lambda: _art("approved")),
+    _Source("customart", "failed build to retry", "failed builds to retry",
+            lambda: _art("failed")),
+    _Source("customart", "request waiting on a Steam push",
+            "requests waiting on a Steam push", _art_steam),
+    _Source("claims", "name claim to verify", "name claims to verify", _trove_claims),
+    _Source("claims", "username change request", "username change requests",
+            _username_requests),
+    _Source("mods", "open content report", "open content reports", _mod_reports),
+    _Source("mods", "stray mod awaiting approval", "stray mods awaiting approval",
+            _stray_mods),
+    _Source("mods", "mod claim request", "mod claim requests", _mod_claims),
 )
 
 
@@ -87,5 +95,6 @@ async def pending_counts() -> dict:
         if n <= 0:
             continue
         counts[source.tab] = counts.get(source.tab, 0) + n
-        detail.setdefault(source.tab, []).append({"label": source.label, "count": n})
+        detail.setdefault(source.tab, []).append(
+            {"label": source.one if n == 1 else source.many, "count": n})
     return {"counts": counts, "detail": detail}
