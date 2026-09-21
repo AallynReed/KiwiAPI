@@ -8,8 +8,12 @@
      profile picture  the 15px box on a 28px whisper tab (Chat ui/Face.as)
      club picture     38px on the 39px channel strip (Chat ui/Rail.as)
      club banner      13px tall in front of a message - the tag size, 13 - 4, plus 4
-                      (Chat ui/Line.as) - and in the 26px box under a 30px bold name
-                      on a nameplate, left-aligned with the name (Nameplate ui/Banner.as)
+                      (Chat ui/Line.as); in the 26px box under a 30px bold name on a
+                      nameplate, left-aligned with the name (Nameplate ui/Banner.as); and
+                      21px tall in place of the club's name on a 62px club row
+                      (Clubs ClubTile.as)
+     both, in Clubs   a club row draws the picture in a 26px box inside the 30px bordered
+                      square, and the banner where the name would be (Clubs ClubTile.as)
 
    The chrome around each picture is a likeness of the default look, not the game's
    own rendering; the picture itself is scaled exactly as the mods scale it. The canvas
@@ -120,16 +124,46 @@
         ctx.drawImage(src, r.x, r.y, r.w, r.h, Math.max(8, left), 50, r.w * scale, r.h * scale);
     }
 
+    function clubRow(host, src, r, name, asBanner) {
+        var w = 280;
+        var ctx = surface(host, w, 62, true);
+        var badge = 30;
+        var box = badge - 4;
+        var top = (62 - badge) / 2;
+        var scale = Math.min(box / r.h, box / r.w);
+        ctx.strokeStyle = BORDER;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(14.5, top + 0.5, badge - 1, badge - 1);
+        var left = 14 + badge + 14;
+        if (asBanner) {
+            write(ctx, name.charAt(0).toUpperCase(), 14 + badge / 2 - 4, top + badge / 2, 13, MAIN, 600);
+            var high = 17 + 4;
+            var room = w - left - 16;
+            var bs = Math.min(high / r.h, room / r.w);
+            ctx.drawImage(src, r.x, r.y, r.w, r.h, left, 10 + (23 - r.h * bs) / 2,
+                          r.w * bs, r.h * bs);
+        } else {
+            ctx.drawImage(src, r.x, r.y, r.w, r.h,
+                          14 + (badge - r.w * scale) / 2, top + (badge - r.h * scale) / 2,
+                          r.w * scale, r.h * scale);
+            write(ctx, name, left, 10 + 11, 17, VALUE, 600);
+        }
+        write(ctx, "12 members", left, 62 - 18, 10, LABEL);
+    }
+
     function render(host, lane, src, rect, name) {
         host.textContent = "";
         if (!src || !rect || rect.w <= 0 || rect.h <= 0) return;
+        var club = (name || "").trim() || "Club";
         if (lane === "pfp") {
             whisperTab(host, src, rect, (name || "").trim() || "Player");
         } else if (lane === "club") {
             channelStrip(host, src, rect);
+            clubRow(host, src, rect, club, false);
         } else {
             chatLine(host, src, rect);
             nameplate(host, src, rect);
+            clubRow(host, src, rect, club, true);
         }
     }
 
