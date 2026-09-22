@@ -1752,7 +1752,8 @@ class Handler(SimpleHTTPRequestHandler):
             # artifact so local edits show up without running minify_static.py
             # (the templates hard-code .min.js/.min.css for production). Every
             # candidate goes through _under, so no raw path is built from input.
-            if ".min." in rel:
+            # SITE_DEV_MIN=1 serves the built bundles instead, to test minifier output.
+            if ".min." in rel and not os.environ.get("SITE_DEV_MIN"):
                 unmin = _under(STATIC, rel.replace(".min.", ".", 1))
                 if unmin is not None and unmin.exists():
                     rel = rel.replace(".min.", ".", 1)

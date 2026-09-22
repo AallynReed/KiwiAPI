@@ -726,8 +726,6 @@
 
     const medLines = runs.map((run) =>
       `<polyline points="${run.map((p) => px(p, p.p50)).join(' ')}" class="mkt-an-medline" fill="none"/>`).join('');
-    // Point pairs go through join(' '), never a `${x} ${y}` template - the
-    // minifier's template lexer can eat that space (see minify_static.py).
     const gapLines = seg.bridges.map(([a, b]) =>
       `<polyline points="${[px(a, a.p50), px(b, b.p50)].join(' ')}" class="mkt-an-medline mkt-an-gapline" fill="none"
         ><title>${esc(t('No listings in this stretch'))}</title></polyline>`).join('');

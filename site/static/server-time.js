@@ -298,8 +298,6 @@
     for (const [u, span] of units) {
       if (abs >= span || u === 'second') {
         const v = Math.round(diff / span);
-        // `${v + ' ' + u}` not `${v} ${u}` - the minifier strips the space between
-        // adjacent interpolations in *.min.js (see minify_static.py guard).
         return rtf ? rtf.format(v, u) : `${v + ' ' + u}${Math.abs(v) === 1 ? '' : 's'}`;
       }
     }

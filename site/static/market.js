@@ -629,8 +629,6 @@
     for (const [a, b] of trendSeg.bridges) {
       const trend = document.createElementNS(svgNS, 'polyline');
       trend.setAttribute('class', 'mkt-chart-trend mkt-chart-trend-gap');
-      // `[a, b].map(xy).join(' ')`, not a `${x} ${y}` template - the minifier's
-      // template lexer can eat that space (see scripts/minify_static.py).
       trend.setAttribute('points', [a, b].map(xy).join(' '));
       const why = document.createElementNS(svgNS, 'title');
       why.textContent = t('No listings in this stretch');
