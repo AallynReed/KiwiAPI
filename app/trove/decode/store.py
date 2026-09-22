@@ -95,6 +95,7 @@ def write(target: Path, text: str) -> None:
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as fh:
             fh.write(text)
+        os.chmod(tmp, 0o644)  # mkstemp makes it 0600; the other containers read it
         os.replace(tmp, target)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)

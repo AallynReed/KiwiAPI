@@ -200,7 +200,8 @@ async def delve_modifiers(request: Request) -> HTMLResponse:
     page = await _page(slug)
     live = page if page and not page.get("deleted") else None
     data = _delve_modifiers()
-    groups = {c: [m for m in data["modifiers"] if m["category"] == c] for c in ("creature", "lair", "path")}
+    groups = {c: [m for m in data["modifiers"] if m["category"] == c]
+              for c in ("creature", "lair", "path", "player", "tier", "new")}
     return _render(request, "wiki/delve_modifiers.html", {
         "title": data_pages.DATA_PAGES["delve-modifiers"],
         "slug": slug,

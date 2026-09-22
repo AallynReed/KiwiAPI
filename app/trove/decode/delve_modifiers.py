@@ -1,14 +1,19 @@
 """delve_modifiers.json - the Kiwi Wiki's /delve-modifiers page.
 
-The client carries each modifier's name (`$DelveCreatureMod_*`, `$DelveLairMod_*`,
-`$DelvePathMod_*` in languages/en/delve.binfab) and the effect prefabs under
-prefabs/abilities/delve/, but not the server's table joining the two. MODIFIERS
-below is that join, written by hand and kept to prefabs whose names match the
-modifier unambiguously; the numbers are always read from the prefabs.
+Every delve modifier has a sign in the client - `prefabs/placeable/deco/delve/
+<id>_interactable.binfab`, the stone shown when a floor rolls it - carrying a
+`$prefabs_placeable_deco_delve_<id>_interactable_sign_title` / `_content` key
+pair. Those are the names and descriptions players see, so they are the page.
 
-Also decodes the unnamed per-tier player effects and names "Under Pressure".
+The numbers sit in effect prefabs under `prefabs/abilities/delve/`, which the
+signs don't reference; the server holds that join. SIGNS below is it, written by
+hand from the matching internal names (`increaseplayerdamage_05` ->
+`tier_player_set_incomingdamagemod_t05`), plus each sign's group.
+
+The older `$DelveCreatureMod_*` / `$DelveLairMod_*` / `$DelvePathMod_*` locale
+names are internal labels for the same modifiers. LEGACY maps them onto signs;
+one left without a sign has no in-game presence and is listed as retired.
 """
-
 from __future__ import annotations
 
 import re
@@ -20,69 +25,106 @@ from app.trove.decode.tree import GameTree
 
 TITLE = "Delve modifiers"
 OUTPUT = "delve_modifiers.json"
-PREFIXES = ("prefabs/abilities/delve/", "languages/en/")
+PREFIXES = ("prefabs/placeable/deco/delve/", "prefabs/abilities/delve/", "languages/en/")
 INDENT, FINAL_NEWLINE = 1, True
 
-CATEGORIES = {"DelveCreatureMod_": "creature", "DelveLairMod_": "lair", "DelvePathMod_": "path"}
+SIGN_DIR = "prefabs/placeable/deco/delve/"
+_SIGN_KEY = re.compile(rb"\$prefabs_placeable_deco_delve_([A-Za-z0-9_]+?)_interactable_sign_title")
 
-# key -> summary: what the prefab chain does; effects: (who, prefab).
-MODIFIERS: dict[str, dict] = {
-    "DelveCreatureMod_berserker": {
-        "summary": "Gets stronger each time one of its allies is killed.",
-        "effects": [("Per ally killed", "mutators/berserker_onallykilled_stats")],
-    },
-    "DelveCreatureMod_berserkerHard": {
-        "summary": "Gets stronger and heals each time one of its allies is killed. The bonus stacks.",
-        "effects": [("Per ally killed", "mutators/berserkerstacking_onallykilled_stats")],
-    },
-    "DelveCreatureMod_slowPlayersOnHit": {
-        "summary": "Its hits snare you and knock you off your mount.",
-        "effects": [("Players it hits", "mutators/daze_onoutgoingdamage_movementspeed")],
-    },
-    "DelveCreatureMod_debuffOnRangedDamage": {
-        "summary": "Hitting it from range debuffs you.",
-        "effects": [("Ranged attackers", "mutators/debuffonrangeddamage_shield_debuff")],
-    },
-    "DelveCreatureMod_ShadowChickens": {
-        "summary": "Summons shadow chickens when it spots you. They vanish after 30 seconds and give no kill credit.",
-        "effects": [("Each chicken", "mutators/spawnchicken_onaggro_stats")],
-    },
-    "DelveCreatureMod_SpawnClone": {
-        "summary": "Splits off a clone of itself when damaged. Clones vanish after 30 seconds and give no kill credit.",
-        "effects": [("Each clone", "mutators/spawnclone_ondamage_stats")],
-    },
-    "DelveCreatureMod_SpawnMushrooms": {
-        "summary": "Keeps spawning mushroom men that explode when they die. They vanish after 10 seconds and give no kill credit.",
-        "effects": [("Each mushroom man", "mutators/spawnmushroom_periodic_stats")],
-    },
-    "DelveCreatureMod_SummonTurret": {
-        "summary": "Summons a flamethrower turret when it spots you. It vanishes after 30 seconds and gives no kill credit.",
-    },
-    "DelveCreatureMod_SpellResistant": {"summary": "Takes 50% less magic damage."},
-    "DelveCreatureMod_SpellImmune": {"summary": "Takes no magic damage."},
-    "DelveCreatureMod_PhysicalResistant": {"summary": "Takes 50% less physical damage."},
-    "DelveCreatureMod_PhysicalImmune": {"summary": "Takes no physical damage."},
-    "DelveCreatureMod_icyGround": {"summary": "Turns the ground under you to ice when it spots you."},
-    "DelveLairMod_bossBerserker": {
-        "summary": "The boss gets stronger at set health thresholds.",
-        "effects": [("Per threshold", "boss/mutators/berserker_onhealthpercent_stats")],
-    },
-    "DelveLairMod_floorToLavaShort": {
-        "summary": "Keeps turning patches of floor to lava. Anyone caught loses health regen for 10 seconds.",
-        "effects": [("Players caught", "mutators/shared_disable_healthregen_10s")],
-    },
-    "DelveLairMod_floorToLavaLong": {
-        "summary": "Keeps turning patches of floor to lava. Anyone caught loses health regen for 15 seconds.",
-        "effects": [("Players caught", "mutators/shared_disable_healthregen_15s")],
-    },
-    "DelveLairMod_floorToIce": {"summary": "Keeps turning patches of floor to ice."},
-    "DelveLairMod_Gravity": {"summary": "Keeps turning patches of floor into blocks that pull you down."},
-    "DelveLairMod_stopDpsStun": {"summary": "Every so often the boss turns reactive: hit it then and you're stunned."},
-    "DelvePathMod_FlaskRefiller": {"summary": "Creatures that die release a burst that refills flasks nearby."},
+# sign id -> (group, [(who, effect prefab under abilities/delve/)]). Groups:
+# creature (rolled onto enemies), lair (the boss), path, player, tier.
+SIGNS: dict[str, tuple[str, list[tuple[str, str]]]] = {
+    "agile": ("creature", []),
+    "antisolo2": ("creature", []),
+    "antumbral": ("creature", []),
+    "arena": ("creature", []),
+    "berserker": ("creature", [("Per ally slain", "mutators/berserker_onallykilled_stats")]),
+    "berserkerstacking": ("creature", [("Per ally slain", "mutators/berserkerstacking_onallykilled_stats")]),
+    "buffondeath": ("creature", []),
+    "debuffonranged": ("creature", [("Ranged attackers", "mutators/debuffonrangeddamage_shield_debuff")]),
+    "deltalith_miniBoss": ("creature", []),
+    "fragile": ("creature", []),
+    "icyground_onaggro": ("creature", []),
+    "physicalimmune": ("creature", []),
+    "physicalresistant": ("creature", []),
+    "rangedimmune": ("creature", []),
+    "slowplayersonhit": ("creature", [("Players it hits", "mutators/daze_onoutgoingdamage_movementspeed")]),
+    "spawnclone": ("creature", [("Each clone", "mutators/spawnclone_ondamage_stats")]),
+    "spawnmushrooms": ("creature", [("Each Sporeling", "mutators/spawnmushroom_periodic_stats")]),
+    "spawnshadowchickens": ("creature", [("Each chicken", "mutators/spawnchicken_onaggro_stats")]),
+    "spawnturret": ("creature", []),
+    "spellimmune": ("creature", []),
+    "spellresistant": ("creature", []),
+    "tenebrous": ("creature", []),
+    "tenebrous2": ("creature", []),
+    "tenebrous3": ("creature", []),
+    "weak": ("creature", []),
+    "berserkerboss": ("lair", [("Per threshold", "boss/mutators/berserker_onhealthpercent_stats")]),
+    "deltalith_bossAntiGrav": ("lair", []),
+    "deltalith_bossFloorIce": ("lair", []),
+    "deltalith_bossFloorLavaLong": ("lair", [("Players caught", "mutators/shared_disable_healthregen_15s")]),
+    "deltalith_bossFloorLavaShort": ("lair", [("Players caught", "mutators/shared_disable_healthregen_10s")]),
+    "deltalith_bossIncreaseDamage_15": ("lair", []),
+    "deltalith_bossIncreaseDamage_30": ("lair", []),
+    "deltalith_bossIncreaseDamage_45": ("lair", []),
+    "deltalith_bossReduceIncDmg_15": ("lair", []),
+    "deltalith_bossReduceIncDmg_30": ("lair", []),
+    "deltalith_bossReduceIncDmg_45": ("lair", []),
+    "deltalith_bossReduceIncDmg_60": ("lair", []),
+    "deltalith_bossReduceIncDmg_75": ("lair", []),
+    "deltalith_bossTimeBomb_180": ("lair", []),
+    "deltalith_graveyard_creaturAoeRoot": ("lair", []),
+    "deltalith_stopDpsStun": ("lair", []),
+    "flaskrefiller": ("path", []),
+    "pathExplosions": ("path", []),
+    "pathNoChevrons": ("path", []),
+    "speedblocks": ("path", []),
+    **{f"increaseplayerdamage_{n:02d}": (
+        "player", [("Players", f"mutators/tier_player_set_incomingdamagemod_t{n:02d}")]) for n in range(1, 14)},
+    "flasks_0": ("player", [("Players", "mutators/tier_player_set_flasks_0")]),
+    **{f"flasks_n{n:02d}": ("player", [("Players", f"mutators/tier_player_sub_flasks_{n:02d}")]) for n in (1, 2, 3)},
+    **{f"jump_{j}": ("player", [("Players", f"mutators/jump_{j}")]) for j in ("0", "2", "n1", "n3", "n5")},
+    "deltalith_movementSpeed_40": ("player", [("Players", "mutators/tier_player_set_movementspeed_40")]),
+    "reducehealing": ("player", [("Players", "mutators/tier_player_reducehealing_noregen")]),
+    "vampirism": ("player", []),
+    "deltalith_death_boon": ("player", []),
+    "deltalith_death_curse": ("player", []),
+    "deltalith_group_death": ("player", []),
+    "disabledeathsaveeffect": ("player", []),
+    "respawnSlower": ("player", []),
+    "lootlevel": ("tier", []),
+    "fauxlootlevel": ("tier", []),
 }
 
-# Vulnerable / Hardened carry their percentage in the key itself; no prefab ships.
-_INC_DMG = re.compile(r"^DelveLairMod_(increase|reduce)IncDmg_(\d+)$")
+# Internal locale label -> the sign it names.
+LEGACY: dict[str, str] = {
+    "DelveCreatureMod_Agile": "agile", "DelveCreatureMod_MiniBoss": "deltalith_miniBoss",
+    "DelveCreatureMod_Antumbral": "antumbral", "DelveCreatureMod_Arena": "arena",
+    "DelveCreatureMod_Fragile": "fragile", "DelveCreatureMod_icyGround": "icyground_onaggro",
+    "DelveCreatureMod_berserker": "berserker", "DelveCreatureMod_berserkerHard": "berserkerstacking",
+    "DelveCreatureMod_antiSolo2": "antisolo2", "DelveCreatureMod_slowPlayersOnHit": "slowplayersonhit",
+    "DelveCreatureMod_buffOnDeath": "buffondeath", "DelveCreatureMod_RangedProtection": "rangedimmune",
+    "DelveCreatureMod_debuffOnRangedDamage": "debuffonranged",
+    "DelveCreatureMod_ShadowChickens": "spawnshadowchickens", "DelveCreatureMod_SpawnClone": "spawnclone",
+    "DelveCreatureMod_SpawnMushrooms": "spawnmushrooms", "DelveCreatureMod_SummonTurret": "spawnturret",
+    "DelveCreatureMod_Tenebrous": "tenebrous", "DelveCreatureMod_Weak": "weak",
+    "DelveCreatureMod_SpellResistant": "spellresistant", "DelveCreatureMod_SpellImmune": "spellimmune",
+    "DelveCreatureMod_PhysicalResistant": "physicalresistant",
+    "DelveCreatureMod_PhysicalImmune": "physicalimmune",
+    "DelvePathMod_noChevrons": "pathNoChevrons", "DelvePathMod_FlaskRefiller": "flaskrefiller",
+    "DelvePathMod_SpeedBlocks": "speedblocks", "DelvePathMod_explosions": "pathExplosions",
+    "DelveLairMod_bossBerserker": "berserkerboss", "DelveLairMod_floorToLavaShort": "deltalith_bossFloorLavaShort",
+    "DelveLairMod_floorToLavaLong": "deltalith_bossFloorLavaLong", "DelveLairMod_floorToIce": "deltalith_bossFloorIce",
+    "DelveLairMod_Gravity": "deltalith_bossAntiGrav",
+    "DelveLairMod_graveyardAoeRoot": "deltalith_graveyard_creaturAoeRoot",
+    "DelveLairMod_stopDpsStun": "deltalith_stopDpsStun",
+    **{f"DelveLairMod_increaseIncDmg_{n}": f"deltalith_bossIncreaseDamage_{n}" for n in (15, 30, 45)},
+    **{f"DelveLairMod_reduceIncDmg_{n}": f"deltalith_bossReduceIncDmg_{n}" for n in (15, 30, 45, 60, 75)},
+}
+_LEGACY_GROUP = {"DelveCreatureMod_": "creature", "DelveLairMod_": "lair", "DelvePathMod_": "path"}
+
+# The boss's damage-taken modifiers carry their size only in the id.
+_BOSS_DMG = re.compile(r"^deltalith_boss(IncreaseDamage|ReduceIncDmg)_(\d+)$")
 
 # `$Stat_` key (no prefix) -> (label, scale, how Add reads: "pct" | "mult" | "flat").
 STATS = {
@@ -143,8 +185,16 @@ def effect_lines(data: bytes) -> list[str]:
     return lines
 
 
+def _sign_id(data: bytes) -> str | None:
+    m = _SIGN_KEY.search(data)
+    return m.group(1).decode() if m else None
+
+
 def build(tree: GameTree) -> dict:
-    loc = extract_localization_map(tree.read("languages/en/delve.binfab") or b"")
+    loc: dict[str, str] = {}
+    for path in tree.files("languages/en/prefabs_placeable_deco_delve", ".binfab"):
+        loc.update(extract_localization_map(tree.read(path) or b""))
+    legacy = extract_localization_map(tree.read("languages/en/delve.binfab") or b"")
     effect_loc = extract_localization_map(tree.read("languages/en/prefabs_effects_delve.binfab") or b"")
 
     def prefab(rel: str) -> bytes:
@@ -153,54 +203,57 @@ def build(tree: GameTree) -> dict:
             raise ValueError(f"missing prefab abilities/delve/{rel}")
         return data
 
-    unknown = set(MODIFIERS) - {k[1:] for k in loc}
-    if unknown:
-        raise ValueError(f"no longer in the locale: {sorted(unknown)}")
+    signs = {}
+    for path in tree.files(SIGN_DIR, "_interactable.binfab"):
+        sid = _sign_id(tree.read(path) or b"") if path.count("/") == 4 else None
+        base = f"$prefabs_placeable_deco_delve_{sid}_interactable_sign"
+        if sid and loc.get(base + "_title"):
+            signs[sid] = (loc[base + "_title"], loc.get(base + "_content", ""))
+
+    missing = set(SIGNS) - set(signs)
+    if missing:
+        raise ValueError(f"signs no longer in the game: {sorted(missing)}")
 
     modifiers = []
-    for key, game_name in sorted(loc.items()):
+    for sid, (name, description) in signs.items():
+        group, effects = SIGNS.get(sid, ("new", []))
+        rows = [{"who": who, "lines": effect_lines(prefab(rel))} for who, rel in effects]
+        if m := _BOSS_DMG.match(sid):
+            sign = "+" if m.group(1) == "IncreaseDamage" else "−"
+            rows.append({"who": "The boss", "lines": [f"Damage taken {sign}{m.group(2)}%"]})
+        modifiers.append({"key": sid, "category": group, "name": name,
+                          "description": description, "effects": rows})
+
+    retired = []
+    for key, name in legacy.items():
         key = key[1:]
-        category = next((c for p, c in CATEGORIES.items() if key.startswith(p)), None)
-        if category is None:
+        group = next((g for p, g in _LEGACY_GROUP.items() if key.startswith(p)), None)
+        if group is None:
             continue
-        spec = MODIFIERS.get(key, {})
-        summary = spec.get("summary", "")
-        if m := _INC_DMG.match(key):
-            summary = f"Incoming damage {'+' if m.group(1) == 'increase' else '−'}{m.group(2)}%."
-        modifiers.append({
-            "key": key, "category": category, "name": game_name, "summary": summary,
-            "effects": [{"who": who, "lines": effect_lines(prefab(rel))}
-                        for who, rel in spec.get("effects", [])],
-        })
+        if key not in LEGACY:
+            retired.append({"key": key, "category": group, "name": name})
+        elif LEGACY[key] not in signs:
+            raise ValueError(f"{key} maps to a sign that is gone: {LEGACY[key]}")
 
-    tiers = []
-    for n in range(1, 100):
-        rel = f"mutators/tier_player_set_incomingdamagemod_t{n:02d}"
-        if not tree.exists(f"prefabs/abilities/delve/{rel}.binfab"):
-            break
-        (value,) = (v for stat, op, v in stat_mods(prefab(rel))
-                    if stat == "IncomingDamageMod" and op == "Set")
-        tiers.append({"tier": n, "damage_taken": _num(value)})
-
+    order = {g: i for i, g in enumerate(("creature", "lair", "path", "player", "tier", "new"))}
     return {
-        "modifiers": sorted(modifiers, key=lambda x: x["name"].lower()),
+        "modifiers": sorted(modifiers, key=lambda x: (order[x["category"]], _natural(x["name"]))),
+        "retired": sorted(retired, key=lambda x: x["name"].lower()),
         "pressure": {
             "name": effect_loc["$prefabs_effects_delve_healthregen_scaling_name"],
             "description": effect_loc["$prefabs_effects_delve_healthregen_scaling_description"],
         },
-        "tier_damage": tiers,
-        "tier_effects": [
-            {"name": "Fewer flasks", "lines": [line for n in (1, 2, 3) for line in
-                                                effect_lines(prefab(f"mutators/tier_player_sub_flasks_{n:02d}"))]
-             + effect_lines(prefab("mutators/tier_player_set_flasks_0"))},
-            {"name": "Slowed", "lines": effect_lines(prefab("mutators/tier_player_set_movementspeed_40"))},
-            {"name": "Reduced healing", "lines": effect_lines(prefab("mutators/tier_player_reducehealing_noregen"))
-             + ["Healing received is reduced"]},
-            {"name": "No mounts", "lines": []},
-            {"name": "Death boon", "lines": ["When a player dies, the rest of the party is healed to full"]},
-            {"name": "Death curse", "lines": ["When a player dies, the rest of the party is hit by a death curse"]},
-        ],
     }
+
+
+_ROMAN = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8, "IX": 9,
+          "X": 10, "XI": 11, "XII": 12, "XIII": 13}
+
+
+def _natural(name: str) -> tuple[str, int]:
+    """"Terror IX" sorts before "Terror X"."""
+    head, _, tail = name.rpartition(" ")
+    return (head.lower(), _ROMAN[tail]) if head and tail in _ROMAN else (name.lower(), 0)
 
 
 def count(data: dict) -> int:

@@ -1,52 +1,60 @@
 {
  "modifiers": [
   {
-   "key": "DelveCreatureMod_Agile",
+   "key": "agile",
    "category": "creature",
    "name": "Agile",
-   "summary": "",
+   "description": "Some enemies have increased Movement Speed and Damage",
    "effects": []
   },
   {
-   "key": "DelveCreatureMod_Antumbral",
+   "key": "antumbral",
    "category": "creature",
    "name": "Antumbral",
-   "summary": "",
+   "description": "Some enemies have reduced Darkness",
    "effects": []
   },
   {
-   "key": "DelveLairMod_bossBerserker",
-   "category": "lair",
-   "name": "Berserker",
-   "summary": "The boss gets stronger at set health thresholds.",
+   "key": "buffondeath",
+   "category": "creature",
+   "name": "Cursed by Light",
+   "description": "Some enemies will buff players within 3 Blocks when slain",
+   "effects": []
+  },
+  {
+   "key": "rangedimmune",
+   "category": "creature",
+   "name": "Distance Shielding",
+   "description": "Some enemies take no damage from attacks made more than 5 Blocks away",
+   "effects": []
+  },
+  {
+   "key": "antisolo2",
+   "category": "creature",
+   "name": "Dynamic Shielding",
+   "description": "Some enemies can only be damaged when attacked by 2 or more Trovians",
+   "effects": []
+  },
+  {
+   "key": "slowplayersonhit",
+   "category": "creature",
+   "name": "Ensnaring Grip",
+   "description": "Some enemies reduce player movement speed until killed",
    "effects": [
     {
-     "who": "Per threshold",
+     "who": "Players it hits",
      "lines": [
-      "Damage dealt +100%"
+      "Glide set to 1",
+      "Movement speed set to 40"
      ]
     }
    ]
   },
   {
-   "key": "DelveLairMod_graveyardAoeRoot",
-   "category": "lair",
-   "name": "Boney Grasp",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_antiSolo2",
+   "key": "spawnshadowchickens",
    "category": "creature",
-   "name": "Brawler",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_ShadowChickens",
-   "category": "creature",
-   "name": "Chicken Summoning",
-   "summary": "Summons shadow chickens when it spots you. They vanish after 30 seconds and give no kill credit.",
+   "name": "Featherwhisperer",
+   "description": "Some enemies call for Shadow Chicken allies",
    "effects": [
     {
      "who": "Each chicken",
@@ -59,17 +67,102 @@
    ]
   },
   {
-   "key": "DelvePathMod_SpeedBlocks",
-   "category": "path",
-   "name": "Chromacycled",
-   "summary": "",
+   "key": "spawnturret",
+   "category": "creature",
+   "name": "Flame Spitters",
+   "description": "Some enemies deploy Flamethrower Turrets",
    "effects": []
   },
   {
-   "key": "DelveCreatureMod_SpawnClone",
+   "key": "fragile",
    "category": "creature",
-   "name": "Cloning",
-   "summary": "Splits off a clone of itself when damaged. Clones vanish after 30 seconds and give no kill credit.",
+   "name": "Fragile",
+   "description": "Some enemies have reduced health and take extra damage",
+   "effects": []
+  },
+  {
+   "key": "berserker",
+   "category": "creature",
+   "name": "Fury",
+   "description": "Some enemies grow stronger upon seeing an ally fall in battle",
+   "effects": [
+    {
+     "who": "Per ally slain",
+     "lines": [
+      "Damage dealt +50%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "arena",
+   "category": "creature",
+   "name": "Gladiator",
+   "description": "Some enemies have increased Health, Damage, and Stability",
+   "effects": []
+  },
+  {
+   "key": "icyground_onaggro",
+   "category": "creature",
+   "name": "Icewalkers",
+   "description": "Some enemies spread ice",
+   "effects": []
+  },
+  {
+   "key": "spellimmune",
+   "category": "creature",
+   "name": "Magical Immunity",
+   "description": "Some enemies are immune to Magic damage",
+   "effects": []
+  },
+  {
+   "key": "spellresistant",
+   "category": "creature",
+   "name": "Magical Resistance",
+   "description": "Some enemies take reduced Magic damage",
+   "effects": []
+  },
+  {
+   "key": "deltalith_miniBoss",
+   "category": "creature",
+   "name": "Mini Boss",
+   "description": "Some day they'll grow up to be a real boss!",
+   "effects": []
+  },
+  {
+   "key": "physicalimmune",
+   "category": "creature",
+   "name": "Physical Immunity",
+   "description": "Some enemies are immune to Physical damage",
+   "effects": []
+  },
+  {
+   "key": "physicalresistant",
+   "category": "creature",
+   "name": "Physical Resistance",
+   "description": "Some enemies take reduced Physical damage",
+   "effects": []
+  },
+  {
+   "key": "debuffonranged",
+   "category": "creature",
+   "name": "Reactive Distance Shielding",
+   "description": "Some enemies debuff attackers who are more than 5 Blocks away",
+   "effects": [
+    {
+     "who": "Ranged attackers",
+     "lines": [
+      "Critical hit −25%",
+      "Health regen ×0"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "spawnclone",
+   "category": "creature",
+   "name": "Split Personality",
+   "description": "Some enemies may duplicate themselves",
    "effects": [
     {
      "who": "Each clone",
@@ -82,225 +175,13 @@
    ]
   },
   {
-   "key": "DelveLairMod_floorToIce",
-   "category": "lair",
-   "name": "Cool Steppin",
-   "summary": "Keeps turning patches of floor to ice.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_Placebo",
-   "category": "creature",
-   "name": "Coxcomb",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelvePathMod_noChevrons",
-   "category": "path",
-   "name": "Directionally Challenged",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_RangedProtection",
-   "category": "creature",
-   "name": "Distance Shielded",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_slowPlayersOnHit",
-   "category": "creature",
-   "name": "Ensnaring",
-   "summary": "Its hits snare you and knock you off your mount.",
-   "effects": [
-    {
-     "who": "Players it hits",
-     "lines": [
-      "Glide set to 1",
-      "Movement speed set to 40"
-     ]
-    }
-   ]
-  },
-  {
-   "key": "DelvePathMod_explosions",
-   "category": "path",
-   "name": "Flak Bombardment",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_Fragile",
-   "category": "creature",
-   "name": "Fragile",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_berserker",
-   "category": "creature",
-   "name": "Furious",
-   "summary": "Gets stronger each time one of its allies is killed.",
-   "effects": [
-    {
-     "who": "Per ally killed",
-     "lines": [
-      "Damage dealt +50%"
-     ]
-    }
-   ]
-  },
-  {
-   "key": "DelveCreatureMod_berserkerHard",
-   "category": "creature",
-   "name": "Furiously Unbridled",
-   "summary": "Gets stronger and heals each time one of its allies is killed. The bonus stacks.",
-   "effects": [
-    {
-     "who": "Per ally killed",
-     "lines": [
-      "Damage dealt +25%"
-     ]
-    }
-   ]
-  },
-  {
-   "key": "DelveCreatureMod_Arena",
-   "category": "creature",
-   "name": "Gladiator",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveLairMod_reduceIncDmg_15",
-   "category": "lair",
-   "name": "Hardened I",
-   "summary": "Incoming damage −15%.",
-   "effects": []
-  },
-  {
-   "key": "DelveLairMod_reduceIncDmg_30",
-   "category": "lair",
-   "name": "Hardened II",
-   "summary": "Incoming damage −30%.",
-   "effects": []
-  },
-  {
-   "key": "DelveLairMod_reduceIncDmg_45",
-   "category": "lair",
-   "name": "Hardened III",
-   "summary": "Incoming damage −45%.",
-   "effects": []
-  },
-  {
-   "key": "DelveLairMod_reduceIncDmg_60",
-   "category": "lair",
-   "name": "Hardened IV",
-   "summary": "Incoming damage −60%.",
-   "effects": []
-  },
-  {
-   "key": "DelveLairMod_reduceIncDmg_75",
-   "category": "lair",
-   "name": "Hardened V",
-   "summary": "Incoming damage −75%.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_icyGround",
-   "category": "creature",
-   "name": "Icewalker",
-   "summary": "Turns the ground under you to ice when it spots you.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_buffOnDeath",
-   "category": "creature",
-   "name": "Light-Cursed",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveLairMod_Gravity",
-   "category": "lair",
-   "name": "Lowered Expectations",
-   "summary": "Keeps turning patches of floor into blocks that pull you down.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_SpellImmune",
-   "category": "creature",
-   "name": "Magic Immune",
-   "summary": "Takes no magic damage.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_SpellResistant",
-   "category": "creature",
-   "name": "Magic Resistant",
-   "summary": "Takes 50% less magic damage.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_MiniBoss",
-   "category": "creature",
-   "name": "Mini-Boss",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_PhysicalImmune",
-   "category": "creature",
-   "name": "Physical Immune",
-   "summary": "Takes no physical damage.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_PhysicalResistant",
-   "category": "creature",
-   "name": "Physical Resistant",
-   "summary": "Takes 50% less physical damage.",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_debuffOnRangedDamage",
-   "category": "creature",
-   "name": "Reactive Distance Shielded",
-   "summary": "Hitting it from range debuffs you.",
-   "effects": [
-    {
-     "who": "Ranged attackers",
-     "lines": [
-      "Critical hit −25%",
-      "Health regen ×0"
-     ]
-    }
-   ]
-  },
-  {
-   "key": "DelvePathMod_smokey",
-   "category": "path",
-   "name": "Smokey",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelvePathMod_spikeCovered",
-   "category": "path",
-   "name": "Spike Covered",
-   "summary": "",
-   "effects": []
-  },
-  {
-   "key": "DelveCreatureMod_SpawnMushrooms",
+   "key": "spawnmushrooms",
    "category": "creature",
    "name": "Spore Carrier",
-   "summary": "Keeps spawning mushroom men that explode when they die. They vanish after 10 seconds and give no kill credit.",
+   "description": "Some enemies spawn Sporelings",
    "effects": [
     {
-     "who": "Each mushroom man",
+     "who": "Each Sporeling",
      "lines": [
       "Maximum health ×0.5",
       "Physical damage ×0.2"
@@ -309,17 +190,164 @@
    ]
   },
   {
-   "key": "DelveCreatureMod_Tenebrous",
+   "key": "tenebrous",
    "category": "creature",
-   "name": "Tenebrous",
-   "summary": "",
+   "name": "Tenebrous I",
+   "description": "Some enemies have increased Darkness stat",
    "effects": []
   },
   {
-   "key": "DelveLairMod_floorToLavaShort",
+   "key": "tenebrous2",
+   "category": "creature",
+   "name": "Tenebrous II",
+   "description": "Some enemies have increased Darkness stat",
+   "effects": []
+  },
+  {
+   "key": "tenebrous3",
+   "category": "creature",
+   "name": "Tenebrous III",
+   "description": "Some enemies have increased Darkness stat",
+   "effects": []
+  },
+  {
+   "key": "berserkerstacking",
+   "category": "creature",
+   "name": "Unbridled Fury",
+   "description": "Some enemies heal and grow stronger for each other nearby enemy slain",
+   "effects": [
+    {
+     "who": "Per ally slain",
+     "lines": [
+      "Damage dealt +25%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "weak",
+   "category": "creature",
+   "name": "Weakened",
+   "description": "Some enemies do less damage and have reduced health",
+   "effects": []
+  },
+  {
+   "key": "deltalith_graveyard_creaturAoeRoot",
+   "category": "lair",
+   "name": "Boney Grasp",
+   "description": "Occasionally slows Trovians in their tracks",
+   "effects": []
+  },
+  {
+   "key": "deltalith_bossFloorIce",
+   "category": "lair",
+   "name": "Cool Steppin",
+   "description": "Occasionally chills the ground around Trovians",
+   "effects": []
+  },
+  {
+   "key": "berserkerboss",
+   "category": "lair",
+   "name": "Furious",
+   "description": "Grows stronger when reduced below a certain health threshold",
+   "effects": [
+    {
+     "who": "Per threshold",
+     "lines": [
+      "Damage dealt +100%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_bossReduceIncDmg_15",
+   "category": "lair",
+   "name": "Hardened I",
+   "description": "Takes reduced damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken −15%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_bossReduceIncDmg_30",
+   "category": "lair",
+   "name": "Hardened II",
+   "description": "Takes reduced damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken −30%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_bossReduceIncDmg_45",
+   "category": "lair",
+   "name": "Hardened III",
+   "description": "Takes reduced damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken −45%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_bossReduceIncDmg_60",
+   "category": "lair",
+   "name": "Hardened IV",
+   "description": "Takes reduced damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken −60%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_bossReduceIncDmg_75",
+   "category": "lair",
+   "name": "Hardened V",
+   "description": "Takes reduced damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken −75%"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_bossTimeBomb_180",
+   "category": "lair",
+   "name": "Impending Doom",
+   "description": "Once the Boss is engaged, players have 180 seconds to defeat it",
+   "effects": []
+  },
+  {
+   "key": "deltalith_bossAntiGrav",
+   "category": "lair",
+   "name": "Sit Down",
+   "description": "Occasionally forces airborne players to the ground",
+   "effects": []
+  },
+  {
+   "key": "deltalith_bossFloorLavaShort",
    "category": "lair",
    "name": "The Floor is Lava",
-   "summary": "Keeps turning patches of floor to lava. Anyone caught loses health regen for 10 seconds.",
+   "description": "Occasionally turns the ground around Trovians into Lava",
    "effects": [
     {
      "who": "Players caught",
@@ -330,10 +358,10 @@
    ]
   },
   {
-   "key": "DelveLairMod_floorToLavaLong",
+   "key": "deltalith_bossFloorLavaLong",
    "category": "lair",
    "name": "The Floor is Lava II",
-   "summary": "Keeps turning patches of floor to lava. Anyone caught loses health regen for 15 seconds.",
+   "description": "Occasionally turns the ground around Trovians into Lava",
    "effects": [
     {
      "who": "Players caught",
@@ -344,152 +372,495 @@
    ]
   },
   {
-   "key": "DelveLairMod_stopDpsStun",
+   "key": "deltalith_stopDpsStun",
    "category": "lair",
    "name": "Trigger Finger",
-   "summary": "Every so often the boss turns reactive: hit it then and you're stunned.",
+   "description": "Occasionally is buffed to punish Trovians who deal damage to the Boss",
    "effects": []
   },
   {
-   "key": "DelveCreatureMod_SummonTurret",
-   "category": "creature",
-   "name": "Turret Summoning",
-   "summary": "Summons a flamethrower turret when it spots you. It vanishes after 30 seconds and gives no kill credit.",
-   "effects": []
-  },
-  {
-   "key": "DelveLairMod_increaseIncDmg_15",
+   "key": "deltalith_bossIncreaseDamage_15",
    "category": "lair",
    "name": "Vulnerable I",
-   "summary": "Incoming damage +15%.",
-   "effects": []
+   "description": "Takes additional damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken +15%"
+     ]
+    }
+   ]
   },
   {
-   "key": "DelveLairMod_increaseIncDmg_30",
+   "key": "deltalith_bossIncreaseDamage_30",
    "category": "lair",
    "name": "Vulnerable II",
-   "summary": "Incoming damage +30%.",
-   "effects": []
+   "description": "Takes additional damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken +30%"
+     ]
+    }
+   ]
   },
   {
-   "key": "DelveLairMod_increaseIncDmg_45",
+   "key": "deltalith_bossIncreaseDamage_45",
    "category": "lair",
    "name": "Vulnerable III",
-   "summary": "Incoming damage +45%.",
-   "effects": []
+   "description": "Takes additional damage from players",
+   "effects": [
+    {
+     "who": "The boss",
+     "lines": [
+      "Damage taken +45%"
+     ]
+    }
+   ]
   },
   {
-   "key": "DelvePathMod_FlaskRefiller",
+   "key": "speedblocks",
    "category": "path",
-   "name": "Water-Cursed",
-   "summary": "Creatures that die release a burst that refills flasks nearby.",
+   "name": "Chromacycled",
+   "description": "Someone kind has already placed speed buffs along your path.",
    "effects": []
   },
   {
-   "key": "DelveCreatureMod_Weak",
-   "category": "creature",
-   "name": "Weak",
-   "summary": "",
+   "key": "flaskrefiller",
+   "category": "path",
+   "name": "Curse of Water",
+   "description": "When slain, enemies have a chance of refilling a single flask charge for all players within 3 Blocks",
    "effects": []
+  },
+  {
+   "key": "pathNoChevrons",
+   "category": "path",
+   "name": "Directionally Challenged",
+   "description": "Ground markings pointing towards the boss' lair have been removed",
+   "effects": []
+  },
+  {
+   "key": "pathExplosions",
+   "category": "path",
+   "name": "Flak Bombard",
+   "description": "Seek cover along the path when the flak gets too intense",
+   "effects": []
+  },
+  {
+   "key": "deltalith_group_death",
+   "category": "player",
+   "name": "Chain Death",
+   "description": "Do not die, lest you curse your allies.",
+   "effects": []
+  },
+  {
+   "key": "deltalith_death_boon",
+   "category": "player",
+   "name": "Death Boon",
+   "description": "If you die your allies will carry on with vigor.",
+   "effects": []
+  },
+  {
+   "key": "jump_n1",
+   "category": "player",
+   "name": "Entropy I",
+   "description": "Jump reduced by 1",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Jump −1"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "jump_n3",
+   "category": "player",
+   "name": "Entropy III",
+   "description": "Jump reduced by 3",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Jump −3"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "jump_n5",
+   "category": "player",
+   "name": "Entropy V",
+   "description": "Jump reduced by 5",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Jump −5"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "vampirism",
+   "category": "player",
+   "name": "Healthdraw",
+   "description": "Trovian attacks heal them for a percentage of their maximum health",
+   "effects": []
+  },
+  {
+   "key": "disabledeathsaveeffect",
+   "category": "player",
+   "name": "Lifting of the Veil",
+   "description": "Trovians are no longer protected from being killed by a single enemy attack, and Death Defying Vials no longer automatically trigger",
+   "effects": []
+  },
+  {
+   "key": "flasks_0",
+   "category": "player",
+   "name": "Parched",
+   "description": "Flask capacity set to 0",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Flasks set to 0"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_death_curse",
+   "category": "player",
+   "name": "Slow Resurrection Wave",
+   "description": "Unless tombstone resurrected, all dead players will release at the same delayed time.",
+   "effects": []
+  },
+  {
+   "key": "respawnSlower",
+   "category": "player",
+   "name": "Slower Respawning",
+   "description": "Trovians will take much longer to respawn on their own.",
+   "effects": []
+  },
+  {
+   "key": "increaseplayerdamage_01",
+   "category": "player",
+   "name": "Terror I",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×1.55"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_02",
+   "category": "player",
+   "name": "Terror II",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×2.4"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_03",
+   "category": "player",
+   "name": "Terror III",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×3.73"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_04",
+   "category": "player",
+   "name": "Terror IV",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×5.77"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_05",
+   "category": "player",
+   "name": "Terror V",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×8.95"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_06",
+   "category": "player",
+   "name": "Terror VI",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×13.87"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_07",
+   "category": "player",
+   "name": "Terror VII",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×21.49"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_08",
+   "category": "player",
+   "name": "Terror VIII",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×33.32"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_09",
+   "category": "player",
+   "name": "Terror IX",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×51.64"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_10",
+   "category": "player",
+   "name": "Terror X",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×80.04"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_11",
+   "category": "player",
+   "name": "Terror XI",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×124.06"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_12",
+   "category": "player",
+   "name": "Terror XII",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×192.3"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "increaseplayerdamage_13",
+   "category": "player",
+   "name": "Terror XIII",
+   "description": "Players take additional damage",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Damage taken ×298.07"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "jump_0",
+   "category": "player",
+   "name": "The Deep",
+   "description": "Jump reduced to 0",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Jump set to 0"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "jump_2",
+   "category": "player",
+   "name": "The Deep",
+   "description": "Jump set to 2",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Jump set to 2"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "reducehealing",
+   "category": "player",
+   "name": "The Long Path",
+   "description": "Trovians receive 50% less healing from all sources",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Health regen ×0.5"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "flasks_n01",
+   "category": "player",
+   "name": "Thirsty? I",
+   "description": "Reduced Flask Capacity",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Flasks −1"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "flasks_n02",
+   "category": "player",
+   "name": "Thirsty? II",
+   "description": "Reduced Flask Capacity",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Flasks −2"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "flasks_n03",
+   "category": "player",
+   "name": "Thirsty? III",
+   "description": "Reduced Flask Capacity",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Flasks −3"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "deltalith_movementSpeed_40",
+   "category": "player",
+   "name": "Thwip",
+   "description": "Player movement speed capped",
+   "effects": [
+    {
+     "who": "Players",
+     "lines": [
+      "Glide set to 1",
+      "Movement speed set to 40"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "fauxlootlevel",
+   "category": "tier",
+   "name": "Missplaced Vault",
+   "description": "This Challenge Tier contains no Vault\n\nDelve deeper",
+   "effects": []
+  },
+  {
+   "key": "lootlevel",
+   "category": "tier",
+   "name": "Shadowy Soul Vault",
+   "description": "This Tier contains a Shadowy Soul Vault",
+   "effects": []
+  }
+ ],
+ "retired": [
+  {
+   "key": "DelveCreatureMod_Placebo",
+   "category": "creature",
+   "name": "Coxcomb"
+  },
+  {
+   "key": "DelvePathMod_smokey",
+   "category": "path",
+   "name": "Smokey"
+  },
+  {
+   "key": "DelvePathMod_spikeCovered",
+   "category": "path",
+   "name": "Spike Covered"
   }
  ],
  "pressure": {
   "name": "Under Pressure",
   "description": "Reduces your Health Regeneration.\nThis effect scales with your current Delve depth."
- },
- "tier_damage": [
-  {
-   "tier": 1,
-   "damage_taken": "1.55"
-  },
-  {
-   "tier": 2,
-   "damage_taken": "2.4"
-  },
-  {
-   "tier": 3,
-   "damage_taken": "3.73"
-  },
-  {
-   "tier": 4,
-   "damage_taken": "5.77"
-  },
-  {
-   "tier": 5,
-   "damage_taken": "8.95"
-  },
-  {
-   "tier": 6,
-   "damage_taken": "13.87"
-  },
-  {
-   "tier": 7,
-   "damage_taken": "21.49"
-  },
-  {
-   "tier": 8,
-   "damage_taken": "33.32"
-  },
-  {
-   "tier": 9,
-   "damage_taken": "51.64"
-  },
-  {
-   "tier": 10,
-   "damage_taken": "80.04"
-  },
-  {
-   "tier": 11,
-   "damage_taken": "124.06"
-  },
-  {
-   "tier": 12,
-   "damage_taken": "192.3"
-  },
-  {
-   "tier": 13,
-   "damage_taken": "298.07"
-  }
- ],
- "tier_effects": [
-  {
-   "name": "Fewer flasks",
-   "lines": [
-    "Flasks −1",
-    "Flasks −2",
-    "Flasks −3",
-    "Flasks set to 0"
-   ]
-  },
-  {
-   "name": "Slowed",
-   "lines": [
-    "Glide set to 1",
-    "Movement speed set to 40"
-   ]
-  },
-  {
-   "name": "Reduced healing",
-   "lines": [
-    "Health regen ×0.5",
-    "Healing received is reduced"
-   ]
-  },
-  {
-   "name": "No mounts",
-   "lines": []
-  },
-  {
-   "name": "Death boon",
-   "lines": [
-    "When a player dies, the rest of the party is healed to full"
-   ]
-  },
-  {
-   "name": "Death curse",
-   "lines": [
-    "When a player dies, the rest of the party is hit by a death curse"
-   ]
-  }
- ]
+ }
 }
