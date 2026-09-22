@@ -14,7 +14,7 @@ services:
     # Bound to localhost only - the api reaches Mongo over the internal compose
     # network; this mapping is just for host-side admin access.
     ports:
-      - "27016:27017"
+      - "127.0.0.1:27016:27017"
     # Local-folder bind mount (no named volume). The host directory ./data/mongo
     # holds the database files directly.
     volumes:
@@ -68,7 +68,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-kiwi}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
       # COLD TABLESPACE for aged leaderboard partitions. The hot working set
@@ -98,7 +98,12 @@ services:
     # runs the whole build phase before creating any container, so the tag always
     # exists by the time they start. Building it three times cost ~3x the image
     # export on every deploy for three byte-identical 1.8 GB images.
-    build: .
+    # target: the Dockerfile has a second stage for the custom art worker, and a
+    # bare "build: ." would build the LAST stage - putting SteamCMD in api, bot and
+    # web as well.
+    build:
+      context: .
+      target: app
     image: trove-app:latest
     restart: unless-stopped
     # One container fronted by two hostnames at the reverse proxy, both -> :15546:
@@ -106,7 +111,7 @@ services:
     #   dev.aallyn.net -> full app: /auth, /tokens, /docs  (developer portal)
     # Bound to localhost so only the local reverse proxy can reach it.
     ports:
-      - "15546:8000"
+      - "${BIND_ADDR:-127.0.0.1}:15546:8000"
     environment:
       MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
       MONGO_DB: ${MONGO_DB:-kiwi}
@@ -277,7 +282,7 @@ services:
     image: trove-app:latest   # built by the api service (same image, different command)
     restart: unless-stopped
     ports:
-      - "15547:8000"
+      - "${BIND_ADDR:-127.0.0.1}:15547:8000"
     environment:
       # Read-side data from the api over the compose network. Deliberately NO
       # Mongo/Redis/Postgres/SECRET_KEY: the website has no DB and issues no tokens.
@@ -312,7 +317,13 @@ services:
   # silently. ./.troveui.git is the bare repo the author pushes TroveUI to and pulls
   # the worker's commits from; ./.troveui.env holds API_TOKEN and the Trovesaurus login.
   builder:
-    image: trove-app:latest   # built by the api service (same image, different command)
+    # Its own image: the app image plus SteamCMD (Dockerfile stage "builder"), so
+    # the worker can push a workshop update itself instead of leaving every release
+    # for someone to send by hand.
+    build:
+      context: .
+      target: builder
+    image: trove-builder:latest
     restart: unless-stopped
     environment:
       MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
@@ -333,6 +344,7 @@ services:
       GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL:-support@aallyn.net}
       GIT_COMMITTER_NAME: ${GIT_AUTHOR_NAME:-Aallyn}
       GIT_COMMITTER_EMAIL: ${GIT_AUTHOR_EMAIL:-support@aallyn.net}
+      CUSTOM_ART_STEAM_USER: ${CUSTOM_ART_STEAM_USER:-}
     depends_on:
       mongo:
         condition: service_healthy
@@ -345,6 +357,9 @@ services:
       - ./.custom-art:/data/custom-art
       - ./.troveui.git:/data/troveui.git
       - ./.troveui.env:/run/troveui.env:ro
+      # The Steam login, put there once by hand. Nothing writes it at build time and
+      # it is never in the image; without it the worker warns and skips Steam.
+      - steamcmd-home:/home/steam
     command: ["python", "-m", "app.custom_art.builder"]
     mem_limit: 2g
     logging:
@@ -377,3 +392,7 @@ services:
     volumes:
       - ./docs:/usr/share/nginx/html:ro
       - ./docs-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  steamcmd-home:
+    external: true

@@ -372,6 +372,11 @@ class Settings(BaseSettings):
     custom_art_poll_seconds: int = 15
     # Per picture. A club request carries two, and both fit under max_request_body_bytes.
     custom_art_image_max_bytes: int = 3 * 1024 * 1024
+    # The Steam account the worker pushes workshop updates as. The password is never
+    # here: steamcmd is logged in once by hand and its refresh token lives in the
+    # steamcmd-home volume. Empty, and Steam is skipped with a warning rather than
+    # the release failing - the hub already has the build by then.
+    custom_art_steam_user: str = ""
 
     # Daily statistics page (/zakros-ui-stats): whose public hub mods it counts. The
     # Trovesaurus and Steam ids are read from custom_art_remote.

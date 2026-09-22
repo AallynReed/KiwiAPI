@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13-slim AS app
 
 # Keep Python lean and unbuffered for clean container logs.
 ENV PYTHONUNBUFFERED=1 \
@@ -57,3 +57,26 @@ EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
      "--proxy-headers", "--forwarded-allow-ips", "*", \
      "--timeout-graceful-shutdown", "3"]
+
+# ---------------------------------------------------------------------------
+# The custom art worker, which is the app image plus SteamCMD.
+#
+# It is a stage here rather than its own Dockerfile so it cannot be built against
+# a stale trove-app:latest: a separate file would have to FROM the tag the api
+# service publishes, and nothing orders the two builds.
+#
+# SteamCMD is a 32-bit binary, hence the i386 architecture and lib32gcc. The
+# login is NOT baked in - it lives in the steamcmd-home volume, put there once by
+# hand, and is read from $HOME/Steam at run time.
+FROM app AS builder
+
+RUN dpkg --add-architecture i386 \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl lib32gcc-s1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /opt/steamcmd \
+    && curl -sSLf https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
+       | tar zxf - -C /opt/steamcmd \
+    && test -x /opt/steamcmd/steamcmd.sh
+
+CMD ["python", "-m", "app.custom_art.builder"]

@@ -20,6 +20,7 @@ failure marks what did not ship ``failed`` with the log; the checkout is reset o
 the next run, so a retry starts clean and skips mods already released.
 """
 import asyncio
+import json
 import logging
 import os
 import re
@@ -51,6 +52,10 @@ ART = tuple(f"{mod}/art" for mod in service.MODS) + ("originals",)
 _TIMEOUT = 1800
 _LOG_MAX = 60_000
 
+STEAMCMD = "/opt/steamcmd/steamcmd.sh"
+STEAM_HOME = "/home/steam"
+STEAM_APP = "304050"
+
 
 class BuildFailed(Exception):
     pass
@@ -67,11 +72,12 @@ class Run:
         self.lines.append(text)
         logger.info(text)
 
-    def __call__(self, args: list[str], cwd: Path, check: bool = True) -> bool:
+    def __call__(self, args: list[str], cwd: Path, check: bool = True,
+                 env: dict[str, str] | None = None) -> bool:
         self.say("$ " + " ".join(args))
         try:
-            done = subprocess.run(args, cwd=cwd, env=self.env, capture_output=True,
-                                  text=True, timeout=_TIMEOUT)
+            done = subprocess.run(args, cwd=cwd, env={**self.env, **(env or {})},
+                                  capture_output=True, text=True, timeout=_TIMEOUT)
         except subprocess.TimeoutExpired:
             raise BuildFailed(f"timed out: {' '.join(args)}") from None
         out = (done.stdout + done.stderr).rstrip()
@@ -184,7 +190,60 @@ def _version(tree: Path, mod: str) -> str:
     return found.group(1)
 
 
-async def _publish(tree: Path, mod: str, requests: list[ArtRequest], run: Run) -> str:
+def _steam(tree: Path, mod: str, note: str, run: Run) -> bool:
+    """Push the .tmod that was just released to the Steam Workshop.
+
+    Never fatal. The hub and Trovesaurus already have the build by the time this
+    runs, so a Steam failure is a platform that is behind rather than a release
+    that did not happen - it warns, leaves the request ``steam_pending`` and the
+    master pushes that one by hand.
+
+    The artifact is the mod's own ``dist`` copy, which is the file release.py just
+    uploaded, so all three platforms carry the same bytes. The login is whatever
+    is in the mounted volume; steamcmd is told where to find it through HOME
+    rather than the worker running under it, because git would read that too."""
+    user = settings.custom_art_steam_user
+    if not user:
+        run.say(f"WARNING no Steam account configured - {mod} not sent to Steam")
+        return False
+    ids = tree / "steam_ids.json"
+    item = json.loads(ids.read_text(encoding="utf-8")).get(mod) if ids.is_file() else None
+    if item is None:
+        run.say(f"WARNING {mod} has no Steam id in {ids.name} - not sent to Steam")
+        return False
+    art = tree / mod / "dist" / f"{mod}.tmod"
+    if not art.is_file():
+        run.say(f"WARNING {mod} has no built .tmod - not sent to Steam")
+        return False
+
+    work = Path(settings.custom_art_workspace) / "steam"
+    shutil.rmtree(work, ignore_errors=True)
+    (work / "content").mkdir(parents=True)
+    shutil.copyfile(art, work / "content" / art.name)
+    vdf = work / "item.vdf"
+    vdf.write_text('"workshopitem"\n{\n'
+                   f'\t"appid"\t\t"{STEAM_APP}"\n'
+                   f'\t"publishedfileid"\t"{item}"\n'
+                   f'\t"contentfolder"\t"{(work / "content").as_posix()}"\n'
+                   f'\t"changenote"\t"{_vdf_safe(note)}"\n'
+                   "}\n", encoding="utf-8")
+
+    ok = run([STEAMCMD, "+login", user, "+workshop_build_item", str(vdf), "+quit"],
+             work, check=False, env={"HOME": STEAM_HOME})
+    tail = run.lines[-1] if run.lines else ""
+    if not ok or "Success." not in tail:
+        run.say(f"WARNING Steam upload failed for {mod} - push it by hand")
+        return False
+    run.say(f"{mod} is on the Steam Workshop, item {item}")
+    return True
+
+
+def _vdf_safe(text: str) -> str:
+    return text.replace("\\", " ").replace('"', "'").replace("\n", " ")
+
+
+async def _publish(tree: Path, mod: str, requests: list[ArtRequest], run: Run,
+                   steamed: dict[str, bool]) -> str:
     project = await ModProject.find_one(ModProject.title == mod)
     if project is None:
         raise BuildFailed(f"no hub project titled {mod!r}")
@@ -202,6 +261,7 @@ async def _publish(tree: Path, mod: str, requests: list[ArtRequest], run: Run) -
     elif not await asyncio.to_thread(run, [sys.executable, "trovesaurus.py", mod, "-m", note,
                                            "--upload", "--silent"], tree, False):
         run.say(f"WARNING Trovesaurus upload failed for {mod} - send it by hand")
+    steamed[mod] = await asyncio.to_thread(_steam, tree, mod, note, run)
     for request in requests:
         request.versions[mod] = version
         await request.save()
@@ -212,6 +272,7 @@ async def _process(requests: list[ArtRequest]) -> None:
     env = {**os.environ, "TROVE_DIR": str(_root() / "trove")}
     run = Run(env)
     pages: dict[str, str] = {}
+    steamed: dict[str, bool] = {}
     try:
         tree = await asyncio.to_thread(_checkout, run)
         await _game_files(tree, run)
@@ -220,7 +281,7 @@ async def _process(requests: list[ArtRequest]) -> None:
         for mod in service.MODS:
             mine = [r for r in requests if mod in service.mods_of(r) and mod not in r.versions]
             if mine:
-                pages[mod] = await _publish(tree, mod, mine, run)
+                pages[mod] = await _publish(tree, mod, mine, run, steamed)
     except BuildFailed as exc:
         run.say(f"FAILED {exc}")
     except Exception as exc:
@@ -232,7 +293,8 @@ async def _process(requests: list[ArtRequest]) -> None:
         request.log = log
         if all(mod in request.versions for mod in service.mods_of(request)):
             request.status = "released"
-            request.steam_pending = True
+            request.steam_pending = not all(steamed.get(mod)
+                                            for mod in service.mods_of(request))
             request.released_at = utcnow()
             await request.save()
             await service.notify_released(request, pages)
