@@ -3,10 +3,10 @@
 {% macro card(m) %}
 <li class="wk-mod" id="{{ m.key | lower }}">
     <h3 class="wk-mod-name">{{ m.name }}</h3>
-    {% if m.description %}<p class="wk-mod-summary">{% for line in m.description.split("\n") if line %}{{ line }}{% if not loop.last %} {% endif %}{% endfor %}</p>{% endif %}
+    {% for para in (m.description or "").split("\n") if para.strip() %}<p class="wk-mod-summary">{{ para }}</p>{% endfor %}
     {% for e in m.effects %}
     <div class="wk-mod-fx">
-        <p class="wk-mod-who">{{ e.who }}</p>
+        {% if e.who %}<p class="wk-mod-who">{{ e.who }}</p>{% endif %}
         <ul>{% for line in e.lines %}<li>{{ line }}</li>{% endfor %}</ul>
     </div>
     {% endfor %}
@@ -31,6 +31,7 @@
 
     <nav class="wk-chips" aria-label="On this page">
         {% for key, heading, _ in sections if groups[key] %}<a class="wk-chip" href="#{{ key }}">{{ heading }} <span class="wk-mod-count">{{ groups[key] | length }}</span></a>{% endfor %}
+        <a class="wk-chip" href="#always">Always on</a>
         <a class="wk-chip" href="#notes">Notes</a>
     </nav>
 
@@ -41,11 +42,14 @@
         <ul class="wk-mods">
             {% for m in groups[key] %}{{ card(m) }}{% endfor %}
         </ul>
-        {% if key == "player" %}
-        <p class="wk-hint wk-always">Always on in delves: <strong>{{ data.pressure.name }}</strong>. {% for line in data.pressure.description.split("\n") %}{{ line }}{% if not loop.last %} {% endif %}{% endfor %}</p>
-        {% endif %}
     </section>
     {% endfor %}
+
+    <section class="wk-section" id="always" aria-labelledby="wk-h-always">
+        <h2 class="wk-writeup-title" id="wk-h-always">Always on</h2>
+        <p class="wk-hint">Applies in every delve, whatever the floor rolled.</p>
+        <ul class="wk-mods">{{ card({"key": "under-pressure", "name": data.pressure.name, "description": data.pressure.description, "effects": []}) }}</ul>
+    </section>
 
     {% if data.retired %}
     <details class="wk-unseen">

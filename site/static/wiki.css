@@ -187,12 +187,11 @@ body.wk > main { min-height: auto; }
 .wk-mod { padding: 16px; border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card); min-width: 0; }
 .wk-mod-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; margin: 0 0 6px; color: var(--text); }
 .wk-mod-summary { margin: 0; color: var(--text); line-height: 1.5; font-size: .93rem; }
+.wk-mod-summary + .wk-mod-summary { margin-top: 6px; }
 .wk-mod-fx { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bg-line); }
 .wk-mod-who { margin: 0 0 6px; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-mute); }
 .wk-mod-fx ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .9rem; }
 .wk-mod-fx li { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .84rem; color: var(--text); }
-.wk-always { margin: 16px 0 0; }
-.wk-always strong { color: var(--text); }
 .wk-unseen { margin-top: 36px; border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 0 16px; }
 .wk-unseen[open] { padding-bottom: 16px; }
 .wk-unseen summary { cursor: pointer; padding: 12px 0; color: var(--text-mute); font-weight: 600; }

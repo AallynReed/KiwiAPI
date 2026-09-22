@@ -469,7 +469,7 @@
    "description": "Jump reduced by 1",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Jump −1"
      ]
@@ -483,7 +483,7 @@
    "description": "Jump reduced by 3",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Jump −3"
      ]
@@ -497,7 +497,7 @@
    "description": "Jump reduced by 5",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Jump −5"
      ]
@@ -525,7 +525,7 @@
    "description": "Flask capacity set to 0",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Flasks set to 0"
      ]
@@ -553,7 +553,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×1.55"
      ]
@@ -567,7 +567,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×2.4"
      ]
@@ -581,7 +581,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×3.73"
      ]
@@ -595,7 +595,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×5.77"
      ]
@@ -609,7 +609,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×8.95"
      ]
@@ -623,7 +623,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×13.87"
      ]
@@ -637,7 +637,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×21.49"
      ]
@@ -651,7 +651,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×33.32"
      ]
@@ -665,7 +665,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×51.64"
      ]
@@ -679,7 +679,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×80.04"
      ]
@@ -693,7 +693,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×124.06"
      ]
@@ -707,7 +707,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×192.3"
      ]
@@ -721,7 +721,7 @@
    "description": "Players take additional damage",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Damage taken ×298.07"
      ]
@@ -735,7 +735,7 @@
    "description": "Jump reduced to 0",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Jump set to 0"
      ]
@@ -749,7 +749,7 @@
    "description": "Jump set to 2",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Jump set to 2"
      ]
@@ -763,7 +763,7 @@
    "description": "Trovians receive 50% less healing from all sources",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Health regen ×0.5"
      ]
@@ -777,7 +777,7 @@
    "description": "Reduced Flask Capacity",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Flasks −1"
      ]
@@ -791,7 +791,7 @@
    "description": "Reduced Flask Capacity",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Flasks −2"
      ]
@@ -805,7 +805,7 @@
    "description": "Reduced Flask Capacity",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Flasks −3"
      ]
@@ -819,7 +819,7 @@
    "description": "Player movement speed capped",
    "effects": [
     {
-     "who": "Players",
+     "who": "",
      "lines": [
       "Glide set to 1",
       "Movement speed set to 40"

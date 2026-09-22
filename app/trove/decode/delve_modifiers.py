@@ -31,7 +31,8 @@ INDENT, FINAL_NEWLINE = 1, True
 SIGN_DIR = "prefabs/placeable/deco/delve/"
 _SIGN_KEY = re.compile(rb"\$prefabs_placeable_deco_delve_([A-Za-z0-9_]+?)_interactable_sign_title")
 
-# sign id -> (group, [(who, effect prefab under abilities/delve/)]). Groups:
+# sign id -> (group, [(who, effect prefab under abilities/delve/)]); who is blank when it's
+# the whole party. Groups:
 # creature (rolled onto enemies), lair (the boss), path, player, tier.
 SIGNS: dict[str, tuple[str, list[tuple[str, str]]]] = {
     "agile": ("creature", []),
@@ -80,12 +81,12 @@ SIGNS: dict[str, tuple[str, list[tuple[str, str]]]] = {
     "pathNoChevrons": ("path", []),
     "speedblocks": ("path", []),
     **{f"increaseplayerdamage_{n:02d}": (
-        "player", [("Players", f"mutators/tier_player_set_incomingdamagemod_t{n:02d}")]) for n in range(1, 14)},
-    "flasks_0": ("player", [("Players", "mutators/tier_player_set_flasks_0")]),
-    **{f"flasks_n{n:02d}": ("player", [("Players", f"mutators/tier_player_sub_flasks_{n:02d}")]) for n in (1, 2, 3)},
-    **{f"jump_{j}": ("player", [("Players", f"mutators/jump_{j}")]) for j in ("0", "2", "n1", "n3", "n5")},
-    "deltalith_movementSpeed_40": ("player", [("Players", "mutators/tier_player_set_movementspeed_40")]),
-    "reducehealing": ("player", [("Players", "mutators/tier_player_reducehealing_noregen")]),
+        "player", [("", f"mutators/tier_player_set_incomingdamagemod_t{n:02d}")]) for n in range(1, 14)},
+    "flasks_0": ("player", [("", "mutators/tier_player_set_flasks_0")]),
+    **{f"flasks_n{n:02d}": ("player", [("", f"mutators/tier_player_sub_flasks_{n:02d}")]) for n in (1, 2, 3)},
+    **{f"jump_{j}": ("player", [("", f"mutators/jump_{j}")]) for j in ("0", "2", "n1", "n3", "n5")},
+    "deltalith_movementSpeed_40": ("player", [("", "mutators/tier_player_set_movementspeed_40")]),
+    "reducehealing": ("player", [("", "mutators/tier_player_reducehealing_noregen")]),
     "vampirism": ("player", []),
     "deltalith_death_boon": ("player", []),
     "deltalith_death_curse": ("player", []),
