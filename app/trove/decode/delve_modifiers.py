@@ -12,7 +12,7 @@ hand from the matching internal names (`increaseplayerdamage_05` ->
 
 The older `$DelveCreatureMod_*` / `$DelveLairMod_*` / `$DelvePathMod_*` locale
 names are internal labels for the same modifiers. LEGACY maps them onto signs;
-one left without a sign has no in-game presence and is listed as retired.
+not every modifier has a sign, so one left over is listed by that name alone.
 """
 from __future__ import annotations
 
@@ -225,21 +225,21 @@ def build(tree: GameTree) -> dict:
         modifiers.append({"key": sid, "category": group, "name": name,
                           "description": description, "effects": rows})
 
-    retired = []
     for key, name in legacy.items():
         key = key[1:]
         group = next((g for p, g in _LEGACY_GROUP.items() if key.startswith(p)), None)
         if group is None:
             continue
         if key not in LEGACY:
-            retired.append({"key": key, "category": group, "name": name})
+            # No sign, so no description - but still in play (Spike Covered is).
+            modifiers.append({"key": key, "category": group, "name": name,
+                              "description": "", "effects": []})
         elif LEGACY[key] not in signs:
             raise ValueError(f"{key} maps to a sign that is gone: {LEGACY[key]}")
 
     order = {g: i for i, g in enumerate(("creature", "lair", "path", "player", "tier", "new"))}
     return {
         "modifiers": sorted(modifiers, key=lambda x: (order[x["category"]], _natural(x["name"]))),
-        "retired": sorted(retired, key=lambda x: x["name"].lower()),
         "pressure": {
             "name": effect_loc["$prefabs_effects_delve_healthregen_scaling_name"],
             "description": effect_loc["$prefabs_effects_delve_healthregen_scaling_description"],

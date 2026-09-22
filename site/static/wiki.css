@@ -188,16 +188,11 @@ body.wk > main { min-height: auto; }
 .wk-mod-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; margin: 0 0 6px; color: var(--text); }
 .wk-mod-summary { margin: 0; color: var(--text); line-height: 1.5; font-size: .93rem; }
 .wk-mod-summary + .wk-mod-summary { margin-top: 6px; }
+.wk-mod-unknown { margin: 0; color: var(--text-mute); font-style: italic; font-size: .9rem; }
 .wk-mod-fx { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bg-line); }
 .wk-mod-who { margin: 0 0 6px; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--text-mute); }
 .wk-mod-fx ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .9rem; }
 .wk-mod-fx li { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .84rem; color: var(--text); }
-.wk-unseen { margin-top: 36px; border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 0 16px; }
-.wk-unseen[open] { padding-bottom: 16px; }
-.wk-unseen summary { cursor: pointer; padding: 12px 0; color: var(--text-mute); font-weight: 600; }
-.wk-unseen summary:hover { color: var(--text); }
-.wk-unseen summary:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; border-radius: 6px; }
-.wk-unseen .wk-hint { margin: 0 0 12px; }
 
 .wk-empty {
   padding: 22px; border: 1px dashed var(--bg-line); border-radius: var(--radius);

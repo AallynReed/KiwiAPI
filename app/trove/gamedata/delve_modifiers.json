@@ -15,6 +15,13 @@
    "effects": []
   },
   {
+   "key": "DelveCreatureMod_Placebo",
+   "category": "creature",
+   "name": "Coxcomb",
+   "description": "",
+   "effects": []
+  },
+  {
    "key": "buffondeath",
    "category": "creature",
    "name": "Cursed by Light",
@@ -449,6 +456,20 @@
    "effects": []
   },
   {
+   "key": "DelvePathMod_smokey",
+   "category": "path",
+   "name": "Smokey",
+   "description": "",
+   "effects": []
+  },
+  {
+   "key": "DelvePathMod_spikeCovered",
+   "category": "path",
+   "name": "Spike Covered",
+   "description": "",
+   "effects": []
+  },
+  {
    "key": "deltalith_group_death",
    "category": "player",
    "name": "Chain Death",
@@ -840,23 +861,6 @@
    "name": "Shadowy Soul Vault",
    "description": "This Tier contains a Shadowy Soul Vault",
    "effects": []
-  }
- ],
- "retired": [
-  {
-   "key": "DelveCreatureMod_Placebo",
-   "category": "creature",
-   "name": "Coxcomb"
-  },
-  {
-   "key": "DelvePathMod_smokey",
-   "category": "path",
-   "name": "Smokey"
-  },
-  {
-   "key": "DelvePathMod_spikeCovered",
-   "category": "path",
-   "name": "Spike Covered"
   }
  ],
  "pressure": {

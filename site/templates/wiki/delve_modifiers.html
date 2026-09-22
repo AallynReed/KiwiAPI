@@ -3,7 +3,8 @@
 {% macro card(m) %}
 <li class="wk-mod" id="{{ m.key | lower }}">
     <h3 class="wk-mod-name">{{ m.name }}</h3>
-    {% for para in (m.description or "").split("\n") if para.strip() %}<p class="wk-mod-summary">{{ para }}</p>{% endfor %}
+    {% for para in (m.description or "").split("\n") if para.strip() %}<p class="wk-mod-summary">{{ para }}</p>
+    {% else %}<p class="wk-mod-unknown">The game has no description for this one.</p>{% endfor %}
     {% for e in m.effects %}
     <div class="wk-mod-fx">
         {% if e.who %}<p class="wk-mod-who">{{ e.who }}</p>{% endif %}
@@ -50,16 +51,6 @@
         <p class="wk-hint">Applies in every delve, whatever the floor rolled.</p>
         <ul class="wk-mods">{{ card({"key": "under-pressure", "name": data.pressure.name, "description": data.pressure.description, "effects": []}) }}</ul>
     </section>
-
-    {% if data.retired %}
-    <details class="wk-unseen">
-        <summary>Most likely retired <span class="wk-mod-count">{{ data.retired | length }}</span></summary>
-        <p class="wk-hint">These still have a name in the game's text files, but the client has no modifier sign for them, so they can't show up on a floor.</p>
-        <ul class="wk-list wk-list-cols">
-            {% for m in data.retired %}<li>{{ m.name }}</li>{% endfor %}
-        </ul>
-    </details>
-    {% endif %}
 
     <section class="wk-writeup" id="notes" aria-labelledby="wk-writeup-title">
         <h2 class="wk-writeup-title" id="wk-writeup-title">Notes</h2>
