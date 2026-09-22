@@ -281,8 +281,10 @@
     const via = r.approved_by ? ` <span class="wk-via">approved by ${esc(r.approved_by)}</span>` : "";
     const page = withPage ? `<a class="wk-row-title" href="${esc(pageHref(r.slug, r.title))}">${esc(r.title)}</a>` : "";
     const summary = r.summary ? `<span class="wk-row-summary">${esc(r.summary)}</span>` : "";
+    const isNew = r.created || (r.rev === 1 && r.action === "edit");
+    const edits = r.edits > 1 ? ` · <a href="/-/history/${esc(r.slug)}">${r.edits} edits</a>` : "";
     return `${page}
-      <span class="wk-row-meta">${verb ? `<span class="wk-pill">${verb}</span> ` : ""}${r.rev === 1 && r.action === "edit" ? '<span class="wk-pill">New</span> ' : ""}${who}${via} · ${timeTag(r.created_at)}</span>
+      <span class="wk-row-meta">${verb ? `<span class="wk-pill">${verb}</span> ` : ""}${isNew ? '<span class="wk-pill">New</span> ' : ""}${who}${via} · ${timeTag(r.created_at)}${edits}</span>
       ${summary}`;
   }
 
@@ -290,7 +292,7 @@
     const list = document.getElementById("wk-home-recent-list");
     if (!list) return;
     try {
-      const d = await api("/site/wiki/recent?limit=" + (list.dataset.limit || 8));
+      const d = await api("/site/wiki/recent?per_page=1&limit=" + (list.dataset.limit || 8));
       list.innerHTML = d.items.length
         ? d.items.map((r) => `<li class="wk-row">${revRow(r, true)}</li>`).join("")
         : `<li class="wk-list-empty">Nothing written yet. The first page could be yours.</li>`;

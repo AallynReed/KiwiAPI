@@ -163,10 +163,26 @@ async def revision(slug: str, rev: int) -> dict | None:
     return _rev_dto(r, await _names([r.author_id, r.approved_by]), body=True)
 
 
-async def recent(limit: int) -> list[dict]:
-    revs = await WikiRevision.find_all().sort("-created_at").limit(limit).to_list()
+async def recent(limit: int, *, per_page: bool = False) -> list[dict]:
+    """Newest revisions first. ``per_page`` keeps only each page's latest one, with
+    how many of the recent revisions it stands for (``edits``) and whether the page
+    was created among them (``created``)."""
+    if not per_page:
+        revs = await WikiRevision.find_all().sort("-created_at").limit(limit).to_list()
+        names = await _names([r.author_id for r in revs] + [r.approved_by for r in revs])
+        return [_rev_dto(r, names) for r in revs]
+    groups = await WikiRevision.aggregate([
+        {"$sort": {"created_at": -1}},
+        {"$limit": limit * 20},    # "recent" is a window, not all history
+        {"$group": {"_id": "$slug", "doc": {"$first": "$$ROOT"},
+                    "edits": {"$sum": 1}, "first_rev": {"$min": "$rev"}}},
+        {"$sort": {"doc.created_at": -1}},
+        {"$limit": limit},
+    ]).to_list()
+    revs = [WikiRevision.model_validate(g["doc"]) for g in groups]
     names = await _names([r.author_id for r in revs] + [r.approved_by for r in revs])
-    return [_rev_dto(r, names) for r in revs]
+    return [_rev_dto(r, names) | {"edits": g["edits"], "created": g["first_rev"] == 1}
+            for r, g in zip(revs, groups, strict=True)]
 
 
 async def search(q: str, limit: int) -> list[dict]:

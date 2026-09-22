@@ -90,9 +90,10 @@ async def revision(response: Response, slug: str = Query(max_length=200),
 
 
 @router.get("/recent")
-async def recent(response: Response, limit: int = Query(default=50, ge=1, le=200)) -> dict:
+async def recent(response: Response, limit: int = Query(default=50, ge=1, le=200),
+                 per_page: bool = False) -> dict:
     _fresh(response)
-    return {"items": await service.recent(limit)}
+    return {"items": await service.recent(limit, per_page=per_page)}
 
 
 @router.get("/search")
