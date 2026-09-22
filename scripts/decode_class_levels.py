@@ -2,8 +2,8 @@
 
 Every `prefabs/class/<tech>.binfab` carries a 30-entry level list: record N (wire
 field N) is what reaching level N grants. Level 1 holds the class's own modifiers
-(MultiplySum -> "Maximum Health %", Multiply -> the class bonuses, Multiply 0 /
-Nullify -> the class has no such stat, Set -> a fixed value); levels 2-30 add flat
+(MultiplySum -> "Maximum Health %", Multiply -> the class bonuses, Multiply 0 ->
+the class has no such stat, Set -> a fixed value); levels 2-30 add flat
 stats. A stat record is `<zig stat> 10 <op> 24 <f32> 38 <label>`, the same shape
 app/trove/codexes/bonuses.py reads.
 
@@ -130,7 +130,7 @@ def decode(data: bytes) -> dict:
             elif op == "MultiplySum":
                 row = rows.setdefault(f"{name} %", {"name": f"{name} %", "value": 0.0, "percentage": True})
                 row["value"] += value * 100
-            elif op == "Multiply" and value == 0 or op == "Nullify":
+            elif op == "Multiply" and value == 0:
                 fixed[name] = None
             elif op == "Multiply":
                 if name not in bonuses:

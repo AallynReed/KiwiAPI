@@ -90,7 +90,7 @@ OPERATIONS: dict[int, str] = {
     0: "MultiplySum",     # scales the stat by the amount (0.30 = +30% of it)
     2: "Add",             # flat amount on the stat, whether or not it displays as a percent
     4: "Set",             # replaces the stat
-    6: "Nullify",         # zeroes it
+    6: "Nullify",         # vetoes modifiers sharing its stat + label; its amount is ignored
     8: "Multiply",        # multiplies the output (patron buffs and the like)
     10: "Minimum",        # floors it
     12: "Maximum",        # caps it
@@ -172,7 +172,7 @@ def _normalize(stat_key: str, operation: int, amount: float) -> tuple[float, boo
     if operation == 8:                       # Multiply
         return (amount - 1) * 100, True
     if operation != 2:                       # Set / Nullify / Minimum / Maximum
-        return amount, False                 # all state the stat itself, never a delta
+        return amount, False                 # never a delta (Nullify's amount is unused)
     # Add: a flat amount, which a few stats nonetheless display as a percent.
     if stat_key == "$Stat_CriticalHitChance":
         return amount / 10, False
