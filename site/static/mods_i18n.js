@@ -17,14 +17,13 @@
   const { esc } = window.BTTUtil;
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
 
-  const LANGS = (window.BTTi18n && window.BTTi18n.langs) || [['en', 'English', '🇬🇧']];
+  const LANGS = (window.BTTi18n && window.BTTi18n.langs) || [['en', 'English']];
   const ORDER = LANGS.map((l) => l[0]);
   // lowercased code -> canonical code, for matching README.zh-cn.md & friends.
   const BY_LOWER = {};
   LANGS.forEach(([c]) => { BY_LOWER[c.toLowerCase()] = c; });
 
   const langName = (c) => (LANGS.find((l) => l[0] === c) || [c, c])[1];
-  const langFlag = (c) => (LANGS.find((l) => l[0] === c) || [c, c, '🌐'])[2];
   const sortLangs = (codes) => codes.slice().sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
 
   // The reader's switch: one pill per language, `active` selected. Nothing at
@@ -34,7 +33,7 @@
     if (!codes || codes.length < 2) return '';
     return `<div class="mp-langtabs" role="tablist" aria-label="${esc(t('Content language'))}">${
       sortLangs(codes).map((c) => `<button type="button" role="tab" class="mp-langtab${c === active ? ' is-sel' : ''}"
-        aria-selected="${c === active}" data-content-lang="${esc(c)}"><span aria-hidden="true">${langFlag(c)}</span> ${esc(langName(c))}</button>`).join('')}</div>`;
+        aria-selected="${c === active}" data-content-lang="${esc(c)}">${esc(langName(c))}</button>`).join('')}</div>`;
   }
 
   // The editor's markup half - drop it above the fields it governs. `id`
@@ -77,7 +76,7 @@
     function paint() {
       tabs.innerHTML = sortLangs([...langs]).map((c) =>
         `<button type="button" role="tab" class="mp-langtab${c === cur ? ' is-sel' : ''}"
-          aria-selected="${c === cur}" data-lang="${esc(c)}"><span aria-hidden="true">${langFlag(c)}</span> ${esc(langName(c))}</button>`).join('');
+          aria-selected="${c === cur}" data-lang="${esc(c)}">${esc(langName(c))}</button>`).join('');
       tabs.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => {
         stash();
         cur = b.getAttribute('data-lang');
@@ -87,9 +86,7 @@
       }));
       const rest = ORDER.filter((c) => !langs.has(c));
       addSel.innerHTML = `<option value="">${esc(t('Add a language…'))}</option>`
-        // The space lives inside the interpolation on purpose - see the
-        // template-literal note in scripts/minify_static.py.
-        + rest.map((c) => `<option value="${esc(c)}">${langFlag(c) + ' ' + esc(langName(c))}</option>`).join('');
+        + rest.map((c) => `<option value="${esc(c)}">${esc(langName(c))}</option>`).join('');
       addSel.hidden = !rest.length;
     }
     addSel.addEventListener('change', () => {
@@ -115,5 +112,5 @@
     };
   }
 
-  window.ModsI18n = { LANGS, BY_LOWER, langName, langFlag, sortLangs, tabsHTML, editorHTML, wireEditor };
+  window.ModsI18n = { LANGS, BY_LOWER, langName, sortLangs, tabsHTML, editorHTML, wireEditor };
 })();
