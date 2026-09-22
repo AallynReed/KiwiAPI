@@ -42,6 +42,27 @@ STATIC = ROOT / "site" / "static"
 # touches. This net just guarantees a regression can never reach users silently.
 _TMPL_SPACE = re.compile(r"\} \$\{")
 
+# csscompressor protects calc() but strips the spaces around `+` everywhere else
+# (it's a selector combinator to it), so `clamp(2rem, 4vw + 0.8rem, 3.6rem)` came
+# out as `4vw+0.8rem` - invalid, since math functions need whitespace around a
+# binary +. The whole value then dropped and headings fell back to body size.
+_MATH_FN = re.compile(r"\b(?:clamp|min|max|calc)\(", re.I)
+
+
+def _respace_math_plus(css: str) -> str:
+    out, i = [], 0
+    for m in _MATH_FN.finditer(css):
+        if m.start() < i:
+            continue    # nested inside a function already handled
+        depth, j = 1, m.end()
+        while j < len(css) and depth:
+            depth += {"(": 1, ")": -1}.get(css[j], 0)
+            j += 1
+        body = re.sub(r"(?<=[\w%)])\s*\+\s*(?=[\w.(])", " + ", css[m.end():j])
+        out.append(css[i:m.end()] + body)
+        i = j
+    return "".join(out) + css[i:]
+
 
 def discover_pairs() -> list[tuple[Path, Path]]:
     """Every top-level source `*.css` / `*.js` -> its `*.min.*` sibling.
@@ -70,7 +91,7 @@ def main() -> None:
     for src, dst in pairs:
         raw = src.read_text(encoding="utf-8")
         if src.suffix == ".css":
-            mini = csscompressor.compress(raw)
+            mini = _respace_math_plus(csscompressor.compress(raw))
         else:
             mini = rjsmin.jsmin(raw, keep_bang_comments=False)
             # Guard: rjsmin must not eat a `${a} ${b}` template space. If it did,
