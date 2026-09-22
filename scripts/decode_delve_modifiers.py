@@ -4,8 +4,7 @@ The client carries each modifier's name (`$DelveCreatureMod_*`, `$DelveLairMod_*
 `$DelvePathMod_*` in languages/en/delve.binfab) and the effect prefabs under
 prefabs/abilities/delve/, but not the server's table joining the two. MODIFIERS
 below is that join, written by hand and kept to prefabs whose names match the
-modifier unambiguously; the numbers are always read from the prefabs. `seen` are
-the names the weekly rotation data records, which is what players see in game.
+modifier unambiguously; the numbers are always read from the prefabs.
 
 Also decodes the unnamed per-tier player effects and names "Under Pressure".
 
@@ -33,61 +32,43 @@ OUT = Path(__file__).resolve().parents[1] / "app" / "trove" / "gamedata" / "delv
 
 CATEGORIES = {"DelveCreatureMod_": "creature", "DelveLairMod_": "lair", "DelvePathMod_": "path"}
 
-# key -> name: display override; seen: rotation names; summary: what the prefab chain does;
-# effects: (who, prefab).
+# key -> summary: what the prefab chain does; effects: (who, prefab).
 MODIFIERS: dict[str, dict] = {
-    "DelveCreatureMod_Agile": {"seen": ["Agile"]},
-    "DelveCreatureMod_Antumbral": {"seen": ["Antumbral"]},
-    "DelveCreatureMod_Arena": {"seen": ["Gladiator"]},
-    "DelveCreatureMod_Fragile": {"seen": ["Fragile"]},
-    "DelveCreatureMod_MiniBoss": {"seen": ["Mini Boss"]},
-    "DelveCreatureMod_Tenebrous": {"name": "Tenebrous", "seen": ["Tenebrous I", "Tenebrous II", "Tenebrous III"]},
-    "DelveCreatureMod_Weak": {"seen": ["Weakened"]},
-    "DelveCreatureMod_buffOnDeath": {"seen": ["Cursed by Light"]},
-    "DelveCreatureMod_RangedProtection": {"seen": ["Distance Shielding"]},
     "DelveCreatureMod_berserker": {
-        "seen": ["Fury"],
         "summary": "Gets stronger each time one of its allies is killed.",
         "effects": [("Per ally killed", "mutators/berserker_onallykilled_stats")],
     },
     "DelveCreatureMod_berserkerHard": {
-        "seen": ["Unbridled Fury"],
         "summary": "Gets stronger and heals each time one of its allies is killed. The bonus stacks.",
         "effects": [("Per ally killed", "mutators/berserkerstacking_onallykilled_stats")],
     },
     "DelveCreatureMod_slowPlayersOnHit": {
-        "seen": ["Ensnaring Grip"],
         "summary": "Its hits snare you and knock you off your mount.",
         "effects": [("Players it hits", "mutators/daze_onoutgoingdamage_movementspeed")],
     },
     "DelveCreatureMod_debuffOnRangedDamage": {
-        "seen": ["Reactive Distance Shielding"],
         "summary": "Hitting it from range debuffs you.",
         "effects": [("Ranged attackers", "mutators/debuffonrangeddamage_shield_debuff")],
     },
     "DelveCreatureMod_ShadowChickens": {
-        "seen": ["Featherwhisperer"],
         "summary": "Summons shadow chickens when it spots you. They vanish after 30 seconds and give no kill credit.",
         "effects": [("Each chicken", "mutators/spawnchicken_onaggro_stats")],
     },
     "DelveCreatureMod_SpawnClone": {
-        "seen": ["Split Personality"],
         "summary": "Splits off a clone of itself when damaged. Clones vanish after 30 seconds and give no kill credit.",
         "effects": [("Each clone", "mutators/spawnclone_ondamage_stats")],
     },
     "DelveCreatureMod_SpawnMushrooms": {
-        "seen": ["Spore Carrier"],
         "summary": "Keeps spawning mushroom men that explode when they die. They vanish after 10 seconds and give no kill credit.",
         "effects": [("Each mushroom man", "mutators/spawnmushroom_periodic_stats")],
     },
     "DelveCreatureMod_SummonTurret": {
-        "seen": ["Flame Spitters"],
         "summary": "Summons a flamethrower turret when it spots you. It vanishes after 30 seconds and gives no kill credit.",
     },
-    "DelveCreatureMod_SpellResistant": {"seen": ["Magical Resistance"], "summary": "Takes 50% less magic damage."},
-    "DelveCreatureMod_SpellImmune": {"seen": ["Magical Immunity"], "summary": "Takes no magic damage."},
-    "DelveCreatureMod_PhysicalResistant": {"seen": ["Physical Resistance"], "summary": "Takes 50% less physical damage."},
-    "DelveCreatureMod_PhysicalImmune": {"seen": ["Physical Immunity"], "summary": "Takes no physical damage."},
+    "DelveCreatureMod_SpellResistant": {"summary": "Takes 50% less magic damage."},
+    "DelveCreatureMod_SpellImmune": {"summary": "Takes no magic damage."},
+    "DelveCreatureMod_PhysicalResistant": {"summary": "Takes 50% less physical damage."},
+    "DelveCreatureMod_PhysicalImmune": {"summary": "Takes no physical damage."},
     "DelveCreatureMod_icyGround": {"summary": "Turns the ground under you to ice when it spots you."},
     "DelveLairMod_bossBerserker": {
         "summary": "The boss gets stronger at set health thresholds.",
@@ -209,11 +190,8 @@ def build() -> dict:
         summary = spec.get("summary", "")
         if m := _INC_DMG.match(key):
             summary = f"Incoming damage {'+' if m.group(1) == 'increase' else '−'}{m.group(2)}%."
-        seen = spec.get("seen", [])
         modifiers.append({
-            "key": key, "category": category,
-            "name": spec.get("name") or (seen[0] if seen else game_name),
-            "game_name": game_name, "seen": seen, "summary": summary,
+            "key": key, "category": category, "name": game_name, "summary": summary,
             "effects": [{"who": who, "lines": effect_lines(prefab(files, rel))}
                         for who, rel in spec.get("effects", [])],
         })

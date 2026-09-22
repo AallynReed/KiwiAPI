@@ -187,7 +187,6 @@ body.wk > main { min-height: auto; }
 .wk-mods-narrow { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); align-content: start; }
 .wk-mod { padding: 16px; border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card); min-width: 0; }
 .wk-mod-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; margin: 0 0 6px; color: var(--text); }
-.wk-mod-alias { font-size: .82rem; color: var(--text-mute); margin: 0 0 6px; }
 .wk-mod-summary { margin: 0; color: var(--text); line-height: 1.5; font-size: .93rem; }
 .wk-mod-unknown { margin: 0; color: var(--text-mute); font-style: italic; font-size: .9rem; }
 .wk-mod-fx { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--bg-line); }

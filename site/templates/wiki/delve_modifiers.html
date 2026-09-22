@@ -28,8 +28,6 @@
             {% for m in groups[key] %}
             <li class="wk-mod" id="{{ m.key | lower }}">
                 <h3 class="wk-mod-name">{{ m.name }}</h3>
-                {% if m.seen | length > 1 %}<p class="wk-mod-alias">Ranks: {{ m.seen | join(", ") }}</p>{% endif %}
-                {% if m.game_name != m.name %}<p class="wk-mod-alias">Called “{{ m.game_name }}” in the game files</p>{% endif %}
                 {% if m.summary %}<p class="wk-mod-summary">{{ m.summary }}</p>
                 {% else %}<p class="wk-mod-unknown">Effect not decoded yet.</p>{% endif %}
                 {% for e in m.effects %}

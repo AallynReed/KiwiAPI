@@ -122,8 +122,7 @@ def _delve_modifiers() -> dict:
 
 def _data_cards() -> list[dict]:
     """Search entries for the data pages; a modifier's name finds its page."""
-    names = " ".join(n for m in _delve_modifiers()["modifiers"]
-                     for n in {m["name"], m["game_name"], *m["seen"]})
+    names = " ".join(m["name"] for m in _delve_modifiers()["modifiers"])
     return [{"name": data_pages.DATA_PAGES["delve-modifiers"], "url": "/delve-modifiers",
              "kind": "Game data", "terms": names}]
 
