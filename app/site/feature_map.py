@@ -269,7 +269,6 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/classes", "classes_enabled"),
     ("/star-chart", "star_chart_enabled"),
     ("/gem-simulator", "gem_simulator_enabled"),
-    ("/gems-guide", "gems_guide_enabled"),
     ("/abilities", "abilities_enabled"),
     ("/guides", "guides_enabled"),
     ("/allies", "allies_enabled"),

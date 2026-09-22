@@ -10,6 +10,7 @@ URL map:
   /                      home
   /classes, /class/<n>   generated class pages + their editable write-ups
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
+  /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /<slug>                an article
   /-/...                 tools: edit, history, search, recent, pages, suggestions
 """
@@ -121,7 +122,10 @@ def _data_cards() -> list[dict]:
     """Search entries for the data pages; a modifier's name finds its page."""
     names = " ".join(m["name"] for m in _delve_modifiers()["modifiers"])
     return [{"name": data_pages.DATA_PAGES["delve-modifiers"], "url": "/delve-modifiers",
-             "kind": "Game data", "terms": names}]
+             "kind": "Game data", "terms": names},
+            {"name": data_pages.DATA_PAGES["gems"], "url": "/gems", "kind": "Guide",
+             "terms": "gems gem guide tiers radiant stellar crystal mystic lesser empowered cosmic "
+                      "light power rank leveling focus boosters converters class gems builds"}]
 
 
 async def _page(slug: str) -> dict | None:
@@ -211,6 +215,24 @@ async def delve_modifiers(request: Request) -> HTMLResponse:
         "rev": page["rev"] if page else 0,
         "description": "Every Trove delve modifier: what creature, lair and path modifiers do, "
                        "with numbers read from the game files.",
+    })
+
+
+@app.get("/gems", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def gems(request: Request) -> HTMLResponse:
+    """The How Gems Work guide, client-rendered by /static/gems-guide.js."""
+    if not (await web_flags._fetch()).get("gems_guide_enabled", True):
+        raise HTTPException(status_code=404)
+    slug = "data/gems"
+    page = await _page(slug)
+    live = page if page and not page.get("deleted") else None
+    return _render(request, "wiki/gems.html", {
+        "title": data_pages.DATA_PAGES["gems"],
+        "slug": slug,
+        "page": live,
+        "rev": page["rev"] if page else 0,
+        "description": "How gems work in Trove: tiers, elements, Lesser and Empowered, stat rolls, "
+                       "leveling and Power Rank, focusing, boosters and build codes.",
     })
 
 

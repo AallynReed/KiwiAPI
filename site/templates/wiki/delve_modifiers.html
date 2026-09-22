@@ -52,18 +52,7 @@
         <ul class="wk-mods">{{ card({"key": "under-pressure", "name": data.pressure.name, "description": data.pressure.description, "effects": []}) }}</ul>
     </section>
 
-    <section class="wk-writeup" id="notes" aria-labelledby="wk-writeup-title">
-        <h2 class="wk-writeup-title" id="wk-writeup-title">Notes</h2>
-        {% if page and page.body %}
-        <div class="wk-prose" id="wk-body" data-src-id="wk-src"></div>
-        <script type="application/json" id="wk-src">{{ page.body | tojson }}</script>
-        <p class="wk-meta">Last edited {% if page.updated_by %}by <span>{{ page.updated_by }}</span> {% endif %}<time datetime="{{ page.updated_at }}" data-rel>{{ page.updated_at[:10] }}</time></p>
-        {% else %}
-        <div class="wk-empty">
-            <p>No notes yet: which modifiers to watch out for and how to deal with them.</p>
-            <p><a class="wk-btn wk-btn-primary" href="/-/edit/{{ slug }}" data-edit-cta>Write the first notes</a></p>
-        </div>
-        {% endif %}
-    </section>
+    {% set notes_prompt = "No notes yet: which modifiers to watch out for and how to deal with them." %}
+    {% include "wiki/_notes.html" %}
 </article>
 {% endblock %}

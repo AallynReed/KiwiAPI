@@ -875,7 +875,7 @@
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
-     Guide / Wiki view toggle - same contract as /gems-guide: Wiki drops the
+     Guide / Wiki view toggle - same contract as the gems guide: Wiki drops the
      narrative leads and shows one section at a time, the secnav acting as
      tabs. ?view= wins over the saved preference so a shared link keeps its
      view.

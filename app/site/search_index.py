@@ -139,7 +139,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Trove Commands", "/commands", "commands_enabled", "fa-solid fa-keyboard", "Learn", "slash commands", "chat"),
     _p("Codexes", "/codexes", "codexes_enabled", "fa-solid fa-book-atlas", "Learn", "database", "catalog", "game data", badge="Beta"),
     _p("Guides", "/guides", "guides_enabled", "fa-solid fa-compass", "Learn", "how to", "explainer", "tutorial"),
-    _p("How Gems Work", "/gems-guide", "gems_guide_enabled", "fa-solid fa-circle-question", "Learn", "gems", "guide", "explainer", in_nav=False),
+    _p("How Gems Work", "https://kiwiwiki.aallyn.net/gems", "gems_guide_enabled", "fa-solid fa-circle-question", "Learn", "gems", "guide", "explainer", in_nav=False),
     _p("Fishing Guide", "/fishing-guide", "fishing_guide_enabled", "fa-solid fa-fish", "Learn", "fish", "pools", "lures", "bait", "turtles", "guide", in_nav=False),
     _p("Loot Collector Rules", "/loot-collector-guide", "loot_collector_guide_enabled", "fa-solid fa-filter", "Learn", "loot", "collector", "rules", "mod", "zakros", "deconstruct", "guide", in_nav=False),
     _p("Recipe Cost Calculator", "/codexes/crafting", "codexes_enabled", "fa-solid fa-flask", "Learn", "crafting", "cost", in_nav=False),

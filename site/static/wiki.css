@@ -4,6 +4,8 @@
    ========================================================================== */
 
 body.wk > main { min-height: auto; }
+/* Sticky offsets in page CSS (e.g. gems-guide.css) key off the header height. */
+body.wk { --nav-h: 63px; }
 
 .wk-sr {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;

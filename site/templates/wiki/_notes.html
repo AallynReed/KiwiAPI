@@ -1,0 +1,14 @@
+{# Editable Notes under a data page; set notes_prompt before including. #}
+<section class="wk-writeup" id="notes" aria-labelledby="wk-writeup-title">
+    <h2 class="wk-writeup-title" id="wk-writeup-title">Notes</h2>
+    {% if page and page.body %}
+    <div class="wk-prose" id="wk-body" data-src-id="wk-src"></div>
+    <script type="application/json" id="wk-src">{{ page.body | tojson }}</script>
+    <p class="wk-meta">Last edited {% if page.updated_by %}by <span>{{ page.updated_by }}</span> {% endif %}<time datetime="{{ page.updated_at }}" data-rel>{{ page.updated_at[:10] }}</time></p>
+    {% else %}
+    <div class="wk-empty">
+        <p>{{ notes_prompt }}</p>
+        <p><a class="wk-btn wk-btn-primary" href="/-/edit/{{ slug }}" data-edit-cta>Write the first notes</a></p>
+    </div>
+    {% endif %}
+</section>

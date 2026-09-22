@@ -31,7 +31,7 @@
     {% block styles %}{% endblock %}
     <link rel="stylesheet" href="/static/wiki.min.css">
 </head>
-<body class="landing wk" data-site-origin="{{ site_url }}" data-generated="{{ generated }}" data-view="{% block view %}{% endblock %}">
+<body class="landing wk{% block body_class %}{% endblock %}" data-site-origin="{{ site_url }}" data-generated="{{ generated }}" data-view="{% block view %}{% endblock %}">
     <a class="skip-link" href="#main">Skip to main content</a>
 
     <header class="wk-top">

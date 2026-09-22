@@ -224,7 +224,7 @@ STUB_BOARDS = [
      "category_id": "Leaderboard_Category_Clubs", "category": "CLUBS",
      "contest_type": None, "reset_kind": "default", "player_board": False},
     # Three class Effort boards (4000+i, named for the class) flagged as this
-    # week's contests - what /gems-guide reads to name the current rotation.
+    # week's contests - what the gems guide reads to name the current rotation.
     # Copied from a real capture; production rotates these every week, so treat
     # the trio here as a shape to render against, not as the live answer.
     {"uuid": 4005, "name_id": "Leaderboard_Effort_CandyBarbarian", "name": "CANDY BARBARIAN",
@@ -1515,8 +1515,6 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "releases.html", "text/html")
         if path == "/classes":
             return self._send_file(TEMPLATES / "classes.html", "text/html")
-        if path == "/gems-guide":
-            return self._send_file(TEMPLATES / "gems-guide.html", "text/html")
         if path == "/loot-collector-guide":
             return self._send_file(TEMPLATES / "loot-collector-guide.html", "text/html")
         if path == "/allies":

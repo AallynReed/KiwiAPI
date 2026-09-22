@@ -430,10 +430,10 @@ REGISTRY: dict[str, TunableSetting] = {
         type="bool",
         category="features",
         description=(
-            "Master switch for the How Gems Work guide (/gems-guide). OFF hides the "
-            "page + navbar link. It's a fully client-rendered interactive explainer "
-            "of the gem system (static /static/gems-guide.js, no proxy or /v1 API), "
-            "so only the page route is hidden."
+            "Master switch for the How Gems Work guide (/gems on the wiki; the old "
+            "/gems-guide redirects there). OFF 404s the page and drops its links. "
+            "It's a client-rendered explainer (static /static/gems-guide.js), so "
+            "only the page route is hidden."
         ),
     ),
     "feature_allies_enabled": _t(

@@ -76,7 +76,8 @@ Browsing is public; developing and publishing mods is a Discord-login action.
 editors (dev portal → Dashboard users) write pages; every other signed-in player can suggest an
 edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages
 and the Delve Modifiers page are generated from the game files, with an editable write-up under the
-data. The data plane is `/site/wiki/*` in `app/wiki/`.
+data. The How Gems Work guide lives there too (`/gems`); the main site's `/gems-guide` redirects to
+it. The data plane is `/site/wiki/*` in `app/wiki/`.
 
 **Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that
 comes from the game files (class stats and abilities, allies, gems, rings, PvP curves, delve

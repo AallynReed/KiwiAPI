@@ -1,4 +1,5 @@
-"""Wiki pages generated from game data, each with an editable write-up.
+"""Wiki pages the site renders itself (from game data, or a built-in guide), each
+with an editable write-up.
 
 A write-up is stored at ``data/<name>`` with a fixed title and read at ``/<name>``,
 so ``<name>`` is reserved for plain articles.
@@ -6,6 +7,7 @@ so ``<name>`` is reserved for plain articles.
 
 DATA_PAGES: dict[str, str] = {
     "delve-modifiers": "Delve Modifiers",
+    "gems": "How Gems Work",
 }
 
 
