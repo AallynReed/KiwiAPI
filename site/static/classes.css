@@ -80,6 +80,32 @@
 .cls-stat-name { font-size: .8rem; color: var(--text-mute); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cls-stat-val { font-weight: 600; font-size: .9rem; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
+/* Class-level control beside the stats title */
+.cls-section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 12px; }
+.cls-section-head .cls-section-title { margin: 0; }
+.cls-lvl { display: flex; align-items: center; gap: 10px; }
+.cls-lvl-label { font-size: .8rem; color: var(--text-mute); }
+.cls-lvl-input { width: clamp(120px, 22vw, 200px); accent-color: var(--accent); cursor: pointer; }
+.cls-lvl-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.cls-lvl-out { min-width: 2ch; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cls-note { margin: 8px 0 0; font-size: .8rem; color: var(--text-mute); }
+
+/* What each level adds */
+.cls-growth-scroll { overflow: auto; max-height: 440px; border: 1px solid var(--bg-line); border-radius: 12px; }
+.cls-seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--bg-deep); border: 1px solid var(--bg-line); }
+.cls-seg-btn { font: inherit; font-size: .78rem; padding: 5px 12px; border-radius: 999px; border: 0; cursor: pointer;
+  background: none; color: var(--text-mute); transition: background .12s ease, color .12s ease; }
+.cls-seg-btn:hover { color: var(--text); }
+.cls-seg-btn[aria-pressed="true"] { background: var(--bg-card); color: var(--text); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent) 40%, var(--bg-line)); }
+.cls-seg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cls-growth-table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+.cls-growth-table th, .cls-growth-table td { padding: 6px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--bg-line); }
+.cls-growth-table thead th { position: sticky; top: 0; background: var(--bg-deep); font-weight: 600; font-size: .74rem; color: var(--text-mute); }
+.cls-growth-table th[scope="row"], .cls-growth-table thead th:first-child { text-align: left; }
+.cls-growth-table tbody tr:last-child > * { border-bottom: 0; }
+.cls-growth-table tbody tr > * { color: var(--text); }
+.cls-growth-table tbody tr.is-ahead > * { color: var(--text-mute); }
+
 /* Subclass */
 .cls-subclass { border: 1px solid var(--bg-line); border-radius: 14px; background: var(--bg-deep); padding: 16px 18px; }
 .cls-subclass-name { font-weight: 700; font-family: 'Space Grotesk', sans-serif; margin-bottom: 6px; }

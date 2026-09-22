@@ -15,8 +15,23 @@
 </div>
 {% if d.stats %}
 <section class="cls-section">
-    <h3 class="cls-section-title"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>Base stats</span></h3>
+    <div class="cls-section-head">
+        <h3 class="cls-section-title"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>Base stats</span></h3>
+        {% if d.growth %}<div class="cls-lvl"><label class="cls-lvl-label" for="cls-lvl-input">Class level</label><input class="cls-lvl-input" id="cls-lvl-input" type="range" min="1" max="30" step="1" value="30"><output class="cls-lvl-out" for="cls-lvl-input">30</output></div>{% endif %}
+    </div>
     <div class="cls-stats">{% for s in d.stats %}<div class="cls-stat"><span class="cls-stat-name">{{ s.name }}</span><span class="cls-stat-val">{{ s.val }}</span></div>{% endfor %}</div>
+    <p class="cls-note">No gear, gems or subclass.</p>
+</section>
+{% endif %}
+{% macro level_table(t, view, hidden) %}<div class="cls-growth-scroll" data-view="{{ view }}"{{ ' hidden' if hidden else '' }}><table class="cls-growth-table"><thead><tr><th scope="col">Level</th>{% for n in t.cols %}<th scope="col">{{ n }}</th>{% endfor %}</tr></thead><tbody>{% for r in t.rows %}<tr data-level="{{ r.level }}"><th scope="row">{{ r.level }}</th>{% for v in r.cells %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>{% endmacro %}
+{% if d.growth %}
+<section class="cls-section cls-growth">
+    <div class="cls-section-head">
+        <h3 class="cls-section-title"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Level scaling</span></h3>
+        {% if d.totals %}<div class="cls-seg" role="group" aria-label="Level scaling view"><button type="button" class="cls-seg-btn" data-view="added" aria-pressed="true">Added per level</button><button type="button" class="cls-seg-btn" data-view="total" aria-pressed="false">Total at level</button></div>{% endif %}
+    </div>
+    {{ level_table(d.growth, 'added', false) }}
+    {% if d.totals %}{{ level_table(d.totals, 'total', true) }}{% endif %}
 </section>
 {% endif %}
 {% if d.bonuses %}

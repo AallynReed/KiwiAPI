@@ -133,6 +133,8 @@ def _clean_class(c: dict) -> dict:
         "attributes": c.get("attributes", []),
         "stats": [_clean_stat(s) for s in c.get("stats", [])],
         "bonuses": [_clean_stat(s) for s in c.get("bonuses", [])],
+        # class level -> the stats reaching that level adds (scripts/decode_class_levels.py)
+        "levels": {lvl: [_clean_stat(x) for x in stats] for lvl, stats in c.get("levels", {}).items()},
         "subclass": _clean_subclass(c.get("subclass", {})),
         "abilities": [_clean_ability(a) for a in c.get("abilities", [])],
     }

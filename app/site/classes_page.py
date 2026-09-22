@@ -16,8 +16,11 @@ from app.trove import stats as trove_stats
 
 def _fmt_stat(s: dict) -> str:
     """``{value, percentage}`` -> "131%" / "2,376" - matches classes.js fmtStat
-    (thousands separators, up to 2 fraction digits, trailing zeros trimmed)."""
+    (thousands separators, up to 2 fraction digits, trailing zeros trimmed).
+    A null value is a stat the class does not have."""
     v = s.get("value")
+    if v is None:
+        return "—"
     if not isinstance(v, (int, float)) or isinstance(v, bool):
         v = 0
     if v == int(v):
@@ -67,6 +70,50 @@ def _fmt_stages(stages: list) -> list[dict]:
     return out
 
 
+def _growth(levels: dict) -> dict | None:
+    """``{level: [stat]}`` -> a level-by-stat table. Mirrors growthTable() in classes.js."""
+    order = sorted(levels, key=int)
+    cols: list[str] = []
+    for lvl in order:
+        for s in levels[lvl]:
+            if s.get("name") and s["name"] not in cols:
+                cols.append(s["name"])
+    if not cols:
+        return None
+    rows = []
+    for lvl in order:
+        by_name = {s["name"]: s for s in levels[lvl] if s.get("name")}
+        rows.append({"level": lvl, "cells": [_fmt_bonus(by_name[n]) if n in by_name else "" for n in cols]})
+    return {"cols": cols, "rows": rows}
+
+
+def _sheet_at(stat: dict, levels: dict, level: int):
+    """A level-30 sheet value wound back to ``level``. Mirrors sheetAt() in classes.js."""
+    v = stat.get("value")
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        return v
+    for lvl, rows in levels.items():
+        if int(lvl) > level:
+            v -= sum(r.get("value") or 0 for r in rows if r.get("name") == stat["name"])
+    return round(v, 2)
+
+
+def _totals(stats: list, levels: dict) -> dict | None:
+    """The sheet at every level, limited to the stats that change with level.
+    Mirrors totalsTable() in classes.js."""
+    if not levels:
+        return None
+    grid = [[_sheet_at(s, levels, lv) for s in stats] for lv in range(1, 31)]
+    keep = [i for i in range(len(stats)) if grid[0][i] != grid[-1][i]]
+    if not keep:
+        return None
+    return {
+        "cols": [stats[i]["name"] for i in keep],
+        "rows": [{"level": str(lv), "cells": [_fmt_stat({"value": grid[lv - 1][i], "percentage": stats[i].get("percentage")})
+                                              for i in keep]} for lv in range(1, 31)],
+    }
+
+
 def _detail(c: dict) -> dict:
     stats = [{"name": s["name"], "val": _fmt_stat(s)}
              for s in (c.get("stats") or []) if s and s.get("name")]
@@ -113,6 +160,8 @@ def _detail(c: dict) -> dict:
         "weapons": c.get("weapons") or [],
         "shorts": " / ".join(c.get("shorts") or []),
         "stats": stats,
+        "growth": _growth(c.get("levels") or {}),
+        "totals": _totals([s for s in (c.get("stats") or []) if s and s.get("name")], c.get("levels") or {}),
         "bonuses": bonuses,
         "subclass": subclass,
         "abilities": abilities,

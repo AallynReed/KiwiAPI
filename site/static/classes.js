@@ -24,7 +24,8 @@
     return (v % 1 === 0) ? v.toLocaleString() : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
   function fmtStat(s) {
-    // {name, value, percentage} -> "131%" / "2,376"
+    // {name, value, percentage} -> "131%" / "2,376"; null = the class has none of it
+    if (s.value === null) return "—";
     var v = (typeof s.value === "number") ? s.value : 0;
     var num = (v % 1 === 0) ? v.toLocaleString() : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
     return s.percentage ? num + "%" : num;
@@ -67,6 +68,7 @@
         // Server already rendered this class - just sync selection state.
         selectedTech = ssrTech;
         markActive(ssrTech);
+        wireLevel(detailEl, byTech[ssrTech]);
       } else {
         select(initial, false);
       }
@@ -167,10 +169,11 @@
     head.appendChild(title);
     box.appendChild(head);
 
-    // Base stats
+    // Base stats, with a class-level control when the level table is known
     var stats = (c.stats || []).filter(function (s) { return s && s.name; });
+    var growth = growthTable(c.levels);
     if (stats.length) {
-      box.appendChild(section(tr("Base stats"), "fa-chart-simple", (function () {
+      var statSec = section(tr("Base stats"), "fa-chart-simple", (function () {
         var grid = el("div", "cls-stats");
         stats.forEach(function (s) {
           var row = el("div", "cls-stat");
@@ -179,7 +182,48 @@
           grid.appendChild(row);
         });
         return grid;
-      })()));
+      })());
+      var headRow = el("div", "cls-section-head");
+      statSec.insertBefore(headRow, statSec.firstChild);
+      headRow.appendChild(statSec.querySelector(".cls-section-title"));
+      if (growth) {
+        var lvl = el("div", "cls-lvl");
+        var lab = el("label", "cls-lvl-label", tr("Class level"));
+        lab.htmlFor = "cls-lvl-input";
+        var input = el("input", "cls-lvl-input");
+        input.id = "cls-lvl-input"; input.type = "range";
+        input.min = "1"; input.max = "30"; input.step = "1"; input.value = "30";
+        var out = el("output", "cls-lvl-out", "30");
+        out.htmlFor = "cls-lvl-input";
+        lvl.appendChild(lab); lvl.appendChild(input); lvl.appendChild(out);
+        headRow.appendChild(lvl);
+      }
+      statSec.appendChild(el("p", "cls-note", tr("No gear, gems or subclass.")));
+      box.appendChild(statSec);
+    }
+
+    // Level scaling: what each level adds, or the whole sheet at each level.
+    if (growth) {
+      var totals = totalsTable(stats, c.levels);
+      var gsec = section(tr("Level scaling"), "fa-arrow-trend-up", levelTable(growth, "added", false));
+      gsec.classList.add("cls-growth");
+      var ghead = el("div", "cls-section-head");
+      gsec.insertBefore(ghead, gsec.firstChild);
+      ghead.appendChild(gsec.querySelector(".cls-section-title"));
+      if (totals) {
+        var seg = el("div", "cls-seg");
+        seg.setAttribute("role", "group");
+        seg.setAttribute("aria-label", tr("Level scaling view"));
+        [["added", tr("Added per level")], ["total", tr("Total at level")]].forEach(function (v, i) {
+          var b = el("button", "cls-seg-btn", v[1]);
+          b.type = "button"; b.dataset.view = v[0];
+          b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+          seg.appendChild(b);
+        });
+        ghead.appendChild(seg);
+        gsec.appendChild(levelTable(totals, "total", true));
+      }
+      box.appendChild(gsec);
     }
 
     // Class gem / bonus stats (non-zero only)
@@ -245,6 +289,113 @@
       sec.appendChild(det);
       box.appendChild(sec);
     }
+    wireLevel(box, c);
+  }
+
+  // {level: [stat]} -> {cols, rows:[{level, cells}]}. Mirrors _growth() in classes_page.py.
+  function growthTable(levels) {
+    var order = Object.keys(levels || {}).sort(function (a, b) { return Number(a) - Number(b); });
+    var cols = [];
+    order.forEach(function (lv) {
+      levels[lv].forEach(function (s) { if (s && s.name && cols.indexOf(s.name) < 0) cols.push(s.name); });
+    });
+    if (!cols.length) return null;
+    return {
+      cols: cols,
+      rows: order.map(function (lv) {
+        var by = {};
+        levels[lv].forEach(function (s) { if (s && s.name) by[s.name] = s; });
+        return { level: lv, cells: cols.map(function (n) { return by[n] ? fmtBonus(by[n]) : ""; }) };
+      })
+    };
+  }
+
+  // The sheet at level N is the level-30 sheet minus every level above N.
+  // Mirrors _sheet_at() in classes_page.py.
+  function sheetAt(s, levels, n) {
+    var v = s.value;
+    if (typeof v !== "number") return v;
+    Object.keys(levels || {}).forEach(function (lv) {
+      if (Number(lv) <= n) return;
+      levels[lv].forEach(function (x) { if (x.name === s.name) v -= x.value || 0; });
+    });
+    return Math.round(v * 100) / 100;
+  }
+
+  // The sheet at every level, limited to the stats that change with level.
+  // Mirrors _totals() in classes_page.py.
+  function totalsTable(stats, levels) {
+    if (!levels || !Object.keys(levels).length) return null;
+    var grid = [];
+    for (var lv = 1; lv <= 30; lv++) grid.push(stats.map(function (s) { return sheetAt(s, levels, lv); }));
+    var keep = [];
+    stats.forEach(function (s, i) { if (grid[0][i] !== grid[29][i]) keep.push(i); });
+    if (!keep.length) return null;
+    return {
+      cols: keep.map(function (i) { return stats[i].name; }),
+      rows: grid.map(function (row, k) {
+        return { level: String(k + 1), cells: keep.map(function (i) {
+          return fmtStat({ value: row[i], percentage: stats[i].percentage });
+        }) };
+      })
+    };
+  }
+
+  // Mirrors the level_table macro in partials/class_detail.html.
+  function levelTable(t, view, hidden) {
+    var scroll = el("div", "cls-growth-scroll");
+    scroll.dataset.view = view;
+    scroll.hidden = hidden;
+    var table = el("table", "cls-growth-table");
+    var thead = el("thead"), htr = el("tr");
+    [tr("Level")].concat(t.cols).forEach(function (n) {
+      var th = el("th", null, n); th.scope = "col"; htr.appendChild(th);
+    });
+    thead.appendChild(htr); table.appendChild(thead);
+    var tbody = el("tbody");
+    t.rows.forEach(function (r) {
+      var rtr = el("tr");
+      rtr.dataset.level = r.level;
+      var th = el("th", null, r.level); th.scope = "row"; rtr.appendChild(th);
+      r.cells.forEach(function (v) { rtr.appendChild(el("td", null, v)); });
+      tbody.appendChild(rtr);
+    });
+    table.appendChild(tbody);
+    scroll.appendChild(table);
+    return scroll;
+  }
+
+  // Slider + table toggle. Works on the server-rendered DOM and on
+  // renderDetail's, which share the markup.
+  function wireLevel(box, c) {
+    if (!box || !c) return;
+    box.querySelectorAll(".cls-seg-btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        box.querySelectorAll(".cls-seg-btn").forEach(function (o) {
+          o.setAttribute("aria-pressed", o === b ? "true" : "false");
+        });
+        box.querySelectorAll(".cls-growth-scroll").forEach(function (t) {
+          t.hidden = t.dataset.view !== b.dataset.view;
+        });
+      });
+    });
+    var input = box.querySelector(".cls-lvl-input");
+    if (!input) return;
+    var out = box.querySelector(".cls-lvl-out");
+    var stats = (c.stats || []).filter(function (s) { return s && s.name; });
+    var vals = box.querySelectorAll(".cls-stat-val");
+    var rows = box.querySelectorAll(".cls-growth-table tbody tr");
+    function apply() {
+      var n = Number(input.value);
+      if (out) out.textContent = String(n);
+      input.setAttribute("aria-valuetext", tr("Level") + " " + n);
+      stats.forEach(function (s, i) {
+        if (vals[i]) vals[i].textContent = fmtStat({ value: sheetAt(s, c.levels, n), percentage: s.percentage });
+      });
+      rows.forEach(function (r) { r.classList.toggle("is-ahead", Number(r.dataset.level) > n); });
+    }
+    input.addEventListener("input", apply);
+    apply();
   }
 
   // Mirrors the ability_card macro in partials/class_detail.html.
