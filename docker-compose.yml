@@ -154,6 +154,8 @@ services:
       # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
       TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}
       TROVE_UPDATE_STORE_DIR: ${TROVE_UPDATE_STORE_DIR:-/data/updates}
+      # Game data rebuilt after each patch (app/trove/decode); read by api, web and bot.
+      GAMEDATA_DIR: /data/gamedata
       # Server-side ingest backlog (gzipped dumps keyed by anchor; re-ingestable
       # from the admin panel). Bind-mounted below; drop <unix>.cfg files in too.
       BACKLOG_DIR: ${BACKLOG_DIR:-/data/backlog}
@@ -197,6 +199,7 @@ services:
       # Content-addressed blob store for the game-file archive (host: ./.game_updates).
       # Many GB once enabled - kept out of git and the image build context.
       - ./.game_updates:/data/updates
+      - ./.gamedata:/data/gamedata
       # Ingest backlog: every leaderboard dump the API receives is gzip-saved here
       # keyed by anchor, so the whole history can be re-ingested from the admin
       # panel with no upload. Drop <unix>.cfg files in by hand too. Kept out of
@@ -244,6 +247,7 @@ services:
       MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
       MONGO_DB: ${MONGO_DB:-kiwi}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      GAMEDATA_DIR: /data/gamedata
       SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
@@ -265,6 +269,7 @@ services:
     # Bind-mount source like the api so a deploy = sync + recreate.
     volumes:
       - ./app:/app/app
+      - ./.gamedata:/data/gamedata:ro
     command: ["python", "-m", "app.bot.runner"]
     mem_limit: 512m
     logging:
@@ -287,6 +292,7 @@ services:
       # Read-side data from the api over the compose network. Deliberately NO
       # Mongo/Redis/Postgres/SECRET_KEY: the website has no DB and issues no tokens.
       INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+      GAMEDATA_DIR: /data/gamedata
       # Signs the page-view beacon to the api's internal ingest (and salts the
       # cookieless visitor hash, which is why it matches the api's value).
       INTERNAL_KEY: ${INTERNAL_KEY:-}
@@ -305,6 +311,7 @@ services:
       - ./app:/app/app
       # Templates + static + ~20 MB of screenshots (same bind mount the api uses).
       - ./site:/app/site:ro
+      - ./.gamedata:/data/gamedata:ro
     command: ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000",
               "--proxy-headers", "--forwarded-allow-ips", "*"]
     mem_limit: 512m

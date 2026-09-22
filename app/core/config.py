@@ -717,6 +717,9 @@ class Settings(BaseSettings):
     trove_update_base_url: str = "http://trove-update.dyn.triongames.com"
     trove_update_prefix: str = "/kiwi-live-client-patch/"  # yields an intentional // when joined
     trove_update_store_dir: str = "data/updates"           # content-addressed blob store (bind-mounted)
+    # Where app/trove/decode writes game data rebuilt after each patch; readers prefer
+    # it over the repo's app/trove/gamedata copy. Empty = no runtime rebuilds.
+    gamedata_dir: str = ""
     # Dev-only fallback for VFX-preview asset resolution: a local PopcornFX project
     # tree (e.g. the extracted VFX/ folder) used to resolve a .pkfx's textures/meshes
     # by basename when the updates archive isn't populated. UNSET in production - the

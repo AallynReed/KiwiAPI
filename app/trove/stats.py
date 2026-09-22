@@ -13,8 +13,10 @@ Sources (copied into gamedata/):
 from __future__ import annotations
 
 import json
-from functools import cache, lru_cache
+from functools import cache
 from pathlib import Path
+
+from app.trove.decode import store as gamedata
 
 _DATA_DIR = Path(__file__).parent / "gamedata"
 _STATS_DIR = _DATA_DIR / "stats"
@@ -133,29 +135,29 @@ def _clean_class(c: dict) -> dict:
         "attributes": c.get("attributes", []),
         "stats": [_clean_stat(s) for s in c.get("stats", [])],
         "bonuses": [_clean_stat(s) for s in c.get("bonuses", [])],
-        # class level -> the stats reaching that level adds (scripts/decode_class_levels.py)
+        # class level -> the stats reaching that level adds (app/trove/decode/class_levels.py)
         "levels": {lvl: [_clean_stat(x) for x in stats] for lvl, stats in c.get("levels", {}).items()},
         "subclass": _clean_subclass(c.get("subclass", {})),
         "abilities": [_clean_ability(a) for a in c.get("abilities", [])],
     }
 
 
-@lru_cache(maxsize=1)
+@gamedata.cached("class_abilities.json")
 def _class_abilities() -> dict[str, list[dict]]:
     """Display name -> abilities, decoded from the game prefabs.
 
     Ability data lives in its own file because it is regenerated wholesale from
-    the game tree (scripts/decode_class_abilities.py) while the rest of a class
+    the game tree (app/trove/decode/class_abilities.py) while the rest of a class
     entry is hand-maintained. The curated `icon` and `type` ride along in there.
     """
-    raw = _read_json(str(_DATA_DIR / "class_abilities.json")) or []
+    raw = gamedata.load("class_abilities.json", [])
     return {c["name"]: c.get("abilities", []) for c in raw}  # type: ignore[union-attr]
 
 
-@lru_cache(maxsize=1)
+@gamedata.cached("classes.json", "class_abilities.json")
 def _classes_index() -> dict[str, dict]:
     """tech_name -> cleaned class object, in source order (preserved by dict)."""
-    raw = _read_json(str(_DATA_DIR / "classes.json"))
+    raw = gamedata.load("classes.json", [])
     abilities = _class_abilities()
     out = {}
     for c in raw:  # type: ignore[union-attr]

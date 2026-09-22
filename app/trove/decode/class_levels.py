@@ -1,4 +1,4 @@
-"""Rebuild each class's `stats`, `bonuses` and `levels` in app/trove/gamedata/classes.json.
+"""classes.json - each class's base sheet, class bonuses and per-level stats.
 
 Every `prefabs/class/<tech>.binfab` carries a 30-entry level list: record N (wire
 field N) is what reaching level N grants. Level 1 holds the class's own modifiers
@@ -12,27 +12,23 @@ Trove_x64.exe carry no such table - so it is read off the in-game character shee
 Every class's old hand-entered sheet minus its prefab level sums gave these same
 values, which is what validated them.
 
-Run after a game patch:  python scripts/decode_class_levels.py
-Point TROVE_GAME_DIR at the extracted tree if it is not E:\\Trove.
+Everything else in classes.json is hand-maintained, so each rebuild starts from
+the repo copy and replaces only `stats`, `bonuses` and `levels`.
 """
-
 from __future__ import annotations
 
-import json
-import os
 import re
 import struct
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.trove.codexes.binfab import read_uleb, unzig
+from app.trove.codexes.bonuses import OPERATIONS, STAT_KEYS
+from app.trove.decode import store
+from app.trove.decode.tree import GameTree
 
-from app.trove.codexes.binfab import read_uleb, unzig  # noqa: E402
-from app.trove.codexes.bonuses import OPERATIONS, STAT_KEYS  # noqa: E402
-
-GAME = os.environ.get("TROVE_GAME_DIR", r"E:\Trove")
-CLASS_DIR = os.path.join(GAME, "prefabs", "class")
-OUT = Path(__file__).resolve().parents[1] / "app" / "trove" / "gamedata" / "classes.json"
+TITLE = "Class levels"
+OUTPUT = "classes.json"
+PREFIXES = ("prefabs/class/",)
+INDENT, FINAL_NEWLINE = 4, False
 MAX_LEVEL = 30
 
 # `$Stat_` key -> (sheet name, wire-to-sheet scale, shown as a percentage)
@@ -160,17 +156,15 @@ def decode(data: bytes) -> dict:
     }
 
 
-def build() -> list[dict]:
-    classes = json.loads(OUT.read_text(encoding="utf-8"))
+def build(tree: GameTree) -> list[dict]:
+    classes = store.baseline(OUTPUT)
     for c in classes:
-        path = os.path.join(CLASS_DIR, c["qualified_name"] + ".binfab")
-        with open(path, "rb") as fh:
-            c.update(decode(fh.read()))
+        data = tree.read(f"prefabs/class/{c['qualified_name']}.binfab")
+        if data is None:
+            raise ValueError(f"no class prefab for {c['qualified_name']}")
+        c.update(decode(data))
     return classes
 
 
-if __name__ == "__main__":
-    classes = build()
-    with open(OUT, "w", encoding="utf-8", newline="") as fh:
-        fh.write(json.dumps(classes, indent=4, ensure_ascii=False).replace("\n", "\r\n"))
-    print(f"wrote {len(classes)} classes to {OUT}")
+def count(data: list) -> int:
+    return len(data)

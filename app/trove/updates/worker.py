@@ -19,6 +19,7 @@ import httpx
 from app.core.config import settings
 from app.core.redis import get_redis
 from app.trove.codexes.indexer import ensure_indexed as ensure_codex_indexed
+from app.trove.decode.runner import ensure_built as ensure_gamedata_built
 from app.trove.updates.cas import ContentStore
 from app.trove.updates.cdn import BRANCHES, CdnClient
 from app.trove.updates.ingest import sync_branch
@@ -61,6 +62,15 @@ async def _sync_all_branches(repo: MongoUpdateRepo, store: ContentStore) -> None
                 raise
             except Exception:
                 logger.warning("codexes[%s] index failed", branch, exc_info=True)
+            # Rebuild the decoded game data (app/trove/gamedata/*.json) the same way.
+            # Each decoder records its own failures for the dev panel; this only
+            # guards against the runner itself breaking.
+            try:
+                await ensure_gamedata_built(branch)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.warning("decode[%s] run failed", branch, exc_info=True)
         except asyncio.CancelledError:
             raise
         except httpx.HTTPStatusError as e:

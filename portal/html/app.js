@@ -338,8 +338,8 @@ function renderForgot() {
 
 // --- Dashboard -------------------------------------------------------------
 
-const TABS = ["tokens", "creators", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "customart", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"];
-const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "customart", "discord", "supporters", "claims", "mods", "codexes", "updates", "botstats"]);
+const TABS = ["tokens", "creators", "activity", "account", "overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "customart", "discord", "supporters", "claims", "mods", "codexes", "gamedata", "updates", "botstats"];
+const MASTER_TABS = new Set(["overview", "pageviews", "events", "users", "siteusers", "config", "leaderboards", "ingest", "marketitems", "giveaways", "drops", "customart", "discord", "supporters", "claims", "mods", "codexes", "gamedata", "updates", "botstats"]);
 
 // Inline SVG icons (the portal ships no icon font). 16px, currentColor stroke.
 const ICONS = {
@@ -364,6 +364,7 @@ const ICONS = {
   botstats:     '<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="14" width="3" height="3"/>',
   mods:         '<path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5"/>',
   codexes:      '<path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z"/><path d="M8 7h7M8 10h7"/>',
+  gamedata:     '<ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13"/><path d="M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5"/>',
   updates:      '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>',
   siteusers:    '<circle cx="12" cy="7.5" r="3.3"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3S18.5 16.6 18.5 20"/><path d="M3 4.5h18"/>',
   marketitems:  '<path d="M20.5 11.3 12.7 3.5a1.5 1.5 0 0 0-1.1-.4L5 3.4a1.5 1.5 0 0 0-1.6 1.6l-.3 6.6a1.5 1.5 0 0 0 .4 1.1l7.8 7.8a1.5 1.5 0 0 0 2.1 0l7.1-7.1a1.5 1.5 0 0 0 0-2.1Z"/><circle cx="8" cy="8" r="1.3"/>',
@@ -397,6 +398,7 @@ const TAB_META = {
   claims:       { group: "Admin panel · Modules", label: "Trove claims" },
   mods:         { group: "Admin panel · Modules", label: "Mods hub" },
   codexes:      { group: "Admin panel · Modules", label: "Codexes" },
+  gamedata:     { group: "Admin panel · Modules", label: "Game data" },
   updates:      { group: "Admin panel · Modules", label: "Updates archive" },
   botstats:     { group: "Admin panel · Modules", label: "Bot stats" },
 };
@@ -447,6 +449,7 @@ function renderDashboard() {
           ${navItem("claims", true)}
           ${navItem("mods", true)}
           ${navItem("codexes", true)}
+          ${navItem("gamedata", true)}
           ${navItem("updates", true)}` : "";
 
   app.innerHTML = `
@@ -525,6 +528,7 @@ function selectTab() {
   else if (state.tab === "claims") renderClaims();
   else if (state.tab === "mods") renderModsModeration();
   else if (state.tab === "codexes") renderCodexes();
+  else if (state.tab === "gamedata") renderGameData();
   else if (state.tab === "updates") renderUpdatesAdmin();
   else if (state.tab === "botstats") renderBotStats();
   else renderTokens();
@@ -3393,6 +3397,119 @@ async function renderCodexes() {
   });
 
   loadStatus();
+}
+
+// --- Game data (master) ------------------------------------------------------
+// app/trove/decode rebuilds app/trove/gamedata/*.json after every live patch. A
+// decoder that fails keeps serving its previous file; this tab shows which, why,
+// and reruns them once fixed.
+
+async function renderGameData() {
+  const body = document.getElementById("tab-body");
+  body.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px">
+        <h2 style="flex:1;margin:0">Game data</h2>
+        <button type="button" class="btn small" data-act="refresh">Refresh</button>
+        <button class="btn primary" data-act="run-all">Rebuild all</button>
+      </div>
+      <p class="hint" style="margin:0 0 14px">
+        Class stats, abilities, allies, gems, rings, PvP curves and delve modifiers are
+        decoded from the game files after every live patch. When a decoder fails, the
+        site keeps its previous data and the error shows here. A decoder also reruns
+        by itself once a deploy changes its code, so fixing it is usually enough.
+      </p>
+      <div id="gd-meta"></div>
+      <div id="gd-result" class="ingest-result"></div>
+      <div id="gd-table"><div class="loading">Loading…</div></div>
+    </div>`;
+
+  const meta = document.getElementById("gd-meta");
+  const table = document.getElementById("gd-table");
+  const result = document.getElementById("gd-result");
+  let pollTimer = null;
+  const stop = () => { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } };
+  const STATE = {
+    ok: ["ok", "OK"], failed: ["off", "FAILED"], interrupted: ["off", "INTERRUPTED"],
+    running: ["warn", "RUNNING"], never: ["muted", "NOT RUN"],
+  };
+  const patch = (r) => r ? `#${r.ordinal}${r.version_tag ? ` · ${r.version_tag}` : ""}` : "—";
+
+  function row(d) {
+    const [cls, label] = STATE[d.state] || ["muted", d.state];
+    const last = d.last, good = d.last_ok;
+    const lastLine = last
+      ? `${esc(fmt(last.started_at))} · ${esc(last.trigger)} · patch ${esc(patch(last))}${last.duration_ms != null ? ` · ${(last.duration_ms / 1000).toFixed(1)}s` : ""}`
+      : "never run";
+    const goodLine = good
+      ? `${Number(good.entries || 0).toLocaleString()} entries from patch ${esc(patch(good))}, ${esc(fmt(good.finished_at))}`
+      : "none yet";
+    const error = last && last.ok === false
+      ? `<div class="err-text" style="margin-top:6px">${esc(last.error || "failed")}</div>
+         ${last.traceback ? `<details style="margin-top:4px"><summary class="curl-summary">Traceback</summary><pre class="mono" style="white-space:pre-wrap;max-height:320px;overflow:auto">${esc(last.traceback)}</pre></details>` : ""}
+         ${/shrank/.test(last.error || "") ? `<button class="btn small" data-run="${esc(d.name)}" data-shrink="1" style="margin-top:6px">Accept smaller output</button>` : ""}`
+      : "";
+    return `<tr>
+      <td><strong>${esc(d.title)}</strong><div class="muted mono">${esc(d.output)}</div></td>
+      <td><span class="badge ${cls}">${label}</span></td>
+      <td>${lastLine}${error}</td>
+      <td>${goodLine}<div class="muted">serving the ${esc(d.serving)}</div></td>
+      <td><button class="btn small" data-run="${esc(d.name)}" ${d.state === "running" ? "disabled" : ""}>Run</button></td>
+    </tr>`;
+  }
+
+  function render(s) {
+    meta.innerHTML = s.enabled
+      ? `<p class="muted" style="margin:0 0 10px">Branch ${esc(s.branch)} · current patch ${esc(patch({ ordinal: s.ordinal, version_tag: s.version_tag }))}${s.running ? " · <strong>rebuilding…</strong>" : ""}</p>`
+      : `<p class="err-text" style="margin:0 0 10px">GAMEDATA_DIR isn't set on this server, so nothing rebuilds and the repo copies are served.</p>`;
+    table.innerHTML = `<table>
+      <thead><tr><th>Decoder</th><th>Status</th><th>Last run</th><th>Last good data</th><th></th></tr></thead>
+      <tbody>${s.decoders.map(row).join("")}</tbody></table>`;
+    return s.running || s.decoders.some((d) => d.state === "running");
+  }
+
+  async function load() {
+    if (!document.body.contains(table)) return stop();  // left the tab
+    try {
+      const running = render(await API.call("/admin/gamedata"));
+      if (running && !pollTimer) pollTimer = setInterval(load, 3000);
+      if (!running) stop();
+    } catch (ex) {
+      table.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+      stop();
+    }
+  }
+
+  async function run(btn, name, shrink) {
+    btn.disabled = true;
+    result.className = "ingest-result";
+    result.textContent = "Starting…";
+    const q = new URLSearchParams();
+    if (name) q.set("name", name);
+    if (shrink) q.set("allow_shrink", "true");
+    try {
+      const data = await API.call(`/admin/gamedata/run?${q}`, { method: "POST" });
+      result.className = "ingest-result ok";
+      result.textContent = data.message;
+      toast(data.started ? "Rebuild started" : "A rebuild is already running", "ok");
+      setTimeout(load, 800);
+    } catch (ex) {
+      result.className = "ingest-result err";
+      result.textContent = ex.message;
+      toast("Rebuild failed to start", "err");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  body.querySelector('[data-act="refresh"]').addEventListener("click", load);
+  body.querySelector('[data-act="run-all"]').addEventListener("click", (e) => run(e.currentTarget, null, false));
+  table.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-run]");
+    if (btn) run(btn, btn.dataset.run, btn.dataset.shrink === "1");
+  });
+
+  load();
 }
 
 // --- Updates archive (master) ----------------------------------------------

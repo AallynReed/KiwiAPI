@@ -71,3 +71,4 @@ _preview/
 backups/
 
 *.tmp
+.gamedata/

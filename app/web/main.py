@@ -13,7 +13,8 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.routing import Host
 
@@ -26,6 +27,7 @@ from app.core.middleware import (
 )
 from app.core.observability import add_request_context_middleware, configure_logging
 from app.pageviews.beacon import add_pageview_beacon_middleware, beacon
+from app.trove.decode import store as gamedata
 from app.web.meta import router as meta_router
 from app.web.pages import router as pages_router
 from app.web.wiki import WIKI_HOST
@@ -94,3 +96,16 @@ if settings.debug:
 @app.get("/health", include_in_schema=False)
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# Decoded game data a page fetches in the browser: the post-patch rebuild when
+# there is one (app/trove/decode), else the repo copy.
+_PUBLIC_GAMEDATA = frozenset({"pvp.json"})
+
+
+@app.get("/gamedata/{name}", include_in_schema=False)
+async def gamedata_file(name: str) -> FileResponse:
+    if name not in _PUBLIC_GAMEDATA:
+        raise HTTPException(status_code=404)
+    return FileResponse(gamedata.path(name), media_type="application/json",
+                        headers={"Cache-Control": "public, max-age=300"})

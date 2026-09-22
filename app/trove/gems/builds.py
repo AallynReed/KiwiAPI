@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import base64
 import itertools
-import json
 import re
-from functools import cache, lru_cache
 from pathlib import Path
 from typing import Any
+
+from app.trove.decode import store as gamedata
 
 _DATA_DIR = Path(__file__).parent.parent / "gamedata"
 
@@ -79,13 +79,8 @@ def _lilypad(name: str, value: float, active: bool) -> float:
     return value * LILYPAD_MULTIPLIERS.get(name, 1.0) if active else value
 
 
-@cache
 def _load(relative: str) -> Any:
-    path = _DATA_DIR / relative
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+    return gamedata.load(relative, {})
 
 
 def _stat_value(stats: list[dict], name: str) -> float:
@@ -445,7 +440,7 @@ class BuildError(ValueError):
     """Raised on invalid build config (mapped to 400 at the router)."""
 
 
-@lru_cache(maxsize=1)
+@gamedata.cached("classes.json")
 def _engine() -> GemOptimizerEngine:
     return GemOptimizerEngine()
 

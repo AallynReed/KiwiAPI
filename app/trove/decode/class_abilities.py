@@ -1,4 +1,4 @@
-"""Rebuild app/trove/gamedata/class_abilities.json from the extracted game tree.
+"""class_abilities.json - each class's abilities and their damage stages.
 
 Each class prefab names the ability prefabs it actually uses; an ability spawns a
 chain (ability -> normal/full charge -> bullet -> explosion) and the damage sits
@@ -6,90 +6,32 @@ at the leaves. A damage record is field 12 (float, the weapon-damage multiplier)
 next to field 14 (float, the base, stored as a fraction of 100).
 
 Validated against the three classes whose ability damage was already curated by
-hand: Gunslinger's Blast Jump decodes to base 10 / multiplier 6, matching what
-classes.json shipped. Where the two disagree the game files are newer - the
-class prefabs point at the `revamp/` abilities, and several multipliers moved.
+hand: Gunslinger's Blast Jump decodes to base 10 / multiplier 6. Where the two
+disagree the game files are newer - the class prefabs point at the `revamp/`
+abilities, and several multipliers moved.
 
-Run after a game patch:  python scripts/decode_class_abilities.py
-Point TROVE_GAME_DIR at the extracted tree if it is not E:\\Trove.
+The curated `icon` and `type` live in the repo copy of this file and are carried
+onto each rebuild.
 """
-
 from __future__ import annotations
 
-import glob
-import json
-import os
 import re
-import struct
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.trove.codexes.binfab import harvest_strings
+from app.trove.decode import store
+from app.trove.decode.common import damage_blocks, locale, stem
+from app.trove.decode.common import refs as _refs
+from app.trove.decode.tree import GameTree
 
-from app.trove.codexes.binfab import harvest_strings  # noqa: E402
-
-GAME = os.environ.get("TROVE_GAME_DIR", r"E:\Trove")
-PREFABS = os.path.join(GAME, "prefabs")
-OUT = Path(__file__).resolve().parents[1] / "app" / "trove" / "gamedata" / "class_abilities.json"
-
-# f11 varint = b0 01 | f12 float (multiplier) = c4 01 | f13 varint = d0 01 | f14 float (base) = e4 01
-_BLOCK = re.compile(rb"\xb0\x01[\x00-\xff]\xc4\x01(....)\xd0\x01[\x00-\xff]\xe4\x01(....)", re.S)
-
-
-def damage_blocks(data: bytes) -> list[tuple[float, float]]:
-    """`[(multiplier, base)]` for each damage record in a prefab."""
-    out = []
-    for match in _BLOCK.finditer(data):
-        mult = struct.unpack("<f", match.group(1))[0]
-        base = struct.unpack("<f", match.group(2))[0]
-        if 0 <= mult < 1000 and -10 <= base <= 10:
-            out.append((round(mult, 4), round(base * 100, 4)))
-    return out
-
-
-def locale(path: str) -> dict[str, str]:
-    """`$key -> text`, paired by byte adjacency so a missing value cannot shift the map."""
-    raw = harvest_strings(open(path, "rb").read())
-    out = {}
-    for i, (off, field, text) in enumerate(raw):
-        if field != 0 or not text.startswith("$") or i + 1 >= len(raw):
-            continue
-        noff, nfield, ntext = raw[i + 1]
-        if nfield == 1 and 0 <= noff - (off + len(text)) <= 4:
-            out[text] = ntext
-    return out
-
-
-def prefab_bytes(rel: str) -> bytes | None:
-    path = os.path.join(PREFABS, rel.replace("/", os.sep) + ".binfab")
-    return open(path, "rb").read() if os.path.exists(path) else None
+TITLE = "Class abilities"
+OUTPUT = "class_abilities.json"
+PREFIXES = ("prefabs/class/", "prefabs/abilities/", "languages/en/")
+INDENT, FINAL_NEWLINE = 4, False
 
 
 def refs(data: bytes, folder: str) -> list[str]:
-    """`abilities/<folder>/...` paths this prefab names, in order, deduped.
-
-    Prefab refs are length-prefixed, so the byte in front of the match gives the
-    exact end - scanning for a printable run instead runs past it into the next
-    record and invents paths like `blast_jump_explosionX`.
-    """
-    seen: set[str] = set()
-    out: list[str] = []
-    needle = f"abilities/{folder}/".encode()
-    for match in re.finditer(re.escape(needle), data):
-        start = match.start()
-        if start == 0:
-            continue
-        length = data[start - 1]
-        if not 0 < length <= 200 or start + length > len(data):
-            continue
-        chunk = data[start:start + length]
-        if not all(32 <= b < 127 for b in chunk):
-            continue
-        rel = chunk.decode()
-        if rel not in seen:
-            seen.add(rel)
-            out.append(rel)
-    return out
+    """`abilities/<folder>/...` paths this prefab names."""
+    return _refs(data, f"abilities/{folder}/")
 
 
 def stage_name(rel: str) -> str:
@@ -132,7 +74,7 @@ def _label(aloc: dict[str, str], folder: str, stem: str, data: bytes | None = No
     return _resolve(aloc, f"$prefabs_abilities_{folder}_{stem}")
 
 
-def _stages(rel: str, root: bytes, folder: str, siblings: set[str]) -> list[dict]:
+def _stages(prefab_bytes, rel: str, root: bytes, folder: str, siblings: set[str]) -> list[dict]:
     """Damage stages under one ability.
 
     Abilities cross-reference each other - Lunar Lancer's passive names the leap
@@ -233,31 +175,21 @@ def _overlay_curated(entry: dict, curated: list[dict], folder: str) -> list[dict
     return entry["abilities"]
 
 
-def build() -> list[dict]:
-    # The curated `icon`/`type` now live in this script's OWN output - they were
-    # moved out of classes.json - so read them back from there and only fall back to
-    # classes.json on a first run. Reading classes.json unconditionally would wipe
-    # the curation the moment it was emptied, i.e. on the very next regeneration.
-    curated_by_class: dict[str, list[dict]] = {}
-    if OUT.exists():
-        curated_by_class = {c["name"]: c.get("abilities", [])
-                            for c in json.loads(OUT.read_text(encoding="utf-8"))}
-    if not any(a.get("icon") or a.get("type") for v in curated_by_class.values() for a in v):
-        legacy = OUT.parent / "classes.json"
-        curated_by_class = {c["name"]: (c.get("abilities") or [])
-                            for c in json.loads(legacy.read_text(encoding="utf-8"))}
+def build(tree: GameTree) -> list[dict]:
+    def prefab_bytes(rel: str) -> bytes | None:
+        return tree.read(f"prefabs/{rel}.binfab")
+
+    curated_by_class = {c["name"]: c.get("abilities", []) for c in store.baseline(OUTPUT)}
     display: dict[str, str] = {}
     for name in ("prefabs_class.binfab", "ui.binfab", "new.binfab"):
-        path = os.path.join(GAME, "languages", "en", name)
-        if os.path.exists(path):
-            display.update(locale(path))
+        display.update(locale(tree.read(f"languages/en/{name}")))
 
     out = []
-    for class_path in sorted(glob.glob(os.path.join(PREFABS, "class", "*.binfab"))):
-        folder = os.path.basename(class_path)[: -len(".binfab")]
-        if folder.endswith("_ultimate"):
+    for class_path in tree.files("prefabs/class/", ".binfab"):
+        folder = stem(class_path)
+        if class_path.count("/") != 2 or folder.endswith("_ultimate"):
             continue
-        data = open(class_path, "rb").read()
+        data = tree.read(class_path) or b""
         key = next((s[2] for s in harvest_strings(data) if s[2].startswith("$DisplayName")), None)
         if not key:
             continue
@@ -266,8 +198,7 @@ def build() -> list[dict]:
         # prefab is `faetrickster` but its abilities live under `abilities/trickster`.
         match = re.search(rb"abilities/([a-z0-9_]+)/", data)
         afolder = match.group(1).decode() if match else folder
-        locale_path = os.path.join(GAME, "languages", "en", f"prefabs_abilities_{afolder}.binfab")
-        aloc = locale(locale_path) if os.path.exists(locale_path) else {}
+        aloc = locale(tree.read(f"languages/en/prefabs_abilities_{afolder}.binfab"))
 
         # Everything the CLASS prefab points at is a top-level action of that class,
         # named or not. Those are the walk's boundaries: without them one ability
@@ -310,7 +241,7 @@ def build() -> list[dict]:
         abilities = []
         by_name: dict[str, dict] = {}
         for rel in named:
-            root = prefab_bytes(rel)
+            root = prefab_bytes(rel) or b""
             name, desc = labels[rel]
             if name in by_name:
                 # Several prefabs share a name (Shadow Hunter ships Radiant Arrow
@@ -318,7 +249,7 @@ def build() -> list[dict]:
                 # the extra prefabs' damage in rather than dropping it - they are
                 # boundaries now, so no parent would pick it up either.
                 merged = by_name[name]
-                for stage in _stages(rel, root, afolder, boundaries - {rel}):
+                for stage in _stages(prefab_bytes, rel, root, afolder, boundaries - {rel}):
                     if stage not in merged["stages"]:
                         merged["stages"].append(stage)
                 if not merged["description"]:
@@ -335,27 +266,25 @@ def build() -> list[dict]:
                 # prefabs but the class only reaches 28 - and those are the ones
                 # that still load but are no longer wired to the class.
                 "active": True,
-                "stages": _stages(rel, root, afolder, boundaries - {rel}),
+                "stages": _stages(prefab_bytes, rel, root, afolder, boundaries - {rel}),
             }
             abilities.append(by_name[name])
-        # Named abilities that exist on disk but the class prefab cannot reach:
-        # Shadow Hunter's Radiant Arrow, Boomeranger's Bawk Bomb. Some are the
-        # pre-revamp copies and some sit in revamp/ unwired, so reachability - not
-        # the folder - is the test. They still load, so list them, flagged inactive.
-        folder_root = os.path.join(PREFABS, "abilities", afolder)
-        for path in sorted(glob.glob(os.path.join(folder_root, "**", "*.binfab"), recursive=True)):
-            rel = "abilities/{}/{}".format(
-                afolder, os.path.relpath(path, folder_root)[: -len(".binfab")].replace(os.sep, "/"))
+        # Named abilities that exist but the class prefab cannot reach: Shadow
+        # Hunter's Radiant Arrow, Boomeranger's Bawk Bomb. Some are the pre-revamp
+        # copies and some sit in revamp/ unwired, so reachability - not the folder -
+        # is the test. They still load, so list them, flagged inactive.
+        for path in tree.files(f"prefabs/abilities/{afolder}/", ".binfab"):
+            rel = path[len("prefabs/"):-len(".binfab")]
             if rel in seen_reach:
                 continue
-            body = prefab_bytes(rel)
+            body = prefab_bytes(rel) or b""
             name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1], body)
             if not name or name in by_name:
                 continue
             by_name[name] = {
                 "name": name, "description": desc, "prefab": rel,
                 "icon": "", "type": "", "active": False,
-                "stages": _stages(rel, body, afolder, boundaries),
+                "stages": _stages(prefab_bytes, rel, body, afolder, boundaries),
             }
             abilities.append(by_name[name])
 
@@ -370,11 +299,5 @@ def build() -> list[dict]:
     return out
 
 
-if __name__ == "__main__":
-    classes = build()
-    for entry in classes:
-        stages = sum(len(a["stages"]) for a in entry["abilities"])
-        print(f"  {entry['name']:18} abilities={len(entry['abilities']):2} stages={stages}")
-    with open(OUT, "w", encoding="utf-8", newline="") as fh:
-        fh.write(json.dumps(classes, indent=4, ensure_ascii=False).replace("\n", "\r\n"))
-    print(f"wrote {OUT}")
+def count(data: list) -> int:
+    return len(data)

@@ -76,8 +76,17 @@ Browsing is public; developing and publishing mods is a Discord-login action.
 editors (dev portal → Dashboard users) write pages; every other signed-in player can suggest an
 edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages
 and the Delve Modifiers page are generated from the game files, with an editable write-up under the
-data (rebuild the modifiers with `scripts/decode_delve_modifiers.py` after a patch). The data plane
-is `/site/wiki/*` in `app/wiki/`.
+data. The data plane is `/site/wiki/*` in `app/wiki/`.
+
+**Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that
+comes from the game files (class stats and abilities, allies, gems, rings, PvP curves, delve
+modifiers) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
+each decoder reruns and writes to `GAMEDATA_DIR` (`./.gamedata`, shared by the api, web and bot
+containers), which readers prefer over the repo copy. A decoder also reruns when a deploy
+changes its code. One that fails, decodes nothing, or shrinks its output by more than 20% keeps
+serving the previous file and shows up in the dev panel's **Game data** tab with the error and
+traceback, where it can be rerun. `python -m app.trove.decode` rebuilds the repo copies from a
+local client.
 
 Its 3D model and particle-effect viewers are also **embeddable**: another site can iframe
 `trove.aallyn.net/embed/viewer` to preview a mod it hosts, a mod on the hub, a dressed character, or

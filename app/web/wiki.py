@@ -13,9 +13,7 @@ URL map:
   /<slug>                an article
   /-/...                 tools: edit, history, search, recent, pages, suggestions
 """
-import json
 import logging
-from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote
 
@@ -31,6 +29,7 @@ from app.core.internal_api import internal_get
 from app.site import classes_page
 from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
+from app.trove.decode import store as gamedata
 from app.web import feature_flags as web_flags
 from app.wiki import data_pages
 
@@ -113,11 +112,9 @@ def _class_cards() -> list[dict]:
             for c in _classes()]
 
 
-@lru_cache(maxsize=1)
 def _delve_modifiers() -> dict:
-    """scripts/decode_delve_modifiers.py output."""
-    path = Path(trove_stats.__file__).parent / "gamedata" / "delve_modifiers.json"
-    return json.loads(path.read_text(encoding="utf-8"))
+    """app/trove/decode/delve_modifiers.py output."""
+    return gamedata.load("delve_modifiers.json")
 
 
 def _data_cards() -> list[dict]:

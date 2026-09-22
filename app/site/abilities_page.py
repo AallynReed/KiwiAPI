@@ -4,17 +4,16 @@ Five decoded datasets, one page: empowered gems, class rings, class abilities,
 the star chart's and allies'. They are reference data, so the whole thing is rendered rather
 than fetched, and abilities.js only switches tabs and filters what is there.
 
-The first three are regenerated from the game tree by scripts/decode_*_abilities.py;
+The first three are regenerated from the game files by app/trove/decode/*_abilities.py;
 the star chart's ride along in star_chart.json. The shapes differ, so each is folded
 into one common card here: a name, some chips, the game's own description, and
 whatever numbers the files back.
 """
-import json
 import re
-from functools import cache
 from pathlib import Path
 from typing import Any
 
+from app.trove.decode import store as gamedata
 from app.trove.gems.model import gem_lookups
 
 _DATA = Path(__file__).resolve().parents[1] / "trove" / "gamedata"
@@ -34,12 +33,8 @@ _LEAD = re.compile(
     re.S | re.I)
 
 
-@cache
 def _load(name: str) -> Any:
-    try:
-        return json.loads((_DATA / name).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return []
+    return gamedata.load(name, [])
 
 
 def _split_description(text: str) -> tuple[str, str]:

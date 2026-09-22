@@ -9,13 +9,12 @@ by stat type as in the original UI. Computed fields (value, quality, power_rank,
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
-from functools import cache
-from pathlib import Path
 from random import choice, randint, random, sample
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
+
+from app.trove.decode import store as gamedata
 
 from .bases import (
     get_augment_base,
@@ -306,14 +305,9 @@ class Gem(BaseModel):
         return calculated
 
 
-@cache
 def _empowered_gems() -> list[dict]:
     """The in-game empowered-gem abilities, or `[]` if the file is missing."""
-    path = Path(__file__).resolve().parents[1] / "gamedata" / "gem_abilities.json"
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return []
+    return gamedata.load("gem_abilities.json", [])
 
 
 def gem_lookups() -> dict:
@@ -334,7 +328,7 @@ def gem_lookups() -> dict:
         "abilities": [{"id": a.value, "name": a.display_name} for a in GemAbility],
         "abilities_by_element": {e.display_name: [ab.value for ab in GEM_ABILITIES[e]] for e in GemElement},
         # Reference data, decoded from the game files by
-        # scripts/decode_gem_abilities.py. The `abilities` enum above stays as it
+        # app/trove/decode/gem_abilities.py. The `abilities` enum above stays as it
         # is because gem build codes round-trip through its ids; this is the full
         # in-game set, per-class empowered gems included.
         "empowered_gems": _empowered_gems(),

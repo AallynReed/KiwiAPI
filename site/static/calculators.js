@@ -43,7 +43,7 @@
 
   // PvP tab: pvp.json mode keys, and the character sheet in order as
   // [stat, name, shown as %, starting value]. Starting values are the universal
-  // base sheet (scripts/decode_class_levels.py BASE).
+  // base sheet (app/trove/decode/class_levels.py BASE).
   const PVP_MODES = [["pvp", "PvP"], ["battleroyale", "Battle Royale"], ["bloodstone", "Bloodstone"]];
   const PVP_SHEET = [
     ["PhysicalDamage", "Physical Damage", false, 100],
@@ -187,8 +187,8 @@
   }
 
   // ── Compute: PvP ─────────────────────────────────────────────────────────
-  // Trove_x64.exe FUN_14081dff0, fed by /static/assets/data/stats/pvp.json
-  // (scripts/decode_pvp_stat_ranges.py). Works in the game's stat units; the
+  // Trove_x64.exe FUN_14081dff0, fed by /gamedata/pvp.json
+  // (app/trove/decode/pvp_stat_ranges.py). Works in the game's stat units; the
   // class/role modifier pass between the clamp and the soft cap is skipped
   // because pvp_classes and pvp_roles ship empty.
   function pvpValue(e, v) {
@@ -607,7 +607,7 @@
         fetchJson("/static/assets/data/stats/power_rank.json"),
         fetchJson("/static/assets/data/stats/magic_find.json"),
         fetchJson("/static/assets/data/stats/light.json"),
-        fetchJson("/static/assets/data/stats/pvp.json"),
+        fetchJson("/gamedata/pvp.json"),
       ]);
       pvpModes = pvp.modes || {};
       prData = [

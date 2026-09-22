@@ -84,6 +84,7 @@ from app.trove.btt_releases import (
     stop_btt_releases_refresher,
 )
 from app.trove.chaos import start_chaos_refresher, stop_chaos_refresher
+from app.trove.decode.router import router as gamedata_admin_router
 from app.trove.delves import start_delve_refresher, stop_delve_refresher
 from app.trove.dressing.router import dressing_router
 from app.trove.events import start_events_refresher, stop_events_refresher
@@ -379,6 +380,7 @@ app.include_router(pageview_ingest_router)  # website-container page-view beacon
 app.include_router(site_oauth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)
+app.include_router(gamedata_admin_router, include_in_schema=False)  # dev panel Game data tab
 app.include_router(giveaways_admin_router, include_in_schema=False)
 # Public + user-facing giveaways ride the master feature toggle (the admin
 # management router above stays reachable so draws can be administered while

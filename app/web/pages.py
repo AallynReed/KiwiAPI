@@ -400,7 +400,7 @@ async def abilities(request: Request, tab: str = "gems") -> HTMLResponse:
 
     Reference data, so all three tabs are server-rendered from
     ``gamedata/{gem,ring,class}_abilities.json`` (decoded from the game files by
-    the matching scripts/decode_*_abilities.py) and ``/static/abilities.js`` only
+    the matching app/trove/decode/*_abilities.py) and ``/static/abilities.js`` only
     switches and filters what is already on the page - no proxy, no /v1 API. The
     ``?tab=`` is honoured server-side so each panel has a real URL."""
     return _TEMPLATES.TemplateResponse(
@@ -412,7 +412,7 @@ async def allies(request: Request) -> HTMLResponse:
     """Allies - every ally that grants a stat, sortable by any of them.
 
     The whole table is server-rendered from gamedata/ally_abilities.json (decoded
-    by scripts/decode_ally_abilities.py) and /static/allies.js sorts and filters
+    by app/trove/decode/ally_abilities.py) and /static/allies.js sorts and filters
     in place, so it is complete and name-sorted without JS. /abilities lists only
     the allies that also carry an ability; this one is about the stats."""
     return _TEMPLATES.TemplateResponse(

@@ -7,6 +7,7 @@ venv/
 data/
 # Runtime stores that live in the deploy checkout - many GB the build never needs.
 .game_updates/
+.gamedata/
 .backlog/
 .mods/
 .drops/

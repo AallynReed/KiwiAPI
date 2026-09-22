@@ -1,4 +1,4 @@
-"""Rebuild app/trove/gamedata/delve_modifiers.json - the Kiwi Wiki's delve modifier page.
+"""delve_modifiers.json - the Kiwi Wiki's /delve-modifiers page.
 
 The client carries each modifier's name (`$DelveCreatureMod_*`, `$DelveLairMod_*`,
 `$DelvePathMod_*` in languages/en/delve.binfab) and the effect prefabs under
@@ -7,28 +7,21 @@ below is that join, written by hand and kept to prefabs whose names match the
 modifier unambiguously; the numbers are always read from the prefabs.
 
 Also decodes the unnamed per-tier player effects and names "Under Pressure".
-
-Run after a game patch:  python scripts/decode_delve_modifiers.py
-Point TROVE_LIVE_DIR at the client if it is not in the default Glyph folder.
 """
 
 from __future__ import annotations
 
-import json
-import os
 import re
 import struct
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.trove.codexes.binfab import extract_localization_map, unzig
+from app.trove.codexes.bonuses import OPERATIONS, STAT_KEYS
+from app.trove.decode.tree import GameTree
 
-from app.trove.codexes.binfab import extract_localization_map, unzig  # noqa: E402
-from app.trove.codexes.bonuses import OPERATIONS, STAT_KEYS  # noqa: E402
-from app.trove.updates.archive import extract_archive, parse_tfi, verify_entry  # noqa: E402
-
-LIVE = Path(os.environ.get("TROVE_LIVE_DIR", r"C:/Program Files (x86)/Glyph/Games/Trove/Live"))
-OUT = Path(__file__).resolve().parents[1] / "app" / "trove" / "gamedata" / "delve_modifiers.json"
+TITLE = "Delve modifiers"
+OUTPUT = "delve_modifiers.json"
+PREFIXES = ("prefabs/abilities/delve/", "languages/en/")
+INDENT, FINAL_NEWLINE = 1, True
 
 CATEGORIES = {"DelveCreatureMod_": "creature", "DelveLairMod_": "lair", "DelvePathMod_": "path"}
 
@@ -131,7 +124,7 @@ def effect_lines(data: bytes) -> list[str]:
         if op == "Nullify":
             continue  # vetoes other modifiers sharing its label; not an effect of its own
         if stat not in STATS:
-            raise SystemExit(f"unmapped stat {stat}")
+            raise ValueError(f"unmapped stat {stat}")
         label, scale, kind = STATS[stat]
         value *= scale
         if op == "Multiply" or (op == "Set" and kind == "mult"):
@@ -146,39 +139,23 @@ def effect_lines(data: bytes) -> list[str]:
         elif op == "MultiplySum":
             lines.append(f"{label} +{_num(value * 100)}%")
         else:
-            raise SystemExit(f"unhandled {op} on {stat}")
+            raise ValueError(f"unhandled {op} on {stat}")
     return lines
 
 
-def read_dir(rel: str) -> dict[str, bytes]:
-    d = LIVE / rel
-    entries = parse_tfi((d / "index.tfi").read_bytes())
-    files: dict[str, bytes] = {}
-    for ai in sorted({e.archive_index for e in entries}):
-        files.update(extract_archive((d / f"archive{ai}.tfa").read_bytes(), entries, ai))
-    for e in entries:
-        if not verify_entry(e, files[e.name]):
-            raise SystemExit(f"{rel}/{e.name}: hash mismatch")
-    return files
+def build(tree: GameTree) -> dict:
+    loc = extract_localization_map(tree.read("languages/en/delve.binfab") or b"")
+    effect_loc = extract_localization_map(tree.read("languages/en/prefabs_effects_delve.binfab") or b"")
 
-
-def prefab(files: dict[str, dict[str, bytes]], rel: str) -> bytes:
-    folder, _, name = rel.rpartition("/")
-    try:
-        return files[folder][name + ".binfab"]
-    except KeyError:
-        raise SystemExit(f"missing prefab abilities/delve/{rel}") from None
-
-
-def build() -> dict:
-    lang = read_dir("languages/en")
-    loc = extract_localization_map(lang["delve.binfab"])
-    effect_loc = extract_localization_map(lang["prefabs_effects_delve.binfab"])
-    files = {sub: read_dir(f"prefabs/abilities/delve/{sub}") for sub in ("mutators", "boss/mutators")}
+    def prefab(rel: str) -> bytes:
+        data = tree.read(f"prefabs/abilities/delve/{rel}.binfab")
+        if data is None:
+            raise ValueError(f"missing prefab abilities/delve/{rel}")
+        return data
 
     unknown = set(MODIFIERS) - {k[1:] for k in loc}
     if unknown:
-        raise SystemExit(f"no longer in the locale: {sorted(unknown)}")
+        raise ValueError(f"no longer in the locale: {sorted(unknown)}")
 
     modifiers = []
     for key, game_name in sorted(loc.items()):
@@ -192,16 +169,16 @@ def build() -> dict:
             summary = f"Incoming damage {'+' if m.group(1) == 'increase' else '−'}{m.group(2)}%."
         modifiers.append({
             "key": key, "category": category, "name": game_name, "summary": summary,
-            "effects": [{"who": who, "lines": effect_lines(prefab(files, rel))}
+            "effects": [{"who": who, "lines": effect_lines(prefab(rel))}
                         for who, rel in spec.get("effects", [])],
         })
 
     tiers = []
     for n in range(1, 100):
         rel = f"mutators/tier_player_set_incomingdamagemod_t{n:02d}"
-        if rel.rpartition("/")[2] + ".binfab" not in files["mutators"]:
+        if not tree.exists(f"prefabs/abilities/delve/{rel}.binfab"):
             break
-        (value,) = (v for stat, op, v in stat_mods(prefab(files, rel))
+        (value,) = (v for stat, op, v in stat_mods(prefab(rel))
                     if stat == "IncomingDamageMod" and op == "Set")
         tiers.append({"tier": n, "damage_taken": _num(value)})
 
@@ -214,10 +191,10 @@ def build() -> dict:
         "tier_damage": tiers,
         "tier_effects": [
             {"name": "Fewer flasks", "lines": [line for n in (1, 2, 3) for line in
-                                                effect_lines(prefab(files, f"mutators/tier_player_sub_flasks_{n:02d}"))]
-             + effect_lines(prefab(files, "mutators/tier_player_set_flasks_0"))},
-            {"name": "Slowed", "lines": effect_lines(prefab(files, "mutators/tier_player_set_movementspeed_40"))},
-            {"name": "Reduced healing", "lines": effect_lines(prefab(files, "mutators/tier_player_reducehealing_noregen"))
+                                                effect_lines(prefab(f"mutators/tier_player_sub_flasks_{n:02d}"))]
+             + effect_lines(prefab("mutators/tier_player_set_flasks_0"))},
+            {"name": "Slowed", "lines": effect_lines(prefab("mutators/tier_player_set_movementspeed_40"))},
+            {"name": "Reduced healing", "lines": effect_lines(prefab("mutators/tier_player_reducehealing_noregen"))
              + ["Healing received is reduced"]},
             {"name": "No mounts", "lines": []},
             {"name": "Death boon", "lines": ["When a player dies, the rest of the party is healed to full"]},
@@ -226,12 +203,5 @@ def build() -> dict:
     }
 
 
-def main() -> None:
-    data = build()
-    OUT.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    known = sum(1 for m in data["modifiers"] if m["summary"])
-    print(f"wrote {OUT} ({len(data['modifiers'])} modifiers, {known} with effects, {len(data['tier_damage'])} tiers)")
-
-
-if __name__ == "__main__":
-    main()
+def count(data: dict) -> int:
+    return len(data["modifiers"])

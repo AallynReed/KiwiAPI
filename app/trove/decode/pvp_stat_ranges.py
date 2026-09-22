@@ -1,4 +1,4 @@
-"""Rebuild site/static/assets/data/stats/pvp.json - the PvE -> PvP stat curves.
+"""pvp.json - the PvE -> PvP stat curves behind the /calculators PvP tab.
 
 PvP converts each PvE stat through a `PVPStatRange` record in
 `prefabs/pvp/data/stats/<mode>_statranges.binfab`. A record is
@@ -10,30 +10,20 @@ PvP converts each PvE stat through a `PVPStatRange` record in
   4 f32    knee                          8 f32  soft-cap ceiling
 
 Trove_x64.exe applies them in FUN_14081dff0 (see site/static/calculators.js
-`pvpValue`). The files ship inside the client's .tfa archives, so this reads the
-Live install directly rather than an extracted tree.
-
-Run after a game patch:  python scripts/decode_pvp_stat_ranges.py
-Point TROVE_LIVE_DIR at the client if it is not in the default Glyph folder.
+`pvpValue`).
 """
-
 from __future__ import annotations
 
-import json
-import os
 import struct
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.trove.codexes.binfab import read_uleb, unzig
+from app.trove.codexes.bonuses import STAT_KEYS
+from app.trove.decode.tree import GameTree
 
-from app.trove.codexes.binfab import read_uleb, unzig  # noqa: E402
-from app.trove.codexes.bonuses import STAT_KEYS  # noqa: E402
-from app.trove.updates.archive import extract_archive, parse_tfi, verify_entry  # noqa: E402
-
-LIVE = Path(os.environ.get("TROVE_LIVE_DIR", r"C:/Program Files (x86)/Glyph/Games/Trove/Live"))
-STATS_DIR = LIVE / "prefabs" / "pvp" / "data" / "stats"
-OUT = Path(__file__).resolve().parents[1] / "site" / "static" / "assets" / "data" / "stats" / "pvp.json"
+TITLE = "PvP stat curves"
+OUTPUT = "pvp.json"
+PREFIXES = ("prefabs/pvp/data/stats/",)
+INDENT, FINAL_NEWLINE = 1, True
 
 # Mode key (calculators.js PVP_MODES names it) -> file.
 MODES = {
@@ -42,7 +32,7 @@ MODES = {
     "bloodstone": "pvp_bloodstone_statranges.binfab",
 }
 
-# `$Stat_` key -> wire-to-sheet scale, the same as scripts/decode_class_levels.py.
+# `$Stat_` key -> wire-to-sheet scale, the same as class_levels.py.
 # calculators.js PVP_SHEET names and orders them; stats absent here are not on the sheet.
 STATS = {
     "PhysicalDamage": 1, "SpellDamage": 1, "MaxHealth": 1, "MaxEnergy": 1,
@@ -85,33 +75,28 @@ def parse(data: bytes) -> list[dict]:
     return rows
 
 
-def main() -> None:
-    entries = parse_tfi((STATS_DIR / "index.tfi").read_bytes())
-    files = extract_archive((STATS_DIR / "archive0.tfa").read_bytes(), entries, 0)
-    for e in entries:
-        if not verify_entry(e, files[e.name]):
-            raise SystemExit(f"{e.name}: hash mismatch")
-
+def build(tree: GameTree) -> dict:
     modes = {}
     for key, name in MODES.items():
+        data = tree.read(f"prefabs/pvp/data/stats/{name}")
+        if data is None:
+            raise ValueError(f"missing prefabs/pvp/data/stats/{name}")
         stats = {}
-        for row in parse(files[name]):
+        for row in parse(data):
             stat = STAT_KEYS.get(row["stat"], "").removeprefix("$Stat_")
             if stat not in STATS:
                 continue
             missing = [f for f in REQUIRED if f not in row]
             if missing:
-                raise SystemExit(f"{name} {stat}: missing fields {missing}")
+                raise ValueError(f"{name} {stat}: missing fields {missing}")
             stats[stat] = {
                 "scale": STATS[stat], "out": [round(v, 4) for v in row[2]],
                 "knee": round(row[4], 4), "sqrt": round(row[5], 4),
                 "curve": bool(row[6]), "floor": bool(row[7]), "cap": round(row[8], 4),
             }
         modes[key] = stats
-
-    OUT.write_text(json.dumps({"modes": modes}, indent=1) + "\n", encoding="utf-8")
-    print(f"wrote {OUT} ({', '.join(f'{k} {len(v)}' for k, v in modes.items())})")
+    return {"modes": modes}
 
 
-if __name__ == "__main__":
-    main()
+def count(data: dict) -> int:
+    return sum(len(v) for v in data["modes"].values())

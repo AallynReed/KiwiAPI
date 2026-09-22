@@ -59,6 +59,11 @@ async def _mod_claims() -> int:
     return await ModClaimRequest.find(ModClaimRequest.status == "pending").count()
 
 
+async def _decoders_failing() -> int:
+    from app.trove.decode.runner import failing_count
+    return await failing_count()
+
+
 _SOURCES: tuple[_Source, ...] = (
     _Source("customart", "request to review", "requests to review",
             lambda: _art("pending")),
@@ -75,6 +80,7 @@ _SOURCES: tuple[_Source, ...] = (
     _Source("mods", "stray mod awaiting approval", "stray mods awaiting approval",
             _stray_mods),
     _Source("mods", "mod claim request", "mod claim requests", _mod_claims),
+    _Source("gamedata", "game-data decoder failing", "game-data decoders failing", _decoders_failing),
 )
 
 

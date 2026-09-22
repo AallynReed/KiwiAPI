@@ -1,7 +1,7 @@
 """Server-side render model for /allies.
 
 The full ally table: all 1,200 pet prefabs that grant combat stats, decoded by
-scripts/decode_ally_abilities.py. /abilities lists only the 127 that also carry
+app/trove/decode/ally_abilities.py. /abilities lists only the 127 that also carry
 an ability, because that page is about abilities; this one is about the stats,
 which is what you are actually shopping for.
 
@@ -9,11 +9,11 @@ Every row is rendered and the client sorts and filters in place - 1,200 rows is
 small enough for the DOM and means the table works with JS switched off (sorted
 by name, which is the useful default anyway).
 """
-import json
 import re
-from functools import cache
 from pathlib import Path
 from typing import Any
+
+from app.trove.decode import store as gamedata
 
 _DATA = Path(__file__).resolve().parents[1] / "trove" / "gamedata"
 
@@ -36,12 +36,8 @@ def _fmt(stat: dict) -> str:
     return f"+{value:g}%"
 
 
-@cache
 def _load() -> list[dict]:
-    try:
-        return json.loads((_DATA / "ally_abilities.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return []
+    return gamedata.load("ally_abilities.json", [])
 
 
 def allies_view(allies: list[dict] | None = None) -> dict[str, Any]:

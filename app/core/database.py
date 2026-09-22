@@ -23,6 +23,7 @@ from app.pageviews.models import PageView
 from app.site_auth.models import SiteSession, SiteUser, UsernameChangeRequest
 from app.supporters.models import Supporter
 from app.tokens.models import ApiToken
+from app.trove.decode.models import DecoderRun
 
 # NOTE: the leaderboards domain (boards/entries/players/activity/cheaters/deltas)
 # AND the codexes (codex_entry) live in PostgreSQL now (app/trove/*/pg_store.py),
@@ -94,6 +95,7 @@ DOCUMENT_MODELS = [
     TroveStatusEvent,
     RuntimeConfig,
     IngestLogEntry,
+    DecoderRun,                          # post-patch game-data rebuilds (dev panel Game data tab)
     VaultItem, Giveaway, GiveawayEntry, PrizeCode,
     Supporter,
     GuildConfig,
