@@ -71,6 +71,7 @@
                 {% if leaderboards_enabled %}<a href="/leaderboards" class="nav-quick {{ 'active' if _p == '/leaderboards' else '' }}"><span data-i18n>Leaderboards</span></a>{% endif %}
                 {% if market_enabled %}<a href="/market" class="nav-quick {{ 'active' if _p == '/market' else '' }}"><span data-i18n>Market</span></a>{% endif %}
                 {% if mods_hub_enabled %}<a href="/mods" class="nav-quick {{ 'active' if _p == '/mods' or _p.startswith('/mods/') else '' }}"><span data-i18n>Mods Hub</span></a>{% endif %}
+                {% if wiki_enabled and wiki_url %}<a href="{{ wiki_url }}" class="nav-quick"><span data-i18n>Wiki</span></a>{% endif %}
 
                 <a href="/app" class="nav-cta {{ 'active' if _p == '/app' else '' }}"><i class="fa-solid fa-download"></i> <span data-i18n>Get the App</span></a>
 

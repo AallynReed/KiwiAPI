@@ -134,6 +134,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Sound Studio", "/sound-studio", "sound_studio_enabled", "fa-solid fa-sliders", "Create", "audio", "music", "bnk"),
     _p("Unlock Debug", "/unlock-debug", "unlock_debug_enabled", "fa-solid fa-terminal", "Create", "debug console", "trove.exe", "patch", "byte patch", "console"),
 
+    _p("Wiki", "https://kiwiwiki.aallyn.net", "wiki_enabled", "fa-solid fa-book-open", "Learn", "kiwi wiki", "guides", "knowledge"),
     _p("Classes", "/classes", "classes_enabled", "fa-solid fa-hat-wizard", "Learn", "class list"),
     _p("Trove Commands", "/commands", "commands_enabled", "fa-solid fa-keyboard", "Learn", "slash commands", "chat"),
     _p("Codexes", "/codexes", "codexes_enabled", "fa-solid fa-book-atlas", "Learn", "database", "catalog", "game data", badge="Beta"),

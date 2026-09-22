@@ -1,0 +1,37 @@
+{% extends "wiki/_base.html" %}
+{% block view %}home{% endblock %}
+{% block main %}
+<section class="wk-hero">
+    <p class="wk-eyebrow">/</p>
+    <h1 class="wk-hero-title">The Trove wiki</h1>
+    <p class="wk-hero-sub">Guides and game knowledge written by players, next to numbers read straight from the game files.</p>
+</section>
+
+<section class="wk-section" aria-labelledby="wk-home-classes">
+    <div class="wk-section-head">
+        <h2 id="wk-home-classes">Classes</h2>
+        <a class="wk-more" href="/classes">All classes <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    {% include "wiki/_class_grid.html" %}
+</section>
+
+<div class="wk-home-cols">
+    <section class="wk-section" aria-labelledby="wk-home-recent">
+        <div class="wk-section-head">
+            <h2 id="wk-home-recent">Recently changed</h2>
+            <a class="wk-more" href="/-/recent">All changes <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <ul class="wk-list" id="wk-home-recent-list" data-limit="8"><li class="wk-list-empty">Loading…</li></ul>
+    </section>
+    <section class="wk-section" aria-labelledby="wk-home-write">
+        <div class="wk-section-head"><h2 id="wk-home-write">Help write it</h2></div>
+        <div class="wk-card">
+            <p>Spotted something missing or out of date? Sign in and suggest a change on any page. An editor reviews it and it goes live under your name.</p>
+            <p class="wk-card-actions">
+                <a class="wk-btn" href="/-/pages">Browse all pages</a>
+                <a class="wk-btn wk-btn-primary" href="/-/new" id="wk-home-new">Start a new page</a>
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}

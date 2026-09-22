@@ -68,6 +68,7 @@ from app.trove.updates.models import (
 )
 from app.usage.models import UsageEvent
 from app.webhooks.models import SiteWebhook
+from app.wiki.models import WikiPage, WikiRevision, WikiSuggestion
 
 # Every Beanie Document must be registered here so init_beanie can bind it.
 # Models live in their feature packages; this is the one place that aggregates them.
@@ -104,6 +105,7 @@ DOCUMENT_MODELS = [
     FileDrop, DropUpload,                # one-off PIN upload links + what arrived on them
     ArtRequest,                          # custom art requests for Zakros UI Chat + Nameplate
     ModStatsSnapshot,                    # daily mod counts across hub, Trovesaurus, Steam
+    WikiPage, WikiRevision, WikiSuggestion,  # wiki pages, their history, edit suggestions
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

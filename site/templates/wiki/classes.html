@@ -1,0 +1,11 @@
+{% extends "wiki/_base.html" %}
+{% set description = "Every Trove class on Kiwi Wiki: base stats, level scaling, subclass and abilities, with player-written guides." %}
+{% block view %}classes{% endblock %}
+{% block main %}
+<header class="wk-pagehead">
+    <p class="wk-eyebrow">/classes</p>
+    <h1 class="wk-title">Classes</h1>
+    <p class="wk-lead">Every playable class. Stats and abilities come straight from the game files; the write-up on each page is by the wiki's editors.</p>
+</header>
+{% include "wiki/_class_grid.html" %}
+{% endblock %}

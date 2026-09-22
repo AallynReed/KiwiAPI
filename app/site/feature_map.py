@@ -62,6 +62,7 @@ SITE_FEATURE_FLAGS = {
     "tomes_enabled": feature_flags.TOMES_FLAG,
     "unlock_debug_enabled": feature_flags.UNLOCK_DEBUG_FLAG,
     "file_drops_enabled": feature_flags.FILE_DROPS_FLAG,
+    "wiki_enabled": feature_flags.WIKI_FLAG,
 }
 
 
@@ -311,6 +312,7 @@ _ROBOTS_BLOCKED_HOSTS = frozenset(
     url.split("://", 1)[-1].split("/", 1)[0].lower()
     for url in (settings.api_url, settings.dev_url, settings.docs_url)
 )
+_WIKI_HOST = settings.wiki_url.split("://", 1)[-1].split("/", 1)[0].lower()
 
 def robots_body(host: str) -> str:
     """Host-aware robots.txt body. The public site is fully crawlable and
@@ -337,6 +339,13 @@ def robots_body(host: str) -> str:
         )
     if host in _ROBOTS_BLOCKED_HOSTS:
         return "User-agent: *\nDisallow: /\n"
+    if host == _WIKI_HOST:
+        return (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /-/\n"
+            f"\nSitemap: {settings.wiki_url.rstrip('/')}/sitemap.xml\n"
+        )
     return (
         "User-agent: *\n"
         "Allow: /\n"

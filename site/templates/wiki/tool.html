@@ -1,0 +1,18 @@
+{% extends "wiki/_base.html" %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block view %}{{ tool }}{% endblock %}
+{% block main %}
+<section class="wk-toolpage" id="wk-tool" data-tool="{{ tool }}"{% if slug %} data-slug="{{ slug }}"{% endif %}{% if sid %} data-sid="{{ sid }}"{% endif %}>
+    <header class="wk-pagehead">
+        {% if tool == 'history' %}
+        <nav class="wk-crumbs" aria-label="Breadcrumb"><a href="{{ page_url }}">{{ page_title }}</a><span aria-hidden="true">/</span><span aria-current="page">History</span></nav>
+        <h1 class="wk-title">History</h1>
+        {% else %}
+        <p class="wk-eyebrow">/-/{{ tool }}</p>
+        <h1 class="wk-title">{{ title }}</h1>
+        {% endif %}
+    </header>
+    {% if classes %}<script type="application/json" id="wk-classes">{{ classes | tojson }}</script>{% endif %}
+    <div id="wk-tool-body"><p class="wk-list-empty">Loading…</p></div>
+</section>
+{% endblock %}

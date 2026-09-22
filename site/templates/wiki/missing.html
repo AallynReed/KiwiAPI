@@ -1,0 +1,27 @@
+{% extends "wiki/_base.html" %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block view %}missing{% endblock %}
+{% block main %}
+<article class="wk-article">
+    <p class="wk-eyebrow">404</p>
+    {% if slug %}
+    <h1 class="wk-title">{{ title }}</h1>
+    <div class="wk-empty">
+        {% if deleted %}
+        <p>This page was deleted. Its history is kept, so an editor can bring it back.</p>
+        <p><a class="wk-btn" href="/-/history/{{ slug }}">See its history</a></p>
+        {% else %}
+        <p>There's no page here yet.</p>
+        <p><a class="wk-btn wk-btn-primary" href="/-/new?slug={{ slug | urlencode }}" data-edit-cta>Create this page</a>
+           <a class="wk-btn" href="/-/search?q={{ slug.replace('-', ' ') | urlencode }}">Search for it</a></p>
+        {% endif %}
+    </div>
+    {% else %}
+    <h1 class="wk-title">Page not found</h1>
+    <div class="wk-empty">
+        <p>Nothing lives at this address.</p>
+        <p><a class="wk-btn" href="/">Wiki home</a> <a class="wk-btn" href="/-/pages">All pages</a></p>
+    </div>
+    {% endif %}
+</article>
+{% endblock %}

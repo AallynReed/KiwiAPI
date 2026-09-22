@@ -1,0 +1,34 @@
+{% extends "wiki/_base.html" %}
+{% block view %}class{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/classes.min.css">{% endblock %}
+{% block main %}
+<nav class="wk-crumbs" aria-label="Breadcrumb"><a href="/classes">Classes</a><span aria-hidden="true">/</span><span aria-current="page">{{ title }}</span></nav>
+
+<article class="wk-article wk-class">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/class/{{ path.rsplit('/', 1)[-1] }}</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+
+    {# Generated from the game files (the same model as the main site's /classes). #}
+    <section class="cls-detail wk-classdata" id="wk-classdata" aria-label="{{ title }} game data">
+        {% include "partials/class_detail.html" %}
+    </section>
+    <script type="application/json" id="wk-class-json">{{ class_data | tojson }}</script>
+
+    <section class="wk-writeup" aria-labelledby="wk-writeup-title">
+        <h2 class="wk-writeup-title" id="wk-writeup-title">Guide</h2>
+        {% if page and page.body %}
+        <div class="wk-prose" id="wk-body" data-src-id="wk-src"></div>
+        <script type="application/json" id="wk-src">{{ page.body | tojson }}</script>
+        <p class="wk-meta">Last edited {% if page.updated_by %}by <span>{{ page.updated_by }}</span> {% endif %}<time datetime="{{ page.updated_at }}" data-rel>{{ page.updated_at[:10] }}</time></p>
+        {% else %}
+        <div class="wk-empty">
+            <p>No one has written a guide for the {{ title }} yet: how to play it, what to build, where it shines.</p>
+            <p><a class="wk-btn wk-btn-primary" href="/-/edit/{{ slug }}" data-edit-cta>Write the first guide</a></p>
+        </div>
+        {% endif %}
+    </section>
+</article>
+{% endblock %}
+{% block scripts %}<script src="/static/class_level.min.js" defer></script>{% endblock %}

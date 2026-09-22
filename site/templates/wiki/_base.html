@@ -1,0 +1,83 @@
+{# Wiki host layout (app/web/wiki.py). The wiki keeps its own chrome - a compact
+   header with search and a way back to the main site - rather than the main
+   navbar, whose links are relative to trove.aallyn.net. #}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% if title and title != 'Kiwi Wiki' %}{{ title }} · {% endif %}Kiwi Wiki</title>
+    <meta name="description" content="{{ description | default('The Trove wiki from Better Trove Tools: guides, classes and game knowledge, written by players and backed by live game data.') }}">
+    <meta name="theme-color" content="#0a0e14">
+    <meta name="color-scheme" content="dark">
+    {% block robots %}{% endblock %}
+    <link rel="canonical" href="{{ wiki_url }}{{ path }}">
+
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Kiwi Wiki">
+    <meta property="og:url" content="{{ wiki_url }}{{ path }}">
+    <meta property="og:title" content="{{ title | default('Kiwi Wiki') }}">
+    <meta property="og:description" content="{{ description | default('The Trove wiki from Better Trove Tools.') }}">
+    <meta property="og:image" content="{{ wiki_url }}/static/assets/favicon.png">
+    <meta name="twitter:card" content="summary">
+
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    {% block styles %}{% endblock %}
+    <link rel="stylesheet" href="/static/wiki.min.css">
+</head>
+<body class="landing wk" data-site-origin="{{ site_url }}" data-view="{% block view %}{% endblock %}">
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="wk-top">
+        <div class="wk-top-inner">
+            <a class="wk-brand" href="/" aria-label="Kiwi Wiki home">
+                <img src="/static/assets/logo.png" alt="" width="30" height="30">
+                <span>Kiwi <span class="highlight-blue">Wiki</span></span>
+            </a>
+            <form class="wk-search" action="/-/search" method="get" role="search">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input type="search" name="q" value="{{ request.query_params.get('q', '') if path == '/-/search' else '' }}"
+                       placeholder="Search the wiki" aria-label="Search the wiki" autocomplete="off" spellcheck="false">
+            </form>
+            <nav class="wk-toplinks" aria-label="Wiki">
+                <a href="/classes"{{ ' aria-current="page"' | safe if path == '/classes' or path.startswith('/class/') else '' }}>Classes</a>
+                <a href="/-/recent"{{ ' aria-current="page"' | safe if path == '/-/recent' else '' }}>Recent changes</a>
+                <a href="/-/suggestions" id="wk-sugg-link" hidden>Suggestions <span class="wk-count" id="wk-sugg-count" hidden></span></a>
+                <a class="wk-back" href="{{ site_url }}">Better Trove Tools <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                <span id="nav-account" class="nav-account" data-state="loading"></span>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main" class="wk-main">
+        {% block main %}{% endblock %}
+    </main>
+
+    <footer class="wk-foot">
+        <div class="wk-foot-inner">
+            <p><strong>Kiwi Wiki</strong> is part of <a href="{{ site_url }}">Better Trove Tools</a>. Anyone can read it; editors write it, and every signed-in player can suggest changes.</p>
+            <p class="wk-foot-links">
+                <a href="/-/pages">All pages</a>
+                <a href="/-/recent">Recent changes</a>
+                <a href="{{ site_url }}/terms">Terms</a>
+                <a href="{{ site_url }}/privacy">Privacy</a>
+                <a href="https://discord.gg/Y7P2k99zAz" target="_blank" rel="noopener">Discord</a>
+            </p>
+            <p class="wk-foot-legal">An independent fan project. Gamigo does not endorse or sponsor it. Some assets shown here are the property of Gamigo and are used for reference only.</p>
+        </div>
+    </footer>
+
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/md_render.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    {% block scripts %}{% endblock %}
+    <script src="/static/wiki.min.js" defer></script>
+    {% block after_scripts %}{% endblock %}
+</body>
+</html>

@@ -522,6 +522,45 @@ REGISTRY: dict[str, TunableSetting] = {
             "for whoever it was handed to."
         ),
     ),
+    "feature_wiki_enabled": _t(
+        key="feature_wiki_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the wiki (its own host, settings.wiki_url). OFF 404s "
+            "every wiki page and /site/wiki/*, and drops the Wiki links from the main "
+            "site's navbar and footer. Pages, history and suggestions are kept."
+        ),
+    ),
+    "wiki_edit_max": _t(
+        key="wiki_edit_max",
+        default=120,
+        type="int",
+        category="wiki",
+        description="Page saves, reverts and deletes one editor may make within wiki_edit_window_seconds.",
+    ),
+    "wiki_edit_window_seconds": _t(
+        key="wiki_edit_window_seconds",
+        default=3600,
+        type="int",
+        category="wiki",
+        description="Window for wiki_edit_max.",
+    ),
+    "wiki_suggest_max": _t(
+        key="wiki_suggest_max",
+        default=20,
+        type="int",
+        category="wiki",
+        description="Edit suggestions one signed-in account may send within wiki_suggest_window_seconds.",
+    ),
+    "wiki_suggest_window_seconds": _t(
+        key="wiki_suggest_window_seconds",
+        default=3600,
+        type="int",
+        category="wiki",
+        description="Window for wiki_suggest_max.",
+    ),
     "feature_delves_enabled": _t(
         key="feature_delves_enabled",
         default=False,

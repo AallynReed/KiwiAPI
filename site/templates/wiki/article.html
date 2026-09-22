@@ -1,0 +1,17 @@
+{% extends "wiki/_base.html" %}
+{% block view %}article{% endblock %}
+{% block main %}
+<article class="wk-article">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/{{ slug }}</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ page.title }}</h1>
+    <div class="wk-article-body">
+        <nav class="wk-toc" id="wk-toc" aria-label="On this page" hidden></nav>
+        <div class="wk-prose" id="wk-body" data-src-id="wk-src"></div>
+    </div>
+    <script type="application/json" id="wk-src">{{ page.body | tojson }}</script>
+    <p class="wk-meta">Last edited {% if page.updated_by %}by <span>{{ page.updated_by }}</span> {% endif %}<time datetime="{{ page.updated_at }}" data-rel>{{ page.updated_at[:10] }}</time></p>
+</article>
+{% endblock %}

@@ -119,8 +119,9 @@ def _redirect_uri() -> str:
 def _safe_next(raw: str | None) -> str:
     """The post-sign-in destination, or "" if it isn't one we may bounce to.
 
-    Only a site-relative path survives, and it is rebuilt from its parsed parts
-    rather than passed through: anything naming a scheme or a host is dropped,
+    Only a site-relative path (or a URL on the wiki's own origin) survives, and it
+    is rebuilt from its parsed parts rather than passed through: any other scheme or
+    host is dropped,
     so a crafted ?next= can never turn sign-in into an open redirect. Backslashes
     are folded to "/" first because browsers treat "/\\evil.com" as "//evil.com"
     while a plain startswith() check does not. The client re-checks the result
@@ -129,6 +130,11 @@ def _safe_next(raw: str | None) -> str:
     if not raw:
         return ""
     parts = urlsplit(raw.replace("\\", "/"))
+    # The wiki lives on its own host and signs in through this site.
+    wiki = urlsplit(settings.wiki_url)
+    if (parts.scheme, parts.netloc) == (wiki.scheme, wiki.netloc) and wiki.netloc:
+        path = parts.path if parts.path.startswith("/") else "/"
+        return urlunsplit((parts.scheme, parts.netloc, path, parts.query, parts.fragment))
     if parts.scheme or parts.netloc or not parts.path.startswith("/"):
         return ""
     return urlunsplit(("", "", parts.path, parts.query, parts.fragment))

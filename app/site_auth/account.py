@@ -199,12 +199,17 @@ async def anonymize_account(user: SiteUser) -> None:
     user.is_active = False
     user.is_verified = False
     user.is_deleted = True
+    user.is_wiki_editor = False
     user.clear_claim()
     user.token_version += 1                      # invalidate every outstanding access token
     user.updated_at = utcnow()
     await user.save()
 
     await clear_discord_token(uid)               # drop the cached Discord token, if any
+
+    # Unreviewed wiki suggestions go with the account; accepted ones are page history.
+    from app.wiki.models import WikiSuggestion
+    await WikiSuggestion.find({"author_id": uid, "status": "pending"}).delete()
 
 
 @router.post("/me/delete", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=False)

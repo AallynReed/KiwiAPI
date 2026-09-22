@@ -1,0 +1,57 @@
+{% extends "wiki/_base.html" %}
+{% block robots %}<meta name="robots" content="noindex">{% endblock %}
+{% block view %}edit{% endblock %}
+{% block main %}
+<section class="wk-editor" id="wk-editor" data-slug="{{ slug }}" data-fixed-title="{{ fixed_title or '' }}">
+    <header class="wk-pagehead">
+        <p class="wk-eyebrow" id="wk-ed-eyebrow">{{ '/-/edit/' ~ slug if slug else '/-/new' }}</p>
+        <h1 class="wk-title" id="wk-ed-heading">{% if fixed_title %}{{ fixed_title }}: guide{% elif slug %}Edit page{% else %}New page{% endif %}</h1>
+        <p class="wk-lead" id="wk-ed-mode"></p>
+    </header>
+
+    <div class="wk-signin" id="wk-ed-signin" hidden>
+        <p>Sign in with Discord to write or suggest changes.</p>
+        <p><a class="wk-btn wk-btn-primary" id="wk-ed-signin-link" href="{{ site_url }}/login">Sign in</a></p>
+    </div>
+
+    <form class="wk-form" id="wk-ed-form" hidden novalidate>
+        {% if not fixed_title %}
+        <div class="wk-field">
+            <label for="wk-ed-title">Title</label>
+            <input id="wk-ed-title" name="title" maxlength="120" required autocomplete="off">
+        </div>
+        <div class="wk-field" id="wk-ed-slug-field" hidden>
+            <label for="wk-ed-slug">Address</label>
+            <div class="wk-slug"><span aria-hidden="true">{{ wiki_url | replace('https://', '') }}/</span><input id="wk-ed-slug" name="slug" maxlength="100" autocomplete="off" spellcheck="false" aria-describedby="wk-ed-slug-help"></div>
+            <p class="wk-help" id="wk-ed-slug-help">Lowercase letters, numbers and dashes. It can't be changed later.</p>
+        </div>
+        {% endif %}
+
+        <div class="wk-field">
+            <div class="wk-tabs" role="tablist" aria-label="Editor view">
+                <button type="button" role="tab" id="wk-tab-write" aria-selected="true" aria-controls="wk-ed-write">Write</button>
+                <button type="button" role="tab" id="wk-tab-preview" aria-selected="false" aria-controls="wk-ed-preview" tabindex="-1">Preview</button>
+            </div>
+            <div id="wk-ed-write" role="tabpanel" aria-labelledby="wk-tab-write">
+                <label class="wk-sr" for="wk-ed-body">Page text</label>
+                <textarea id="wk-ed-body" name="body" rows="22" spellcheck="true" aria-describedby="wk-ed-body-help"></textarea>
+                <p class="wk-help" id="wk-ed-body-help">Markdown: <code>## Heading</code>, <code>**bold**</code>, <code>- list</code>, <code>[text](https://…)</code>. Link another wiki page with <code>[[Page title]]</code> or <code>[[Page title|shown text]]</code>; a class with <code>[[class/Knight]]</code>.</p>
+            </div>
+            <div id="wk-ed-preview" role="tabpanel" aria-labelledby="wk-tab-preview" class="wk-preview wk-prose" hidden></div>
+        </div>
+
+        <div class="wk-field">
+            <label for="wk-ed-summary">What did you change? <span class="wk-optional">(optional)</span></label>
+            <input id="wk-ed-summary" name="summary" maxlength="200" autocomplete="off" placeholder="e.g. Added a section on gem builds">
+        </div>
+
+        <p class="wk-error" id="wk-ed-error" role="alert" hidden></p>
+
+        <div class="wk-actions">
+            <button type="submit" class="wk-btn wk-btn-primary" id="wk-ed-submit">Save</button>
+            <a class="wk-btn" id="wk-ed-cancel" href="/">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
+{% block after_scripts %}<script src="/static/wiki_edit.min.js" defer></script>{% endblock %}

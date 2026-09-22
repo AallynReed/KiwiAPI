@@ -70,7 +70,7 @@ def allowed_cookie_origins() -> set[str]:
     unaffected by this - they bring their own credential.
     """
     origins = set()
-    for url in (settings.app_url, settings.api_url):
+    for url in (settings.app_url, settings.api_url, settings.wiki_url):
         p = urlsplit(url)
         if p.scheme and p.hostname:
             origins.add(f"{p.scheme}://{p.netloc}")
