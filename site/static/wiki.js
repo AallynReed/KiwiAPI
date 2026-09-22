@@ -92,6 +92,8 @@
     })).join("");
   }
 
+  const SCROLL_ROWS = 15;
+
   let _known = null;
   function knownPages() {
     if (!_known) {
@@ -127,6 +129,20 @@
         });
       });
     }
+    // Long tables scroll inside their own box so they don't bury the page.
+    el.querySelectorAll("table").forEach((t) => {
+      const body = t.tBodies[0];
+      if (!body || body.rows.length <= SCROLL_ROWS) return;
+      const box = document.createElement("div");
+      box.className = "wk-scrolltable";
+      box.tabIndex = 0;
+      box.setAttribute("role", "region");
+      let head = t.previousElementSibling;
+      while (head && !/^H[1-6]$/.test(head.tagName)) head = head.previousElementSibling;
+      box.setAttribute("aria-label", head ? head.textContent : "Table");
+      t.parentNode.insertBefore(box, t);
+      box.appendChild(t);
+    });
     // Heading anchors (the sanitizer strips ids, so they're added after it).
     const used = {};
     const heads = [];

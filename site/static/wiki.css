@@ -165,6 +165,14 @@ body.wk > main { min-height: auto; }
 .wk-prose [align="center"] { text-align: center; }
 .wk-prose [align="right"] { text-align: right; }
 .wk-prose span[style*="background-color"] { padding: 0 .28em; border-radius: 4px; }
+.wk-prose .wk-scrolltable {
+  max-height: min(70vh, 640px); overflow: auto; margin: 0 0 16px;
+  border: 1px solid var(--bg-line); border-radius: var(--radius-sm);
+}
+.wk-prose .wk-scrolltable table { display: table; width: 100%; max-width: none; margin: 0; }
+.wk-prose .wk-scrolltable th, .wk-prose .wk-scrolltable td { border-width: 0 0 1px; }
+.wk-prose .wk-scrolltable thead th { position: sticky; top: 0; z-index: 1; }
+.wk-prose td img { vertical-align: middle; margin-right: 8px; }
 
 /* Class pages: generated data first, the write-up under it. */
 .wk-class .cls-detail { margin-top: 8px; }
