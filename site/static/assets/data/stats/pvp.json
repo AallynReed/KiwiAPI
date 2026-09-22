@@ -1,0 +1,346 @@
+{
+ "modes": {
+  "pvp": {
+   "MaxHealth": {
+    "scale": 1,
+    "out": [
+     0.0,
+     40000.0
+    ],
+    "knee": 15000.0,
+    "sqrt": 5.8,
+    "curve": true,
+    "floor": true,
+    "cap": 52000.0
+   },
+   "PhysicalDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.666,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "SpellDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.574,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "MovementSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     110.0
+    ],
+    "knee": 60.0,
+    "sqrt": 6.46,
+    "curve": true,
+    "floor": true,
+    "cap": 140.0
+   },
+   "CriticalHitChance": {
+    "scale": 0.1,
+    "out": [
+     0.0,
+     750.0
+    ],
+    "knee": 100.0,
+    "sqrt": 17.58,
+    "curve": true,
+    "floor": true,
+    "cap": 900.0
+   },
+   "CriticalHitDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 50.0,
+    "sqrt": 1.581,
+    "curve": true,
+    "floor": true,
+    "cap": 195.0
+   },
+   "HealthRegen_controller": {
+    "scale": 1,
+    "out": [
+     0.0,
+     3000.0
+    ],
+    "knee": 250.0,
+    "sqrt": 21.209,
+    "curve": true,
+    "floor": true,
+    "cap": 4000.0
+   },
+   "AttackSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     140.0
+    ],
+    "knee": 100.0,
+    "sqrt": 4.512,
+    "curve": true,
+    "floor": false,
+    "cap": 170.0
+   },
+   "EnergyRegen_controller": {
+    "scale": 1,
+    "out": [
+     0.0,
+     200.0
+    ],
+    "knee": 100.0,
+    "sqrt": 3.454,
+    "curve": true,
+    "floor": false,
+    "cap": 260.0
+   },
+   "MaxEnergy": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 100.0,
+    "sqrt": 7.906,
+    "curve": true,
+    "floor": false,
+    "cap": 195.0
+   },
+   "Jump": {
+    "scale": 1,
+    "out": [
+     0.0,
+     4.0
+    ],
+    "knee": 0.0,
+    "sqrt": 1.0,
+    "curve": false,
+    "floor": true,
+    "cap": 0.0
+   }
+  },
+  "battleroyale": {
+   "MaxHealth": {
+    "scale": 1,
+    "out": [
+     0.0,
+     40000.0
+    ],
+    "knee": 15000.0,
+    "sqrt": 5.8,
+    "curve": true,
+    "floor": true,
+    "cap": 52000.0
+   },
+   "PhysicalDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.666,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "SpellDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.574,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "MovementSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     110.0
+    ],
+    "knee": 60.0,
+    "sqrt": 6.46,
+    "curve": true,
+    "floor": true,
+    "cap": 140.0
+   },
+   "CriticalHitChance": {
+    "scale": 0.1,
+    "out": [
+     0.0,
+     750.0
+    ],
+    "knee": 100.0,
+    "sqrt": 17.58,
+    "curve": true,
+    "floor": true,
+    "cap": 900.0
+   },
+   "CriticalHitDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 50.0,
+    "sqrt": 1.581,
+    "curve": true,
+    "floor": true,
+    "cap": 195.0
+   },
+   "HealthRegen_controller": {
+    "scale": 1,
+    "out": [
+     0.0,
+     3000.0
+    ],
+    "knee": 250.0,
+    "sqrt": 21.209,
+    "curve": true,
+    "floor": true,
+    "cap": 4000.0
+   },
+   "AttackSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     140.0
+    ],
+    "knee": 100.0,
+    "sqrt": 4.512,
+    "curve": true,
+    "floor": false,
+    "cap": 170.0
+   },
+   "Jump": {
+    "scale": 1,
+    "out": [
+     0.0,
+     4.0
+    ],
+    "knee": 0.0,
+    "sqrt": 1.0,
+    "curve": false,
+    "floor": true,
+    "cap": 0.0
+   },
+   "MaxEnergy": {
+    "scale": 1,
+    "out": [
+     100.0,
+     100.0
+    ],
+    "knee": 100.0,
+    "sqrt": 0.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "EnergyRegen_controller": {
+    "scale": 1,
+    "out": [
+     100.0,
+     100.0
+    ],
+    "knee": 100.0,
+    "sqrt": 0.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   }
+  },
+  "bloodstone": {
+   "MaxHealth": {
+    "scale": 1,
+    "out": [
+     0.0,
+     40000.0
+    ],
+    "knee": 15000.0,
+    "sqrt": 180.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "PhysicalDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     12000.0
+    ],
+    "knee": 3000.0,
+    "sqrt": 60.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "SpellDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     12000.0
+    ],
+    "knee": 3000.0,
+    "sqrt": 60.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "MovementSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     110.0
+    ],
+    "knee": 80.0,
+    "sqrt": 8.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "CriticalHitChance": {
+    "scale": 0.1,
+    "out": [
+     0.0,
+     25.0
+    ],
+    "knee": 10.0,
+    "sqrt": 0.4,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "CriticalHitDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 50.0,
+    "sqrt": 5.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   }
+  }
+ }
+}

@@ -1,5 +1,5 @@
 /* =========================================================================
-   Calculators - Power Rank, Mastery, Magic Find & Light.
+   Calculators - Power Rank, Mastery, Magic Find, Light & PvP.
    Vanilla-JS re-implementation of Better Trove Tools' Vue calculators. All the
    maths is client-side (ported 1:1 from BTT's calculators.js) off the static
    stat tables in /static/assets/data/stats/*.json. The Magic Find tab's
@@ -38,7 +38,27 @@
     { key: "mastery", label: "Mastery", icon: "fa-crown", color: "#ff9800" },
     { key: "mf", label: "Magic Find", icon: "fa-gem", color: "var(--accent-blue)" },
     { key: "light", label: "Light", icon: "fa-sun", color: "#00bcd4" },
+    { key: "pvp", label: "PvP", icon: "fa-khanda", color: "var(--accent-red)" },
   ];
+
+  // PvP tab: pvp.json mode keys, and the character sheet in order as
+  // [stat, name, shown as %, starting value]. Starting values are the universal
+  // base sheet (scripts/decode_class_levels.py BASE).
+  const PVP_MODES = [["pvp", "PvP"], ["battleroyale", "Battle Royale"], ["bloodstone", "Bloodstone"]];
+  const PVP_SHEET = [
+    ["PhysicalDamage", "Physical Damage", false, 100],
+    ["SpellDamage", "Magic Damage", false, 100],
+    ["MaxHealth", "Maximum Health", false, 150],
+    ["MaxEnergy", "Energy", false, 100],
+    ["HealthRegen_controller", "Health Regen", false, 25],
+    ["EnergyRegen_controller", "Energy Regen", false, 100],
+    ["MovementSpeed", "Movement Speed", false, 40],
+    ["AttackSpeed", "Attack Speed", true, 100],
+    ["Jump", "Jump", false, 3],
+    ["CriticalHitChance", "Critical Hit", true, 2],
+    ["CriticalHitDamage", "Critical Damage", true, 50],
+  ];
+  const PVP_DEFAULTS = Object.fromEntries(PVP_SHEET.map(([stat, , , v]) => [stat, v]));
 
   // ── State ────────────────────────────────────────────────────────────────
   let activeTab = "pr";
@@ -50,6 +70,9 @@
   let starChartCode = "";
   let starChartMf = { flat: 0, pct: 0, pathsCount: 0, error: false };
   let lilypad = true;
+  let pvpModes = {};
+  let pvpMode = "pvp";
+  let pvpInputs = { ...PVP_DEFAULTS };
 
   // An ally row's value with the Lilypad buff folded in; every other row is
   // returned untouched - the buff only ever scales the ally's own stats.
@@ -62,7 +85,7 @@
   function keyOf(item) { return item.name || item.type; }
   function save() {
     const snap = {
-      activeTab, troveMastery, geodeMastery, starChartCode, lilypad,
+      activeTab, troveMastery, geodeMastery, starChartCode, lilypad, pvpMode, pvpInputs,
       pr: prData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
       mf: mfData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
       light: lightData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
@@ -163,6 +186,25 @@
     return Math.min(tc, 500) * 4 + Math.max(0, tc - 500) * 1 + gc * 5;
   }
 
+  // ── Compute: PvP ─────────────────────────────────────────────────────────
+  // Trove_x64.exe FUN_14081dff0, fed by /static/assets/data/stats/pvp.json
+  // (scripts/decode_pvp_stat_ranges.py). Works in the game's stat units; the
+  // class/role modifier pass between the clamp and the soft cap is skipped
+  // because pvp_classes and pvp_roles ship empty.
+  function pvpValue(e, v) {
+    let raised = false;
+    if (e.curve) {
+      if (v < e.knee) { if (e.floor) { v = e.knee; raised = true; } }
+      else v = e.knee + e.sqrt * Math.sqrt(v - e.knee);
+    }
+    v = Math.max(v, e.out[0]);
+    const hi = e.out[1];
+    const capped = v > hi;
+    if (capped) v = hi < e.cap ? hi + (e.cap - hi) * (1 - Math.exp(-(v - hi) / (e.cap - hi))) : hi;
+    return { value: v, raised, capped };
+  }
+  const pvpFmt = (v, pct) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: 1 }) + (pct ? "%" : "");
+
   // ── Star chart (Magic Find) ──────────────────────────────────────────────
   let scTimer = null;
   function scheduleStarChart() { if (scTimer) clearTimeout(scTimer); scTimer = setTimeout(fetchStarChartMf, 350); }
@@ -235,6 +277,7 @@
       elTabs.appendChild(h("button", { class: "calc-tab" + (activeTab === tab.key ? " active" : ""), onClick: () => { activeTab = tab.key; save(); renderTabs(); renderBody(); } },
         h("i", { class: "fa-solid " + tab.icon, "aria-hidden": "true", style: { color: tab.color } }), " " + t(tab.label)));
     });
+    if (activeTab === "pvp") return;   // mastery sync feeds nothing on this tab
     elTabs.appendChild(h("button", {
       class: "calc-sync-btn", disabled: syncing, onClick: syncRecords,
       title: t("Set the mastery fields to the current highest Trove & Geode Mastery in the game"),
@@ -315,6 +358,7 @@
     if (activeTab === "mastery") return renderMastery();
     if (activeTab === "mf") return renderMf();
     if (activeTab === "light") return renderLight();
+    if (activeTab === "pvp") return renderPvp();
   }
 
   // Called on every input event: persist and refresh the derived text only. The
@@ -469,6 +513,68 @@
     elBody.appendChild(grid);
   }
 
+  function renderPvp() {
+    const modes = PVP_MODES.filter(([key]) => pvpModes[key]);
+    const [modeKey, modeLabel] = modes.find(([key]) => key === pvpMode) || modes[0] || [];
+    if (!modeKey) return;
+    const pills = h("div", { class: "calc-pvp-modes", role: "group", "aria-label": t("Game mode") },
+      modes.map(([key, label]) => h("button", {
+        class: "calc-pvp-mode" + (key === modeKey ? " active" : ""), "aria-pressed": String(key === modeKey),
+        onClick: () => { pvpMode = key; save(); renderBody(); },
+      }, t(label))));
+    elBody.appendChild(h("div", { class: "calc-header calc-pvp-header" },
+      h("div", { class: "calc-total-box" },
+        h("span", { class: "calc-total-label" }, t("Your stats in")),
+        h("span", { class: "calc-total-value" }, t(modeLabel))),
+      pills));
+    elBody.appendChild(h("p", { class: "calc-pvp-intro" },
+      t("Type in your stats from the character sheet. Past a certain point every stat grows more slowly in PvP, so better gear still wins, just by a smaller margin.")));
+
+    const grid = h("div", { class: "calc-grid" });
+    PVP_SHEET.forEach((row) => grid.appendChild(pvpItem(row, pvpModes[modeKey][row[0]])));
+    elBody.appendChild(grid);
+  }
+
+  // A stat the mode has no range for passes through untouched, as in the game.
+  function pvpItem([stat, label, pct], e) {
+    const name = t(label);
+    const input = h("input", { class: "calc-number calc-pvp-input", type: "number", min: 0, step: "any", value: pvpInputs[stat], "aria-label": name + " - " + t("Your stat") });
+    const out = h("span", { class: "calc-pvp-out" });
+    const note = h("p", { class: "calc-pvp-note" });
+    const fill = h("span", { class: "calc-pvp-fill" });
+    const meter = e && e.out[1] > e.out[0]
+      ? h("div", { class: "calc-pvp-meter", "aria-hidden": "true" }, fill,
+        e.curve && e.knee > e.out[0] ? h("span", { class: "calc-pvp-knee", style: { left: (e.knee / e.out[1]) * 100 + "%" } }) : null)
+      : null;
+    const paint = () => {
+      const sheet = Number(pvpInputs[stat]) || 0;
+      if (!e) {
+        out.textContent = pvpFmt(sheet, pct);
+        note.textContent = t("Unchanged in this mode");
+        return;
+      }
+      const r = pvpValue(e, sheet / e.scale);
+      out.textContent = pvpFmt(r.value * e.scale, pct);
+      if (meter) fill.style.width = clampN((r.value / e.out[1]) * 100, 0, 100) + "%";
+      const at = (v) => pvpFmt(v * e.scale, pct);
+      if (e.out[0] === e.out[1]) note.textContent = t("Fixed for everyone");
+      else if (r.raised) note.textContent = t("Raised to the minimum of") + " " + at(e.knee);
+      else if (r.capped && e.cap <= e.out[1]) note.textContent = t("Capped at") + " " + at(e.out[1]);
+      else if (r.capped) note.textContent = t("Near the cap of") + " " + at(e.cap);
+      else if (e.curve && sheet / e.scale > e.knee) note.textContent = t("Grows more slowly past") + " " + at(e.knee);
+      else note.textContent = t("Carries over as is");
+    };
+    input.addEventListener("input", (ev) => { pvpInputs[stat] = Number(ev.target.value) || 0; paint(); save(); });
+    paint();
+    return h("div", { class: "calc-item calc-pvp-item" },
+      h("div", { class: "calc-item-header" }, h("span", {}, name)),
+      h("div", { class: "calc-pvp-row" },
+        h("label", { class: "calc-pvp-field" }, h("span", {}, t("Your stat")), input),
+        h("i", { class: "fa-solid fa-arrow-right calc-pvp-arrow", "aria-hidden": "true" }),
+        h("div", { class: "calc-pvp-field calc-pvp-result", "aria-live": "polite" }, h("span", {}, t("In PvP")), out)),
+      meter, note);
+  }
+
   // ── Data loading ─────────────────────────────────────────────────────────
   async function fetchJson(url) {
     const r = await fetch(url, { headers: { Accept: "application/json" } });
@@ -497,11 +603,13 @@
     geodeMastery = defGeode;
 
     try {
-      const [pr, mf, light] = await Promise.all([
+      const [pr, mf, light, pvp] = await Promise.all([
         fetchJson("/static/assets/data/stats/power_rank.json"),
         fetchJson("/static/assets/data/stats/magic_find.json"),
         fetchJson("/static/assets/data/stats/light.json"),
+        fetchJson("/static/assets/data/stats/pvp.json"),
       ]);
+      pvpModes = pvp.modes || {};
       prData = [
         { name: "Trove Mastery", type: "pr_mastery", max: Math.max(1100, defTrove), default: defTrove },
         { name: "Geode Mastery", type: "pr_geode_mastery", max: Math.max(150, defGeode), default: defGeode },
@@ -530,11 +638,17 @@
       if (typeof saved.starChartCode === "string") starChartCode = saved.starChartCode;
       if (typeof saved.lilypad === "boolean") lilypad = saved.lilypad;
       restore(prData, saved.pr); restore(mfData, saved.mf); restore(lightData, saved.light);
+      if (typeof saved.pvpMode === "string") pvpMode = saved.pvpMode;
+      if (saved.pvpInputs && typeof saved.pvpInputs === "object") pvpInputs = { ...PVP_DEFAULTS, ...saved.pvpInputs };
     }
+    // A shared link like /calculators#pvp opens straight on that tab.
+    const hashTab = location.hash.slice(1);
+    if (TABS.some((tab) => tab.key === hashTab)) activeTab = hashTab;
 
     renderTabs();
     renderBody();
     if (starChartCode) fetchStarChartMf();
+    document.addEventListener("btt-lang-changed", () => { renderTabs(); renderBody(); });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
