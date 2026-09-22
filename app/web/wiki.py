@@ -9,10 +9,13 @@ files the ``/classes`` page already renders from.
 URL map:
   /                      home
   /classes, /class/<n>   generated class pages + their editable write-ups
+  /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /<slug>                an article
   /-/...                 tools: edit, history, search, recent, pages, suggestions
 """
+import json
 import logging
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote
 
@@ -29,6 +32,7 @@ from app.site import classes_page
 from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
 from app.web import feature_flags as web_flags
+from app.wiki import data_pages
 
 logger = logging.getLogger("kiwi.web.wiki")
 
@@ -38,7 +42,7 @@ WIKI_HOST = WIKI.split("://", 1)[-1].split("/", 1)[0].lower()
 
 def _context(request: Request) -> dict:
     return {"wiki_url": WIKI, "site_url": settings.app_url.rstrip("/"),
-            "path": request.url.path}
+            "path": request.url.path, "generated": " ".join(["classes", *data_pages.DATA_PAGES])}
 
 
 _TEMPLATES = Jinja2Templates(
@@ -109,6 +113,21 @@ def _class_cards() -> list[dict]:
             for c in _classes()]
 
 
+@lru_cache(maxsize=1)
+def _delve_modifiers() -> dict:
+    """scripts/decode_delve_modifiers.py output."""
+    path = Path(trove_stats.__file__).parent / "gamedata" / "delve_modifiers.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _data_cards() -> list[dict]:
+    """Search entries for the data pages; a modifier's name finds its page."""
+    names = " ".join(n for m in _delve_modifiers()["modifiers"]
+                     for n in {m["name"], m["game_name"], *m["seen"]})
+    return [{"name": data_pages.DATA_PAGES["delve-modifiers"], "url": "/delve-modifiers",
+             "kind": "Game data", "terms": names}]
+
+
 async def _page(slug: str) -> dict | None:
     return await internal_get("/site/wiki/page", {"slug": slug}, timeout=3.0)
 
@@ -128,7 +147,7 @@ async def robots() -> Response:
 
 @app.get("/sitemap.xml", dependencies=[Depends(_gate)])
 async def sitemap() -> Response:
-    urls = [WIKI + "/", WIKI + "/classes"] + [WIKI + c["url"] for c in _class_cards()]
+    urls = [WIKI + "/", WIKI + "/classes"] + [WIKI + c["url"] for c in _class_cards() + _data_cards()]
     data = await internal_get("/site/wiki/pages", timeout=5.0) or {}
     urls += [f"{WIKI}/{quote(p['slug'])}" for p in data.get("items", [])
              if "/" not in p["slug"]]
@@ -147,7 +166,8 @@ async def health() -> dict:
 
 @app.get("/", response_class=HTMLResponse, dependencies=[Depends(_gate)])
 async def home(request: Request) -> HTMLResponse:
-    return _render(request, "wiki/home.html", {"title": "Kiwi Wiki", "classes": _class_cards()})
+    return _render(request, "wiki/home.html", {"title": "Kiwi Wiki", "classes": _class_cards(),
+                                               "data_pages": _data_cards()})
 
 
 @app.get("/classes", response_class=HTMLResponse, dependencies=[Depends(_gate)])
@@ -178,6 +198,25 @@ async def class_page(request: Request, name: str) -> Response:
     })
 
 
+@app.get("/delve-modifiers", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def delve_modifiers(request: Request) -> HTMLResponse:
+    slug = "data/delve-modifiers"
+    page = await _page(slug)
+    live = page if page and not page.get("deleted") else None
+    data = _delve_modifiers()
+    groups = {c: [m for m in data["modifiers"] if m["category"] == c] for c in ("creature", "lair", "path")}
+    return _render(request, "wiki/delve_modifiers.html", {
+        "title": data_pages.DATA_PAGES["delve-modifiers"],
+        "slug": slug,
+        "groups": groups,
+        "data": data,
+        "page": live,
+        "rev": page["rev"] if page else 0,
+        "description": "Every Trove delve modifier: what creature, lair and path modifiers do, "
+                       "with numbers read from the game files.",
+    })
+
+
 @app.get("/-/{tool}", response_class=HTMLResponse, dependencies=[Depends(_gate)])
 async def tool(request: Request, tool: str) -> HTMLResponse:
     titles = {"search": "Search", "recent": "Recent changes", "pages": "All pages",
@@ -188,7 +227,8 @@ async def tool(request: Request, tool: str) -> HTMLResponse:
         return _render(request, "wiki/edit.html", {"title": titles[tool], "slug": "", "fixed_title": None})
     return _render(request, "wiki/tool.html", {
         "title": titles[tool], "tool": tool,
-        "classes": [{"name": c["name"], "url": c["url"]} for c in _class_cards()] if tool == "search" else None,
+        "classes": [{"name": c["name"], "url": c["url"]} for c in _class_cards()] + _data_cards()
+        if tool == "search" else None,
     })
 
 
@@ -203,6 +243,11 @@ def _fixed_title(slug: str) -> str | None:
         if c is None:
             raise HTTPException(status_code=404)
         return c["name"]
+    if slug.startswith("data/"):
+        title = data_pages.title_for(slug)
+        if title is None:
+            raise HTTPException(status_code=404)
+        return title
     return None
 
 
@@ -211,7 +256,7 @@ def page_url(slug: str) -> str:
     if slug.startswith("class/"):
         c = trove_stats.class_by_tech_name(slug[6:])
         return f"/class/{_class_slug(c)}" if c else "/classes"
-    return "/" + slug
+    return "/" + slug.removeprefix("data/")
 
 
 @app.get("/-/edit/{slug:path}", response_class=HTMLResponse, dependencies=[Depends(_gate)])

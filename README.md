@@ -75,8 +75,9 @@ Browsing is public; developing and publishing mods is a Discord-login action.
 (`app/web/wiki.py`, routed by hostname). Anyone can read it. Accounts the master marks as wiki
 editors (dev portal → Dashboard users) write pages; every other signed-in player can suggest an
 edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages
-are generated from the game files, with an editable guide under the data. The data plane is
-`/site/wiki/*` in `app/wiki/`.
+and the Delve Modifiers page are generated from the game files, with an editable write-up under the
+data (rebuild the modifiers with `scripts/decode_delve_modifiers.py` after a patch). The data plane
+is `/site/wiki/*` in `app/wiki/`.
 
 Its 3D model and particle-effect viewers are also **embeddable**: another site can iframe
 `trove.aallyn.net/embed/viewer` to preview a mod it hosts, a mod on the hub, a dressed character, or

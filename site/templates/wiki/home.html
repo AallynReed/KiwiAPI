@@ -15,6 +15,13 @@
     {% include "wiki/_class_grid.html" %}
 </section>
 
+<section class="wk-section" aria-labelledby="wk-home-data">
+    <div class="wk-section-head"><h2 id="wk-home-data">Game data</h2></div>
+    <ul class="wk-list wk-list-cols">
+        {% for d in data_pages %}<li><a href="{{ d.url }}">{{ d.name }}</a></li>{% endfor %}
+    </ul>
+</section>
+
 <div class="wk-home-cols">
     <section class="wk-section" aria-labelledby="wk-home-recent">
         <div class="wk-section-head">

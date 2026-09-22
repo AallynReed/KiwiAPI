@@ -20,9 +20,10 @@
       .replace(/^-+|-+$/g, "").slice(0, 100).replace(/-+$/, "");
   }
 
-  // Where a stored slug is read. class/<tech> pages live at /class/<name>.
+  // Where a stored slug is read. class/<tech> pages live at /class/<name>, data/<name> at /<name>.
   function pageHref(slug, title) {
-    return slug.startsWith("class/") ? "/class/" + slugify(title) : "/" + slug;
+    if (slug.startsWith("class/")) return "/class/" + slugify(title);
+    return "/" + slug.replace(/^data\//, "");
   }
 
   function hasSession() {
@@ -97,8 +98,10 @@
   let _known = null;
   function knownPages() {
     if (!_known) {
+      // Generated routes (/classes, data pages) exist whether or not a write-up does.
+      const generated = (document.body.dataset.generated || "").split(" ").filter(Boolean);
       _known = api("/site/wiki/pages")
-        .then((d) => new Set((d.items || []).map((p) => p.slug)))
+        .then((d) => new Set([...generated, ...(d.items || []).map((p) => p.slug)]))
         .catch(() => null);
     }
     return _known;
@@ -307,12 +310,13 @@
     if (!term) { el.innerHTML = `<p class="wk-list-empty">Type something in the search box above.</p>`; return; }
     try {
       const d = await api("/site/wiki/search?q=" + encodeURIComponent(term));
-      const classes = (readJSON("wk-classes") || []).filter((c) => c.name.toLowerCase().includes(term.toLowerCase()));
+      const needle = term.toLowerCase();
+      const classes = (readJSON("wk-classes") || []).filter((c) => `${c.name} ${c.terms || ""}`.toLowerCase().includes(needle));
       const seen = new Set();
       let html = "";
       classes.forEach((c) => {
         seen.add(c.url);
-        html += `<li class="wk-row"><a class="wk-row-title" href="${esc(c.url)}">${esc(c.name)}</a><span class="wk-row-meta">Class</span></li>`;
+        html += `<li class="wk-row"><a class="wk-row-title" href="${esc(c.url)}">${esc(c.name)}</a><span class="wk-row-meta">${esc(c.kind || "Class")}</span></li>`;
       });
       d.items.forEach((p) => {
         const href = pageHref(p.slug, p.title);

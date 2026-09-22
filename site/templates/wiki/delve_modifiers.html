@@ -1,0 +1,87 @@
+{% extends "wiki/_base.html" %}
+{% block view %}data{% endblock %}
+{% block main %}
+{% set sections = [
+    ("creature", "Creature modifiers", "Rolled onto a floor's creatures, and sometimes its boss."),
+    ("lair", "Lair modifiers", "Change the boss fight. Vulnerable and Hardened change incoming damage by the amount shown; the game files don't say whether that's the boss's damage or yours."),
+    ("path", "Path modifiers", "Change the cave you fight through on the way to the boss."),
+] %}
+<article class="wk-article wk-data">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/delve-modifiers</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ title }}</h1>
+    <p class="wk-lead">Every delve floor rolls modifiers onto its creatures, its boss lair and the path between them. Names and numbers come straight from the game files. Where a modifier has no effect listed, nobody has decoded it yet. If you know what it does, add it to the notes at the bottom.</p>
+
+    <nav class="wk-chips" aria-label="On this page">
+        {% for key, heading, _ in sections %}<a class="wk-chip" href="#{{ key }}">{{ heading }} <span class="wk-mod-count">{{ groups[key] | length }}</span></a>{% endfor %}
+        <a class="wk-chip" href="#tiers">Tier effects</a>
+        <a class="wk-chip" href="#notes">Notes</a>
+    </nav>
+
+    {% for key, heading, intro in sections %}
+    <section class="wk-section" id="{{ key }}" aria-labelledby="wk-h-{{ key }}">
+        <h2 class="wk-writeup-title" id="wk-h-{{ key }}">{{ heading }}</h2>
+        <p class="wk-hint">{{ intro }}</p>
+        <ul class="wk-mods">
+            {% for m in groups[key] %}
+            <li class="wk-mod" id="{{ m.key | lower }}">
+                <h3 class="wk-mod-name">{{ m.name }}</h3>
+                {% if m.seen | length > 1 %}<p class="wk-mod-alias">Ranks: {{ m.seen | join(", ") }}</p>{% endif %}
+                {% if m.game_name != m.name %}<p class="wk-mod-alias">Called “{{ m.game_name }}” in the game files</p>{% endif %}
+                {% if m.summary %}<p class="wk-mod-summary">{{ m.summary }}</p>
+                {% else %}<p class="wk-mod-unknown">Effect not decoded yet.</p>{% endif %}
+                {% for e in m.effects %}
+                <div class="wk-mod-fx">
+                    <p class="wk-mod-who">{{ e.who }}</p>
+                    <ul>{% for line in e.lines %}<li>{{ line }}</li>{% endfor %}</ul>
+                </div>
+                {% endfor %}
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endfor %}
+
+    <section class="wk-section" id="tiers" aria-labelledby="wk-h-tiers">
+        <h2 class="wk-writeup-title" id="wk-h-tiers">Tier effects on players</h2>
+        <p class="wk-hint">The game files also carry these player effects. They have no names there, and the server decides which depths use which.</p>
+        <div class="wk-tier-cols">
+            <table class="wk-tiers">
+                <caption>Damage taken, by tier</caption>
+                <thead><tr><th scope="col">Tier</th><th scope="col">Damage taken</th></tr></thead>
+                <tbody>
+                {% for t in data.tier_damage %}<tr><th scope="row">{{ t.tier }}</th><td>×{{ t.damage_taken }}</td></tr>{% endfor %}
+                </tbody>
+            </table>
+            <ul class="wk-mods wk-mods-narrow">
+                {% for e in data.tier_effects %}
+                <li class="wk-mod">
+                    <h3 class="wk-mod-name">{{ e.name }}</h3>
+                    {% if e.lines %}<ul class="wk-mod-lines">{% for line in e.lines %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+                </li>
+                {% endfor %}
+                <li class="wk-mod">
+                    <h3 class="wk-mod-name">{{ data.pressure.name }}</h3>
+                    <p class="wk-mod-summary">{% for line in data.pressure.description.split("\n") %}{{ line }}{% if not loop.last %} {% endif %}{% endfor %}</p>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="wk-writeup" id="notes" aria-labelledby="wk-writeup-title">
+        <h2 class="wk-writeup-title" id="wk-writeup-title">Notes</h2>
+        {% if page and page.body %}
+        <div class="wk-prose" id="wk-body" data-src-id="wk-src"></div>
+        <script type="application/json" id="wk-src">{{ page.body | tojson }}</script>
+        <p class="wk-meta">Last edited {% if page.updated_by %}by <span>{{ page.updated_by }}</span> {% endif %}<time datetime="{{ page.updated_at }}" data-rel>{{ page.updated_at[:10] }}</time></p>
+        {% else %}
+        <div class="wk-empty">
+            <p>No notes yet: which modifiers to watch out for, how to deal with them, and what the undecoded ones do.</p>
+            <p><a class="wk-btn wk-btn-primary" href="/-/edit/{{ slug }}" data-edit-cta>Write the first notes</a></p>
+        </div>
+        {% endif %}
+    </section>
+</article>
+{% endblock %}
