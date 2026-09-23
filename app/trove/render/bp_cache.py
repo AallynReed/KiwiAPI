@@ -61,7 +61,7 @@ ASSEMBLY_VERSION = "a20"     # a20: head-area scale comes from the prefab's decl
 
 # Bump when ``app.trove.swf.extract`` changes what a manifest holds or how a
 # bitmap is decoded. Namespaces the SWF keys only.
-SWF_VERSION = "s1"
+SWF_VERSION = "s2"
 
 # Bump when the decompiled-script payload changes shape - or when the FFDec build
 # in the image is upgraded and its output is worth rebuilding. Namespaces the

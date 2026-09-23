@@ -477,13 +477,12 @@ def _sprite_child_refs(body: bytes) -> list[int]:
         elif code == 26 and nested[0] & 0x02:          # PlaceFlagHasCharacter
             refs.append(struct.unpack("<H", nested[3:5])[0])
         elif code == 70 and nested[0] & 0x02:
-            # PlaceObject3 slots two extra flag bytes plus an optional class name
-            # before the character id.
-            off = 3
-            if nested[1] & 0x08:                        # HasClassName
+            # PlaceObject3: two flag bytes, the depth, then a class name when
+            # HasClassName is set, or HasImage together with HasCharacter.
+            off = 4
+            if nested[1] & 0x08 or nested[1] & 0x10:
                 end = nested.find(b"\x00", off)
                 off = len(nested) if end < 0 else end + 1
-            off += 2                                    # Depth
             if off + 2 <= len(nested):
                 refs.append(struct.unpack("<H", nested[off : off + 2])[0])
     return refs
