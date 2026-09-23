@@ -40,6 +40,7 @@ tables, recipes) is one bare object.
 from __future__ import annotations
 
 import struct
+import sys
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -217,13 +218,12 @@ class _Reader:
         # declare several properties under one index); refusing any other repeat is
         # what rejects a nested object swallowing its parent's END, since the parent
         # would then have to write an earlier field a second time.
-        def step(state, acc):
+        def step(state, chain):
             pos, used, last = state
-            acc = acc or {}
             try:
                 idx, wt, q = self.key(pos)
                 if wt == END:
-                    yield "done", q, acc, 0
+                    yield "done", q, _section(chain), 0
                     return
                 if idx > MAX_FIELD or (idx in used and idx != last):
                     return
@@ -231,10 +231,7 @@ class _Reader:
             except WireError:
                 return
             for end, (v, c) in alts.items():
-                if idx in acc:
-                    prev = acc[idx]
-                    v = Repeated([*prev, v]) if isinstance(prev, Repeated) else Repeated([prev, v])
-                yield "next", (end, used | {idx}, idx), {**acc, idx: v}, c
+                yield "next", (end, used | {idx}, idx), (chain, idx, v), c
 
         return self._memoised("section", p, lambda p: self._search((p, frozenset(), -1), step))
 
@@ -258,9 +255,8 @@ class _Reader:
             # The state carries how many values were written, so two readings that
             # reach the same byte with different element counts stay apart until the
             # header count can judge them.
-            def step(state, items):
+            def step(state, chain):
                 pos, written = state
-                items = items or {}
                 try:
                     k, r = self.zz(pos, 70)
                     op, slot = k & 7, k >> 3
@@ -270,11 +266,12 @@ class _Reader:
                         # strays from it has usually folded one element into its
                         # neighbour as an extra section - same bytes, same section
                         # total - so it pays for every value it is off by.
+                        items = _slots(chain)
                         values = [None if v is _EMPTY else v for _, v in sorted(items.items())]
                         yield "done", r, values, COUNT_PENALTY * abs(count - written)
                         return
                     if op == 0:
-                        yield "next", (r, written), {slot: _EMPTY, **items}, 0
+                        yield "next", (r, written), (chain, slot, _EMPTY), 0
                         return
                     if op != 2 or written >= count + 1:
                         return
@@ -282,7 +279,7 @@ class _Reader:
                 except WireError:
                     return
                 for end, (v, c) in alts.items():
-                    yield "next", (end, written + 1), {**items, slot: v}, c
+                    yield "next", (end, written + 1), (chain, slot, v), c
 
             return self._search((q, 0), step)
 
@@ -294,8 +291,7 @@ class _Reader:
             if vwt != OBJ:
                 raise WireError("map header")
 
-            def step(pos, items):
-                items = items or {}
+            def step(pos, chain):
                 try:
                     if kind == MAP:
                         k, r = self.zz(pos, 70)
@@ -308,10 +304,10 @@ class _Reader:
                             n, r = self.uvar(r)
                             mk, r = self.take(r, n).decode("utf-8", "replace"), r + n
                     if op == 4:
-                        yield "done", r, dict(items), 0
+                        yield "done", r, {k: (None if v is _EMPTY else v) for k, v in _slots(chain).items()}, 0
                         return
                     if op in (0, 3):
-                        yield "next", r, {mk: None, **items}, 0
+                        yield "next", r, (chain, mk, _EMPTY), 0
                         return
                     if op not in (1, 2):
                         return
@@ -319,11 +315,43 @@ class _Reader:
                 except WireError:
                     return
                 for end, (v, c) in alts.items():
-                    yield "next", end, {**items, mk: v}, c
+                    yield "next", end, (chain, mk, v), c
 
             return self._search(q, step)
 
         return self._memoised(f"map{kind}", p, build)
+
+
+# Readings accumulate as linked chains ``(parent, key, value)`` and become dicts only
+# when complete: copying a dict per step made a 5,000-entry array cost gigabytes.
+def _unchain(chain) -> list[tuple[Any, Any]]:
+    out = []
+    while chain is not None:
+        chain, key, value = chain
+        out.append((key, value))
+    out.reverse()
+    return out
+
+
+def _section(chain) -> dict:
+    out: dict = {}
+    for idx, v in _unchain(chain):
+        if idx in out:
+            prev = out[idx]
+            v = Repeated([*prev, v]) if isinstance(prev, Repeated) else Repeated([prev, v])
+        out[idx] = v
+    return out
+
+
+def _slots(chain) -> dict:
+    """Array/map slots in write order; a created-empty slot never overwrites a value."""
+    out: dict = {}
+    for key, v in _unchain(chain):
+        if v is _EMPTY:
+            out.setdefault(key, v)
+        else:
+            out[key] = v
+    return out
 
 
 def read_object(data: bytes, start: int = 0, end: int | None = None) -> Obj:
@@ -359,9 +387,20 @@ def _entity(data: bytes) -> Prefab | None:
     return Prefab("entity", tid, comps)
 
 
+# The search follows misaligned readings a long way down before they fail, so a
+# few prefabs (claim/goldenthread) need more Python frames than the default 1,000
+# even though the real data nests under 20 deep.
+RECURSION_LIMIT = 20_000
+
+
 def parse(data: bytes) -> Prefab:
     """A whole prefab file. Raises WireError when no reading fits."""
-    return _entity(data) or Prefab("object", root=read_object(data))
+    if sys.getrecursionlimit() < RECURSION_LIMIT:
+        sys.setrecursionlimit(RECURSION_LIMIT)
+    try:
+        return _entity(data) or Prefab("object", root=read_object(data))
+    except RecursionError as exc:
+        raise WireError("nesting too deep") from exc
 
 
 def walk(value: Any):
