@@ -1,0 +1,50 @@
+{% extends "wiki/_base.html" %}
+{% from "partials/ability_card.html" import ability_card %}
+{% block view %}{{ kind }}{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/classes.min.css">{% endblock %}
+{% block main %}
+<nav class="wk-crumbs" aria-label="Breadcrumb"><a href="/{{ index.plural }}">{{ index.title }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ title }}</span></nav>
+
+<article class="wk-article wk-class">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/{{ kind }}/{{ path.rsplit('/', 1)[-1] }}</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+
+    {# Generated from the game files. #}
+    <section class="cls-detail wk-classdata" aria-label="{{ title }} game data">
+        <div class="cls-detail-head">
+            <div class="cls-detail-title">
+                <h2 class="cls-detail-name">{{ d.name }}</h2>
+                {% if d.description %}<p class="cls-ability-desc wk-entity-desc">{{ d.description }}</p>{% endif %}
+            </div>
+        </div>
+        {% for g in d.stat_groups %}
+        <section class="cls-section">
+            <h3 class="cls-section-title"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>{{ g.label }}</span></h3>
+            <div class="cls-chips">{% for s in g.stats %}<span class="cls-chip">{{ s }}</span>{% endfor %}</div>
+        </section>
+        {% endfor %}
+        {% if d.abilities %}
+        <section class="cls-section">
+            <h3 class="cls-section-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>Abilities</span></h3>
+            <div class="cls-abilities">{% for a in d.abilities %}{{ ability_card(a) }}{% endfor %}</div>
+        </section>
+        {% endif %}
+    </section>
+
+    <section class="wk-writeup" aria-labelledby="wk-writeup-title">
+        <h2 class="wk-writeup-title" id="wk-writeup-title">Notes</h2>
+        {% if page and page.body %}
+        <div class="wk-prose" id="wk-body" data-src-id="wk-src"></div>
+        <script type="application/json" id="wk-src">{{ page.body | tojson }}</script>
+        <p class="wk-meta">Last edited {% if page.updated_by %}by <span>{{ page.updated_by }}</span> {% endif %}<time datetime="{{ page.updated_at }}" data-rel>{{ page.updated_at[:10] }}</time></p>
+        {% else %}
+        <div class="wk-empty">
+            <p>No one has written about {{ title }} yet: where to get it, how it plays, what it pairs with.</p>
+            <p><a class="wk-btn wk-btn-primary" href="/-/edit/{{ slug }}" data-edit-cta>Write the first notes</a></p>
+        </div>
+        {% endif %}
+    </section>
+</article>
+{% endblock %}

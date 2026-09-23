@@ -52,6 +52,7 @@ body.wk { --nav-h: 63px; }
 .wk-toplinks > a:hover { color: var(--text); background: var(--bg-card); }
 .wk-toplinks > a[aria-current="page"] { color: var(--accent-blue); }
 .wk-back i { font-size: .72rem; margin-left: 3px; }
+.wk-toplinks .nav-account { flex-shrink: 0; white-space: nowrap; }
 .wk-count {
   display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 2px;
   border-radius: 999px; background: var(--accent-blue); color: #06080d;
@@ -388,10 +389,13 @@ body.wk { --nav-h: 63px; }
 .wk-foot-legal { font-size: .8rem; }
 
 /* ── Small screens ───────────────────────────────────────────────────── */
-@media (max-width: 900px) {
+/* Six links plus the account pill no longer fit beside the search box. */
+@media (max-width: 1080px) {
   .wk-top-inner { flex-wrap: wrap; gap: 10px 14px; }
   .wk-search { order: 3; flex-basis: 100%; max-width: none; }
   .wk-toplinks { overflow-x: auto; }
+}
+@media (max-width: 900px) {
   .wk-home-cols { grid-template-columns: minmax(0, 1fr); }
   .wk-article-body:has(.wk-toc:not([hidden])) { grid-template-columns: minmax(0, 1fr); }
   .wk-toc { display: none; }
@@ -406,3 +410,41 @@ body.wk { --nav-h: 63px; }
   .wk-hero-title { font-size: 2.1rem; }
   .wk-row-actions, .wk-row-link { margin-left: 0; }
 }
+
+/* ── Ally / mount lists ──────────────────────────────────────────────── */
+.wk-filterbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 0 0 20px; }
+.wk-filter {
+  display: flex; align-items: center; gap: 8px; flex: 1 1 280px; max-width: 420px;
+  padding: 9px 14px; border-radius: 999px; background: var(--bg-card); border: 1px solid var(--bg-line);
+  color: var(--text-mute);
+}
+.wk-filter:focus-within { border-color: var(--accent-blue); }
+.wk-filter input { flex: 1; min-width: 0; background: none; border: 0; color: var(--text); font: inherit; outline: none; }
+.wk-toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--text-mute); font-size: .92rem; cursor: pointer; }
+.wk-toggle input { accent-color: var(--accent-blue); width: 16px; height: 16px; }
+.wk-filter-count { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .8rem; color: var(--text-mute); }
+.wk-entitylist li { display: flex; align-items: baseline; gap: 6px; }
+.wk-entitylist li[hidden] { display: none; }
+.wk-entity-badge { color: var(--accent-blue); font-size: .72rem; }
+
+/* ── Ability cards (partials/ability_card.html) ──────────────────────── */
+.ab-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+.ab-meta-item {
+  display: inline-flex; gap: 6px; align-items: baseline; padding: 3px 9px; border-radius: 999px;
+  background: var(--bg-card); border: 1px solid var(--bg-line); font-size: .78rem;
+}
+.ab-meta dt { color: var(--text-mute); }
+.ab-meta dd { margin: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--text); }
+.ab-heal .cls-stage-val { color: var(--accent-green); }
+.ab-effects { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px solid var(--bg-line); display: grid; gap: 8px; }
+.ab-effect-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: .86rem; }
+.ab-effect-name { color: var(--text-mute); min-width: 0; overflow-wrap: anywhere; }
+.ab-effect-dur { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .8rem; color: var(--text); white-space: nowrap; }
+.ab-effect-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ab-effect-desc { margin-top: 4px; font-size: .82rem; color: var(--text-mute); line-height: 1.5; }
+.ab-vfx { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--bg-line); font-size: .8rem; }
+.ab-vfx-label { color: var(--text-mute); }
+.ab-vfx-link { color: var(--accent-blue); text-decoration: none; }
+.ab-vfx-link:hover, .ab-vfx-link:focus-visible { text-decoration: underline; }
+.ab-vfx-link i { font-size: .68rem; }
+.wk-entity-desc { white-space: pre-line; max-width: 68ch; margin: 6px 0 0; }

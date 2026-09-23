@@ -9,6 +9,8 @@ files (``app/site/classes_page.py`` builds the detail model).
 URL map:
   /                      home
   /classes, /class/<n>   generated class pages + their editable write-ups
+  /allies, /ally/<n>     generated ally pages (stats + abilities) + write-ups
+  /mounts, /mount/<n>    generated mount pages (stats by slot + abilities) + write-ups
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
@@ -34,7 +36,7 @@ from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
 from app.trove.decode import store as gamedata
 from app.web import feature_flags as web_flags
-from app.wiki import data_pages, pvp_stats
+from app.wiki import data_pages, entities, pvp_stats
 
 logger = logging.getLogger("kiwi.web.wiki")
 
@@ -44,7 +46,8 @@ WIKI_HOST = WIKI.split("://", 1)[-1].split("/", 1)[0].lower()
 
 def _context(request: Request) -> dict:
     return {"wiki_url": WIKI, "site_url": settings.app_url.rstrip("/"),
-            "path": request.url.path, "generated": " ".join(["classes", *data_pages.DATA_PAGES])}
+            "path": request.url.path,
+            "generated": " ".join(["classes", *entities.KINDS, *data_pages.DATA_PAGES])}
 
 
 _TEMPLATES = Jinja2Templates(
@@ -136,6 +139,13 @@ def _data_cards() -> list[dict]:
                       + " ".join(name for _, name, _ in pvp_stats.SHEET)}]
 
 
+def _entity_cards() -> list[dict]:
+    """Search entries for every ally and mount page."""
+    return [{"name": e["name"], "url": f"/{kind}/{entities.url_slug(e['slug'])}",
+             "kind": kind.capitalize()}
+            for kind in entities.KINDS for e in entities.entries(kind)]
+
+
 async def _page(slug: str) -> dict | None:
     return await internal_get("/site/wiki/page", {"slug": slug}, timeout=3.0)
 
@@ -155,7 +165,8 @@ async def robots() -> Response:
 
 @app.get("/sitemap.xml", dependencies=[Depends(_gate)])
 async def sitemap() -> Response:
-    urls = [WIKI + "/", WIKI + "/classes"] + [WIKI + c["url"] for c in _class_cards() + _data_cards()]
+    urls = [WIKI + "/", WIKI + "/classes", WIKI + "/allies", WIKI + "/mounts"]
+    urls += [WIKI + c["url"] for c in _class_cards() + _data_cards() + _entity_cards()]
     data = await internal_get("/site/wiki/pages", timeout=5.0) or {}
     urls += [f"{WIKI}/{quote(p['slug'])}" for p in data.get("items", [])
              if "/" not in p["slug"]]
@@ -204,6 +215,56 @@ async def class_page(request: Request, name: str) -> Response:
         "description": _excerpt(live["body"]) if live and live.get("body")
         else f"{c['name']} in Trove: base stats, level scaling, subclass and abilities.",
     })
+
+
+def _entity_index(request: Request, kind: str) -> HTMLResponse:
+    spec = entities.KINDS[kind]
+    rows = sorted((entities.summary(kind, e) for e in entities.entries(kind)), key=lambda r: r["name"].lower())
+    return _render(request, "wiki/entity_index.html", {
+        "title": spec["title"], "kind": kind, "rows": rows,
+        "with_abilities": sum(1 for r in rows if r["abilities"]),
+        "description": f"Every Trove {kind} with the stats it grants and what its abilities do, "
+                       "read from the game files.",
+    })
+
+
+async def _entity_page(request: Request, kind: str, name: str) -> Response:
+    e = entities.find(kind, name)
+    if e is None:
+        raise HTTPException(status_code=404)
+    canonical = entities.url_slug(e["slug"])
+    if name != canonical:
+        return RedirectResponse(f"/{kind}/{canonical}", status_code=301)
+    slug = entities.storage_slug(kind, e)
+    page = await _page(slug)
+    live = page if page and not page.get("deleted") else None
+    d = entities.detail(kind, e)
+    return _render(request, "wiki/entity.html", {
+        "title": e["name"], "kind": kind, "index": entities.KINDS[kind], "slug": slug, "d": d,
+        "page": live, "rev": page["rev"] if page else 0,
+        "description": _excerpt(live["body"]) if live and live.get("body")
+        else (d["description"] or f"{e['name']} in Trove: stats and abilities."),
+    })
+
+
+@app.get("/allies", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def allies(request: Request) -> HTMLResponse:
+    return _entity_index(request, "ally")
+
+
+@app.get("/ally/{name}", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def ally_page(request: Request, name: str) -> Response:
+    return await _entity_page(request, "ally", name)
+
+
+@app.get("/mounts", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def mounts(request: Request) -> HTMLResponse:
+    return _entity_index(request, "mount")
+
+
+@app.get("/mount/{name}", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def mount_page(request: Request, name: str) -> Response:
+    return await _entity_page(request, "mount", name)
 
 
 @app.get("/delve-modifiers", response_class=HTMLResponse, dependencies=[Depends(_gate)])
@@ -286,7 +347,7 @@ async def tool(request: Request, tool: str) -> HTMLResponse:
     return _render(request, "wiki/tool.html", {
         "title": titles[tool], "tool": tool,
         "classes": [{"name": c["name"], "url": c["url"]} for c in _class_cards()] + _data_cards()
-        if tool == "search" else None,
+        + _entity_cards() if tool == "search" else None,
     })
 
 
@@ -306,6 +367,12 @@ def _fixed_title(slug: str) -> str | None:
         if title is None:
             raise HTTPException(status_code=404)
         return title
+    kind, _, name = slug.partition("/")
+    if kind in entities.KINDS:
+        e = entities.find(kind, name)
+        if e is None:
+            raise HTTPException(status_code=404)
+        return e["name"]
     return None
 
 
@@ -314,6 +381,9 @@ def page_url(slug: str) -> str:
     if slug.startswith("class/"):
         c = trove_stats.class_by_tech_name(slug[6:])
         return f"/class/{_class_slug(c)}" if c else "/classes"
+    kind, _, name = slug.partition("/")
+    if kind in entities.KINDS:
+        return f"/{kind}/{entities.url_slug(name)}"
     return "/" + slug.removeprefix("data/")
 
 

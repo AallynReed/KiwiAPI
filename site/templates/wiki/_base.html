@@ -47,6 +47,8 @@
             </form>
             <nav class="wk-toplinks" aria-label="Wiki">
                 <a href="/classes"{{ ' aria-current="page"' | safe if path == '/classes' or path.startswith('/class/') else '' }}>Classes</a>
+                <a href="/allies"{{ ' aria-current="page"' | safe if path == '/allies' or path.startswith('/ally/') else '' }}>Allies</a>
+                <a href="/mounts"{{ ' aria-current="page"' | safe if path == '/mounts' or path.startswith('/mount/') else '' }}>Mounts</a>
                 <a href="/-/recent"{{ ' aria-current="page"' | safe if path == '/-/recent' else '' }}>Recent changes</a>
                 <a href="/-/suggestions" id="wk-sugg-link" hidden>Suggestions <span class="wk-count" id="wk-sugg-count" hidden></span></a>
                 <a class="wk-back" href="{{ site_url }}">Better Trove Tools <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>

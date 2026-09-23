@@ -1,5 +1,6 @@
 """Render model for a class's detail (``partials/class_detail.html``), used by
 the wiki's class pages."""
+from app.wiki.ability_view import card
 
 
 def _fmt_stat(s: dict) -> str:
@@ -127,8 +128,7 @@ def _detail(c: dict) -> dict:
         }
 
     rows = [{
-        "name": a.get("name") or "",
-        "description": a.get("description") or "",
+        **card(a),
         "type": a.get("type") or "",
         "inactive": a.get("active") is False,
         "stages": _fmt_stages(a.get("stages") or []),

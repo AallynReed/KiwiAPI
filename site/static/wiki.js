@@ -20,9 +20,12 @@
       .replace(/^-+|-+$/g, "").slice(0, 100).replace(/-+$/, "");
   }
 
-  // Where a stored slug is read. class/<tech> pages live at /class/<name>, data/<name> at /<name>.
+  // Where a stored slug is read. class/<tech> pages live at /class/<name>, data/<name> at /<name>,
+  // ally/<prefab> and mount/<prefab> at /ally/<prefab-with-dashes>.
   function pageHref(slug, title) {
     if (slug.startsWith("class/")) return "/class/" + slugify(title);
+    const entity = slug.match(/^(ally|mount)\/(.+)$/);
+    if (entity) return "/" + entity[1] + "/" + entity[2].replace(/_/g, "-");
     return "/" + slug.replace(/^data\//, "");
   }
 
@@ -347,11 +350,15 @@
     const el = toolBody();
     try {
       const d = await api("/site/wiki/pages");
-      const articles = d.items.filter((p) => !p.slug.startsWith("class/"));
-      const guides = d.items.filter((p) => p.slug.startsWith("class/"));
+      const ns = (p, kind) => p.slug.startsWith(kind + "/");
+      const articles = d.items.filter((p) => !["class", "ally", "mount"].some((k) => ns(p, k)));
+      const guides = d.items.filter((p) => ns(p, "class"));
+      const allies = d.items.filter((p) => ns(p, "ally"));
+      const mounts = d.items.filter((p) => ns(p, "mount"));
       const block = (title, items) => items.length ? `<h2 class="wk-subhead">${title}</h2><ul class="wk-list wk-list-cols">${items.map((p) =>
         `<li><a href="${esc(pageHref(p.slug, p.title))}">${esc(p.title)}</a></li>`).join("")}</ul>` : "";
-      el.innerHTML = (block("Articles", articles) + block("Class guides", guides))
+      el.innerHTML = (block("Articles", articles) + block("Class guides", guides)
+        + block("Ally notes", allies) + block("Mount notes", mounts))
         || `<p class="wk-list-empty">No pages yet. <a href="/-/new">Start the first one</a>.</p>`;
     } catch (err) { fail(el, err); }
   }

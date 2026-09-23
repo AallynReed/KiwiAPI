@@ -1,0 +1,31 @@
+{# One ability card, from app/wiki/ability_view.card(). Shared by the wiki's class,
+   ally and mount pages. #}
+{% macro ability_card(a) %}
+<div class="cls-ability">
+    {% if a.name %}<div class="cls-ability-name">{{ a.name }}{% if a.kind %}<span class="cls-ability-kind">{{ a.kind }}</span>{% endif %}</div>{% endif %}
+    {% if a.meta %}<dl class="ab-meta">{% for m in a.meta %}<div class="ab-meta-item"><dt>{{ m.label }}</dt><dd>{{ m.value }}</dd></div>{% endfor %}</dl>{% endif %}
+    {% if a.description %}<div class="cls-ability-desc">{{ a.description }}</div>{% endif %}
+    {% if a.damage %}
+    <ul class="cls-stages" aria-label="Damage">
+        {% for s in a.damage %}<li><span class="cls-stage-name">{{ s.name }}</span><span class="cls-stage-val">{{ s.value }}{% for n in s.notes %}<span class="cls-stage-base">{{ n }}</span>{% endfor %}</span></li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if a.healing %}
+    <ul class="cls-stages ab-heal" aria-label="Healing">
+        {% for h in a.healing %}<li><span class="cls-stage-name">{{ h.name }}</span><span class="cls-stage-val">Restores {{ h.value }}</span></li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if a.effects %}
+    <ul class="ab-effects" aria-label="Effects">
+        {% for e in a.effects %}<li class="ab-effect">
+            <div class="ab-effect-head"><span class="ab-effect-name">{{ e.name }}</span>{% if e.duration %}<span class="ab-effect-dur">{{ e.duration }}</span>{% endif %}</div>
+            {% if e.stats %}<div class="ab-effect-stats">{% for s in e.stats %}<span class="cls-chip">{{ s }}</span>{% endfor %}</div>{% endif %}
+            {% if e.description %}<div class="ab-effect-desc">{{ e.description }}</div>{% endif %}
+        </li>{% endfor %}
+    </ul>
+    {% endif %}
+    {% if a.vfx %}
+    <div class="ab-vfx"><span class="ab-vfx-label">Preview effects</span>{% for v in a.vfx %}<a class="ab-vfx-link" href="{{ v.url }}" target="_blank" rel="noopener">{{ v.label }} <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>{% endfor %}</div>
+    {% endif %}
+</div>
+{% endmacro %}

@@ -9,8 +9,9 @@ Every write is optimistic: the client sends the revision it started from
 silently overwrite each other - the second one gets a 409 and re-bases.
 
 Slugs are either plain (``beginner-guide``) or namespaced to game data
-(``class/<tech_name>``, ``data/<name>``). A namespaced page's title is fixed and
-can't be edited; its body is the write-up shown under the generated data.
+(``class/<tech_name>``, ``data/<name>``, ``ally/<prefab>``, ``mount/<prefab>``). A
+namespaced page's title is fixed and can't be edited; its body is the write-up
+shown under the generated data.
 """
 from __future__ import annotations
 
@@ -27,7 +28,7 @@ from app.core.ratelimit import check_rate_limit
 from app.core.utils import iso, to_oid, utcnow
 from app.site_auth.models import SiteUser
 from app.trove import stats as trove_stats
-from app.wiki import data_pages
+from app.wiki import data_pages, entities
 from app.wiki.models import RevisionAction, WikiPage, WikiRevision, WikiSuggestion
 
 SLUG_MAX = 100
@@ -38,7 +39,8 @@ NOTE_MAX = 500
 MAX_PENDING_PER_AUTHOR = 10
 
 # Plain slugs the wiki host routes itself.
-RESERVED = frozenset({"classes", "class", "data", "static", "health", *data_pages.DATA_PAGES})
+RESERVED = frozenset({"classes", "class", "data", "static", "health", *data_pages.DATA_PAGES,
+                      *entities.KINDS, *(k["plural"] for k in entities.KINDS.values())})
 _PLAIN = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,98}[a-z0-9])?$")
 
 
@@ -67,6 +69,12 @@ def normalize_slug(raw: str) -> str:
         if data_pages.title_for(slug) is None:
             raise _bad("There's no such data page.")
         return slug
+    kind, _, name = slug.partition("/")
+    if kind in entities.KINDS:
+        entry = entities.find(kind, name)
+        if entry is None:
+            raise _bad(f"There's no such {kind}.")
+        return entities.storage_slug(kind, entry)
     if not _PLAIN.match(slug) or slug in RESERVED:
         raise _bad("That page address isn't allowed. Use letters, numbers and dashes.")
     return slug
@@ -77,6 +85,9 @@ def fixed_title(slug: str) -> str | None:
     if slug.startswith("class/"):
         c = class_for(slug[6:])
         return (c or {}).get("name") or None
+    kind, _, name = slug.partition("/")
+    if kind in entities.KINDS:
+        return (entities.find(kind, name) or {}).get("name") or None
     return data_pages.title_for(slug)
 
 
