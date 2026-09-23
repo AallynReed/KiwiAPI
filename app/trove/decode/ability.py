@@ -95,6 +95,24 @@ def identity(pf: Prefab | None) -> dict[str, str]:
             if isinstance(leaf.get(i), str) and leaf[i]}
 
 
+def text_keys(pf: Prefab | None) -> dict[str, str]:
+    """An ability's own name/description locale keys: the identity component, else
+    the effect base of its first effect component (where a combat-event proc keeps
+    them). Neither is derivable from the file name."""
+    ident = identity(pf)
+    if ident or pf is None:
+        return ident
+    for cid, obj in pf.components:
+        if cid not in F.EFFECTS or not obj:
+            continue
+        base = obj[0]
+        out = {k: base[i] for k, i in (("name_key", F.EFFECT_NAME), ("description_key", F.EFFECT_DESCRIPTION))
+               if isinstance(base.get(i), str) and base[i].startswith("$")}
+        if out:
+            return out
+    return {}
+
+
 def action(pf: Prefab | None) -> dict | None:
     """Energy cost and cooldown from the prefab's action component, when it has one."""
     for cid, obj in pf.components if pf else ():
@@ -164,7 +182,7 @@ def healing_records(pf: Prefab) -> list[dict]:
     return out
 
 
-def _is_modifier(v: Any) -> bool:
+def is_modifier(v: Any) -> bool:
     return (isinstance(v, dict) and isinstance(v.get(F.MOD_LABEL), str) and isinstance(v.get(F.MOD_FLAGS), int)
             and isinstance(v.get(F.MOD_STAT, 0), int) and isinstance(v.get(F.MOD_OP, 0), int)
             and isinstance(v.get(F.MOD_VALUE), (int, float)) and not isinstance(v.get(F.MOD_VALUE), bool))
@@ -178,7 +196,7 @@ def modifiers(values: Iterable[Any]) -> list[dict]:
     """Stat modifier records, in the units the site's other stat rows use."""
     out = []
     for v in values:
-        if not _is_modifier(v):
+        if not is_modifier(v):
             continue
         ordinal, op = v.get(F.MOD_STAT, 0), v.get(F.MOD_OP, 0)
         if not 0 <= op < len(F.MOD_OPS):

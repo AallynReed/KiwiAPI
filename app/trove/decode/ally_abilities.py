@@ -1,21 +1,24 @@
 """ally_abilities.json - allies with the stats and abilities they grant.
 
 Allies are the `prefabs/collections/pet/*.binfab` that carry combat stats - about
-half the pet prefabs; the rest are cosmetic pets with nothing to grant. The stat
-records and the ability refs come out of app/trove/codexes/bonuses.py, which was
-written for exactly these collection prefabs.
+half the pet prefabs; the rest are cosmetic pets with nothing to grant. Everything
+is read structurally: the stat modifier records (component 65), the identity
+component's name and description keys, and every `abilities/...` prefab the pet
+names.
 
-Names and descriptions come from the prefab's own `$prefabs_collections_pet_…`
-keys. Each ability is then read structurally (``ability.describe``): the proc's
-cooldown, what it heals or deals, and each effect's duration and stat changes.
+An ability's text comes from its own prefab (``ability.text_keys``), not from a key
+built out of its path: that guess missed the text on about 185 allies, and the old
+byte scan missed a handful of allies outright. Each ability is then read by
+``ability.describe``: the proc's cooldown, what it heals or deals, and each
+effect's duration and stat changes.
 """
 from __future__ import annotations
 
-from app.trove.codexes.binfab import decode_identity
-from app.trove.codexes.bonuses import extract_abilities
-from app.trove.decode.ability import Prefabs, describe
+from app.trove.codexes.bonuses import _is_hidden
+from app.trove.decode.ability import Prefabs, component_values, describe, identity, refs, text_keys
 from app.trove.decode.common import locale, stat_rows, stem
 from app.trove.decode.tree import GameTree
+from app.trove.decode.wire import WireError, parse
 
 TITLE = "Ally abilities"
 OUTPUT = "ally_abilities.json"
@@ -61,21 +64,24 @@ def build(tree: GameTree) -> list[dict]:
     for path in tree.files("prefabs/collections/pet/", ".binfab"):
         if path.count("/") != 3:
             continue
-        data = tree.read(path) or b""
-        stats = stat_rows(data)
+        # Parsed here rather than through `prefabs`: 2,400 pets would sit in its cache.
+        try:
+            pf = parse(tree.read(path) or b"")
+        except WireError:
+            continue
+        stats = stat_rows(component_values(pf))
         if not stats:
             continue                       # a cosmetic pet, not an ally
         slug = stem(path)
-        identity = decode_identity(data) or {}
-        name = names.get(identity.get("name_key") or "", "")
-        description = names.get(identity.get("desc_key") or "", "")
+        ident = identity(pf)
+        name = names.get(ident.get("name_key", ""), "")
+        description = names.get(ident.get("description_key", ""), "")
 
         powers = []
-        for ability in extract_abilities(data):
-            if ability.get("hidden"):
+        for ref in refs(pf):
+            if _is_hidden(ref) or prefabs.get(ref) is None:
                 continue
-            text = abilities_text.get(ability.get("key") or "", "")
-            ref = ability.get("ref", "")
+            text = abilities_text.get(text_keys(prefabs.get(ref)).get("description_key", ""), "")
             if text and not any(p["ref"] == ref and p["text"] == text for p in powers):
                 powers.append({"ref": ref, "text": text, **_detail(prefabs, ref, abilities_text)})
 

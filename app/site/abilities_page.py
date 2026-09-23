@@ -235,7 +235,7 @@ def _star_chart_cards() -> tuple[list[dict], list[str]]:
 def _ally_cards() -> tuple[list[dict], list[str]]:
     """Allies that do something beyond granting stats.
 
-    1,200 of the 2,412 pet prefabs carry stats, but only 127 also carry an
+    1,200 of the 2,412 pet prefabs carry stats, but only 289 also carry an
     ability - and this is a page about abilities, so the flat-stat-only allies are
     left in ally_abilities.json rather than rendered. Filtering is by the stats an
     ally grants, which is what you would be shopping for.

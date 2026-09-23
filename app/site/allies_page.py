@@ -1,7 +1,7 @@
 """Server-side render model for /allies.
 
 The full ally table: all 1,200 pet prefabs that grant combat stats, decoded by
-app/trove/decode/ally_abilities.py. /abilities lists only the 127 that also carry
+app/trove/decode/ally_abilities.py. /abilities lists only the 289 that also carry
 an ability, because that page is about abilities; this one is about the stats,
 which is what you are actually shopping for.
 
