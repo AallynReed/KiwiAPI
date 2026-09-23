@@ -88,7 +88,7 @@
     {
         "slug": "cycle_quad_clover",
         "name": "4-Wheeled Clover",
-        "description": "",
+        "description": "Somehow rarer than the 3-Wheeled variety.\n\nCan be purchased on occasion via the store.",
         "prefab": "collections/mount/cycle_quad_clover",
         "stats": [
             {
@@ -499,9 +499,52 @@
         "abilities": []
     },
     {
+        "slug": "ufo_nest",
+        "name": "Airy Aerie",
+        "description": "Transport for the stranded baby bird, and Trovian.",
+        "prefab": "collections/mount/ufo_nest",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "dragon_music",
         "name": "Albairn, Voice of Dawn",
-        "description": "",
+        "description": "With the sunrise comes singing Albairn, and the birds unite in chorus at his passage. \\n\\nHaving this Dragon unlocked grants a permanent +0.6% Critical Hit, +1000 Max Health, +250 Damage and +50 Magic Find.",
         "prefab": "collections/mount/dragon_music",
         "stats": [
             {
@@ -695,6 +738,49 @@
         "abilities": []
     },
     {
+        "slug": "ufo_flying_gym",
+        "name": "All in One Flying Gym",
+        "description": "This gym not only gets you where you need to be, but lets you get a workout in on the way.",
+        "prefab": "collections/mount/ufo_flying_gym",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "dragon_constellations",
         "name": "Almakhestia, Host of Starfire",
         "description": "There is no record of her existence prior to the Sundering, leading many to wonder about her origins.\\n\\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +3 Energy Regeneration, +250 Physical Damage and +50 Magic Find.",
@@ -852,7 +938,7 @@
     {
         "slug": "dragonserpent_vile",
         "name": "Alyxthesius, the Vile Martriarch",
-        "description": "",
+        "description": "\"Coal to diamonds... Water to acid...\"\n\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +1500 Health Regeneration, and +50 Magic Find.",
         "prefab": "collections/mount/dragonserpent_vile",
         "stats": [
             {
@@ -1064,7 +1150,7 @@
     {
         "slug": "dragonwyvern_amitola",
         "name": "Amitola, the Winds Alight",
-        "description": "",
+        "description": "\"The winds arrive from nowhere, and everywhere...\"\n\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +7 Jump, and +50 Magic Find.",
         "prefab": "collections/mount/dragonwyvern_amitola",
         "stats": [
             {
@@ -1273,7 +1359,7 @@
     {
         "slug": "raptor_raven",
         "name": "Ancient Raven",
-        "description": "",
+        "description": "Mutters 'Nevermore' every now and then.",
         "prefab": "collections/mount/raptor_raven",
         "stats": [
             {
@@ -1426,7 +1512,7 @@
     {
         "slug": "dragon_aquarus",
         "name": "Aquarus, the Aquarius Lord",
-        "description": "",
+        "description": "Rising from the depths to devour the land dwellers.\n\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +3% Critical Damage, +3 Jump, and +50 Magic Find.",
         "prefab": "collections/mount/dragon_aquarus",
         "stats": [
             {
@@ -1536,6 +1622,57 @@
         ]
     },
     {
+        "slug": "platypus",
+        "name": "Aquilia the Furred",
+        "description": "Swim wild and free, my mammallian steed!",
+        "prefab": "collections/mount/platypus",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Boat",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 110.0,
+                        "percent": false,
+                        "amount": 110.0
+                    },
+                    {
+                        "stat": "$Stat_TurningRate",
+                        "name": "Turning Rate",
+                        "op": "Set",
+                        "value": 80.0,
+                        "percent": false,
+                        "amount": 80.0
+                    },
+                    {
+                        "stat": "$Stat_Acceleration",
+                        "name": "Acceleration",
+                        "op": "Set",
+                        "value": 16.0,
+                        "percent": false,
+                        "amount": 16.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "dragonbug_arcanium",
         "name": "Arcanium Automantis",
         "description": "Built to crush anything in its path, it enjoys roaming free instead.",
@@ -1603,7 +1740,7 @@
     {
         "slug": "spider_steam",
         "name": "Arcanium Crawler",
-        "description": "",
+        "description": "This rugged all-terrain arachnid can handle the rigors of the road.",
         "prefab": "collections/mount/spider_steam",
         "stats": [
             {
@@ -1625,7 +1762,7 @@
     {
         "slug": "platypus_ratsteam",
         "name": "Arcanium R.A.T",
-        "description": "",
+        "description": "Initially intended for ore retrieval from hazardous areas, Rodontiform Autonomous Transports - or R.A.T.s - quickly became popular as mounts and beasts of burden.",
         "prefab": "collections/mount/platypus_ratsteam",
         "stats": [
             {
@@ -1691,7 +1828,7 @@
     {
         "slug": "dragon_stainedglass",
         "name": "Ariel, The Ashen Reborn",
-        "description": "",
+        "description": "Ariel fought the giants in its previous life, and now it's ready to fight them again.\n\nHaving this Dragon unlocked grants a permanent +5 Jump, +1000 Health, and +50 Magic Find.",
         "prefab": "collections/mount/dragon_stainedglass",
         "stats": [
             {
@@ -1939,7 +2076,7 @@
     {
         "slug": "ufo_moonlightbulb",
         "name": "Ascended Moonlight",
-        "description": "",
+        "description": "Drifts upon unseen lunar currents.",
         "prefab": "collections/mount/ufo_moonlightbulb",
         "stats": [
             {
@@ -2004,7 +2141,7 @@
     {
         "slug": "sugarglider_ashen",
         "name": "Ashen Wanderer",
-        "description": "",
+        "description": "Flits around the Ashen Wastes looking for Unnatural Devices to squirrel away for later.\nFlies freely in the Sundered Uplands",
         "prefab": "collections/mount/sugarglider_ashen",
         "stats": [
             {
@@ -2473,7 +2610,7 @@
     {
         "slug": "griffon_lucky",
         "name": "Avalon, the Happy Accident",
-        "description": "",
+        "description": "Seeing this griffon is said to bring luck to all.\n\nCan be purchased on occasion via the store.",
         "prefab": "collections/mount/griffon_lucky",
         "stats": [
             {
@@ -2538,7 +2675,7 @@
     {
         "slug": "ball_awesome",
         "name": "Awesome Ball",
-        "description": "",
+        "description": "Most people can't handle this much awesome.",
         "prefab": "collections/mount/ball_awesome",
         "stats": [
             {
@@ -2897,7 +3034,7 @@
     {
         "slug": "foxspirit_balefire",
         "name": "Baleful Borker",
-        "description": "",
+        "description": "Who's a Good Ecto? You are, you are!\n\nOriginally obtainable during Shadow's Eve 2020.",
         "prefab": "collections/mount/foxspirit_balefire",
         "stats": [
             {
@@ -3385,7 +3522,7 @@
     {
         "slug": "dragonserpent_bat",
         "name": "Behrne, the Lurking Fiend",
-        "description": "",
+        "description": "Behrne's patience is only eclipsed by his viciousness.\n\nHaving this Dragon unlocked grants a permanent +3 Jump, +5 Stability, +1000 Health, and +50 Magic Find.",
         "prefab": "collections/mount/dragonserpent_bat",
         "stats": [
             {
@@ -3809,7 +3946,7 @@
     {
         "slug": "ball_catvamp",
         "name": "Bitten Kitten",
-        "description": "",
+        "description": "It may be undead, but it is still very lively.",
         "prefab": "collections/mount/ball_catvamp",
         "stats": [
             {
@@ -4275,7 +4412,7 @@
     {
         "slug": "cat_pvp_blue",
         "name": "Blue Battle Tiger",
-        "description": "",
+        "description": "This cat will scratch.",
         "prefab": "collections/mount/cat_pvp_blue",
         "stats": [
             {
@@ -4694,6 +4831,28 @@
         "abilities": []
     },
     {
+        "slug": "recliner_bonethrone",
+        "name": "Bone Throne",
+        "description": "The back is a little stiff, but it is reasonably comfortable nontheless.",
+        "prefab": "collections/mount/recliner_bonethrone",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "cycle_bonecutter",
         "name": "Bonecutter X-2",
         "description": "Well, that's one way to upcycle.",
@@ -4718,7 +4877,7 @@
     {
         "slug": "rhino_viking",
         "name": "Bonewalker: Armoured Axeailant",
-        "description": "",
+        "description": "Don't axe any questions.\n\nRarely found on creatures within the Primordial Pit biome within Delves.",
         "prefab": "collections/mount/rhino_viking",
         "stats": [
             {
@@ -4740,7 +4899,7 @@
     {
         "slug": "centaur_viking",
         "name": "Bonewalker: Beared Bronto",
-        "description": "",
+        "description": "May be prone to self-injury.\n\nRarely found from Ashen Devourers within the Ashen Wastes of the Sundered Uplands.",
         "prefab": "collections/mount/centaur_viking",
         "stats": [
             {
@@ -4762,7 +4921,7 @@
     {
         "slug": "iguana_viking",
         "name": "Bonewalker: Hurkel the Half-Thag",
-        "description": "",
+        "description": "Though diminuitive, Hurkel's thagomizer is regularly on the top of the Leaderboards.\n\nPreferred mount of the Viking Skeletons within Cursed Vale Worlds.",
         "prefab": "collections/mount/iguana_viking",
         "stats": [
             {
@@ -4784,7 +4943,7 @@
     {
         "slug": "archeoceratops_viking",
         "name": "Bonewalker: Raging Raptor",
-        "description": "",
+        "description": "You have ALL of his axes.\n\nRarely found from the Tyrannosaurus Rex, found within the Jurassic Jungle biome in adventure worlds.",
         "prefab": "collections/mount/archeoceratops_viking",
         "stats": [
             {
@@ -4806,7 +4965,7 @@
     {
         "slug": "griffon_viking",
         "name": "Bonewalker: Rapacious Raider",
-        "description": "",
+        "description": "So weighed down with credits they're spilling over and have to walk on all fours.\n\nPurchaseable from Fungi Thingshapers in the Ashen Wastes in the Sundered Uplands, but only after all other 'Bonewalker Dinosaurs' have been unlocked on your account.",
         "prefab": "collections/mount/griffon_viking",
         "stats": [
             {
@@ -4849,7 +5008,7 @@
     {
         "slug": "triceratops_viking",
         "name": "Bonewalker: Sigrid the Bearded",
-        "description": "",
+        "description": "None can withstand the sieges of Sigrid!\n\nRarely found on creatures within the Primordial Pit biome within Delves.",
         "prefab": "collections/mount/triceratops_viking",
         "stats": [
             {
@@ -5096,7 +5255,7 @@
     {
         "slug": "ball_beehive",
         "name": "Bouncing Beehive",
-        "description": "",
+        "description": "The inhabitants of this sweet mount are cool with you hitching a ride, just don't break anything.",
         "prefab": "collections/mount/ball_beehive",
         "stats": [
             {
@@ -5118,7 +5277,7 @@
     {
         "slug": "ball_egg_carrot",
         "name": "Bouncing Bunfest Egg Carr-Egg Edition",
-        "description": "",
+        "description": "Collect all 4 of these colored Bunfest 2022 egg mounts.\n\nInspired by Sablini's submission to the Trovesaurus Bunfest Eggshell Creation Contest.",
         "prefab": "collections/mount/ball_egg_carrot",
         "stats": [
             {
@@ -5140,7 +5299,7 @@
     {
         "slug": "ball_egg_ganda",
         "name": "Bouncing Bunfest Egg Egganda Edition",
-        "description": "",
+        "description": "Collect all 4 of these colored Bunfest 2022 egg mounts.\n\nInspired by DizzyPhysics's submission to the Trovesaurus Bunfest Eggshell Creation Contest.",
         "prefab": "collections/mount/ball_egg_ganda",
         "stats": [
             {
@@ -5162,7 +5321,7 @@
     {
         "slug": "ball_egg_paragon",
         "name": "Bouncing Bunfest Egg Paragegg Edition",
-        "description": "",
+        "description": "Collect all 4 of these colored Bunfest 2022 egg mounts.\n\nInspired by _FutureHero_'s submission to the Trovesaurus Bunfest Eggshell Creation Contest.",
         "prefab": "collections/mount/ball_egg_paragon",
         "stats": [
             {
@@ -5360,7 +5519,7 @@
     {
         "slug": "ball_ladybug",
         "name": "Bouncy Ladybug",
-        "description": "",
+        "description": "Born after the Great Dhev War, it has a more cosmopolitan outlook on life.",
         "prefab": "collections/mount/ball_ladybug",
         "stats": [
             {
@@ -5404,7 +5563,7 @@
     {
         "slug": "ball_goldbug",
         "name": "Bounding Golden Beetle",
-        "description": "",
+        "description": "A domesticated beetle is a friend for life.",
         "prefab": "collections/mount/ball_goldbug",
         "stats": [
             {
@@ -5666,7 +5825,7 @@
     {
         "slug": "dragonserpent_ashen",
         "name": "Budgiz, the Forager",
-        "description": "",
+        "description": "Budgiz spends so much time loafing in what sunlight reaches the Ashen Wastes that more than one Devourer have mistaken them for fauna.\n\nHaving this Dragon unlocked grants a permanent +3 Jump, +5 Stability, +1000 Health, and +50 Magic Find.",
         "prefab": "collections/mount/dragonserpent_ashen",
         "stats": [
             {
@@ -5844,7 +6003,7 @@
     {
         "slug": "recliner_cyberbun",
         "name": "Bunny Chrono Recliner",
-        "description": "",
+        "description": "A futuristic recliner that has travelled through time.",
         "prefab": "collections/mount/recliner_cyberbun",
         "stats": [
             {
@@ -6126,7 +6285,7 @@
     {
         "slug": "dragonserpent_capricorn",
         "name": "Capricorn, Risen from the Depths",
-        "description": "",
+        "description": "Infiltrated the depths of Trove from a shooting star, and is now finally ready to emerge.\n\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +3% Critical Damage, +5 Stability, and +50 Magic Find.",
         "prefab": "collections/mount/dragonserpent_capricorn",
         "stats": [
             {
@@ -6325,7 +6484,7 @@
     {
         "slug": "ball_cupcake",
         "name": "Carom Cupcake",
-        "description": "",
+        "description": "So sweet you'll be bouncing off the walls.",
         "prefab": "collections/mount/ball_cupcake",
         "stats": [
             {
@@ -6638,6 +6797,28 @@
         "abilities": []
     },
     {
+        "slug": "warhorse_golem",
+        "name": "Cataphract Construct",
+        "description": "This autonomous battle charger needs no additional armour, just a valiant soul to ride it into the fray.",
+        "prefab": "collections/mount/warhorse_golem",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "platypus_heckbug",
         "name": "Cave Crawler Critter",
         "description": "It crawls, it skulks, and it creeps across the geodian caves.",
@@ -6691,7 +6872,7 @@
     {
         "slug": "pinata_trove",
         "name": "Celebratory Pinata",
-        "description": "",
+        "description": "Always appears at the most happening parties.",
         "prefab": "collections/mount/pinata_trove",
         "stats": [
             {
@@ -6909,7 +7090,7 @@
     {
         "slug": "dragon_chaos",
         "name": "Charl the Chaos Dragon",
-        "description": "",
+        "description": "Born to sow chaos, and hidden in the shadows for far too long.\\n\\nHaving this Dragon unlocked grants a permanent +1% Critical Hit, +50 Light, and +50 Magic Find.",
         "prefab": "collections/mount/dragon_chaos",
         "stats": [
             {
@@ -7005,6 +7186,49 @@
                 ]
             }
         ]
+    },
+    {
+        "slug": "ufo_helicopter",
+        "name": "Charter Chopper",
+        "description": "It costs and arm and a leg in maintenance and fuel costs, but it's oh so very glamorous and convenient.",
+        "prefab": "collections/mount/ufo_helicopter",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
     },
     {
         "slug": "ball_catskull",
@@ -7328,6 +7552,107 @@
         "abilities": []
     },
     {
+        "slug": "dog_dracorgi_newyear2026",
+        "name": "Cindrakken, the Emberscale",
+        "description": "Blazing like the fires of retribution, Cindrakken leaves embers beneath her feet as she travels.\nHaving this Dragon unlocked grants a permanent +10% Max Health, +5% Attack Speed and +50 Magic Find",
+        "prefab": "collections/mount/dog_dracorgi_newyear2026",
+        "stats": [
+            {
+                "slot": "unlock",
+                "stats": [
+                    {
+                        "stat": "$Stat_MaxHealthBonus",
+                        "name": "Maximum Health Bonus",
+                        "op": "MultiplySum",
+                        "value": 10.0,
+                        "percent": true,
+                        "amount": 0.1,
+                        "modes": [
+                            "PVE"
+                        ]
+                    },
+                    {
+                        "stat": "$Stat_AttackSpeed",
+                        "name": "Attack Speed",
+                        "op": "Add",
+                        "value": 5.0,
+                        "percent": true,
+                        "amount": 5.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    },
+                    {
+                        "stat": "$Stat_MagicFind",
+                        "name": "Magic Find",
+                        "op": "Add",
+                        "value": 50.0,
+                        "percent": false,
+                        "amount": 50.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/dragon/dog_dracorgi_newyear2026_cannon",
+                "name": "Dragon Fire",
+                "stages": [
+                    {
+                        "name": "Dog Dracorgi Newyear2026 Cannon Explosion",
+                        "prefab": "abilities/dragon/dog_dracorgi_newyear2026_cannon_explosion",
+                        "base": 10000,
+                        "multiplier": 0,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 350,
+                        "max_block_hardness": 500,
+                        "max_blocks": 10000,
+                        "min_knockback": 0.65,
+                        "damage_type": 5,
+                        "damage_stat": -1
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "slug": "cycle_quad_red",
         "name": "Cinnabar Squad Quad",
         "description": "Team Cinnabar's Pan-Trovian Rally roster leans more toward the heavy hardware, but has a few slots open for these.",
@@ -7374,7 +7699,7 @@
     {
         "slug": "dragon_sol",
         "name": "Circumsolae, Fringe of the Ever-Pyre",
-        "description": "",
+        "description": "\"The flame that flickers, yet never dies.\"\n\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +25 Stability, and +50 Magic Find.",
         "prefab": "collections/mount/dragon_sol",
         "stats": [
             {
@@ -7981,6 +8306,28 @@
         "abilities": []
     },
     {
+        "slug": "log_corn",
+        "name": "Corn Rollio",
+        "description": "Its buttered surface adds extra challenge to balancing upon it.",
+        "prefab": "collections/mount/log_corn",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "recliner_couch",
         "name": "Couch Conquest",
         "description": "Victory can wait.",
@@ -8186,7 +8533,7 @@
     {
         "slug": "board_crimson",
         "name": "Crimson Kingsblade",
-        "description": "",
+        "description": "Ride the legendary crimson blade straight from the kingdom’s banner.",
         "prefab": "collections/mount/board_crimson",
         "stats": [
             {
@@ -8229,7 +8576,7 @@
     {
         "slug": "raptor_cranewhite",
         "name": "Crimson-Crested Crane",
-        "description": "",
+        "description": "Immune to the passage of time, these noble birds have witnessed the rise and fall of entire civilizations.",
         "prefab": "collections/mount/raptor_cranewhite",
         "stats": [
             {
@@ -8967,7 +9314,7 @@
     {
         "slug": "cycle_cygnus",
         "name": "Cygnus-01 Speedcycle",
-        "description": "",
+        "description": "Sleek and stylish, inspired by the first among the Celestial Paragons.",
         "prefab": "collections/mount/cycle_cygnus",
         "stats": [
             {
@@ -9075,6 +9422,49 @@
                         "value": 90.0,
                         "percent": false,
                         "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "warhorse_pegasus_radiant",
+        "name": "Dawn Destrier",
+        "description": "A perfect steed for those seeking a deep connection with the cosmos.",
+        "prefab": "collections/mount/warhorse_pegasus_radiant",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
                     }
                 ]
             }
@@ -9394,7 +9784,7 @@
     {
         "slug": "dragon_irradiantduck",
         "name": "Doc Duckster",
-        "description": "",
+        "description": "May have gone a little quackers while the lands were being lifted, and can be heard mumbling something about Watt, Doc, and the Uplands.\nFlies freely in the Sundered Uplands",
         "prefab": "collections/mount/dragon_irradiantduck",
         "stats": [
             {
@@ -9480,7 +9870,7 @@
     {
         "slug": "cat_domogato",
         "name": "Domo Gato",
-        "description": "",
+        "description": "This robotic retainer to the Daimeownt bears the blades that win his battles.",
         "prefab": "collections/mount/cat_domogato",
         "stats": [
             {
@@ -9524,7 +9914,7 @@
     {
         "slug": "dragon_choko",
         "name": "Dracocolatl, the Mellower",
-        "description": "",
+        "description": "Dracocolatl's descent from the Sky Realm to end the Seasons of Salt is a cornerstone of Candorian history. \\n\\nHaving this Dragon unlocked grants a permanent +5% Health Regeneration, +1000 Max Health and +50 Magic Find.",
         "prefab": "collections/mount/dragon_choko",
         "stats": [
             {
@@ -9941,7 +10331,7 @@
     {
         "slug": "horse_shadow",
         "name": "Dream Brony",
-        "description": "",
+        "description": "Sometimes called nightmares, these steeds fear no darkness.",
         "prefab": "collections/mount/horse_shadow",
         "stats": [
             {
@@ -10050,7 +10440,7 @@
     {
         "slug": "dragon_bamboo",
         "name": "Duraveln, the Hollow Spirit",
-        "description": "",
+        "description": "Natural armor harder than steel, Duraveln rides brave against onslaught eternal.\n\nHaving this Dragon unlocked grants a permanent +15% Max Health, +500 Magic Damage and +50 Magic Find.",
         "prefab": "collections/mount/dragon_bamboo",
         "stats": [
             {
@@ -10322,6 +10712,28 @@
         "abilities": []
     },
     {
+        "slug": "ball_eggster_ribbon",
+        "name": "Eggster Bouncer",
+        "description": "It prefers Tag over Hide-and-Seek.",
+        "prefab": "collections/mount/ball_eggster_ribbon",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "ball_elderboot",
         "name": "Elder Boot",
         "description": "One of these days this boot is gonna hop all over you.",
@@ -10431,6 +10843,28 @@
         "abilities": []
     },
     {
+        "slug": "spider_hellbug_blue",
+        "name": "Electric Skitterling",
+        "description": "Ready to shock you into your senses.\n\nCan be purchased on occasion via the store, or acquired by completing the Heckbugs in Love 2020 event.",
+        "prefab": "collections/mount/spider_hellbug_blue",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "iguana_electrogecko",
         "name": "Electro Gecko",
         "description": "Has a shockingly good resume.",
@@ -10455,7 +10889,7 @@
     {
         "slug": "bulldozer_pumpkin",
         "name": "Ella's Eco Carriage",
-        "description": "",
+        "description": "Eco friendly and veggie based transport for any occasion!",
         "prefab": "collections/mount/bulldozer_pumpkin",
         "stats": [
             {
@@ -10919,7 +11353,7 @@
     {
         "slug": "horse_stag_undead",
         "name": "Ethereal Explorer",
-        "description": "",
+        "description": "From beyond the grave.",
         "prefab": "collections/mount/horse_stag_undead",
         "stats": [
             {
@@ -11213,7 +11647,7 @@
     {
         "slug": "griffon_peregrine",
         "name": "Falminar, Assuager of Burdens",
-        "description": "",
+        "description": "Weeping skies and pealing thunder follow her, washing away the suffering of mortals. Concept by KawaiiCaretaker.",
         "prefab": "collections/mount/griffon_peregrine",
         "stats": [
             {
@@ -11256,7 +11690,7 @@
     {
         "slug": "carpet_fancy",
         "name": "Fancy Carpet",
-        "description": "",
+        "description": "Hover high above the common folk.",
         "prefab": "collections/mount/carpet_fancy",
         "stats": [
             {
@@ -11451,7 +11885,7 @@
     {
         "slug": "tortoise_pheasant",
         "name": "Feathered Harvest",
-        "description": "",
+        "description": "A true basket case of bounty.",
         "prefab": "collections/mount/tortoise_pheasant",
         "stats": [
             {
@@ -11493,6 +11927,49 @@
                         "value": 16.0,
                         "percent": false,
                         "amount": 16.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "rocket_sleigh_green",
+        "name": "Festive Fae Sleigh",
+        "description": "This magical sleigh is loaded for bear with wondrous gifts and presents.",
+        "prefab": "collections/mount/rocket_sleigh_green",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
                     }
                 ]
             }
@@ -11952,7 +12429,7 @@
     {
         "slug": "carpet_beachparty",
         "name": "Floaty the Party Gator",
-        "description": "",
+        "description": "Inflatable, unstoppable, and always ready to crash your party.",
         "prefab": "collections/mount/carpet_beachparty",
         "stats": [
             {
@@ -12103,6 +12580,28 @@
                         "value": 100.0,
                         "percent": false,
                         "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "log_flux",
+        "name": "Flux Roller",
+        "description": "Definitely way more flux than your average megaflux tank.",
+        "prefab": "collections/mount/log_flux",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
                     }
                 ]
             }
@@ -12444,9 +12943,31 @@
         ]
     },
     {
+        "slug": "carpet_sweater",
+        "name": "Friendsgiving Sweaters",
+        "description": "Sweaters are perfect for every holiday!",
+        "prefab": "collections/mount/carpet_sweater",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "bulldozer_frogbus",
         "name": "FROBBOT",
-        "description": "",
+        "description": "Mechanized wonder-vehicle.",
         "prefab": "collections/mount/bulldozer_frogbus",
         "stats": [
             {
@@ -12727,7 +13248,7 @@
     {
         "slug": "warhorse_unicorn_blue",
         "name": "Frovious, the Snowsteed",
-        "description": "",
+        "description": "Its time to let it go and ride into the snow in style.\n\nEarned from completing the Snowfest 2018 Golden Thread.",
         "prefab": "collections/mount/warhorse_unicorn_blue",
         "stats": [
             {
@@ -13546,7 +14067,7 @@
     {
         "slug": "cat_pandafae",
         "name": "Giant Fae Panda",
-        "description": "",
+        "description": "Highly magical and mischievous, only the Fae can domesticate them reliably.",
         "prefab": "collections/mount/cat_pandafae",
         "stats": [
             {
@@ -13612,7 +14133,7 @@
     {
         "slug": "cat_pandared",
         "name": "Giant Red Panda",
-        "description": "",
+        "description": "Much more active and agile than its monochromatic cousins.",
         "prefab": "collections/mount/cat_pandared",
         "stats": [
             {
@@ -13787,7 +14308,7 @@
     {
         "slug": "platypus_glorious",
         "name": "Glorious Gator",
-        "description": "",
+        "description": "Nobody expects a threat in the still waters.",
         "prefab": "collections/mount/platypus_glorious",
         "stats": [
             {
@@ -13988,6 +14509,28 @@
         "abilities": []
     },
     {
+        "slug": "spider_hellbug_gold",
+        "name": "Golden Skitterling",
+        "description": "A rare and beautiful specimen.\n\nCan be purchased on occasion via the store.",
+        "prefab": "collections/mount/spider_hellbug_gold",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "cycle_quad_mastery",
         "name": "Golden Squad Quad",
         "description": "Ride in style in this blinged out buggy.",
@@ -14164,7 +14707,7 @@
     {
         "slug": "cycle_gravedigger",
         "name": "Gravedigger Torque",
-        "description": "",
+        "description": "Why go around obstacles when you can plow through them? Leaves a clear path…and unclear remains.",
         "prefab": "collections/mount/cycle_gravedigger",
         "stats": [
             {
@@ -14208,7 +14751,7 @@
     {
         "slug": "dog_pvp_grey",
         "name": "Grey War Wolf",
-        "description": "",
+        "description": "Ferocious and ready to fight.",
         "prefab": "collections/mount/dog_pvp_grey",
         "stats": [
             {
@@ -14678,7 +15221,7 @@
     {
         "slug": "dragonbug_hellbug",
         "name": "Heckbug Drone",
-        "description": "",
+        "description": "Watch out they now have wings.",
         "prefab": "collections/mount/dragonbug_hellbug",
         "stats": [
             {
@@ -14721,7 +15264,7 @@
     {
         "slug": "mechquad_hellbug",
         "name": "Heckbug Monarch",
-        "description": "",
+        "description": "This Monarch got so heckin' big it had two legs fall off.\n\nCan be purchased on occasion via the store, or rarely found when Heckbugs fall in love.",
         "prefab": "collections/mount/mechquad_hellbug",
         "stats": [
             {
@@ -14786,7 +15329,7 @@
     {
         "slug": "bulldozer_heckbug",
         "name": "Heckroller Buggy",
-        "description": "",
+        "description": "The bane of both beast and bug!",
         "prefab": "collections/mount/bulldozer_heckbug",
         "stats": [
             {
@@ -15026,7 +15569,7 @@
     {
         "slug": "cycle_harvestyellow",
         "name": "Horticultural Harvester",
-        "description": "",
+        "description": "The Horticultural Harvester lets you gather in a flash!\n\nHarvests all eligible plants within a small radius.",
         "prefab": "collections/mount/cycle_harvestyellow",
         "stats": [
             {
@@ -15313,7 +15856,7 @@
     {
         "slug": "mechquad_cauldron",
         "name": "Huntsman Holder",
-        "description": "",
+        "description": "Continue the hunt in wild style, following the trail through every fork and prong.",
         "prefab": "collections/mount/mechquad_cauldron",
         "stats": [
             {
@@ -15357,7 +15900,7 @@
     {
         "slug": "warhorse_bonedeer",
         "name": "Huyldirjr, Singer for the Silent",
-        "description": "",
+        "description": "Before the Sundering, he alone bore the honor and burden of escorting the greatest souls before the Sun Goddess.",
         "prefab": "collections/mount/warhorse_bonedeer",
         "stats": [
             {
@@ -15573,7 +16116,7 @@
     {
         "slug": "tortoise_icegiant",
         "name": "Icebreaker Tortoise",
-        "description": "",
+        "description": "A steed worthy of royalty.",
         "prefab": "collections/mount/tortoise_icegiant",
         "stats": [
             {
@@ -15624,7 +16167,7 @@
     {
         "slug": "raptor_geocavered",
         "name": "Igneleon Inferno",
-        "description": "",
+        "description": "Happy to find safety in the Geode after escaping the Shadow invasion.",
         "prefab": "collections/mount/raptor_geocavered",
         "stats": [
             {
@@ -15719,7 +16262,7 @@
     {
         "slug": "cat_skeleton",
         "name": "Immortal Meownt",
-        "description": "",
+        "description": "Rather lively, for a bag of bones.",
         "prefab": "collections/mount/cat_skeleton",
         "stats": [
             {
@@ -15741,7 +16284,7 @@
     {
         "slug": "rocket_radiantfish",
         "name": "Incompetent Irradiant Sentry",
-        "description": "",
+        "description": "Much better at flying around than actually guarding anything.\nFlies freely in the Sundered Uplands",
         "prefab": "collections/mount/rocket_radiantfish",
         "stats": [
             {
@@ -16204,7 +16747,7 @@
     {
         "slug": "dragon_qubeflyred",
         "name": "Irascible Jeliphin",
-        "description": "",
+        "description": "Flutters through the air with bubbly glee.",
         "prefab": "collections/mount/dragon_qubeflyred",
         "stats": [
             {
@@ -16371,7 +16914,7 @@
     {
         "slug": "platypus_ratchaos",
         "name": "Irrational Rodent",
-        "description": "",
+        "description": "If allowed to grow large enough, these creatures can end up with an infinite number of digits.",
         "prefab": "collections/mount/platypus_ratchaos",
         "stats": [
             {
@@ -17030,7 +17573,7 @@
     {
         "slug": "dragon_garden",
         "name": "Kahramet, Warden of the Fields",
-        "description": "",
+        "description": "The twin of Petallura - Kahramet brings fertile fields and gentle rains to those who tend the soil of Trove. \n\nHaving this Dragon unlocked grants a permanent +8 Max Energy, +5 Jump, +1000 Max Health, and +50 Magic Find.",
         "prefab": "collections/mount/dragon_garden",
         "stats": [
             {
@@ -17186,7 +17729,7 @@
     {
         "slug": "raptor_birdkamiyg",
         "name": "Kami of Calm Conviction",
-        "description": "",
+        "description": "Seek your truth, wherever the search may lead you.",
         "prefab": "collections/mount/raptor_birdkamiyg",
         "stats": [
             {
@@ -17382,7 +17925,7 @@
     {
         "slug": "pwny_peacock",
         "name": "Kami of Graceful Grandeur",
-        "description": "",
+        "description": "Embodiment of elegance and enlightment.",
         "prefab": "collections/mount/pwny_peacock",
         "stats": [
             {
@@ -17631,7 +18174,7 @@
     {
         "slug": "dragon_fishkamibp",
         "name": "Kami of Tumultuous Torrents",
-        "description": "",
+        "description": "Turn your inner turmoil into the strength to keep moving forward.",
         "prefab": "collections/mount/dragon_fishkamibp",
         "stats": [
             {
@@ -17782,7 +18325,7 @@
     {
         "slug": "cat_fox_fire",
         "name": "Kazuki, the Dancing Flame",
-        "description": "",
+        "description": "This fire-friendly fox spirit is a fond patron of moonlit summer festivals.",
         "prefab": "collections/mount/cat_fox_fire",
         "stats": [
             {
@@ -17867,7 +18410,7 @@
     {
         "slug": "warhorse_firekami",
         "name": "Kindled Kirin",
-        "description": "",
+        "description": "Keeps you warm, whole winter long.",
         "prefab": "collections/mount/warhorse_firekami",
         "stats": [
             {
@@ -18016,6 +18559,132 @@
             }
         ],
         "abilities": []
+    },
+    {
+        "slug": "dragon_bomberroyale",
+        "name": "Kyrothon, the War Head",
+        "description": "Despite his awesome firepower, the moniker actually refers to his keen mind for battlefield strategy.\\n\\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +7% Max Health, +5% Attack Speed, and +50 Magic Find.",
+        "prefab": "collections/mount/dragon_bomberroyale",
+        "stats": [
+            {
+                "slot": "unlock",
+                "stats": [
+                    {
+                        "stat": "$Stat_MaxHealth",
+                        "name": "Maximum Health",
+                        "op": "Add",
+                        "value": 1000.0,
+                        "percent": false,
+                        "amount": 1000.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    },
+                    {
+                        "stat": "$Stat_MaxHealthBonus",
+                        "name": "Maximum Health Bonus",
+                        "op": "MultiplySum",
+                        "value": 7.0,
+                        "percent": true,
+                        "amount": 0.07,
+                        "modes": [
+                            "PVE"
+                        ]
+                    },
+                    {
+                        "stat": "$Stat_AttackSpeed",
+                        "name": "Attack Speed",
+                        "op": "Add",
+                        "value": 5.0,
+                        "percent": true,
+                        "amount": 5.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    },
+                    {
+                        "stat": "$Stat_MagicFind",
+                        "name": "Magic Find",
+                        "op": "Add",
+                        "value": 50.0,
+                        "percent": false,
+                        "amount": 50.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/dragon/bomberroyale_cannon",
+                "name": "Dragon Fire",
+                "stages": [
+                    {
+                        "name": "Bomberroyale Cannon Explosion",
+                        "prefab": "abilities/dragon/bomberroyale_cannon_explosion",
+                        "base": 10000,
+                        "multiplier": 0,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 350,
+                        "max_block_hardness": 500,
+                        "max_blocks": 10000,
+                        "min_knockback": 0.65,
+                        "damage_type": 5,
+                        "damage_stat": -1
+                    }
+                ],
+                "vfx": [
+                    {
+                        "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                        "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                    },
+                    {
+                        "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                        "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                    },
+                    {
+                        "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                        "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                    }
+                ]
+            }
+        ]
     },
     {
         "slug": "board_speed",
@@ -18300,7 +18969,7 @@
     {
         "slug": "ufo_spooky",
         "name": "Last Taxi",
-        "description": "",
+        "description": "Grim's favorite ride.\n\nOriginally obtainable during Shadow's Eve 2020.",
         "prefab": "collections/mount/ufo_spooky",
         "stats": [
             {
@@ -18387,7 +19056,7 @@
     {
         "slug": "dragonbug_ladybug",
         "name": "Lifelike Ladybot",
-        "description": "",
+        "description": "This lifelike bug bot was used as a decoy during the D'hev wars.",
         "prefab": "collections/mount/dragonbug_ladybug",
         "stats": [
             {
@@ -18430,7 +19099,7 @@
     {
         "slug": "ufo_gunship_basic",
         "name": "Light Gunship",
-        "description": "",
+        "description": "A fast, lightweight combat ship, deployed in swarms to overwhelm large enemy vessels and defensive positions.",
         "prefab": "collections/mount/ufo_gunship_basic",
         "stats": [
             {
@@ -18901,7 +19570,7 @@
     {
         "slug": "caterpillar_corgi",
         "name": "Lounging Loafdog",
-        "description": "",
+        "description": "Prefers taking long sun-soaked naps to excessive exertion.",
         "prefab": "collections/mount/caterpillar_corgi",
         "stats": [
             {
@@ -19379,7 +20048,7 @@
     {
         "slug": "sugarglider_chaos",
         "name": "Maelstrom Monitor",
-        "description": "",
+        "description": "Thought by some to cause tornadoes, scientists believe it just glides in them hunting for helpless prey.",
         "prefab": "collections/mount/sugarglider_chaos",
         "stats": [
             {
@@ -19560,7 +20229,7 @@
     {
         "slug": "carpet_trove",
         "name": "Magic Trove Carpet",
-        "description": "",
+        "description": "Made from real Troves.",
         "prefab": "collections/mount/carpet_trove",
         "stats": [
             {
@@ -19603,7 +20272,7 @@
     {
         "slug": "caterpillar_magma",
         "name": "Magma Critter",
-        "description": "",
+        "description": "Enjoys an immunity to lava, sad that it can't offer that to it's rider.",
         "prefab": "collections/mount/caterpillar_magma",
         "stats": [
             {
@@ -20046,7 +20715,7 @@
     {
         "slug": "raptor_mechwalker",
         "name": "Mega Mechwalker",
-        "description": "",
+        "description": "Reckless and full of rampaging wrecks.",
         "prefab": "collections/mount/raptor_mechwalker",
         "stats": [
             {
@@ -20090,7 +20759,7 @@
     {
         "slug": "ball_catluna",
         "name": "Meowling Moonling",
-        "description": "",
+        "description": "An enchanted feline of mysterious lunar origin.",
         "prefab": "collections/mount/ball_catluna",
         "stats": [
             {
@@ -20955,7 +21624,7 @@
     {
         "slug": "horse_zombie",
         "name": "Moulder",
-        "description": "",
+        "description": "The strength of its belief is the only thing that keeps it going.",
         "prefab": "collections/mount/horse_zombie",
         "stats": [
             {
@@ -21115,7 +21784,7 @@
     {
         "slug": "caterpillar_mushy",
         "name": "Mushi The Caterpillar",
-        "description": "",
+        "description": "Mushi's mushrooms ensure there's shade wherever they crawl.",
         "prefab": "collections/mount/caterpillar_mushy",
         "stats": [
             {
@@ -21507,7 +22176,7 @@
     {
         "slug": "dragon_night",
         "name": "Night Dragon",
-        "description": "",
+        "description": "Strikes a dramatic silhouette against a full moon.",
         "prefab": "collections/mount/dragon_night",
         "stats": [
             {
@@ -21594,7 +22263,7 @@
     {
         "slug": "rocket_leafblower",
         "name": "No-Leaf Rover",
-        "description": "",
+        "description": "For those who align themselves against Fall.",
         "prefab": "collections/mount/rocket_leafblower",
         "stats": [
             {
@@ -21637,7 +22306,7 @@
     {
         "slug": "ball_bouncyspring",
         "name": "No-Quarter Bounder",
-        "description": "",
+        "description": "No cheese, just a roiling coil that will pound your foes into hamburger.",
         "prefab": "collections/mount/ball_bouncyspring",
         "stats": [
             {
@@ -21848,7 +22517,7 @@
     {
         "slug": "butterfly_westerndino",
         "name": "Ol' Pterry",
-        "description": "",
+        "description": "It's easier to see threats to the herds from the skies.",
         "prefab": "collections/mount/butterfly_westerndino",
         "stats": [
             {
@@ -21891,7 +22560,7 @@
     {
         "slug": "dragon_moonsilver",
         "name": "Olhukoi, the Moonlit Muse",
-        "description": "",
+        "description": "Each night she takes wing, chasing away nightmares, comforting the sleepless, and lavishing inspiration on those burning the midnight oil.\\n\\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +0.3% Critical Hit, +500 Magic Damage and +50 Magic Find.",
         "prefab": "collections/mount/dragon_moonsilver",
         "stats": [
             {
@@ -22090,7 +22759,7 @@
     {
         "slug": "bulldozer_schoolbus",
         "name": "Oopsie Bus",
-        "description": "",
+        "description": "All aboard the axolotl express! Covered in band-aids and bad decisions, it always gets there… eventually.",
         "prefab": "collections/mount/bulldozer_schoolbus",
         "stats": [
             {
@@ -22207,7 +22876,7 @@
     {
         "slug": "chariot_greekmyth",
         "name": "Ornate Chariot",
-        "description": "",
+        "description": "Ride like the heroes of the past!",
         "prefab": "collections/mount/chariot_greekmyth",
         "stats": [
             {
@@ -22330,7 +22999,7 @@
     {
         "slug": "board_okonomiyaki",
         "name": "Oversized Okonomiyaki",
-        "description": "",
+        "description": "This seasoned batter patty will make travel to your liking.",
         "prefab": "collections/mount/board_okonomiyaki",
         "stats": [
             {
@@ -22559,7 +23228,7 @@
     {
         "slug": "bulldozer_panatea",
         "name": "Pan-Panatean Transport",
-        "description": "",
+        "description": "Putter to your Panatean party!",
         "prefab": "collections/mount/bulldozer_panatea",
         "stats": [
             {
@@ -23206,7 +23875,7 @@
     {
         "slug": "centaur_permataur",
         "name": "Permataur",
-        "description": "",
+        "description": "Once the passion project of an aspiring ice sorceress, this animated ice sculpture now gallops free in any biome he chooses.",
         "prefab": "collections/mount/centaur_permataur",
         "stats": [
             {
@@ -23344,7 +24013,7 @@
     {
         "slug": "ball_renewus",
         "name": "Personal Renewus Orb",
-        "description": "",
+        "description": "Happy new year!",
         "prefab": "collections/mount/ball_renewus",
         "stats": [
             {
@@ -24400,7 +25069,7 @@
     {
         "slug": "griffon_greekmyth",
         "name": "Pretty Pastel Pegasus",
-        "description": "",
+        "description": "Born from clouds and raised by starlight.",
         "prefab": "collections/mount/griffon_greekmyth",
         "stats": [
             {
@@ -24486,7 +25155,7 @@
     {
         "slug": "carpet_pride",
         "name": "Pride Ride",
-        "description": "",
+        "description": "Let your colors show.",
         "prefab": "collections/mount/carpet_pride",
         "stats": [
             {
@@ -25101,7 +25770,7 @@
     {
         "slug": "warhorse_headless",
         "name": "Pumpkin Patch Prancer",
-        "description": "",
+        "description": "Patrolling the pumpkin patch with vengeant fury.",
         "prefab": "collections/mount/warhorse_headless",
         "stats": [
             {
@@ -26072,7 +26741,7 @@
     {
         "slug": "dragonlong_marshmallow",
         "name": "Raymon the Ever-Puffed",
-        "description": "",
+        "description": "Raymon's carefree attitude to life is something that his friends can't help but emulate.\n\nHaving this Dragon unlocked grants a permanent +10 Stability, +1000 Health, and +50 Magic Find.",
         "prefab": "collections/mount/dragonlong_marshmallow",
         "stats": [
             {
@@ -26669,9 +27338,123 @@
         "abilities": []
     },
     {
+        "slug": "dragon_amperium",
+        "name": "Rhom-10, Dissent’s Roar",
+        "description": "Once a trusted servitor of C455-Andra, he was defeated in battle by Yoshimi, whose strength of will inspired him to adopt a new moral code. \\n\\nHaving this Dragon unlocked grants a permanent +7% Attack Speed, +1000 Max Health and +50 Magic Find.",
+        "prefab": "collections/mount/dragon_amperium",
+        "stats": [
+            {
+                "slot": "unlock",
+                "stats": [
+                    {
+                        "stat": "$Stat_MaxHealth",
+                        "name": "Maximum Health",
+                        "op": "Add",
+                        "value": 1000.0,
+                        "percent": false,
+                        "amount": 1000.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    },
+                    {
+                        "stat": "$Stat_AttackSpeed",
+                        "name": "Attack Speed",
+                        "op": "Add",
+                        "value": 7.0,
+                        "percent": true,
+                        "amount": 7.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    },
+                    {
+                        "stat": "$Stat_MagicFind",
+                        "name": "Magic Find",
+                        "op": "Add",
+                        "value": 50.0,
+                        "percent": false,
+                        "amount": 50.0,
+                        "modes": [
+                            "PVE"
+                        ]
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Cart",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 25.0,
+                        "percent": false,
+                        "amount": 25.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/dragon/amperium_cannon",
+                "name": "Dragon Fire",
+                "stages": [
+                    {
+                        "name": "Amperium Cannon Explosion",
+                        "prefab": "abilities/dragon/amperium_cannon_explosion",
+                        "base": 10000,
+                        "multiplier": 0,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 350,
+                        "max_block_hardness": 500,
+                        "max_blocks": 10000,
+                        "min_knockback": 0.65,
+                        "damage_type": 5,
+                        "damage_stat": -1
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "slug": "raptor_fancy",
         "name": "Rich Raptor",
-        "description": "",
+        "description": "Made some sound investments during the great Limestone Boom of the late Cretaceous.",
         "prefab": "collections/mount/raptor_fancy",
         "stats": [
             {
@@ -26758,7 +27541,7 @@
     {
         "slug": "board_martialarts",
         "name": "Road-top Zen Garden",
-        "description": "",
+        "description": "The only Zen you find here is the Zen you bring with you.",
         "prefab": "collections/mount/board_martialarts",
         "stats": [
             {
@@ -26997,7 +27780,7 @@
     {
         "slug": "tortoise_icecream",
         "name": "Rocky Raisin Road",
-        "description": "",
+        "description": "A scoop worth raisin' your standards.",
         "prefab": "collections/mount/tortoise_icecream",
         "stats": [
             {
@@ -27068,6 +27851,28 @@
         "abilities": []
     },
     {
+        "slug": "log_soda",
+        "name": "Rolla-Cola",
+        "description": "You probably shouldn't open it after this much rough-and-tumble.",
+        "prefab": "collections/mount/log_soda",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "log_caterpillar",
         "name": "Roller Caterpoler",
         "description": "Entirely the wrong species of insect for this, and you should feel bad.",
@@ -27092,7 +27897,7 @@
     {
         "slug": "log_corgi",
         "name": "Rolli Corgi",
-        "description": "",
+        "description": "He tends to let things roll off his back.\n\nThis long lost brother of Pemblock was originally rescued during Mount Parade 2019.",
         "prefab": "collections/mount/log_corgi",
         "stats": [
             {
@@ -27158,7 +27963,7 @@
     {
         "slug": "pinata_valentines",
         "name": "Romancing Pinata",
-        "description": "",
+        "description": "There's no candy in the world worth breaking its heart.",
         "prefab": "collections/mount/pinata_valentines",
         "stats": [
             {
@@ -27799,7 +28604,7 @@
     {
         "slug": "bulldozer_treeplanter",
         "name": "Sapling Sower",
-        "description": "",
+        "description": "Primarily used for helping replant deforested areas, but can plant any seeds in a pinch.\n\nPlants whichever seeds are selected in the Build inventory hotbar within a small radius.",
         "prefab": "collections/mount/bulldozer_treeplanter",
         "stats": [
             {
@@ -28329,6 +29134,28 @@
         "abilities": []
     },
     {
+        "slug": "foxspirit_dolphin_pirate",
+        "name": "Scurvy Treasurefin",
+        "description": "Swims the seven seas in search of sunken treasure.",
+        "prefab": "collections/mount/foxspirit_dolphin_pirate",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "dragonserpent_greekmyth",
         "name": "Scylla the Sea-Snacker",
         "description": "Don't ask what's for dinner...",
@@ -28353,7 +29180,7 @@
     {
         "slug": "carpet_seapancake",
         "name": "Sea Pancake",
-        "description": "",
+        "description": "It's hard to fall off with this much syrup.",
         "prefab": "collections/mount/carpet_seapancake",
         "stats": [
             {
@@ -29561,7 +30388,7 @@
     {
         "slug": "griffon_ashensteed",
         "name": "Shinkira, the Cinderwing",
-        "description": "",
+        "description": "Patrols the Ashen Wastes endlessly, searching for a way back in to the light.\nFlies freely in the Sundered Uplands",
         "prefab": "collections/mount/griffon_ashensteed",
         "stats": [
             {
@@ -29595,6 +30422,28 @@
                         "value": 100.0,
                         "percent": false,
                         "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "log_ship",
+        "name": "Ship in a Bottle",
+        "description": "Far less fragile than it appears.",
+        "prefab": "collections/mount/log_ship",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
                     }
                 ]
             }
@@ -29909,7 +30758,7 @@
     {
         "slug": "cat_siltabby",
         "name": "Silver Tabby Meownt",
-        "description": "",
+        "description": "Purebred by Frost Fae royalty over many generations to the most regal of bearings.",
         "prefab": "collections/mount/cat_siltabby",
         "stats": [
             {
@@ -30340,7 +31189,7 @@
     {
         "slug": "bulldozer_ravager",
         "name": "Skullcrank Ravager",
-        "description": "",
+        "description": "Built for ramming first and apologizing never.",
         "prefab": "collections/mount/bulldozer_ravager",
         "stats": [
             {
@@ -30362,7 +31211,7 @@
     {
         "slug": "horse_undead",
         "name": "Skully",
-        "description": "",
+        "description": "Just a bag of bones.",
         "prefab": "collections/mount/horse_undead",
         "stats": [
             {
@@ -30695,7 +31544,7 @@
     {
         "slug": "ball_pumpkin",
         "name": "Smashing Pumpkin",
-        "description": "",
+        "description": "Don't ride it in the mosh pit unless you want to make a mess.",
         "prefab": "collections/mount/ball_pumpkin",
         "stats": [
             {
@@ -30717,7 +31566,7 @@
     {
         "slug": "butterfly_phoenix",
         "name": "Smolder",
-        "description": "",
+        "description": "It is said that it is unwise to linger for long in her gaze",
         "prefab": "collections/mount/butterfly_phoenix",
         "stats": [
             {
@@ -30997,6 +31846,28 @@
         "abilities": []
     },
     {
+        "slug": "log_yule",
+        "name": "Snowfest Log",
+        "description": "It's a Snowfest miracle that you don't break your neck on this thing.",
+        "prefab": "collections/mount/log_yule",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "pinata_snowfest",
         "name": "Snowfest Superyata",
         "description": "Fills cold winter nights with warmth, cheer, and awe-inspiring pyrotechnics displays.",
@@ -31236,7 +32107,7 @@
     {
         "slug": "board_sword_basic",
         "name": "Soarwind Sword",
-        "description": "",
+        "description": "Wielded by heroes of antiquity, it also serves as a convenient mode of transport.",
         "prefab": "collections/mount/board_sword_basic",
         "stats": [
             {
@@ -31337,7 +32208,7 @@
     {
         "slug": "centaur_mysticism",
         "name": "Sorcerer Centaur",
-        "description": "",
+        "description": "Always willing to light the way for a fellow magic practitioner.",
         "prefab": "collections/mount/centaur_mysticism",
         "stats": [
             {
@@ -31400,9 +32271,52 @@
         "abilities": []
     },
     {
+        "slug": "dog_dracorgi_spaceaurora",
+        "name": "Space Corgi",
+        "description": "Boldly goes where no corgi has gone before!",
+        "prefab": "collections/mount/dog_dracorgi_spaceaurora",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "cycle_spaceaurora",
         "name": "Space Speedster",
-        "description": "",
+        "description": "Safety Warning: Do not use in space!",
         "prefab": "collections/mount/cycle_spaceaurora",
         "stats": [
             {
@@ -31424,7 +32338,7 @@
     {
         "slug": "board_spaceaurora",
         "name": "Space Surf",
-        "description": "",
+        "description": "Imbued with power of Cosmic Gems.",
         "prefab": "collections/mount/board_spaceaurora",
         "stats": [
             {
@@ -31446,7 +32360,7 @@
     {
         "slug": "raptor_space",
         "name": "Spaceosaurus",
-        "description": "",
+        "description": "This scholarly saurian diligently documents the state of affairs in all the worlds.",
         "prefab": "collections/mount/raptor_space",
         "stats": [
             {
@@ -31817,7 +32731,7 @@
     {
         "slug": "dragon_moontouched",
         "name": "Spirit of the Moonlight Menace",
-        "description": "",
+        "description": "Drawn to Trove like a moth to the flame. May it forever remain in pursuit.\n\nHaving this Dragon unlocked grants a permanent +1 Max Flasks, +3% Critical Hit Damage, and +50 Magic Find.",
         "prefab": "collections/mount/dragon_moontouched",
         "stats": [
             {
@@ -31962,7 +32876,7 @@
     {
         "slug": "spider_biter",
         "name": "Spite Biter",
-        "description": "",
+        "description": "Someone tried to wash it. Once.",
         "prefab": "collections/mount/spider_biter",
         "stats": [
             {
@@ -32354,6 +33268,28 @@
         "abilities": []
     },
     {
+        "slug": "rhino_ox",
+        "name": "Stalwart Ox",
+        "description": "Reliable and hardworking.",
+        "prefab": "collections/mount/rhino_ox",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "dog_dracorgi_starpony",
         "name": "Star Sebastian",
         "description": "Immortalized in the stars forever.",
@@ -32423,6 +33359,93 @@
         "name": "Starglint Pinata",
         "description": "Don't just reach for the stars... ride them!",
         "prefab": "collections/mount/pinata_starbar",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "dragon_starlight_02",
+        "name": "Starlight Dragon",
+        "description": "Unlocked through consumption of 50 Starlight Dragon Souls, craftable at the Dragon Crucible in the Hub.",
+        "prefab": "collections/mount/dragon_starlight_02",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "dragon_starlight_01",
+        "name": "Starlight Fledgling",
+        "description": "Unlocked through consumption of 10 Starlight Dragon Souls, craftable at the Dragon Crucible in the Hub.",
+        "prefab": "collections/mount/dragon_starlight_01",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "horse_sheep_radiantruins",
+        "name": "Starry Shmeep",
+        "description": "Native to the Sky Realms, it cycles between sunny and somber dispositions.",
+        "prefab": "collections/mount/horse_sheep_radiantruins",
         "stats": [
             {
                 "slot": "$EquipmentSlot_Mount",
@@ -32572,6 +33595,68 @@
         "abilities": []
     },
     {
+        "slug": "dragon_starlight_03",
+        "name": "Stellaurion, Charter of the Constellations",
+        "description": "Unlocked through consumption of 100 Starlight Dragon Souls, craftable at the Dragon Crucible in the Hub.",
+        "prefab": "collections/mount/dragon_starlight_03",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
+                    }
+                ]
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/dragon/starlight_cannon",
+                "stages": [
+                    {
+                        "name": "Starlight Cannon Explosion",
+                        "prefab": "abilities/dragon/starlight_cannon_explosion",
+                        "base": 10000,
+                        "multiplier": 0,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 350,
+                        "max_block_hardness": 500,
+                        "max_blocks": 10000,
+                        "min_knockback": 0.65,
+                        "damage_type": 5,
+                        "damage_stat": -1
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "slug": "platypus_ratshadow",
         "name": "Stoic Shaderat",
         "description": "Has more than a few strikes against it, but does the best it can every day.",
@@ -32638,9 +33723,31 @@
         "abilities": []
     },
     {
+        "slug": "warhorse_starchaser",
+        "name": "Striding Starchaser",
+        "description": "Every night chasing the same dreams.",
+        "prefab": "collections/mount/warhorse_starchaser",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "dragon_stubs",
         "name": "stubs Dragon",
-        "description": "",
+        "description": "Strikes a dramatic silhouette against a full moon.",
         "prefab": "collections/mount/dragon_stubs",
         "stats": [
             {
@@ -32887,7 +33994,7 @@
     {
         "slug": "ufo_sunderer",
         "name": "Sundered Sunderer",
-        "description": "",
+        "description": "A piece of the Sunderer sundered and rendered controllable.\nFlies freely in the Sundered Uplands",
         "prefab": "collections/mount/ufo_sunderer",
         "stats": [
             {
@@ -32952,7 +34059,7 @@
     {
         "slug": "griffon_sunflower",
         "name": "Sunlight Glider",
-        "description": "",
+        "description": "Prefers not to sleep near hungry horses.",
         "prefab": "collections/mount/griffon_sunflower",
         "stats": [
             {
@@ -33216,6 +34323,28 @@
         ]
     },
     {
+        "slug": "ball_snowman_classy",
+        "name": "Swanky Snowman",
+        "description": "This dapper dude has a fondness for frosty frolicking.",
+        "prefab": "collections/mount/ball_snowman_classy",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "chariot_sweet",
         "name": "Sweet Ride Supreme",
         "description": "The sweetest ride in all of Trove.",
@@ -33306,7 +34435,7 @@
     {
         "slug": "dragonbug_swirl",
         "name": "Swirlin' Shelly",
-        "description": "",
+        "description": "Its sugary spiral shell is rumoured to hold ancient secrets… or maybe it's just really sticky. Hard to tell.",
         "prefab": "collections/mount/dragonbug_swirl",
         "stats": [
             {
@@ -34497,6 +35626,28 @@
         "abilities": []
     },
     {
+        "slug": "dog_taco",
+        "name": "The Roaming Taco",
+        "description": "''New at all Chuck Pinzo approved locations, the Roaming Taco, a taco that runs to you!''\n\n- Chuck Pinzo",
+        "prefab": "collections/mount/dog_taco",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "rocket_troveexpress",
         "name": "The Trovian Express",
         "description": "Always running, always on time.",
@@ -35346,7 +36497,7 @@
     {
         "slug": "platypus_ratrobot",
         "name": "Trioptic Laser Mouse",
-        "description": "",
+        "description": "Never loses its position thanks to its triplicate pinpointing technology.",
         "prefab": "collections/mount/platypus_ratrobot",
         "stats": [
             {
@@ -35540,6 +36691,49 @@
                         "value": 90.0,
                         "percent": false,
                         "amount": 90.0
+                    }
+                ]
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "carpet_bgame_twists",
+        "name": "Trovenado",
+        "description": "Don't break in to cubes trying to reach the right spot!",
+        "prefab": "collections/mount/carpet_bgame_twists",
+        "stats": [
+            {
+                "slot": "$EquipmentSlot_Mount",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 90.0,
+                        "percent": false,
+                        "amount": 90.0
+                    }
+                ]
+            },
+            {
+                "slot": "$EquipmentSlot_Wings",
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Set",
+                        "value": 95.0,
+                        "percent": false,
+                        "amount": 95.0
+                    },
+                    {
+                        "stat": "$Stat_Glide",
+                        "name": "Glide",
+                        "op": "Set",
+                        "value": 100.0,
+                        "percent": false,
+                        "amount": 100.0
                     }
                 ]
             }
@@ -36434,7 +37628,7 @@
     {
         "slug": "tortoise_undertow",
         "name": "Unhurried Undertow",
-        "description": "",
+        "description": "Don't stray too far from shore, lest you be dragged down below... Slowly. Very, very slowly.",
         "prefab": "collections/mount/tortoise_undertow",
         "stats": [
             {
@@ -36948,7 +38142,7 @@
     {
         "slug": "butterfly_vulture",
         "name": "Vault Vulture",
-        "description": "",
+        "description": "High above the city swoops a feathered felon, talons locked on a stolen safe and eyes on its next shiny score.",
         "prefab": "collections/mount/butterfly_vulture",
         "stats": [
             {
@@ -37447,7 +38641,7 @@
     {
         "slug": "board_musicplayer",
         "name": "Walk n Jam",
-        "description": "",
+        "description": "Crank up the volume and strut through the halls like it's 1995. Rewind not included.",
         "prefab": "collections/mount/board_musicplayer",
         "stats": [
             {
@@ -37664,7 +38858,7 @@
     {
         "slug": "rocket_luna_stars",
         "name": "Watt's Saucer",
-        "description": "",
+        "description": "A magnificent example of alien technology, but how did Watt fit in this?\nFlies freely in the Sundered Uplands",
         "prefab": "collections/mount/rocket_luna_stars",
         "stats": [
             {
@@ -38120,7 +39314,7 @@
     {
         "slug": "horse_willowworth",
         "name": "Willow Woodsworth",
-        "description": "",
+        "description": "Woodsworth the fourth, carving many Trovian paths.",
         "prefab": "collections/mount/horse_willowworth",
         "stats": [
             {
@@ -38627,7 +39821,7 @@
     {
         "slug": "pinata_birdshadow",
         "name": "Yaba-nata Pinata",
-        "description": "",
+        "description": "Smart and mischievous.",
         "prefab": "collections/mount/pinata_birdshadow",
         "stats": [
             {
@@ -38732,7 +39926,7 @@
     {
         "slug": "cycle_quad_cannon",
         "name": "Ye Old Cannon Bike",
-        "description": "",
+        "description": "Just the right vehicle for when you need to be blasting off elsewhere.",
         "prefab": "collections/mount/cycle_quad_cannon",
         "stats": [
             {
@@ -39234,7 +40428,7 @@
     {
         "slug": "dragon_bomberroyale_sticky",
         "name": "Zyntryn, the Fury",
-        "description": "",
+        "description": "Zyntryn is always first into the fray and not one to shy from a challenge.\n\nHaving this Dragon unlocked grants a permanent +1000 Max Health, +10% Critical Damage, +5 Jump, and +50 Magic Find.",
         "prefab": "collections/mount/dragon_bomberroyale_sticky",
         "stats": [
             {

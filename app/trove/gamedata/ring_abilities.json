@@ -2713,7 +2713,7 @@
         "class": "Pirate Captain",
         "game_folder": "piratelord",
         "name": "All Hands On Deck",
-        "description": "Using Man O War now summons a Pirrot Cannoneer as well.",
+        "description": "Using Man o' War now summons a Pirrot Cannoneer as well.",
         "slug": "all_hands",
         "prefab": "abilities/mods_01/piratelord/ring_all_hands",
         "prefabs": [

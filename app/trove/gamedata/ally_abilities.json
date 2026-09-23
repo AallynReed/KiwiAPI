@@ -198,7 +198,7 @@
     {
         "slug": "octopus_mindleecher",
         "name": "Abyssal Mindleecher",
-        "description": "",
+        "description": "It does not see you. It senses your thoughts.",
         "prefab": "collections/pet/octopus_mindleecher",
         "stats": [
             {
@@ -263,6 +263,65 @@
             }
         ],
         "abilities": []
+    },
+    {
+        "slug": "delve_bird_kiwi_aempcannon",
+        "name": "Aemppie",
+        "description": "Absolutely harmless.",
+        "prefab": "collections/pet/delve_bird_kiwi_aempcannon",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 200.0,
+                "amount": 200.0
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 10.0,
+                "amount": 0.1
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/equipment/enemydeath_heal_low",
+                "text": "Gain 5% health when a nearby enemy dies.",
+                "proc_cooldown": 1.0,
+                "healing": [
+                    {
+                        "name": "Enemydeath Heal Effect Low",
+                        "prefab": "abilities/equipment/enemydeath_heal_effect_low",
+                        "max_health_percent": 0.05
+                    }
+                ]
+            },
+            {
+                "ref": "abilities/equipment/enemydeath_movementspeed_low",
+                "text": "Gain a small movement speed boost when a nearby enemy dies.",
+                "proc_cooldown": 1.0,
+                "effects": [
+                    {
+                        "name": "Enemydeath Speed Effect Low",
+                        "prefab": "abilities/equipment/enemydeath_speed_effect_low",
+                        "component": 136,
+                        "duration": 5.5,
+                        "stats": [
+                            {
+                                "stat": "$Stat_MovementSpeed",
+                                "name": "Movement Speed",
+                                "op": "Add",
+                                "value": 20.0,
+                                "percent": false,
+                                "amount": 20.0
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     },
     {
         "slug": "delve_dragonfly_jadedrake",
@@ -402,7 +461,7 @@
     {
         "slug": "zardille_whitemouse",
         "name": "Al Bino Minal",
-        "description": "",
+        "description": "Math genius with a side job as a philosopher.",
         "prefab": "collections/pet/zardille_whitemouse",
         "stats": [
             {
@@ -788,7 +847,7 @@
     {
         "slug": "caterpillar_gardening_snail",
         "name": "Appleshell Snail",
-        "description": "",
+        "description": "These tricksy snails love hiding in plain sight, pretending to be apples high on a tree.\n\nAppleshell Snails can be adopted from Appleshell Snail Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/caterpillar_gardening_snail",
         "stats": [
             {
@@ -850,7 +909,7 @@
     {
         "slug": "stiltstitcher_steam",
         "name": "Arcanium Strider",
-        "description": "",
+        "description": "Running around like a robot chicken with its head cut off.",
         "prefab": "collections/pet/stiltstitcher_steam",
         "stats": [
             {
@@ -940,6 +999,36 @@
         "abilities": []
     },
     {
+        "slug": "biped_soul",
+        "name": "Armored Andy",
+        "description": "A ghost in a very shiny shell!",
+        "prefab": "collections/pet/biped_soul",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 150.0,
+                "amount": 150.0
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 9.0,
+                "amount": 0.09
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "spidermonkey_armored",
         "name": "Armored Jouster",
         "description": "Suited up and ready to compete.",
@@ -1011,6 +1100,29 @@
                 ]
             }
         ]
+    },
+    {
+        "slug": "cube_ashen",
+        "name": "Ashen Dice",
+        "description": "Rolls a critical fail every time.",
+        "prefab": "collections/pet/cube_ashen",
+        "stats": [
+            {
+                "name": "Crafting Speed",
+                "stat": "$Stat_CraftingSpeed",
+                "op": "Add",
+                "value": 3.0,
+                "amount": 3.0
+            },
+            {
+                "name": "Lasermancy",
+                "stat": "$Stat_Mining",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            }
+        ],
+        "abilities": []
     },
     {
         "slug": "spacebug_ashen",
@@ -1097,7 +1209,7 @@
     {
         "slug": "griffon_fedifensoar",
         "name": "Atomic Wraith",
-        "description": "",
+        "description": "Striking silently from afar with overwhelming force.",
         "prefab": "collections/pet/griffon_fedifensoar",
         "stats": [
             {
@@ -1199,7 +1311,7 @@
     {
         "slug": "dragon_oldblue",
         "name": "Azulian Dragonling",
-        "description": "",
+        "description": "Unlocked through consumption of an Azulian Dragon Soul, craftable at the Dragon Crucible in the Hub World.",
         "prefab": "collections/pet/dragon_oldblue",
         "stats": [
             {
@@ -1450,9 +1562,32 @@
         "abilities": []
     },
     {
+        "slug": "monkey_cft",
+        "name": "Bag'ets Camembert",
+        "description": "The Charming French Touch.",
+        "prefab": "collections/pet/monkey_cft",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 7.0,
+                "amount": 7.0
+            },
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 25.0,
+                "amount": 25.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "froleek_breadbasket",
         "name": "Baguette Basket",
-        "description": "",
+        "description": "Contains more breadsticks than your normal garden full of olives.",
         "prefab": "collections/pet/froleek_breadbasket",
         "stats": [
             {
@@ -1692,6 +1827,36 @@
         "abilities": []
     },
     {
+        "slug": "wheel_coin",
+        "name": "Bankroller",
+        "description": "Practically rolling in money.",
+        "prefab": "collections/pet/wheel_coin",
+        "stats": [
+            {
+                "name": "Maximum Energy",
+                "stat": "$Stat_MaxEnergy",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
+            },
+            {
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
+            },
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 8.0,
+                "amount": 0.08
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "qubesly_banker",
         "name": "Banksly",
         "description": "Made a fortune knowing when to ring the register.",
@@ -1733,29 +1898,6 @@
                 "op": "Add",
                 "value": 1.0,
                 "amount": 1.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "bat_shadow",
-        "name": "bat_shadow",
-        "description": "Not entirely comfortable in the light, but it seems to want to be friends.",
-        "prefab": "collections/pet/bat_shadow",
-        "stats": [
-            {
-                "name": "Attack Speed",
-                "stat": "$Stat_AttackSpeed",
-                "op": "Add",
-                "value": 4.0,
-                "amount": 4.0
-            },
-            {
-                "name": "Critical Hit",
-                "stat": "$Stat_CriticalHitChance",
-                "op": "Add",
-                "value": 1.2,
-                "amount": 12.0
             }
         ],
         "abilities": []
@@ -1904,29 +2046,6 @@
         "abilities": []
     },
     {
-        "slug": "bee_aribee",
-        "name": "bee_aribee",
-        "description": "It seems quite enamored with you.",
-        "prefab": "collections/pet/bee_aribee",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            },
-            {
-                "name": "Lasermancy",
-                "stat": "$Stat_Mining",
-                "op": "Add",
-                "value": 50.0,
-                "amount": 50.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "bee_beebuddy",
         "name": "BEEEE BUDDY",
         "description": "Best Bee Buddy Be-ever?",
@@ -2068,7 +2187,7 @@
     {
         "slug": "griffon_rainbowcorn",
         "name": "Berriwinkle",
-        "description": "",
+        "description": "She crosses the sky on rainbow wings, spreading joy, and happiness, and all good things.",
         "prefab": "collections/pet/griffon_rainbowcorn",
         "stats": [
             {
@@ -2119,6 +2238,29 @@
         "abilities": []
     },
     {
+        "slug": "goat_demon",
+        "name": "Billy the Kid",
+        "description": "Pure trouble.",
+        "prefab": "collections/pet/goat_demon",
+        "stats": [
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 100.0,
+                "amount": 100.0
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 350.0,
+                "amount": 350.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "biped_mushroom",
         "name": "biped_mushroom",
         "description": "",
@@ -2142,24 +2284,17 @@
         "abilities": []
     },
     {
-        "slug": "biped_soul",
-        "name": "biped_soul",
-        "description": "A ghost in a very shiny shell!",
-        "prefab": "collections/pet/biped_soul",
+        "slug": "mimic_bike",
+        "name": "Biron Bicycle",
+        "description": "Bring bring.",
+        "prefab": "collections/pet/mimic_bike",
         "stats": [
             {
-                "name": "Light",
-                "stat": "$Stat_Light",
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
                 "op": "Add",
-                "value": 150.0,
-                "amount": 150.0
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 9.0,
-                "amount": 0.09
+                "value": 5.0,
+                "amount": 5.0
             },
             {
                 "name": "Movement Speed",
@@ -2169,53 +2304,47 @@
                 "amount": 5.0
             }
         ],
-        "abilities": []
-    },
-    {
-        "slug": "biped_yeti",
-        "name": "biped_yeti",
-        "description": "The myth, the legend!",
-        "prefab": "collections/pet/biped_yeti",
-        "stats": [
+        "abilities": [
             {
-                "name": "Stability",
-                "stat": "$Stat_Stability",
-                "op": "Add",
-                "value": 30.0,
-                "amount": 30.0
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 7.0,
-                "amount": 7.0
+                "ref": "abilities/equipment/enemydeath_damagebuff",
+                "text": "Chance when a nearby enemy dies to gain a large damage and movement speed boost.",
+                "proc_cooldown": 10.0,
+                "effects": [
+                    {
+                        "name": "Enemydeath Damagebuff Effect",
+                        "prefab": "abilities/equipment/enemydeath_damagebuff_effect",
+                        "component": 136,
+                        "duration": 8.0,
+                        "stats": [
+                            {
+                                "stat": "$Stat_PhysicalDamageBonus",
+                                "name": "Physical Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 50.0,
+                                "percent": true,
+                                "amount": 0.5
+                            },
+                            {
+                                "stat": "$Stat_SpellDamageBonus",
+                                "name": "Magic Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 50.0,
+                                "percent": true,
+                                "amount": 0.5
+                            },
+                            {
+                                "stat": "$Stat_MovementSpeed",
+                                "name": "Movement Speed",
+                                "op": "Add",
+                                "value": 15.0,
+                                "percent": false,
+                                "amount": 15.0
+                            }
+                        ]
+                    }
+                ]
             }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "bird_carys",
-        "name": "bird_carys",
-        "description": "Wishes you prosperity, stability, and wealth for years to come!",
-        "prefab": "collections/pet/bird_carys",
-        "stats": [
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 450.0,
-                "amount": 450.0
-            },
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 3.0,
-                "amount": 3.0
-            }
-        ],
-        "abilities": []
+        ]
     },
     {
         "slug": "joystick_knightsword",
@@ -2447,7 +2576,7 @@
     {
         "slug": "octopus_moonlightbulb",
         "name": "Blooming Bulb",
-        "description": "",
+        "description": "Out of the pot and into the plot — adventure awaits!",
         "prefab": "collections/pet/octopus_moonlightbulb",
         "stats": [
             {
@@ -2783,53 +2912,6 @@
         "abilities": []
     },
     {
-        "slug": "boot_clown",
-        "name": "boot_clown",
-        "description": "Persistently pushes you to play pranks on punters.",
-        "prefab": "collections/pet/boot_clown",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 3.0,
-                "amount": 3.0
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/enemydeath_movementspeed",
-                "text": "Gain a movement speed boost when a nearby enemy dies.",
-                "proc_cooldown": 1.0,
-                "effects": [
-                    {
-                        "name": "Enemydeath Speed Effect",
-                        "prefab": "abilities/equipment/enemydeath_speed_effect",
-                        "component": 136,
-                        "duration": 5.5,
-                        "stats": [
-                            {
-                                "stat": "$Stat_MovementSpeed",
-                                "name": "Movement Speed",
-                                "op": "Add",
-                                "value": 30.0,
-                                "percent": false,
-                                "amount": 30.0
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    },
-    {
         "slug": "boot_garx",
         "name": "Booterful",
         "description": "Ready to stomp; ready to win.",
@@ -2855,7 +2937,7 @@
     {
         "slug": "raptor_boots",
         "name": "Boots Boots",
-        "description": "",
+        "description": "These boots carry the spirit of their last true adventurer. They might help you escape danger… or meet the same fate as their previous owner.",
         "prefab": "collections/pet/raptor_boots",
         "stats": [
             {
@@ -3094,7 +3176,7 @@
     {
         "slug": "biped_turtle_spooky",
         "name": "Brian Bones",
-        "description": "",
+        "description": "Of the Rolling Bones.\n\nOriginally obtainable during Shadow's Eve 2020.",
         "prefab": "collections/pet/biped_turtle_spooky",
         "stats": [
             {
@@ -3117,7 +3199,7 @@
     {
         "slug": "dragonfly_firefly_purple_rare",
         "name": "Brilliant Glowfly",
-        "description": "",
+        "description": "Brilliant Glowflies are known for showing off their bright colors.\n\nBrilliant Glowflies can be adopted rarely from Purple Glowfly Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/dragonfly_firefly_purple_rare",
         "stats": [
             {
@@ -3519,29 +3601,6 @@
         "abilities": []
     },
     {
-        "slug": "bunny_moss",
-        "name": "bunny_moss",
-        "description": "Born in the hedges and raised by flowers.",
-        "prefab": "collections/pet/bunny_moss",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 7.0,
-                "amount": 7.0
-            },
-            {
-                "name": "Attack Speed",
-                "stat": "$Stat_AttackSpeed",
-                "op": "Add",
-                "value": 4.0,
-                "amount": 4.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "bunny_bunnysaurus",
         "name": "Bunnysaurus",
         "description": "Not fluffy, but its smooth scales and tiny 'RAWR!'s are very endearing.",
@@ -3682,6 +3741,45 @@
                 "op": "Add",
                 "value": 15.0,
                 "amount": 15.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "poop_chili",
+        "name": "Butterscotch",
+        "description": "Just as sweet as the candy your grandparents give you.",
+        "prefab": "collections/pet/poop_chili",
+        "stats": [
+            {
+                "name": "Energy Regen Bonus",
+                "stat": "$Stat_EnergyRegenBonus_controller",
+                "op": "MultiplySum",
+                "value": 8.0,
+                "amount": 0.08
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "bee_aribee",
+        "name": "Buzzy Beefriend",
+        "description": "It seems quite enamored with you.",
+        "prefab": "collections/pet/bee_aribee",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
+            },
+            {
+                "name": "Lasermancy",
+                "stat": "$Stat_Mining",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0
             }
         ],
         "abilities": []
@@ -4065,7 +4163,7 @@
     {
         "slug": "butterfly_blue",
         "name": "Cardinal Wildwing",
-        "description": "",
+        "description": "It manifests a rare and mysterious power.",
         "prefab": "collections/pet/butterfly_blue",
         "stats": [
             {
@@ -4141,7 +4239,7 @@
     {
         "slug": "punchbot_carrot",
         "name": "Carrocket",
-        "description": "",
+        "description": "Using a special Vitamin-A fuel with this rocket, and you'll be blasting off again.",
         "prefab": "collections/pet/punchbot_carrot",
         "stats": [
             {
@@ -4157,6 +4255,29 @@
                 "op": "Add",
                 "value": 30.0,
                 "amount": 30.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "bird_carys",
+        "name": "Carys Friend",
+        "description": "Wishes you prosperity, stability, and wealth for years to come!",
+        "prefab": "collections/pet/bird_carys",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 450.0,
+                "amount": 450.0
+            },
+            {
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
+                "op": "Add",
+                "value": 3.0,
+                "amount": 3.0
             }
         ],
         "abilities": []
@@ -4180,6 +4301,29 @@
                 "op": "Add",
                 "value": 2.0,
                 "amount": 2.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "papercrane_lifeguard_carys",
+        "name": "Carysian Pool Patrol",
+        "description": "No eating while swimming!",
+        "prefab": "collections/pet/papercrane_lifeguard_carys",
+        "stats": [
+            {
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 2.0
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
             }
         ],
         "abilities": []
@@ -4231,6 +4375,29 @@
         "abilities": []
     },
     {
+        "slug": "mimic_cash",
+        "name": "Cash & Kaboom",
+        "description": "Loaded with cash and a lil surprise.",
+        "prefab": "collections/pet/mimic_cash",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 3.0,
+                "amount": 3.0
+            },
+            {
+                "name": "Lasermancy",
+                "stat": "$Stat_Mining",
+                "op": "Add",
+                "value": 60.0,
+                "amount": 60.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "mimic_catbook",
         "name": "Cat-a-log",
         "description": "Nine lives' worth of logs.",
@@ -4255,7 +4422,7 @@
     },
     {
         "slug": "cat_cataew",
-        "name": "cat_cataew",
+        "name": "Cataew",
         "description": "Runs a vast variety of fan projects.",
         "prefab": "collections/pet/cat_cataew",
         "stats": [
@@ -4284,92 +4451,9 @@
         "abilities": []
     },
     {
-        "slug": "cat_cheese",
-        "name": "cat_cheese",
-        "description": "You can't get any cuter than this!",
-        "prefab": "collections/pet/cat_cheese",
-        "stats": [
-            {
-                "name": "Crafting Speed",
-                "stat": "$Stat_CraftingSpeed",
-                "op": "Add",
-                "value": 70.0,
-                "amount": 70.0
-            },
-            {
-                "name": "Critical Hit",
-                "stat": "$Stat_CriticalHitChance",
-                "op": "Add",
-                "value": 1.5,
-                "amount": 15.0
-            },
-            {
-                "name": "Critical Damage",
-                "stat": "$Stat_CriticalHitDamage",
-                "op": "Add",
-                "value": 25.0,
-                "amount": 25.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "cat_cookie",
-        "name": "cat_cookie",
-        "description": "Rumored to be insanely delicious, but it is way too fast and feisty to let you have a taste.",
-        "prefab": "collections/pet/cat_cookie",
-        "stats": [
-            {
-                "name": "Magic Damage",
-                "stat": "$Stat_SpellDamage",
-                "op": "Add",
-                "value": 50.0,
-                "amount": 50.0
-            },
-            {
-                "name": "Critical Hit",
-                "stat": "$Stat_CriticalHitChance",
-                "op": "Add",
-                "value": 2.0,
-                "amount": 20.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "cat_viking",
-        "name": "cat_viking",
-        "description": "No, on second thought, maybe I'll let you feed it...",
-        "prefab": "collections/pet/cat_viking",
-        "stats": [
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            },
-            {
-                "name": "Lasermancy",
-                "stat": "$Stat_Mining",
-                "op": "Add",
-                "value": 80.0,
-                "amount": 80.0
-            },
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 250.0,
-                "amount": 250.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "hermitcrab_catskull",
         "name": "Catastrophic Crawler",
-        "description": "",
+        "description": "Skull & Claw, together forever.",
         "prefab": "collections/pet/hermitcrab_catskull",
         "stats": [
             {
@@ -4666,7 +4750,7 @@
     {
         "slug": "zardille_gardening",
         "name": "Chard Chitterer",
-        "description": "",
+        "description": "This mischievious ally is frequently found consulting with chard.\n\nUnearthed rarely when harvesting Unicorn Chard.",
         "prefab": "collections/pet/zardille_gardening",
         "stats": [
             {
@@ -4887,6 +4971,36 @@
         "abilities": []
     },
     {
+        "slug": "cat_cheese",
+        "name": "Cheesy Kitten",
+        "description": "You can't get any cuter than this!",
+        "prefab": "collections/pet/cat_cheese",
+        "stats": [
+            {
+                "name": "Crafting Speed",
+                "stat": "$Stat_CraftingSpeed",
+                "op": "Add",
+                "value": 70.0,
+                "amount": 70.0
+            },
+            {
+                "name": "Critical Hit",
+                "stat": "$Stat_CriticalHitChance",
+                "op": "Add",
+                "value": 1.5,
+                "amount": 15.0
+            },
+            {
+                "name": "Critical Damage",
+                "stat": "$Stat_CriticalHitDamage",
+                "op": "Add",
+                "value": 25.0,
+                "amount": 25.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "qubesly_chef",
         "name": "Chef Qubesly",
         "description": "Your own personal cubic chef.",
@@ -5059,7 +5173,7 @@
     {
         "slug": "joystick_beachparty",
         "name": "Chilly Cup",
-        "description": "",
+        "description": "A brave popsicle trapped in a yogurt tub… and he’s cool with it.",
         "prefab": "collections/pet/joystick_beachparty",
         "stats": [
             {
@@ -5349,9 +5463,56 @@
         "abilities": []
     },
     {
+        "slug": "boot_clown",
+        "name": "Clownish Kicker",
+        "description": "Persistently pushes you to play pranks on punters.",
+        "prefab": "collections/pet/boot_clown",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 3.0,
+                "amount": 3.0
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/equipment/enemydeath_movementspeed",
+                "text": "Gain a movement speed boost when a nearby enemy dies.",
+                "proc_cooldown": 1.0,
+                "effects": [
+                    {
+                        "name": "Enemydeath Speed Effect",
+                        "prefab": "abilities/equipment/enemydeath_speed_effect",
+                        "component": 136,
+                        "duration": 5.5,
+                        "stats": [
+                            {
+                                "stat": "$Stat_MovementSpeed",
+                                "name": "Movement Speed",
+                                "op": "Add",
+                                "value": 30.0,
+                                "percent": false,
+                                "amount": 30.0
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
         "slug": "joystick_calculator",
         "name": "Clumsy Calculator",
-        "description": "",
+        "description": "Somehow everything you enter in to this calculator comes up as pi despite being a total square.  But it's trying its best.",
         "prefab": "collections/pet/joystick_calculator",
         "stats": [
             {
@@ -5432,6 +5593,29 @@
         "abilities": []
     },
     {
+        "slug": "dragonserpent_quetzalcoatl",
+        "name": "Colorful Quetzalcoatl",
+        "description": "Flashes a different color from every angle.",
+        "prefab": "collections/pet/dragonserpent_quetzalcoatl",
+        "stats": [
+            {
+                "name": "Health Regen Bonus",
+                "stat": "$Stat_HealthRegenBonus_controller",
+                "op": "MultiplySum",
+                "value": 15.0,
+                "amount": 0.15
+            },
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "papercrane_surfboard",
         "name": "Colors of the Breezesurfer",
         "description": "Maybe a little too small to actually surf the colors of the wind.",
@@ -5464,7 +5648,7 @@
     {
         "slug": "cube_companion",
         "name": "Companion Cube",
-        "description": "",
+        "description": "It would never dump you into a furnace. You monster.",
         "prefab": "collections/pet/cube_companion",
         "stats": [
             {
@@ -5882,6 +6066,29 @@
         "abilities": []
     },
     {
+        "slug": "jelotl_red",
+        "name": "Cranberry Pilotl",
+        "description": "Why... Why is the pilgrim wet?\\n\\nOriginally available during Turkeytopia 2019.",
+        "prefab": "collections/pet/jelotl_red",
+        "stats": [
+            {
+                "name": "Critical Damage",
+                "stat": "$Stat_CriticalHitDamage",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 2.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "frog_scavenger",
         "name": "Cranky Croaker",
         "description": "You can hear their teeth grinding after an unsuccessful hunt.",
@@ -5907,7 +6114,7 @@
     {
         "slug": "spidermonkey_cursed",
         "name": "Crawly Sporeling",
-        "description": "",
+        "description": "Itsy bitsy sporeling went up the Bunfeed sprout. Down poured the water can and washed the sporeling out.",
         "prefab": "collections/pet/spidermonkey_cursed",
         "stats": [
             {
@@ -6027,6 +6234,29 @@
         "abilities": []
     },
     {
+        "slug": "duodrak_september2024_down",
+        "name": "Cross-Eyed Crawler",
+        "description": "Beware, it has the eyes of both predator and prey.",
+        "prefab": "collections/pet/duodrak_september2024_down",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 250.0,
+                "amount": 250.0
+            },
+            {
+                "name": "Stability",
+                "stat": "$Stat_Stability",
+                "op": "Add",
+                "value": 15.0,
+                "amount": 15.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "joystick_frog_lava",
         "name": "Crunchie Freddy",
         "description": "Puddle me a Lava frog. Found during April Fool's Day",
@@ -6114,29 +6344,6 @@
                 "op": "Add",
                 "value": 10.0,
                 "amount": 10.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "cube_ashen",
-        "name": "cube_ashen",
-        "description": "Rolls a critical fail every time.",
-        "prefab": "collections/pet/cube_ashen",
-        "stats": [
-            {
-                "name": "Crafting Speed",
-                "stat": "$Stat_CraftingSpeed",
-                "op": "Add",
-                "value": 3.0,
-                "amount": 3.0
-            },
-            {
-                "name": "Lasermancy",
-                "stat": "$Stat_Mining",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
             }
         ],
         "abilities": []
@@ -6310,7 +6517,7 @@
     {
         "slug": "cragglepod_qbthulhu",
         "name": "Curious Cauldron",
-        "description": "",
+        "description": "Something sinister is brewing!",
         "prefab": "collections/pet/cragglepod_qbthulhu",
         "stats": [
             {
@@ -6772,101 +6979,6 @@
         "abilities": []
     },
     {
-        "slug": "delve_bird_kiwi_aempcannon",
-        "name": "delve_bird_kiwi_aempcannon",
-        "description": "Absolutely harmless.",
-        "prefab": "collections/pet/delve_bird_kiwi_aempcannon",
-        "stats": [
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 200.0,
-                "amount": 200.0
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 10.0,
-                "amount": 0.1
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/enemydeath_heal_low",
-                "text": "Gain 5% health when a nearby enemy dies.",
-                "proc_cooldown": 1.0,
-                "healing": [
-                    {
-                        "name": "Enemydeath Heal Effect Low",
-                        "prefab": "abilities/equipment/enemydeath_heal_effect_low",
-                        "max_health_percent": 0.05
-                    }
-                ]
-            },
-            {
-                "ref": "abilities/equipment/enemydeath_movementspeed_low",
-                "text": "Gain a small movement speed boost when a nearby enemy dies.",
-                "proc_cooldown": 1.0,
-                "effects": [
-                    {
-                        "name": "Enemydeath Speed Effect Low",
-                        "prefab": "abilities/equipment/enemydeath_speed_effect_low",
-                        "component": 136,
-                        "duration": 5.5,
-                        "stats": [
-                            {
-                                "stat": "$Stat_MovementSpeed",
-                                "name": "Movement Speed",
-                                "op": "Add",
-                                "value": 20.0,
-                                "percent": false,
-                                "amount": 20.0
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "slug": "delve_pebble_toxicmushroom",
-        "name": "delve_pebble_toxicmushroom",
-        "description": "Mastered all forms of social media.",
-        "prefab": "collections/pet/delve_pebble_toxicmushroom",
-        "stats": [
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 200.0,
-                "amount": 200.0
-            },
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 3.0,
-                "amount": 3.0
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/onhit_heal_low",
-                "text": "Gain 1% health each time you damage an enemy.",
-                "proc_cooldown": 0.05,
-                "healing": [
-                    {
-                        "name": "Onhit Heal Effect Low",
-                        "prefab": "abilities/equipment/onhit_heal_effect_low",
-                        "max_health_percent": 0.01
-                    }
-                ]
-            }
-        ]
-    },
-    {
         "slug": "unicorn_trove",
         "name": "Derpony",
         "description": "Maximum derp.",
@@ -6892,7 +7004,7 @@
     {
         "slug": "llama_puppy_diamond",
         "name": "Diamond Dog",
-        "description": "",
+        "description": "Loyal to the crew. Fabulous under pressure.",
         "prefab": "collections/pet/llama_puppy_diamond",
         "stats": [
             {
@@ -6931,7 +7043,7 @@
     {
         "slug": "qubesly_diggsly_shadow",
         "name": "Diggsly's Shadow's Shadow",
-        "description": "",
+        "description": "This shadowy shadow makes exploring even shadier.\n\nPurchasable from Mortsdot during the Subterranean Scramble event.",
         "prefab": "collections/pet/qubesly_diggsly_shadow",
         "stats": [
             {
@@ -7195,29 +7307,6 @@
         "abilities": []
     },
     {
-        "slug": "dog_postal",
-        "name": "dog_postal",
-        "description": "",
-        "prefab": "collections/pet/dog_postal",
-        "stats": [
-            {
-                "name": "Health Regen Bonus",
-                "stat": "$Stat_HealthRegenBonus_controller",
-                "op": "MultiplySum",
-                "value": 8.0,
-                "amount": 0.08
-            },
-            {
-                "name": "Incoming Damage",
-                "stat": "$Stat_IncomingDamageMod",
-                "op": "Multiply",
-                "value": 8.0,
-                "amount": 0.92
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "dog_unicorgi",
         "name": "Dolly",
         "description": "A gift from the Sun Goddess to a young fae who wished for a lifelong friend.",
@@ -7319,7 +7408,7 @@
     {
         "slug": "qubesly_doctor",
         "name": "Dr. Qubesly",
-        "description": "",
+        "description": "Worry not, you are in good hands.",
         "prefab": "collections/pet/qubesly_doctor",
         "stats": [
             {
@@ -7416,29 +7505,6 @@
                 ]
             }
         ]
-    },
-    {
-        "slug": "dragonserpent_quetzalcoatl",
-        "name": "dragonserpent_quetzalcoatl",
-        "description": "Flashes a different color from every angle.",
-        "prefab": "collections/pet/dragonserpent_quetzalcoatl",
-        "stats": [
-            {
-                "name": "Health Regen Bonus",
-                "stat": "$Stat_HealthRegenBonus_controller",
-                "op": "MultiplySum",
-                "value": 15.0,
-                "amount": 0.15
-            },
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 50.0,
-                "amount": 50.0
-            }
-        ],
-        "abilities": []
     },
     {
         "slug": "panda_dropbear",
@@ -7651,29 +7717,6 @@
                 "op": "Add",
                 "value": 10.0,
                 "amount": 10.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "duodrak_september2024_down",
-        "name": "duodrak_september2024_down",
-        "description": "Beware, it has the eyes of both predator and prey.",
-        "prefab": "collections/pet/duodrak_september2024_down",
-        "stats": [
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 250.0,
-                "amount": 250.0
-            },
-            {
-                "name": "Stability",
-                "stat": "$Stat_Stability",
-                "op": "Add",
-                "value": 15.0,
-                "amount": 15.0
             }
         ],
         "abilities": []
@@ -7974,6 +8017,29 @@
         "abilities": []
     },
     {
+        "slug": "mug_eggnog",
+        "name": "Eggnoggin",
+        "description": "A great friend to have over when you are snowed in.",
+        "prefab": "collections/pet/mug_eggnog",
+        "stats": [
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "griffon_announcer",
         "name": "El Anunciadorcito",
         "description": "He can turn a scuffle into a main event.",
@@ -8061,7 +8127,7 @@
     {
         "slug": "qubesly_friend",
         "name": "Elder Dragonsquire",
-        "description": "",
+        "description": "Unlocked when 3 friends you have referred reach Trove Mastery Rank 20.",
         "prefab": "collections/pet/qubesly_friend",
         "stats": [
             {
@@ -8077,7 +8143,7 @@
     {
         "slug": "hellbug_blue",
         "name": "Electric Heckling",
-        "description": "",
+        "description": "This heckbug has stunning good looks and is ready to impress.\n\nCan be purchased on occasion via the store, or rarely found when Heckbugs fall in love.",
         "prefab": "collections/pet/hellbug_blue",
         "stats": [
             {
@@ -8677,7 +8743,7 @@
     {
         "slug": "zardille_fae_racoon",
         "name": "Fae Scavenger",
-        "description": "",
+        "description": "They come and go, scavenging till they find what they search for.",
         "prefab": "collections/pet/zardille_fae_racoon",
         "stats": [
             {
@@ -8723,7 +8789,7 @@
     {
         "slug": "spidermonkey_purple",
         "name": "Fae Spidermonkey",
-        "description": "",
+        "description": "This stranger creature must be the result of some magical mishap, right?",
         "prefab": "collections/pet/spidermonkey_purple",
         "stats": [
             {
@@ -8739,158 +8805,6 @@
                 "op": "Add",
                 "value": 7.0,
                 "amount": 7.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "fae_gingee",
-        "name": "fae_gingee",
-        "description": "Sweetness to die for.",
-        "prefab": "collections/pet/fae_gingee",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 2.0,
-                "amount": 2.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "fae_pinfae",
-        "name": "fae_pinfae",
-        "description": "Brought about by a dying curse, it now stalks you for eternity.",
-        "prefab": "collections/pet/fae_pinfae",
-        "stats": [
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 6.0,
-                "amount": 0.06
-            },
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 40.0,
-                "amount": 40.0
-            },
-            {
-                "name": "Energy Regen",
-                "stat": "$Stat_EnergyRegen_controller",
-                "op": "Add",
-                "value": 30.0,
-                "amount": 30.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "fae_pingod",
-        "name": "fae_pingod",
-        "description": "This servant to the fallen God-Queen of the Shadow Fae is keeping tabs on you, with unknown ulterior motives.",
-        "prefab": "collections/pet/fae_pingod",
-        "stats": [
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 6.0,
-                "amount": 0.06
-            },
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 44.0,
-                "amount": 44.0
-            },
-            {
-                "name": "Energy Regen",
-                "stat": "$Stat_EnergyRegen_controller",
-                "op": "Add",
-                "value": 30.0,
-                "amount": 30.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "fae_quasit",
-        "name": "fae_quasit",
-        "description": "His true name is Tiercelnydrixalydacorth, but most people call him Jim.",
-        "prefab": "collections/pet/fae_quasit",
-        "stats": [
-            {
-                "name": "Physical Damage",
-                "stat": "$Stat_PhysicalDamage",
-                "op": "Add",
-                "value": 13.0,
-                "amount": 13.0
-            },
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 23.0,
-                "amount": 23.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "fae_reaper",
-        "name": "fae_reaper",
-        "description": "There's no need to fear this reaper - this baby is really just along for the ride.",
-        "prefab": "collections/pet/fae_reaper",
-        "stats": [
-            {
-                "name": "Attack Speed",
-                "stat": "$Stat_AttackSpeed",
-                "op": "Add",
-                "value": 4.0,
-                "amount": 4.0
-            },
-            {
-                "name": "Critical Damage",
-                "stat": "$Stat_CriticalHitDamage",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "fae_triton",
-        "name": "fae_triton",
-        "description": "Takes his role as the king very serious!",
-        "prefab": "collections/pet/fae_triton",
-        "stats": [
-            {
-                "name": "Incoming Damage",
-                "stat": "$Stat_IncomingDamageMod",
-                "op": "Multiply",
-                "value": 20.0,
-                "amount": 0.8
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            },
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 150.0,
-                "amount": 150.0
             }
         ],
         "abilities": []
@@ -8944,6 +8858,75 @@
                 "op": "MultiplySum",
                 "value": 0.49,
                 "amount": 0.0049
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "panda_fate",
+        "name": "Fateful Brainbeast",
+        "description": "It might be all brain, doesn’t mean it’s overly smart.",
+        "prefab": "collections/pet/panda_fate",
+        "stats": [
+            {
+                "name": "Maximum Energy",
+                "stat": "$Stat_MaxEnergy",
+                "op": "Add",
+                "value": 15.0,
+                "amount": 15.0
+            },
+            {
+                "name": "Energy Regen",
+                "stat": "$Stat_EnergyRegen_controller",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "llama_fate",
+        "name": "Fateful Milo",
+        "description": "Your most loyal companion on your adventurous journey!",
+        "prefab": "collections/pet/llama_fate",
+        "stats": [
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 15.0,
+                "amount": 15.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "mimic_fate",
+        "name": "Fateful Mimic",
+        "description": "Just an ordinary chest. Watch your fingers though.",
+        "prefab": "collections/pet/mimic_fate",
+        "stats": [
+            {
+                "name": "Magic Find Bonus",
+                "stat": "$Stat_MagicFindBonus",
+                "op": "MultiplySum",
+                "value": 3.0,
+                "amount": 0.03
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 200.0,
+                "amount": 200.0
             }
         ],
         "abilities": []
@@ -9173,6 +9156,29 @@
                 "op": "MultiplySum",
                 "value": 15.0,
                 "amount": 0.15
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "fae_quasit",
+        "name": "Fiendish Familiar",
+        "description": "His true name is Tiercelnydrixalydacorth, but most people call him Jim.",
+        "prefab": "collections/pet/fae_quasit",
+        "stats": [
+            {
+                "name": "Physical Damage",
+                "stat": "$Stat_PhysicalDamage",
+                "op": "Add",
+                "value": 13.0,
+                "amount": 13.0
+            },
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 23.0,
+                "amount": 23.0
             }
         ],
         "abilities": []
@@ -9608,29 +9614,6 @@
         "abilities": []
     },
     {
-        "slug": "floateye_inflatable_chuckp",
-        "name": "floateye_inflatable_chuckp",
-        "description": "Liberated from Chuck Pinzo, who uses these to attract attention.",
-        "prefab": "collections/pet/floateye_inflatable_chuckp",
-        "stats": [
-            {
-                "name": "Incoming Damage",
-                "stat": "$Stat_IncomingDamageMod",
-                "op": "Multiply",
-                "value": 8.0,
-                "amount": 0.92
-            },
-            {
-                "name": "Energy Regen",
-                "stat": "$Stat_EnergyRegen_controller",
-                "op": "Add",
-                "value": 30.0,
-                "amount": 30.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "mug_rootbeer",
         "name": "Floaty Rootbeer",
         "description": "Surprisingly successful at keeping a level head.",
@@ -9679,7 +9662,7 @@
     {
         "slug": "fae_gardening_rare",
         "name": "Flowerbed Countess",
-        "description": "",
+        "description": "The Flowerbed Countess is as elusive as she is beautiful.\n\nThe Flowerbed Countess can be adopted rarely from Flowerbed Faerie Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/fae_gardening_rare",
         "stats": [
             {
@@ -9702,7 +9685,7 @@
     {
         "slug": "fae_gardening",
         "name": "Flowerbed Faerie",
-        "description": "",
+        "description": "Flowerbed Faeries love beauty in all its forms.\n\nFlowerbed Faeries can be adopted from Flowerbed Faerie Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/fae_gardening",
         "stats": [
             {
@@ -10004,6 +9987,36 @@
         "abilities": []
     },
     {
+        "slug": "fae_pinfae",
+        "name": "Fractious Fury",
+        "description": "Brought about by a dying curse, it now stalks you for eternity.",
+        "prefab": "collections/pet/fae_pinfae",
+        "stats": [
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 6.0,
+                "amount": 0.06
+            },
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 40.0,
+                "amount": 40.0
+            },
+            {
+                "name": "Energy Regen",
+                "stat": "$Stat_EnergyRegen_controller",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "tentacle_rook",
         "name": "Framework",
         "description": "Looking to escape and build free.",
@@ -10091,7 +10104,7 @@
     {
         "slug": "joystick_frog_water",
         "name": "Freddy",
-        "description": "",
+        "description": "Puddle me a Water frog. Found during April Fool's Day",
         "prefab": "collections/pet/joystick_frog_water",
         "stats": [
             {
@@ -10137,7 +10150,7 @@
     {
         "slug": "floateye_fiona",
         "name": "Friendly Fiona",
-        "description": "",
+        "description": "Most cats have 9 Lives, Fiona has at least that many personalities.\nThis one loves tunafish cake, by the way!",
         "prefab": "collections/pet/floateye_fiona",
         "stats": [
             {
@@ -10189,7 +10202,7 @@
     {
         "slug": "zepperay_heckbug_02",
         "name": "Friendly Heckomorph",
-        "description": "",
+        "description": "Free hugs!",
         "prefab": "collections/pet/zepperay_heckbug_02",
         "stats": [
             {
@@ -10249,65 +10262,6 @@
                 "op": "Multiply",
                 "value": 10.0,
                 "amount": 0.9
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "frog_chair",
-        "name": "frog_chair",
-        "description": "It was meant to be jumped OFF of!",
-        "prefab": "collections/pet/frog_chair",
-        "stats": [
-            {
-                "name": "Maximum Health Bonus",
-                "stat": "$Stat_MaxHealthBonus",
-                "op": "MultiplySum",
-                "value": 15.0,
-                "amount": 0.15
-            },
-            {
-                "name": "Stability",
-                "stat": "$Stat_Stability",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/enemydeath_heal",
-                "text": "Gain 15% health when a nearby enemy dies.",
-                "proc_cooldown": 1.0,
-                "healing": [
-                    {
-                        "name": "Enemydeath Heal Effect",
-                        "prefab": "abilities/equipment/enemydeath_heal_effect",
-                        "max_health_percent": 0.15
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "slug": "frog_lucky",
-        "name": "frog_lucky",
-        "description": "The cutest knight I've ever seen.",
-        "prefab": "collections/pet/frog_lucky",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 7.0,
-                "amount": 7.0
-            },
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 35.0,
-                "amount": 35.0
             }
         ],
         "abilities": []
@@ -10476,6 +10430,29 @@
                 "op": "Add",
                 "value": 33.0,
                 "amount": 33.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "mug_sundae",
+        "name": "Funday Sundae",
+        "description": "Have a chill time any day of the week with this sentient sweet treat.",
+        "prefab": "collections/pet/mug_sundae",
+        "stats": [
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2
             }
         ],
         "abilities": []
@@ -10674,7 +10651,7 @@
     {
         "slug": "qubesly_crystaline",
         "name": "Gemsly",
-        "description": "",
+        "description": "This precious friend is here to help you become stronger. Gemsly loves you just the way you are.\n\n Earned from Gemsly's Gem Expertise Quest.",
         "prefab": "collections/pet/qubesly_crystaline",
         "stats": [
             {
@@ -10854,9 +10831,25 @@
         "abilities": []
     },
     {
+        "slug": "fae_gingee",
+        "name": "Gingee",
+        "description": "Sweetness to die for.",
+        "prefab": "collections/pet/fae_gingee",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 2.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "qubesly_gingerbread",
         "name": "Gingerly Qubaker",
-        "description": "",
+        "description": "Long-term dance partner of stage superstar Frida Astralia, their Snowfest performances are one of the season's cultural highlights.",
         "prefab": "collections/pet/qubesly_gingerbread",
         "stats": [
             {
@@ -10939,6 +10932,22 @@
         "abilities": []
     },
     {
+        "slug": "llama_neon",
+        "name": "Glowy Gary",
+        "description": "Makes a spectacle of himself every Neon night.",
+        "prefab": "collections/pet/llama_neon",
+        "stats": [
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "griffon_void",
         "name": "Glyfous the Shadow Touched",
         "description": "Proof that the shadow doesn't corrupt everything it touches.",
@@ -10994,7 +11003,7 @@
     {
         "slug": "tentacle_ski",
         "name": "Gnorbert the Shaky Skier",
-        "description": "",
+        "description": "He may wobble, but he always crosses the finish line… sooner or later.",
         "prefab": "collections/pet/tentacle_ski",
         "stats": [
             {
@@ -11033,29 +11042,6 @@
                 "op": "Add",
                 "value": 20.0,
                 "amount": 20.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "goat_demon",
-        "name": "goat_demon",
-        "description": "Pure trouble.",
-        "prefab": "collections/pet/goat_demon",
-        "stats": [
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 100.0,
-                "amount": 100.0
-            },
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 350.0,
-                "amount": 350.0
             }
         ],
         "abilities": []
@@ -11179,7 +11165,7 @@
     {
         "slug": "hellbug_gold",
         "name": "Golden Heckling",
-        "description": "",
+        "description": "Go for the gold with this gorgeous heckbug.\n\nCan be purchased on occasion via the store.",
         "prefab": "collections/pet/hellbug_gold",
         "stats": [
             {
@@ -11563,7 +11549,7 @@
     {
         "slug": "biped_turtle_grawky",
         "name": "Grawky the Green",
-        "description": "",
+        "description": "As long as you do what Grawky says you'll never need to know if the pistol is loaded or not.",
         "prefab": "collections/pet/biped_turtle_grawky",
         "stats": [
             {
@@ -11639,6 +11625,36 @@
                 "op": "Add",
                 "value": 20.0,
                 "amount": 20.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "raptor_eye",
+        "name": "Greedy Gazeraptor Pup",
+        "description": "Its eye is bigger than its stomach, so it tends to make itself sick by overeating.",
+        "prefab": "collections/pet/raptor_eye",
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            },
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Add",
+                "value": 8.0,
+                "amount": 8.0
             }
         ],
         "abilities": []
@@ -11945,7 +11961,7 @@
     {
         "slug": "hellbug_red",
         "name": "Handsome Heckling",
-        "description": "",
+        "description": "A classic cutey thats looking for the right heckbug to fall in love with.\n\nCan be purchased on occasion via the store, or rarely found when Heckbugs fall in love.",
         "prefab": "collections/pet/hellbug_red",
         "stats": [
             {
@@ -12292,7 +12308,7 @@
     {
         "slug": "caterpillar_hellbug",
         "name": "Heckbug Larva",
-        "description": "",
+        "description": "Give it a few days and it won't want to hug your faceoff.",
         "prefab": "collections/pet/caterpillar_hellbug",
         "stats": [
             {
@@ -12548,29 +12564,6 @@
         "abilities": []
     },
     {
-        "slug": "hermitcrab_cake_strawberry",
-        "name": "hermitcrab_cake_strawberry",
-        "description": "Take a bite at your own peril.",
-        "prefab": "collections/pet/hermitcrab_cake_strawberry",
-        "stats": [
-            {
-                "name": "Attack Speed",
-                "stat": "$Stat_AttackSpeed",
-                "op": "Add",
-                "value": 8.0,
-                "amount": 8.0
-            },
-            {
-                "name": "Energy Regen",
-                "stat": "$Stat_EnergyRegen_controller",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "dragon_seahorse",
         "name": "Heroic Hippocampus",
         "description": "A very brave steed.",
@@ -12624,6 +12617,29 @@
         "abilities": []
     },
     {
+        "slug": "pebble_hex",
+        "name": "Hex-o-Lantern",
+        "description": "With a hat brimming with tricks and a bag full of treats, this spooky skeleton never knocks twice.",
+        "prefab": "collections/pet/pebble_hex",
+        "stats": [
+            {
+                "name": "Health Regen Bonus",
+                "stat": "$Stat_HealthRegenBonus_controller",
+                "op": "MultiplySum",
+                "value": 10.0,
+                "amount": 0.1
+            },
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 25.0,
+                "amount": 25.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "llama_medieval",
         "name": "Highland Harriet",
         "description": "Loves hikes in the hills, mysterious mushrooms, and flittering fireflies.",
@@ -12635,6 +12651,29 @@
                 "op": "Add",
                 "value": 15.0,
                 "amount": 15.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "mug_coffee",
+        "name": "Home Brew",
+        "description": "The Cafmeister's most local creation, it will always be with you.",
+        "prefab": "collections/pet/mug_coffee",
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 2.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
             }
         ],
         "abilities": []
@@ -12665,7 +12704,7 @@
     {
         "slug": "delve_poop_honeyjar",
         "name": "Honeyguard",
-        "description": "",
+        "description": "Watch out for that bee!",
         "prefab": "collections/pet/delve_poop_honeyjar",
         "stats": [
             {
@@ -12880,6 +12919,36 @@
         "abilities": []
     },
     {
+        "slug": "cat_viking",
+        "name": "Hrolfköttr",
+        "description": "No, on second thought, maybe I'll let you feed it...",
+        "prefab": "collections/pet/cat_viking",
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            },
+            {
+                "name": "Lasermancy",
+                "stat": "$Stat_Mining",
+                "op": "Add",
+                "value": 80.0,
+                "amount": 80.0
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 250.0,
+                "amount": 250.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "raptor_hydrakken",
         "name": "Hungry Hydrakken Hatchling",
         "description": "Be thankful this little one only has two mouths to feed.",
@@ -13039,6 +13108,29 @@
         "abilities": []
     },
     {
+        "slug": "llama_fire",
+        "name": "Igneous Ignatius",
+        "description": "The name might be old-fashioned, but he is completely lit, fam.",
+        "prefab": "collections/pet/llama_fire",
+        "stats": [
+            {
+                "name": "Critical Hit",
+                "stat": "$Stat_CriticalHitChance",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 20.0
+            },
+            {
+                "name": "Critical Damage",
+                "stat": "$Stat_CriticalHitDamage",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "rooster_ikabay",
         "name": "Ikabay",
         "description": "Eno siht evah nac uoy sey.",
@@ -13156,7 +13248,7 @@
     {
         "slug": "phoenix_environment",
         "name": "Invigorating Icy Flying Fish",
-        "description": "",
+        "description": "Just standing near it takes your breath away, it's so cold!",
         "prefab": "collections/pet/phoenix_environment",
         "stats": [
             {
@@ -13347,7 +13439,7 @@
     {
         "slug": "egg",
         "name": "Itty Bitty Bawk",
-        "description": "",
+        "description": "Freshly hatched and ready for action.",
         "prefab": "collections/pet/egg",
         "stats": [
             {
@@ -13530,24 +13622,24 @@
         ]
     },
     {
-        "slug": "jelotl_red",
-        "name": "jelotl_red",
-        "description": "Why... Why is the pilgrim wet?\\n\\nOriginally available during Turkeytopia 2019.",
-        "prefab": "collections/pet/jelotl_red",
+        "slug": "mimic_jaws",
+        "name": "JAWS",
+        "description": "Absolutely the perfect snappy substitution for your thirds.",
+        "prefab": "collections/pet/mimic_jaws",
         "stats": [
             {
-                "name": "Critical Damage",
-                "stat": "$Stat_CriticalHitDamage",
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
                 "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
+                "value": 4.0,
+                "amount": 4.0
             },
             {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
+                "name": "Physical Damage",
+                "stat": "$Stat_PhysicalDamage",
                 "op": "Add",
-                "value": 2.0,
-                "amount": 2.0
+                "value": 150.0,
+                "amount": 150.0
             }
         ],
         "abilities": []
@@ -13597,6 +13689,42 @@
             }
         ],
         "abilities": []
+    },
+    {
+        "slug": "frog_chair",
+        "name": "Jumping Chair",
+        "description": "It was meant to be jumped OFF of!",
+        "prefab": "collections/pet/frog_chair",
+        "stats": [
+            {
+                "name": "Maximum Health Bonus",
+                "stat": "$Stat_MaxHealthBonus",
+                "op": "MultiplySum",
+                "value": 15.0,
+                "amount": 0.15
+            },
+            {
+                "name": "Stability",
+                "stat": "$Stat_Stability",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/equipment/enemydeath_heal",
+                "text": "Gain 15% health when a nearby enemy dies.",
+                "proc_cooldown": 1.0,
+                "healing": [
+                    {
+                        "name": "Enemydeath Heal Effect",
+                        "prefab": "abilities/equipment/enemydeath_heal_effect",
+                        "max_health_percent": 0.15
+                    }
+                ]
+            }
+        ]
     },
     {
         "slug": "stack_junebugcake",
@@ -13732,7 +13860,7 @@
     {
         "slug": "unicorn_kamirainbow",
         "name": "Kami of Guileless Wonder",
-        "description": "",
+        "description": "Shed your preconceptions, and marvel at all the miracles that surround you.",
         "prefab": "collections/pet/unicorn_kamirainbow",
         "stats": [
             {
@@ -13902,7 +14030,7 @@
     {
         "slug": "spidermonkey_drider",
         "name": "Kami of Skittering Splendor",
-        "description": "",
+        "description": "Expressing the splendor of the world in every graceful movement.",
         "prefab": "collections/pet/spidermonkey_drider",
         "stats": [
             {
@@ -14204,6 +14332,29 @@
         ]
     },
     {
+        "slug": "snake_prestige",
+        "name": "King Koba",
+        "description": "When King Koba Sss's you ssss how ssssss.",
+        "prefab": "collections/pet/snake_prestige",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 400.0,
+                "amount": 400.0
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "qubesly_king",
         "name": "King Qubesly",
         "description": "A magnificent monarch who deems you his equal.",
@@ -14273,9 +14424,46 @@
         "abilities": []
     },
     {
+        "slug": "papercrane_viking",
+        "name": "Knarrmót",
+        "description": "The spirit of voyage is eternal.",
+        "prefab": "collections/pet/papercrane_viking",
+        "stats": [
+            {
+                "name": "Superstition",
+                "stat": "$Stat_Superstition",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            },
+            {
+                "name": "Maximum Health Bonus",
+                "stat": "$Stat_MaxHealthBonus",
+                "op": "MultiplySum",
+                "value": 10.0,
+                "amount": 0.1
+            },
+            {
+                "name": "Maximum Energy",
+                "stat": "$Stat_MaxEnergy",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 200.0,
+                "amount": 200.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "qubesly_knight",
         "name": "Knight Qubesly",
-        "description": "",
+        "description": "Defender of the Medieval Highlands.",
         "prefab": "collections/pet/qubesly_knight",
         "stats": [
             {
@@ -14314,6 +14502,29 @@
                 "op": "Add",
                 "value": 0.5,
                 "amount": 5.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "cat_cookie",
+        "name": "Kookie Kitty",
+        "description": "Rumored to be insanely delicious, but it is way too fast and feisty to let you have a taste.",
+        "prefab": "collections/pet/cat_cookie",
+        "stats": [
+            {
+                "name": "Magic Damage",
+                "stat": "$Stat_SpellDamage",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0
+            },
+            {
+                "name": "Critical Hit",
+                "stat": "$Stat_CriticalHitChance",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 20.0
             }
         ],
         "abilities": []
@@ -14538,6 +14749,35 @@
             }
         ],
         "abilities": []
+    },
+    {
+        "slug": "panda_pug",
+        "name": "Latté",
+        "description": "It's French of course!",
+        "prefab": "collections/pet/panda_pug",
+        "stats": [
+            {
+                "name": "Lasermancy",
+                "stat": "$Stat_Mining",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/equipment/onhit_heal",
+                "text": "Gain 2.2% health each time you damage an enemy.",
+                "proc_cooldown": 0.15,
+                "healing": [
+                    {
+                        "name": "Onhit Heal Effect",
+                        "prefab": "abilities/equipment/onhit_heal_effect",
+                        "max_health_percent": 0.022
+                    }
+                ]
+            }
+        ]
     },
     {
         "slug": "caterpillar_lavalarva",
@@ -15352,91 +15592,6 @@
         "abilities": []
     },
     {
-        "slug": "llama_fate",
-        "name": "llama_fate",
-        "description": "Your most loyal companion on your adventurous journey!",
-        "prefab": "collections/pet/llama_fate",
-        "stats": [
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 50.0,
-                "amount": 50.0
-            },
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 15.0,
-                "amount": 15.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "llama_fire",
-        "name": "llama_fire",
-        "description": "The name might be old-fashioned, but he is completely lit, fam.",
-        "prefab": "collections/pet/llama_fire",
-        "stats": [
-            {
-                "name": "Critical Hit",
-                "stat": "$Stat_CriticalHitChance",
-                "op": "Add",
-                "value": 2.0,
-                "amount": 20.0
-            },
-            {
-                "name": "Critical Damage",
-                "stat": "$Stat_CriticalHitDamage",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "llama_luna",
-        "name": "llama_luna",
-        "description": "Limited Edition Doggo.",
-        "prefab": "collections/pet/llama_luna",
-        "stats": [
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            },
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 4.0,
-                "amount": 4.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "llama_neon",
-        "name": "llama_neon",
-        "description": "Makes a spectacle of himself every Neon night.",
-        "prefab": "collections/pet/llama_neon",
-        "stats": [
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 30.0,
-                "amount": 30.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "punchbot_loo",
         "name": "Looey the Loo",
         "description": "A surprisingly loyal lavatory who opens its heart and door to you. When danger strikes, out pops a roll of emergency TP and a whiff of determination. Buzz included.",
@@ -15485,7 +15640,7 @@
     {
         "slug": "papercrane_loveboat",
         "name": "Love Boat",
-        "description": "",
+        "description": "Take a leisurely cruise down the river of love.",
         "prefab": "collections/pet/papercrane_loveboat",
         "stats": [
             {
@@ -15743,6 +15898,29 @@
                 "op": "Add",
                 "value": 1.0,
                 "amount": 10.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "llama_luna",
+        "name": "Luna",
+        "description": "Limited Edition Doggo.",
+        "prefab": "collections/pet/llama_luna",
+        "stats": [
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 4.0,
+                "amount": 4.0
             }
         ],
         "abilities": []
@@ -16063,7 +16241,7 @@
     {
         "slug": "goldfish_mudskipper",
         "name": "Magical Mudskipper",
-        "description": "",
+        "description": "A sage with a sense of humour, if he doesn't already know the answer he can find it out soon enough.",
         "prefab": "collections/pet/goldfish_mudskipper",
         "stats": [
             {
@@ -16137,6 +16315,59 @@
         "abilities": []
     },
     {
+        "slug": "fae_pingod",
+        "name": "Maiden of Pershadonie",
+        "description": "This servant to the fallen God-Queen of the Shadow Fae is keeping tabs on you, with unknown ulterior motives.",
+        "prefab": "collections/pet/fae_pingod",
+        "stats": [
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 6.0,
+                "amount": 0.06
+            },
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 44.0,
+                "amount": 44.0
+            },
+            {
+                "name": "Energy Regen",
+                "stat": "$Stat_EnergyRegen_controller",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "dog_postal",
+        "name": "Maildog Max",
+        "description": "Guarding letters like they’re legendary loot!",
+        "prefab": "collections/pet/dog_postal",
+        "stats": [
+            {
+                "name": "Health Regen Bonus",
+                "stat": "$Stat_HealthRegenBonus_controller",
+                "op": "MultiplySum",
+                "value": 8.0,
+                "amount": 0.08
+            },
+            {
+                "name": "Incoming Damage",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 8.0,
+                "amount": 0.92
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "delve_zepperay_map",
         "name": "Mapphew",
         "description": "'Map, please. Mapphew was my father!'",
@@ -16162,7 +16393,7 @@
     {
         "slug": "qubesly_merchantmarvel",
         "name": "Mark, Mini Marakeet",
-        "description": "",
+        "description": "Respects the hustle and their elders.\n\nEarned from completing the Marketplace Expertise Side Quest.",
         "prefab": "collections/pet/qubesly_merchantmarvel",
         "stats": [
             {
@@ -16608,161 +16839,6 @@
         "abilities": []
     },
     {
-        "slug": "mimic_bike",
-        "name": "mimic_bike",
-        "description": "Bring bring.",
-        "prefab": "collections/pet/mimic_bike",
-        "stats": [
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/enemydeath_damagebuff",
-                "text": "Chance when a nearby enemy dies to gain a large damage and movement speed boost.",
-                "proc_cooldown": 10.0,
-                "effects": [
-                    {
-                        "name": "Enemydeath Damagebuff Effect",
-                        "prefab": "abilities/equipment/enemydeath_damagebuff_effect",
-                        "component": 136,
-                        "duration": 8.0,
-                        "stats": [
-                            {
-                                "stat": "$Stat_PhysicalDamageBonus",
-                                "name": "Physical Damage Bonus",
-                                "op": "MultiplySum",
-                                "value": 50.0,
-                                "percent": true,
-                                "amount": 0.5
-                            },
-                            {
-                                "stat": "$Stat_SpellDamageBonus",
-                                "name": "Magic Damage Bonus",
-                                "op": "MultiplySum",
-                                "value": 50.0,
-                                "percent": true,
-                                "amount": 0.5
-                            },
-                            {
-                                "stat": "$Stat_MovementSpeed",
-                                "name": "Movement Speed",
-                                "op": "Add",
-                                "value": 15.0,
-                                "percent": false,
-                                "amount": 15.0
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "slug": "mimic_cash",
-        "name": "mimic_cash",
-        "description": "Loaded with cash and a lil surprise.",
-        "prefab": "collections/pet/mimic_cash",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 3.0,
-                "amount": 3.0
-            },
-            {
-                "name": "Lasermancy",
-                "stat": "$Stat_Mining",
-                "op": "Add",
-                "value": 60.0,
-                "amount": 60.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mimic_clam",
-        "name": "mimic_clam",
-        "description": "Incredibly talented when it comes to making fresh-squoze Orange Juice. But boy does it ever make a mess!",
-        "prefab": "collections/pet/mimic_clam",
-        "stats": [
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            },
-            {
-                "name": "Energy Regen",
-                "stat": "$Stat_EnergyRegen_controller",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mimic_fate",
-        "name": "mimic_fate",
-        "description": "Just an ordinary chest. Watch your fingers though.",
-        "prefab": "collections/pet/mimic_fate",
-        "stats": [
-            {
-                "name": "Magic Find Bonus",
-                "stat": "$Stat_MagicFindBonus",
-                "op": "MultiplySum",
-                "value": 3.0,
-                "amount": 0.03
-            },
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 200.0,
-                "amount": 200.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mimic_jaws",
-        "name": "mimic_jaws",
-        "description": "Absolutely the perfect snappy substitution for your thirds.",
-        "prefab": "collections/pet/mimic_jaws",
-        "stats": [
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 4.0,
-                "amount": 4.0
-            },
-            {
-                "name": "Physical Damage",
-                "stat": "$Stat_PhysicalDamage",
-                "op": "Add",
-                "value": 150.0,
-                "amount": 150.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "llama_environment",
         "name": "Mindful Mountain Dino",
         "description": "Find your Zen by being in the company of a (very small) Mountain Dino.",
@@ -16901,7 +16977,7 @@
     {
         "slug": "trex_manabeast_fire",
         "name": "Mini Fire Manabeast",
-        "description": "",
+        "description": "Like a Fire Manabeast if you made it smaller and friendlier.",
         "prefab": "collections/pet/trex_manabeast_fire",
         "stats": [
             {
@@ -17030,7 +17106,7 @@
     {
         "slug": "stiltstitcher_heron",
         "name": "Mire Lantern Heron",
-        "description": "",
+        "description": "Lost souls follow its lantern. Few remember why.",
         "prefab": "collections/pet/stiltstitcher_heron",
         "stats": [
             {
@@ -17237,7 +17313,7 @@
     {
         "slug": "dragon_mastery",
         "name": "Monarch Dragonling",
-        "description": "",
+        "description": "Very proper and well-behaved, as behooves royalty.",
         "prefab": "collections/pet/dragon_mastery",
         "stats": [
             {
@@ -17295,29 +17371,6 @@
                 ]
             }
         ]
-    },
-    {
-        "slug": "monkey_cft",
-        "name": "monkey_cft",
-        "description": "The Charming French Touch.",
-        "prefab": "collections/pet/monkey_cft",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 7.0,
-                "amount": 7.0
-            },
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 25.0,
-                "amount": 25.0
-            }
-        ],
-        "abilities": []
     },
     {
         "slug": "monkey_platymoon",
@@ -17497,6 +17550,29 @@
         "abilities": []
     },
     {
+        "slug": "bunny_moss",
+        "name": "Mosswhisker Hopper",
+        "description": "Born in the hedges and raised by flowers.",
+        "prefab": "collections/pet/bunny_moss",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 7.0,
+                "amount": 7.0
+            },
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Add",
+                "value": 4.0,
+                "amount": 4.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "griffon_lunaraxolotl",
         "name": "Mothwing Nightlion",
         "description": "Strong in both Moonlight and Moonshadow, and capable of the most adorable caterwauling.",
@@ -17568,128 +17644,6 @@
                 "op": "MultiplySum",
                 "value": 1.0,
                 "amount": 0.01
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mug_code40",
-        "name": "mug_code40",
-        "description": "If T = 0, time =  \"for more\".",
-        "prefab": "collections/pet/mug_code40",
-        "stats": [
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 20.0,
-                "amount": 0.2
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 20.0,
-                "amount": 0.2
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mug_coffee",
-        "name": "mug_coffee",
-        "description": "The Cafmeister's most local creation, it will always be with you.",
-        "prefab": "collections/pet/mug_coffee",
-        "stats": [
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 2.0,
-                "amount": 2.0
-            },
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mug_eggnog",
-        "name": "mug_eggnog",
-        "description": "A great friend to have over when you are snowed in.",
-        "prefab": "collections/pet/mug_eggnog",
-        "stats": [
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 20.0,
-                "amount": 0.2
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 20.0,
-                "amount": 0.2
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mug_hotpot",
-        "name": "mug_hotpot",
-        "description": "Will keep you warm on the coldest nights.",
-        "prefab": "collections/pet/mug_hotpot",
-        "stats": [
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 12.0,
-                "amount": 0.12
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 12.0,
-                "amount": 0.12
-            },
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "mug_sundae",
-        "name": "mug_sundae",
-        "description": "Have a chill time any day of the week with this sentient sweet treat.",
-        "prefab": "collections/pet/mug_sundae",
-        "stats": [
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 20.0,
-                "amount": 0.2
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 20.0,
-                "amount": 0.2
             }
         ],
         "abilities": []
@@ -17814,6 +17768,29 @@
                 "op": "Add",
                 "value": 7.0,
                 "amount": 7.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "tato_naomi",
+        "name": "Naomi's Tato",
+        "description": "A li'l spud bud for you to hang out with.",
+        "prefab": "collections/pet/tato_naomi",
+        "stats": [
+            {
+                "name": "Maximum Energy",
+                "stat": "$Stat_MaxEnergy",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 10.0,
+                "amount": 0.1
             }
         ],
         "abilities": []
@@ -18005,7 +17982,7 @@
     {
         "slug": "dragonfly_neonplane",
         "name": "Neon Nanodrone",
-        "description": "",
+        "description": "Very adept and persistent at giving chase, so shaking it off is going to be a challenge.",
         "prefab": "collections/pet/dragonfly_neonplane",
         "stats": [
             {
@@ -18180,6 +18157,29 @@
         "abilities": []
     },
     {
+        "slug": "fae_reaper",
+        "name": "Not So Grim Reaper",
+        "description": "There's no need to fear this reaper - this baby is really just along for the ride.",
+        "prefab": "collections/pet/fae_reaper",
+        "stats": [
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Add",
+                "value": 4.0,
+                "amount": 4.0
+            },
+            {
+                "name": "Critical Damage",
+                "stat": "$Stat_CriticalHitDamage",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "monkey_martialarts",
         "name": "Not-so helpful Grasshopper",
         "description": "Master Pun-chi assigned this one to follow you, but you still have to do all the good deeds by yourself.",
@@ -18224,6 +18224,62 @@
             }
         ],
         "abilities": []
+    },
+    {
+        "slug": "qubesly_shadow_knight",
+        "name": "Novice Shadow Knight",
+        "description": "A pocket-sized shadow with knightly poise.",
+        "prefab": "collections/pet/qubesly_shadow_knight",
+        "stats": [
+            {
+                "name": "Incoming Damage",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 8.0,
+                "amount": 0.92
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/equipment/enemydeath_damagebuff",
+                "text": "Chance when a nearby enemy dies to gain a large damage and movement speed boost.",
+                "proc_cooldown": 10.0,
+                "effects": [
+                    {
+                        "name": "Enemydeath Damagebuff Effect",
+                        "prefab": "abilities/equipment/enemydeath_damagebuff_effect",
+                        "component": 136,
+                        "duration": 8.0,
+                        "stats": [
+                            {
+                                "stat": "$Stat_PhysicalDamageBonus",
+                                "name": "Physical Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 50.0,
+                                "percent": true,
+                                "amount": 0.5
+                            },
+                            {
+                                "stat": "$Stat_SpellDamageBonus",
+                                "name": "Magic Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 50.0,
+                                "percent": true,
+                                "amount": 0.5
+                            },
+                            {
+                                "stat": "$Stat_MovementSpeed",
+                                "name": "Movement Speed",
+                                "op": "Add",
+                                "value": 15.0,
+                                "percent": false,
+                                "amount": 15.0
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     },
     {
         "slug": "goldfish_narwhal",
@@ -18403,7 +18459,7 @@
     {
         "slug": "hoppet_scout",
         "name": "Oracle Scout Droid",
-        "description": "",
+        "description": "Scanning… success is inevitable.",
         "prefab": "collections/pet/hoppet_scout",
         "stats": [
             {
@@ -18518,7 +18574,7 @@
     {
         "slug": "octopus_flower_prestige",
         "name": "Orchian",
-        "description": "",
+        "description": "Also goes by the Golden Lotus.",
         "prefab": "collections/pet/octopus_flower_prestige",
         "stats": [
             {
@@ -18581,6 +18637,36 @@
                 "op": "Add",
                 "value": 17.0,
                 "amount": 17.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "panda_lion",
+        "name": "Oren Lionheart",
+        "description": "Strong will, strong heart.",
+        "prefab": "collections/pet/panda_lion",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 150.0,
+                "amount": 150.0
+            },
+            {
+                "name": "Critical Damage Bonus",
+                "stat": "$Stat_CriticalHitDamageBonus",
+                "op": "MultiplySum",
+                "value": 25.0,
+                "amount": 0.25
+            },
+            {
+                "name": "Critical Hit",
+                "stat": "$Stat_CriticalHitChance",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 50.0
             }
         ],
         "abilities": []
@@ -18687,6 +18773,29 @@
         "abilities": []
     },
     {
+        "slug": "zepperay_lifeguard_panatea",
+        "name": "Panatean Pool Patrol",
+        "description": "Party on, but don't party too hard in the water!",
+        "prefab": "collections/pet/zepperay_lifeguard_panatea",
+        "stats": [
+            {
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 2.0
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "monkey_panatea",
         "name": "Panatean Protester",
         "description": "Thy Delves are weak and thou smellest of lavender!",
@@ -18731,88 +18840,6 @@
             }
         ],
         "abilities": []
-    },
-    {
-        "slug": "panda_fate",
-        "name": "panda_fate",
-        "description": "",
-        "prefab": "collections/pet/panda_fate",
-        "stats": [
-            {
-                "name": "Maximum Energy",
-                "stat": "$Stat_MaxEnergy",
-                "op": "Add",
-                "value": 15.0,
-                "amount": 15.0
-            },
-            {
-                "name": "Energy Regen",
-                "stat": "$Stat_EnergyRegen_controller",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "panda_lion",
-        "name": "panda_lion",
-        "description": "Strong will, strong heart.",
-        "prefab": "collections/pet/panda_lion",
-        "stats": [
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 150.0,
-                "amount": 150.0
-            },
-            {
-                "name": "Critical Damage Bonus",
-                "stat": "$Stat_CriticalHitDamageBonus",
-                "op": "MultiplySum",
-                "value": 25.0,
-                "amount": 0.25
-            },
-            {
-                "name": "Critical Hit",
-                "stat": "$Stat_CriticalHitChance",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 50.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "panda_pug",
-        "name": "panda_pug",
-        "description": "It's French of course!",
-        "prefab": "collections/pet/panda_pug",
-        "stats": [
-            {
-                "name": "Lasermancy",
-                "stat": "$Stat_Mining",
-                "op": "Add",
-                "value": 50.0,
-                "amount": 50.0
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/onhit_heal",
-                "text": "Gain 2.2% health each time you damage an enemy.",
-                "proc_cooldown": 0.15,
-                "healing": [
-                    {
-                        "name": "Onhit Heal Effect",
-                        "prefab": "abilities/equipment/onhit_heal_effect",
-                        "max_health_percent": 0.022
-                    }
-                ]
-            }
-        ]
     },
     {
         "slug": "monkey_crystalpanda",
@@ -18888,66 +18915,6 @@
                 "op": "Add",
                 "value": 3.0,
                 "amount": 30.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "papercrane_lifeguard_carys",
-        "name": "papercrane_lifeguard_carys",
-        "description": "No eating while swimming!",
-        "prefab": "collections/pet/papercrane_lifeguard_carys",
-        "stats": [
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 2.0,
-                "amount": 2.0
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "papercrane_viking",
-        "name": "papercrane_viking",
-        "description": "The spirit of voyage is eternal.",
-        "prefab": "collections/pet/papercrane_viking",
-        "stats": [
-            {
-                "name": "Superstition",
-                "stat": "$Stat_Superstition",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            },
-            {
-                "name": "Maximum Health Bonus",
-                "stat": "$Stat_MaxHealthBonus",
-                "op": "MultiplySum",
-                "value": 10.0,
-                "amount": 0.1
-            },
-            {
-                "name": "Maximum Energy",
-                "stat": "$Stat_MaxEnergy",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            },
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 200.0,
-                "amount": 200.0
             }
         ],
         "abilities": []
@@ -19139,52 +19106,6 @@
                 ]
             }
         ]
-    },
-    {
-        "slug": "pebble_fox",
-        "name": "pebble_fox",
-        "description": "Pixel is ready to cut you a deal.\\n\\nThis cuddly merchant is rumored to appear to the generous.",
-        "prefab": "collections/pet/pebble_fox",
-        "stats": [
-            {
-                "name": "Dark",
-                "stat": "$Stat_Dark",
-                "op": "Add",
-                "value": 50.0,
-                "amount": 50.0
-            },
-            {
-                "name": "Adventurine",
-                "stat": "$Stat_AdventurineGainBoost",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "pebble_hex",
-        "name": "pebble_hex",
-        "description": "With a hat brimming with tricks and a bag full of treats, this spooky skeleton never knocks twice.",
-        "prefab": "collections/pet/pebble_hex",
-        "stats": [
-            {
-                "name": "Health Regen Bonus",
-                "stat": "$Stat_HealthRegenBonus_controller",
-                "op": "MultiplySum",
-                "value": 10.0,
-                "amount": 0.1
-            },
-            {
-                "name": "Magic Find",
-                "stat": "$Stat_MagicFind",
-                "op": "Add",
-                "value": 25.0,
-                "amount": 25.0
-            }
-        ],
-        "abilities": []
     },
     {
         "slug": "bunny_qbthulhu",
@@ -19626,6 +19547,29 @@
         "abilities": []
     },
     {
+        "slug": "qubesly_pi",
+        "name": "Piece of Pi",
+        "description": "Rated a perfect 22/7.",
+        "prefab": "collections/pet/qubesly_pi",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 3.0,
+                "amount": 3.0
+            },
+            {
+                "name": "Health Regen",
+                "stat": "$Stat_HealthRegen_controller",
+                "op": "Add",
+                "value": 14.0,
+                "amount": 14.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "dragon_pigeon",
         "name": "Pigeon",
         "description": "A simple pigeon here to deliver bunfest joy.",
@@ -19651,7 +19595,7 @@
     {
         "slug": "guineapig_astronaut",
         "name": "Pigstronaut",
-        "description": "",
+        "description": "Bravely squeeing where no guinea pig has squeed before.",
         "prefab": "collections/pet/guineapig_astronaut",
         "stats": [
             {
@@ -19864,6 +19808,29 @@
         "abilities": []
     },
     {
+        "slug": "floateye_inflatable_chuckp",
+        "name": "Pinzo Popup",
+        "description": "Liberated from Chuck Pinzo, who uses these to attract attention.",
+        "prefab": "collections/pet/floateye_inflatable_chuckp",
+        "stats": [
+            {
+                "name": "Incoming Damage",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 8.0,
+                "amount": 0.92
+            },
+            {
+                "name": "Energy Regen",
+                "stat": "$Stat_EnergyRegen_controller",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "monkey_chuckp",
         "name": "Pinzo's Patsy",
         "description": "Definitely will get everything he's owed any day now.",
@@ -19981,6 +19948,29 @@
                 "op": "MultiplySum",
                 "value": 10.0,
                 "amount": 0.1
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "pebble_fox",
+        "name": "Pixel",
+        "description": "Pixel is ready to cut you a deal.\\n\\nThis cuddly merchant is rumored to appear to the generous.",
+        "prefab": "collections/pet/pebble_fox",
+        "stats": [
+            {
+                "name": "Dark",
+                "stat": "$Stat_Dark",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0
+            },
+            {
+                "name": "Adventurine",
+                "stat": "$Stat_AdventurineGainBoost",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
             }
         ],
         "abilities": []
@@ -20127,7 +20117,7 @@
     {
         "slug": "snake_kite_toyblock",
         "name": "Playful Kite",
-        "description": "",
+        "description": "Who would’ve thought that being down-to-earth is so much fun!",
         "prefab": "collections/pet/snake_kite_toyblock",
         "stats": [
             {
@@ -20155,9 +20145,39 @@
         "abilities": []
     },
     {
+        "slug": "wheel_fish",
+        "name": "Playful Pisces",
+        "description": "Round and round they go, without a care in the world.",
+        "prefab": "collections/pet/wheel_fish",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 15.0,
+                "amount": 15.0
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 150.0,
+                "amount": 150.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "llama_puppy_rainbow",
         "name": "Playful Pup",
-        "description": "",
+        "description": "Radical rainbows representing romping with relish.",
         "prefab": "collections/pet/llama_puppy_rainbow",
         "stats": [
             {
@@ -20256,7 +20276,7 @@
     {
         "slug": "quarble_rainbowdino",
         "name": "Plush Prismasaur",
-        "description": "",
+        "description": "Crocheted from rainbows with love.",
         "prefab": "collections/pet/quarble_rainbowdino",
         "stats": [
             {
@@ -20392,22 +20412,6 @@
         "abilities": []
     },
     {
-        "slug": "poop_chili",
-        "name": "poop_chili",
-        "description": "Just as sweet as the candy your grandparents give you.",
-        "prefab": "collections/pet/poop_chili",
-        "stats": [
-            {
-                "name": "Energy Regen Bonus",
-                "stat": "$Stat_EnergyRegenBonus_controller",
-                "op": "MultiplySum",
-                "value": 8.0,
-                "amount": 0.08
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "tentacle_jack",
         "name": "Poppin' Pete",
         "description": "Had a really bad habit of jumping out of its box to surprise folks, until it blew a spring.",
@@ -20484,6 +20488,22 @@
         "abilities": []
     },
     {
+        "slug": "tato_chili",
+        "name": "Popular Demand Chili",
+        "description": "Deerly beloved chili champion of the people, although it still winds up going stag to parties.",
+        "prefab": "collections/pet/tato_chili",
+        "stats": [
+            {
+                "name": "Energy Regen Bonus",
+                "stat": "$Stat_EnergyRegenBonus_controller",
+                "op": "MultiplySum",
+                "value": 8.0,
+                "amount": 0.08
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "pebble_redshroom",
         "name": "Port A. Bella",
         "description": "Really hopes no one ever realizes how delicious they could be.",
@@ -20509,7 +20529,7 @@
     {
         "slug": "octopus_martialarts",
         "name": "Portable Wisdom",
-        "description": "",
+        "description": "If things are in balance, they do not have to make sense.",
         "prefab": "collections/pet/octopus_martialarts",
         "stats": [
             {
@@ -20654,7 +20674,7 @@
     {
         "slug": "rooster_martialarts",
         "name": "Powerful Aevis",
-        "description": "",
+        "description": "Focuses their energy on following the Way of the Beak.",
         "prefab": "collections/pet/rooster_martialarts",
         "stats": [
             {
@@ -21578,7 +21598,7 @@
     {
         "slug": "zardille_djtechlive",
         "name": "Proxy",
-        "description": "",
+        "description": "Always takes point on the missions you don't want to deal with.",
         "prefab": "collections/pet/zardille_djtechlive",
         "stats": [
             {
@@ -21804,7 +21824,7 @@
     {
         "slug": "dragonfly_firefly_purple",
         "name": "Purple Glowfly",
-        "description": "",
+        "description": "Purple Glowflies only come out during the cover of darkness when their bright lights can disguise them as stars.\n\nPurple Glowflies can be adopted from Purple Glowfly Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/dragonfly_firefly_purple",
         "stats": [
             {
@@ -22255,144 +22275,9 @@
         "abilities": []
     },
     {
-        "slug": "qubesly_pi",
-        "name": "qubesly_pi",
-        "description": "Rated a perfect 22/7.",
-        "prefab": "collections/pet/qubesly_pi",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 3.0,
-                "amount": 3.0
-            },
-            {
-                "name": "Health Regen",
-                "stat": "$Stat_HealthRegen_controller",
-                "op": "Add",
-                "value": 14.0,
-                "amount": 14.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "qubesly_shadow_knight",
-        "name": "qubesly_shadow_knight",
-        "description": "A pocket-sized shadow with knightly poise.",
-        "prefab": "collections/pet/qubesly_shadow_knight",
-        "stats": [
-            {
-                "name": "Incoming Damage",
-                "stat": "$Stat_IncomingDamageMod",
-                "op": "Multiply",
-                "value": 8.0,
-                "amount": 0.92
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/enemydeath_damagebuff",
-                "text": "Chance when a nearby enemy dies to gain a large damage and movement speed boost.",
-                "proc_cooldown": 10.0,
-                "effects": [
-                    {
-                        "name": "Enemydeath Damagebuff Effect",
-                        "prefab": "abilities/equipment/enemydeath_damagebuff_effect",
-                        "component": 136,
-                        "duration": 8.0,
-                        "stats": [
-                            {
-                                "stat": "$Stat_PhysicalDamageBonus",
-                                "name": "Physical Damage Bonus",
-                                "op": "MultiplySum",
-                                "value": 50.0,
-                                "percent": true,
-                                "amount": 0.5
-                            },
-                            {
-                                "stat": "$Stat_SpellDamageBonus",
-                                "name": "Magic Damage Bonus",
-                                "op": "MultiplySum",
-                                "value": 50.0,
-                                "percent": true,
-                                "amount": 0.5
-                            },
-                            {
-                                "stat": "$Stat_MovementSpeed",
-                                "name": "Movement Speed",
-                                "op": "Add",
-                                "value": 15.0,
-                                "percent": false,
-                                "amount": 15.0
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "slug": "qubesly_shadow_vendor",
-        "name": "qubesly_shadow_vendor",
-        "description": "A pocket-sized shadow with heapings of hustle.",
-        "prefab": "collections/pet/qubesly_shadow_vendor",
-        "stats": [
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 8.0,
-                "amount": 0.08
-            }
-        ],
-        "abilities": [
-            {
-                "ref": "abilities/equipment/enemydeath_damagebuff",
-                "text": "Chance when a nearby enemy dies to gain a large damage and movement speed boost.",
-                "proc_cooldown": 10.0,
-                "effects": [
-                    {
-                        "name": "Enemydeath Damagebuff Effect",
-                        "prefab": "abilities/equipment/enemydeath_damagebuff_effect",
-                        "component": 136,
-                        "duration": 8.0,
-                        "stats": [
-                            {
-                                "stat": "$Stat_PhysicalDamageBonus",
-                                "name": "Physical Damage Bonus",
-                                "op": "MultiplySum",
-                                "value": 50.0,
-                                "percent": true,
-                                "amount": 0.5
-                            },
-                            {
-                                "stat": "$Stat_SpellDamageBonus",
-                                "name": "Magic Damage Bonus",
-                                "op": "MultiplySum",
-                                "value": 50.0,
-                                "percent": true,
-                                "amount": 0.5
-                            },
-                            {
-                                "stat": "$Stat_MovementSpeed",
-                                "name": "Movement Speed",
-                                "op": "Add",
-                                "value": 15.0,
-                                "percent": false,
-                                "amount": 15.0
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    },
-    {
         "slug": "qubesly_qubrix",
         "name": "Qubeta v0.1",
-        "description": "",
+        "description": "10 PRINT \"HELLO WORLD\" 20 GOTO 10",
         "prefab": "collections/pet/qubesly_qubrix",
         "stats": [
             {
@@ -22451,7 +22336,7 @@
     {
         "slug": "qubesly_quchik",
         "name": "Quchik",
-        "description": "",
+        "description": "Who you callin' chicken?",
         "prefab": "collections/pet/qubesly_quchik",
         "stats": [
             {
@@ -22543,7 +22428,7 @@
     {
         "slug": "dog",
         "name": "Radar",
-        "description": "",
+        "description": "I eat sticks.",
         "prefab": "collections/pet/dog",
         "stats": [
             {
@@ -22761,7 +22646,7 @@
     {
         "slug": "caterpillar_gardening_snail_rare_02",
         "name": "Rainwater Snail",
-        "description": "",
+        "description": "Despite their name, Rainwater Snails enjoy healthy gardens no matter the current weather.\\n\\nRainwater Snails can be adopted rarely from Appleshell Snail Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/caterpillar_gardening_snail_rare_02",
         "stats": [
             {
@@ -22904,36 +22789,6 @@
         "abilities": []
     },
     {
-        "slug": "raptor_eye",
-        "name": "raptor_eye",
-        "description": "Its eye is bigger than its stomach, so it tends to make itself sick by overeating.",
-        "prefab": "collections/pet/raptor_eye",
-        "stats": [
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            },
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            },
-            {
-                "name": "Attack Speed",
-                "stat": "$Stat_AttackSpeed",
-                "op": "Add",
-                "value": 8.0,
-                "amount": 8.0
-            }
-        ],
-        "abilities": []
-    },
-    {
         "slug": "raptor_baby",
         "name": "Rascal Raptor",
         "description": "Can I keep it?",
@@ -23061,7 +22916,7 @@
     {
         "slug": "zepperay_maple_leaf",
         "name": "Red Leaflet",
-        "description": "",
+        "description": "Has been dropped, but still believes.",
         "prefab": "collections/pet/zepperay_maple_leaf",
         "stats": [
             {
@@ -23568,6 +23423,29 @@
                 "op": "MultiplySum",
                 "value": 15.0,
                 "amount": 0.15
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "wheel_corn",
+        "name": "Rolling Roger",
+        "description": "Would prefer to walk, but rolling is faster.",
+        "prefab": "collections/pet/wheel_corn",
+        "stats": [
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 12.0,
+                "amount": 12.0
             }
         ],
         "abilities": []
@@ -24484,6 +24362,29 @@
         ]
     },
     {
+        "slug": "hermitcrab_cake_strawberry",
+        "name": "Sentient Slice",
+        "description": "Take a bite at your own peril.",
+        "prefab": "collections/pet/hermitcrab_cake_strawberry",
+        "stats": [
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Add",
+                "value": 8.0,
+                "amount": 8.0
+            },
+            {
+                "name": "Energy Regen",
+                "stat": "$Stat_EnergyRegen_controller",
+                "op": "Add",
+                "value": 10.0,
+                "amount": 10.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "papercrane_swan",
         "name": "Seph Swansong",
         "description": "Always by your side, through thick or thin.",
@@ -24652,7 +24553,7 @@
     {
         "slug": "spidermonkey_shadow",
         "name": "Shadow Queen of Arachnids",
-        "description": "",
+        "description": "Commands legions of fearsome spiders with utmost grace.",
         "prefab": "collections/pet/spidermonkey_shadow",
         "stats": [
             {
@@ -25023,6 +24924,29 @@
         "abilities": []
     },
     {
+        "slug": "bat_shadow",
+        "name": "Shifty Shadowbat",
+        "description": "Not entirely comfortable in the light, but it seems to want to be friends.",
+        "prefab": "collections/pet/bat_shadow",
+        "stats": [
+            {
+                "name": "Attack Speed",
+                "stat": "$Stat_AttackSpeed",
+                "op": "Add",
+                "value": 4.0,
+                "amount": 4.0
+            },
+            {
+                "name": "Critical Hit",
+                "stat": "$Stat_CriticalHitChance",
+                "op": "Add",
+                "value": 1.2,
+                "amount": 12.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "tentacle_shamrock",
         "name": "Shimmying Shamrock",
         "description": "Sometimes, when no one is looking, it does a little dance of joy.",
@@ -25126,6 +25050,36 @@
                 "op": "MultiplySum",
                 "value": 20.0,
                 "amount": 0.2
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "tato_snowy",
+        "name": "Showy Snowy",
+        "description": "As dapper as they come.",
+        "prefab": "collections/pet/tato_snowy",
+        "stats": [
+            {
+                "name": "Maximum Health",
+                "stat": "$Stat_MaxHealth",
+                "op": "Add",
+                "value": 1000.0,
+                "amount": 1000.0
+            },
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 10.0,
+                "amount": 0.1
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 10.0,
+                "amount": 0.1
             }
         ],
         "abilities": []
@@ -25445,6 +25399,29 @@
                 ]
             }
         ]
+    },
+    {
+        "slug": "frog_lucky",
+        "name": "Sir Lanci-hop the Lucky Leaper",
+        "description": "The cutest knight I've ever seen.",
+        "prefab": "collections/pet/frog_lucky",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 7.0,
+                "amount": 7.0
+            },
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 35.0,
+                "amount": 35.0
+            }
+        ],
+        "abilities": []
     },
     {
         "slug": "goat_knight",
@@ -25818,7 +25795,7 @@
     {
         "slug": "caterpillar_seal",
         "name": "Slapshot Seal",
-        "description": "",
+        "description": "Every fight's a win when he’s on your side.",
         "prefab": "collections/pet/caterpillar_seal",
         "stats": [
             {
@@ -25880,7 +25857,7 @@
     {
         "slug": "cube_gelatinouscube",
         "name": "Slimesly",
-        "description": "",
+        "description": "This is totally fine.",
         "prefab": "collections/pet/cube_gelatinouscube",
         "stats": [
             {
@@ -26125,29 +26102,6 @@
                 "op": "Add",
                 "value": 5.0,
                 "amount": 5.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "snake_prestige",
-        "name": "snake_prestige",
-        "description": "When King Koba Sss's you ssss how ssssss.",
-        "prefab": "collections/pet/snake_prestige",
-        "stats": [
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 400.0,
-                "amount": 400.0
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
             }
         ],
         "abilities": []
@@ -26544,7 +26498,7 @@
     {
         "slug": "caterpillar_gardening_snail_rare",
         "name": "Sourshell Snail",
-        "description": "",
+        "description": "Pucker up, Sweetie. These snails try to hide, but their bright shells make it difficult.\n\nSourshell Snails can be adopted rarely from Appleshell Snail Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/caterpillar_gardening_snail_rare",
         "stats": [
             {
@@ -27209,7 +27163,7 @@
     {
         "slug": "qubesly_stqubeslick",
         "name": "St. Qubeslick",
-        "description": "",
+        "description": "A hero always rises to face the encroaching shadows.",
         "prefab": "collections/pet/qubesly_stqubeslick",
         "stats": [
             {
@@ -27232,7 +27186,7 @@
     {
         "slug": "tentacle_pumpkin",
         "name": "Stack o' Lantern",
-        "description": "",
+        "description": "Precarious, at best.\n\nOriginally obtainable during Shadow's Eve 2020.",
         "prefab": "collections/pet/tentacle_pumpkin",
         "stats": [
             {
@@ -27264,29 +27218,6 @@
                 ]
             }
         ]
-    },
-    {
-        "slug": "stack_taco",
-        "name": "stack_taco",
-        "description": "Loaded with all the good stuff.",
-        "prefab": "collections/pet/stack_taco",
-        "stats": [
-            {
-                "name": "Maximum Energy",
-                "stat": "$Stat_MaxEnergy",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            },
-            {
-                "name": "Energy Regen",
-                "stat": "$Stat_EnergyRegen_controller",
-                "op": "Add",
-                "value": 4.0,
-                "amount": 4.0
-            }
-        ],
-        "abilities": []
     },
     {
         "slug": "stack_postal",
@@ -27656,7 +27587,7 @@
     {
         "slug": "qubesly_steakmaster",
         "name": "Steakmaster Qubesly",
-        "description": "",
+        "description": "Serving up the juiciest steaks this side of the Desert Frontier.",
         "prefab": "collections/pet/qubesly_steakmaster",
         "stats": [
             {
@@ -27695,6 +27626,36 @@
                 "op": "Add",
                 "value": 50.0,
                 "amount": 50.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "mug_hotpot",
+        "name": "Steaming Pot",
+        "description": "Will keep you warm on the coldest nights.",
+        "prefab": "collections/pet/mug_hotpot",
+        "stats": [
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 12.0,
+                "amount": 0.12
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 12.0,
+                "amount": 0.12
+            },
+            {
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
             }
         ],
         "abilities": []
@@ -28350,7 +28311,7 @@
     {
         "slug": "raptor_sunmote",
         "name": "Sunspot Sprinter",
-        "description": "",
+        "description": "It loves nothing more than chasing the sun.",
         "prefab": "collections/pet/raptor_sunmote",
         "stats": [
             {
@@ -28541,6 +28502,29 @@
         "abilities": []
     },
     {
+        "slug": "mug_code40",
+        "name": "T.bat",
+        "description": "If T = 0, time =  \"for more\".",
+        "prefab": "collections/pet/mug_code40",
+        "stats": [
+            {
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2
+            },
+            {
+                "name": "Physical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "amount": 0.2
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "quarble_taco",
         "name": "Tacohuahua",
         "description": "Fueled by salsa and applause.",
@@ -28663,73 +28647,60 @@
         "abilities": []
     },
     {
-        "slug": "tato_chili",
-        "name": "tato_chili",
-        "description": "Deerly beloved chili champion of the people, although it still winds up going stag to parties.",
-        "prefab": "collections/pet/tato_chili",
+        "slug": "qubesly_shadow_vendor",
+        "name": "Teensy Shadow Trader",
+        "description": "A pocket-sized shadow with heapings of hustle.",
+        "prefab": "collections/pet/qubesly_shadow_vendor",
         "stats": [
             {
-                "name": "Energy Regen Bonus",
-                "stat": "$Stat_EnergyRegenBonus_controller",
+                "name": "Magic Damage Bonus",
+                "stat": "$Stat_SpellDamageBonus",
                 "op": "MultiplySum",
                 "value": 8.0,
                 "amount": 0.08
             }
         ],
-        "abilities": []
-    },
-    {
-        "slug": "tato_naomi",
-        "name": "tato_naomi",
-        "description": "A li'l spud bud for you to hang out with.",
-        "prefab": "collections/pet/tato_naomi",
-        "stats": [
+        "abilities": [
             {
-                "name": "Maximum Energy",
-                "stat": "$Stat_MaxEnergy",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 10.0,
-                "amount": 0.1
+                "ref": "abilities/equipment/enemydeath_damagebuff",
+                "text": "Chance when a nearby enemy dies to gain a large damage and movement speed boost.",
+                "proc_cooldown": 10.0,
+                "effects": [
+                    {
+                        "name": "Enemydeath Damagebuff Effect",
+                        "prefab": "abilities/equipment/enemydeath_damagebuff_effect",
+                        "component": 136,
+                        "duration": 8.0,
+                        "stats": [
+                            {
+                                "stat": "$Stat_PhysicalDamageBonus",
+                                "name": "Physical Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 50.0,
+                                "percent": true,
+                                "amount": 0.5
+                            },
+                            {
+                                "stat": "$Stat_SpellDamageBonus",
+                                "name": "Magic Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 50.0,
+                                "percent": true,
+                                "amount": 0.5
+                            },
+                            {
+                                "stat": "$Stat_MovementSpeed",
+                                "name": "Movement Speed",
+                                "op": "Add",
+                                "value": 15.0,
+                                "percent": false,
+                                "amount": 15.0
+                            }
+                        ]
+                    }
+                ]
             }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "tato_snowy",
-        "name": "tato_snowy",
-        "description": "As dapper as they come.",
-        "prefab": "collections/pet/tato_snowy",
-        "stats": [
-            {
-                "name": "Maximum Health",
-                "stat": "$Stat_MaxHealth",
-                "op": "Add",
-                "value": 1000.0,
-                "amount": 1000.0
-            },
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 10.0,
-                "amount": 0.1
-            },
-            {
-                "name": "Physical Damage Bonus",
-                "stat": "$Stat_PhysicalDamageBonus",
-                "op": "MultiplySum",
-                "value": 10.0,
-                "amount": 0.1
-            }
-        ],
-        "abilities": []
+        ]
     },
     {
         "slug": "cat_tiger",
@@ -28803,7 +28774,7 @@
     {
         "slug": "papercrane_cyberbun",
         "name": "Temporal Vacuum Cleaner",
-        "description": "",
+        "description": "Because it's always dirty, in ALL points in time.",
         "prefab": "collections/pet/papercrane_cyberbun",
         "stats": [
             {
@@ -28869,6 +28840,36 @@
                 ]
             }
         ]
+    },
+    {
+        "slug": "fae_triton",
+        "name": "Tenacious Triton",
+        "description": "Takes his role as the king very serious!",
+        "prefab": "collections/pet/fae_triton",
+        "stats": [
+            {
+                "name": "Incoming Damage",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 20.0,
+                "amount": 0.8
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            },
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 150.0,
+                "amount": 150.0
+            }
+        ],
+        "abilities": []
     },
     {
         "slug": "octopus_jellyfish",
@@ -29136,9 +29137,32 @@
         "abilities": []
     },
     {
+        "slug": "mimic_clam",
+        "name": "The Great Clamper",
+        "description": "Incredibly talented when it comes to making fresh-squoze Orange Juice. But boy does it ever make a mess!",
+        "prefab": "collections/pet/mimic_clam",
+        "stats": [
+            {
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
+            },
+            {
+                "name": "Energy Regen",
+                "stat": "$Stat_EnergyRegen_controller",
+                "op": "Add",
+                "value": 5.0,
+                "amount": 5.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "rooster_prizeturkey",
         "name": "The Greatest Gobbler",
-        "description": "",
+        "description": "The greatest gobbler that ever gobbled.",
         "prefab": "collections/pet/rooster_prizeturkey",
         "stats": [
             {
@@ -29283,7 +29307,7 @@
     {
         "slug": "turtle_ankylosaurus",
         "name": "The Orange Bandit",
-        "description": "",
+        "description": "Bandit might be a stretch. His crimes mostly consist of breaking the stable's foodstores and scaring the herds for fun.",
         "prefab": "collections/pet/turtle_ankylosaurus",
         "stats": [
             {
@@ -29555,7 +29579,7 @@
     {
         "slug": "zardille_chronofox",
         "name": "Time-stranded Tod",
-        "description": "",
+        "description": "He’ll whisk away all your free time like it never existed.",
         "prefab": "collections/pet/zardille_chronofox",
         "stats": [
             {
@@ -29594,7 +29618,7 @@
     {
         "slug": "pebble_bloominonion",
         "name": "Tinnip",
-        "description": "",
+        "description": "\"Cut me and I'll make you cry!\"",
         "prefab": "collections/pet/pebble_bloominonion",
         "stats": [
             {
@@ -29937,6 +29961,65 @@
             }
         ],
         "abilities": []
+    },
+    {
+        "slug": "stack_taco",
+        "name": "Towering Taco",
+        "description": "Loaded with all the good stuff.",
+        "prefab": "collections/pet/stack_taco",
+        "stats": [
+            {
+                "name": "Maximum Energy",
+                "stat": "$Stat_MaxEnergy",
+                "op": "Add",
+                "value": 1.0,
+                "amount": 1.0
+            },
+            {
+                "name": "Energy Regen",
+                "stat": "$Stat_EnergyRegen_controller",
+                "op": "Add",
+                "value": 4.0,
+                "amount": 4.0
+            }
+        ],
+        "abilities": []
+    },
+    {
+        "slug": "delve_pebble_toxicmushroom",
+        "name": "Toxic Sporeling",
+        "description": "Mastered all forms of social media.",
+        "prefab": "collections/pet/delve_pebble_toxicmushroom",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 200.0,
+                "amount": 200.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 3.0,
+                "amount": 3.0
+            }
+        ],
+        "abilities": [
+            {
+                "ref": "abilities/equipment/onhit_heal_low",
+                "text": "Gain 1% health each time you damage an enemy.",
+                "proc_cooldown": 0.05,
+                "healing": [
+                    {
+                        "name": "Onhit Heal Effect Low",
+                        "prefab": "abilities/equipment/onhit_heal_effect_low",
+                        "max_health_percent": 0.01
+                    }
+                ]
+            }
+        ]
     },
     {
         "slug": "delve_wheel_barrel",
@@ -30282,7 +30365,7 @@
     {
         "slug": "dreambro_dragonfire",
         "name": "Trycrys the Burnt",
-        "description": "",
+        "description": "A cruel fate for a red dragon to hatch without the ability to withstand the heat.",
         "prefab": "collections/pet/dreambro_dragonfire",
         "stats": [
             {
@@ -30397,7 +30480,7 @@
     {
         "slug": "cube_present",
         "name": "Tumbling Present",
-        "description": "",
+        "description": "Its contents are unsalvageable by now, but friendship is the greatest gift anyway.\n\nEarned from the Snowfest 2018 Golden Thread.",
         "prefab": "collections/pet/cube_present",
         "stats": [
             {
@@ -30636,7 +30719,7 @@
     {
         "slug": "wheel_pinball_trove",
         "name": "Tysorion Roly-Poly Pal",
-        "description": "",
+        "description": "SQUISH ME!",
         "prefab": "collections/pet/wheel_pinball_trove",
         "stats": [
             {
@@ -31156,7 +31239,7 @@
     {
         "slug": "papercrane_vengeful",
         "name": "Victor's Weapon",
-        "description": "",
+        "description": "Nobody else needs to be avenged, what a shame.",
         "prefab": "collections/pet/papercrane_vengeful",
         "stats": [
             {
@@ -31820,7 +31903,7 @@
     {
         "slug": "qubesly_hotdog",
         "name": "Wee Dawg",
-        "description": "",
+        "description": "A connoisseur of the finest dining experiences.",
         "prefab": "collections/pet/qubesly_hotdog",
         "stats": [
             {
@@ -32000,89 +32083,6 @@
                 "op": "Add",
                 "value": 17.0,
                 "amount": 17.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "wheel_coin",
-        "name": "wheel_coin",
-        "description": "Practically rolling in money.",
-        "prefab": "collections/pet/wheel_coin",
-        "stats": [
-            {
-                "name": "Maximum Energy",
-                "stat": "$Stat_MaxEnergy",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            },
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 1.0,
-                "amount": 1.0
-            },
-            {
-                "name": "Magic Damage Bonus",
-                "stat": "$Stat_SpellDamageBonus",
-                "op": "MultiplySum",
-                "value": 8.0,
-                "amount": 0.08
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "wheel_corn",
-        "name": "wheel_corn",
-        "description": "Would prefer to walk, but rolling is faster.",
-        "prefab": "collections/pet/wheel_corn",
-        "stats": [
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
-            },
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 12.0,
-                "amount": 12.0
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "wheel_fish",
-        "name": "wheel_fish",
-        "description": "Round and round they go, without a care in the world.",
-        "prefab": "collections/pet/wheel_fish",
-        "stats": [
-            {
-                "name": "Jump",
-                "stat": "$Stat_Jump",
-                "op": "Add",
-                "value": 15.0,
-                "amount": 15.0
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 5.0,
-                "amount": 5.0
-            },
-            {
-                "name": "Light",
-                "stat": "$Stat_Light",
-                "op": "Add",
-                "value": 150.0,
-                "amount": 150.0
             }
         ],
         "abilities": []
@@ -32641,6 +32641,29 @@
         "abilities": []
     },
     {
+        "slug": "biped_yeti",
+        "name": "Yare Yeti",
+        "description": "The myth, the legend!",
+        "prefab": "collections/pet/biped_yeti",
+        "stats": [
+            {
+                "name": "Stability",
+                "stat": "$Stat_Stability",
+                "op": "Add",
+                "value": 30.0,
+                "amount": 30.0
+            },
+            {
+                "name": "Movement Speed",
+                "stat": "$Stat_MovementSpeed",
+                "op": "Add",
+                "value": 7.0,
+                "amount": 7.0
+            }
+        ],
+        "abilities": []
+    },
+    {
         "slug": "qubesly_yasqueen",
         "name": "Yasqueen",
         "description": "Classy and sassy in equal parts.",
@@ -32705,7 +32728,7 @@
     {
         "slug": "bee_gardening_fuzzybee",
         "name": "Yzzuli's Drone",
-        "description": "",
+        "description": "Yzzuli's Drones were starting to become endangered, but thanks to gardeners they are thriving once again!\n\nYzzuli's Drones can be adopted from Yzzuli's Drone Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/bee_gardening_fuzzybee",
         "stats": [
             {
@@ -32728,7 +32751,7 @@
     {
         "slug": "bee_gardening_fuzzybee_rare",
         "name": "Yzzuli's Queen",
-        "description": "",
+        "description": "Yzzzzz Queeen.\n\nYzzuli's Queen can be adopted rarely from Yzzuli's Drone Habitats, which can be crafted at the Harvesting Station.",
         "prefab": "collections/pet/bee_gardening_fuzzybee_rare",
         "stats": [
             {
@@ -32820,29 +32843,6 @@
                 "op": "MultiplySum",
                 "value": 9.0,
                 "amount": 0.09
-            }
-        ],
-        "abilities": []
-    },
-    {
-        "slug": "zepperay_lifeguard_panatea",
-        "name": "zepperay_lifeguard_panatea",
-        "description": "Party on, but don't party too hard in the water!",
-        "prefab": "collections/pet/zepperay_lifeguard_panatea",
-        "stats": [
-            {
-                "name": "Flask Capacity",
-                "stat": "$Stat_MaxFlasks",
-                "op": "Add",
-                "value": 2.0,
-                "amount": 2.0
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Add",
-                "value": 10.0,
-                "amount": 10.0
             }
         ],
         "abilities": []

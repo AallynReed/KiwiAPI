@@ -3257,7 +3257,7 @@
         "element": "Air",
         "slug": "nova_dot",
         "name": "Spirit Surge",
-        "description": "Empowered Water Gem for any class. Taking damage has a chance to spawn a ring of projectiles, applying damage-over-time to enemies based on your max health. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "description": "Empowered Air Gem for any class. Taking damage has a chance to spawn a ring of projectiles, applying damage-over-time to enemies based on your max health. Only one such Gem may be socketed at a time. This gem has a cooldown.",
         "tiers": [
             109,
             110,
@@ -7321,7 +7321,7 @@
         "element": "Water",
         "slug": "spirittank",
         "name": "Aegis Assault",
-        "description": "Empowered Fire Gem for the Revenant. Bulwark Bash loses its cooldown and applies a stacking damage-over-time effect to damaged enemies. DoT effect does not leech health. Only one such Gem may be socketed at a time.",
+        "description": "Empowered Water Gem for the Revenant. Bulwark Bash loses its cooldown and applies a stacking damage-over-time effect to damaged enemies. DoT effect does not leech health. Only one such Gem may be socketed at a time.",
         "tiers": [
             110,
             111,
@@ -8738,7 +8738,7 @@
         "element": "Water",
         "slug": "nova_snare",
         "name": "Mired Mojo",
-        "description": "Empowered Fire Gem for any class. Taking damage has a chance to spawn a ring of snaring projectiles, reducing enemy Movement Speed. Only one such Gem may be socketed at a time. This gem has a cooldown.",
+        "description": "Empowered Water Gem for any class. Taking damage has a chance to spawn a ring of snaring projectiles, reducing enemy Movement Speed. Only one such Gem may be socketed at a time. This gem has a cooldown.",
         "tiers": [
             109,
             110,

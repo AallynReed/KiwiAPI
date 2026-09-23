@@ -138,7 +138,7 @@
             },
             {
                 "name": "Final Fairy",
-                "description": "",
+                "description": "Boomeranger can equip ether a bow or sword. Basic attacks and abilities change based on what weapon the Boomeranger has equipped. With the Bow equipped basic attacks will shoot Fire Arrows, Ice Arrows, and Bomb Arrows in that order. Fire Arrows deal damage over time, Ice slow enemies, and bomb arrows deal damage in an area. Every 3rd Bow attack provides a cooldown reduction. With the Sword Equipped every 3rd attack summons a cyclone at your location dealing damage over time for a short time and grants the Boomeranger a damage reduction buff. Additionally, a fairy companion will heal the Boomeranger at low health.",
                 "prefab": "abilities/adventurer/revamp/passive_dummy",
                 "icon": "icon_adventurer_passive",
                 "type": "Passive",
@@ -1124,18 +1124,6 @@
                         "prefab": "abilities/bard/singing_crystal_energy_aoe",
                         "component": 132,
                         "duration": 0.5
-                    },
-                    {
-                        "name": "Singing Crystal Npc Exploder",
-                        "prefab": "abilities/bard/singing_crystal_npc_exploder",
-                        "component": 132,
-                        "duration": 0.1
-                    },
-                    {
-                        "name": "Singing Crystal Effect Trigger",
-                        "prefab": "abilities/bard/singing_crystal_effect_trigger",
-                        "component": 303,
-                        "duration": 0.1
                     }
                 ],
                 "vfx": [
@@ -1191,6 +1179,153 @@
                     {
                         "key": "$VFX_BARD_BARDSONG_RIFF_BUFF",
                         "pkfx": "Particles/character_pc_bard_ability_bardsong_cycle_loop.pkfx"
+                    }
+                ]
+            },
+            {
+                "name": "Battle Song",
+                "description": "Triggers an explosion around the bard dealing damage to nearby enemies and temporarily redirects aggro to the player for a short duration. Buffs nearby allies to gain increased physical damage, magic damage and critical hit damage. Removes three Melody when used.",
+                "prefab": "abilities/bard/battle_song",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "cooldown": 8.0,
+                "stages": [
+                    {
+                        "name": "Explosion",
+                        "prefab": "abilities/bard/battle_song/explosion",
+                        "base": 25,
+                        "multiplier": 6.0,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 5,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 2.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "damage_type": 1,
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Explosion Gem",
+                        "prefab": "abilities/bard/battle_song/explosion_gem",
+                        "base": 25,
+                        "multiplier": 8.0,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 5,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 2.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "stability_ignore": 0.5,
+                        "damage_type": 1,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Amp Finder",
+                        "prefab": "abilities/bard/battle_song/amp_finder",
+                        "component": 132,
+                        "duration": 0.1
+                    },
+                    {
+                        "name": "Aoe Effect Friendly",
+                        "prefab": "abilities/bard/battle_song/aoe_effect_friendly",
+                        "component": 132,
+                        "duration": 5.0
+                    },
+                    {
+                        "name": "Aoe Effect Friendly Gem",
+                        "prefab": "abilities/bard/battle_song/aoe_effect_friendly_gem",
+                        "component": 132,
+                        "duration": 5.0
+                    },
+                    {
+                        "name": "Aoe Effect Hostile",
+                        "prefab": "abilities/bard/battle_song/aoe_effect_hostile",
+                        "component": 132,
+                        "duration": 0.1
+                    },
+                    {
+                        "name": "Buff Stats",
+                        "prefab": "abilities/bard/battle_song/buff_stats",
+                        "component": 136,
+                        "duration": 30.0,
+                        "stats": [
+                            {
+                                "stat": "$Stat_PhysicalDamageBonus",
+                                "name": "Physical Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 30.0,
+                                "percent": true,
+                                "amount": 0.3
+                            },
+                            {
+                                "stat": "$Stat_SpellDamageBonus",
+                                "name": "Magic Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 30.0,
+                                "percent": true,
+                                "amount": 0.3
+                            },
+                            {
+                                "stat": "$Stat_CriticalHitDamage",
+                                "name": "Critical Damage",
+                                "op": "Add",
+                                "value": 20.0,
+                                "percent": true,
+                                "amount": 20.0
+                            }
+                        ],
+                        "title": "Battle Song",
+                        "description": "Increases Physical & Magic Damage by 45%. Increases Critical Hit Damage by 45%."
+                    },
+                    {
+                        "name": "Buff Stats Gem",
+                        "prefab": "abilities/bard/battle_song/buff_stats_gem",
+                        "component": 136,
+                        "duration": 30.0,
+                        "stats": [
+                            {
+                                "stat": "$Stat_PhysicalDamageBonus",
+                                "name": "Physical Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 45.0,
+                                "percent": true,
+                                "amount": 0.45
+                            },
+                            {
+                                "stat": "$Stat_SpellDamageBonus",
+                                "name": "Magic Damage Bonus",
+                                "op": "MultiplySum",
+                                "value": 45.0,
+                                "percent": true,
+                                "amount": 0.45
+                            },
+                            {
+                                "stat": "$Stat_CriticalHitDamage",
+                                "name": "Critical Damage",
+                                "op": "Add",
+                                "value": 45.0,
+                                "percent": true,
+                                "amount": 45.0
+                            }
+                        ],
+                        "title": "Battle Song",
+                        "description": "Increases Physical & Magic Damage by 45%. Increases Critical Hit Damage by 45%."
+                    }
+                ],
+                "vfx": [
+                    {
+                        "key": "$VFX_BARD_BATTLE_LOOP",
+                        "pkfx": "Particles/character_pc_bard_ability_bardsong_battle_loop.pkfx"
+                    },
+                    {
+                        "key": "$VFX_BARD_BATTLE_AOE",
+                        "pkfx": "Particles/character_pc_bard_ability_bardsong_battle_init.pkfx"
                     }
                 ]
             },
@@ -1490,6 +1625,32 @@
                         "pkfx": "Particles/character_pc_bard_ability_bardsong_level_up.pkfx"
                     }
                 ]
+            },
+            {
+                "name": "Crystal Pop",
+                "description": "Detonate the Singing Crystal with an overloaded amount of musical energy causing it to deal damage to nearby enemies.",
+                "prefab": "abilities/bard/singing_crystal_teleport",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "cooldown": 1.5,
+                "stages": [],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Singing Crystal Npc Exploder",
+                        "prefab": "abilities/bard/singing_crystal_npc_exploder",
+                        "component": 132,
+                        "duration": 0.1
+                    },
+                    {
+                        "name": "Singing Crystal Effect Trigger",
+                        "prefab": "abilities/bard/singing_crystal_effect_trigger",
+                        "component": 303,
+                        "duration": 0.1
+                    }
+                ],
+                "vfx": []
             }
         ]
     },
@@ -1767,7 +1928,7 @@
         "abilities": [
             {
                 "name": "Mini Bloom",
-                "description": "",
+                "description": "Basic Attacks have a chance to spawn plants nearby enemies. They will explode in a burst of pollen that heals allies and damages enemies. Using Basic Attack on Mini Blooms makes them explode instantly.",
                 "prefab": "abilities/chloromancer/passive",
                 "icon": "",
                 "type": "",
@@ -2406,7 +2567,7 @@
             },
             {
                 "name": "WIP Basic Attack",
-                "description": "",
+                "description": "WIP Basic Attack Description",
                 "prefab": "abilities/crimefighter/basic_attack",
                 "icon": "",
                 "type": "",
@@ -4477,7 +4638,8 @@
                         "prefab": "abilities/knight/shield_heal_redirect_effect",
                         "component": 406,
                         "duration": 12.0,
-                        "title": "Iron Will"
+                        "title": "Iron Will",
+                        "description": "Reduces Incoming Damage by 25%. Redirects 25% of Incoming Damage to another Target. Increases Stability by 100%."
                     }
                 ],
                 "vfx": [
@@ -4823,7 +4985,7 @@
             },
             {
                 "name": "Blessing of the Moon",
-                "description": "",
+                "description": "Summon a spear from the heavens that increases Stability and Movement Speed, additionally applies an healing over time buff to allies. It also damages enemies caught in the area. Costs Moon Power.",
                 "prefab": "abilities/lunarlancer/revamp/moon_blessing_transformed",
                 "icon": "",
                 "type": "",
@@ -5541,7 +5703,7 @@
             },
             {
                 "name": "Man o' War",
-                "description": "",
+                "description": "Summons an extra powerful Man o' War turret which lobs explosive shells that deal damage over a small area.",
                 "prefab": "abilities/piratelord/man_o_war",
                 "icon": "",
                 "type": "",
@@ -5642,7 +5804,7 @@
         "abilities": [
             {
                 "name": "Shadow Seekers",
-                "description": "",
+                "description": "Requires one Seeker to use. On use fires all Seekers that hunt the closest target and explode on contact dealing damage. The Shadow Hunter can store up to 5 Seekers at a time. Seekers deal increased damage for each one fired when used.",
                 "prefab": "abilities/shadowhunter/revamp/seeker_minion_fuelmanager",
                 "icon": "",
                 "type": "",
@@ -6009,6 +6171,64 @@
                 ]
             },
             {
+                "name": "Sacred Arrow",
+                "description": "Fire a large damaging arrow of energy that applies a damage over time to targets hit by it. This arrow pierces targets and blocks. If the ability button is held down, you will continuously fire arrows until running out of energy. Damage over time effect can be applied to the same target multiple times. ",
+                "prefab": "abilities/shadowhunter/revamp/sacred_shooter",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "energy": 30,
+                "cooldown": 45.0,
+                "stages": [
+                    {
+                        "name": "Sacred Bullet",
+                        "prefab": "abilities/shadowhunter/revamp/sacred_bullet",
+                        "base": 0,
+                        "multiplier": 5.5,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 4,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 2.0,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "target_effect": "abilities/shadowhunter/revamp/sacred_bullet_damage",
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Sacred Bullet Damage",
+                        "prefab": "abilities/shadowhunter/revamp/sacred_bullet_damage",
+                        "base": 0,
+                        "multiplier": 4.0,
+                        "crit_damage_multiplier": 1.0,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Sacred Bullet Damage",
+                        "prefab": "abilities/shadowhunter/revamp/sacred_bullet_damage",
+                        "component": 156,
+                        "duration": 7.0
+                    }
+                ],
+                "vfx": [
+                    {
+                        "key": "$VFX_SHADOWHUNTER_SACRED_FIRE_ULTIMATE",
+                        "pkfx": "Particles/character_pc_shadow_hunter_ability_radiant_arrow_muzzle_flash_03.pkfx"
+                    },
+                    {
+                        "key": "$VFX_SHADOWHUNTER_SACRED_IMPACT_ULTIMATE",
+                        "pkfx": "Particles/character_pc_shadow_hunter_ability_radiant_arrow_impact_03.pkfx"
+                    },
+                    {
+                        "key": "$VFX_SHADOWHUNTER_SACRED_PROJECTILE_ULTIMATE",
+                        "pkfx": "Particles/character_pc_shadow_hunter_ability_radiant_arrow_projectile_ultimate_01.pkfx"
+                    }
+                ]
+            },
+            {
                 "name": "Arrow of the Goddess",
                 "description": "Applies Shadowmark to all nearby enemies. Empowers the Shadow Hunter's next Radiant Arrow, increasing its damage, doubling critical damage, and causing it to knock enemies back.",
                 "prefab": "abilities/shadowhunter/arrowofthegoddess",
@@ -6208,7 +6428,7 @@
         "abilities": [
             {
                 "name": "Solar Flare",
-                "description": "",
+                "description": "Fire a charged explosive shot. The area increases with charge time. Applies a Damage over time effect that gives Divine Radiance and Energy to The Solarion. When being used and for a short time after use The Solarion will gain slow fall. Phoenix will also target enemies damaged by Solar Flare.",
                 "prefab": "abilities/solarion/solar_flare",
                 "icon": "",
                 "type": "",
@@ -6373,7 +6593,7 @@
             },
             {
                 "name": "Phoenix Radiance",
-                "description": "",
+                "description": "The Solarion gains Divine Radiance and energy from their damage over time effects. Divine Radiance increases the number of projectiles fired from basic attacks. Energy is used to power their Prismatic Blast. The Solarion summons a phoenix to aid them in battle. Phoenix’s attacks apply a damage over time effect that grants The Solarion Divine Radiance and Energy. When Phoenix dies it will spawn an egg at its location. The egg will heal itself and at max health explode dealing damage to nearby enemies and respawn Phoenix.",
                 "prefab": "abilities/solarion/passive",
                 "icon": "",
                 "type": "",
@@ -6959,7 +7179,8 @@
                                 "amount": 0.5
                             }
                         ],
-                        "title": "Vengeful Spirits"
+                        "title": "Vengeful Spirits",
+                        "description": "Increases Health Regeneration by 100%. Increases Physical Damage by 50%. You are NOT currently protected from Death."
                     }
                 ],
                 "vfx": [
@@ -7467,6 +7688,46 @@
                     {
                         "key": "$VFX_TOMBRAISER_SOUL_BUFF_01",
                         "pkfx": "Particles/character_pc_tombraiser_ability_passive_01.pkfx"
+                    }
+                ]
+            },
+            {
+                "name": "Soul Caller",
+                "description": "The Tomb Raiser passively attracts Restless Souls periodically and upon slaying enemies, up to a maximum of three. Attracting Restless Souls also draws in Skellittles, up to a maximum of 6. Basic attacks heal the Tomb Raiser for a small amount of the damage done.",
+                "prefab": "abilities/tombraiser/passive_soulbuff",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Passive Soulbuff Splitter",
+                        "prefab": "abilities/tombraiser/passive_soulbuff_splitter",
+                        "component": 46,
+                        "duration": 1.0
+                    }
+                ],
+                "vfx": [
+                    {
+                        "key": "$VFX_TOMBRAISER_SOUL_BUFF_01",
+                        "pkfx": "Particles/character_pc_tombraiser_ability_passive_01.pkfx"
+                    },
+                    {
+                        "key": "$VFX_TOMBRAISER_SOUL_BUFF_02",
+                        "pkfx": "Particles/character_pc_tombraiser_ability_passive_02.pkfx"
+                    },
+                    {
+                        "key": "$VFX_TOMBRAISER_SOUL_BUFF_03",
+                        "pkfx": "Particles/character_pc_tombraiser_ability_passive_03.pkfx"
+                    },
+                    {
+                        "key": "$VFX_TOMBRAISER_MINION_SPAWN",
+                        "pkfx": "Particles/character_pc_tombraiser_ability_bonetourage_spawn_01.pkfx"
+                    },
+                    {
+                        "key": "$VFX_TOMBRAISER_MINION_DESPAWN",
+                        "pkfx": "Particles/character_pc_tombraiser_ability_bonetourage_despawn_01.pkfx"
                     }
                 ]
             },
