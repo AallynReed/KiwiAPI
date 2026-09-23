@@ -7,20 +7,24 @@ from pathlib import Path
 from types import ModuleType
 
 from app.trove.decode import (
+    ability,
     ally_abilities,
     class_abilities,
     class_levels,
     common,
     delve_modifiers,
+    fields,
     gem_abilities,
+    mount_abilities,
     pvp_stat_ranges,
     ring_abilities,
+    wire,
 )
 
 DECODERS: dict[str, ModuleType] = {
     m.__name__.rsplit(".", 1)[-1]: m
     for m in (class_levels, class_abilities, ally_abilities, gem_abilities,
-              ring_abilities, pvp_stat_ranges, delve_modifiers)
+              ring_abilities, mount_abilities, pvp_stat_ranges, delve_modifiers)
 }
 
 
@@ -28,7 +32,7 @@ def code_version(module: ModuleType) -> str:
     """Hash of the decoder's source plus the shared helpers, so any edit to either
     reruns it on the next check without anyone bumping a number."""
     h = hashlib.sha1()
-    for m in (module, common):
+    for m in (module, common, wire, fields, ability):
         h.update(Path(m.__file__ or "").read_bytes())
     return h.hexdigest()[:12]
 

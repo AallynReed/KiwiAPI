@@ -6,9 +6,81 @@
         "description": "When using Crystal Pop teleport to your singing crystals location",
         "slug": "test_bard_01",
         "prefab": "abilities/mods_01/bard/ring_test_bard_01",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/bard/singing_crystal_effect_explosion",
+            "abilities/bard/singing_crystal_effect_trigger",
+            "abilities/bard/singing_crystal_energy_aoe",
+            "abilities/bard/singing_crystal_energy_effect",
+            "abilities/bard/singing_crystal_npc_exploder"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Singing Crystal Effect Explosion",
+                "prefab": "abilities/bard/singing_crystal_effect_explosion",
+                "base": 25,
+                "multiplier": 3.5,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 5,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 2.5,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "stability_ignore": 0.5,
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "healing": [
+            {
+                "name": "Singing Crystal Energy Effect",
+                "prefab": "abilities/bard/singing_crystal_energy_effect",
+                "energy": 15
+            }
+        ],
+        "effects": [
+            {
+                "name": "Singing Crystal Energy Aoe",
+                "prefab": "abilities/bard/singing_crystal_energy_aoe",
+                "component": 132,
+                "duration": 0.5
+            },
+            {
+                "name": "Singing Crystal Npc Exploder",
+                "prefab": "abilities/bard/singing_crystal_npc_exploder",
+                "component": 132,
+                "duration": 0.1
+            },
+            {
+                "name": "Singing Crystal Effect Trigger",
+                "prefab": "abilities/bard/singing_crystal_effect_trigger",
+                "component": 303,
+                "duration": 0.1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_BARD_CRYSTAL_PROJECTILE",
+                "pkfx": "Particles/character_pc_bard_crystal_cast.pkfx"
+            },
+            {
+                "key": "$VFX_BARD_CRYSTAL_EXPLOSION",
+                "pkfx": "Particles/character_pc_bard_crystal_explode.pkfx"
+            },
+            {
+                "key": "$VFX_BARD_CRYSTAL_TELEPORT",
+                "pkfx": "Particles/character_pc_bard_crystal_cast.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Singing Crystal",
+                "prefab": "abilities/mods_01/bard/singing_crystal",
+                "energy": 30.0,
+                "cooldown": 1.5
+            }
+        ]
     },
     {
         "class": "Bard",
@@ -22,15 +94,34 @@
         ],
         "stats": [
             {
-                "name": "Magic Damage Bonus",
                 "stat": "$Stat_SpellDamageBonus",
+                "name": "Magic Damage Bonus",
                 "op": "MultiplySum",
                 "value": 20.0,
+                "percent": true,
                 "amount": 0.2,
                 "prefab": "abilities/mods_01/bard/melody_overload_buff"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Melody Overload Buff",
+                "prefab": "abilities/mods_01/bard/melody_overload_buff",
+                "component": 136,
+                "duration": 600.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_SpellDamageBonus",
+                        "name": "Magic Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 20.0,
+                        "percent": true,
+                        "amount": 0.2
+                    }
+                ]
+            }
+        ]
     },
     {
         "class": "Bard",
@@ -40,28 +131,310 @@
         "slug": "test_bard_musical_master",
         "prefab": "abilities/mods_01/bard/ring_test_bard_musical_master",
         "prefabs": [
+            "abilities/bard/battle_song/buff_stats",
+            "abilities/bard/battle_song/buff_stats_gem",
+            "abilities/bard/jubilant_song/buff_effect",
+            "abilities/bard/jubilant_song/buff_effect_gem",
+            "abilities/bard/peaceful_song/buff_combat_effect",
+            "abilities/bard/peaceful_song/buff_combat_effect_gem",
+            "abilities/bard/peaceful_song/buff_leech",
+            "abilities/bard/peaceful_song/buff_leech_gem",
             "abilities/mods_01/bard/musical_master_buff_criticaldamage",
             "abilities/mods_01/bard/musical_master_buff_criticaldamage_gem"
         ],
         "stats": [
             {
-                "name": "Critical Damage Bonus",
                 "stat": "$Stat_CriticalHitDamageBonus",
+                "name": "Critical Damage Bonus",
                 "op": "MultiplySum",
                 "value": 35.0,
+                "percent": true,
                 "amount": 0.35,
                 "prefab": "abilities/mods_01/bard/musical_master_buff_criticaldamage"
             },
             {
-                "name": "Critical Damage Bonus",
+                "stat": "$Stat_PhysicalDamageBonus",
+                "name": "Physical Damage Bonus",
+                "op": "MultiplySum",
+                "value": 30.0,
+                "percent": true,
+                "amount": 0.3,
+                "prefab": "abilities/bard/battle_song/buff_stats"
+            },
+            {
+                "stat": "$Stat_SpellDamageBonus",
+                "name": "Magic Damage Bonus",
+                "op": "MultiplySum",
+                "value": 30.0,
+                "percent": true,
+                "amount": 0.3,
+                "prefab": "abilities/bard/battle_song/buff_stats"
+            },
+            {
+                "stat": "$Stat_CriticalHitDamage",
+                "name": "Critical Damage",
+                "op": "Add",
+                "value": 20.0,
+                "percent": true,
+                "amount": 20.0,
+                "prefab": "abilities/bard/battle_song/buff_stats"
+            },
+            {
+                "stat": "$Stat_MovementSpeedBonus",
+                "name": "Movement Speed Bonus",
+                "op": "MultiplySum",
+                "value": 25.0,
+                "percent": true,
+                "amount": 0.25,
+                "prefab": "abilities/bard/jubilant_song/buff_effect"
+            },
+            {
+                "stat": "$Stat_MaxEnergy",
+                "name": "Maximum Energy",
+                "op": "Add",
+                "value": 30.0,
+                "percent": false,
+                "amount": 30.0,
+                "prefab": "abilities/bard/jubilant_song/buff_effect"
+            },
+            {
                 "stat": "$Stat_CriticalHitDamageBonus",
+                "name": "Critical Damage Bonus",
                 "op": "MultiplySum",
                 "value": 35.0,
+                "percent": true,
                 "amount": 0.35,
                 "prefab": "abilities/mods_01/bard/musical_master_buff_criticaldamage_gem"
+            },
+            {
+                "stat": "$Stat_PhysicalDamageBonus",
+                "name": "Physical Damage Bonus",
+                "op": "MultiplySum",
+                "value": 45.0,
+                "percent": true,
+                "amount": 0.45,
+                "prefab": "abilities/bard/battle_song/buff_stats_gem"
+            },
+            {
+                "stat": "$Stat_SpellDamageBonus",
+                "name": "Magic Damage Bonus",
+                "op": "MultiplySum",
+                "value": 45.0,
+                "percent": true,
+                "amount": 0.45,
+                "prefab": "abilities/bard/battle_song/buff_stats_gem"
+            },
+            {
+                "stat": "$Stat_CriticalHitDamage",
+                "name": "Critical Damage",
+                "op": "Add",
+                "value": 45.0,
+                "percent": true,
+                "amount": 45.0,
+                "prefab": "abilities/bard/battle_song/buff_stats_gem"
+            },
+            {
+                "stat": "$Stat_MovementSpeedBonus",
+                "name": "Movement Speed Bonus",
+                "op": "MultiplySum",
+                "value": 40.0,
+                "percent": true,
+                "amount": 0.4,
+                "prefab": "abilities/bard/jubilant_song/buff_effect_gem"
+            },
+            {
+                "stat": "$Stat_MaxEnergy",
+                "name": "Maximum Energy",
+                "op": "Add",
+                "value": 50.0,
+                "percent": false,
+                "amount": 50.0,
+                "prefab": "abilities/bard/jubilant_song/buff_effect_gem"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Musical Master Buff Criticaldamage",
+                "prefab": "abilities/mods_01/bard/musical_master_buff_criticaldamage",
+                "component": 136,
+                "duration": 30.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_CriticalHitDamageBonus",
+                        "name": "Critical Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 35.0,
+                        "percent": true,
+                        "amount": 0.35
+                    }
+                ]
+            },
+            {
+                "name": "Buff Stats",
+                "prefab": "abilities/bard/battle_song/buff_stats",
+                "component": 136,
+                "name_key": "$prefabs_abilities_bard_battle_song_name",
+                "description_key": "$prefabs_abilities_bard_battle_song_buff_stats_gem_description",
+                "duration": 30.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_PhysicalDamageBonus",
+                        "name": "Physical Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 30.0,
+                        "percent": true,
+                        "amount": 0.3
+                    },
+                    {
+                        "stat": "$Stat_SpellDamageBonus",
+                        "name": "Magic Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 30.0,
+                        "percent": true,
+                        "amount": 0.3
+                    },
+                    {
+                        "stat": "$Stat_CriticalHitDamage",
+                        "name": "Critical Damage",
+                        "op": "Add",
+                        "value": 20.0,
+                        "percent": true,
+                        "amount": 20.0
+                    }
+                ]
+            },
+            {
+                "name": "Buff Combat Effect",
+                "prefab": "abilities/bard/peaceful_song/buff_combat_effect",
+                "component": 150,
+                "name_key": "$prefabs_abilities_bard_peaceful_song_name",
+                "description_key": "$prefabs_abilities_bard_peaceful_song_buff_combat_effect_description",
+                "duration": 30.0
+            },
+            {
+                "name": "Buff Effect",
+                "prefab": "abilities/bard/jubilant_song/buff_effect",
+                "component": 136,
+                "name_key": "$prefabs_abilities_bard_jubilant_song_name",
+                "description_key": "$prefabs_abilities_bard_jubilant_song_buff_effect_description",
+                "duration": 30.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeedBonus",
+                        "name": "Movement Speed Bonus",
+                        "op": "MultiplySum",
+                        "value": 25.0,
+                        "percent": true,
+                        "amount": 0.25
+                    },
+                    {
+                        "stat": "$Stat_MaxEnergy",
+                        "name": "Maximum Energy",
+                        "op": "Add",
+                        "value": 30.0,
+                        "percent": false,
+                        "amount": 30.0
+                    }
+                ]
+            },
+            {
+                "name": "Musical Master Buff Criticaldamage Gem",
+                "prefab": "abilities/mods_01/bard/musical_master_buff_criticaldamage_gem",
+                "component": 136,
+                "duration": 30.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_CriticalHitDamageBonus",
+                        "name": "Critical Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 35.0,
+                        "percent": true,
+                        "amount": 0.35
+                    }
+                ]
+            },
+            {
+                "name": "Buff Stats Gem",
+                "prefab": "abilities/bard/battle_song/buff_stats_gem",
+                "component": 136,
+                "name_key": "$prefabs_abilities_bard_battle_song_name",
+                "description_key": "$prefabs_abilities_bard_battle_song_buff_stats_gem_description",
+                "duration": 30.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_PhysicalDamageBonus",
+                        "name": "Physical Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 45.0,
+                        "percent": true,
+                        "amount": 0.45
+                    },
+                    {
+                        "stat": "$Stat_SpellDamageBonus",
+                        "name": "Magic Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 45.0,
+                        "percent": true,
+                        "amount": 0.45
+                    },
+                    {
+                        "stat": "$Stat_CriticalHitDamage",
+                        "name": "Critical Damage",
+                        "op": "Add",
+                        "value": 45.0,
+                        "percent": true,
+                        "amount": 45.0
+                    }
+                ]
+            },
+            {
+                "name": "Buff Combat Effect Gem",
+                "prefab": "abilities/bard/peaceful_song/buff_combat_effect_gem",
+                "component": 150,
+                "name_key": "$prefabs_abilities_bard_peaceful_song_name",
+                "description_key": "$prefabs_abilities_bard_peaceful_song_buff_combat_effect_description",
+                "duration": 30.0
+            },
+            {
+                "name": "Buff Effect Gem",
+                "prefab": "abilities/bard/jubilant_song/buff_effect_gem",
+                "component": 136,
+                "name_key": "$prefabs_abilities_bard_jubilant_song_name",
+                "description_key": "$prefabs_abilities_bard_jubilant_song_buff_effect_gem_description",
+                "duration": 30.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeedBonus",
+                        "name": "Movement Speed Bonus",
+                        "op": "MultiplySum",
+                        "value": 40.0,
+                        "percent": true,
+                        "amount": 0.4
+                    },
+                    {
+                        "stat": "$Stat_MaxEnergy",
+                        "name": "Maximum Energy",
+                        "op": "Add",
+                        "value": 50.0,
+                        "percent": false,
+                        "amount": 50.0
+                    }
+                ]
+            },
+            {
+                "name": "Buff Leech",
+                "prefab": "abilities/bard/peaceful_song/buff_leech",
+                "component": 281,
+                "duration": 3.0
+            },
+            {
+                "name": "Buff Leech Gem",
+                "prefab": "abilities/bard/peaceful_song/buff_leech_gem",
+                "component": 281,
+                "duration": 3.0
+            }
+        ]
     },
     {
         "class": "Bard",
@@ -71,19 +444,91 @@
         "slug": "test_bard_02",
         "prefab": "abilities/mods_01/bard/ring_test_bard_02",
         "prefabs": [
+            "abilities/bard/peaceful_song/buff_combat_effect",
+            "abilities/bard/peaceful_song/buff_combat_effect_gem",
+            "abilities/bard/peaceful_song/buff_heal",
+            "abilities/bard/peaceful_song/buff_heal_gem",
+            "abilities/bard/peaceful_song/buff_leech",
+            "abilities/bard/peaceful_song/buff_leech_gem",
+            "abilities/mods_01/bard/mod_02_aoe_effect_friendly",
             "abilities/mods_01/bard/mod_02_buff_reducedamage"
         ],
         "stats": [
             {
-                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
                 "op": "Multiply",
-                "value": 25.0,
+                "value": -25.0,
+                "percent": true,
                 "amount": 0.75,
                 "prefab": "abilities/mods_01/bard/mod_02_buff_reducedamage"
             }
         ],
-        "stages": []
+        "stages": [],
+        "healing": [
+            {
+                "name": "Buff Heal",
+                "prefab": "abilities/bard/peaceful_song/buff_heal",
+                "max_health_percent": 0.2
+            },
+            {
+                "name": "Buff Heal Gem",
+                "prefab": "abilities/bard/peaceful_song/buff_heal_gem",
+                "max_health_percent": 0.45
+            }
+        ],
+        "effects": [
+            {
+                "name": "Mod 02 Aoe Effect Friendly",
+                "prefab": "abilities/mods_01/bard/mod_02_aoe_effect_friendly",
+                "component": 132,
+                "duration": 4.0
+            },
+            {
+                "name": "Mod 02 Buff Reducedamage",
+                "prefab": "abilities/mods_01/bard/mod_02_buff_reducedamage",
+                "component": 136,
+                "duration": 30.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Multiply",
+                        "value": -25.0,
+                        "percent": true,
+                        "amount": 0.75
+                    }
+                ]
+            },
+            {
+                "name": "Buff Combat Effect",
+                "prefab": "abilities/bard/peaceful_song/buff_combat_effect",
+                "component": 150,
+                "name_key": "$prefabs_abilities_bard_peaceful_song_name",
+                "description_key": "$prefabs_abilities_bard_peaceful_song_buff_combat_effect_description",
+                "duration": 30.0
+            },
+            {
+                "name": "Buff Combat Effect Gem",
+                "prefab": "abilities/bard/peaceful_song/buff_combat_effect_gem",
+                "component": 150,
+                "name_key": "$prefabs_abilities_bard_peaceful_song_name",
+                "description_key": "$prefabs_abilities_bard_peaceful_song_buff_combat_effect_description",
+                "duration": 30.0
+            },
+            {
+                "name": "Buff Leech",
+                "prefab": "abilities/bard/peaceful_song/buff_leech",
+                "component": 281,
+                "duration": 3.0
+            },
+            {
+                "name": "Buff Leech Gem",
+                "prefab": "abilities/bard/peaceful_song/buff_leech_gem",
+                "component": 281,
+                "duration": 3.0
+            }
+        ]
     },
     {
         "class": "Boomeranger",
@@ -100,10 +545,18 @@
             {
                 "name": "Blast Bow Effect Explosion",
                 "prefab": "abilities/mods_01/adventurer/blast_bow_effect_explosion",
-                "base": 10.0,
-                "multiplier": 1.0
+                "base": 50,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 25,
+                "max_block_hardness": 50,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "min_knockback": 0.1,
+                "damage_stat": -1
             }
-        ]
+        ],
+        "proc_cooldown": 0.1
     },
     {
         "class": "Boomeranger",
@@ -123,9 +576,32 @@
         "description": "Your 3rd melee attack now pulls enemies in.",
         "slug": "cyclone",
         "prefab": "abilities/mods_01/adventurer/ring_cyclone",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/adventurer/cyclone_attack_aoe",
+            "abilities/mods_01/adventurer/cyclone_attack_attract_effect"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Cyclone Attack Aoe",
+                "prefab": "abilities/mods_01/adventurer/cyclone_attack_aoe",
+                "component": 132,
+                "duration": 1.0
+            },
+            {
+                "name": "Cyclone Attack Attract Effect",
+                "prefab": "abilities/mods_01/adventurer/cyclone_attack_attract_effect",
+                "component": 287,
+                "duration": 1.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_CRIMEFIGHTER_MELEE_BUFF_TRANSFORM_01",
+                "pkfx": "Particles/character_pc_crimefighter_ability_melee_transform_buff_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Boomeranger",
@@ -145,9 +621,34 @@
         "description": "Spawns a Cupcake when you take damage below 50% hp that refills your energy bar resets your ability cooldowns.",
         "slug": "emergency_snack",
         "prefab": "abilities/mods_01/candybarbarian/ring_emergency_snack",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/candybarbarian/emergency_snack_cooldown_timer_buff",
+            "abilities/mods_01/candybarbarian/emergency_snack_energy_200_effect"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "healing": [
+            {
+                "name": "Emergency Snack Energy 200 Effect",
+                "prefab": "abilities/mods_01/candybarbarian/emergency_snack_energy_200_effect",
+                "max_energy_percent": 2.0
+            }
+        ],
+        "effects": [
+            {
+                "name": "Emergency Snack Cooldown Timer Buff",
+                "prefab": "abilities/mods_01/candybarbarian/emergency_snack_cooldown_timer_buff",
+                "component": 136,
+                "duration": 60.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_ADVENTURER_BOOMERANG_REDUCE_COOLDOWN",
+                "pkfx": "Particles/character_pc_adventurer_ability_boomerang_catch_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 10.0
     },
     {
         "class": "Candy Barbarian",
@@ -157,24 +658,55 @@
         "slug": "spin_to_win",
         "prefab": "abilities/mods_01/candybarbarian/ring_spin_to_win",
         "prefabs": [
+            "abilities/candybarbarian/healthcandy_effect_heal",
             "abilities/mods_01/candybarbarian/spin_to_win_swirlwind"
         ],
-        "stats": [
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Multiply",
-                "value": 50.0,
-                "amount": 1.5,
-                "prefab": "abilities/mods_01/candybarbarian/spin_to_win_swirlwind"
-            }
-        ],
+        "stats": [],
         "stages": [
             {
                 "name": "Spin To Win Swirlwind",
                 "prefab": "abilities/mods_01/candybarbarian/spin_to_win_swirlwind",
-                "base": 10.0,
-                "multiplier": 6.5
+                "base": 0,
+                "multiplier": 6.5,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 12,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "stability_ignore": 0.25,
+                "target_effect": "abilities/candybarbarian/swirlwind_candyspawn",
+                "damage_stat": -1
+            }
+        ],
+        "healing": [
+            {
+                "name": "Healthcandy Effect Heal",
+                "prefab": "abilities/candybarbarian/healthcandy_effect_heal",
+                "max_health_percent": 0.1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_CANDYBARBARIAN_SWIRLWIND",
+                "pkfx": "Particles/character_pc_candyBarbarian_ability_spinAttack_whirlwind_01.pkfx"
+            },
+            {
+                "key": "$VFX_CANDYBARBARIAN_WEAPON_IMPACT",
+                "pkfx": "Particles/character_pc_candyBarbarian_ability_basicAttack_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_CANDYBARBARIAN_CANDY_HEAL",
+                "pkfx": "Particles/character_pc_generic_status_heal_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Spin To Win Swirlwind",
+                "prefab": "abilities/mods_01/candybarbarian/spin_to_win_swirlwind",
+                "energy": 30,
+                "cooldown": 0
             }
         ]
     },
@@ -185,9 +717,227 @@
         "description": "Basic attacks have a chance to spawn a Mini Green Gatling. Mini Green Gatlings have a chance to spawn Mini Mini Green Gatlings.",
         "slug": "gatling_gatling",
         "prefab": "abilities/mods_01/chloromancer/ring_gatling_gatling",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/chloromancer/basic_attack_bulletheal_effect",
+            "abilities/chloromancer/chloromancer_gatling_bullet",
+            "abilities/chloromancer/seedling_both_bulletheal_effect",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr10",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr100",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr20",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr30",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr40",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr50",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr60",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr70",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr80",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr90",
+            "abilities/mods_01/chloromancer/gatling_gatling_effect_projectile",
+            "abilities/mods_01/chloromancer/gatling_gatling_gatling_effect_projectile"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
+                "op": "Multiply",
+                "value": -60.0,
+                "percent": true,
+                "amount": 0.4,
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Gatling Gatling Effect Projectile",
+                "prefab": "abilities/mods_01/chloromancer/gatling_gatling_effect_projectile",
+                "base": 1,
+                "multiplier": 0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "damage_type": -1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Chloromancer Gatling Bullet",
+                "prefab": "abilities/chloromancer/chloromancer_gatling_bullet",
+                "base": 300,
+                "multiplier": 1.2,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 10,
+                "max_block_hardness": 10,
+                "max_blocks": 10000,
+                "damage_type": 1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                "base": 10,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "target_effect": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare",
+                "damage_type": 1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Gatling Gatling Gatling Effect Projectile",
+                "prefab": "abilities/mods_01/chloromancer/gatling_gatling_gatling_effect_projectile",
+                "base": 1,
+                "multiplier": 0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "damage_type": -1,
+                "damage_stat": -1
+            }
+        ],
+        "healing": [
+            {
+                "name": "Seedling Both Bulletheal Effect",
+                "prefab": "abilities/chloromancer/seedling_both_bulletheal_effect",
+                "max_health_percent": 0.22
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal",
+                "max_health_percent": 0.2
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr10",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr10",
+                "max_health_percent": 0.22
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr20",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr20",
+                "max_health_percent": 0.24
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr30",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr30",
+                "max_health_percent": 0.26
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr40",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr40",
+                "max_health_percent": 0.28
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr50",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr50",
+                "max_health_percent": 0.3
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr60",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr60",
+                "max_health_percent": 0.32
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr70",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr70",
+                "max_health_percent": 0.34
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr80",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr80",
+                "max_health_percent": 0.36
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr90",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr90",
+                "max_health_percent": 0.38
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr100",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr100",
+                "max_health_percent": 0.4
+            }
+        ],
+        "effects": [
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe",
+                "component": 132,
+                "duration": 10.0
+            },
+            {
+                "name": "Basic Attack Bulletheal Effect",
+                "prefab": "abilities/chloromancer/basic_attack_bulletheal_effect",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Snare",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare",
+                "component": 136,
+                "duration": 0.55,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Multiply",
+                        "value": -60.0,
+                        "percent": true,
+                        "amount": 0.4
+                    }
+                ]
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_DESPAWN",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_despawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_GATLING_SHOT",
+                "pkfx": "Particles/character_pc_chloromancer_gem_gatlingGun_muzzleFlash_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_SPIN",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_spin_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_GATLING_SHOT_IMPACT",
+                "pkfx": "Particles/character_pc_chloromancer_gem_gatlingGun_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_GATLING_SHOT_PROJECTILE",
+                "pkfx": "Particles/character_pc_chloromancer_gem_gatlingGun_projectile_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_HEAL",
+                "pkfx": "Particles/character_pc_chloromancer_act2_seedling_heal_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_HEAL",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_heal_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_SNARE",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_snare_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Chloromancer Gatling Effect Shoot",
+                "prefab": "abilities/chloromancer/chloromancer_gatling_effect_shoot",
+                "energy": 0,
+                "cooldown": 0
+            }
+        ],
+        "proc_cooldown": 1.8
     },
     {
         "class": "Chloromancer",
@@ -196,9 +946,26 @@
         "description": "Creates a shield at low health that reduces damage",
         "slug": "test_chloromancer",
         "prefab": "abilities/mods_01/chloromancer/ring_test_chloromancer",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/chloromancer/mod_01_effect_shield"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Mod 01 Effect Shield",
+                "prefab": "abilities/mods_01/chloromancer/mod_01_effect_shield",
+                "component": 261,
+                "duration": 15.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_CHLOROMANCER_PASSIVE_SHIELD",
+                "pkfx": "Particles/character_pc_chloromancer_passive_shield_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 15.0
     },
     {
         "class": "Chloromancer",
@@ -207,9 +974,336 @@
         "description": "After you deal damage gain a buff that spawns plants randomly around you for a short time.",
         "slug": "random_plants",
         "prefab": "abilities/mods_01/chloromancer/ring_random_plants",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/chloromancer/basic_attack_bulletheal_effect",
+            "abilities/chloromancer/chloromancer_gatling_bullet",
+            "abilities/chloromancer/chloromancer_gatling_effect_projectile",
+            "abilities/chloromancer/seedling_both_bulletheal_effect",
+            "abilities/chloromancer/seedling_effect_death",
+            "abilities/chloromancer/seedling_effect_flower_fullhealth_aoe",
+            "abilities/chloromancer/seedling_effect_flower_fullhealth_aoe_effect_heal_full",
+            "abilities/chloromancer/seedling_effect_flower_fullhealth_aoe_effect_heal_partial",
+            "abilities/chloromancer/seedling_effect_flower_fullhealth_explosion",
+            "abilities/chloromancer/seedling_effect_flower_heal",
+            "abilities/chloromancer/seedling_effect_projectile",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr10",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr100",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr20",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr30",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr40",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr50",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr60",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr70",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr80",
+            "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr90",
+            "abilities/chloromancer/seedling_lasher_effect_projectile",
+            "abilities/chloromancer/seedling_minibloom_bulletheal_effect",
+            "abilities/mods_01/chloromancer/spawn_random_seedlings_effect_spawner_periodic"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
+                "op": "Multiply",
+                "value": -60.0,
+                "percent": true,
+                "amount": 0.4,
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Chloromancer Gatling Effect Projectile",
+                "prefab": "abilities/chloromancer/chloromancer_gatling_effect_projectile",
+                "base": 1,
+                "multiplier": 0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "damage_type": -1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Seedling Lasher Effect Projectile",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_projectile",
+                "base": 1,
+                "multiplier": 0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "damage_type": -1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Seedling Effect Projectile",
+                "prefab": "abilities/chloromancer/seedling_effect_projectile",
+                "base": 1,
+                "multiplier": 0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "damage_type": -1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Chloromancer Gatling Bullet",
+                "prefab": "abilities/chloromancer/chloromancer_gatling_bullet",
+                "base": 300,
+                "multiplier": 1.2,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 10,
+                "max_block_hardness": 10,
+                "max_blocks": 10000,
+                "damage_type": 1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                "base": 10,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "target_effect": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare",
+                "damage_type": 1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Seedling Effect Death",
+                "prefab": "abilities/chloromancer/seedling_effect_death",
+                "base": 0,
+                "multiplier": 0.5,
+                "max_health_percent": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "damage_stat": -1
+            },
+            {
+                "name": "Seedling Effect Flower Fullhealth Explosion",
+                "prefab": "abilities/chloromancer/seedling_effect_flower_fullhealth_explosion",
+                "base": 0,
+                "multiplier": 3.75,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "min_knockback": 0.1,
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "healing": [
+            {
+                "name": "Seedling Both Bulletheal Effect",
+                "prefab": "abilities/chloromancer/seedling_both_bulletheal_effect",
+                "max_health_percent": 0.22
+            },
+            {
+                "name": "Seedling Minibloom Bulletheal Effect",
+                "prefab": "abilities/chloromancer/seedling_minibloom_bulletheal_effect",
+                "max_health_percent": 1.0
+            },
+            {
+                "name": "Seedling Effect Flower Heal",
+                "prefab": "abilities/chloromancer/seedling_effect_flower_heal",
+                "max_health_percent": 0.05
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal",
+                "max_health_percent": 0.2
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr10",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr10",
+                "max_health_percent": 0.22
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr20",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr20",
+                "max_health_percent": 0.24
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr30",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr30",
+                "max_health_percent": 0.26
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr40",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr40",
+                "max_health_percent": 0.28
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr50",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr50",
+                "max_health_percent": 0.3
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr60",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr60",
+                "max_health_percent": 0.32
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr70",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr70",
+                "max_health_percent": 0.34
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr80",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr80",
+                "max_health_percent": 0.36
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr90",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr90",
+                "max_health_percent": 0.38
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Heal Pr100",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_heal_pr100",
+                "max_health_percent": 0.4
+            },
+            {
+                "name": "Seedling Effect Flower Fullhealth Aoe Effect Heal Full",
+                "prefab": "abilities/chloromancer/seedling_effect_flower_fullhealth_aoe_effect_heal_full",
+                "max_health_percent": 1.0
+            },
+            {
+                "name": "Seedling Effect Flower Fullhealth Aoe Effect Heal Partial",
+                "prefab": "abilities/chloromancer/seedling_effect_flower_fullhealth_aoe_effect_heal_partial",
+                "max_health_percent": 0.125
+            }
+        ],
+        "effects": [
+            {
+                "name": "Spawn Random Seedlings Effect Spawner Periodic",
+                "prefab": "abilities/mods_01/chloromancer/spawn_random_seedlings_effect_spawner_periodic",
+                "component": 158,
+                "duration": 15.0
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe",
+                "component": 132,
+                "duration": 10.0
+            },
+            {
+                "name": "Basic Attack Bulletheal Effect",
+                "prefab": "abilities/chloromancer/basic_attack_bulletheal_effect",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Damage",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_damage",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Seedling Effect Death",
+                "prefab": "abilities/chloromancer/seedling_effect_death",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Seedling Lasher Effect Bulb Fullhealth Aoe Effect Snare",
+                "prefab": "abilities/chloromancer/seedling_lasher_effect_bulb_fullhealth_aoe_effect_snare",
+                "component": 136,
+                "duration": 0.55,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Multiply",
+                        "value": -60.0,
+                        "percent": true,
+                        "amount": 0.4
+                    }
+                ]
+            },
+            {
+                "name": "Seedling Effect Flower Fullhealth Aoe",
+                "prefab": "abilities/chloromancer/seedling_effect_flower_fullhealth_aoe",
+                "component": 132,
+                "duration": 0.01
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_PROJECTILE",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_projectile_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_PROJECTILE",
+                "pkfx": "Particles/character_pc_chloromancer_act2_seedling_projectile_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_DESPAWN",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_despawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_SPAWN",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_spawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_SPAWN",
+                "pkfx": "Particles/character_pc_chloromancer_act2_seedling_spawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_DESPAWN",
+                "pkfx": "Particles/character_pc_chloromancer_act2_seedling_despawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_GATLING_SHOT",
+                "pkfx": "Particles/character_pc_chloromancer_gem_gatlingGun_muzzleFlash_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_SPIN",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_spin_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_GATLING_SHOT_IMPACT",
+                "pkfx": "Particles/character_pc_chloromancer_gem_gatlingGun_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_GATLING_SHOT_PROJECTILE",
+                "pkfx": "Particles/character_pc_chloromancer_gem_gatlingGun_projectile_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_HEAL",
+                "pkfx": "Particles/character_pc_chloromancer_act2_seedling_heal_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_HEAL",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_heal_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_LASHER_SNARE",
+                "pkfx": "Particles/character_pc_chloromancer_act1_lasher_snare_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_EXPLOSION",
+                "pkfx": "Particles/character_pc_chloromancer_act2_seedling_explosion_01.pkfx"
+            },
+            {
+                "key": "$VFX_CHLOROMANCER_SEEDLING_EXPLOSION_HEAL",
+                "pkfx": "Particles/character_pc_chloromancer_act2_player_heal_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Chloromancer Gatling Effect Shoot",
+                "prefab": "abilities/chloromancer/chloromancer_gatling_effect_shoot",
+                "energy": 0,
+                "cooldown": 0
+            }
+        ],
+        "proc_cooldown": 1.0
     },
     {
         "class": "Dino Tamer",
@@ -219,19 +1313,51 @@
         "slug": "deep_wounds",
         "prefab": "abilities/mods_01/dinotamer/ring_deep_wounds",
         "prefabs": [
-            "abilities/mods_01/dinotamer/deep_wounds_damage_mult_effect"
+            "abilities/mods_01/dinotamer/deep_wounds_damage_mult_effect",
+            "abilities/mods_01/dinotamer/deep_wounds_pet_effect"
         ],
         "stats": [
             {
-                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
                 "op": "Multiply",
                 "value": 5.0,
+                "percent": true,
                 "amount": 1.05,
                 "prefab": "abilities/mods_01/dinotamer/deep_wounds_damage_mult_effect"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Deep Wounds Damage Mult Effect",
+                "prefab": "abilities/mods_01/dinotamer/deep_wounds_damage_mult_effect",
+                "component": 136,
+                "duration": 10.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Multiply",
+                        "value": 5.0,
+                        "percent": true,
+                        "amount": 1.05
+                    }
+                ]
+            },
+            {
+                "name": "Deep Wounds Pet Effect",
+                "prefab": "abilities/mods_01/dinotamer/deep_wounds_pet_effect",
+                "component": 136,
+                "duration": 0.5
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_DRACOLYTE_PASSIVE",
+                "pkfx": "Particles/character_pc_dracolyte_basic_passive_DoT_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Dino Tamer",
@@ -240,9 +1366,45 @@
         "description": "Dino Mount also spawns a Tyrannosaurus Rex minion.",
         "slug": "chomp_chomp",
         "prefab": "abilities/mods_01/dinotamer/ring_chomp_chomp",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/NPC/summon/effect_drawdistance",
+            "abilities/NPC/summon/effect_healthmult"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_MaxHealth",
+                "name": "Maximum Health",
+                "op": "Multiply",
+                "value": 50.0,
+                "percent": true,
+                "amount": 1.5,
+                "prefab": "abilities/NPC/summon/effect_healthmult"
+            }
+        ],
+        "stages": [],
+        "effects": [
+            {
+                "name": "Effect Drawdistance",
+                "prefab": "abilities/NPC/summon/effect_drawdistance",
+                "component": 233,
+                "duration": 1.0
+            },
+            {
+                "name": "Effect Healthmult",
+                "prefab": "abilities/NPC/summon/effect_healthmult",
+                "component": 136,
+                "stats": [
+                    {
+                        "stat": "$Stat_MaxHealth",
+                        "name": "Maximum Health",
+                        "op": "Multiply",
+                        "value": 50.0,
+                        "percent": true,
+                        "amount": 1.5
+                    }
+                ]
+            }
+        ]
     },
     {
         "class": "Dino Tamer",
@@ -262,9 +1424,38 @@
         "description": "Summon two Dracolyte allies when using Avatar of Flame.",
         "slug": "dragon_force",
         "prefab": "abilities/mods_01/dracolyte/ring_dragon_force",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/dracolyte/idol_bomb2_effect_minion_flamethrower"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Idol Bomb2 Effect Minion Flamethrower",
+                "prefab": "abilities/dracolyte/idol_bomb2_effect_minion_flamethrower",
+                "base": 30,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 1,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_DRACOLYTE_FLAMETHROWER",
+                "pkfx": "Particles/character_pc_dracolyte_ability_flamethrower_stream_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Idol Bomb2 Effect Minion Flamethrower",
+                "prefab": "abilities/dracolyte/idol_bomb2_effect_minion_flamethrower",
+                "energy": 0.0,
+                "cooldown": 0
+            }
+        ]
     },
     {
         "class": "Dracolyte",
@@ -273,9 +1464,81 @@
         "description": "When dodging the Dracolyte leaves a Burnt Offering.",
         "slug": "dragonborn",
         "prefab": "abilities/mods_01/dracolyte/ring_dragonborn",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/dracolyte/idol_bomb2_effect_minion_flamethrower",
+            "abilities/dracolyte/idol_bomb_effect_explosion",
+            "abilities/dracolyte/idol_bomb_effect_trigger"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Idol Bomb Effect Trigger",
+                "prefab": "abilities/dracolyte/idol_bomb_effect_trigger",
+                "base": 0,
+                "multiplier": 0.5,
+                "max_health_percent": 100.0,
+                "crit_damage_multiplier": 1.0,
+                "damage_stat": -1
+            },
+            {
+                "name": "Idol Bomb Effect Explosion",
+                "prefab": "abilities/dracolyte/idol_bomb_effect_explosion",
+                "base": 25,
+                "multiplier": 5.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 5,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 2.5,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "stability_ignore": 0.5,
+                "damage_type": 1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Idol Bomb2 Effect Minion Flamethrower",
+                "prefab": "abilities/dracolyte/idol_bomb2_effect_minion_flamethrower",
+                "base": 30,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 1,
+                "max_block_hardness": 100,
+                "max_blocks": 10000,
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "effects": [
+            {
+                "name": "Idol Bomb Effect Trigger",
+                "prefab": "abilities/dracolyte/idol_bomb_effect_trigger",
+                "component": 156,
+                "duration": 0.1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_DRACOLYTE_IDOL_IMPACT",
+                "pkfx": "Particles/character_pc_dracolyte_ability_idol_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_DRACOLYTE_IDOL_EXPLOSION",
+                "pkfx": "Particles/character_pc_dracolyte_ability_idol_explosion_01.pkfx"
+            },
+            {
+                "key": "$VFX_DRACOLYTE_FLAMETHROWER",
+                "pkfx": "Particles/character_pc_dracolyte_ability_flamethrower_stream_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Idol Bomb2 Effect Minion Flamethrower",
+                "prefab": "abilities/dracolyte/idol_bomb2_effect_minion_flamethrower",
+                "energy": 0.0,
+                "cooldown": 0
+            }
+        ]
     },
     {
         "class": "Fae Trickster",
@@ -284,9 +1547,43 @@
         "description": "Ego Blast now allows for two hits within 2 seconds instead of just one.",
         "slug": "big_brain",
         "prefab": "abilities/mods_01/trickster/ring_big_brain",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/trickster/big_brain_combat_effects_spawner",
+            "abilities/mods_01/trickster/big_brain_evade_debuff",
+            "abilities/trickster/effect_trickster_evade_debuff"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Big Brain Combat Effects Spawner",
+                "prefab": "abilities/mods_01/trickster/big_brain_combat_effects_spawner",
+                "component": 150,
+                "duration": 2.0
+            },
+            {
+                "name": "Effect Trickster Evade Debuff",
+                "prefab": "abilities/trickster/effect_trickster_evade_debuff",
+                "component": 151,
+                "duration": 4.0
+            },
+            {
+                "name": "Big Brain Evade Debuff",
+                "prefab": "abilities/mods_01/trickster/big_brain_evade_debuff",
+                "component": 151,
+                "duration": 2.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_FAETRICKSTER_PASSIVE_DEBUFF_END",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_passive_activated_01.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_PASSIVE_DEBUFF_BEGIN",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_passive_deactivated_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Fae Trickster",
@@ -295,9 +1592,76 @@
         "description": "Faerie Dance summons a Fae Juggernaut that taunts enemies.",
         "slug": "dance_partner",
         "prefab": "abilities/mods_01/trickster/ring_dance_partner",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/NPC/basic_attack_melee",
+            "abilities/NPC/slam",
+            "abilities/NPC/winduppunch_shadow"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Basic Attack Melee",
+                "prefab": "abilities/NPC/basic_attack_melee",
+                "base": 0,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "knockback": 1.0,
+                "damage_stat": -1
+            },
+            {
+                "name": "Slam",
+                "prefab": "abilities/NPC/slam",
+                "base": 0,
+                "multiplier": 2.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 10,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "knockback": 2.5,
+                "min_knockback": 0.15,
+                "stability_ignore": 0.25,
+                "damage_stat": -1
+            },
+            {
+                "name": "Winduppunch Shadow",
+                "prefab": "abilities/NPC/winduppunch_shadow",
+                "base": 0,
+                "multiplier": 12.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 5,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "knockback": 3.5,
+                "min_knockback": 0.5,
+                "stability_ignore": 0.25,
+                "damage_stat": -1
+            }
+        ],
+        "actions": [
+            {
+                "name": "Basic Attack Melee",
+                "prefab": "abilities/NPC/basic_attack_melee",
+                "energy": 0,
+                "cooldown": 0
+            },
+            {
+                "name": "Slam",
+                "prefab": "abilities/NPC/slam",
+                "energy": 0,
+                "cooldown": 0
+            },
+            {
+                "name": "Winduppunch Shadow",
+                "prefab": "abilities/NPC/winduppunch_shadow",
+                "energy": 0,
+                "cooldown": 0
+            }
+        ]
     },
     {
         "class": "Fae Trickster",
@@ -307,34 +1671,64 @@
         "slug": "test_faetrickster",
         "prefab": "abilities/mods_01/trickster/ring_test_faetrickster",
         "prefabs": [
-            "abilities/mods_01/trickster/mod_01_summon_turrets",
-            "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_shoot",
             "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_bullet"
         ],
-        "stats": [
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Set",
-                "value": 0.0,
-                "amount": 0.0,
-                "prefab": "abilities/mods_01/trickster/mod_01_summon_turrets"
-            },
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Multiply",
-                "value": 40.0,
-                "amount": 0.6,
-                "prefab": "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_shoot"
-            }
-        ],
+        "stats": [],
         "stages": [
             {
                 "name": "Mod 01 Summon Turrets Effect Turret Bullet",
                 "prefab": "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_bullet",
-                "base": 0.0,
-                "multiplier": 6.0
+                "base": 200,
+                "multiplier": 6.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 5,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 0.3,
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_FAETRICKSTER_SUMMON_CAST",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_weaponClone_01.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_SUMMON_COOLDOWN",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_cooldown_ready_01.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_SUMMON_TURRET",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_weaponClone_clone_ambient_01.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_SUMMON_TURRET_SPAWN",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_faerieDance_origin_01.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_SUMMON_TURRET_DESPAWN",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_faerieDance_clone_death_01.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_BASIC_SHOT",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_regularAttack_muzzleFlash_02.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_BASIC_SHOT_IMPACT_DEBUFFED",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_regularAttack_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_FAETRICKSTER_BASIC_SHOT_PROJECTILE_DEBUFFED",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_regularAttack_projectile_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Mod 01 Summon Turrets Effect Turret Shoot",
+                "prefab": "abilities/mods_01/trickster/mod_01_summon_turrets_effect_turret_shoot",
+                "energy": 0,
+                "cooldown": 0
             }
         ]
     },
@@ -346,17 +1740,44 @@
         "slug": "trick_trick",
         "prefab": "abilities/mods_01/trickster/ring_trick_trick",
         "prefabs": [
-            "abilities/mods_01/trickster/trick_trick_effect_explosion"
+            "abilities/mods_01/trickster/trick_trick_effect_explosion",
+            "abilities/mods_01/trickster/trick_trick_effect_stun"
         ],
         "stats": [],
         "stages": [
             {
                 "name": "Trick Trick Effect Explosion",
                 "prefab": "abilities/mods_01/trickster/trick_trick_effect_explosion",
-                "base": 0.0,
-                "multiplier": 6.75
+                "base": 25,
+                "multiplier": 6.75,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 10,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "target_effect": "abilities/mods_01/trickster/trick_trick_effect_stun",
+                "damage_type": 1,
+                "damage_stat": -1
             }
-        ]
+        ],
+        "effects": [
+            {
+                "name": "Trick Trick Effect Stun",
+                "prefab": "abilities/mods_01/trickster/trick_trick_effect_stun",
+                "component": 242,
+                "duration": 1.5
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_FAETRICKSTER_GLITTERBOMB_EXPLOSION",
+                "pkfx": "Particles/character_pc_faeTrickster_ability_bomb_explosion_01.pkfx"
+            },
+            {
+                "key": "$VFX_KNIGHT_SMASH_STUN",
+                "pkfx": "Particles/character_pc_knight_ability_smash_stun_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 10.0
     },
     {
         "class": "Gunslinger",
@@ -370,31 +1791,69 @@
         ],
         "stats": [
             {
-                "name": "Attack Speed",
                 "stat": "$Stat_AttackSpeed",
+                "name": "Attack Speed",
                 "op": "Multiply",
                 "value": 50.0,
+                "percent": true,
                 "amount": 1.5,
                 "prefab": "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect"
             },
             {
-                "name": "Movement Speed",
                 "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
                 "op": "Multiply",
-                "value": 90.0,
+                "value": -90.0,
+                "percent": true,
                 "amount": 0.1,
                 "prefab": "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect"
             },
             {
-                "name": "Magic Damage",
                 "stat": "$Stat_SpellDamage",
+                "name": "Magic Damage",
                 "op": "Multiply",
                 "value": 55.0,
+                "percent": true,
                 "amount": 1.55,
                 "prefab": "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Berserk Slinger Berserk Effect",
+                "prefab": "abilities/mods_01/gunslinger/berserk_slinger_berserk_effect",
+                "component": 280,
+                "duration": 10.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_AttackSpeed",
+                        "name": "Attack Speed",
+                        "op": "Multiply",
+                        "value": 50.0,
+                        "percent": true,
+                        "amount": 1.5
+                    },
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Multiply",
+                        "value": -90.0,
+                        "percent": true,
+                        "amount": 0.1
+                    },
+                    {
+                        "stat": "$Stat_SpellDamage",
+                        "name": "Magic Damage",
+                        "op": "Multiply",
+                        "value": 55.0,
+                        "percent": true,
+                        "amount": 1.55
+                    }
+                ]
+            }
+        ],
+        "proc_cooldown": 5.0
     },
     {
         "class": "Gunslinger",
@@ -403,9 +1862,26 @@
         "description": "Dodging gives you an instant Charged shot. Resets after a short cooldown.",
         "slug": "lock_load",
         "prefab": "abilities/mods_01/gunslinger/ring_lock_load",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/gunslinger/lock_load_instant_charge_shot_full_charge"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Lock Load Instant Charge Shot Full Charge",
+                "prefab": "abilities/mods_01/gunslinger/lock_load_instant_charge_shot_full_charge",
+                "component": 151,
+                "duration": 5.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_GUNSLINGER_PASSIVE_CHARGED",
+                "pkfx": "Particles/character_pc_gunslinger_ability_chargeShot_charging_02.pkfx"
+            }
+        ],
+        "proc_cooldown": 5.0
     },
     {
         "class": "Gunslinger",
@@ -414,9 +1890,26 @@
         "description": "Your Charged Shot attacks have a chance to stun.",
         "slug": "stunning_ammo",
         "prefab": "abilities/mods_01/gunslinger/ring_stunning_ammo",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/gunslinger/stunning_ammo_stun"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Stunning Ammo Stun",
+                "prefab": "abilities/mods_01/gunslinger/stunning_ammo_stun",
+                "component": 242,
+                "duration": 1.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_KNIGHT_SMASH_STUN",
+                "pkfx": "Particles/character_pc_knight_ability_smash_stun_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 3.0
     },
     {
         "class": "Ice Sage",
@@ -430,23 +1923,51 @@
         ],
         "stats": [
             {
-                "name": "Critical Hit Bonus",
                 "stat": "$Stat_CriticalHitChanceBonus",
+                "name": "Critical Hit Bonus",
                 "op": "MultiplySum",
                 "value": 65.0,
+                "percent": true,
                 "amount": 0.65,
                 "prefab": "abilities/mods_01/icemage/cold_ice_buff_crit"
             },
             {
-                "name": "Critical Damage Bonus",
                 "stat": "$Stat_CriticalHitDamageBonus",
+                "name": "Critical Damage Bonus",
                 "op": "MultiplySum",
                 "value": 40.0,
+                "percent": true,
                 "amount": 0.4,
                 "prefab": "abilities/mods_01/icemage/cold_ice_buff_crit"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Cold Ice Buff Crit",
+                "prefab": "abilities/mods_01/icemage/cold_ice_buff_crit",
+                "component": 136,
+                "duration": 3.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_CriticalHitChanceBonus",
+                        "name": "Critical Hit Bonus",
+                        "op": "MultiplySum",
+                        "value": 65.0,
+                        "percent": true,
+                        "amount": 0.65
+                    },
+                    {
+                        "stat": "$Stat_CriticalHitDamageBonus",
+                        "name": "Critical Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 40.0,
+                        "percent": true,
+                        "amount": 0.4
+                    }
+                ]
+            }
+        ]
     },
     {
         "class": "Ice Sage",
@@ -460,39 +1981,92 @@
         ],
         "stats": [
             {
-                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
                 "op": "Add",
-                "value": 0.5,
+                "value": -50.0,
+                "percent": true,
                 "amount": -0.5,
                 "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
             },
             {
-                "name": "Movement Speed",
                 "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
                 "op": "Add",
                 "value": 50.0,
+                "percent": false,
                 "amount": 50.0,
                 "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
             },
             {
-                "name": "Magic Damage",
                 "stat": "$Stat_SpellDamage",
+                "name": "Magic Damage",
                 "op": "Multiply",
                 "value": 100.0,
+                "percent": true,
                 "amount": 2.0,
                 "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
             },
             {
-                "name": "Attack Speed",
                 "stat": "$Stat_AttackSpeed",
+                "name": "Attack Speed",
                 "op": "Multiply",
                 "value": 400.0,
+                "percent": true,
                 "amount": 5.0,
                 "prefab": "abilities/mods_01/icemage/chill_out_effect_shield"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Chill Out Effect Shield",
+                "prefab": "abilities/mods_01/icemage/chill_out_effect_shield",
+                "component": 131,
+                "duration": 6.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Add",
+                        "value": -50.0,
+                        "percent": true,
+                        "amount": -0.5
+                    },
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Add",
+                        "value": 50.0,
+                        "percent": false,
+                        "amount": 50.0
+                    },
+                    {
+                        "stat": "$Stat_SpellDamage",
+                        "name": "Magic Damage",
+                        "op": "Multiply",
+                        "value": 100.0,
+                        "percent": true,
+                        "amount": 2.0
+                    },
+                    {
+                        "stat": "$Stat_AttackSpeed",
+                        "name": "Attack Speed",
+                        "op": "Multiply",
+                        "value": 400.0,
+                        "percent": true,
+                        "amount": 5.0
+                    }
+                ]
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_ICEMAGE_SHIELD",
+                "pkfx": "Particles/character_pc_iceMage_ability_shield_shield_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 30.0
     },
     {
         "class": "Ice Sage",
@@ -501,9 +2075,79 @@
         "description": "The Big Chill Summons an Ice Crash on your location. This Ice Crash changes the ground around you to ice.",
         "slug": "ice_baby",
         "prefab": "abilities/mods_01/icemage/ring_ice_baby",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/icemage/icicledrop_effect_explosion",
+            "abilities/icemage/icicledrop_effect_snare",
+            "abilities/mods_01/icemage/ice_nice_effect_convert_lava_transform"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
+                "op": "Multiply",
+                "value": -64.0,
+                "percent": true,
+                "amount": 0.36,
+                "prefab": "abilities/icemage/icicledrop_effect_snare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Icicledrop Effect Explosion",
+                "prefab": "abilities/icemage/icicledrop_effect_explosion",
+                "base": 25,
+                "multiplier": 7.5,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 10,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 2.0,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "stability_ignore": 0.35,
+                "target_effect": "abilities/icemage/icicledrop_effect_snare",
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "effects": [
+            {
+                "name": "Ice Nice Effect Convert Lava Transform",
+                "prefab": "abilities/mods_01/icemage/ice_nice_effect_convert_lava_transform",
+                "component": 250,
+                "duration": 1.0
+            },
+            {
+                "name": "Icicledrop Effect Snare",
+                "prefab": "abilities/icemage/icicledrop_effect_snare",
+                "component": 136,
+                "duration": 3.5,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Multiply",
+                        "value": -64.0,
+                        "percent": true,
+                        "amount": 0.36
+                    }
+                ]
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_ICEMAGE_SUMMON_EXPLOSION",
+                "pkfx": "Particles/character_pc_iceMage_ability_icicleDrop_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_ICEMAGE_BASIC_SHOT_SNARE",
+                "pkfx": "Particles/character_pc_iceMage_ability_regularAttack_snare_01.pkfx"
+            },
+            {
+                "key": "$VFX_ICEMAGE_FREEZEBLAST_DAMAGE",
+                "pkfx": "Particles/character_pc_iceMage_ability_freezeBlast_detonate_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Knight",
@@ -513,27 +2157,196 @@
         "slug": "ironer_will",
         "prefab": "abilities/mods_01/knight/ring_ironer_will",
         "prefabs": [
-            "abilities/mods_01/knight/ironer_will_effect_shield"
+            "abilities/knight/shield_heal_effect_shield",
+            "abilities/knight/shield_heal_redirect_effect",
+            "abilities/knight/shield_heal_redirect_effect_shield",
+            "abilities/knight/shield_heal_redirect_spawner",
+            "abilities/mods_01/knight/ironer_will_effect_shield",
+            "abilities/mods_01/knight/ironer_will_redirect_effect",
+            "abilities/mods_01/knight/ironer_will_redirect_spawner"
         ],
         "stats": [
             {
-                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
                 "op": "Add",
-                "value": 0.65,
+                "value": -65.0,
+                "percent": true,
                 "amount": -0.65,
                 "prefab": "abilities/mods_01/knight/ironer_will_effect_shield"
             },
             {
-                "name": "Stability Bonus",
                 "stat": "$Stat_StabilityBonus",
+                "name": "Stability Bonus",
                 "op": "MultiplySum",
                 "value": 100.0,
+                "percent": true,
                 "amount": 1.0,
                 "prefab": "abilities/mods_01/knight/ironer_will_effect_shield"
+            },
+            {
+                "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
+                "op": "Add",
+                "value": -50.0,
+                "percent": true,
+                "amount": -0.5,
+                "prefab": "abilities/knight/shield_heal_effect_shield"
+            },
+            {
+                "stat": "$Stat_StabilityBonus",
+                "name": "Stability Bonus",
+                "op": "MultiplySum",
+                "value": 100.0,
+                "percent": true,
+                "amount": 1.0,
+                "prefab": "abilities/knight/shield_heal_effect_shield"
+            },
+            {
+                "stat": "$Stat_Stability",
+                "name": "Stability",
+                "op": "Add",
+                "value": 150.0,
+                "percent": false,
+                "amount": 150.0,
+                "prefab": "abilities/knight/shield_heal_effect_shield"
+            },
+            {
+                "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
+                "op": "Add",
+                "value": -25.0,
+                "percent": true,
+                "amount": -0.25,
+                "prefab": "abilities/knight/shield_heal_redirect_effect_shield"
+            },
+            {
+                "stat": "$Stat_StabilityBonus",
+                "name": "Stability Bonus",
+                "op": "MultiplySum",
+                "value": 100.0,
+                "percent": true,
+                "amount": 1.0,
+                "prefab": "abilities/knight/shield_heal_redirect_effect_shield"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Ironer Will Redirect Spawner",
+                "prefab": "abilities/mods_01/knight/ironer_will_redirect_spawner",
+                "component": 132,
+                "duration": 1.0
+            },
+            {
+                "name": "Shield Heal Redirect Spawner",
+                "prefab": "abilities/knight/shield_heal_redirect_spawner",
+                "component": 132,
+                "duration": 1.0
+            },
+            {
+                "name": "Ironer Will Effect Shield",
+                "prefab": "abilities/mods_01/knight/ironer_will_effect_shield",
+                "component": 131,
+                "duration": 10.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Add",
+                        "value": -65.0,
+                        "percent": true,
+                        "amount": -0.65
+                    },
+                    {
+                        "stat": "$Stat_StabilityBonus",
+                        "name": "Stability Bonus",
+                        "op": "MultiplySum",
+                        "value": 100.0,
+                        "percent": true,
+                        "amount": 1.0
+                    }
+                ]
+            },
+            {
+                "name": "Shield Heal Effect Shield",
+                "prefab": "abilities/knight/shield_heal_effect_shield",
+                "component": 131,
+                "name_key": "$prefabs_abilities_knight_shield_heal_item_name",
+                "description_key": "$prefabs_abilities_knight_shield_heal_effect_shield_description",
+                "duration": 12.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Add",
+                        "value": -50.0,
+                        "percent": true,
+                        "amount": -0.5
+                    },
+                    {
+                        "stat": "$Stat_StabilityBonus",
+                        "name": "Stability Bonus",
+                        "op": "MultiplySum",
+                        "value": 100.0,
+                        "percent": true,
+                        "amount": 1.0
+                    },
+                    {
+                        "stat": "$Stat_Stability",
+                        "name": "Stability",
+                        "op": "Add",
+                        "value": 150.0,
+                        "percent": false,
+                        "amount": 150.0
+                    }
+                ]
+            },
+            {
+                "name": "Ironer Will Redirect Effect",
+                "prefab": "abilities/mods_01/knight/ironer_will_redirect_effect",
+                "component": 406,
+                "duration": 10.0
+            },
+            {
+                "name": "Shield Heal Redirect Effect",
+                "prefab": "abilities/knight/shield_heal_redirect_effect",
+                "component": 406,
+                "name_key": "$prefabs_abilities_knight_shield_heal_item_name",
+                "description_key": "$prefabs_abilities_knight_shield_heal_redirect_effect_shield_description",
+                "duration": 12.0
+            },
+            {
+                "name": "Shield Heal Redirect Effect Shield",
+                "prefab": "abilities/knight/shield_heal_redirect_effect_shield",
+                "component": 131,
+                "duration": 12.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Add",
+                        "value": -25.0,
+                        "percent": true,
+                        "amount": -0.25
+                    },
+                    {
+                        "stat": "$Stat_StabilityBonus",
+                        "name": "Stability Bonus",
+                        "op": "MultiplySum",
+                        "value": 100.0,
+                        "percent": true,
+                        "amount": 1.0
+                    }
+                ]
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_KNIGHT_SHIELD_HEAL",
+                "pkfx": "Particles/character_pc_knight_ability_layOnHands_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Knight",
@@ -547,23 +2360,51 @@
         ],
         "stats": [
             {
-                "name": "Movement Speed",
                 "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
                 "op": "Add",
                 "value": 40.0,
+                "percent": false,
                 "amount": 40.0,
                 "prefab": "abilities/mods_01/knight/over_charge_buff_stats"
             },
             {
-                "name": "Movement Speed Bonus",
                 "stat": "$Stat_MovementSpeedBonus",
+                "name": "Movement Speed Bonus",
                 "op": "MultiplySum",
                 "value": 20.0,
+                "percent": true,
                 "amount": 0.2,
                 "prefab": "abilities/mods_01/knight/over_charge_buff_stats"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Over Charge Buff Stats",
+                "prefab": "abilities/mods_01/knight/over_charge_buff_stats",
+                "component": 136,
+                "duration": 5.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Add",
+                        "value": 40.0,
+                        "percent": false,
+                        "amount": 40.0
+                    },
+                    {
+                        "stat": "$Stat_MovementSpeedBonus",
+                        "name": "Movement Speed Bonus",
+                        "op": "MultiplySum",
+                        "value": 20.0,
+                        "percent": true,
+                        "amount": 0.2
+                    }
+                ]
+            }
+        ]
     },
     {
         "class": "Lunar Lancer",
@@ -574,7 +2415,8 @@
         "prefab": "abilities/mods_01/lunarlancer/ring_speed_grapple",
         "prefabs": [],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "proc_cooldown": 3.0
     },
     {
         "class": "Lunar Lancer",
@@ -584,24 +2426,50 @@
         "slug": "meteors",
         "prefab": "abilities/mods_01/lunarlancer/ring_meteors",
         "prefabs": [
-            "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_trigger",
-            "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_explosion"
+            "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_explosion",
+            "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_trigger"
         ],
         "stats": [],
         "stages": [
             {
                 "name": "Meteors Spawn Meteor Effect Trigger",
                 "prefab": "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_trigger",
-                "base": 0.0,
-                "multiplier": 0.5
+                "base": 0,
+                "multiplier": 0.5,
+                "max_health_percent": 100.0,
+                "crit_damage_multiplier": 1.0,
+                "damage_stat": -1
             },
             {
                 "name": "Meteors Spawn Meteor Effect Explosion",
                 "prefab": "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_explosion",
-                "base": 100.0,
-                "multiplier": 3.0
+                "base": 10,
+                "multiplier": 3.0,
+                "crit_damage_multiplier": 0.5,
+                "block_damage": 70,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "knockback": 1.0,
+                "min_knockback": 1.0,
+                "damage_stat": -1
             }
-        ]
+        ],
+        "effects": [
+            {
+                "name": "Meteors Spawn Meteor Effect Trigger",
+                "prefab": "abilities/mods_01/lunarlancer/meteors_spawn_meteor_effect_trigger",
+                "component": 156,
+                "duration": 0.1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_LUNARLANCER_ULTIMATE_METEOR_EXPLOSION",
+                "pkfx": "Particles/character_pc_lunarLancer_ability_ult_impact_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 0.5
     },
     {
         "class": "Lunar Lancer",
@@ -611,19 +2479,66 @@
         "slug": "test_lunarlancer",
         "prefab": "abilities/mods_01/lunarlancer/ring_test_lunarlancer",
         "prefabs": [
+            "abilities/lunarlancer/revamp/lunar_leap_buff_stats",
             "abilities/mods_01/lunarlancer/mod_01_buff_speed_stats"
         ],
         "stats": [
             {
-                "name": "Movement Speed Bonus",
                 "stat": "$Stat_MovementSpeedBonus",
+                "name": "Movement Speed Bonus",
                 "op": "MultiplySum",
                 "value": 85.0,
+                "percent": true,
                 "amount": 0.85,
                 "prefab": "abilities/mods_01/lunarlancer/mod_01_buff_speed_stats"
+            },
+            {
+                "stat": "$Stat_PhysicalDamageBonus",
+                "name": "Physical Damage Bonus",
+                "op": "MultiplySum",
+                "value": 85.0,
+                "percent": true,
+                "amount": 0.85,
+                "prefab": "abilities/lunarlancer/revamp/lunar_leap_buff_stats"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Mod 01 Buff Speed Stats",
+                "prefab": "abilities/mods_01/lunarlancer/mod_01_buff_speed_stats",
+                "component": 136,
+                "duration": 8.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeedBonus",
+                        "name": "Movement Speed Bonus",
+                        "op": "MultiplySum",
+                        "value": 85.0,
+                        "percent": true,
+                        "amount": 0.85
+                    }
+                ]
+            },
+            {
+                "name": "Lunar Leap Buff Stats",
+                "prefab": "abilities/lunarlancer/revamp/lunar_leap_buff_stats",
+                "component": 136,
+                "name_key": "$prefabs_abilities_lunarlancer_lunar_leap_item_name",
+                "description_key": "$prefabs_abilities_lunarlancer_lunar_leap_buff_stats_description",
+                "duration": 12.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_PhysicalDamageBonus",
+                        "name": "Physical Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 85.0,
+                        "percent": true,
+                        "amount": 0.85
+                    }
+                ]
+            }
+        ]
     },
     {
         "class": "Neon Ninja",
@@ -641,14 +2556,38 @@
             {
                 "name": "Clone Jutsu Bomb Effect Bomb Trigger",
                 "prefab": "abilities/mods_01/neonninja/clone_jutsu_bomb_effect_bomb_trigger",
-                "base": 0.0,
-                "multiplier": 0.5
+                "base": 0,
+                "multiplier": 0.5,
+                "max_health_percent": 100.0,
+                "crit_damage_multiplier": 1.0,
+                "damage_stat": -1
             },
             {
                 "name": "Clone Jutsus Bomb Effect Explosion",
                 "prefab": "abilities/mods_01/neonninja/clone_jutsus_bomb_effect_explosion",
-                "base": 10.0,
-                "multiplier": 5.0
+                "base": 50,
+                "multiplier": 5.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 100,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "min_knockback": 0.1,
+                "damage_stat": -1
+            }
+        ],
+        "effects": [
+            {
+                "name": "Clone Jutsu Bomb Effect Bomb Trigger",
+                "prefab": "abilities/mods_01/neonninja/clone_jutsu_bomb_effect_bomb_trigger",
+                "component": 156,
+                "duration": 0.1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_NINJA_ABILITY_MOD_CLONE_JUTSU_EXPLOSION",
+                "pkfx": "Particles/character_pc_adventurer_resistor_ability_bomb_explosion_01.pkfx"
             }
         ]
     },
@@ -659,9 +2598,19 @@
         "description": "Gain slowfall for the duration of Final Technique.",
         "slug": "float_like",
         "prefab": "abilities/mods_01/neonninja/ring_float_like",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/neonninja/float_like_slowfall"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Float Like Slowfall",
+                "prefab": "abilities/mods_01/neonninja/float_like_slowfall",
+                "component": 252,
+                "duration": 8.0
+            }
+        ]
     },
     {
         "class": "Neon Ninja",
@@ -670,9 +2619,28 @@
         "description": "Gain energy when you dodge.",
         "slug": "recharge",
         "prefab": "abilities/mods_01/neonninja/ring_recharge",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/neonninja/recharge_cooldown_timer_buff",
+            "abilities/mods_01/neonninja/recharge_energy_200_effect"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "healing": [
+            {
+                "name": "Recharge Energy 200 Effect",
+                "prefab": "abilities/mods_01/neonninja/recharge_energy_200_effect",
+                "max_energy_percent": 2.0
+            }
+        ],
+        "effects": [
+            {
+                "name": "Recharge Cooldown Timer Buff",
+                "prefab": "abilities/mods_01/neonninja/recharge_cooldown_timer_buff",
+                "component": 136,
+                "duration": 30.0
+            }
+        ],
+        "proc_cooldown": 30.0
     },
     {
         "class": "Neon Ninja",
@@ -693,19 +2661,53 @@
         "slug": "avast_ye",
         "prefab": "abilities/mods_01/piratelord/ring_avast_ye",
         "prefabs": [
+            "abilities/mods_01/piratelord/avast_ye_aggro",
+            "abilities/mods_01/piratelord/avast_ye_aura",
             "abilities/mods_01/piratelord/avast_ye_damage_mult_effect"
         ],
         "stats": [
             {
-                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
                 "op": "Multiply",
                 "value": 15.0,
+                "percent": true,
                 "amount": 1.15,
                 "prefab": "abilities/mods_01/piratelord/avast_ye_damage_mult_effect"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Avast Ye Aura",
+                "prefab": "abilities/mods_01/piratelord/avast_ye_aura",
+                "component": 132,
+                "duration": 1.0
+            },
+            {
+                "name": "Avast Ye Damage Mult Effect",
+                "prefab": "abilities/mods_01/piratelord/avast_ye_damage_mult_effect",
+                "component": 136,
+                "duration": 5.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Multiply",
+                        "value": 15.0,
+                        "percent": true,
+                        "amount": 1.15
+                    }
+                ]
+            },
+            {
+                "name": "Avast Ye Aggro",
+                "prefab": "abilities/mods_01/piratelord/avast_ye_aggro",
+                "component": 331,
+                "duration": 5.0
+            }
+        ],
+        "proc_cooldown": 1.0
     },
     {
         "class": "Pirate Captain",
@@ -714,9 +2716,35 @@
         "description": "Using Man O War now summons a Pirrot Cannoneer as well.",
         "slug": "all_hands",
         "prefab": "abilities/mods_01/piratelord/ring_all_hands",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/NPC/basic_attack_shoot_bullet"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Basic Attack Shoot Bullet",
+                "prefab": "abilities/NPC/basic_attack_shoot_bullet",
+                "base": 0,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 4,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "knockback": 0.5,
+                "min_knockback": 0.1,
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "actions": [
+            {
+                "name": "Basic Attack Shoot",
+                "prefab": "abilities/NPC/basic_attack_shoot",
+                "energy": 0,
+                "cooldown": 0
+            }
+        ]
     },
     {
         "class": "Pirate Captain",
@@ -737,19 +2765,62 @@
         "slug": "speed_spears",
         "prefab": "abilities/mods_01/spirittank/ring_speed_spears",
         "prefabs": [
-            "abilities/mods_01/spirittank/speed_spears_active_spears_stat_mods"
+            "abilities/mods_01/spirittank/speed_spears_active_spears_stat_mods",
+            "abilities/spirittank/active_spears_stat_mods"
         ],
         "stats": [
             {
-                "name": "Movement Speed",
                 "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
                 "op": "Multiply",
                 "value": 0.0,
+                "percent": true,
                 "amount": 1.0,
                 "prefab": "abilities/mods_01/spirittank/speed_spears_active_spears_stat_mods"
+            },
+            {
+                "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
+                "op": "Multiply",
+                "value": -62.5,
+                "percent": true,
+                "amount": 0.375,
+                "prefab": "abilities/spirittank/active_spears_stat_mods"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Speed Spears Active Spears Stat Mods",
+                "prefab": "abilities/mods_01/spirittank/speed_spears_active_spears_stat_mods",
+                "component": 136,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Multiply",
+                        "value": 0.0,
+                        "percent": true,
+                        "amount": 1.0
+                    }
+                ]
+            },
+            {
+                "name": "Active Spears Stat Mods",
+                "prefab": "abilities/spirittank/active_spears_stat_mods",
+                "component": 136,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Multiply",
+                        "value": -62.5,
+                        "percent": true,
+                        "amount": 0.375
+                    }
+                ]
+            }
+        ]
     },
     {
         "class": "Revenant",
@@ -758,9 +2829,72 @@
         "description": "Spirit Storm summons a group of tiny Spirit Wraiths.",
         "slug": "spirit_squad",
         "prefab": "abilities/mods_01/spirittank/ring_spirit_squad",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/spirittank/passive_minion_melee",
+            "abilities/spirittank/passive_minion_slam"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Passive Minion Melee",
+                "prefab": "abilities/spirittank/passive_minion_melee",
+                "base": 0,
+                "multiplier": 1.5,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 0.25,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "damage_stat": -1
+            },
+            {
+                "name": "Passive Minion Slam",
+                "prefab": "abilities/spirittank/passive_minion_slam",
+                "base": 0,
+                "multiplier": 5.5,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 10,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback_multiplier": 0.5,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "damage_stat": -1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_SPIRITTANK_PASSIVE_SUMMON",
+                "pkfx": "Particles/character_pc_spiritTank_passive_bloodWraith_spawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_SPIRITTANK_PASSIVE_MINION_DESPAWN",
+                "pkfx": "Particles/character_pc_spiritTank_passive_bloodWraith_despawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_SPIRITTANK_BASIC_MELEE_IMPACT",
+                "pkfx": "Particles/character_pc_spiritTank_basic_spear_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_SPIRITTANK_ACT2_SHIELDBASH_CONE",
+                "pkfx": "Particles/character_pc_spiritTank_act2_shieldBash_cone_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Passive Minion Melee",
+                "prefab": "abilities/spirittank/passive_minion_melee",
+                "energy": 0,
+                "cooldown": 0
+            },
+            {
+                "name": "Passive Minion Slam",
+                "prefab": "abilities/spirittank/passive_minion_slam",
+                "energy": 0,
+                "cooldown": 0
+            }
+        ]
     },
     {
         "class": "Revenant",
@@ -769,9 +2903,171 @@
         "description": "When at low health Spirit Storm is triggered automatically. Has a long cooldown.",
         "slug": "vengeful_storm",
         "prefab": "abilities/mods_01/spirittank/ring_vengeful_storm",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/mods_01/spirittank/ultimate_spirit_storm_effect_spawner",
+            "abilities/spirittank/ultimate_spirit_storm_aoe_npc",
+            "abilities/spirittank/ultimate_spirit_storm_aoe_npc_damage",
+            "abilities/spirittank/ultimate_spirit_storm_aoe_npc_snare",
+            "abilities/spirittank/ultimate_spirit_storm_attract",
+            "abilities/spirittank/ultimate_spirit_storm_attract_effect",
+            "abilities/spirittank/ultimate_spirit_storm_damage_player",
+            "abilities/spirittank/ultimate_spirit_storm_damage_player_spawner",
+            "abilities/spirittank/ultimate_spirit_storm_explosion",
+            "abilities/spirittank/ultimate_spirit_storm_explosion_aoe_player_effect",
+            "abilities/spirittank/ultimate_spirit_storm_explosion_aoe_players",
+            "abilities/spirittank/ultimate_spirit_storm_spawner"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
+                "op": "Multiply",
+                "value": -50.0,
+                "percent": true,
+                "amount": 0.5,
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_aoe_npc_snare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Ultimate Spirit Storm Damage Player",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_damage_player",
+                "base": 0,
+                "multiplier": 0,
+                "max_health_percent": 0.15,
+                "crit_damage_multiplier": 1.0,
+                "damage_stat": -1
+            },
+            {
+                "name": "Ultimate Spirit Storm Aoe Npc Damage",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_aoe_npc_damage",
+                "base": 50,
+                "multiplier": 3.15,
+                "crit_damage_multiplier": 0.5,
+                "damage_stat": -1
+            },
+            {
+                "name": "Ultimate Spirit Storm Aoe Npc Damage",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_aoe_npc_damage",
+                "base": 50,
+                "multiplier": 0,
+                "crit_damage_multiplier": 0.5,
+                "damage_stat": -1
+            },
+            {
+                "name": "Ultimate Spirit Storm Explosion",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_explosion",
+                "base": 15,
+                "multiplier": 2.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 10,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "damage_stat": -1
+            }
+        ],
+        "healing": [
+            {
+                "name": "Ultimate Spirit Storm Explosion Aoe Player Effect",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_explosion_aoe_player_effect",
+                "max_health_percent": 0.05
+            }
+        ],
+        "effects": [
+            {
+                "name": "Ultimate Spirit Storm Effect Spawner",
+                "prefab": "abilities/mods_01/spirittank/ultimate_spirit_storm_effect_spawner",
+                "component": 46,
+                "duration": 10.0
+            },
+            {
+                "name": "Ultimate Spirit Storm Aoe Npc",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_aoe_npc",
+                "component": 132,
+                "duration": 5.0
+            },
+            {
+                "name": "Ultimate Spirit Storm Spawner",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_spawner",
+                "component": 158,
+                "duration": 5.0
+            },
+            {
+                "name": "Ultimate Spirit Storm Attract",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_attract",
+                "component": 132,
+                "duration": 2.0
+            },
+            {
+                "name": "Ultimate Spirit Storm Damage Player Spawner",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_damage_player_spawner",
+                "component": 46,
+                "duration": 1.0
+            },
+            {
+                "name": "Ultimate Spirit Storm Attract Effect",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_attract_effect",
+                "component": 287,
+                "duration": 1.0
+            },
+            {
+                "name": "Ultimate Spirit Storm Damage Player",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_damage_player",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Ultimate Spirit Storm Aoe Npc Damage",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_aoe_npc_damage",
+                "component": 156,
+                "duration": 0.01
+            },
+            {
+                "name": "Ultimate Spirit Storm Aoe Npc Snare",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_aoe_npc_snare",
+                "component": 136,
+                "duration": 5.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Multiply",
+                        "value": -50.0,
+                        "percent": true,
+                        "amount": 0.5
+                    }
+                ]
+            },
+            {
+                "name": "Ultimate Spirit Storm Explosion Aoe Players",
+                "prefab": "abilities/spirittank/ultimate_spirit_storm_explosion_aoe_players",
+                "component": 132,
+                "duration": 0.01
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_SPIRITTANK_ULT_SPIRITSTORM_TORNADO",
+                "pkfx": "Particles/character_pc_spiritTank_ult_spiritStorm_attract_01.pkfx"
+            },
+            {
+                "key": "$VFX_SPIRITTANK_ULT_SPIRITSTORM_PROJECTILE",
+                "pkfx": "Particles/character_pc_spiritTank_ult_spiritStorm_projectile_01.pkfx"
+            },
+            {
+                "key": "$VFX_SPIRITTANK_ULT_SPIRITSTORM_IMPACT",
+                "pkfx": "Particles/character_pc_spiritTank_ult_spiritStorm_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_SPIRITTANK_BASIC_MELEE_IMPACT",
+                "pkfx": "Particles/character_pc_spiritTank_basic_spear_impact_01.pkfx"
+            },
+            {
+                "key": "$VFX_CANDYBARBARIAN_CANDY_HEAL",
+                "pkfx": "Particles/character_pc_generic_status_heal_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 30.0
     },
     {
         "class": "Shadow Hunter",
@@ -780,9 +3076,166 @@
         "description": "When dodging the Shadow Hunter drops a Sun Snare.",
         "slug": "sneaky_traps",
         "prefab": "abilities/mods_01/shadowhunter/ring_sneaky_traps",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/shadowhunter/revamp/basic_attack_bullet_damage",
+            "abilities/shadowhunter/revamp/basic_attack_fast_bullet_damage",
+            "abilities/shadowhunter/revamp/passive_shadowwhispers_effect_spawner",
+            "abilities/shadowhunter/revamp/shadowmark_basic_fast_explosion_explosion",
+            "abilities/shadowhunter/revamp/shadowmark_damage_mult_effect",
+            "abilities/shadowhunter/revamp/sun_snare_effect_explosion",
+            "abilities/shadowhunter/revamp/sun_snare_effect_snare",
+            "abilities/shadowhunter/revamp/sun_snare_effect_trigger"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
+                "op": "Multiply",
+                "value": 5.0,
+                "percent": true,
+                "amount": 1.05,
+                "prefab": "abilities/shadowhunter/revamp/shadowmark_damage_mult_effect"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Sun Snare Effect Explosion",
+                "prefab": "abilities/shadowhunter/revamp/sun_snare_effect_explosion",
+                "base": 25,
+                "multiplier": 3.5,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 5,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "target_effect": "abilities/shadowhunter/revamp/sun_snare_splitter",
+                "damage_stat": -1
+            },
+            {
+                "name": "Sun Snare Effect Trigger",
+                "prefab": "abilities/shadowhunter/revamp/sun_snare_effect_trigger",
+                "base": 0,
+                "multiplier": 0.5,
+                "max_health_percent": 100.0,
+                "crit_damage_multiplier": 1.0,
+                "damage_stat": -1
+            },
+            {
+                "name": "Basic Attack Bullet Damage",
+                "prefab": "abilities/shadowhunter/revamp/basic_attack_bullet_damage",
+                "base": 5,
+                "multiplier": 3.75,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 30,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "damage_stat": -1
+            },
+            {
+                "name": "Basic Attack Fast Bullet Damage",
+                "prefab": "abilities/shadowhunter/revamp/basic_attack_fast_bullet_damage",
+                "base": 5,
+                "multiplier": 2.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 1,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "damage_stat": -1
+            },
+            {
+                "name": "Shadowmark Basic Fast Explosion Explosion",
+                "prefab": "abilities/shadowhunter/revamp/shadowmark_basic_fast_explosion_explosion",
+                "base": 50,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 0.5,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "damage_type": 4,
+                "damage_stat": -1
+            }
+        ],
+        "effects": [
+            {
+                "name": "Sun Snare Effect Trigger",
+                "prefab": "abilities/shadowhunter/revamp/sun_snare_effect_trigger",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Sun Snare Effect Snare",
+                "prefab": "abilities/shadowhunter/revamp/sun_snare_effect_snare",
+                "component": 242,
+                "duration": 2.25
+            },
+            {
+                "name": "Passive Shadowwhispers Effect Spawner",
+                "prefab": "abilities/shadowhunter/revamp/passive_shadowwhispers_effect_spawner",
+                "component": 46,
+                "duration": 10.0
+            },
+            {
+                "name": "Shadowmark Damage Mult Effect",
+                "prefab": "abilities/shadowhunter/revamp/shadowmark_damage_mult_effect",
+                "component": 136,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Multiply",
+                        "value": 5.0,
+                        "percent": true,
+                        "amount": 1.05
+                    }
+                ]
+            },
+            {
+                "name": "Basic Attack Bullet Damage",
+                "prefab": "abilities/shadowhunter/revamp/basic_attack_bullet_damage",
+                "component": 156,
+                "duration": 0.1
+            },
+            {
+                "name": "Basic Attack Fast Bullet Damage",
+                "prefab": "abilities/shadowhunter/revamp/basic_attack_fast_bullet_damage",
+                "component": 156,
+                "duration": 0.1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_SHADOWHUNTER_SUNSNARE_WARNING",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_sun_snare_warning_01.pkfx"
+            },
+            {
+                "key": "$VFX_SHADOWHUNTER_SUNSNARE_IMPACT",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_sun_snare_spawn_explosion_01.pkfx"
+            },
+            {
+                "key": "$VFX_SHADOWHUNTER_SUNSNARE_EXPLOSION",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_sun_snare_aoe_explosion_01.pkfx"
+            },
+            {
+                "key": "$VFX_SHADOWHUNTER_SUNSNARE_ROOT_LOOP",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_sun_snare_root_loop_01.pkfx"
+            },
+            {
+                "key": "$VFX_SHADOWHUNTER_SHADOWMARK_HIT",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_passive_shadowmark_hit_01.pkfx"
+            },
+            {
+                "key": "$VFX_SHADOWHUNTER_SHADOWMARK_LOOP",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_passive_shadowmark_aura_01.pkfx"
+            },
+            {
+                "key": "$VFX_SHADOWHUNTER_SHADOWMARK_DETONATE",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_passive_shadowmark_detonate_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 5.0
     },
     {
         "class": "Shadow Hunter",
@@ -791,9 +3244,63 @@
         "description": "When enemies take damage from the Shadow Hunter's Sacred Arrow a Shadow Seeker will fire from the Shadow Hunter and attack the closest target.",
         "slug": "tactical_shot",
         "prefab": "abilities/mods_01/shadowhunter/ring_tactical_shot",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/shadowhunter/revamp/seeker_effect_explosion",
+            "abilities/shadowhunter/revamp/seeker_kill_self"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Seeker Kill Self",
+                "prefab": "abilities/shadowhunter/revamp/seeker_kill_self",
+                "base": 0,
+                "multiplier": 0,
+                "max_health_percent": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "damage_stat": -1
+            },
+            {
+                "name": "Seeker Effect Explosion",
+                "prefab": "abilities/shadowhunter/revamp/seeker_effect_explosion",
+                "base": 0,
+                "multiplier": 3.5,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 20,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.5,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "stability_ignore": 0.35,
+                "damage_stat": -1
+            }
+        ],
+        "effects": [
+            {
+                "name": "Seeker Kill Self",
+                "prefab": "abilities/shadowhunter/revamp/seeker_kill_self",
+                "component": 156,
+                "duration": 10.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_SHADOWHUNTER_BASIC_SHOT_PROJECTILE",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_basic_shot_projectile_01.pkfx"
+            },
+            {
+                "key": "$VFX_SHADOWHUNTER_SEEKER_EXPLOSION",
+                "pkfx": "Particles/character_pc_shadow_hunter_ability_seeker_explosion.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Seeker Explode",
+                "prefab": "abilities/shadowhunter/revamp/seeker_explode",
+                "cooldown": 0
+            }
+        ],
+        "proc_cooldown": 1.25
     },
     {
         "class": "Shadow Hunter",
@@ -802,9 +3309,19 @@
         "description": "When enemies with Shadowmark are defeated the Shadow Hunter is healed a small amount.",
         "slug": "unholy_heal",
         "prefab": "abilities/mods_01/shadowhunter/ring_unholy_heal",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/shadowhunter/unholy_heal_effect_heal"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "healing": [
+            {
+                "name": "Unholy Heal Effect Heal",
+                "prefab": "abilities/mods_01/shadowhunter/unholy_heal_effect_heal",
+                "max_health_percent": 0.05
+            }
+        ],
+        "proc_cooldown": 2.0
     },
     {
         "class": "Solarion",
@@ -813,9 +3330,112 @@
         "description": "Guiding Light and Prismatic Blast now grant Solar Wings.",
         "slug": "guiding_wings",
         "prefab": "abilities/mods_01/solarion/ring_guiding_wings",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/solarion/guiding_light_beacon",
+            "abilities/solarion/guiding_light_effect_heal",
+            "abilities/solarion/guiding_light_effect_heal_spawner",
+            "abilities/solarion/guiding_light_searing_glare",
+            "abilities/solarion/prismatic_burst_explosion"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_PhysicalDamage",
+                "name": "Physical Damage",
+                "op": "Multiply",
+                "value": -2.5,
+                "percent": true,
+                "amount": 0.975,
+                "prefab": "abilities/solarion/guiding_light_searing_glare"
+            }
+        ],
+        "stages": [
+            {
+                "name": "Guiding Light Beacon",
+                "prefab": "abilities/solarion/guiding_light_beacon",
+                "base": 0,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "target_effect": "abilities/solarion/guiding_light_searing_glare",
+                "damage_type": 4,
+                "damage_stat": -1
+            },
+            {
+                "name": "Guiding Light Searing Glare",
+                "prefab": "abilities/solarion/guiding_light_searing_glare",
+                "base": 0,
+                "multiplier": 1.5,
+                "crit_damage_multiplier": 1.0,
+                "damage_type": 4,
+                "damage_stat": -1
+            },
+            {
+                "name": "Prismatic Burst Explosion",
+                "prefab": "abilities/solarion/prismatic_burst_explosion",
+                "base": 50,
+                "multiplier": 4.0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 10,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "knockback": 2.5,
+                "min_knockback": 0.25,
+                "damage_type": 4,
+                "damage_stat": -1
+            }
+        ],
+        "healing": [
+            {
+                "name": "Guiding Light Effect Heal",
+                "prefab": "abilities/solarion/guiding_light_effect_heal",
+                "max_health_percent": 0.05
+            }
+        ],
+        "effects": [
+            {
+                "name": "Guiding Light Searing Glare",
+                "prefab": "abilities/solarion/guiding_light_searing_glare",
+                "component": 156,
+                "duration": 5.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_PhysicalDamage",
+                        "name": "Physical Damage",
+                        "op": "Multiply",
+                        "value": -2.5,
+                        "percent": true,
+                        "amount": 0.975
+                    }
+                ]
+            },
+            {
+                "name": "Guiding Light Effect Heal Spawner",
+                "prefab": "abilities/solarion/guiding_light_effect_heal_spawner",
+                "component": 132,
+                "duration": 12.0
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_SOLARION_GUIDING_LIGHT_BEAM",
+                "pkfx": "Particles/character_pc_solarion_ability_guiding_light_beam_01.pkfx"
+            },
+            {
+                "key": "$VFX_SOLARION_GUIDING_LIGHT_DOT",
+                "pkfx": "Particles/character_pc_solarion_ability_guiding_light_dot_01.pkfx"
+            },
+            {
+                "key": "$VFX_SOLARION_GUIDING_LIGHT_HEAL",
+                "pkfx": "Particles/character_pc_solarion_ability_guiding_light_heal_01.pkfx"
+            },
+            {
+                "key": "$VFX_SOLARION_PRISMATIC_EXPLOSION",
+                "pkfx": "Particles/character_pc_solarion_ability_prismatic_explosion_01.pkfx"
+            },
+            {
+                "key": "$VFX_SOLARION_SOLAR_WINGS_BUFF",
+                "pkfx": "Particles/character_pc_solarion_ability_solar_wings_buff_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Solarion",
@@ -832,10 +3452,22 @@
             {
                 "name": "Prismatic Chain Explosion",
                 "prefab": "abilities/mods_01/solarion/prismatic_chain_explosion",
-                "base": 0.0,
-                "multiplier": 7.0
+                "base": 50,
+                "multiplier": 7.0,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 200,
+                "max_blocks": 10000,
+                "damage_type": 4,
+                "damage_stat": -1
             }
-        ]
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_SOLARION_PRISMATIC_EXPLOSION",
+                "pkfx": "Particles/character_pc_solarion_ability_prismatic_explosion_01.pkfx"
+            }
+        ],
+        "proc_cooldown": 0.2
     },
     {
         "class": "Solarion",
@@ -849,15 +3481,40 @@
         ],
         "stats": [
             {
-                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
                 "op": "Add",
-                "value": 0.15,
+                "value": -15.0,
+                "percent": true,
                 "amount": -0.15,
                 "prefab": "abilities/mods_01/solarion/solar_stance_buff_stats"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Solar Stance Buff Stats",
+                "prefab": "abilities/mods_01/solarion/solar_stance_buff_stats",
+                "component": 136,
+                "duration": 4.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Add",
+                        "value": -15.0,
+                        "percent": true,
+                        "amount": -0.15
+                    }
+                ]
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_SOLARION_SOLAR_WINGS_BUFF",
+                "pkfx": "Particles/character_pc_solarion_ability_solar_wings_buff_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Tomb Raiser",
@@ -869,24 +3526,39 @@
         "prefabs": [
             "abilities/mods_01/tombraiser/banshee_blast_minion_effect_minion_melee"
         ],
-        "stats": [
-            {
-                "name": "Movement Speed",
-                "stat": "$Stat_MovementSpeed",
-                "op": "Multiply",
-                "value": 50.0,
-                "amount": 0.5,
-                "prefab": "abilities/mods_01/tombraiser/banshee_blast_minion_effect_minion_melee"
-            }
-        ],
+        "stats": [],
         "stages": [
             {
                 "name": "Banshee Blast Minion Effect Minion Melee",
                 "prefab": "abilities/mods_01/tombraiser/banshee_blast_minion_effect_minion_melee",
-                "base": 0.0,
-                "multiplier": 1.25
+                "base": 0,
+                "multiplier": 1.25,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "damage_type": 1,
+                "damage_stat": -1
             }
-        ]
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_TOMBRAISER_MINION_SPAWN",
+                "pkfx": "Particles/character_pc_tombraiser_ability_bonetourage_spawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_TOMBRAISER_MINION_DESPAWN",
+                "pkfx": "Particles/character_pc_tombraiser_ability_bonetourage_despawn_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Banshee Blast Minion Effect Minion Melee",
+                "prefab": "abilities/mods_01/tombraiser/banshee_blast_minion_effect_minion_melee",
+                "energy": 0,
+                "cooldown": 0
+            }
+        ],
+        "proc_cooldown": 1.0
     },
     {
         "class": "Tomb Raiser",
@@ -895,9 +3567,61 @@
         "description": "Reduces the energy drain from Banshee's Boon.",
         "slug": "ghost_more",
         "prefab": "abilities/mods_01/tombraiser/ring_ghost_more",
-        "prefabs": [],
-        "stats": [],
-        "stages": []
+        "prefabs": [
+            "abilities/tombraiser/ghost_form_effect_stats"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
+                "op": "Multiply",
+                "value": -90.0,
+                "percent": true,
+                "amount": 0.1,
+                "prefab": "abilities/tombraiser/ghost_form_effect_stats"
+            },
+            {
+                "stat": "$Stat_EnergyRegen_controller",
+                "name": "Energy Regen",
+                "op": "Multiply",
+                "value": -100.0,
+                "percent": true,
+                "amount": 0.0,
+                "prefab": "abilities/tombraiser/ghost_form_effect_stats"
+            }
+        ],
+        "stages": [],
+        "effects": [
+            {
+                "name": "Ghost Form Effect Stats",
+                "prefab": "abilities/tombraiser/ghost_form_effect_stats",
+                "component": 136,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Multiply",
+                        "value": -90.0,
+                        "percent": true,
+                        "amount": 0.1
+                    },
+                    {
+                        "stat": "$Stat_EnergyRegen_controller",
+                        "name": "Energy Regen",
+                        "op": "Multiply",
+                        "value": -100.0,
+                        "percent": true,
+                        "amount": 0.0
+                    }
+                ]
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_TOMBRAISER_GHOST_FORM_AURA",
+                "pkfx": "Particles/character_pc_tombraiser_ability_bansheesBoon_aura_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Tomb Raiser",
@@ -906,9 +3630,45 @@
         "description": "Using Bonetourage has a chance to summon a larger skellittle. When this large skellittle dies it will spawn skellittles.",
         "slug": "skellittles_split",
         "prefab": "abilities/mods_01/tombraiser/ring_skellittles_split",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/tombraiser/throw_minion_effect_minion_melee"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [
+            {
+                "name": "Throw Minion Effect Minion Melee",
+                "prefab": "abilities/tombraiser/throw_minion_effect_minion_melee",
+                "base": 0,
+                "multiplier": 2.6,
+                "crit_damage_multiplier": 1.0,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 0.25,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "damage_type": 1,
+                "damage_stat": -1
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_TOMBRAISER_MINION_SPAWN",
+                "pkfx": "Particles/character_pc_tombraiser_ability_bonetourage_spawn_01.pkfx"
+            },
+            {
+                "key": "$VFX_TOMBRAISER_MINION_DESPAWN",
+                "pkfx": "Particles/character_pc_tombraiser_ability_bonetourage_despawn_01.pkfx"
+            }
+        ],
+        "actions": [
+            {
+                "name": "Throw Minion Effect Minion Melee",
+                "prefab": "abilities/tombraiser/throw_minion_effect_minion_melee",
+                "energy": 0,
+                "cooldown": 0
+            }
+        ],
+        "proc_cooldown": 1.0
     },
     {
         "class": "Vanguardian",
@@ -918,15 +3678,229 @@
         "slug": "champions",
         "prefab": "abilities/mods_01/crimefighter/ring_champions",
         "prefabs": [
+            "abilities/crimefighter/super_buff_melee_effect",
+            "abilities/crimefighter/super_buff_melee_explosion",
+            "abilities/crimefighter/super_buff_melee_vacuum_aoe",
+            "abilities/crimefighter/super_buff_melee_vacuum_magnet",
+            "abilities/crimefighter/super_buff_melee_vfx",
+            "abilities/crimefighter/super_buff_ranged_effect",
+            "abilities/mods_01/crimefighter/champions_fired_up_aoe",
+            "abilities/mods_01/crimefighter/champions_force_flash_aoe",
             "abilities/mods_01/crimefighter/super_buff_melee_explosion"
         ],
-        "stats": [],
+        "stats": [
+            {
+                "stat": "$Stat_AttackSpeedBonus",
+                "name": "Attack Speed Bonus",
+                "op": "MultiplySum",
+                "value": 50.0,
+                "percent": true,
+                "amount": 0.5,
+                "prefab": "abilities/crimefighter/super_buff_ranged_effect"
+            },
+            {
+                "stat": "$Stat_PhysicalDamageBonus",
+                "name": "Physical Damage Bonus",
+                "op": "MultiplySum",
+                "value": 50.0,
+                "percent": true,
+                "amount": 0.5,
+                "prefab": "abilities/crimefighter/super_buff_ranged_effect"
+            },
+            {
+                "stat": "$Stat_JumpSpeedMultiplier",
+                "name": "Jump Speed",
+                "op": "Add",
+                "value": 0.75,
+                "percent": false,
+                "amount": 0.75,
+                "prefab": "abilities/crimefighter/super_buff_ranged_effect"
+            },
+            {
+                "stat": "$Stat_Jump",
+                "name": "Jump",
+                "op": "Add",
+                "value": 10.0,
+                "percent": false,
+                "amount": 10.0,
+                "prefab": "abilities/crimefighter/super_buff_ranged_effect"
+            },
+            {
+                "stat": "$Stat_MovementSpeed",
+                "name": "Movement Speed",
+                "op": "Add",
+                "value": 40.0,
+                "percent": false,
+                "amount": 40.0,
+                "prefab": "abilities/crimefighter/super_buff_melee_effect"
+            },
+            {
+                "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
+                "op": "Multiply",
+                "value": -25.0,
+                "percent": true,
+                "amount": 0.75,
+                "prefab": "abilities/crimefighter/super_buff_melee_effect"
+            },
+            {
+                "stat": "$Stat_MovementSpeedBonus",
+                "name": "Movement Speed Bonus",
+                "op": "MultiplySum",
+                "value": 5.0,
+                "percent": true,
+                "amount": 0.05,
+                "prefab": "abilities/crimefighter/super_buff_melee_effect"
+            }
+        ],
         "stages": [
             {
                 "name": "Super Buff Melee Explosion",
+                "prefab": "abilities/crimefighter/super_buff_melee_explosion",
+                "base": 50,
+                "multiplier": 2.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 5,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 2.5,
+                "knockback": 1.0,
+                "min_knockback": 0.1,
+                "stability_ignore": 0.5,
+                "damage_type": 4,
+                "damage_stat": -1
+            },
+            {
+                "name": "Super Buff Melee Explosion",
                 "prefab": "abilities/mods_01/crimefighter/super_buff_melee_explosion",
-                "base": 10.0,
-                "multiplier": 2.0
+                "base": 50,
+                "multiplier": 2.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 5,
+                "max_block_hardness": 500,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "min_knockback": 0.1,
+                "damage_type": 4,
+                "damage_stat": -1
+            }
+        ],
+        "effects": [
+            {
+                "name": "Champions Force Flash Aoe",
+                "prefab": "abilities/mods_01/crimefighter/champions_force_flash_aoe",
+                "component": 132,
+                "duration": 0.15
+            },
+            {
+                "name": "Champions Fired Up Aoe",
+                "prefab": "abilities/mods_01/crimefighter/champions_fired_up_aoe",
+                "component": 132,
+                "duration": 0.15
+            },
+            {
+                "name": "Super Buff Melee Vfx",
+                "prefab": "abilities/crimefighter/super_buff_melee_vfx",
+                "component": 233,
+                "duration": 1.0
+            },
+            {
+                "name": "Super Buff Melee Vacuum Aoe",
+                "prefab": "abilities/crimefighter/super_buff_melee_vacuum_aoe",
+                "component": 132,
+                "duration": 0.95
+            },
+            {
+                "name": "Super Buff Ranged Effect",
+                "prefab": "abilities/crimefighter/super_buff_ranged_effect",
+                "component": 136,
+                "name_key": "$prefabs_abilities_crimefighter_buff",
+                "description_key": "$prefabs_abilities_crimefighter_super_buff_ranged_effect_description",
+                "duration": 10.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_AttackSpeedBonus",
+                        "name": "Attack Speed Bonus",
+                        "op": "MultiplySum",
+                        "value": 50.0,
+                        "percent": true,
+                        "amount": 0.5
+                    },
+                    {
+                        "stat": "$Stat_PhysicalDamageBonus",
+                        "name": "Physical Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 50.0,
+                        "percent": true,
+                        "amount": 0.5
+                    },
+                    {
+                        "stat": "$Stat_JumpSpeedMultiplier",
+                        "name": "Jump Speed",
+                        "op": "Add",
+                        "value": 0.75,
+                        "percent": false,
+                        "amount": 0.75
+                    },
+                    {
+                        "stat": "$Stat_Jump",
+                        "name": "Jump",
+                        "op": "Add",
+                        "value": 10.0,
+                        "percent": false,
+                        "amount": 10.0
+                    }
+                ]
+            },
+            {
+                "name": "Super Buff Melee Effect",
+                "prefab": "abilities/crimefighter/super_buff_melee_effect",
+                "component": 136,
+                "name_key": "$prefabs_abilities_crimefighter_shockwave",
+                "description_key": "$prefabs_abilities_crimefighter_super_buff_melee_effect_description",
+                "duration": 6.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_MovementSpeed",
+                        "name": "Movement Speed",
+                        "op": "Add",
+                        "value": 40.0,
+                        "percent": false,
+                        "amount": 40.0
+                    },
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Multiply",
+                        "value": -25.0,
+                        "percent": true,
+                        "amount": 0.75
+                    },
+                    {
+                        "stat": "$Stat_MovementSpeedBonus",
+                        "name": "Movement Speed Bonus",
+                        "op": "MultiplySum",
+                        "value": 5.0,
+                        "percent": true,
+                        "amount": 0.05
+                    }
+                ]
+            },
+            {
+                "name": "Super Buff Melee Vacuum Magnet",
+                "prefab": "abilities/crimefighter/super_buff_melee_vacuum_magnet",
+                "component": 287,
+                "duration": 1.5
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_CRIMEFIGHTER_MELEE_SHOCKWAVE_01",
+                "pkfx": "Particles/character_pc_crimefighter_ability_melee_shockwave_01.pkfx"
+            },
+            {
+                "key": "$VFX_CRIMEFIGHTER_RANGE_BUFF_ATTACKSPEED_01",
+                "pkfx": "Particles/character_pc_crimefighter_ability_range_buff_attackSpeed_01.pkfx"
             }
         ]
     },
@@ -942,15 +3916,40 @@
         ],
         "stats": [
             {
-                "name": "Incoming Damage",
                 "stat": "$Stat_IncomingDamageMod",
+                "name": "Incoming Damage",
                 "op": "Multiply",
                 "value": 5.0,
+                "percent": true,
                 "amount": 1.05,
                 "prefab": "abilities/mods_01/crimefighter/combo_melee_damage_multiplier_effect"
             }
         ],
-        "stages": []
+        "stages": [],
+        "effects": [
+            {
+                "name": "Combo Melee Damage Multiplier Effect",
+                "prefab": "abilities/mods_01/crimefighter/combo_melee_damage_multiplier_effect",
+                "component": 136,
+                "duration": 10.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_IncomingDamageMod",
+                        "name": "Incoming Damage",
+                        "op": "Multiply",
+                        "value": 5.0,
+                        "percent": true,
+                        "amount": 1.05
+                    }
+                ]
+            }
+        ],
+        "vfx": [
+            {
+                "key": "$VFX_DRACOLYTE_PASSIVE",
+                "pkfx": "Particles/character_pc_dracolyte_basic_passive_DoT_01.pkfx"
+            }
+        ]
     },
     {
         "class": "Vanguardian",
@@ -959,8 +3958,26 @@
         "description": "Your Laser Leap and Hero's Charge grant a buff that heals you while dealing damage for a short time.",
         "slug": "heros_stand",
         "prefab": "abilities/mods_01/crimefighter/ring_heros_stand",
-        "prefabs": [],
+        "prefabs": [
+            "abilities/mods_01/crimefighter/heros_stand_onhitheal_effect",
+            "abilities/mods_01/crimefighter/heros_stand_onhitheal_listener"
+        ],
         "stats": [],
-        "stages": []
+        "stages": [],
+        "healing": [
+            {
+                "name": "Heros Stand Onhitheal Effect",
+                "prefab": "abilities/mods_01/crimefighter/heros_stand_onhitheal_effect",
+                "max_health_percent": 0.065
+            }
+        ],
+        "effects": [
+            {
+                "name": "Heros Stand Onhitheal Listener",
+                "prefab": "abilities/mods_01/crimefighter/heros_stand_onhitheal_listener",
+                "component": 150,
+                "duration": 15.0
+            }
+        ]
     }
 ]

@@ -96,8 +96,11 @@ def _clean_stat(s: dict) -> dict:
 
 
 def _clean_stage(st: dict) -> dict:
+    # `base` is DamageParameters' flat damage, `multiplier` its share of the damage
+    # stat; the rest (max_health_percent, crit_chance_bonus, ...) ride along as decoded.
     return {"name": st.get("name", ""), "base": st.get("base", 0), "multiplier": st.get("multiplier", 0),
-            "prefab": st.get("prefab", "")}
+            "prefab": st.get("prefab", ""),
+            **{k: v for k, v in st.items() if k not in ("name", "base", "multiplier", "prefab")}}
 
 
 def _clean_ability(a: dict) -> dict:
@@ -111,6 +114,11 @@ def _clean_ability(a: dict) -> dict:
         # reaches it. Absent in hand-written data, so default to active.
         "active": a.get("active", True),
         "stages": [_clean_stage(st) for st in a.get("stages", [])],
+        # Read from the ability's action component; absent = the ability has none.
+        **{k: a[k] for k in ("energy", "cooldown") if k in a},
+        "healing": a.get("healing", []),
+        "effects": a.get("effects", []),
+        "vfx": a.get("vfx", []),
     }
 
 

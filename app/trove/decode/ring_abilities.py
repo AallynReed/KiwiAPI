@@ -1,82 +1,28 @@
-"""ring_abilities.json - class rings and the numbers down their implementation chain.
+"""ring_abilities.json - class rings and what their implementation chain changes.
 
 Class rings live in `prefabs/abilities/mods_01/<class>/ring_<slug>.binfab`. Unlike
-class abilities and gems, a ring names itself with LITERAL text rather than a
-locale key - "Candy Barbarian: Spin-To-Win" and its description sit in the prefab
-as plain strings - so that is the bridge here.
+class abilities and gems, a ring names itself with LITERAL text in its identity
+component - "Candy Barbarian: Spin-To-Win" and its description - so that is the
+bridge here, with the mods locale table preferred where its key matches.
 
-The ring itself carries no numbers; it points at the prefab that implements it
-(`ring_spin_to_win` -> `spin_to_win_swap`), and the damage and stat records sit
-down that chain, same shape as the class abilities: field 12 is the weapon-damage
-multiplier, field 14 the base as a fraction of 100.
+The ring itself carries no numbers; component 149 names the prefabs that
+implement it (`ring_spin_to_win` -> `spin_to_win_swap`) and ``ability.describe``
+reads that chain: the replacement abilities' energy and cooldown, damage, healing,
+and each effect's duration and stat changes. The walk stops at the class's own
+kit and at other rings, so a ring reports only what it adds.
 """
 from __future__ import annotations
 
-import re
-
-from app.trove.codexes.binfab import harvest_strings
-from app.trove.decode.common import damage_blocks, locale, refs, stat_rows, stem
+from app.trove.decode.ability import Prefabs, describe, identity, refs
+from app.trove.decode.common import locale, stem
+from app.trove.decode.gem_abilities import class_kit, merge_rows
 from app.trove.decode.tree import GameTree
 
 TITLE = "Ring abilities"
 OUTPUT = "ring_abilities.json"
-PREFIXES = ("prefabs/abilities/mods_01/", "languages/en/")
+PREFIXES = ("prefabs/abilities/", "prefabs/class/", "prefabs/sfx/", "languages/en/")
 INDENT, FINAL_NEWLINE = 4, False
 MODS = "prefabs/abilities/mods_01/"
-
-# "Candy Barbarian: Spin-To-Win" - a display title, not a path or a locale key.
-_TITLE = re.compile(r"^[A-Z][A-Za-z' ]+:\s*\S.*$")
-
-
-def _title_and_description(data: bytes) -> tuple[str, str, str]:
-    """`(class, name, description)` from the prefab's own literal strings."""
-    strings = [s[2] for s in harvest_strings(data)]
-    title = next((s for s in strings
-                  if _TITLE.match(s) and "/" not in s and not s.endswith(".blueprint")), "")
-    if not title:
-        return "", "", ""
-    owner, _, name = title.partition(":")
-    # The description is the longest remaining sentence; paths and one-word tags
-    # (Equipment, quantitydecay) are never it.
-    body = ""
-    for s in strings:
-        if s == title or "/" in s or s.endswith(".blueprint") or " " not in s:
-            continue
-        if len(s) > len(body):
-            body = s
-    return owner.strip(), name.strip(), body.strip()
-
-
-def _walk(tree: GameTree, rel: str, folder: str, stop: set[str]) -> tuple[list[dict], list[dict], list[str]]:
-    """Damage + stat records down one ring's implementation chain."""
-    stats: list[dict] = []
-    stages: list[dict] = []
-    touched: list[str] = []
-    seen = {rel}
-    queue = [rel]
-    while queue:
-        cur = queue.pop(0)
-        data = tree.read(f"prefabs/{cur}.binfab")
-        if data is None:
-            continue
-        rows = stat_rows(data, cur)
-        found = [{"name": cur.rsplit("/", 1)[-1].replace("_", " ").title(), "prefab": cur,
-                  "base": base, "multiplier": mult}
-                 for mult, base in damage_blocks(data) if mult or base]
-        if rows or found:
-            touched.append(cur)
-        for row in rows:
-            if row not in stats:
-                stats.append(row)
-        for stage in found:
-            if stage not in stages:
-                stages.append(stage)
-        for child in refs(data, f"abilities/mods_01/{folder}/"):
-            if child in seen or child in stop or len(seen) > 60:
-                continue
-            seen.add(child)
-            queue.append(child)
-    return stats, stages, touched
 
 
 def _locale_names(tree: GameTree) -> dict[str, tuple[str, str]]:
@@ -95,37 +41,47 @@ def _locale_names(tree: GameTree) -> dict[str, tuple[str, str]]:
         if not key.endswith("_name"):
             continue
         slug = key[len("$prefabs_abilities_mods_"):-len("_name")]
-        desc = table.get(f"$prefabs_abilities_mods_{slug}_description", "")
-        out[slug] = (value, desc)
+        out[slug] = (value, table.get(f"$prefabs_abilities_mods_{slug}_description", ""))
     return out
 
 
 def build(tree: GameTree) -> list[dict]:
+    prefabs = Prefabs(tree)
     names = _locale_names(tree)
+    kit = class_kit(prefabs, tree)
     rings = []
     for folder in tree.dirs(MODS):
         paths = [p for p in tree.files(f"{MODS}{folder}/ring_", ".binfab") if p.count("/") == 4]
-        # Other rings of the same class are boundaries, so one ring cannot claim
-        # another's numbers - the same rule the class abilities needed.
         others = {f"abilities/mods_01/{folder}/{stem(p)}" for p in paths}
         for path in paths:
             ring = stem(path)
             rel = f"abilities/mods_01/{folder}/{ring}"
-            owner, name, description = _title_and_description(tree.read(path) or b"")
-            if not name:
+            pf = prefabs.get(rel)
+            ident = identity(pf)
+            # A title opening with "@" (Smashing, Firestorm, ...) is skipped, as the
+            # literal-title decoder always did; whether those rings are live is unknown.
+            owner, _, name = ident.get("name_key", "").partition(":")
+            if not name.strip() or not owner[:1].isalpha():
                 continue
+            name, description = name.strip(), ident.get("description_key", "").strip()
             slug = ring[len("ring_"):]
             for key, (loc_name, loc_desc) in names.items():
                 if key == slug or key.endswith("_" + slug):
                     name = loc_name or name
                     description = loc_desc or description
                     break
-            stats, stages, touched = _walk(tree, rel, folder, others - {rel})
-            rings.append({
-                "class": owner, "game_folder": folder, "name": name,
-                "description": description, "slug": slug,
-                "prefab": rel, "prefabs": touched, "stats": stats, "stages": stages,
-            })
+            entry = {
+                "class": owner.strip(), "game_folder": folder, "name": name,
+                "description": description, "slug": slug, "prefab": rel, "prefabs": [],
+                "stats": [], "stages": [], "healing": [], "effects": [], "vfx": [], "actions": [],
+            }
+            for ref in refs(pf) if pf else []:
+                info = describe(prefabs, ref, kit | (others - {rel}))
+                merge_rows(entry, info)
+            for key in ("healing", "effects", "vfx", "actions"):
+                if not entry[key]:
+                    del entry[key]
+            rings.append(entry)
     return sorted(rings, key=lambda r: (r["class"], r["name"]))
 
 

@@ -1,37 +1,31 @@
-"""class_abilities.json - each class's abilities and their damage stages.
+"""class_abilities.json - each class's abilities: cost, cooldown, damage, healing, effects.
 
 Each class prefab names the ability prefabs it actually uses; an ability spawns a
-chain (ability -> normal/full charge -> bullet -> explosion) and the damage sits
-at the leaves. A damage record is field 12 (float, the weapon-damage multiplier)
-next to field 14 (float, the base, stored as a fraction of 100).
+chain (ability -> projectile -> explosion -> effect) and ``ability.describe`` reads
+the numbers off that chain structurally: energy and cooldown from the action
+component, DamageParameters (``base`` = flat damage, ``multiplier`` = share of the
+damage stat), HealingParameters, and each effect's duration and stat changes.
 
-Validated against the three classes whose ability damage was already curated by
-hand: Gunslinger's Blast Jump decodes to base 10 / multiplier 6. Where the two
-disagree the game files are newer - the class prefabs point at the `revamp/`
-abilities, and several multipliers moved.
-
-The curated `icon` and `type` live in the repo copy of this file and are carried
-onto each rebuild.
+The curated ``icon`` and ``type`` live in the repo copy of this file and are
+carried onto each rebuild.
 """
 from __future__ import annotations
 
 import re
 
-from app.trove.codexes.binfab import harvest_strings
 from app.trove.decode import store
-from app.trove.decode.common import damage_blocks, locale, stem
-from app.trove.decode.common import refs as _refs
+from app.trove.decode.ability import Prefabs, describe, identity, refs, walk
+from app.trove.decode.common import locale, stem
 from app.trove.decode.tree import GameTree
+from app.trove.decode.wire import strings
 
 TITLE = "Class abilities"
 OUTPUT = "class_abilities.json"
-PREFIXES = ("prefabs/class/", "prefabs/abilities/", "languages/en/")
+PREFIXES = ("prefabs/class/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/")
 INDENT, FINAL_NEWLINE = 4, False
 
-
-def refs(data: bytes, folder: str) -> list[str]:
-    """`abilities/<folder>/...` paths this prefab names."""
-    return _refs(data, f"abilities/{folder}/")
+# Per-prefab lists that ``_assign_owners`` de-duplicates across a class's abilities.
+_OWNED = ("stages", "healing", "effects")
 
 
 def stage_name(rel: str) -> str:
@@ -49,81 +43,52 @@ def _resolve(aloc: dict[str, str], key: str) -> tuple[str | None, str]:
     return None, ""
 
 
-def _label(aloc: dict[str, str], folder: str, stem: str, data: bytes | None = None) -> tuple[str | None, str]:
+def _label(aloc: dict[str, str], folder: str, rel: str, prefabs: Prefabs) -> tuple[str | None, str]:
     """Ability name + description.
 
-    The prefab usually names its own locale key, and that key is NOT derivable
-    from the filename - Vanguardian's `super_buff_melee` is `…_shockwave`
-    ("Force Flash"). So read the embedded key first and only fall back to
-    guessing from the stem, which is all the prefabs that embed nothing have.
+    The identity component names its own locale keys, and those are NOT derivable
+    from the filename - Vanguardian's `super_buff_melee` is `…_shockwave` ("Force
+    Flash"). Other embedded `$prefabs_abilities…` keys come next, and the stem only
+    as a last resort, which is all the prefabs that embed nothing have.
     """
-    if data is not None:
-        for text in (s[2] for s in harvest_strings(data)):
-            if not text.startswith("$prefabs_abilities") or text.endswith("_description"):
-                continue
-            # A prefab may embed the base key or the full `…_item_name` one; strip
-            # the suffix so the description lookup does not land on `…_name_description`.
-            base = text
-            for suffix in ("_item_name", "_name"):
-                if base.endswith(suffix):
-                    base = base[: -len(suffix)]
-                    break
-            name, desc = _resolve(aloc, base)
-            if name:
-                return name, desc
-    return _resolve(aloc, f"$prefabs_abilities_{folder}_{stem}")
-
-
-def _stages(prefab_bytes, rel: str, root: bytes, folder: str, siblings: set[str]) -> list[dict]:
-    """Damage stages under one ability.
-
-    Abilities cross-reference each other - Lunar Lancer's passive names the leap
-    and the spear throw, which are abilities in their own right - so the walk stops
-    at any prefab that is another named ability of this class. Without that guard
-    one ability swallows the whole class's damage and the numbers double up.
-    """
-    stages: list[dict] = []
-    seen = {rel}
-    queue = [(rel, root, 0)]
-    while queue:
-        cur, data, depth = queue.pop(0)
-        for mult, base in damage_blocks(data):
-            if mult == 0 and base == 0:
-                continue
-            row = {"name": stage_name(cur), "prefab": cur, "base": base,
-                   "multiplier": mult, "_depth": depth}
-            if row not in stages:
-                stages.append(row)
-        for child in refs(data, folder):
-            if child in seen or child in siblings or len(seen) > 60:
-                continue
-            seen.add(child)
-            child_data = prefab_bytes(child)
-            if child_data is not None:
-                queue.append((child, child_data, depth + 1))
-    return stages
+    pf = prefabs.get(rel)
+    ident = identity(pf)
+    if ident.get("name_key") in aloc:
+        return aloc[ident["name_key"]], aloc.get(ident.get("description_key", ""), "")
+    for text in strings(pf.components if pf else []):
+        if not text.startswith("$prefabs_abilities") or text.endswith("_description"):
+            continue
+        base = text
+        for suffix in ("_item_name", "_name"):
+            if base.endswith(suffix):
+                base = base[: -len(suffix)]
+                break
+        name, desc = _resolve(aloc, base)
+        if name:
+            return name, desc
+    return _resolve(aloc, f"$prefabs_abilities_{folder}_{rel.rsplit('/', 1)[-1]}")
 
 
 def _assign_owners(abilities: list[dict]) -> None:
-    """Give every damage prefab exactly one owning ability.
+    """Give every damage/heal/effect prefab exactly one owning ability.
 
     Trove abilities share sub-prefabs - Shadow Hunter's passive and Sun Snare both
-    reach the basic attack - so a plain walk lists the same damage under several
+    reach the basic attack - so a plain walk lists the same numbers under several
     abilities and anything that sums them double-counts. The ability that reaches a
     prefab most directly owns it; ties go to the order the class prefab names them.
     """
-    best: dict[str, tuple[int, int]] = {}
-    for index, ability in enumerate(abilities):
-        for stage in ability["stages"]:
-            key = stage["prefab"]
-            rank = (stage["_depth"], index)
-            if key not in best or rank < best[key]:
-                best[key] = rank
-    for index, ability in enumerate(abilities):
-        kept = [s for s in ability["stages"] if best[s["prefab"]] == (s["_depth"], index)]
-        for stage in kept:
-            stage.pop("_depth", None)
-        ability["stages"] = kept
+    for key in _OWNED:
+        best: dict[str, tuple[int, int]] = {}
+        for index, ability in enumerate(abilities):
+            for row in ability.get(key, []):
+                rank = (row["_depth"], index)
+                if row["prefab"] not in best or rank < best[row["prefab"]]:
+                    best[row["prefab"]] = rank
+        for index, ability in enumerate(abilities):
+            kept = [r for r in ability.get(key, []) if best[r["prefab"]] == (r["_depth"], index)]
+            for row in kept:
+                row.pop("_depth", None)
+            ability[key] = kept
 
 
 def _icon_token(icon: str, folder: str) -> str:
@@ -157,9 +122,9 @@ def _overlay_curated(entry: dict, curated: list[dict], folder: str) -> list[dict
     for ability in entry["abilities"]:
         if ability.get("type"):
             continue
-        stem = re.sub(r"[^a-z0-9]", "", ability["prefab"].rsplit("/", 1)[-1].lower())
+        token = re.sub(r"[^a-z0-9]", "", ability["prefab"].rsplit("/", 1)[-1].lower())
         fits = [a for a in curated if a["name"] not in claimed
-                and (tok := _icon_token(a.get("icon", ""), folder)) and tok in stem]
+                and (tok := _icon_token(a.get("icon", ""), folder)) and tok in token]
         if len(fits) == 1:
             ability["icon"], ability["type"] = fits[0].get("icon", ""), fits[0].get("type", "")
             ability["matched_by"] = "icon"
@@ -175,10 +140,42 @@ def _overlay_curated(entry: dict, curated: list[dict], folder: str) -> list[dict
     return entry["abilities"]
 
 
-def build(tree: GameTree) -> list[dict]:
-    def prefab_bytes(rel: str) -> bytes | None:
-        return tree.read(f"prefabs/{rel}.binfab")
+def _ability(prefabs: Prefabs, aloc: dict[str, str], rel: str, name: str, desc: str, stop: set[str],
+             prefix: str, active: bool) -> dict:
+    info = describe(prefabs, rel, stop - {rel}, prefix=prefix)
+    out = {"name": name, "description": desc, "prefab": rel, "icon": "", "type": "", "active": active}
+    for key in ("energy", "cooldown"):
+        if key in info:
+            out[key] = info[key]
+    for key in ("stages", *_OWNED[1:], "vfx"):
+        out[key] = info[key]
+    for eff in out["effects"]:
+        title = aloc.get(eff.pop("name_key", ""), "")
+        text = aloc.get(eff.pop("description_key", ""), "")
+        if title:
+            eff["title"] = title
+        if text:
+            eff["description"] = text
+    return out
 
+
+def _merge(into: dict, extra: dict) -> None:
+    """Several prefabs share a name (Shadow Hunter ships Radiant Arrow three times,
+    normal/ultimate/base). They are one ability, so fold the extra prefabs' rows in
+    rather than dropping them - they are boundaries, so no parent picks them up."""
+    for key in (*_OWNED, "vfx"):
+        for row in extra.get(key, []):
+            if row not in into[key]:
+                into[key].append(row)
+    if not into["description"]:
+        into["description"] = extra["description"]
+    for key in ("energy", "cooldown"):
+        if key not in into and key in extra:
+            into[key] = extra[key]
+
+
+def build(tree: GameTree) -> list[dict]:
+    prefabs = Prefabs(tree)
     curated_by_class = {c["name"]: c.get("abilities", []) for c in store.baseline(OUTPUT)}
     display: dict[str, str] = {}
     for name in ("prefabs_class.binfab", "ui.binfab", "new.binfab"):
@@ -189,103 +186,65 @@ def build(tree: GameTree) -> list[dict]:
         folder = stem(class_path)
         if class_path.count("/") != 2 or folder.endswith("_ultimate"):
             continue
-        data = tree.read(class_path) or b""
-        key = next((s[2] for s in harvest_strings(data) if s[2].startswith("$DisplayName")), None)
+        cls = prefabs.get(f"class/{folder}")
+        texts = strings(cls.root) if cls and cls.root is not None else []
+        key = next((s for s in texts if s.startswith("$DisplayName")), None)
         if not key:
             continue
 
         # The ability folder is not always the class folder - Fae Trickster's class
         # prefab is `faetrickster` but its abilities live under `abilities/trickster`.
-        match = re.search(rb"abilities/([a-z0-9_]+)/", data)
-        afolder = match.group(1).decode() if match else folder
+        match = next((re.match(r"abilities/([a-z0-9_]+)/", s) for s in texts
+                      if re.match(r"abilities/([a-z0-9_]+)/", s)), None)
+        afolder = match.group(1) if match else folder
+        prefix = f"abilities/{afolder}/"
         aloc = locale(tree.read(f"languages/en/prefabs_abilities_{afolder}.binfab"))
 
         # Everything the CLASS prefab points at is a top-level action of that class,
         # named or not. Those are the walk's boundaries: without them one ability
         # absorbs the others' damage (Lunar Lancer's passive reaches the leap, the
         # spear throw and moon blessing, and reports all of it as its own).
-        class_refs = [r for r in refs(data, afolder) if prefab_bytes(r) is not None]
+        class_refs = [r for r in (refs(cls, prefix) if cls else []) if prefabs.get(r) is not None]
 
         # A prefab that carries its own locale name IS an ability, wherever it sits
-        # in the chain. Class-level refs are not the whole story: some are stance
-        # dispatchers with no name of their own (Vanguardian's `energy_blast` only
-        # points at Plasma Blast and Eyebeam), and a class's transformed kit hangs
-        # further down (Lunar Lancer's Eclipse Spear, Shadow Hunter's Radiant
-        # Arrow). So walk everything the class reaches and promote whatever is
-        # named, class refs first so the primary kit leads the list.
+        # in the chain. Some class refs are stance dispatchers with no name
+        # (Vanguardian's `energy_blast` points at Plasma Blast and Eyebeam), and a
+        # transformed kit hangs further down (Lunar Lancer's Eclipse Spear). So walk
+        # everything the class reaches and promote whatever is named, class refs
+        # first so the primary kit leads the list.
         reachable: list[str] = []
-        seen_reach = set()
-        queue = list(class_refs)
-        while queue:
-            rel = queue.pop(0)
-            if rel in seen_reach or len(seen_reach) > 400:
-                continue
-            body = prefab_bytes(rel)
-            if body is None:
-                continue
-            seen_reach.add(rel)
-            reachable.append(rel)
-            queue.extend(refs(body, afolder))
-
+        for root in class_refs:
+            for rel, _, _ in walk(prefabs, root, limit=400, prefix=prefix):
+                if rel not in reachable:
+                    reachable.append(rel)
         ordered = class_refs + [r for r in reachable if r not in set(class_refs)]
-        entries: list[tuple[str, str, str]] = []
-        for rel in ordered:
-            name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1], prefab_bytes(rel))
-            if name:
-                entries.append((rel, name, desc))
-
+        entries = [(rel, *_label(aloc, afolder, rel, prefabs)) for rel in ordered]
+        entries = [(rel, name, desc) for rel, name, desc in entries if name]
         boundaries = set(class_refs) | {rel for rel, _, _ in entries}
-        named = [rel for rel, _, _ in entries]
-        labels = {rel: (name, desc) for rel, name, desc in entries}
 
-        abilities = []
+        abilities: list[dict] = []
         by_name: dict[str, dict] = {}
-        for rel in named:
-            root = prefab_bytes(rel) or b""
-            name, desc = labels[rel]
+        for rel, name, desc in entries:
+            ability = _ability(prefabs, aloc, rel, name, desc, boundaries, prefix, active=True)
             if name in by_name:
-                # Several prefabs share a name (Shadow Hunter ships Radiant Arrow
-                # three times, normal/ultimate/base). They are one ability, so fold
-                # the extra prefabs' damage in rather than dropping it - they are
-                # boundaries now, so no parent would pick it up either.
-                merged = by_name[name]
-                for stage in _stages(prefab_bytes, rel, root, afolder, boundaries - {rel}):
-                    if stage not in merged["stages"]:
-                        merged["stages"].append(stage)
-                if not merged["description"]:
-                    merged["description"] = desc
+                _merge(by_name[name], ability)
                 continue
-            by_name[name] = {
-                "name": name,
-                "description": desc,
-                "prefab": rel,
-                "icon": "",
-                "type": "",
-                # Reachable from the live class prefab. The tree also keeps the
-                # pre-revamp copies of most abilities - Gunslinger has 60 ability
-                # prefabs but the class only reaches 28 - and those are the ones
-                # that still load but are no longer wired to the class.
-                "active": True,
-                "stages": _stages(prefab_bytes, rel, root, afolder, boundaries - {rel}),
-            }
-            abilities.append(by_name[name])
+            # Reachable from the live class prefab. The tree also keeps pre-revamp
+            # copies of most abilities that still load but are no longer wired up.
+            by_name[name] = ability
+            abilities.append(ability)
+
         # Named abilities that exist but the class prefab cannot reach: Shadow
-        # Hunter's Radiant Arrow, Boomeranger's Bawk Bomb. Some are the pre-revamp
-        # copies and some sit in revamp/ unwired, so reachability - not the folder -
-        # is the test. They still load, so list them, flagged inactive.
-        for path in tree.files(f"prefabs/abilities/{afolder}/", ".binfab"):
+        # Hunter's Radiant Arrow, Boomeranger's Bawk Bomb. Reachability - not the
+        # folder - is the test. They still load, so list them, flagged inactive.
+        for path in tree.files(f"prefabs/{prefix}", ".binfab"):
             rel = path[len("prefabs/"):-len(".binfab")]
-            if rel in seen_reach:
+            if rel in reachable:
                 continue
-            body = prefab_bytes(rel) or b""
-            name, desc = _label(aloc, afolder, rel.rsplit("/", 1)[-1], body)
+            name, desc = _label(aloc, afolder, rel, prefabs)
             if not name or name in by_name:
                 continue
-            by_name[name] = {
-                "name": name, "description": desc, "prefab": rel,
-                "icon": "", "type": "", "active": False,
-                "stages": _stages(prefab_bytes, rel, body, afolder, boundaries),
-            }
+            by_name[name] = _ability(prefabs, aloc, rel, name, desc, boundaries, prefix, active=False)
             abilities.append(by_name[name])
 
         entry = {
