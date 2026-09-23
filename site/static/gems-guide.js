@@ -563,9 +563,9 @@
 
     function grade(q) {
       if (q >= 100) return ["Perfect", "q-high"];
-      if (q >= 90) return ["Great roll", "q-high"];
-      if (q >= 72) return ["Good roll", "q-mid"];
-      return ["Weak roll", "q-low"];
+      if (q >= 66) return ["Great roll", "q-high"];
+      if (q >= 33) return ["Good roll", "q-mid"];
+      return ["Very weak roll", "q-low"];
     }
     function pick3() {
       var pool = POOL.slice(), out = [];
@@ -594,7 +594,7 @@
     }
     function roll() {
       var names = pick3();
-      renderRoll(names, names.map(function () { return Math.round((55 + Math.random() * 45) * 10) / 10; }));
+      renderRoll(names, names.map(function () { return Math.round(Math.random() * 1000) / 10; }));
     }
     if (btn) btn.addEventListener("click", roll);
     roll();
