@@ -351,18 +351,6 @@ REGISTRY: dict[str, TunableSetting] = {
             "not this flag), so update prompts keep working while the page is hidden."
         ),
     ),
-    "feature_classes_enabled": _t(
-        key="feature_classes_enabled",
-        default=True,
-        type="bool",
-        category="features",
-        description=(
-            "Master switch for the Classes reference page. OFF hides the /classes "
-            "page + navbar link and 404s its same-origin /site/stats/classes proxy. "
-            "The public /v1/stats/classes API (driven by scopes) is NOT gated by this "
-            "- only the dedicated reference page is hidden. It's static game data."
-        ),
-    ),
     "feature_star_chart_enabled": _t(
         key="feature_star_chart_enabled",
         default=True,

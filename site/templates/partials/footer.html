@@ -28,7 +28,7 @@
                 <h3 data-i18n>Reference</h3>
                 {% if wiki_enabled and wiki_url %}<a href="{{ wiki_url }}" data-i18n>Wiki</a>{% endif %}
                 {% if commands_enabled %}<a href="/commands" data-i18n>Commands</a>{% endif %}
-                {% if classes_enabled %}<a href="/classes" data-i18n>Classes</a>{% endif %}
+                {% if wiki_enabled and wiki_url %}<a href="{{ wiki_url }}/classes" data-i18n>Classes</a>{% endif %}
                 {% if calendar_enabled %}<a href="/calendar" data-i18n>Calendar</a>{% endif %}
                 {% if server_time_enabled %}<a href="/server-time" data-i18n>Server Time</a>{% endif %}
             </div>

@@ -1,7 +1,5 @@
-{# Server-rendered class detail - mirrors classes.js renderDetail exactly (same
-   classes + section order) so the pre-rendered DOM is what the JS would build.
-   Expects `d`, a detail model from classes_page._detail(). Section titles are
-   English (the crawlable default); classes.js re-renders on language switch. #}
+{# Server-rendered class detail for the wiki's class pages.
+   Expects `d`, a detail model from classes_page._detail(). #}
 <div class="cls-detail-head">
     <img class="cls-detail-icon" src="/static/class-icons/{{ d.tech }}.png" alt="{{ d.name }}">
     <div class="cls-detail-title">

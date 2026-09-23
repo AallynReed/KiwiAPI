@@ -4,7 +4,7 @@ A separate app mounted by hostname in ``app/web/main.py``, so none of the main
 site's routes answer here and none of these answer on the main site. Like the
 rest of this container it holds no database: page text comes from the API's
 ``/site/wiki/*`` over ``internal_get``, and class data is read from the game-data
-files the ``/classes`` page already renders from.
+files (``app/site/classes_page.py`` builds the detail model).
 
 URL map:
   /                      home

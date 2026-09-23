@@ -1,8 +1,7 @@
 /* ===========================================================================
    class_level.js - a class's stat sheet at a chosen level (window.BTTClassLevel).
 
-   Shared by the /classes page (classes.js) and the wiki's class pages, which
-   render the same partials/class_detail.html markup.
+   Used by the wiki's class pages, which render partials/class_detail.html.
    ========================================================================== */
 (function () {
   "use strict";

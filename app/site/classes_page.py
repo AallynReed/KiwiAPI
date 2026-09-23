@@ -1,21 +1,9 @@
-"""Server-side render model for /classes.
-
-The class picker + the initially-selected class's full detail are server-rendered
-(English) so the page is complete without JS and paints instantly; ``classes.js``
-then fetches the full set once to power switching, hydrates the existing nav, and
-re-renders the detail only when a different class is chosen (hash deep-link, a
-click, or a language switch).
-
-Mirrors ``classes.js`` buildNav/renderDetail so the pre-rendered DOM matches what
-the JS would build (same classes, ``data-tech``, section order).
-"""
-from typing import Any
-
-from app.trove import stats as trove_stats
+"""Render model for a class's detail (``partials/class_detail.html``), used by
+the wiki's class pages."""
 
 
 def _fmt_stat(s: dict) -> str:
-    """``{value, percentage}`` -> "131%" / "2,376" - matches classes.js fmtStat
+    """``{value, percentage}`` -> "131%" / "2,376"
     (thousands separators, up to 2 fraction digits, trailing zeros trimmed).
     A null value is a stat the class does not have."""
     v = s.get("value")
@@ -31,8 +19,8 @@ def _fmt_stat(s: dict) -> str:
 
 
 def _fmt_bonus(s: dict) -> str:
-    """Same as ``_fmt_stat`` but signed, for values shown as a bonus - matches
-    classes.js fmtBonus. ``absolute`` stats (Fae Trickster's Flying Speed) name a
+    """Same as ``_fmt_stat`` but signed, for values shown as a bonus.
+    ``absolute`` stats (Fae Trickster's Flying Speed) name a
     resulting value rather than a delta, so they carry no sign."""
     out = _fmt_stat(s)
     if s.get("absolute"):
@@ -55,7 +43,6 @@ def _fmt_stages(stages: list) -> list[dict]:
 
     `multiplier` scales the class's damage stat, so it reads as a percentage -
     the wire's 3.5 is 350%. `base` is a flat add, shown only when it is there.
-    Mirrors fmtStage() in classes.js so SSR and the client agree.
     """
     out = []
     for s in stages:
@@ -71,7 +58,7 @@ def _fmt_stages(stages: list) -> list[dict]:
 
 
 def _growth(levels: dict) -> dict | None:
-    """``{level: [stat]}`` -> a level-by-stat table. Mirrors growthTable() in classes.js."""
+    """``{level: [stat]}`` -> a level-by-stat table."""
     order = sorted(levels, key=int)
     cols: list[str] = []
     for lvl in order:
@@ -88,7 +75,7 @@ def _growth(levels: dict) -> dict | None:
 
 
 def _sheet_at(stat: dict, levels: dict, level: int):
-    """A level-30 sheet value wound back to ``level``. Mirrors sheetAt() in classes.js."""
+    """A level-30 sheet value wound back to ``level``."""
     v = stat.get("value")
     if not isinstance(v, (int, float)) or isinstance(v, bool):
         return v
@@ -99,8 +86,7 @@ def _sheet_at(stat: dict, levels: dict, level: int):
 
 
 def _totals(stats: list, levels: dict) -> dict | None:
-    """The sheet at every level, limited to the stats that change with level.
-    Mirrors totalsTable() in classes.js."""
+    """The sheet at every level, limited to the stats that change with level."""
     if not levels:
         return None
     grid = [[_sheet_at(s, levels, lv) for s in stats] for lv in range(1, 31)]
@@ -168,20 +154,3 @@ def _detail(c: dict) -> dict:
         "legacy": legacy,
     }
 
-
-def classes_view() -> dict[str, Any]:
-    """Nav entries for every class + the full detail model for the first one
-    (the client default; a URL hash overrides it after JS loads)."""
-    items = (trove_stats.all_classes() or {}).get("items") or []
-    nav = [{
-        "tech": c["tech_name"],
-        "name": c.get("name") or "",
-        "damage_type": c.get("damage_type") or "",
-        "dmg_class": _dmg_class(c.get("damage_type")),
-    } for c in items]
-    return {
-        "nav": nav,
-        "initial": _detail(items[0]) if items else None,
-        "initial_tech": items[0]["tech_name"] if items else "",
-        "count": len(items),
-    }

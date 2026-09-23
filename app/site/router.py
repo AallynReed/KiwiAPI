@@ -60,7 +60,6 @@ from app.trove import luxion as trove_luxion
 from app.trove import news as trove_news
 from app.trove import rotations as trove_rotations
 from app.trove import server_time as trove_server_time
-from app.trove import stats as trove_stats
 from app.trove import status as trove_status
 from app.trove.blueprint import editor as bp_editor
 from app.trove.blueprint import model as bp_model
@@ -423,16 +422,6 @@ async def site_gem_parse_star_chart(code: str = Query(default="", max_length=819
     except Exception:  # noqa: BLE001 - preview only; bad codes must degrade, not 500
         parsed = {"stats": {}, "abilities": [], "paths_count": 0}
     return JSONResponse(jsonable_encoder(parsed))
-
-
-@router.get("/site/stats/classes", response_class=JSONResponse)
-async def site_stats_classes() -> JSONResponse:
-    """Every Trove class as a full object for the /classes page - same data as
-    ``/v1/stats/classes``. Static game data, cached hard."""
-    return JSONResponse(
-        jsonable_encoder(trove_stats.all_classes()),
-        headers={"Cache-Control": "public, max-age=3600"},
-    )
 
 
 @router.get("/site/tomes", response_class=JSONResponse)

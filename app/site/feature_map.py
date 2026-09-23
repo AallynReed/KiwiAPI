@@ -41,7 +41,6 @@ SITE_FEATURE_FLAGS = {
     "calendar_enabled": feature_flags.CALENDAR_FLAG,
     "streams_enabled": feature_flags.STREAMS_FLAG,
     "btt_releases_enabled": feature_flags.BTT_RELEASES_FLAG,
-    "classes_enabled": feature_flags.CLASSES_FLAG,
     "star_chart_enabled": feature_flags.STAR_CHART_FLAG,
     "gem_simulator_enabled": feature_flags.GEM_SIMULATOR_FLAG,
     "gem_evaluator_enabled": feature_flags.GEM_EVALUATOR_FLAG,
@@ -145,10 +144,6 @@ def feature_blocks(p: str, f: dict) -> bool:
         return True
     if not f["btt_releases_enabled"] and (
         p == "/releases" or p.startswith("/site/btt")
-    ):
-        return True
-    if not f["classes_enabled"] and (
-        p == "/classes" or p.startswith("/site/stats/classes")
     ):
         return True
     # Star Chart is fully client-rendered from the static /static/star_chart.json
@@ -266,7 +261,6 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/accessibility", None),
     ("/changelog", None),
     ("/commands", "commands_enabled"),
-    ("/classes", "classes_enabled"),
     ("/star-chart", "star_chart_enabled"),
     ("/gem-simulator", "gem_simulator_enabled"),
     ("/abilities", "abilities_enabled"),

@@ -135,10 +135,10 @@ PAGES: tuple[Destination, ...] = (
     _p("Unlock Debug", "/unlock-debug", "unlock_debug_enabled", "fa-solid fa-terminal", "Create", "debug console", "trove.exe", "patch", "byte patch", "console"),
 
     _p("Wiki", "https://kiwiwiki.aallyn.net", "wiki_enabled", "fa-solid fa-book-open", "Learn", "kiwi wiki", "guides", "knowledge"),
-    _p("Classes", "/classes", "classes_enabled", "fa-solid fa-hat-wizard", "Learn", "class list"),
+    _p("Classes", "https://kiwiwiki.aallyn.net/classes", "wiki_enabled", "fa-solid fa-hat-wizard", "Learn", "class list", in_nav=False),
     _p("Trove Commands", "/commands", "commands_enabled", "fa-solid fa-keyboard", "Learn", "slash commands", "chat"),
     _p("Codexes", "/codexes", "codexes_enabled", "fa-solid fa-book-atlas", "Learn", "database", "catalog", "game data", badge="Beta"),
-    _p("Guides", "/guides", "guides_enabled", "fa-solid fa-compass", "Learn", "how to", "explainer", "tutorial"),
+    _p("Guides", "/guides", "guides_enabled", "fa-solid fa-compass", "Learn", "how to", "explainer", "tutorial", in_nav=False),
     _p("How Gems Work", "https://kiwiwiki.aallyn.net/gems", "gems_guide_enabled", "fa-solid fa-circle-question", "Learn", "gems", "guide", "explainer", in_nav=False),
     _p("Fishing Guide", "/fishing-guide", "fishing_guide_enabled", "fa-solid fa-fish", "Learn", "fish", "pools", "lures", "bait", "turtles", "guide", in_nav=False),
     _p("Loot Collector Rules", "/loot-collector-guide", "loot_collector_guide_enabled", "fa-solid fa-filter", "Learn", "loot", "collector", "rules", "mod", "zakros", "deconstruct", "guide", in_nav=False),

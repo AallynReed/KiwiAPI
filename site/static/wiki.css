@@ -1,6 +1,6 @@
 /* ===========================================================================
    wiki.css - Kiwi Wiki (the wiki host). Builds on style.css tokens; the
-   class pages also load classes.css for the shared class-detail markup.
+   class pages also load classes.css for the class-detail markup.
    ========================================================================== */
 
 body.wk > main { min-height: auto; }

@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
-from app.site import abilities_page, allies_page, classes_page, commands_page, hubs, ssr
+from app.site import abilities_page, allies_page, commands_page, hubs, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import feature_flags as web_flags
 
@@ -273,16 +273,10 @@ async def releases_page(request: Request) -> HTMLResponse:
         request, "releases.html", {"ssr": await ssr.releases_view(_ssr_fetch)})
 
 
-@router.get("/classes", response_class=HTMLResponse)
-async def classes(request: Request) -> HTMLResponse:
-    """Trove class reference - a browsable codex of every class: base stats,
-    weapons, damage type, its signature subclass (with the 1→30 level-scaling
-    bonuses) and abilities. The picker + the first class's detail are
-    server-rendered (English) so the page is complete without JS; classes.js
-    fetches ``/site/stats/classes`` to power switching. See classes_page.py."""
-    return _TEMPLATES.TemplateResponse(
-        request, "classes.html", {"cls": classes_page.classes_view()},
-    )
+@router.get("/classes")
+async def classes() -> RedirectResponse:
+    """The class reference moved to the wiki."""
+    return RedirectResponse(f"{settings.wiki_url.rstrip('/')}/classes", status_code=301)
 
 
 @router.get("/star-chart", response_class=HTMLResponse)
