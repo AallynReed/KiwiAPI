@@ -1,0 +1,10 @@
+{# Recipe totals under the station index (entities._recipe_totals). #}
+<section class="wk-section wk-lures" aria-labelledby="wk-recipe-totals">
+    <h2 class="wk-subhead" id="wk-recipe-totals">About these recipes</h2>
+    <ul class="wk-thinglist" role="list">
+        <li>The game files hold {{ "{:,}".format(extra.recipes) }} recipes; {{ "{:,}".format(extra.offered) }} are offered at the stations above.</li>
+        {% if extra.elsewhere %}<li>{{ "{:,}".format(extra.elsewhere) }} more are crafted through vendors, NPCs and other interactions rather than a station.</li>{% endif %}
+        {% if extra.unoffered %}<li>{{ "{:,}".format(extra.unoffered) }} aren't offered anywhere in the current game files.</li>{% endif %}
+        <li>Which recipes the Featured Crafting Bench shows is scheduled by the game server, so it isn't listed.</li>
+    </ul>
+</section>

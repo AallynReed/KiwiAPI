@@ -9,8 +9,9 @@ files (``app/site/classes_page.py`` builds the detail model).
 URL map:
   /                      home
   /classes, /class/<n>   generated class pages + their editable write-ups
-  /allies, /ally/<n>     generated ally pages (stats + abilities) + write-ups
-  /mounts, /mount/<n>    generated mount pages (stats by slot + abilities) + write-ups
+  /<plural>, /<kind>/<n> generated game-data pages + write-ups, one pair per kind in
+                         app/wiki/entities.KINDS: allies, mounts, companions, fish,
+                         mementos, badges, and crafting stations (/recipes, /station/<n>)
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
@@ -44,9 +45,19 @@ WIKI = settings.wiki_url.rstrip("/")
 WIKI_HOST = WIKI.split("://", 1)[-1].split("/", 1)[0].lower()
 
 
+def _browse(path: str) -> list[dict]:
+    """The header's Browse menu: classes, then each generated kind."""
+    rows = [{"url": "/classes", "title": "Classes", "icon": "fa-shield-halved",
+             "current": path == "/classes" or path.startswith("/class/")}]
+    for kind, spec in entities.KINDS.items():
+        rows.append({"url": f"/{spec['plural']}", "title": spec["title"], "icon": spec["icon"],
+                     "current": path == f"/{spec['plural']}" or path.startswith(f"/{kind}/")})
+    return rows
+
+
 def _context(request: Request) -> dict:
     return {"wiki_url": WIKI, "site_url": settings.app_url.rstrip("/"),
-            "path": request.url.path,
+            "path": request.url.path, "browse": _browse(request.url.path),
             "generated": " ".join(["classes", *entities.KINDS, *data_pages.DATA_PAGES])}
 
 
@@ -169,7 +180,7 @@ async def robots() -> Response:
 
 @app.get("/sitemap.xml", dependencies=[Depends(_gate)])
 async def sitemap() -> Response:
-    urls = [WIKI + "/", WIKI + "/classes", WIKI + "/allies", WIKI + "/mounts"]
+    urls = [WIKI + "/", WIKI + "/classes"] + [f"{WIKI}/{spec['plural']}" for spec in entities.KINDS.values()]
     urls += [WIKI + c["url"] for c in _class_cards() + _data_cards() + _entity_cards()]
     data = await internal_get("/site/wiki/pages", timeout=5.0) or {}
     urls += [f"{WIKI}/{quote(p['slug'])}" for p in data.get("items", [])
@@ -189,8 +200,10 @@ async def health() -> dict:
 
 @app.get("/", response_class=HTMLResponse, dependencies=[Depends(_gate)])
 async def home(request: Request) -> HTMLResponse:
+    kinds = [{"url": f"/{spec['plural']}", "title": spec["title"], "icon": spec["icon"],
+              "count": len(entities.entries(kind))} for kind, spec in entities.KINDS.items()]
     return _render(request, "wiki/home.html", {"title": "Kiwi Wiki", "classes": _class_cards(),
-                                               "data_pages": _data_cards()})
+                                               "data_pages": _data_cards(), "kinds": kinds})
 
 
 @app.get("/classes", response_class=HTMLResponse, dependencies=[Depends(_gate)])
@@ -224,14 +237,15 @@ async def class_page(request: Request, name: str) -> Response:
 async def _entity_index(request: Request, kind: str) -> HTMLResponse:
     spec = entities.KINDS[kind]
     found = await media.blueprints(kind)
-    rows = sorted(({**entities.summary(kind, e),
-                    "thumb": media.thumb_url(e, found.get(media.codex_path(e)), 64)}
+    rows = sorted(({**entities.summary(kind, e), "thumb": media.thumb_url(e, media.lookup(kind, e, found), 64)}
                    for e in entities.entries(kind)), key=lambda r: r["name"].lower())
+    with_abilities = sum(1 for r in rows if r["abilities"])
     return _render(request, "wiki/entity_index.html", {
-        "title": spec["title"], "kind": kind, "rows": rows,
-        "with_abilities": sum(1 for r in rows if r["abilities"]),
-        "description": f"Every Trove {kind} with the stats it grants and what its abilities do, "
-                       "read from the game files.",
+        "title": spec["title"], "kind": kind, "rows": rows, "noun": spec.get("noun", spec["title"].lower()),
+        "lead": spec["lead"].format(n=with_abilities), "with_abilities": with_abilities,
+        "facets": entities.facets(kind, rows), "groups": entities.groups(kind, rows),
+        "extra": entities.index_extra(kind),
+        "description": spec["lead"].format(n=with_abilities),
     })
 
 
@@ -246,35 +260,36 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
     page = await _page(slug)
     live = page if page and not page.get("deleted") else None
     d = entities.detail(kind, e)
-    found = (await media.blueprints(kind)).get(media.codex_path(e))
+    found = media.lookup(kind, e, await media.blueprints(kind))
     d["image"] = media.thumb_url(e, found, 256)
     d["preview"] = media.preview_url(e, found)
+    for row in d.get("ranks") or []:
+        row["image"] = media.render_url(row.get("blueprint", ""), 64)
+    for row in d.get("sizes") or []:
+        row["image"] = media.render_url(row.get("trophy_blueprint", ""), 64)
     return _render(request, "wiki/entity.html", {
         "title": e["name"], "kind": kind, "index": entities.KINDS[kind], "slug": slug, "d": d,
         "page": live, "rev": page["rev"] if page else 0,
         "description": _excerpt(live["body"]) if live and live.get("body")
-        else (d["description"] or f"{e['name']} in Trove: stats and abilities."),
+        else (d["description"] or f"{e['name']} in Trove, read from the game files."),
     })
 
 
-@app.get("/allies", response_class=HTMLResponse, dependencies=[Depends(_gate)])
-async def allies(request: Request) -> HTMLResponse:
-    return await _entity_index(request, "ally")
+def _entity_routes(kind: str) -> None:
+    """``/<plural>`` and ``/<kind>/<name>``, registered ahead of the article catch-all."""
+    async def index(request: Request) -> HTMLResponse:
+        return await _entity_index(request, kind)
+
+    async def page(request: Request, name: str) -> Response:
+        return await _entity_page(request, kind, name)
+
+    opts = {"response_class": HTMLResponse, "dependencies": [Depends(_gate)], "methods": ["GET"]}
+    app.add_api_route(f"/{entities.KINDS[kind]['plural']}", index, name=f"{kind}_index", **opts)
+    app.add_api_route(f"/{kind}/{{name}}", page, name=f"{kind}_page", **opts)
 
 
-@app.get("/ally/{name}", response_class=HTMLResponse, dependencies=[Depends(_gate)])
-async def ally_page(request: Request, name: str) -> Response:
-    return await _entity_page(request, "ally", name)
-
-
-@app.get("/mounts", response_class=HTMLResponse, dependencies=[Depends(_gate)])
-async def mounts(request: Request) -> HTMLResponse:
-    return await _entity_index(request, "mount")
-
-
-@app.get("/mount/{name}", response_class=HTMLResponse, dependencies=[Depends(_gate)])
-async def mount_page(request: Request, name: str) -> Response:
-    return await _entity_page(request, "mount", name)
+for _kind in entities.KINDS:
+    _entity_routes(_kind)
 
 
 @app.get("/delve-modifiers", response_class=HTMLResponse, dependencies=[Depends(_gate)])

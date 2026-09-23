@@ -15,6 +15,13 @@
     {% include "wiki/_class_grid.html" %}
 </section>
 
+<section class="wk-section" aria-labelledby="wk-home-browse">
+    <div class="wk-section-head"><h2 id="wk-home-browse">Browse the game</h2></div>
+    <ul class="wk-kindgrid" role="list">
+        {% for k in kinds %}<li><a class="wk-kindcard" href="{{ k.url }}"><i class="fa-solid {{ k.icon }}" aria-hidden="true"></i><span class="wk-kindcard-name">{{ k.title }}</span><span class="wk-count-muted">{{ "{:,}".format(k.count) }}</span></a></li>{% endfor %}
+    </ul>
+</section>
+
 <section class="wk-section" aria-labelledby="wk-home-data">
     <div class="wk-section-head"><h2 id="wk-home-data">Game data</h2></div>
     <ul class="wk-list wk-list-cols">

@@ -3,27 +3,46 @@
 {% block main %}
 <header class="wk-pagehead">
     <h1 class="wk-title">{{ title }}</h1>
-    <p class="wk-lead">Every {{ kind }} in the game files: the stats it grants and, for the {{ with_abilities }} that have one, what its abilities do.</p>
+    <p class="wk-lead">{{ lead }}</p>
 </header>
 
 <div class="wk-filterbar" data-filter-root>
     <label class="wk-filter">
         <i class="fa-solid fa-filter" aria-hidden="true"></i>
-        <input type="search" placeholder="Filter {{ rows | length }} {{ title | lower }}" aria-label="Filter {{ title | lower }}" data-filter-input autocomplete="off" spellcheck="false">
+        <input type="search" placeholder="Filter {{ rows | length }} {{ noun }}" aria-label="Filter {{ noun }}" data-filter-input autocomplete="off" spellcheck="false">
     </label>
-    <label class="wk-toggle"><input type="checkbox" data-filter-abilities> Only with abilities</label>
+    {% for f in facets %}
+    <label class="wk-select"><span class="wk-sr">{{ f.label }}</span>
+        <select data-filter-facet="{{ f.key }}">
+            <option value="">{{ f.label }}: all</option>
+            {% for v in f.options %}<option value="{{ v }}">{{ v }}</option>{% endfor %}
+        </select>
+    </label>
+    {% endfor %}
+    {% if with_abilities %}<label class="wk-toggle"><input type="checkbox" data-filter-abilities> Only with abilities</label>{% endif %}
     <output class="wk-filter-count" data-filter-count aria-live="polite">{{ rows | length }} shown</output>
 </div>
 
-<ul class="wk-entitygrid" role="list" data-filter-list>
-    {% for r in rows %}
-    <li data-search="{{ r.search }}" data-abilities="{{ r.abilities }}"><a class="wk-entitycard" href="{{ r.url }}">
-        <span class="wk-entitycard-img">{% if r.thumb %}<img data-lazy-src="{{ r.thumb }}" alt="" width="48" height="48" decoding="async" data-hide-on-error>{% endif %}</span>
-        <span class="wk-entitycard-name">{{ r.name }}</span>
-        {% if r.abilities %}<span class="wk-entity-badge" title="{{ r.abilities }} {{ 'ability' if r.abilities == 1 else 'abilities' }}"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span class="sr-only">has abilities</span></span>{% endif %}
-    </a></li>
-    {% endfor %}
-</ul>
+<div data-filter-list>
+{% for g in groups %}
+    <section class="wk-entitygroup" data-filter-group aria-labelledby="wk-group-{{ loop.index }}">
+        {% if g.title %}<h2 class="wk-subhead" id="wk-group-{{ loop.index }}">{{ g.title }} <span class="wk-count-muted" data-group-count>{{ g.rows | length }}</span></h2>{% endif %}
+        <ul class="wk-entitygrid" role="list">
+            {% for r in g.rows %}
+            <li data-search="{{ r.search }}" data-abilities="{{ r.abilities }}"{% for k, v in r.facets.items() %} data-{{ k }}="{{ v }}"{% endfor %}><a class="wk-entitycard" href="{{ r.url }}">
+                <span class="wk-entitycard-img">{% if r.thumb %}<img data-lazy-src="{{ r.thumb }}" alt="" width="48" height="48" decoding="async" data-hide-on-error>{% endif %}</span>
+                <span class="wk-entitycard-text">
+                    <span class="wk-entitycard-name">{{ r.name }}</span>
+                    {% if r.sub %}<span class="wk-entitycard-sub{% if r.tone %} tone-{{ r.tone }}{% endif %}">{{ r.sub }}</span>{% endif %}
+                </span>
+                {% if r.abilities %}<span class="wk-entity-badge" title="{{ r.abilities }} {{ 'ability' if r.abilities == 1 else 'abilities' }}"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span class="sr-only">has abilities</span></span>{% endif %}
+            </a></li>
+            {% endfor %}
+        </ul>
+    </section>
+{% endfor %}
+</div>
 <p class="wk-list-empty" data-filter-empty hidden>Nothing matches that filter.</p>
+{% include "wiki/kinds/" ~ kind ~ "_index.html" ignore missing %}
 {% endblock %}
 {% block scripts %}<script src="/static/wiki_filter.min.js" defer></script>{% endblock %}

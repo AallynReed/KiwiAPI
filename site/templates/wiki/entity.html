@@ -17,6 +17,7 @@
             <div class="cls-detail-title">
                 <h2 class="cls-detail-name">{{ d.name }}</h2>
                 {% if d.description %}<p class="cls-ability-desc wk-entity-desc">{{ d.description }}</p>{% endif %}
+                {% if d.facts %}<dl class="wk-facts">{% for f in d.facts %}<div class="wk-fact"><dt>{{ f.label }}</dt><dd{% if f.tone %} class="tone-{{ f.tone }}"{% endif %}>{% if f.url %}<a href="{{ f.url }}">{{ f.value }}</a>{% else %}{{ f.value }}{% endif %}</dd></div>{% endfor %}</dl>{% endif %}
                 {% if d.preview %}<p class="wk-entity-actions"><button type="button" class="wk-btn" data-embed="{{ d.preview }}" data-embed-title="{{ d.name }} 3D model" aria-pressed="false"><i class="fa-solid fa-cube" aria-hidden="true"></i> View 3D model</button></p>{% endif %}
             </div>
             <div class="wk-embed wk-embed-model" data-embed-slot hidden></div>
@@ -27,6 +28,7 @@
             <div class="cls-chips">{% for s in g.stats %}<span class="cls-chip">{{ s }}</span>{% endfor %}</div>
         </section>
         {% endfor %}
+        {% include "wiki/kinds/" ~ kind ~ ".html" ignore missing %}
         {% if d.abilities %}
         <section class="cls-section">
             <h3 class="cls-section-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>Abilities</span></h3>
@@ -43,10 +45,11 @@
         <p class="wk-meta">Last edited {% if page.updated_by %}by <span>{{ page.updated_by }}</span> {% endif %}<time datetime="{{ page.updated_at }}" data-rel>{{ page.updated_at[:10] }}</time></p>
         {% else %}
         <div class="wk-empty">
-            <p>No one has written about {{ title }} yet: where to get it, how it plays, what it pairs with.</p>
+            <p>No one has written about {{ title }} yet: {{ index.prompt }}.</p>
             <p><a class="wk-btn wk-btn-primary" href="/-/edit/{{ slug }}" data-edit-cta>Write the first notes</a></p>
         </div>
         {% endif %}
     </section>
 </article>
 {% endblock %}
+{% block scripts %}{% if kind == "station" %}<script src="/static/wiki_filter.min.js" defer></script>{% endif %}{% endblock %}

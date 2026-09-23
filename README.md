@@ -74,14 +74,15 @@ Browsing is public; developing and publishing mods is a Discord-login action.
 **Kiwi Wiki** lives on its own host, `kiwiwiki.aallyn.net`, served by the same website container
 (`app/web/wiki.py`, routed by hostname). Anyone can read it. Accounts the master marks as wiki
 editors (dev portal → Dashboard users) write pages; every other signed-in player can suggest an
-edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages
-and the Delve Modifiers page are generated from the game files, with an editable write-up under the
-data; the main site's `/classes` redirects to the wiki's. The How Gems Work guide lives there too
+edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages,
+the Delve Modifiers page and one page per ally, mount, Geode companion, fish, Delve memento, badge
+and crafting station (with its recipes) are generated from the game files, with an editable
+write-up under the data; the main site's `/classes` redirects to the wiki's. The How Gems Work guide lives there too
 (`/gems`); the main site's `/gems-guide` redirects to it. The data plane is `/site/wiki/*` in `app/wiki/`.
 
 **Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that
-comes from the game files (class stats and abilities, allies, gems, rings, PvP curves, delve
-modifiers) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
+comes from the game files (class stats and abilities, allies, mounts, gems, rings, PvP curves,
+delve modifiers, companions, fish, mementos, badges, recipes) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
 each decoder reruns and writes to `GAMEDATA_DIR` (`./.gamedata`, shared by the api, web and bot
 containers), which readers prefer over the repo copy. A decoder also reruns when a deploy
 changes its code. One that fails, decodes nothing, or shrinks its output by more than 20% keeps

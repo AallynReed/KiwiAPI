@@ -46,9 +46,13 @@
                        placeholder="Search the wiki" aria-label="Search the wiki" autocomplete="off" spellcheck="false">
             </form>
             <nav class="wk-toplinks" aria-label="Wiki">
-                <a href="/classes"{{ ' aria-current="page"' | safe if path == '/classes' or path.startswith('/class/') else '' }}>Classes</a>
-                <a href="/allies"{{ ' aria-current="page"' | safe if path == '/allies' or path.startswith('/ally/') else '' }}>Allies</a>
-                <a href="/mounts"{{ ' aria-current="page"' | safe if path == '/mounts' or path.startswith('/mount/') else '' }}>Mounts</a>
+                {% set here = browse | selectattr('current') | first %}
+                <details class="wk-browse" data-browse>
+                    <summary{{ ' class="is-current"' | safe if here else '' }}>{{ here.title if here else 'Browse' }} <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                    <ul class="wk-browse-menu" role="list">
+                        {% for b in browse %}<li><a href="{{ b.url }}"{{ ' aria-current="page"' | safe if b.current else '' }}><i class="fa-solid {{ b.icon }}" aria-hidden="true"></i>{{ b.title }}</a></li>{% endfor %}
+                    </ul>
+                </details>
                 <a href="/-/recent"{{ ' aria-current="page"' | safe if path == '/-/recent' else '' }}>Recent changes</a>
                 <a href="/-/suggestions" id="wk-sugg-link" hidden>Suggestions <span class="wk-count" id="wk-sugg-count" hidden></span></a>
                 <a class="wk-back" href="{{ site_url }}">Better Trove Tools <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>

@@ -566,7 +566,20 @@
 
   window.BTTWiki = { api, me, slugify, pageHref, renderInto, wireTabs, signInUrl, q };
 
+  // The header's Browse <details>: Escape or a click elsewhere closes it.
+  function wireBrowse() {
+    const menu = document.querySelector("[data-browse]");
+    if (!menu) return;
+    const summary = menu.querySelector("summary");
+    document.addEventListener("click", (e) => { if (menu.open && !menu.contains(e.target)) menu.open = false; });
+    menu.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && menu.open) { menu.open = false; summary.focus(); }
+    });
+    menu.addEventListener("focusout", (e) => { if (menu.open && !menu.contains(e.relatedTarget)) menu.open = false; });
+  }
+
   function boot() {
+    wireBrowse();
     document.querySelectorAll("time[data-rel]").forEach((t) => {
       const iso = t.getAttribute("datetime");
       t.title = new Date(iso).toLocaleString();

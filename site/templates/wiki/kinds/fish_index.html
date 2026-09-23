@@ -1,0 +1,22 @@
+{# Lure odds under the fish index (entities._lure_table). #}
+<section class="wk-section wk-lures" aria-labelledby="wk-lures-title">
+    <h2 class="wk-subhead" id="wk-lures-title">How lures change your odds</h2>
+    <p class="wk-hint">Chances for each catch, read from the game's fishing tables. A trophy-size catch is the one that earns a trophy; gold is the rarest of those. Bite wait is the range the game draws the wait for a bite from, before your fishing upgrades adjust it.</p>
+    <div class="wk-tablewrap">
+        <table class="wk-table">
+            <thead><tr><th scope="col">Lure</th><th scope="col">Uncommon</th><th scope="col">Rare</th><th scope="col">Trophy size or better</th><th scope="col">Gold trophy size</th><th scope="col">Bite wait</th></tr></thead>
+            <tbody>
+            {% for r in extra.lures %}
+            <tr>
+                <th scope="row">{{ r.label }}{% if r.note %}<div class="wk-mute wk-pre">{{ r.note }}</div>{% endif %}</th>
+                <td class="num">{{ r.uncommon }}</td>
+                <td class="num">{{ r.rare }}</td>
+                <td class="num">{{ r.trophy }}</td>
+                <td class="num">{{ r.gold }}</td>
+                <td class="num">{{ r.bite }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>

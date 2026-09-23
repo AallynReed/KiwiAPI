@@ -9,14 +9,19 @@ from types import ModuleType
 from app.trove.decode import (
     ability,
     ally_abilities,
+    badges,
     class_abilities,
     class_levels,
     common,
+    companions,
     delve_modifiers,
     fields,
+    fish,
     gem_abilities,
+    mementos,
     mount_abilities,
     pvp_stat_ranges,
+    recipes,
     ring_abilities,
     wire,
 )
@@ -24,7 +29,8 @@ from app.trove.decode import (
 DECODERS: dict[str, ModuleType] = {
     m.__name__.rsplit(".", 1)[-1]: m
     for m in (class_levels, class_abilities, ally_abilities, gem_abilities,
-              ring_abilities, mount_abilities, pvp_stat_ranges, delve_modifiers)
+              ring_abilities, mount_abilities, pvp_stat_ranges, delve_modifiers,
+              companions, badges, fish, mementos, recipes)
 }
 
 

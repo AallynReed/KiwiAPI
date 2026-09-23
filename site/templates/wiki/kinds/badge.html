@@ -1,0 +1,25 @@
+{# Badge rank ladder (entities._badge). #}
+<section class="cls-section" aria-labelledby="wk-ranks-title">
+    <h3 class="cls-section-title" id="wk-ranks-title"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i><span>Ranks</span></h3>
+    <div class="wk-tablewrap">
+        <table class="wk-table">
+            <thead><tr><th scope="col">Rank</th><th scope="col" colspan="2">Badge</th><th scope="col">Requirement</th><th scope="col">Rewards</th></tr></thead>
+            <tbody>
+            {% for r in d.ranks %}
+            <tr>
+                <th scope="row"><span class="wk-tier tier-{{ r.tier | lower }}">{{ r.tier }}</span></th>
+                <td class="wk-cell-img">{% if r.image %}<img src="{{ r.image }}" alt="" width="32" height="32" loading="lazy" decoding="async" data-hide-on-error>{% endif %}</td>
+                <td>
+                    <div>{{ r.name }}</div>
+                    {% if r.description %}<div class="wk-mute wk-pre">{{ r.description }}</div>{% endif %}
+                    {% if r.stats %}<div class="cls-chips wk-rank-stats" aria-label="Owning it grants">{% for s in r.stats %}<span class="cls-chip">{{ s }}</span>{% endfor %}</div>{% endif %}
+                </td>
+                <td>{{ r.requirement or "" }}</td>
+                <td>{% for rw in r.rewards %}<div>{% if rw.url %}<a href="{{ rw.url }}">{% endif %}{{ rw.lines | join(", ") }}{% if rw.url %}</a>{% endif %}</div>{% else %}<span class="wk-mute">None</span>{% endfor %}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if d.ranks | selectattr('stats') | list %}<p class="wk-hint">Chips under a badge are what owning it grants, permanently.</p>{% endif %}
+</section>

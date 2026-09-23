@@ -65,12 +65,19 @@ class ArchiveTree(GameTree):
         return self._store.get(self._shas[path])
 
 
+def _loose(root: Path, prefixes: list[str]) -> list[str]:
+    """Prefixes that name a plain file at the client root (``Trove_x64.exe``)."""
+    return [p for p in prefixes if not p.endswith("/") and (root / p).is_file()]
+
+
 class LiveTree(GameTree):
-    """An installed client, reading straight out of its .tfa archives."""
+    """An installed client, reading straight out of its .tfa archives; a prefix that
+    names a loose file at the root is read from disk."""
 
     def __init__(self, root: str | os.PathLike, prefixes: list[str]):
         self._root = Path(root)
         self._where: dict[str, tuple[Path, int, int, int]] = {}
+        self._loose = set(_loose(self._root, prefixes))
         for prefix in prefixes:
             for dp, _, fs in os.walk(self._root / prefix):
                 if "index.tfi" not in fs:
@@ -80,9 +87,11 @@ class LiveTree(GameTree):
                 for e in parse_tfi((d / "index.tfi").read_bytes()):
                     self._where[f"{rel}/{e.name}"] = (d, e.archive_index, e.offset, e.size)
         self._archives: OrderedDict[tuple[Path, int], bytes] = OrderedDict()
-        super().__init__(list(self._where))
+        super().__init__([*self._where, *self._loose])
 
     def _fetch(self, path: str) -> bytes | None:
+        if path in self._loose:
+            return (self._root / path).read_bytes()
         d, ai, offset, size = self._where[path]
         key = (d, ai)
         content = self._archives.get(key)
@@ -100,7 +109,7 @@ class DirTree(GameTree):
 
     def __init__(self, root: str | os.PathLike, prefixes: list[str]):
         self._root = Path(root)
-        paths = []
+        paths = _loose(self._root, prefixes)
         for prefix in prefixes:
             for dp, _, fs in os.walk(self._root / prefix):
                 rel = Path(dp).relative_to(self._root).as_posix()

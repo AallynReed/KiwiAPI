@@ -1,4 +1,4 @@
-"""Pictures and 3D previews for the wiki's ally and mount pages.
+"""Pictures and 3D previews for the wiki's generated pages.
 
 Both come from what the codexes already resolved: each codex entry carries the
 blueprint that draws it (the `_ui` whole-model for multi-part creatures), and the
@@ -15,6 +15,7 @@ from urllib.parse import quote, urlencode
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
+from app.wiki import entities
 
 # Codex types that hold our ally/mount entries, and which are rigged creatures.
 CODEX_TYPES = {"ally": ("ally",), "mount": ("mount", "dragon")}
@@ -32,6 +33,8 @@ def codex_path(entry: dict) -> str:
 
 async def blueprints(kind: str) -> dict[str, tuple[str, str]]:
     """``codex path -> (blueprint, codex type)`` for every entry of ``kind``."""
+    if kind not in CODEX_TYPES:
+        return {}
     hit = _cache.get(kind)
     if hit and time.monotonic() - hit[0] < _TTL:
         return hit[1]
@@ -51,6 +54,23 @@ async def blueprints(kind: str) -> dict[str, tuple[str, str]]:
     if out or not hit:
         _cache[kind] = (time.monotonic(), out)
     return out if out else (hit[1] if hit else {})
+
+
+def lookup(kind: str, entry: dict, found: dict[str, tuple[str, str]]) -> tuple[str, str] | None:
+    """An entry's (blueprint, codex type): from the codexes for allies and mounts, else
+    the blueprint its decoder read."""
+    if kind in CODEX_TYPES:
+        return found.get(codex_path(entry))
+    blueprint = entities.picture(entry)
+    return (blueprint, kind) if blueprint else None
+
+
+def render_url(blueprint: str, dim: int) -> str:
+    """A bare blueprint drawn by the API."""
+    if not blueprint:
+        return ""
+    blueprint = entities.blueprint_name(blueprint)
+    return f"{settings.api_url.rstrip('/')}/site/codexes/render?{urlencode({'blueprint': blueprint, 'dim': dim})}"
 
 
 def thumb_url(entry: dict, found: tuple[str, str] | None, dim: int) -> str:
