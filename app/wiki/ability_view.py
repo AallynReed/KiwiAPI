@@ -10,6 +10,10 @@ from typing import Any
 from urllib.parse import quote
 
 from app.core.config import settings
+from app.trove.codexes.bonuses import _normalize
+from app.trove.codexes.localize import resolve_stat_name
+
+_OPS = ("MultiplySum", "Add", "Set", "Nullify", "Multiply", "Minimum", "Maximum")
 
 
 def num(v: float | int) -> str:
@@ -24,13 +28,34 @@ def seconds(v: float | int) -> str:
     return f"{num(v)}s"
 
 
+def _is_percent(row: dict) -> bool:
+    """Whether a stat row reads as a percentage - the codexes' rule (``bonuses._normalize``),
+    for rows that don't carry the flag themselves (ally stats)."""
+    if "percent" in row:
+        return bool(row["percent"])
+    op = row.get("op")
+    if op not in _OPS:
+        return False
+    return _normalize(row.get("stat", ""), _OPS.index(op) * 2, row.get("amount", 0) or 0)[1]
+
+
 def stat_text(row: dict) -> str:
-    """One stat modifier as a player reads it: "+30% Attack Speed", "Movement Speed 90"."""
-    name = row.get("name") or row.get("stat", "")
-    if name.endswith(" Bonus"):
-        name = name[: -len(" Bonus")]
-    op, value, pct = row.get("op"), row.get("value", 0) or 0, row.get("percent")
-    unit = "%" if pct else ""
+    """One stat modifier as a player reads it: "+30% Critical Damage", "Movement Speed 90".
+
+    A MultiplySum keeps its "… Bonus" name, as in the codexes: +30% Critical Damage
+    (an Add, 30 points) and +30% Critical Damage Bonus (scales the stat) differ.
+    """
+    name = row.get("name") or resolve_stat_name({}, row.get("stat", ""))
+    op, value = row.get("op"), row.get("value", 0) or 0
+    amount = row.get("amount")
+    # Ally rows store |value|; the raw amount still carries the sign (a Multiply
+    # of 0.9 is 10% LESS incoming damage, not more).
+    if isinstance(amount, (int, float)):
+        if op == "Multiply":
+            value = (amount - 1) * 100
+        elif op in ("Add", "MultiplySum") and amount < 0:
+            value = -abs(value)
+    unit = "%" if _is_percent(row) else ""
     if op in ("Add", "MultiplySum", "Multiply"):
         sign = "+" if value >= 0 else "-"
         return f"{sign}{num(abs(value))}{unit} {name}"
