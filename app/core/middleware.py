@@ -206,11 +206,12 @@ def _add_vary(headers, *fields: str) -> None:
 
 # The assets the 3D viewers fetch while they run: baked rigs (clips + animation
 # graph), the dressing-room catalogue and assembled models, and the BRDF lighting
-# map. Every one is public, tokenless and takes no viewer identity - no cookie, no
+# map; plus the codex thumbnails, which the wiki's indexes load by the hundred and so
+# must stay browser-cacheable for signed-in readers too. Every one is public, tokenless and takes no viewer identity - no cookie, no
 # Authorization header, pure query params - which is what makes them safe to hand to
 # any origin.
 _PUBLIC_ASSET_PREFIXES = ("/site/rigs/", "/site/dressing/")
-_PUBLIC_ASSET_PATHS = frozenset({"/site/render/brdf-map.png"})
+_PUBLIC_ASSET_PATHS = frozenset({"/site/render/brdf-map.png", "/site/codexes/render"})
 
 
 def _is_public_asset(path: str) -> bool:

@@ -41,7 +41,17 @@
   document.addEventListener("error", (ev) => {
     if (ev.target instanceof HTMLImageElement && ev.target.hasAttribute("data-hide-on-error")) hide(ev.target);
   }, true);
-  document.querySelectorAll("img[data-hide-on-error]").forEach((img) => {
-    if (img.complete && img.naturalWidth === 0 && img.getAttribute("loading") !== "lazy") hide(img);
+  document.querySelectorAll("img[data-hide-on-error][src]").forEach((img) => {
+    if (img.complete && img.naturalWidth === 0) hide(img);
   });
+
+  // Index thumbnails load only as they near the viewport. Native loading="lazy"
+  // fetches a screenful or two ahead, which on a 1,200-card list is hundreds at once.
+  const lazy = document.querySelectorAll("img[data-lazy-src]");
+  const load = (img) => { img.src = img.getAttribute("data-lazy-src"); img.removeAttribute("data-lazy-src"); };
+  if (!("IntersectionObserver" in window)) { lazy.forEach(load); return; }
+  const io = new IntersectionObserver((seen) => seen.forEach((e) => {
+    if (e.isIntersecting) { io.unobserve(e.target); load(e.target); }
+  }), { rootMargin: "200px 0px" });
+  lazy.forEach((img) => io.observe(img));
 })();

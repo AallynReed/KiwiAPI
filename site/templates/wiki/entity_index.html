@@ -18,7 +18,7 @@
 <ul class="wk-entitygrid" role="list" data-filter-list>
     {% for r in rows %}
     <li data-search="{{ r.search }}" data-abilities="{{ r.abilities }}"><a class="wk-entitycard" href="{{ r.url }}">
-        <span class="wk-entitycard-img">{% if r.thumb %}<img src="{{ r.thumb }}" alt="" width="48" height="48" loading="lazy" decoding="async" data-hide-on-error>{% endif %}</span>
+        <span class="wk-entitycard-img">{% if r.thumb %}<img data-lazy-src="{{ r.thumb }}" alt="" width="48" height="48" decoding="async" data-hide-on-error>{% endif %}</span>
         <span class="wk-entitycard-name">{{ r.name }}</span>
         {% if r.abilities %}<span class="wk-entity-badge" title="{{ r.abilities }} {{ 'ability' if r.abilities == 1 else 'abilities' }}"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span class="sr-only">has abilities</span></span>{% endif %}
     </a></li>
