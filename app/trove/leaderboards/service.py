@@ -139,8 +139,8 @@ async def is_archive_query(anchor: int) -> bool:
 # capture read as "newly appeared / active" against it. So a materially-incomplete
 # LIVE capture is REJECTED (not stored) - the hour becomes a clean time-gap that
 # every consumer already bridges over. Detection is by board PRESENCE (id set),
-# with a secondary gross-collapse check; gated to non-reset windows since board
-# rotation / zeroing at a daily/weekly reset is legitimate, not a failure.
+# with a secondary gross-collapse check. Across a daily/weekly reset only boards
+# marked never-resetting are judged, since rotation / zeroing there is legitimate.
 
 _COLLAPSE_FLOOR = 100   # ignore collapse on boards that never had a real population
 
@@ -173,11 +173,17 @@ def _completeness_verdict(
     return {"reason": "; ".join(parts), "missing_boards": missing, "collapsed_boards": collapsed}
 
 
+def _never_reset_only(counts: dict[int, int], kinds: dict[int, str]) -> dict[int, int]:
+    """Keep only boards whose cadence is the explicit ``"none"`` override - the
+    ones a reset can't legitimately rotate or shrink."""
+    return {u: n for u, n in counts.items() if kinds.get(u) == "none"}
+
+
 async def _assess_capture_completeness(boards, anchor: int) -> dict | None:
     """Gather the previous-capture baseline + config and run ``_completeness_verdict``
     for a LIVE ingest. Returns a reason dict to REJECT, or None to accept. No-op
-    when the guard is off, on a cold start, at a reset boundary (board rotation
-    expected), or when the previous capture is too sparse to judge against."""
+    when the guard is off, on a cold start, or when the previous capture is too
+    sparse to judge against. Across a reset only never-resetting boards are judged."""
     from app.admin import runtime_config
 
     if not bool(await runtime_config.get_setting("capture_completeness_enabled")):
@@ -185,12 +191,6 @@ async def _assess_capture_completeness(boards, anchor: int) -> dict | None:
     prev = await pg_store.previous_anchor_before(anchor)
     if prev is None:
         return None   # first/cold capture - nothing to compare against
-    # Non-reset gate: at a daily (11:00 UTC) / weekly (Mon 11:00) reset the board
-    # set legitimately rotates (contest boards) and daily boards zero out, so a
-    # changed board set there is expected, not a failed scrape.
-    if (reset_boundaries_for_kind("daily", prev, anchor)
-            or reset_boundaries_for_kind("weekly", prev, anchor)):
-        return None
     prev_counts = await pg_store.board_counts_at(prev)
     min_prev = int(await runtime_config.get_setting("capture_min_prev_boards"))
     if len(prev_counts) < min_prev:
@@ -198,6 +198,15 @@ async def _assess_capture_completeness(boards, anchor: int) -> dict | None:
     max_missing = int(await runtime_config.get_setting("capture_max_missing_boards"))
     collapse_frac = float(await runtime_config.get_setting("capture_collapse_frac"))
     cur_counts = {b.uuid: len(b.entries) for b in boards}
+    # At a daily (11:00 UTC) / weekly (Mon 11:00) reset the board set rotates and
+    # daily boards zero out, so only judge boards explicitly marked never-resetting.
+    if (reset_boundaries_for_kind("daily", prev, anchor)
+            or reset_boundaries_for_kind("weekly", prev, anchor)):
+        kinds = await pg_store.board_kinds(list(prev_counts))
+        prev_counts = _never_reset_only(prev_counts, kinds)
+        cur_counts = _never_reset_only(cur_counts, kinds)
+        if not prev_counts:
+            return None
     verdict = _completeness_verdict(
         cur_counts, prev_counts, max_missing=max_missing, collapse_frac=collapse_frac,
     )
