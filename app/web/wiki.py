@@ -11,6 +11,8 @@ URL map:
   /classes, /class/<n>   generated class pages + their editable write-ups
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
+  /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
+  /pvp-stats             the PvP stat curves (pvp.json, docs/pvp-stats.md) + its write-up
   /<slug>                an article
   /-/...                 tools: edit, history, search, recent, pages, suggestions
 """
@@ -32,7 +34,7 @@ from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
 from app.trove.decode import store as gamedata
 from app.web import feature_flags as web_flags
-from app.wiki import data_pages
+from app.wiki import data_pages, pvp_stats
 
 logger = logging.getLogger("kiwi.web.wiki")
 
@@ -125,7 +127,13 @@ def _data_cards() -> list[dict]:
              "kind": "Game data", "terms": names},
             {"name": data_pages.DATA_PAGES["gems"], "url": "/gems", "kind": "Guide",
              "terms": "gems gem guide tiers radiant stellar crystal mystic lesser empowered cosmic "
-                      "light power rank leveling focus boosters converters class gems builds"}]
+                      "light power rank leveling focus boosters converters class gems builds"},
+            {"name": data_pages.DATA_PAGES["stat-modifiers"], "url": "/stat-modifiers", "kind": "Guide",
+             "terms": "stats stat modifiers bonus bonuses percent multiplier add multiplysum multiply set "
+                      "nullify minimum maximum order character sheet critical damage health"},
+            {"name": data_pages.DATA_PAGES["pvp-stats"], "url": "/pvp-stats", "kind": "Game data",
+             "terms": "pvp battle royale bloodstone arena stats stat curve cap soft cap diminishing returns "
+                      + " ".join(name for _, name, _ in pvp_stats.SHEET)}]
 
 
 async def _page(slug: str) -> dict | None:
@@ -233,6 +241,37 @@ async def gems(request: Request) -> HTMLResponse:
         "rev": page["rev"] if page else 0,
         "description": "How gems work in Trove: tiers, elements, Lesser and Empowered, stat rolls, "
                        "leveling and Power Rank, focusing, boosters and build codes.",
+    })
+
+
+@app.get("/stat-modifiers", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def stat_modifiers(request: Request) -> HTMLResponse:
+    slug = "data/stat-modifiers"
+    page = await _page(slug)
+    live = page if page and not page.get("deleted") else None
+    return _render(request, "wiki/stat_modifiers.html", {
+        "title": data_pages.DATA_PAGES["stat-modifiers"],
+        "slug": slug,
+        "page": live,
+        "rev": page["rev"] if page else 0,
+        "description": "Why two \"+30%\" bonuses can be worth wildly different amounts: how Trove "
+                       "stacks every bonus on your character sheet, and in what order.",
+    })
+
+
+@app.get("/pvp-stats", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def pvp_stats_page(request: Request) -> HTMLResponse:
+    slug = "data/pvp-stats"
+    page = await _page(slug)
+    live = page if page and not page.get("deleted") else None
+    return _render(request, "wiki/pvp_stats.html", {
+        "title": data_pages.DATA_PAGES["pvp-stats"],
+        "slug": slug,
+        "page": live,
+        "rev": page["rev"] if page else 0,
+        **pvp_stats.page(gamedata.load("pvp.json", {"modes": {}})),
+        "description": "How Trove turns your character sheet into PvP, Battle Royale and Bloodstone "
+                       "stats: the minimums, the slowdown and the caps for every stat.",
     })
 
 

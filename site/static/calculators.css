@@ -153,6 +153,11 @@
 .calc-pvp-mode:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
 .calc-pvp-intro { color: var(--text-mute); font-size: .9rem; line-height: 1.5; margin: -4px 0 16px; max-width: 70ch; }
 
+.calc-pvp-class { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 20px; margin: 0 0 16px; }
+.calc-pvp-select { width: auto; min-width: 220px; text-align: left; }
+.calc-pvp-role { margin: 0 0 7px; font-size: .85rem; color: var(--text-mute); }
+.calc-pvp-role strong { color: var(--text); }
+
 .calc-pvp-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 10px; }
 .calc-pvp-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .calc-pvp-field > span:first-child { font-size: .72rem; color: var(--text-mute); text-transform: uppercase; letter-spacing: .04em; }

@@ -3179,5 +3179,17 @@
   "Grows more slowly past": "この値を超えると伸びが鈍化:",
   "Carries over as is": "そのまま反映",
   "Type in your stats from the character sheet. Past a certain point every stat grows more slowly in PvP, so better gear still wins, just by a smaller margin.": "キャラクターシートのステータスを入力してください。PvPではある値を超えると各ステータスの伸びが鈍くなるため、良い装備が有利なのは変わりませんが、その差は小さくなります。",
-  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "パワーランク、Mastery、マジックファインド、Light - 装備、ジェム、アライ、スターチャートを切り替えると、合計値がライブで更新されます。さらに、PvPでのステータスも確認できます。"
+  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "パワーランク、Mastery、マジックファインド、Light - 装備、ジェム、アライ、スターチャートを切り替えると、合計値がライブで更新されます。さらに、PvPでのステータスも確認できます。",
+  "No class": "クラスなし",
+  "Your class": "あなたのクラス",
+  "Each class's PvP role adds its own bonus and drawback.": "クラスごとのPvPロールには、それぞれ固有のボーナスとペナルティがあります。",
+  "Tank": "タンク",
+  "Assassin": "アサシン",
+  "Skirmisher": "スカーミッシャー",
+  "Mage": "メイジ",
+  "Ranged DPS": "遠距離DPS",
+  "Outgoing damage": "与ダメージ",
+  "Cooldown": "クールダウン",
+  "Healing done": "与回復量",
+  "Roles only apply in PvP.": "ロールはPvPでのみ適用されます。"
 }

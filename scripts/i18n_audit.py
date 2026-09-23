@@ -248,6 +248,8 @@ def keys_from_js() -> tuple[dict[str, set[str]], dict[str, int]]:
 # scan of `t('...')` can see it, yet every entry is a real key the site looks up. Read
 # out of the source array rather than copied here, so the two cannot drift apart.
 _VOCAB_LISTS = [("site/static/mods_project.js", "MOD_CATEGORIES")]
+# The PvP calculator's role names and modifier labels come from this data file.
+_PVP_JSON = "app/trove/gamedata/pvp.json"
 
 
 def dynamic_vocab() -> dict[str, set[str]]:
@@ -262,6 +264,12 @@ def dynamic_vocab() -> dict[str, set[str]]:
         items = {norm(s) for s in re.findall(r"['\"]([^'\"]+)['\"]", m.group(1))}
         if items:
             found.setdefault(rel, set()).update(items)
+    pvp = ROOT / _PVP_JSON
+    if pvp.exists():
+        roles = json.loads(pvp.read_text(encoding="utf-8")).get("roles", [])
+        items = {norm(r["name"]) for r in roles} | {norm(m["label"]) for r in roles for m in r["modifiers"]}
+        if items:
+            found.setdefault(_PVP_JSON, set()).update(items)
     return found
 
 

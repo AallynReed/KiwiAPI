@@ -9,12 +9,18 @@ PvP converts each PvE stat through a `PVPStatRange` record in
   3 vec2   (not read by the curve)       7 bool raise values below the knee to it
   4 f32    knee                          8 f32  soft-cap ceiling
 
-Trove_x64.exe applies them in FUN_14081dff0 (see site/static/calculators.js
-`pvpValue`).
+Trove_x64.exe applies them in FUN_14081dff0 (`pvp_value` below; calculators.js
+`pvpValue`). docs/pvp-stats.md explains the curve; the wiki's /pvp-stats shows it.
+
+Between the floor and the soft cap the game applies class, then role modifiers
+(FUN_14081e290). The client's `pvp_classes` / `pvp_roles` ship empty; the server
+sends the real ones, so ROLES below is kept by hand from the Trove team's numbers.
 """
 from __future__ import annotations
 
+import math
 import struct
+from collections.abc import Sequence
 
 from app.trove.codexes.binfab import read_uleb, unzig
 from app.trove.codexes.bonuses import STAT_KEYS
@@ -40,6 +46,45 @@ STATS = {
     "AttackSpeed": 1, "Jump": 1, "CriticalHitChance": 0.1, "CriticalHitDamage": 1,
 }
 REQUIRED = (2, 4, 5, 6, 7, 8)
+
+# The two files as they ship today: empty lists.
+EMPTY_LIST = bytes.fromhex("3e2e0008be012e00081e")
+ROLE_FILES = ("pvp_roles.binfab", "pvp_classes.binfab")
+
+# Modes the roles apply in: PvP only, not Battle Royale or Bloodstone.
+ROLE_MODES = ["pvp"]
+
+# KPVPClassRole (Tank, Assassin, Mage, Support, RangedDPS, Skirmisher) -> classes
+# (tech name, display name) and modifiers in the order the game applies them.
+# `stat` is None where the stat behind the label isn't known.
+ROLES = [
+    {"key": "Tank", "name": "Tank",
+     "classes": [["candybarbarian", "Candy Barbarian"], ["spirittank", "Revenant"], ["knight", "Knight"]],
+     "modifiers": [{"stat": "MaxHealth", "label": "Maximum Health", "op": "multiply", "value": 1.15},
+                   {"stat": "OutgoingDamageMod", "label": "Outgoing damage", "op": "multiply", "value": 0.9}]},
+    {"key": "Assassin", "name": "Assassin",
+     "classes": [["shadowhunter", "Shadow Hunter"], ["neonninja", "Neon Ninja"]],
+     "modifiers": [{"stat": "MaxHealth", "label": "Maximum Health", "op": "multiply", "value": 0.85},
+                   {"stat": "OutgoingDamageMod", "label": "Outgoing damage", "op": "multiply", "value": 1.12}]},
+    {"key": "Skirmisher", "name": "Skirmisher",
+     "classes": [["lunarlancer", "Lunar Lancer"], ["adventurer", "Boomeranger"], ["crimefighter", "Vanguardian"]],
+     "modifiers": [{"stat": "MovementSpeed", "label": "Movement Speed", "op": "multiply", "value": 1.08},
+                   {"stat": "MaxHealth", "label": "Maximum Health", "op": "multiply", "value": 0.95}]},
+    {"key": "Mage", "name": "Mage",
+     "classes": [["icemage", "Ice Sage"], ["dracolyte", "Dracolyte"], ["tombraiser", "Tomb Raiser"],
+                 ["faetrickster", "Fae Trickster"]],
+     "modifiers": [{"stat": "SpellDamage", "label": "Magic Damage", "op": "multiply", "value": 1.15},
+                   {"stat": None, "label": "Cooldown", "op": "multiply", "value": 1.2}]},
+    {"key": "Support", "name": "Support",
+     "classes": [["chloromancer", "Chloromancer"], ["bard", "Bard"]],
+     "modifiers": [{"stat": "HealDoneMultiplier", "label": "Healing done", "op": "multiply", "value": 0.9},
+                   {"stat": None, "label": "Cooldown", "op": "multiply", "value": 1.15}]},
+    {"key": "RangedDPS", "name": "Ranged DPS",
+     "classes": [["gunslinger", "Gunslinger"], ["piratelord", "Pirate Captain"], ["dinotamer", "Dino Tamer"],
+                 ["solarion", "Solarion"]],
+     "modifiers": [{"stat": "CriticalHitDamage", "label": "Critical Damage", "op": "multiply", "value": 1.15},
+                   {"stat": "MaxHealth", "label": "Maximum Health", "op": "multiply", "value": 0.92}]},
+]
 
 
 def parse(data: bytes) -> list[dict]:
@@ -95,7 +140,29 @@ def build(tree: GameTree) -> dict:
                 "curve": bool(row[6]), "floor": bool(row[7]), "cap": round(row[8], 4),
             }
         modes[key] = stats
-    return {"modes": modes}
+    for name in ROLE_FILES:
+        if tree.read(f"prefabs/pvp/data/stats/{name}") not in (None, EMPTY_LIST):
+            raise ValueError(f"{name} now ships data: decode it instead of the hand-kept ROLES")
+    return {"modes": modes, "roles": ROLES, "role_modes": ROLE_MODES}
+
+
+def pvp_value(e: dict, v: float, mods: Sequence[dict] = ()) -> float:
+    """One pvp.json entry applied to a PvE value, both in game units (calculators.js `pvpValue`).
+    `mods` are the role's modifiers for this stat."""
+    if e["curve"]:
+        if v < e["knee"]:
+            if e["floor"]:
+                v = e["knee"]
+        else:
+            v = e["knee"] + e["sqrt"] * math.sqrt(v - e["knee"])
+    lo, hi = e["out"]
+    v = max(v, lo)
+    for m in mods:
+        v = v + m["value"] if m["op"] == "add" else v * m["value"]
+    if v > hi:
+        cap = e["cap"]
+        v = hi + (cap - hi) * (1 - math.exp(-(v - hi) / (cap - hi))) if hi < cap else hi
+    return v
 
 
 def count(data: dict) -> int:

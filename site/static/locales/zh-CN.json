@@ -3179,5 +3179,17 @@
   "Grows more slowly past": "超过此值后增长放缓:",
   "Carries over as is": "保持原值",
   "Type in your stats from the character sheet. Past a certain point every stat grows more slowly in PvP, so better gear still wins, just by a smaller margin.": "输入角色面板上的属性。在 PvP 中，每项属性超过一定数值后增长会放缓，所以更好的装备依然占优，只是差距更小。",
-  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "战力等级、Mastery、魔法发现 和 Light——切换你的装备、宝石、盟友和 Star Chart，实时查看总值更新。然后看看你的属性在 PvP 中表现如何。"
+  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "战力等级、Mastery、魔法发现 和 Light——切换你的装备、宝石、盟友和 Star Chart，实时查看总值更新。然后看看你的属性在 PvP 中表现如何。",
+  "No class": "无职业",
+  "Your class": "你的职业",
+  "Each class's PvP role adds its own bonus and drawback.": "每个职业的 PvP 定位都有各自的加成和代价。",
+  "Tank": "坦克",
+  "Assassin": "刺客",
+  "Skirmisher": "游击手",
+  "Mage": "法师",
+  "Ranged DPS": "远程输出",
+  "Outgoing damage": "造成的伤害",
+  "Cooldown": "冷却",
+  "Healing done": "造成的治疗",
+  "Roles only apply in PvP.": "职业定位仅在 PvP 中生效。"
 }

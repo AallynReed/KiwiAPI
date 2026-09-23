@@ -196,6 +196,57 @@ body.wk { --nav-h: 63px; }
 .wk-mod-fx ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .9rem; }
 .wk-mod-fx li { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .84rem; color: var(--text); }
 
+/* /stat-modifiers: the guide's tables, step list and "Try it" stack. */
+.wk-sm .wk-prose { max-width: none; }
+.wk-sm .wk-prose > .wk-section > p, .wk-sm .wk-prose h3 { max-width: 72ch; }
+.wk-sm-table table { width: 100%; max-width: 100%; }
+.wk-sm-table th[scope="row"] { text-align: left; white-space: nowrap; font-weight: 600; }
+.wk-sm-table th[scope="row"] code { display: block; margin-top: 4px; width: max-content; }
+.wk-sm-table td:last-child, .wk-sm-id { font-family: 'JetBrains Mono', ui-monospace, monospace; text-align: right; white-space: nowrap; }
+.wk-sm-stats td:nth-child(2) { white-space: nowrap; }
+.wk-sm-steps { max-width: 72ch; }
+.wk-sm-details { margin: 0 0 16px; }
+.wk-sm-details summary { cursor: pointer; color: var(--accent-blue); margin-bottom: 12px; width: max-content; }
+.wk-sm-try .wk-hint { margin: -8px 0 14px; }
+.wk-sm-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.wk-sm-presets .wk-btn { padding: 7px 14px; font-size: .86rem; font-weight: 500; }
+.wk-sm-calc {
+  display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 20px;
+  padding: 20px; border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card);
+}
+.wk-sm-form { display: grid; gap: 12px; }
+.wk-sm-form label { display: grid; gap: 5px; font-size: .88rem; color: var(--text-mute); }
+.wk-sm-form input {
+  font: inherit; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .92rem; color: var(--text);
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm); padding: 8px 12px;
+}
+.wk-sm-form input:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; border-color: var(--accent-blue); }
+.wk-sm-form input[aria-invalid="true"] { border-color: var(--accent-red); }
+.wk-sm-out { display: flex; flex-direction: column; min-width: 0; }
+.wk-sm-trace { list-style: none; margin: 0 0 auto; padding: 0; display: grid; gap: 2px; }
+.wk-sm-trace li {
+  display: flex; justify-content: space-between; gap: 16px; padding: 8px 0;
+  border-bottom: 1px solid var(--bg-line); font-size: .92rem; color: var(--text-mute);
+}
+.wk-sm-trace li strong { font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--text); font-weight: 500; white-space: nowrap; }
+.wk-sm-trace .wk-sm-bad { color: #ff9b95; border: 0; }
+.wk-sm-result { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin: 16px 0 0; color: var(--text-mute); }
+.wk-sm-result strong { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; color: var(--accent-blue); font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) { .wk-sm-calc { grid-template-columns: 1fr; padding: 16px; } }
+
+/* /pvp-stats: per-mode curve tables. */
+.wk-pvp .wk-prose { max-width: none; }
+.wk-pvp .wk-prose > .wk-section > p, .wk-pvp .wk-prose h3, .wk-pvp-steps { max-width: 72ch; }
+.wk-pvp-table table { width: 100%; max-width: 100%; word-break: normal; }
+.wk-pvp-table th[scope="row"], .wk-pvp-table th[scope="rowgroup"] { text-align: left; white-space: nowrap; font-weight: 600; }
+.wk-pvp-table th[scope="rowgroup"] { vertical-align: top; }
+.wk-pvp-table td { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .88rem; white-space: nowrap; }
+.wk-pvp-table td.wk-pvp-text { font-family: inherit; font-size: .94rem; color: var(--text-mute); }
+.wk-pvp-mods { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.wk-pvp-mod span { font-family: 'Inter', system-ui, sans-serif; color: var(--text-mute); }
+.wk-pvp-details { margin: 0 0 12px; }
+.wk-pvp-details summary { cursor: pointer; color: var(--accent-blue); margin-bottom: 12px; width: max-content; }
+
 .wk-empty {
   padding: 22px; border: 1px dashed var(--bg-line); border-radius: var(--radius);
   color: var(--text-mute); max-width: 72ch;

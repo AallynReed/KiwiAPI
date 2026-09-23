@@ -342,5 +342,202 @@
     "cap": 0.0
    }
   }
- }
+ },
+ "roles": [
+  {
+   "key": "Tank",
+   "name": "Tank",
+   "classes": [
+    [
+     "candybarbarian",
+     "Candy Barbarian"
+    ],
+    [
+     "spirittank",
+     "Revenant"
+    ],
+    [
+     "knight",
+     "Knight"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 1.15
+    },
+    {
+     "stat": "OutgoingDamageMod",
+     "label": "Outgoing damage",
+     "op": "multiply",
+     "value": 0.9
+    }
+   ]
+  },
+  {
+   "key": "Assassin",
+   "name": "Assassin",
+   "classes": [
+    [
+     "shadowhunter",
+     "Shadow Hunter"
+    ],
+    [
+     "neonninja",
+     "Neon Ninja"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 0.85
+    },
+    {
+     "stat": "OutgoingDamageMod",
+     "label": "Outgoing damage",
+     "op": "multiply",
+     "value": 1.12
+    }
+   ]
+  },
+  {
+   "key": "Skirmisher",
+   "name": "Skirmisher",
+   "classes": [
+    [
+     "lunarlancer",
+     "Lunar Lancer"
+    ],
+    [
+     "adventurer",
+     "Boomeranger"
+    ],
+    [
+     "crimefighter",
+     "Vanguardian"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "MovementSpeed",
+     "label": "Movement Speed",
+     "op": "multiply",
+     "value": 1.08
+    },
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 0.95
+    }
+   ]
+  },
+  {
+   "key": "Mage",
+   "name": "Mage",
+   "classes": [
+    [
+     "icemage",
+     "Ice Sage"
+    ],
+    [
+     "dracolyte",
+     "Dracolyte"
+    ],
+    [
+     "tombraiser",
+     "Tomb Raiser"
+    ],
+    [
+     "faetrickster",
+     "Fae Trickster"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "SpellDamage",
+     "label": "Magic Damage",
+     "op": "multiply",
+     "value": 1.15
+    },
+    {
+     "stat": null,
+     "label": "Cooldown",
+     "op": "multiply",
+     "value": 1.2
+    }
+   ]
+  },
+  {
+   "key": "Support",
+   "name": "Support",
+   "classes": [
+    [
+     "chloromancer",
+     "Chloromancer"
+    ],
+    [
+     "bard",
+     "Bard"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "HealDoneMultiplier",
+     "label": "Healing done",
+     "op": "multiply",
+     "value": 0.9
+    },
+    {
+     "stat": null,
+     "label": "Cooldown",
+     "op": "multiply",
+     "value": 1.15
+    }
+   ]
+  },
+  {
+   "key": "RangedDPS",
+   "name": "Ranged DPS",
+   "classes": [
+    [
+     "gunslinger",
+     "Gunslinger"
+    ],
+    [
+     "piratelord",
+     "Pirate Captain"
+    ],
+    [
+     "dinotamer",
+     "Dino Tamer"
+    ],
+    [
+     "solarion",
+     "Solarion"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "CriticalHitDamage",
+     "label": "Critical Damage",
+     "op": "multiply",
+     "value": 1.15
+    },
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 0.92
+    }
+   ]
+  }
+ ],
+ "role_modes": [
+  "pvp"
+ ]
 }

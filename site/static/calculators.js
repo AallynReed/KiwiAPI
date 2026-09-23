@@ -73,6 +73,9 @@
   let pvpModes = {};
   let pvpMode = "pvp";
   let pvpInputs = { ...PVP_DEFAULTS };
+  let pvpRoles = [];
+  let pvpRoleModes = [];
+  let pvpClass = "";
 
   // An ally row's value with the Lilypad buff folded in; every other row is
   // returned untouched - the buff only ever scales the ally's own stats.
@@ -85,7 +88,7 @@
   function keyOf(item) { return item.name || item.type; }
   function save() {
     const snap = {
-      activeTab, troveMastery, geodeMastery, starChartCode, lilypad, pvpMode, pvpInputs,
+      activeTab, troveMastery, geodeMastery, starChartCode, lilypad, pvpMode, pvpInputs, pvpClass,
       pr: prData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
       mf: mfData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
       light: lightData.reduce((o, i) => (o[keyOf(i)] = i.currentValue, o), {}),
@@ -188,21 +191,23 @@
 
   // ── Compute: PvP ─────────────────────────────────────────────────────────
   // Trove_x64.exe FUN_14081dff0, fed by /gamedata/pvp.json
-  // (app/trove/decode/pvp_stat_ranges.py). Works in the game's stat units; the
-  // class/role modifier pass between the clamp and the soft cap is skipped
-  // because pvp_classes and pvp_roles ship empty.
-  function pvpValue(e, v) {
+  // (app/trove/decode/pvp_stat_ranges.py). Works in the game's stat units; `mods`
+  // are the class's role modifiers for this stat, applied between the clamp and the soft cap.
+  function pvpValue(e, v, mods) {
     let raised = false;
     if (e.curve) {
       if (v < e.knee) { if (e.floor) { v = e.knee; raised = true; } }
       else v = e.knee + e.sqrt * Math.sqrt(v - e.knee);
     }
     v = Math.max(v, e.out[0]);
+    (mods || []).forEach((m) => { v = m.op === "add" ? v + m.value : v * m.value; });
     const hi = e.out[1];
     const capped = v > hi;
     if (capped) v = hi < e.cap ? hi + (e.cap - hi) * (1 - Math.exp(-(v - hi) / (e.cap - hi))) : hi;
     return { value: v, raised, capped };
   }
+  const pvpMult = (v) => "×" + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const pvpRole = () => pvpRoles.find((r) => r.classes.some(([tech]) => tech === pvpClass)) || null;
   const pvpFmt = (v, pct) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: 1 }) + (pct ? "%" : "");
 
   // ── Star chart (Magic Find) ──────────────────────────────────────────────
@@ -530,13 +535,38 @@
     elBody.appendChild(h("p", { class: "calc-pvp-intro" },
       t("Type in your stats from the character sheet. Past a certain point every stat grows more slowly in PvP, so better gear still wins, just by a smaller margin.")));
 
+    const role = pvpRole();
+    const roleOn = pvpRoleModes.includes(modeKey);
+    if (pvpRoles.length) {
+      const select = h("select", {
+        class: "calc-number calc-pvp-select",
+        onChange: (ev) => {
+          pvpClass = ev.target.value; save(); renderBody();
+          // The rebuilt picker is enhanced by dropdown.js a tick later; keep focus on it.
+          setTimeout(() => { const next = elBody.querySelector(".calc-pvp-class .btt-dd-trigger, .calc-pvp-class select"); if (next) next.focus(); });
+        },
+      },
+      h("option", { value: "" }, t("No class")),
+      pvpRoles.map((r) => h("optgroup", { label: t(r.name) },
+        r.classes.map(([tech, name]) => h("option", { value: tech, selected: tech === pvpClass }, name)))));
+      elBody.appendChild(h("div", { class: "calc-pvp-class" },
+        h("label", { class: "calc-pvp-field" }, h("span", {}, t("Your class")), select),
+        !roleOn
+          ? h("p", { class: "calc-pvp-role" }, t("Roles only apply in PvP."))
+          : role
+            ? h("p", { class: "calc-pvp-role" }, h("strong", {}, t(role.name)),
+              role.modifiers.map((m) => " · " + t(m.label) + " " + pvpMult(m.value)).join(""))
+            : h("p", { class: "calc-pvp-role" }, t("Each class's PvP role adds its own bonus and drawback."))));
+    }
+
     const grid = h("div", { class: "calc-grid" });
-    PVP_SHEET.forEach((row) => grid.appendChild(pvpItem(row, pvpModes[modeKey][row[0]])));
+    PVP_SHEET.forEach((row) => grid.appendChild(pvpItem(row, pvpModes[modeKey][row[0]],
+      role && roleOn ? role.modifiers.filter((m) => m.stat === row[0]) : [], role)));
     elBody.appendChild(grid);
   }
 
   // A stat the mode has no range for passes through untouched, as in the game.
-  function pvpItem([stat, label, pct], e) {
+  function pvpItem([stat, label, pct], e, mods, role) {
     const name = t(label);
     const input = h("input", { class: "calc-number calc-pvp-input", type: "number", min: 0, step: "any", value: pvpInputs[stat], "aria-label": name + " - " + t("Your stat") });
     const out = h("span", { class: "calc-pvp-out" });
@@ -553,7 +583,7 @@
         note.textContent = t("Unchanged in this mode");
         return;
       }
-      const r = pvpValue(e, sheet / e.scale);
+      const r = pvpValue(e, sheet / e.scale, mods);
       out.textContent = pvpFmt(r.value * e.scale, pct);
       if (meter) fill.style.width = clampN((r.value / e.out[1]) * 100, 0, 100) + "%";
       const at = (v) => pvpFmt(v * e.scale, pct);
@@ -563,6 +593,7 @@
       else if (r.capped) note.textContent = t("Near the cap of") + " " + at(e.cap);
       else if (e.curve && sheet / e.scale > e.knee) note.textContent = t("Grows more slowly past") + " " + at(e.knee);
       else note.textContent = t("Carries over as is");
+      if (mods.length) note.textContent += " · " + t(role.name) + " " + mods.map((m) => pvpMult(m.value)).join(" ");
     };
     input.addEventListener("input", (ev) => { pvpInputs[stat] = Number(ev.target.value) || 0; paint(); save(); });
     paint();
@@ -610,6 +641,8 @@
         fetchJson("/gamedata/pvp.json"),
       ]);
       pvpModes = pvp.modes || {};
+      pvpRoles = pvp.roles || [];
+      pvpRoleModes = pvp.role_modes || [];
       prData = [
         { name: "Trove Mastery", type: "pr_mastery", max: Math.max(1100, defTrove), default: defTrove },
         { name: "Geode Mastery", type: "pr_geode_mastery", max: Math.max(150, defGeode), default: defGeode },
@@ -639,6 +672,7 @@
       if (typeof saved.lilypad === "boolean") lilypad = saved.lilypad;
       restore(prData, saved.pr); restore(mfData, saved.mf); restore(lightData, saved.light);
       if (typeof saved.pvpMode === "string") pvpMode = saved.pvpMode;
+      if (typeof saved.pvpClass === "string") pvpClass = saved.pvpClass;
       if (saved.pvpInputs && typeof saved.pvpInputs === "object") pvpInputs = { ...PVP_DEFAULTS, ...saved.pvpInputs };
     }
     // A shared link like /calculators#pvp opens straight on that tab.

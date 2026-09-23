@@ -3014,5 +3014,17 @@
   "Jump": "กระโดด",
   "Critical Hit": "คริติคอล",
   "Critical Damage": "ความเสียหายคริติคอล",
-  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "Power Rank, Mastery, Magic Find และ Light - สลับอุปกรณ์ เจม แอลลี่ และ star chart ของคุณแล้วดูยอดรวมอัปเดตสด ๆ แล้วดูว่าค่าสถานะของคุณจะเป็นอย่างไรใน PvP"
+  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "Power Rank, Mastery, Magic Find และ Light - สลับอุปกรณ์ เจม แอลลี่ และ star chart ของคุณแล้วดูยอดรวมอัปเดตสด ๆ แล้วดูว่าค่าสถานะของคุณจะเป็นอย่างไรใน PvP",
+  "No class": "ไม่มีคลาส",
+  "Your class": "คลาสของคุณ",
+  "Each class's PvP role adds its own bonus and drawback.": "บทบาท PvP ของแต่ละคลาสมีโบนัสและข้อเสียเป็นของตัวเอง",
+  "Tank": "แทงก์",
+  "Assassin": "นักลอบสังหาร",
+  "Skirmisher": "นักจู่โจม",
+  "Mage": "จอมเวท",
+  "Ranged DPS": "DPS ระยะไกล",
+  "Outgoing damage": "ความเสียหายที่ทำ",
+  "Cooldown": "คูลดาวน์",
+  "Healing done": "การรักษาที่ทำ",
+  "Roles only apply in PvP.": "บทบาทมีผลเฉพาะใน PvP เท่านั้น"
 }

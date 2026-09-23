@@ -8,6 +8,8 @@ so ``<name>`` is reserved for plain articles.
 DATA_PAGES: dict[str, str] = {
     "delve-modifiers": "Delve Modifiers",
     "gems": "How Gems Work",
+    "stat-modifiers": "How Stat Modifiers Work",
+    "pvp-stats": "How PvP Stats Work",
 }
 
 

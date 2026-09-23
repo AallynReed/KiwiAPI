@@ -3179,5 +3179,17 @@
   "Grows more slowly past": "이 수치부터 증가폭 감소:",
   "Carries over as is": "그대로 적용",
   "Type in your stats from the character sheet. Past a certain point every stat grows more slowly in PvP, so better gear still wins, just by a smaller margin.": "캐릭터 정보창의 능력치를 입력하세요. PvP에서는 일정 수치를 넘으면 모든 능력치의 증가폭이 줄어들어, 좋은 장비가 여전히 유리하지만 그 격차는 작아집니다.",
-  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "파워 랭크, Mastery, 매직 파인드 및 Light - 장비, 젬, 동료, Star Chart를 토글하며 합계가 실시간으로 업데이트되는 것을 지켜보세요. PvP에서 내 능력치가 어떻게 되는지도 확인해 보세요."
+  "Power Rank, Mastery, Magic Find and Light - toggle your gear, gems, allies and star chart and watch the totals update live. Then see how your stats hold up in PvP.": "파워 랭크, Mastery, 매직 파인드 및 Light - 장비, 젬, 동료, Star Chart를 토글하며 합계가 실시간으로 업데이트되는 것을 지켜보세요. PvP에서 내 능력치가 어떻게 되는지도 확인해 보세요.",
+  "No class": "클래스 없음",
+  "Your class": "내 클래스",
+  "Each class's PvP role adds its own bonus and drawback.": "각 클래스의 PvP 역할에는 고유한 보너스와 페널티가 있습니다.",
+  "Tank": "탱커",
+  "Assassin": "암살자",
+  "Skirmisher": "척후병",
+  "Mage": "마법사",
+  "Ranged DPS": "원거리 딜러",
+  "Outgoing damage": "주는 피해",
+  "Cooldown": "재사용 대기시간",
+  "Healing done": "주는 치유량",
+  "Roles only apply in PvP.": "역할은 PvP에서만 적용됩니다."
 }

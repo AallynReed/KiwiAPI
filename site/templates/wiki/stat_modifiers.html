@@ -1,0 +1,232 @@
+{% extends "wiki/_base.html" %}
+{% block view %}data{% endblock %}
+{% block main %}
+<article class="wk-article wk-data wk-sm">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/stat-modifiers</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ title }}</h1>
+    <p class="wk-lead">Two bonuses can both say "+30% Critical Damage" and be worth 30 points or 900. Every number on your character sheet is a base value plus a stack of bonuses from your class, gear, gems, allies and buffs, and the game always combines them in the same order. Knowing that order tells you which bonuses are really worth chasing.</p>
+
+    <nav class="wk-chips" aria-label="On this page">
+        <a class="wk-chip" href="#kinds">The seven kinds</a>
+        <a class="wk-chip" href="#order">Order</a>
+        <a class="wk-chip" href="#try">Try it</a>
+        <a class="wk-chip" href="#build">For your build</a>
+        <a class="wk-chip" href="#stats">Every stat</a>
+        <a class="wk-chip" href="#modes">Game modes</a>
+        <a class="wk-chip" href="#source">Where this comes from</a>
+        <a class="wk-chip" href="#notes">Notes</a>
+    </nav>
+
+    <div class="wk-prose">
+        <section class="wk-section" id="kinds" aria-labelledby="wk-h-kinds">
+            <h2 id="wk-h-kinds">The seven kinds of modifier</h2>
+            <p>Every bonus in the game is one of seven types. The game file says which, so a bonus's type never depends on how its number is written.</p>
+            <div class="wk-sm-table">
+                <table>
+                    <thead><tr><th scope="col">Type</th><th scope="col">What it does</th><th scope="col">When there are several</th><th scope="col">Where you see it</th><th scope="col">In the game</th></tr></thead>
+                    <tbody>
+                        <tr><th scope="row">Flat bonus <code>Add</code></th><td>Adds an amount to the stat.</td><td>They add up.</td><td>Class level-ups and most ally stats</td><td>2,814</td></tr>
+                        <tr><th scope="row">Percent bonus <code>MultiplySum</code></th><td>Raises the stat by a share of itself.</td><td>The percentages add together first, then apply once: +30% and +30% make +60%.</td><td><a href="/class/knight">Knight</a>'s +30% Maximum Health</td><td>946</td></tr>
+                        <tr><th scope="row">Multiplier <code>Multiply</code></th><td>Multiplies the stat.</td><td>They multiply each other: ×1.3 and ×1.3 make ×1.69.</td><td><a href="/class/candy-barbarian">Candy Barbarian</a>'s Physical Damage ×1.3</td><td>438</td></tr>
+                        <tr><th scope="row">Fixed value <code>Set</code></th><td>Replaces the stat outright.</td><td>The lowest one wins.</td><td>Abilities that stop Energy Regen by setting it to 0</td><td>2,184</td></tr>
+                        <tr><th scope="row">Cancel <code>Nullify</code></th><td>Stops other modifiers with the same stat <em>and</em> the same name tag from applying. Its own number is ignored.</td><td>Each one cancels its own match.</td><td>A handful of delve modifiers</td><td>54</td></tr>
+                        <tr><th scope="row">Floor <code>Minimum</code></th><td>The stat can't go below it.</td><td>The highest floor wins.</td><td>Only in two test files</td><td>2</td></tr>
+                        <tr><th scope="row">Cap <code>Maximum</code></th><td>The stat can't go above it.</td><td>The lowest cap wins.</td><td>Effects that root you, capping Movement Speed at 0</td><td>7</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="wk-hint">"In the game" counts the modifiers of each type across all 42,588 prefab files in the live client.</p>
+
+            <h3>A Cancel is not a zero</h3>
+            <p>Every modifier carries a name tag set by the designers. A Cancel only switches off modifiers whose stat and tag both match its own; the rest of the stat is untouched. To take a stat away completely, the game multiplies it by 0 instead. That is how <a href="/class/boomeranger">Boomeranger</a>, <a href="/class/dino-tamer">Dino Tamer</a> and <a href="/class/revenant">Revenant</a> have no Energy, and how <a href="/class/dracolyte">Dracolyte</a> and <a href="/class/tomb-raiser">Tomb Raiser</a> have no Attack Speed. <a href="/class/lunar-lancer">Lunar Lancer</a> and <a href="/class/solarion">Solarion</a> have their Energy Regen fixed at 0 instead.</p>
+        </section>
+
+        <section class="wk-section" id="order" aria-labelledby="wk-h-order">
+            <h2 id="wk-h-order">The order the game uses</h2>
+            <p>Each stat is rebuilt from scratch whenever anything touching it changes, in these steps:</p>
+            <ol class="wk-sm-steps">
+                <li><strong>Drop what doesn't apply.</strong> Modifiers meant for another game mode, and any modifier a Cancel matches, are left out.</li>
+                <li><strong>Flat bonuses.</strong> Start from the base value and add every flat bonus.</li>
+                <li><strong>Multipliers and percent bonuses.</strong> Multiply by every multiplier, then by 1 + the sum of all percent bonuses.</li>
+                <li><strong>Floor, then cap.</strong> Raise the result to the highest floor, then lower it to the lowest cap. If the two clash, the cap wins.</li>
+                <li><strong>Fixed values.</strong> If the stat has any fixed value, it becomes the lowest one. Steps 2 to 4 are thrown away.</li>
+                <li><strong>Conversions.</strong> A few effects rewrite a stat directly at this point.</li>
+                <li><strong>Late modifiers.</strong> Modifiers flagged to apply late run steps 2 to 4 again on top of the result, with the same floor and cap. They still count after a fixed value.</li>
+            </ol>
+<pre><code>value = (base + flat bonuses) × multipliers × (1 + percent bonuses)
+value = cap(floor(value))
+value = lowest fixed value, if there is one
+value = cap(floor((value + late flat) × late multipliers × (1 + late percent)))</code></pre>
+            <p>Every step is held between −1,000,000,000 and 1,000,000,000.</p>
+
+            <h3>Example: a level 30 Knight's health, no gear</h3>
+            <table>
+                <thead><tr><th scope="col">Step</th><th scope="col">Maximum Health</th></tr></thead>
+                <tbody>
+                    <tr><td>Base</td><td>150</td></tr>
+                    <tr><td>+ flat bonuses from levels 2 to 30</td><td>+6,000 → 6,150</td></tr>
+                    <tr><td>× (1 + Knight's +30% percent bonus)</td><td>× 1.3 → <strong>7,995</strong></td></tr>
+                </tbody>
+            </table>
+            <p>The character sheet lists 6,150 and "Maximum Health 30%" as separate rows. The number the game actually uses is 7,995.</p>
+        </section>
+    </div>
+
+    <section class="wk-section wk-sm-try" id="try" aria-labelledby="wk-h-try">
+        <h2 class="wk-writeup-title" id="wk-h-try">Try it</h2>
+        <p class="wk-hint">Stack some bonuses and watch each step. Separate several values with commas.</p>
+        <div class="wk-sm-presets" role="group" aria-label="Examples">
+            <button type="button" class="wk-btn" data-preset="knight">Knight's health</button>
+            <button type="button" class="wk-btn" data-preset="crit-add">+30 Critical Damage</button>
+            <button type="button" class="wk-btn" data-preset="crit-pct">+30% Critical Damage</button>
+            <button type="button" class="wk-btn" data-preset="pct">Two percent bonuses</button>
+            <button type="button" class="wk-btn" data-preset="mult">Two multipliers</button>
+            <button type="button" class="wk-btn" data-preset="zero">No Energy</button>
+        </div>
+        <div class="wk-sm-calc">
+            <form class="wk-sm-form" id="wk-sm-form" novalidate>
+                <label>Base value<input name="base" inputmode="decimal" autocomplete="off" value="150"></label>
+                <label>Flat bonuses<input name="add" inputmode="decimal" autocomplete="off" value="6000" placeholder="e.g. 750, 30"></label>
+                <label>Percent bonuses (%)<input name="pct" inputmode="decimal" autocomplete="off" value="30" placeholder="e.g. 30, 15"></label>
+                <label>Multipliers<input name="mult" inputmode="decimal" autocomplete="off" placeholder="e.g. 1.3, 0.5"></label>
+                <label>Fixed values<input name="set" inputmode="decimal" autocomplete="off" placeholder="none"></label>
+            </form>
+            <div class="wk-sm-out" aria-live="polite">
+                <ol class="wk-sm-trace" id="wk-sm-trace"></ol>
+                <p class="wk-sm-result">Final value <strong id="wk-sm-final">7,995</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <div class="wk-prose">
+        <section class="wk-section" id="build" aria-labelledby="wk-h-build">
+            <h2 id="wk-h-build">What it means for your build</h2>
+            <h3>Same "+30%", two different bonuses</h3>
+            <p>Critical Damage and Attack Speed show as percentages whether a bonus is flat or percent, so the text can't tell you which you have. On a character with 3,000% Critical Damage:</p>
+            <table>
+                <thead><tr><th scope="col">Ally</th><th scope="col">Bonus type</th><th scope="col">Result</th></tr></thead>
+                <tbody>
+                    <tr><td>Hopflite Assassin</td><td>Flat: +30</td><td>3,030%</td></tr>
+                    <tr><td>Bulbous Heckmantis</td><td>Percent: +30% of the stat</td><td>3,900%</td></tr>
+                </tbody>
+            </table>
+            <p>Better Trove Tools labels the percent kind as a "Bonus" stat, like <strong>Critical Damage Bonus</strong>, so you can tell them apart on the <a href="{{ site_url }}/allies">Allies</a> page.</p>
+
+            <h3>Flat bonuses get boosted</h3>
+            <p>Flat bonuses go in before any multiplier or percent bonus, so every flat point you add is also raised by all of your percentages and your class multiplier.</p>
+
+            <h3>Percent bonuses add, multipliers compound</h3>
+            <p>Each extra percent bonus adds to the same pool, so it's worth a little less than the one before: going from +60% to +90% raises the stat by less than going from +30% to +60% did. Multipliers stack on each other, so each one is worth its full amount.</p>
+
+            <h3>Equip order doesn't matter</h3>
+            <p>Within a type, everything is summed or multiplied together, so the order you put gear on changes nothing.</p>
+
+            <h3>A fixed value ignores your gear</h3>
+            <p>When something fixes a stat, none of your ordinary bonuses on that stat count until it wears off. A missing class stat is the same story: once it's multiplied by 0, no ordinary bonus brings it back.</p>
+
+            <h3>Delve modifiers grow fast</h3>
+            <p>Some delve modifiers scale with how deep you are. Their value is multiplied by (depth × a per-modifier factor)², so going twice as deep makes them four times as strong. See <a href="/delve-modifiers">Delve Modifiers</a> for what each one does.</p>
+        </section>
+
+        <section class="wk-section" id="stats" aria-labelledby="wk-h-stats">
+            <h2 id="wk-h-stats">Every stat</h2>
+            <p>The game tracks 47 stats, numbered 0 to 46. The ID is how a modifier names its stat in the game files. Stats marked <span class="wk-pill">every mode</span> ignore game modes and always count.</p>
+            {% set stats = [
+                ("PhysicalDamage", "Physical Damage", "Damage dealt by physical classes.", ""),
+                ("SpellDamage", "Magic Damage", "Damage dealt by magic classes.", ""),
+                ("MaxHealth", "Maximum Health", "Your health pool.", ""),
+                ("MaxEnergy", "Maximum Energy", "The energy your abilities spend. Geode shows it as Maximum N-Charge.", ""),
+                ("HealthRegen", "Health Regen", "Health recovered over time.", ""),
+                ("EnergyRegen", "Energy Regen", "Energy recovered over time. Geode shows it as N-Charge Regen.", ""),
+                ("Stability", "Stability", "Resistance to being knocked back.", ""),
+                ("CriticalHitChance", "Critical Hit", "Chance for a hit to be critical. Stored in tenths of a percent: 115 means 11.5%.", ""),
+                ("MovementSpeed", "Movement Speed", "How fast you move. Slows, roots and most delve movement modifiers work on this stat.", ""),
+                ("Jump", "Jump", "How many jumps you get before you land.", ""),
+                ("Superstition", "Superstition", "Granted by a few allies and mounts. The game doesn't say what it does.", ""),
+                ("IncomingDamageMod", "Incoming Damage", "Scales the damage you take. Better Trove Tools calls it Damage Reduction.", ""),
+                ("OutgoingDamageMod", "Outgoing Damage", "Scales the damage you deal.", ""),
+                ("MagicFind", "Magic Find", "Improves the rarity of the loot you find.", ""),
+                ("Mining", "Lasermancy", "How hard your laser mines blocks. Geode shows it as Omni-Tool Power.", ""),
+                ("AttackSpeed", "Attack Speed", "How often your basic attack fires.", ""),
+                ("MaxFlasks", "Flask Capacity", "How many flask charges you carry.", ""),
+                ("CraftingSpeed", "Crafting Speed", "How fast crafting goes.", "all"),
+                ("CooldownSpeed", "Cooldown Speed", "How fast ability cooldowns recover.", ""),
+                ("Acceleration", "Acceleration", "No modifier in the current game files uses it.", ""),
+                ("TurningRate", "Turning Rate", "No modifier in the current game files uses it.", ""),
+                ("ExperienceBoost", "Experience Gain", "More experience. Fountain fixtures raise it.", "all"),
+                ("CriticalHitDamage", "Critical Damage", "Extra damage dealt by critical hits.", ""),
+                ("BattleFactor", "Battle Factor", "No modifier in the current game files uses it.", "all"),
+                ("ActionTimeMod", "Action Time", "No modifier in the current game files uses it.", ""),
+                ("PowerRank", "Power Rank", "Your overall power, which worlds and dungeons check against.", "all"),
+                ("Glide", "Glide", "How you glide.", ""),
+                ("ShootProjectileSpeedMultiplier", "Projectile Speed Mutliple", "How fast your projectiles fly. The typo is the game's.", ""),
+                ("RedGemStatBoost", "Red Gem Gain", "Boosts Red gems.", "all"),
+                ("BlueGemStatBoost", "Blue Gem Gain", "Boosts Blue gems.", "all"),
+                ("YellowGemStatBoost", "Yellow Gem Gain", "Boosts Yellow gems.", "all"),
+                ("DoubleHitChance", "Double Strike", "Chance of a double strike. Strike fixtures raise it.", ""),
+                ("JackpotExperience", "Jackpot Experience", "Bonus jackpot experience. Fountain fixtures raise it.", "all"),
+                ("GemEfficiency", "Gem Efficiency", "Cuts the Gem Dust cost of leveling gems. Gem fixtures give up to 20%.", "all"),
+                ("AdventurineGainBoost", "Adventurine Gain Boost", "More Adventurine. Granted by a few allies.", "all"),
+                ("ClubExperienceBoost", "Club Experience Gain", "More club experience.", "all"),
+                ("MaxExploration", "Max G.A.S.", "Your G.A.S. tank in Geode.", "all"),
+                ("JumpSpeedMultiplier", "Jump Strength", "How strong each jump is.", ""),
+                ("GreenGemStatBoost", "Green Gem Gain", "Boosts Green gems.", "all"),
+                ("Light", "Light", "The stat harder worlds and dungeons check against.", ""),
+                ("Dark", "Dark", "Given to enemies such as world bosses, never to players.", ""),
+                ("OpalGemStatBoost", "Cosmic Gem Gain", "Boosts Cosmic gems.", "all"),
+                ("MaxNCharge", "", "No modifier uses it. Geode shows Maximum Energy under this name instead.", ""),
+                ("NChargeRegen", "", "N-Charge regeneration in Geode. One N-Charge upgrade raises it.", ""),
+                ("MaxArmor", "", "No modifier uses it yet, and the game has no name for it.", ""),
+                ("HealDoneMultiplier", "", "By its name, scales the healing you give. No modifier uses it yet.", ""),
+                ("HealReceiveMultiplier", "", "By its name, scales the healing you receive. No modifier uses it yet.", ""),
+            ] %}
+            <div class="wk-scrolltable">
+                <table class="wk-sm-stats">
+                    <thead><tr><th scope="col">ID</th><th scope="col">In game</th><th scope="col">Internal name</th><th scope="col">What it does</th></tr></thead>
+                    <tbody>
+                        {% for key, name, what, modes in stats %}
+                        <tr><td class="wk-sm-id">{{ loop.index0 }}</td><td>{{ name or "—" }}</td><td><code>{{ key }}</code></td><td>{{ what }}{% if modes %} <span class="wk-pill">every mode</span>{% endif %}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="wk-hint">"In game" is the name the English client shows; a dash means the game has none. Anywhere a percent bonus appears on Better Trove Tools, it's the stat's name plus "Bonus", like Critical Damage Bonus.</p>
+        </section>
+
+        <section class="wk-section" id="modes" aria-labelledby="wk-h-modes">
+            <h2 id="wk-h-modes">Game modes</h2>
+            <p>Every modifier is marked with the modes it works in. Most are marked for both adventuring and PvP; others only count in delves, only in PvP, or everywhere except PvP. A modifier applies when it shares a mode with what you're doing. The stats marked "every mode" in <a href="#stats">the table above</a> skip this check and always count.</p>
+            <p>PvP then converts your stats through its own curves: see <a href="/pvp-stats">How PvP Stats Work</a>. The <a href="{{ site_url }}/calculators#pvp">PvP calculator</a> shows what your sheet becomes in each mode.</p>
+            <details class="wk-sm-details">
+                <summary>The game's mode flags</summary>
+                <table>
+                    <thead><tr><th scope="col">Value</th><th scope="col">Flag</th><th scope="col">Meaning</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td><code>PVE</code></td><td>Adventuring</td></tr>
+                        <tr><td>2</td><td><code>PVP</code></td><td>PvP</td></tr>
+                        <tr><td>4</td><td><code>Reproportion</code></td><td></td></tr>
+                        <tr><td>8</td><td><code>OwnedClass</code></td><td>Skipped unless the context carries it too</td></tr>
+                        <tr><td>16</td><td><code>Discovery</code></td><td>Geode</td></tr>
+                        <tr><td>32</td><td><code>Delve</code></td><td>Delves</td></tr>
+                        <tr><td>64</td><td><code>PostRange</code></td><td>A late modifier (step 7)</td></tr>
+                        <tr><td>128</td><td><code>ExcludePVP</code></td><td>Never in PvP</td></tr>
+                    </tbody>
+                </table>
+                <p class="wk-hint">Common combinations: 3 = adventuring and PvP (the default), 49 = every delving mode, 51 = all modes, 66 = PvP late, 129 = adventuring but never PvP.</p>
+            </details>
+        </section>
+
+        <section class="wk-section" id="source" aria-labelledby="wk-h-source">
+            <h2 id="wk-h-source">Where this comes from</h2>
+            <p>Everything here was read out of the Trove game client (the 22 September 2026 build) and checked against the game files, not worked out from testing. The server decides what really happens in a fight, and it almost certainly uses the same rules, but that side can't be checked from the client.</p>
+        </section>
+    </div>
+
+    {% set notes_prompt = "No notes yet: tips, edge cases, or bonuses that surprised you." %}
+    {% include "wiki/_notes.html" %}
+</article>
+{% endblock %}
+{% block scripts %}<script src="/static/stat_modifiers.min.js" defer></script>{% endblock %}
