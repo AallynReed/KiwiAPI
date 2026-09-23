@@ -155,7 +155,10 @@ def add_security_middleware(app: FastAPI) -> None:
             # makes the ORIGIN's answer unambiguous when debugging a proxy that injects
             # its own (nginx `add_header`, a Cloudflare managed transform).
             del h["X-Frame-Options"]
-            h.setdefault("Content-Security-Policy", _embed_csp(await allowed_origins()))
+            # The wiki is first-party and previews models/effects inline, so it is
+            # always allowed on top of the admin's partner list.
+            ancestors = [*await allowed_origins(), settings.wiki_url.rstrip("/")]
+            h.setdefault("Content-Security-Policy", _embed_csp(list(dict.fromkeys(ancestors))))
             h.setdefault("Cache-Control", "no-cache")
             return response
         h.setdefault("X-Frame-Options", "DENY")

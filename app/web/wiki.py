@@ -36,7 +36,7 @@ from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
 from app.trove.decode import store as gamedata
 from app.web import feature_flags as web_flags
-from app.wiki import data_pages, entities, pvp_stats
+from app.wiki import data_pages, entities, media, pvp_stats
 
 logger = logging.getLogger("kiwi.web.wiki")
 
@@ -65,12 +65,16 @@ async def _gate(request: Request) -> None:
 
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
+# The site CSP, plus framing the main site's 3D/VFX viewer (/embed/viewer), which
+# ally, mount and ability previews load inline when a reader asks for one.
+WIKI_CSP = SITE_CSP.replace("frame-src ", f"frame-src {settings.app_url.rstrip('/')} ", 1)
+
 
 @app.middleware("http")
 async def _headers(request: Request, call_next):
     # Set before the outer security layer, which only fills what is missing.
     response = await call_next(request)
-    response.headers.setdefault("Content-Security-Policy", SITE_CSP)
+    response.headers.setdefault("Content-Security-Policy", WIKI_CSP)
     response.headers.setdefault("Cache-Control", "no-cache")
     return response
 
@@ -217,9 +221,12 @@ async def class_page(request: Request, name: str) -> Response:
     })
 
 
-def _entity_index(request: Request, kind: str) -> HTMLResponse:
+async def _entity_index(request: Request, kind: str) -> HTMLResponse:
     spec = entities.KINDS[kind]
-    rows = sorted((entities.summary(kind, e) for e in entities.entries(kind)), key=lambda r: r["name"].lower())
+    found = await media.blueprints(kind)
+    rows = sorted(({**entities.summary(kind, e),
+                    "thumb": media.thumb_url(e, found.get(media.codex_path(e)), 64)}
+                   for e in entities.entries(kind)), key=lambda r: r["name"].lower())
     return _render(request, "wiki/entity_index.html", {
         "title": spec["title"], "kind": kind, "rows": rows,
         "with_abilities": sum(1 for r in rows if r["abilities"]),
@@ -239,6 +246,9 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
     page = await _page(slug)
     live = page if page and not page.get("deleted") else None
     d = entities.detail(kind, e)
+    found = (await media.blueprints(kind)).get(media.codex_path(e))
+    d["image"] = media.thumb_url(e, found, 256)
+    d["preview"] = media.preview_url(e, found)
     return _render(request, "wiki/entity.html", {
         "title": e["name"], "kind": kind, "index": entities.KINDS[kind], "slug": slug, "d": d,
         "page": live, "rev": page["rev"] if page else 0,
@@ -249,7 +259,7 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
 
 @app.get("/allies", response_class=HTMLResponse, dependencies=[Depends(_gate)])
 async def allies(request: Request) -> HTMLResponse:
-    return _entity_index(request, "ally")
+    return await _entity_index(request, "ally")
 
 
 @app.get("/ally/{name}", response_class=HTMLResponse, dependencies=[Depends(_gate)])
@@ -259,7 +269,7 @@ async def ally_page(request: Request, name: str) -> Response:
 
 @app.get("/mounts", response_class=HTMLResponse, dependencies=[Depends(_gate)])
 async def mounts(request: Request) -> HTMLResponse:
-    return _entity_index(request, "mount")
+    return await _entity_index(request, "mount")
 
 
 @app.get("/mount/{name}", response_class=HTMLResponse, dependencies=[Depends(_gate)])

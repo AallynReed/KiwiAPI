@@ -1,7 +1,7 @@
 {# One ability card, from app/wiki/ability_view.card(). Shared by the wiki's class,
    ally and mount pages. #}
 {% macro ability_card(a) %}
-<div class="cls-ability">
+<div class="cls-ability" data-embed-scope>
     {% if a.name %}<div class="cls-ability-name">{{ a.name }}{% if a.kind %}<span class="cls-ability-kind">{{ a.kind }}</span>{% endif %}</div>{% endif %}
     {% if a.meta %}<dl class="ab-meta">{% for m in a.meta %}<div class="ab-meta-item"><dt>{{ m.label }}</dt><dd>{{ m.value }}</dd></div>{% endfor %}</dl>{% endif %}
     {% if a.description %}<div class="cls-ability-desc">{{ a.description }}</div>{% endif %}
@@ -25,7 +25,8 @@
     </ul>
     {% endif %}
     {% if a.vfx %}
-    <div class="ab-vfx"><span class="ab-vfx-label">Preview effects</span>{% for v in a.vfx %}<a class="ab-vfx-link" href="{{ v.url }}" target="_blank" rel="noopener">{{ v.label }} <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>{% endfor %}</div>
+    <div class="ab-vfx"><span class="ab-vfx-label">Preview effects</span>{% for v in a.vfx %}<button type="button" class="ab-vfx-link" data-embed="{{ v.url }}" data-embed-title="{{ v.label }} effect preview" aria-pressed="false">{{ v.label }}</button>{% endfor %}</div>
+    <div class="wk-embed" data-embed-slot hidden></div>
     {% endif %}
 </div>
 {% endmacro %}

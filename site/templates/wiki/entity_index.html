@@ -2,7 +2,6 @@
 {% block view %}{{ kind }}-index{% endblock %}
 {% block main %}
 <header class="wk-pagehead">
-    <p class="wk-eyebrow">/{{ 'allies' if kind == 'ally' else 'mounts' }}</p>
     <h1 class="wk-title">{{ title }}</h1>
     <p class="wk-lead">Every {{ kind }} in the game files: the stats it grants and, for the {{ with_abilities }} that have one, what its abilities do.</p>
 </header>
@@ -16,9 +15,13 @@
     <output class="wk-filter-count" data-filter-count aria-live="polite">{{ rows | length }} shown</output>
 </div>
 
-<ul class="wk-list wk-list-cols wk-entitylist" role="list" data-filter-list>
+<ul class="wk-entitygrid" role="list" data-filter-list>
     {% for r in rows %}
-    <li data-search="{{ r.search }}" data-abilities="{{ r.abilities }}"><a href="{{ r.url }}">{{ r.name }}</a>{% if r.abilities %}<span class="wk-entity-badge" title="{{ r.abilities }} {{ 'ability' if r.abilities == 1 else 'abilities' }}"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span class="sr-only">has abilities</span></span>{% endif %}</li>
+    <li data-search="{{ r.search }}" data-abilities="{{ r.abilities }}"><a class="wk-entitycard" href="{{ r.url }}">
+        <span class="wk-entitycard-img">{% if r.thumb %}<img src="{{ r.thumb }}" alt="" width="48" height="48" loading="lazy" decoding="async" data-hide-on-error>{% endif %}</span>
+        <span class="wk-entitycard-name">{{ r.name }}</span>
+        {% if r.abilities %}<span class="wk-entity-badge" title="{{ r.abilities }} {{ 'ability' if r.abilities == 1 else 'abilities' }}"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span class="sr-only">has abilities</span></span>{% endif %}
+    </a></li>
     {% endfor %}
 </ul>
 <p class="wk-list-empty" data-filter-empty hidden>Nothing matches that filter.</p>

@@ -7,17 +7,19 @@
 
 <article class="wk-article wk-class">
     <div class="wk-article-head">
-        <p class="wk-eyebrow">/{{ kind }}/{{ path.rsplit('/', 1)[-1] }}</p>
         {% include "wiki/_page_tools.html" %}
     </div>
 
     {# Generated from the game files. #}
     <section class="cls-detail wk-classdata" aria-label="{{ title }} game data">
-        <div class="cls-detail-head">
+        <div class="cls-detail-head wk-entity-head" data-embed-scope>
+            {% if d.image %}<img class="wk-entity-img" src="{{ d.image }}" alt="{{ d.name }}" width="128" height="128" loading="eager" decoding="async" data-hide-on-error>{% endif %}
             <div class="cls-detail-title">
                 <h2 class="cls-detail-name">{{ d.name }}</h2>
                 {% if d.description %}<p class="cls-ability-desc wk-entity-desc">{{ d.description }}</p>{% endif %}
+                {% if d.preview %}<p class="wk-entity-actions"><button type="button" class="wk-btn" data-embed="{{ d.preview }}" data-embed-title="{{ d.name }} 3D model" aria-pressed="false"><i class="fa-solid fa-cube" aria-hidden="true"></i> View 3D model</button></p>{% endif %}
             </div>
+            <div class="wk-embed wk-embed-model" data-embed-slot hidden></div>
         </div>
         {% for g in d.stat_groups %}
         <section class="cls-section">
