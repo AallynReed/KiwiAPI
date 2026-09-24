@@ -21,7 +21,7 @@ from app.core.utils import utcnow
 from app.trove.decode import store
 from app.trove.decode.models import DecoderRun
 from app.trove.decode.registry import DECODERS, code_version, dump
-from app.trove.decode.tree import ArchiveTree
+from app.trove.decode.tree import ArchiveTree, GameTree
 from app.trove.updates.cas import ContentStore
 
 logger = logging.getLogger("kiwi.trove.decode")
@@ -119,14 +119,14 @@ async def _previous_count(name: str) -> int | None:
         return None
 
 
-async def _run_one(name: str, tree: ArchiveTree, ordinal: int, tag: str | None,
+async def _run_one(name: str, tree: GameTree, ordinal: int, tag: str | None,
                    trigger: str, allow_shrink: bool) -> None:
     module = DECODERS[name]
     rec = DecoderRun(name=name, trigger=trigger, ordinal=ordinal, version_tag=tag,
                      code_version=code_version(module), started_at=utcnow())
     await rec.insert()
     try:
-        data = await asyncio.to_thread(module.build, tree)
+        data = await asyncio.to_thread(module.build, tree.only(module.PREFIXES))
         n = module.count(data)
         if not n:
             raise ValueError("decoded nothing - the game files may have moved or changed format")

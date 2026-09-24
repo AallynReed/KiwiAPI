@@ -34,12 +34,27 @@ class GameTree:
         return [p for p in self._sorted
                 if p.lower().startswith(prefix) and p.lower().endswith(suffix)]
 
+    def only(self, prefixes) -> GameTree:
+        """A view of just ``prefixes``: a decoder sees the folders it declares and
+        nothing that another decoder loaded alongside it."""
+        return _Subset(self, prefixes)
+
     def dirs(self, prefix: str) -> list[str]:
         """Names of the immediate subdirectories of ``prefix``."""
         prefix = prefix.lower().rstrip("/") + "/"
         out = {p[len(prefix):].split("/", 1)[0] for p in self.files(prefix)
                if "/" in p[len(prefix):]}
         return sorted(out)
+
+
+class _Subset(GameTree):
+    def __init__(self, parent: GameTree, prefixes):
+        wanted = tuple(p.lower() for p in prefixes)
+        self._parent = parent
+        super().__init__([p for p in parent._sorted if p.lower().startswith(wanted)])
+
+    def _fetch(self, path: str) -> bytes | None:
+        return self._parent._fetch(path)
 
 
 class ArchiveTree(GameTree):

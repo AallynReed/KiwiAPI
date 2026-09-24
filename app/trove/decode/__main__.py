@@ -37,7 +37,7 @@ def main() -> int:
     changed = 0
     for name in names:
         module = DECODERS[name]
-        data = module.build(tree)
+        data = module.build(tree.only(module.PREFIXES))
         text = dump(module, data)
         target = store.BASELINE_DIR / module.OUTPUT
         old = target.read_text(encoding="utf-8") if target.exists() else ""
