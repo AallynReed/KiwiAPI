@@ -29,6 +29,13 @@
         </section>
         {% endfor %}
         {% include "wiki/kinds/" ~ kind ~ ".html" ignore missing %}
+        {% if d.vfx %}
+        <section class="cls-section" data-embed-scope>
+            <h3 class="cls-section-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span>Effects</span></h3>
+            <div class="ab-vfx">{% for v in d.vfx %}<button type="button" class="ab-vfx-link" data-embed="{{ v.url }}" data-embed-title="{{ v.label }} effect preview" aria-pressed="false">{{ v.label }}</button>{% endfor %}</div>
+            <div class="wk-embed" data-embed-slot hidden></div>
+        </section>
+        {% endif %}
         {% if d.abilities %}
         <section class="cls-section">
             <h3 class="cls-section-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>Abilities</span></h3>

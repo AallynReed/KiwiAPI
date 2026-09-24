@@ -14,7 +14,7 @@ from typing import Any
 from app.trove import stats as trove_stats
 from app.trove.codexes.localize import resolve_stat_name
 from app.trove.decode import store as gamedata
-from app.wiki.ability_view import card, num, stat_text
+from app.wiki.ability_view import card, num, stat_text, vfx_links
 
 # file: decoder output; key: where the list sits when the file is a dict;
 # lead: the index page's intro; facets: entry fields the index filters by.
@@ -27,6 +27,22 @@ KINDS: dict[str, dict[str, Any]] = {
               "file": "mount_abilities.json", "plural": "mounts", "title": "Mounts", "icon": "fa-horse",
               "lead": "Every mount in the game files: the stats it grants in each slot and, for the {n} "
                       "that have one, what its abilities do."},
+    "wings": {"prompt": "where to get them and how they feel to fly",
+              "file": "collectibles.json", "key": "wings", "plural": "wings", "title": "Wings", "icon": "fa-feather",
+              "facets": {"group": "Collection"},
+              "lead": "Every pair of wings: the speed and glide they give and the effects they wear."},
+    "boat": {"prompt": "where to get it and how it handles",
+             "file": "collectibles.json", "key": "boats", "plural": "boats", "title": "Boats", "icon": "fa-sailboat",
+             "facets": {"group": "Collection"},
+             "lead": "Every boat: its speed, turning and acceleration, and what its cannon hits for."},
+    "sail": {"prompt": "where to get it",
+             "file": "collectibles.json", "key": "sails", "plural": "sails", "title": "Sails", "icon": "fa-flag",
+             "facets": {"group": "Collection"},
+             "lead": "Every sail in the game and where the collection screen files it."},
+    "aura": {"prompt": "where to get it and what it looks like in play",
+             "file": "collectibles.json", "key": "auras", "plural": "auras", "title": "Auras", "icon": "fa-wand-sparkles",
+             "facets": {"group": "Collection"},
+             "lead": "Every weapon aura in the game and where the collection screen files it."},
     "companion": {"prompt": "where to find it and which of its perks matter",
                   "file": "companions.json", "plural": "companions", "title": "Companions",
                   "icon": "fa-dove", "facets": {"rarity": "Rarity"},
@@ -60,6 +76,8 @@ KINDS: dict[str, dict[str, Any]] = {
 # `$EquipmentSlot_*` -> what the stat group is labelled on a mount page.
 SLOT_NAMES = {"unlock": "When unlocked", "$EquipmentSlot_Mount": "As a mount", "$EquipmentSlot_Wings": "As wings",
               "$EquipmentSlot_Boat": "As a boat", "$EquipmentSlot_Cart": "As a cart"}
+# Where a wing or boat effect is attached, as the model names it.
+ATTACH_NAMES = {"VFX_l_wing": "Left wing", "VFX_r_wing": "Right wing", "VFX_ground": "Ground", "VFX_body": "Body"}
 RARITY_TONES = {"common": "common", "uncommon": "uncommon", "rare": "rare", "epic": "epic", "legendary": "legendary"}
 
 
@@ -142,6 +160,8 @@ def summary(kind: str, e: dict) -> dict:
     if kind == "companion":
         row.update(sub=e.get("rarity", ""), tone=_tone(e.get("rarity", "")),
                    search=f"{row['search']} {_companion_search(e)}")
+    elif kind in ("wings", "boat", "sail", "aura"):
+        row["sub"] = e.get("group", "")
     elif kind == "fish":
         row["facets"]["liquid"] = fish_liquid(e)
         row.update(sub=f"{e.get('rarity', '')} · {num(e['weight']['min'])}–{num(e['weight']['max'])} lb"
@@ -202,10 +222,12 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
     d: dict[str, Any] = {"name": e["name"], "description": _text(e.get("description")), "prefab": e.get("prefab", ""),
                          "facts": [], "stat_groups": [], "abilities": []}
     abilities = [card(a, name=a.get("name", ""), description=a.get("text", "")) for a in e.get("abilities") or []]
-    if kind == "mount":
+    if kind in ("mount", "wings", "boat"):
         d["stat_groups"] = [{"label": SLOT_NAMES.get(g["slot"], resolve_stat_name({}, g["slot"])),
                              "stats": _stat_rows(g["stats"])} for g in e.get("stats") or []]
         d["abilities"] = abilities
+        d["vfx"] = [{**v, "label": ATTACH_NAMES.get(row.get("key", ""), v["label"])}
+                    for row in e.get("vfx") or [] for v in vfx_links([row])]
     elif kind == "ally":
         if e.get("stats"):
             d["stat_groups"] = [{"label": "Stats granted", "stats": _stat_rows(e["stats"])}]
@@ -220,6 +242,9 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _memento(d, e)
     elif kind == "station":
         _station(d, e)
+    if e.get("group"):
+        d["facts"].append({"label": "Collection", "value": e["group"]})
+    d["facts"] += _sources(e.get("prefab") or "")
     return d
 
 
@@ -578,3 +603,46 @@ def _station(d: dict, e: dict) -> None:
     d["recipe_count"] = sum(len(g["rows"]) for g in groups)
     twins = [x for x in (find("station", t) for t in e.get("same_as") or []) if x]
     d["same_as"] = [{"name": t["name"], "url": url("station", t)} for t in twins]
+
+
+# ── where an entry comes from (recipes and badge rewards) ──────────────────
+
+@gamedata.cached("recipes.json", "badges.json")
+def _origins() -> dict[str, dict[str, list[str]]]:
+    """``prefab -> {"stations": [station slug], "badges": [badge slug]}``."""
+    out: dict[str, dict[str, list[str]]] = {}
+
+    def add(prefab: str | None, key: str, slug: str) -> None:
+        if not prefab:
+            return
+        rows = out.setdefault(prefab.removesuffix(".binfab"), {}).setdefault(key, [])
+        if slug not in rows:
+            rows.append(slug)
+
+    recipes = _recipes()
+    for st in _recipe_file().get("stations") or []:
+        for g in st.get("groups") or []:
+            for rid in g.get("recipes") or []:
+                for res in (recipes.get(rid) or {}).get("results") or []:
+                    add(res.get("path") or (res.get("collectable") or {}).get("ref"), "stations", st["slug"])
+    badges = gamedata.load("badges.json", []) or []
+    for b in badges if isinstance(badges, list) else []:
+        for r in b.get("ranks") or []:
+            for rw in r.get("rewards") or []:
+                for gr in rw.get("grants") or []:
+                    add(gr.get("prefab"), "badges", b["slug"])
+    return out
+
+
+def _sources(prefab: str) -> list[dict]:
+    got = _origins().get(prefab) or {}
+    facts = []
+    for slug in got.get("stations") or []:
+        st = find("station", slug)
+        if st:
+            facts.append({"label": "Crafted at", "value": st["name"], "url": url("station", st)})
+    for slug in got.get("badges") or []:
+        b = find("badge", slug)
+        if b:
+            facts.append({"label": "Badge reward", "value": b["name"], "url": url("badge", b)})
+    return facts

@@ -12,6 +12,7 @@ from app.trove.decode import (
     badges,
     class_abilities,
     class_levels,
+    collectibles,
     common,
     companions,
     delve_modifiers,
@@ -30,7 +31,7 @@ DECODERS: dict[str, ModuleType] = {
     m.__name__.rsplit(".", 1)[-1]: m
     for m in (class_levels, class_abilities, ally_abilities, gem_abilities,
               ring_abilities, mount_abilities, pvp_stat_ranges, delve_modifiers,
-              companions, badges, fish, mementos, recipes)
+              companions, badges, fish, mementos, recipes, collectibles)
 }
 
 

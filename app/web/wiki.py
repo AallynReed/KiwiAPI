@@ -10,8 +10,8 @@ URL map:
   /                      home
   /classes, /class/<n>   generated class pages + their editable write-ups
   /<plural>, /<kind>/<n> generated game-data pages + write-ups, one pair per kind in
-                         app/wiki/entities.KINDS: allies, mounts, companions, fish,
-                         mementos, badges, and crafting stations (/recipes, /station/<n>)
+                         app/wiki/entities.KINDS: allies, mounts, wings, boats, sails,
+                         auras, companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
