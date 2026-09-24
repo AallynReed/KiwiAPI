@@ -75,7 +75,7 @@ Browsing is public; developing and publishing mods is a Discord-login action.
 (`app/web/wiki.py`, routed by hostname). Anyone can read it. Accounts the master marks as wiki
 editors (dev portal → Dashboard users) write pages; every other signed-in player can suggest an
 edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages,
-the Delve Modifiers page and one page per ally, mount, wings, boat, sail, aura, Mag Rider, flask, tome, fishing pole, costume, bomb skin, Geode companion,
+the Delve Modifiers page and one page per ally (every pet players can own), mount, dragon, wings, boat, sail, aura, Mag Rider, flask, tome, fishing pole, costume, bomb skin, Geode companion,
 fish, Delve memento, badge and crafting station (with its recipes), plus one page per style slot (hats, faces, weapons, banners) and a Titles page, are generated from the game files, with an editable
 write-up under the data; the main site's `/classes` redirects to the wiki's. The How Gems Work guide lives there too
 (`/gems`); the main site's `/gems-guide` redirects to it. The data plane is `/site/wiki/*` in `app/wiki/`.

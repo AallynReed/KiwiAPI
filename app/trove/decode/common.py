@@ -1,6 +1,7 @@
 """Helpers the ability decoders share."""
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 from typing import Any
 
@@ -72,6 +73,30 @@ def stat_rows(values: Iterable[Any]) -> list[dict]:
         if row not in rows:
             rows.append(row)
     return rows
+
+
+# Collection groups the game uses while building content; not player facing.
+WORKING_GROUPS = re.compile(r"^(InProgress|ReadyForGame|READY_FOR_GAME|NEEDS_AUDIO|Hidden)")
+
+
+def collection_members(pf, names: dict[str, str]) -> dict[str, tuple[str, str]]:
+    """`collections/collection_<x>` -> `{member ref: (group id, group name)}`.
+
+    A collection file lists groups {0 id, 1 `$CollectionName_*` key, 3 member rows
+    whose field 0 is the collectible}; the group name is where the collection screen
+    files it. Working groups keep their id but get no name. First listing wins.
+    """
+    out: dict[str, tuple[str, str]] = {}
+    root = pf.root if pf is not None else None
+    for group in (root.leaf.get(0) if root is not None else None) or []:
+        g = group.leaf if isinstance(group, Obj) else {}
+        gid = g.get(0) if isinstance(g.get(0), str) else ""
+        label = "" if WORKING_GROUPS.match(gid) else names.get(g.get(1) or "", "") or gid
+        for row in g.get(3) or []:
+            ref = (row.leaf if isinstance(row, Obj) else {}).get(0)
+            if isinstance(ref, str):
+                out.setdefault(ref.removesuffix(".binfab"), (gid, label))
+    return out
 
 
 def stem(path: str) -> str:

@@ -18,7 +18,7 @@ from app.core.internal_api import internal_get
 from app.wiki import entities
 
 # Codex types that hold our ally/mount entries, and which are rigged creatures.
-CODEX_TYPES = {"ally": ("ally",), "mount": ("mount", "dragon")}
+CODEX_TYPES = {"ally": ("ally",), "mount": ("mount", "dragon"), "dragon": ("mount", "dragon")}
 RIGGED = frozenset({"mount", "dragon"})
 _PAGE = 200
 _TTL = 3600

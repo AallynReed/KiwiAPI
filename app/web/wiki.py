@@ -10,7 +10,7 @@ URL map:
   /                      home
   /classes, /class/<n>   generated class pages + their editable write-ups
   /<plural>, /<kind>/<n> generated game-data pages + write-ups, one pair per kind in
-                         app/wiki/entities.KINDS: allies, mounts, wings, boats, sails,
+                         app/wiki/entities.KINDS: allies, mounts, dragons, wings, boats, sails,
                          auras, Mag Riders, flasks, tomes, fishing poles, costumes, bomb skins, style slots
                          (/styles, /style/<slot>), companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
@@ -256,6 +256,8 @@ async def _entity_index(request: Request, kind: str) -> HTMLResponse:
 
 async def _entity_page(request: Request, kind: str, name: str) -> Response:
     e = entities.find(kind, name)
+    if e is None and kind == "mount" and entities.find("dragon", name):
+        return RedirectResponse(entities.url("dragon", entities.find("dragon", name) or {}), status_code=301)
     if e is None:
         raise HTTPException(status_code=404)
     canonical = entities.url_slug(e["slug"])

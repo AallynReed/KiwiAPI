@@ -5,19 +5,20 @@ the stat groups a rider gets per slot (field 6; component 369 adds what owning i
 grants at all), the passive abilities that ride along
 (field 3 - almost always just the block harvester every mount has) and the
 triggered ones (field 4: input, attach point, ability prefab). Each ability is
-read structurally by ``ability.describe``.
+read structurally by ``ability.describe``. `collections/collection_mount` gives the
+group each mount is filed under; dragons are the "<tier> Dragon" groups.
 """
 from __future__ import annotations
 
 from app.trove.decode.ability import Prefabs, identity, modifiers, walk_values
 from app.trove.decode.ally_abilities import _detail
-from app.trove.decode.common import locale, stem
+from app.trove.decode.common import collection_members, locale, stem
 from app.trove.decode.tree import GameTree
 from app.trove.decode.wire import Obj, strings
 
 TITLE = "Mount abilities"
 OUTPUT = "mount_abilities.json"
-PREFIXES = ("prefabs/collections/mount/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/")
+PREFIXES = ("prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/")
 INDENT, FINAL_NEWLINE = 4, False
 
 MOUNT = 80
@@ -73,6 +74,8 @@ def build(tree: GameTree) -> list[dict]:
     for path in tree.files("languages/en/prefabs_abilities", ".binfab"):
         abilities_text.update(locale(tree.read(path)))
 
+    owned = collection_members(prefabs.get("collections/collection_mount"),
+                               {**locale(tree.read("languages/en/prefabs_collections.binfab")), **names})
     mounts = []
     for path in tree.files("prefabs/collections/mount/", ".binfab"):
         if path.count("/") != 3:
@@ -101,13 +104,19 @@ def build(tree: GameTree) -> list[dict]:
             detail = _detail(prefabs, ref, abilities_text)
             if detail or title or text:
                 powers.append({**row, **detail})
-        mounts.append({
+        entry = {
             "slug": slug, "name": name,
             "description": names.get(ident.get("description_key", ""), ""),
             "prefab": f"collections/mount/{slug}",
             "stats": _stat_groups(pf, mount),
             "abilities": powers,
-        })
+        }
+        gid, label = owned.get(f"collections/mount/{slug}", ("", ""))
+        if gid:
+            entry["group_id"] = gid
+        if label:
+            entry["group"] = label
+        mounts.append(entry)
     return sorted(mounts, key=lambda m: m["name"].lower())
 
 

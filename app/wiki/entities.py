@@ -21,12 +21,21 @@ from app.wiki.ability_view import card, num, stat_text, vfx_links
 KINDS: dict[str, dict[str, Any]] = {
     "ally": {"prompt": "where to get it, how it plays, what it pairs with",
              "file": "ally_abilities.json", "plural": "allies", "title": "Allies", "icon": "fa-paw",
+             "facets": {"group": "Collection"},
              "lead": "Every ally in the game files: the stats it grants and, for the {n} that have one, "
                      "what its abilities do."},
     "mount": {"prompt": "where to get it and what it is like to ride",
               "file": "mount_abilities.json", "plural": "mounts", "title": "Mounts", "icon": "fa-horse",
+              "facets": {"group": "Collection"}, "where": lambda e: e.get("group_id") not in DRAGON_TIERS,
               "lead": "Every mount in the game files: the stats it grants in each slot and, for the {n} "
                       "that have one, what its abilities do."},
+    "dragon": {"prompt": "how to hatch it and whether its bonus is worth the souls",
+               "file": "mount_abilities.json", "plural": "dragons", "title": "Dragons", "icon": "fa-dragon",
+               "where": lambda e: e.get("group_id") in DRAGON_TIERS, "group_by": "group",
+               "group_order": ["Fledgling Dragon", "Adult Dragon", "Ancestral Dragon", "Legendary Dragon",
+                               "Primordial Dragon"],
+               "facets": {"group": "Tier"},
+               "lead": "Every dragon, by tier: its stats, its abilities and what owning it grants."},
     "wings": {"prompt": "where to get them and how they feel to fly",
               "file": "collectibles.json", "key": "wings", "plural": "wings", "title": "Wings", "icon": "fa-feather",
               "facets": {"group": "Collection"},
@@ -102,6 +111,9 @@ KINDS: dict[str, dict[str, Any]] = {
               "lead": "Every badge: what each rank asks of you and what it pays out."},
 }
 
+# The collection_mount groups that hold dragons - the game files dragons by tier.
+DRAGON_TIERS = frozenset({"Fledgling Dragon", "Adult Dragon", "Ancestral Dragon", "Legendary Dragon",
+                          "Primordial Dragon"})
 # `$EquipmentSlot_*` -> what the stat group is labelled on a mount page.
 SLOT_NAMES = {"unlock": "When unlocked", "$EquipmentSlot_Mount": "As a mount", "$EquipmentSlot_Wings": "As wings",
               "$EquipmentSlot_Boat": "As a boat", "$EquipmentSlot_Cart": "As a cart"}
@@ -118,7 +130,8 @@ def _rows(spec: dict) -> list[dict]:
     data = gamedata.load(spec["file"], []) or []
     if isinstance(data, dict):
         data = data.get(spec.get("key", ""), [])
-    return data
+    where = spec.get("where")
+    return [e for e in data if where(e)] if where else data
 
 
 @gamedata.cached(*(s["file"] for s in KINDS.values()))
@@ -191,7 +204,8 @@ def summary(kind: str, e: dict) -> dict:
     if kind == "companion":
         row.update(sub=e.get("rarity", ""), tone=_tone(e.get("rarity", "")),
                    search=f"{row['search']} {_companion_search(e)}")
-    elif kind in ("wings", "boat", "sail", "aura", "magrider", "flask", "tome", "bomb-skin"):
+    elif kind in ("ally", "mount", "dragon", "wings", "boat", "sail", "aura", "magrider", "flask", "tome",
+                  "bomb-skin"):
         row["sub"] = e.get("group", "")
     elif kind == "costume":
         row["facets"]["class"] = class_name(e.get("class", ""))
@@ -265,13 +279,15 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
     abilities = [card(a, name=a.get("name", ""), description=a.get("text", "")) for a in e.get("abilities") or []]
     if kind == "bomb-skin":
         d["vfx"] = vfx_links(e.get("vfx") or [])
-    if kind in ("mount", "wings", "boat", "magrider"):
+    if kind in ("mount", "dragon", "wings", "boat", "magrider"):
         d["stat_groups"] = [{"label": SLOT_NAMES.get(g["slot"], resolve_stat_name({}, g["slot"])),
                              "stats": _stat_rows(g["stats"])} for g in e.get("stats") or []]
         if kind == "magrider":
             for g in d["stat_groups"]:
                 g["label"] = "Riding" if g["label"] == SLOT_NAMES["$EquipmentSlot_Cart"] else g["label"]
         d["abilities"] = abilities
+        if kind == "dragon" and e.get("group"):
+            d["facts"].insert(0, {"label": "Tier", "value": e["group"]})
         d["vfx"] = [{**v, "label": ATTACH_NAMES.get(row.get("key", ""), v["label"])}
                     for row in e.get("vfx") or [] for v in vfx_links([row])]
     elif kind == "ally":
@@ -298,7 +314,7 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         d["abilities"] = abilities
         if e.get("liquids"):
             d["facts"].append({"label": "Fishes in", "value": ", ".join(x.title() for x in e["liquids"])})
-    if e.get("group") and kind != "costume":
+    if e.get("group") and kind not in ("costume", "dragon"):
         d["facts"].append({"label": "Collection", "value": e["group"]})
     d["facts"] += _sources(e.get("prefab") or "")
     return d

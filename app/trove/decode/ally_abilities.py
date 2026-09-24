@@ -1,7 +1,9 @@
 """ally_abilities.json - allies with the stats and abilities they grant.
 
-Allies are the `prefabs/collections/pet/*.binfab` that carry combat stats - about
-half the pet prefabs; the rest are cosmetic pets with nothing to grant. Everything
+Allies are the `prefabs/collections/pet/*.binfab` players can own: every member of
+`collections/collection_pet` (with the collection group it is filed under), plus
+any other pet that carries combat stats. Pet prefabs outside both are NPC and test
+variants. Everything
 is read structurally: the stat modifier records (component 65), the identity
 component's name and description keys, and every `abilities/...` prefab the pet
 names.
@@ -16,13 +18,13 @@ from __future__ import annotations
 
 from app.trove.codexes.bonuses import _is_hidden
 from app.trove.decode.ability import Prefabs, component_values, describe, identity, refs, text_keys
-from app.trove.decode.common import locale, stat_rows, stem
+from app.trove.decode.common import collection_members, locale, stat_rows, stem
 from app.trove.decode.tree import GameTree
 from app.trove.decode.wire import WireError, parse
 
 TITLE = "Ally abilities"
 OUTPUT = "ally_abilities.json"
-PREFIXES = ("prefabs/collections/pet/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/")
+PREFIXES = ("prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/")
 INDENT, FINAL_NEWLINE = 4, False
 
 
@@ -60,6 +62,8 @@ def build(tree: GameTree) -> list[dict]:
     for path in tree.files("languages/en/prefabs_abilities", ".binfab"):
         abilities_text.update(locale(tree.read(path)))
 
+    owned = collection_members(prefabs.get("collections/collection_pet"),
+                               {**locale(tree.read("languages/en/prefabs_collections.binfab")), **names})
     allies = []
     for path in tree.files("prefabs/collections/pet/", ".binfab"):
         if path.count("/") != 3:
@@ -70,9 +74,10 @@ def build(tree: GameTree) -> list[dict]:
         except WireError:
             continue
         stats = stat_rows(component_values(pf))
-        if not stats:
-            continue                       # a cosmetic pet, not an ally
         slug = stem(path)
+        member = owned.get(f"collections/pet/{slug}")
+        if not stats and member is None:
+            continue                       # an NPC or test variant, not an ally
         ident = identity(pf)
         name = names.get(ident.get("name_key", ""), "")
         description = names.get(ident.get("description_key", ""), "")
@@ -85,10 +90,11 @@ def build(tree: GameTree) -> list[dict]:
             if text and not any(p["ref"] == ref and p["text"] == text for p in powers):
                 powers.append({"ref": ref, "text": text, **_detail(prefabs, ref, abilities_text)})
 
-        allies.append({
-            "slug": slug, "name": name or slug, "description": description,
-            "prefab": f"collections/pet/{slug}", "stats": stats, "abilities": powers,
-        })
+        ally = {"slug": slug, "name": name or slug, "description": description,
+                "prefab": f"collections/pet/{slug}", "stats": stats, "abilities": powers}
+        if member and member[1]:
+            ally["group"] = member[1]
+        allies.append(ally)
     return sorted(allies, key=lambda a: a["name"].lower())
 
 
