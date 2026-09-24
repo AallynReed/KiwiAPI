@@ -14,6 +14,25 @@
     <section class="cls-detail wk-classdata" id="wk-classdata" aria-label="{{ title }} game data">
         {% include "partials/class_detail.html" %}
     </section>
+    {% if subclass_power and subclass_power.rows %}
+    <section class="cls-detail wk-classrings" aria-labelledby="wk-subpower-title">
+        <h3 class="cls-section-title" id="wk-subpower-title"><i class="fa-solid fa-arrow-up-right-dots" aria-hidden="true"></i><span>Subclass power: {{ subclass_power.name }}</span></h3>
+        <p class="wk-hint">What {{ title }} grants as another class's subclass, read from the game files. It grows with the {{ title }}'s own Power Rank.</p>
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">Unlocks at</th><th scope="col">What it does</th></tr></thead>
+                <tbody>
+                {% for r in subclass_power.rows %}
+                <tr>
+                    <th scope="row" class="num">{{ r.threshold }}{% if r.overlapping %}<div class="wk-mute">Overlaps the next tier</div>{% endif %}</th>
+                    <td>{% for p in r.parts %}<div class="wk-subpart">{% if r.parts | length > 1 %}<strong>{{ p.label }}</strong> {% endif %}{% for l in p.lines %}<div>{{ l }}</div>{% endfor %}</div>{% else %}<span class="wk-mute">No effect in the game files</span>{% endfor %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
     {% if rings %}
     <section class="cls-detail wk-classrings" aria-labelledby="wk-rings-title">
         <h3 class="cls-section-title" id="wk-rings-title"><i class="fa-solid fa-ring" aria-hidden="true"></i><span>Class rings</span></h3>

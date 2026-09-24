@@ -82,7 +82,7 @@ write-up under the data; the main site's `/classes` redirects to the wiki's. The
 
 **Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that
 comes from the game files (class stats and abilities, allies, mounts, gems, rings, PvP curves,
-delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
+delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds, subclass powers) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
 each decoder reruns and writes to `GAMEDATA_DIR` (`./.gamedata`, shared by the api, web and bot
 containers), which readers prefer over the repo copy. A decoder also reruns when a deploy
 changes its code. One that fails, decodes nothing, or shrinks its output by more than 20% keeps

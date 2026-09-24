@@ -585,3 +585,4 @@ body.wk { --nav-h: 63px; }
 .wk-tiers ul { margin: 4px 0 0; padding-left: 16px; display: grid; gap: 4px; }
 .wk-chips-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .wk-classrings { margin-top: 16px; }
+.wk-subpart + .wk-subpart { margin-top: 8px; }

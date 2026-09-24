@@ -44,7 +44,7 @@ from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
 from app.trove.decode import store as gamedata
 from app.web import feature_flags as web_flags
-from app.wiki import data_pages, entities, media, pvp_stats, worlds_pages
+from app.wiki import data_pages, entities, media, pvp_stats, subclass_view, worlds_pages
 
 logger = logging.getLogger("kiwi.web.wiki")
 
@@ -246,6 +246,7 @@ async def class_page(request: Request, name: str) -> Response:
         "title": c["name"],
         "slug": slug,
         "d": classes_page._detail(c),
+        "subclass_power": subclass_view.table(c["tech_name"]),
         "rings": [{"name": r["name"], "description": entities._text(r.get("description")), "url": entities.url("ring", r)}
                   for r in entities.entries("ring") if r.get("class") == c["name"]],
         # Just what the level slider needs to recompute the sheet client-side.
