@@ -73,6 +73,7 @@ async def embed_viewer(
     dress: str | None = None,
     path: str | None = None,
     sound: str | None = None,
+    backdrop: str | None = None,
     mode: str = "auto",
     theme: str = "dark",
 ) -> HTMLResponse:
@@ -91,6 +92,7 @@ async def embed_viewer(
         "release": release or "", "tmod": tmod or "", "game": game or "",
         "prefab": prefab or "", "dress": dress or "",
         "path": path or "", "sound": sound or "",
+        "backdrop": backdrop if backdrop in ("melee", "pistol", "staff", "spear", "fist", "hat") else "",
         "mode": mode if mode in
         ("auto", "blueprint", "assembled", "vfx", "audio") else "auto",
         "theme": theme if theme in ("dark", "light") else "dark",

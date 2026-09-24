@@ -39,6 +39,7 @@
   var cfg = {
     path: shell.dataset.path || '',
     sound: shell.dataset.sound || '',
+    backdrop: shell.dataset.backdrop || '',
     mode: shell.dataset.mode || 'auto',
     // The data plane's origin. This page is served from the WEBSITE host (the only
     // one allowed to be framed), while every byte it needs lives on the API - so the
@@ -286,6 +287,7 @@
         state.viewer = Pkfx.mount(stage, {
           path: state.path,
           endpoint: { base: cfg.apiBase + '/site/embed/vfx', query: srcQuery },
+          backdrop: cfg.backdrop ? cfg.apiBase + '/site/embed/vfx/backdrop?kind=' + encodeURIComponent(cfg.backdrop) : '',
         });
       }).catch(function (e) { message(e.message, true); });
       return;

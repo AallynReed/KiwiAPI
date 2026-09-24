@@ -152,6 +152,8 @@ DRAGON_TIERS = frozenset({"Fledgling Dragon", "Adult Dragon", "Ancestral Dragon"
 SLOT_NAMES = {"unlock": "When unlocked", "$EquipmentSlot_Mount": "As a mount", "$EquipmentSlot_Wings": "As wings",
               "$EquipmentSlot_Boat": "As a boat", "$EquipmentSlot_Cart": "As a cart"}
 # Where a wing or boat effect is attached, as the model names it.
+# what each aura effect is previewed on (app/embed/backdrop.py); bows have no VFX bone to seat one by
+AURA_BACKDROPS = {"Melee": "melee", "Pistol": "pistol", "Staff": "staff", "Spear": "spear", "Fist": "fist", "Hat": "hat"}
 ATTACH_NAMES = {"VFX_l_wing": "Left wing", "VFX_r_wing": "Right wing", "VFX_ground": "Ground", "VFX_body": "Body"}
 RARITY_TONES = {"common": "common", "uncommon": "uncommon", "rare": "rare", "epic": "epic", "legendary": "legendary"}
 
@@ -334,8 +336,11 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
     d: dict[str, Any] = {"name": e["name"], "description": _text(e.get("description")), "prefab": e.get("prefab", ""),
                          "facts": [], "stat_groups": [], "abilities": []}
     abilities = [card(a, name=a.get("name", ""), description=a.get("text", "")) for a in e.get("abilities") or []]
-    if kind in ("bomb-skin", "aura"):
+    if kind == "bomb-skin":
         d["vfx"] = vfx_links(e.get("vfx") or [])
+    if kind == "aura":
+        d["vfx"] = [{**v, "url": v["url"] + (f"&backdrop={AURA_BACKDROPS[row['key']]}" if row.get("key") in AURA_BACKDROPS else "")}
+                    for row in e.get("vfx") or [] for v in vfx_links([row])]
     if kind in ("mount", "dragon", "wings", "boat", "magrider"):
         d["stat_groups"] = [{"label": SLOT_NAMES.get(g["slot"], resolve_stat_name({}, g["slot"])),
                              "stats": _stat_rows(g["stats"])} for g in e.get("stats") or []]

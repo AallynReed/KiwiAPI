@@ -260,9 +260,14 @@ precision highp float;
 in vec3 vN; in vec2 vUV; in vec4 vColor;
 uniform sampler2D uTex;
 uniform int uLit;      // 1 = Solid (opaque)
+uniform int uShade;    // 1 = the preview's backdrop model, lit so its voxels read as solid
 out vec4 frag;
 void main(){
   vec4 c = texture(uTex, vUV) * vColor;
+  if (uShade == 1) {
+    vec3 n = normalize(vN);
+    c.rgb *= 0.55 + 0.45 * max(dot(n, normalize(vec3(0.45, 0.8, 0.4))), 0.0);
+  }
   frag = uLit == 1 ? vec4(c.rgb, 1.0) : c;
 }`;
 export const MESH_FLOATS_PER_INSTANCE = 16; // basis 9, center 3, color 4
@@ -357,6 +362,7 @@ export class Renderer {
     this.muProj = gl.getUniformLocation(this.mprog, 'uProj');
     this.muTex = gl.getUniformLocation(this.mprog, 'uTex');
     this.muLit = gl.getUniformLocation(this.mprog, 'uLit');
+    this.muShade = gl.getUniformLocation(this.mprog, 'uShade');
     this.cubeGeom = this.makeMeshGeometry(buildCubeMesh());
 
     // ground program (reuses the billboard quad buffer, corner attribute only)
@@ -608,6 +614,7 @@ export class Renderer {
     const g = d.geom || this.cubeGeom;
     gl.bindVertexArray(g.vao);
     gl.bindTexture(gl.TEXTURE_2D, d.texture || this.white);
+    gl.uniform1i(this.muShade, d.shade ? 1 : 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, g.instBuf);
     gl.bufferData(gl.ARRAY_BUFFER, d.instances.subarray(0, d.count * MESH_FLOATS_PER_INSTANCE), gl.DYNAMIC_DRAW);
     gl.drawElementsInstanced(gl.TRIANGLES, g.indexCount, g.indexType, 0, d.count);

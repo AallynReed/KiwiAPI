@@ -32,7 +32,7 @@ model (a tome's component 322 numbers are unlabelled and left out).
 No client file links an aura to its particles (the server sends the paths), so an
 aura's effects are found by the particle file names, which aura mods depend on too:
 `aura_<x>` plays `weapon_aura_<weapon>_<x>.pkfx` on each weapon type that has one,
-and `aura_stellar_<x>` plays `character_aura_stellar_<x>.pkfx` on the head. Auras
+and `aura_stellar_<x>` (a hat aura) plays `character_aura_stellar_<x>.pkfx` on the hat. Auras
 whose files are named any other way get no effects.
 """
 from __future__ import annotations
@@ -101,7 +101,7 @@ def _effects(mount: Obj) -> list[dict]:
 
 def _aura_effects(slug: str, particles: dict[str, str]) -> list[dict]:
     if slug.startswith("aura_stellar_"):
-        wanted = [("Head", f"character_{slug}")]
+        wanted = [("Hat", f"character_{slug}")]
     else:
         wanted = [(label, f"weapon_aura_{w}_{slug.removeprefix('aura_')}") for w, label in AURA_WEAPONS]
     return [{"key": label, "pkfx": particles[name]} for label, name in wanted if name in particles]

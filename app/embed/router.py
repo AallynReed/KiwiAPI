@@ -43,7 +43,7 @@ from app.core.dependencies import (
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
 from app.core.ratelimit import check_rate_limit
 from app.core.utils import client_ip
-from app.embed import service, uploads
+from app.embed import backdrop, service, uploads
 from app.trove import tmod as tmod_mod
 from app.trove.render import bp_cache
 
@@ -114,6 +114,7 @@ async def embed_viewer(
     dress: str | None = Query(default=None, max_length=700),
     path: str | None = Query(default=None, max_length=400),
     sound: str | None = Query(default=None, max_length=200),
+    backdrop: str | None = Query(default=None, pattern="^(melee|pistol|staff|spear|fist|hat)$"),
     mode: str = Query(default="auto", pattern="^(auto|blueprint|assembled|vfx|audio)$"),
     theme: str = Query(default="dark", pattern="^(dark|light)$"),
 ) -> HTMLResponse:
@@ -127,7 +128,8 @@ async def embed_viewer(
     return _TEMPLATES.TemplateResponse(request, "embed_viewer.html", {
         "release": release or "", "tmod": tmod or "", "game": game or "",
         "prefab": prefab or "", "dress": dress or "",
-        "path": path or "", "sound": sound or "", "mode": mode, "theme": theme,
+        "path": path or "", "sound": sound or "", "backdrop": backdrop or "",
+        "mode": mode, "theme": theme,
         # Same origin here (this process serves both), so no prefix is needed.
         "api_base": "",
         "app_url": settings.app_url.rstrip("/"),
@@ -173,6 +175,18 @@ async def embed_vfx_manifest(
     src: service.Source = _SRC, _t: None = _LIMIT,
 ) -> JSONResponse:
     return JSONResponse(await service.vfx_manifest(src, path), headers=_MED)
+
+
+@embed_page_router.get("/site/embed/vfx/backdrop", response_class=JSONResponse)
+async def embed_vfx_backdrop(
+    kind: str = Query(..., pattern="^(melee|pistol|staff|spear|fist|hat)$"),
+    _t: None = _LIMIT,
+) -> JSONResponse:
+    """The model an aura is worn on, placed in the effect's own space."""
+    got = await backdrop.backdrop(kind)
+    if got is None:
+        raise APIError(404, ErrorCode.not_found, "No backdrop for this kind.")
+    return JSONResponse(got, headers=_LONG)
 
 
 @embed_page_router.get("/site/embed/audio/bank", response_class=JSONResponse)

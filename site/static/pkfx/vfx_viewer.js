@@ -10,7 +10,9 @@
 
    Public API (assigned to window.PkfxViewer for classic-script callers):
      PkfxViewer.mount(container, { releaseId, path }) -> { dispose() }
-     PkfxViewer.mount(container, { endpoint: {base, query}, path })  // embeddable viewer */
+     PkfxViewer.mount(container, { endpoint: {base, query}, path })  // embeddable viewer
+     `backdrop` (optional) is a URL returning the model the effect is worn on - a weapon
+     or a head, already placed in the effect's own space (app/embed/backdrop.py). */
 import { parsePkfx } from './parser.js';
 import { buildEffect } from './model.js';
 import { System } from './sim.js';
@@ -95,7 +97,28 @@ function kindFor(material, ribbon) {
   return 0;
 }
 
-export function mount(container, { releaseId, path, endpoint }) {
+/* Backdrop parts -> instanced unit cubes: each voxel's centre and the part matrix's
+   basis columns, which carry the voxel size. */
+function backdropInstances(parts) {
+  const n = parts.reduce((a, p) => a + p.x.length, 0);
+  const out = new Float32Array(n * MESH_FLOATS_PER_INSTANCE);
+  const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+  let o = 0;
+  for (const p of parts) {
+    const m = p.m;
+    for (let i = 0; i < p.x.length; i++) {
+      const x = p.x[i], y = p.y[i], z = p.z[i], rgb = p.rgb[i];
+      const c = [m[0] * x + m[4] * y + m[8] * z + m[12], m[1] * x + m[5] * y + m[9] * z + m[13], m[2] * x + m[6] * y + m[10] * z + m[14]];
+      for (let k = 0; k < 9; k++) out[o++] = m[k + (k / 3 | 0)];
+      out[o++] = c[0]; out[o++] = c[1]; out[o++] = c[2];
+      out[o++] = ((rgb >> 16) & 255) / 255; out[o++] = ((rgb >> 8) & 255) / 255; out[o++] = (rgb & 255) / 255; out[o++] = 1;
+      for (let k = 0; k < 3; k++) { if (c[k] < lo[k]) lo[k] = c[k]; if (c[k] > hi[k]) hi[k] = c[k]; }
+    }
+  }
+  return { instances: out, count: n, lo, hi };
+}
+
+export function mount(container, { releaseId, path, endpoint, backdrop: backdropUrl }) {
   const urls = endpointsFor({ releaseId, endpoint });
   const canvas = document.createElement('canvas');
   canvas.className = 'pkfx-canvas';
@@ -108,7 +131,7 @@ export function mount(container, { releaseId, path, endpoint }) {
   loading.innerHTML = '<span class="pkfx-spinner"></span> Loading VFX preview…';
   container.appendChild(loading);
 
-  let renderer, system, current, raf = 0, disposed = false;
+  let renderer, system, current, raf = 0, disposed = false, backdrop = null;
   const texCache = new Map(), atlasCache = new Map(), meshCache = new Map();
 
   const assetUrl = (ref) => urls.asset(ref);
@@ -232,6 +255,21 @@ export function mount(container, { releaseId, path, endpoint }) {
       }
     }
     await loadAnimTracks(effect);
+    if (backdropUrl) {
+      try {
+        const res = await fetch(backdropUrl);
+        if (res.ok) backdrop = backdropInstances((await res.json()).parts || []);
+      } catch { backdrop = null; }   // the effect still plays on its own
+      if (backdrop && !backdrop.count) backdrop = null;
+      if (backdrop) {
+        // look across a long weapon rather than down its length
+        const [lo, hi] = [backdrop.lo, backdrop.hi];
+        if (hi[2] - lo[2] > hi[0] - lo[0]) renderer.cam.az = Math.PI / 2;
+        renderer.cam.target = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
+        // framed on the model it is worn on, not on sparks that drift off it
+        renderer.cam.dist = Math.max(Math.hypot(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) * 1.6, 0.8);
+      }
+    }
     if (disposed) return;
     system = new System(effect, Math.random);
     current = { effect, unsupported: [...unsupported], missing: man.missing || [] };
@@ -243,7 +281,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     note.textContent = partials.length ? 'Partial preview — ' + partials.join(' · ') : '';
     note.style.display = partials.length ? 'block' : 'none';
 
-    autofit.active = true; autofit.scale = 0; autofit.t = 0; autofit.floor = null; autofit.y1 = null;
+    autofit.active = !backdrop; autofit.scale = 0; autofit.t = 0; autofit.floor = null; autofit.y1 = null;
     loading.style.display = 'none';
     raf = requestAnimationFrame(frame);
   }
@@ -526,6 +564,10 @@ export function mount(container, { releaseId, path, endpoint }) {
     const items = [];
     const eye = renderer.eyePosition();
     let cnt = 0, maxR2 = 0, minY = Infinity, maxY = -Infinity;
+    if (backdrop) {
+      items.push({ type: 'mesh', geom: null, texture: renderer.white, lit: true, shade: true, kind: 0,
+                   instances: backdrop.instances, count: backdrop.count, drawOrder: 0 });
+    }
     if (system) {
       for (const ls of system.layers) {
         for (let i = 0; i < ls.count; i++) {
@@ -596,7 +638,7 @@ export function mount(container, { releaseId, path, endpoint }) {
     renderer.cam.az -= dx * 0.01;
     renderer.cam.el = clamp(renderer.cam.el + dy * 0.01, -1.5, 1.5);
   };
-  const onWheel = (e) => { e.preventDefault(); autofit.active = false; renderer.cam.dist = clamp(renderer.cam.dist * (1 + Math.sign(e.deltaY) * 0.1), 1, 120); };
+  const onWheel = (e) => { e.preventDefault(); autofit.active = false; renderer.cam.dist = clamp(renderer.cam.dist * (1 + Math.sign(e.deltaY) * 0.1), 0.3, 120); };
   const onCtx = (e) => e.preventDefault();   // right-drag is a control, not a context menu
   canvas.addEventListener('pointerdown', onDown);
   window.addEventListener('pointerup', onUp);
