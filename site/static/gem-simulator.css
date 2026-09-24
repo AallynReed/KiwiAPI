@@ -574,3 +574,29 @@
 @media (max-width: 640px) {
   .gem-sim .creator-advanced-row, .gem-sim .creator-generate-row { flex-direction: column; align-items: stretch; }
 }
+
+/* ── Level-up odds, cost and spend ───────────────────────────────────────── */
+.gem-sim .level-panel { margin-top: 14px; display: grid; gap: 6px; font-size: 0.9em; }
+.gem-sim .level-panel .muted { color: var(--text-mute, #9aa4b2); }
+.gem-sim .level-booster { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px; }
+.gem-sim .level-booster span { color: var(--text-mute, #9aa4b2); }
+.gem-sim .level-cost { line-height: 1.5; overflow-wrap: anywhere; }
+.gem-sim .level-attempt {
+  height: 8px; border-radius: 4px; overflow: hidden;
+  background: var(--bg-deep, #0a0e14); border: 1px solid var(--bg-line, #1f2733);
+}
+.gem-sim .level-attempt-fill {
+  height: 100%; transform: scaleX(0); transform-origin: left center;
+  background: var(--accent-blue, #58a6ff);
+}
+.gem-sim .level-attempt-fill.running { transform: scaleX(1); transition: transform 900ms cubic-bezier(0.3, 0.6, 0.4, 1); }
+.gem-sim .level-attempt-fill.success,
+.gem-sim .level-attempt-fill.double,
+.gem-sim .level-attempt-fill.failed { transform: scaleX(1); }
+.gem-sim .level-attempt-fill.success { background: var(--accent-green, #3fb950); }
+.gem-sim .level-attempt-fill.double { background: #e3b341; }
+.gem-sim .level-attempt-fill.failed { background: var(--accent-red, #f85149); }
+.gem-sim .level-result { min-height: 1.5em; font-weight: 600; }
+.gem-sim .level-result.success { color: var(--accent-green, #3fb950); }
+.gem-sim .level-result.double { color: #e3b341; }
+.gem-sim .level-result.failed { color: #ff7b72; }

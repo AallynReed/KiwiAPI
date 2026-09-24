@@ -80,8 +80,10 @@ from app.trove.codexes.schemas import (
     CodexUpgradeSystemList,
 )
 from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
+from app.trove.gems import bases as gem_bases
 from app.trove.gems import builds as gem_builds
 from app.trove.gems import evaluator as gem_evaluator
+from app.trove.gems.constants import GemElement, GemTier, GemType
 from app.trove.gems.model import Gem, gem_lookups
 from app.trove.gems.schemas import (
     AugmentRequest,
@@ -95,7 +97,9 @@ from app.trove.gems.schemas import (
     GemLookups,
     GemStatRange,
     GenerateGemRequest,
+    LevelPlan,
     LevelUpRequest,
+    LevelUpResult,
     SetLevelRequest,
     SimpleEvaluateRequest,
     SimpleEvaluationResult,
@@ -929,11 +933,33 @@ async def flare_gem(req: StatPositionRequest, ctx: TokenContext = _GEM) -> GemAc
     return GemActionResult(applied=applied, gem=req.gem)
 
 
-@gems_router.post("/level-up", response_model=GemActionResult)
-async def level_up_gem(req: LevelUpRequest, ctx: TokenContext = _GEM) -> GemActionResult:
-    """Raise the gem's level by one (adds a container at levels 5/10/15). No-op at max level."""
-    applied = req.gem.level_up()
-    return GemActionResult(applied=applied, gem=req.gem)
+@gems_router.post("/level-up", response_model=LevelUpResult)
+async def level_up_gem(req: LevelUpRequest, ctx: TokenContext = _GEM) -> LevelUpResult:
+    """One level-up attempt at the game's odds, optionally with a booster. The attempt's
+    materials are spent (and added to `gem.spent`) whether or not it lands; a double
+    level-up gains two levels. Levels 5/10/15 add a stat boost. No-op at max level."""
+    level = req.gem.level
+    try:
+        out = req.gem.level_up(req.booster)
+    except ValueError as e:
+        raise _bad_request(str(e)) from e
+    return LevelUpResult(applied=req.gem.level > level, gem=req.gem, **out)
+
+
+@gems_router.get("/level-costs", response_model=LevelPlan)
+async def get_gem_level_costs(
+    tier: int, type: int, element: int = 1,
+    booster: str | None = None,
+    from_level: int = Query(default=1, ge=1),
+    ctx: TokenContext = _GEM,
+) -> LevelPlan:
+    """Every level-up attempt from `from_level` to max - chance, double chance and
+    materials per attempt - and the expected total spend, from the game files."""
+    try:
+        plan = gem_bases.level_plan(GemTier(tier), GemType(type), GemElement(element), booster, from_level)
+    except (ValueError, KeyError) as e:
+        raise _bad_request(f"Invalid level-cost parameters: {e}") from e
+    return LevelPlan(tier=tier, type=type, element=element, booster=booster, from_level=from_level, **plan)
 
 
 @gems_router.post("/set-level", response_model=GemActionResult)

@@ -200,11 +200,13 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>/v1/stats/light</code></td><td><code>stats:read</code></td><td>Light stat table - each source and the Light it gives</td></tr>
             <tr><td><code>/v1/stats/classes</code></td><td><code>stats:read</code></td><td>All 18 classes as full objects, keyed by <code>tech_name</code></td></tr>
             <tr><td><code>/v1/stats/classes/{tech_name}</code></td><td><code>stats:read</code></td><td>One class by its <code>tech_name</code> token (e.g. <code>knight</code>)</td></tr>
-            <tr><td><code>GET /v1/gems/lookups</code></td><td><code>gems:read</code></td><td>Valid gem field values (tiers, types, elements, stats, augments, abilities)</td></tr>
+            <tr><td><code>GET /v1/gems/lookups</code></td><td><code>gems:read</code></td><td>Valid gem field values (tiers, types, elements, stats, augments, abilities, level-up boosters)</td></tr>
             <tr><td><code>POST /v1/gems/generate</code></td><td><code>gems:read</code></td><td>Roll a gem (omit any field for random) → a gem object</td></tr>
             <tr><td><code>POST /v1/gems/augment</code></td><td><code>gems:read</code></td><td>Apply a focus augment to a stat by position → updated gem</td></tr>
             <tr><td><code>POST /v1/gems/spark</code> · <code>/flare</code></td><td><code>gems:read</code></td><td>Reroll a stat type / move a proc, by stat position → updated gem</td></tr>
-            <tr><td><code>POST /v1/gems/level-up</code> · <code>/set-level</code></td><td><code>gems:read</code></td><td>Raise or set a gem's level → updated gem</td></tr>
+            <tr><td><code>POST /v1/gems/level-up</code></td><td><code>gems:read</code></td><td>One level-up attempt at the game's odds (optional booster) → outcome, cost, updated gem</td></tr>
+            <tr><td><code>POST /v1/gems/set-level</code></td><td><code>gems:read</code></td><td>Set a gem's level outright → updated gem</td></tr>
+            <tr><td><code>GET /v1/gems/level-costs</code></td><td><code>gems:read</code></td><td>Every level-up attempt to max: chance, materials, expected total</td></tr>
             <tr><td><code>POST /v1/gems/evaluate</code></td><td><code>gems:read</code></td><td>Score a typed-in gem: quality %, Power Rank, cost to perfect</td></tr>
             <tr><td><code>GET /v1/gems/stat-range</code></td><td><code>gems:read</code></td><td>Plausible (min, max) value a stat can roll at</td></tr>
             <tr><td><code>GET /v1/gems/builds/options</code></td><td><code>gems:read</code></td><td>Valid build-config field values (classes, allies, foods, flags)</td></tr>
@@ -249,7 +251,10 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             server-side. <code>generate</code> returns a gem object; you hold it and POST it back to an
             action endpoint (<code>augment</code>, <code>spark</code>, <code>flare</code>,
             <code>level-up</code>, <code>set-level</code>) with a <code>stat_position</code> (0, 1 or 2)
-            to mutate it, and it's returned updated. <code>evaluate</code> and <code>builds/calculate</code>
+            to mutate it, and it's returned updated. Stat rolls, level-up chances and costs are the game's
+            own, decoded from its files: <code>level-up</code> is an attempt that can fail, spends its
+            materials either way and adds them to the gem's <code>spent</code> total.
+            <code>evaluate</code> and <code>builds/calculate</code>
             are pure calculators; the <code>lookups</code> and <code>builds/options</code> endpoints tell
             you every valid field value to send.</p>
           <p class="field-help">The <strong>mod</strong> tools are stateless too. <code>/mods/read</code>

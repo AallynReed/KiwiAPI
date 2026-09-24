@@ -12,10 +12,8 @@ reports what it adds, not the base kit's numbers.
 Small gems carry no ability - they are `blue_t1`, `blue_t10_concat1` and so on,
 with no slug - which is why only `large/` is walked.
 
-Gem STAT ROLL values (gamedata/mystic.json) are deliberately not touched: they
-are not in the prefab tree. `gems/meta/gem_upgradedata.binfab` holds upgrade
-costs (flux, gemrepair, warpseed) and the item prefabs hold no stat records, so
-the per-tier roll ranges are computed by the game and cannot be read from here.
+Gem stat rolls, level-up odds and costs are gem_upgrades.py's, from
+`gems/meta/gem_upgradedata.binfab`.
 """
 from __future__ import annotations
 

@@ -10,6 +10,7 @@ import math
 from itertools import product
 
 from .bases import (
+    boosts_at,
     get_empowered_gem_pr_threshold,
     get_gem_max_level,
     get_increment_power_rank_empowered,
@@ -222,7 +223,7 @@ def _guess_distribution(gem_tier, gem_type, level, stats_payload) -> list[int]:
     exist (players scrap them, which makes them rare, not impossible). So every
     total up to `available` is considered, and the entered values decide.
     """
-    available = min(level, 15) // 5
+    available = boosts_at(gem_tier, gem_type, level)
     best_distribution = None
     best_score = None
     for distribution in product(range(4), repeat=3):
@@ -252,7 +253,7 @@ def evaluate_gem(tier: int, type: int, level: int, stats: list[dict], auto_guess
     if len(stats) != 3:
         raise GemEvaluatorError("Exactly 3 stats are required.")
 
-    available = min(level, 15) // 5
+    available = boosts_at(gem_tier, gem_type, level)
     selected: list[GemStatType] = []
     extra_total = 0
     payload = [dict(s) for s in stats]
@@ -313,7 +314,7 @@ def evaluate_gem_simple(tier: int, type: int, power_rank: int, level: int = 1) -
     # count whose band actually contains it; a PR below the full-boost minimum is
     # itself the evidence that the gem is short a boost. Falls back to the usual
     # count when no band fits (then `is_within_range` reports the mismatch).
-    boosts = min(level, 15) // 5
+    boosts = boosts_at(gem_tier, gem_type, level)
     container_count = boosts + 3
     min_pr, max_pr = _band(container_count)
     for candidate in range(container_count, 2, -1):
@@ -365,7 +366,7 @@ def gem_stat_range(tier: int, type: int, stat_type: int, level: int = 1,
     return {
         "stat_type": st.value, "stat_display_name": st.display_name, "element": elem.value,
         "containers": containers,
-        "min_value": stat_base * (thresholds[0] * containers + pr_increments_total),
-        "max_value": stat_base * (thresholds[1] * containers + pr_increments_total),
+        "min_value": round(stat_base * (thresholds[0] * containers + pr_increments_total), 6),
+        "max_value": round(stat_base * (thresholds[1] * containers + pr_increments_total), 6),
         "stat_base": stat_base, "thresholds": list(thresholds),
     }

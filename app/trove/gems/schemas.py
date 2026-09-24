@@ -39,6 +39,22 @@ class StatPositionRequest(BaseModel):
 
 class LevelUpRequest(BaseModel):
     gem: Gem
+    booster: str | None = None       # a booster id from /lookups (e.g. "booster2"), spent on the attempt
+
+
+class ItemCount(BaseModel):
+    item: str                        # game item path, e.g. "item/crafting/flux"
+    name: str
+    count: int
+
+
+class LevelUpResult(BaseModel):
+    applied: bool                    # the level went up
+    outcome: str                     # "success" | "double" | "failed" | "max_level"
+    chance: float                    # level-up chance of this attempt, booster applied
+    double_chance: float
+    cost: list[ItemCount]            # spent whether or not it landed; also added to gem.spent
+    gem: Gem
 
 
 class SetLevelRequest(BaseModel):
@@ -58,6 +74,13 @@ class TierLookup(BaseModel):
     id: int
     name: str
     max_level: int
+
+
+class BoosterLookup(BaseModel):
+    id: str
+    name: str
+    chance_multiplier: float
+    double_multiplier: float
 
 
 class AugmentLookup(BaseModel):
@@ -108,7 +131,31 @@ class GemLookups(BaseModel):
     augment_types: list[AugmentLookup]
     abilities: list[LookupItem]
     abilities_by_element: dict[str, list[int]]
+    boosters: list[BoosterLookup] = []
     empowered_gems: list[EmpoweredGem] = []
+
+
+class LevelPlanStep(BaseModel):
+    level: int
+    chance: float
+    double_chance: float
+    expected_attempts: float
+    cost: list[ItemCount]            # per attempt
+
+
+class LevelPlanTotal(BaseModel):
+    name: str
+    count: int
+
+
+class LevelPlan(BaseModel):
+    tier: int
+    type: int
+    element: int
+    booster: str | None
+    from_level: int
+    levels: list[LevelPlanStep]
+    expected_total: list[LevelPlanTotal]  # sum of cost x expected attempts; ignores double level-ups
 
 
 # --- Evaluator -------------------------------------------------------------

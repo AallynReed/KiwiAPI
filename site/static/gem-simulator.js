@@ -44,6 +44,10 @@
   let selectedSource = null; // { pane, idx } | null
   let selectedStatIdx = 0;
   let selectedActionKey = null; // 'augment-1' | 'augment-2' | 'augment-3' | 'spark' | 'flare'
+  let selectedBooster = ""; // a GemEngine.boosters() id, or "" for none
+  const ATTEMPT_MS = 900;
+  let levelBusy = false;
+  let lastAttempt = null; // { gemId, outcome, chance, level } - the latest level-up result shown
   const creatorParams = { type: "", tier: "", element: "", restriction: "", level: 1, augmentNull: true, augment: 0 };
   let dragState = { pane: null, idx: -1, gem: null };
   // Keyboard "move" alternative to drag: Enter picks a source slot, Enter on a
@@ -69,6 +73,8 @@
   const statValue = (gem, i) => gem.stat_values[i][statName(gem, i)];
   const formatStat = (v) => (Math.round(v * 100) / 100).toLocaleString();
   const barColor = (v) => (v < 0.33 ? "#d32f2f" : v < 0.66 ? "#fbc02d" : "#34d058");
+  const pct = (x) => parseFloat((x * 100).toFixed(x < 0.1 ? 2 : 1)) + "%";
+  const costText = (rows) => rows.map((r) => r.count.toLocaleString() + " " + t(r.name)).join(" · ");
 
   // ── Asset URLs ──────────────────────────────────────────────────────────
   const tierBg = (gem) => `${ASSET}/gem_tiers/${gem.tier}.png`;
@@ -412,8 +418,10 @@
     actionGroup.appendChild(actionSquare("flare", modifierImg("flare"), t("Move Boost")));
     elDetail.appendChild(h("div", { class: "button-row" }, actionGroup));
 
+    elDetail.appendChild(levelPanel(gem));
+
     const lvlBtn = h("button", { class: "gem-action-btn" }, gem.is_max_level ? t("Max Level") : t("Level Up"));
-    lvlBtn.disabled = !!gem.is_max_level;
+    lvlBtn.disabled = !!gem.is_max_level || levelBusy;
     lvlBtn.addEventListener("click", levelUpSelected);
 
     const actBtn = h("button", { class: "gem-action-btn" }, t(actionButtonText()));
@@ -427,6 +435,47 @@
       addBtn.addEventListener("click", saveSelectedToInventory);
       elDetail.appendChild(addBtn);
     }
+  }
+  // The next level-up attempt's odds and cost (the game's), a booster picker, and
+  // what levelling this gem has cost so far.
+  function levelPanel(gem) {
+    const panel = h("div", { class: "level-panel" });
+    const next = window.GemEngine.nextAttempt(gem, selectedBooster);
+    if (next) {
+      const sel = h("select", { id: "gs-booster" });
+      sel.appendChild(h("option", { value: "" }, t("No booster")));
+      window.GemEngine.boosters().forEach((b) => {
+        const label = b.double_multiplier !== 1
+          ? fmt("{name} (×{chance} chance, ×{double} double)", { name: t(b.name), chance: b.chance_multiplier, double: b.double_multiplier })
+          : fmt("{name} (×{chance} chance)", { name: t(b.name), chance: b.chance_multiplier });
+        sel.appendChild(h("option", { value: b.id }, label));
+      });
+      sel.value = selectedBooster;
+      sel.addEventListener("change", () => { selectedBooster = sel.value; renderDetail(); });
+      panel.appendChild(h("label", { class: "level-booster", for: "gs-booster" }, h("span", null, t("Booster")), sel));
+      panel.appendChild(h("div", { class: "level-odds" },
+        h("b", null, fmt("Lv {level}", { level: next.level })), " ",
+        fmt("{chance} chance", { chance: pct(next.chance) }),
+        next.double_chance > 0 ? h("span", { class: "muted" }, " · " + fmt("{double} double", { double: pct(next.double_chance) })) : null));
+      panel.appendChild(h("div", { class: "level-cost" }, h("span", { class: "muted" }, t("Each attempt:") + " "), costText(next.cost)));
+    }
+    const fill = h("div", { class: "level-attempt-fill" });
+    const result = h("div", { class: "level-result", "aria-live": "polite" });
+    if (lastAttempt && lastAttempt.gemId === gem.id) {
+      fill.classList.add(lastAttempt.outcome);
+      result.classList.add(lastAttempt.outcome);
+      result.textContent = lastAttempt.outcome === "double" ? fmt("Double level up! Now level {level}.", { level: lastAttempt.level })
+        : lastAttempt.outcome === "success" ? fmt("Success! Now level {level}.", { level: lastAttempt.level })
+        : fmt("Failed ({chance} chance). Materials spent.", { chance: pct(lastAttempt.chance) });
+    }
+    if (next || lastAttempt) panel.appendChild(h("div", { class: "level-attempt", "aria-hidden": "true" }, fill));
+    panel.appendChild(result);
+    if (gem.attempts) {
+      const spent = Object.entries(gem.spent || {}).map(([name, count]) => ({ name, count }));
+      panel.appendChild(h("div", { class: "level-cost" },
+        h("span", { class: "muted" }, fmt("Spent over {n} attempts:", { n: gem.attempts.toLocaleString() }) + " "), costText(spent)));
+    }
+    return panel;
   }
   function actionButtonText() {
     if (!selectedActionKey) return "Action";
@@ -544,11 +593,37 @@
       toast(fmt("Could not generate gem: {error}", { error: (resp && resp.error) || t("Unknown error") }), true);
     }
   }
+  // Rolls the attempt at once (the game's odds), then plays the attempt bar before
+  // showing the outcome, like the in-game upgrade.
   function levelUpSelected() {
-    if (!selected) return;
-    const resp = window.GemEngine.levelUpGem(selected);
-    if (resp && resp.success) { updateSelectedInPlace(resp.gem); render(); save(); }
-    else toast(fmt("Could not level up: {error}", { error: (resp && resp.error) || t("Unknown error") }), true);
+    if (!selected || levelBusy) return;
+    const resp = window.GemEngine.levelUpGem(selected, selectedBooster);
+    if (!resp || !resp.success) {
+      toast(fmt("Could not level up: {error}", { error: (resp && resp.error) || t("Unknown error") }), true);
+      return;
+    }
+    const source = selectedSource;
+    const finish = () => {
+      levelBusy = false;
+      lastAttempt = { gemId: resp.gem.id, outcome: resp.outcome, chance: resp.chance, level: resp.gem.level };
+      if (source) {
+        if (source.pane === "inventory") inventory[source.idx] = resp.gem;
+        else if (source.pane === "equipped") equipped[source.idx] = resp.gem;
+      }
+      if (selected && selected.id === resp.gem.id) selected = resp.gem;
+      render();
+      save();
+    };
+    const fill = elDetail.querySelector(".level-attempt-fill");
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || !fill) return finish();
+    levelBusy = true;
+    const btn = elDetail.querySelector(".gem-actions-row .gem-action-btn");
+    if (btn) btn.disabled = true;
+    fill.className = "level-attempt-fill";
+    void fill.offsetWidth;
+    fill.classList.add("running");
+    setTimeout(finish, ATTEMPT_MS);
   }
   function doSelectedAction() {
     if (!selectedActionKey || !selected) return;
@@ -725,7 +800,7 @@
   }
 
   // ── Init ────────────────────────────────────────────────────────────────
-  function init() {
+  async function init() {
     elEquipped = document.getElementById("gs-equipped");
     elPrimordial = document.getElementById("gs-primordial");
     elTotals = document.getElementById("gs-totals");
@@ -737,6 +812,14 @@
     elTooltip = document.getElementById("gs-tooltip");
     elModal = document.getElementById("gs-modal");
     if (!elInventory) return;
+
+    try {
+      await window.GemEngine.load();
+    } catch (e) {
+      elDetail.appendChild(h("div", { class: "placeholder-text" }, t("The gem data could not be loaded. Reload the page to try again.")));
+      toast(t("The gem data could not be loaded."), true);
+      return;
+    }
 
     const look = window.GemEngine.getLookups();
     lookups = (look && look.data) || {};

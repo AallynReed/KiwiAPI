@@ -1,9 +1,9 @@
 /* =========================================================================
    Better Trove Tools - client-side gem engine
    -------------------------------------------------------------------------
-   A faithful JS port of the Python gem model (models/trove/gems.py +
-   gem_bases.py + gem_constants.py) so the Gem Simulator works with no Python
-   backend - i.e. in hosted web mode AND in the Android (Capacitor) build.
+   A faithful JS port of the Python gem model (app/trove/gems/model.py +
+   bases.py + constants.py) so the Gem Simulator runs in the browser. The game
+   numbers come from /gamedata/gem_upgrades.json: call GemEngine.load() first.
 
    web_mode.js routes the gem eel-shim functions here. The output matches the
    Python `model_dump(mode='json')` shape exactly, including the computed
@@ -65,134 +65,100 @@
         [Element.COSMIC]: [9, 10, 11, 12]
     };
 
-    // ---- bases (gem_bases.py) ----
-    function getGemMaxLevel(tier) {
-        switch (tier) {
-            case Tier.RADIANT: return 23;
-            case Tier.STELLAR: return 25;
-            case Tier.CRYSTAL: return 30;
-            case Tier.MYSTIC: return 35;
-        }
-        return null;
+    // ---- game data (gem_upgrades.json; app/trove/gems/bases.py is the Python twin) ----
+    // Stat rolls, the level schedule, level-up odds/costs, focuses and boosters come
+    // from the game files. Power Rank is not in them and stays as BTT had it.
+    let DATA = null;
+    let INDEX = {};
+    const PR_BASE = { 1: 3, 2: 5, 3: 7, 4: 9 };
+    const LESSER_PR_THRESHOLD = { 1: [85, 113], 2: [150, 200], 3: [175, 250], 4: [200, 260] };
+    const EMPOWERED_PR_THRESHOLD = { 1: [113, 150], 2: [200, 266], 3: [220, 280], 4: [240, 300] };
+    const FILE_TIER = { 1: 9, 2: 10, 3: 11, 4: 12 };
+    const COLOR = { 1: "blue", 2: "red", 3: "yellow", 4: "opal" };
+    const STAT_KEY = {
+        1: "PhysicalDamage|false", 2: "SpellDamage|false", 3: "CriticalHitDamage|false",
+        4: "CriticalHitChance|false", 5: "MaxHealth|false", 6: "MaxHealth|true", 7: "Light|false"
+    };
+    const FOCUS = { 1: "item/gem/booster/augment1", 2: "item/gem/booster/augment2", 3: "item/gem/booster/augment3" };
+
+    function setData(data) {
+        DATA = data || { gems: [] };
+        INDEX = {};
+        for (const g of DATA.gems || []) for (const i of g.items) INDEX[i.size + "/" + i.color + "/" + i.tier] = g;
     }
-    function getLevelPrIncrement(level, base) {
-        if (level === 1 || level === 5 || level === 10 || level === 15) return 0;
-        if (level > 15 && level % 5 === 0) return base * 5;
-        if (level > 1 && level < 15) return base;
-        if (level > 15) return base * 2;
-        return null;
+    function upgradeData(tier, type, element) {
+        const size = type === Type.LESSER ? "small" : "large";
+        const t = FILE_TIER[tier] + (type === Type.LESSER ? 0 : 100);
+        return INDEX[size + "/" + COLOR[element || Element.WATER] + "/" + t] || null;
     }
+    const itemName = (item) => (DATA && DATA.names && DATA.names[item]) || item.split("/").pop();
+    const levelAttempt = (tier, type, element, level) => {
+        const g = upgradeData(tier, type, element);
+        return g ? (g.levels.find(l => l.level === level) || null) : null;
+    };
+    function getGemMaxLevel(tier, type) {
+        const g = upgradeData(tier, type || Type.LESSER, Element.WATER);
+        return g ? g.max_level : null;
+    }
+    function boostLevels(tier, type) {
+        const g = upgradeData(tier, type || Type.LESSER, Element.WATER);
+        return g ? g.levels.filter(l => l.boost).map(l => l.level) : [];
+    }
+    const boostsAt = (tier, type, level) => boostLevels(tier, type).filter(l => l <= level).length;
     function getIncrementPowerRank(tier, level) {
-        // lesser and empowered use the same table in gem_bases.py
-        switch (tier) {
-            case Tier.RADIANT: return getLevelPrIncrement(level, 3);
-            case Tier.STELLAR: return getLevelPrIncrement(level, 5);
-            case Tier.CRYSTAL: return getLevelPrIncrement(level, 7);
-            case Tier.MYSTIC: return getLevelPrIncrement(level, 9);
-        }
-        return null;
+        const a = levelAttempt(tier, Type.LESSER, Element.WATER, level);
+        return PR_BASE[tier] * (a ? a.stat_steps : 0);
     }
-    function getStatBaseLesser(tier, statType) {
-        const D = (statType === Stat.PHYSICAL_DAMAGE || statType === Stat.MAGIC_DAMAGE);
-        switch (tier) {
-            case Tier.RADIANT: case Tier.STELLAR:
-                if (D) return 14;
-                if (statType === Stat.CRITICAL_DAMAGE) return 0.2;
-                if (statType === Stat.CRITICAL_HIT) return 0.02;
-                if (statType === Stat.MAX_HEALTH_BONUS) return 0.5;
-                if (statType === Stat.MAX_HEALTH) return 50;
-                if (statType === Stat.LIGHT) return 1;
-                break;
-            case Tier.CRYSTAL:
-                if (D) return 16;
-                if (statType === Stat.CRITICAL_DAMAGE) return 3 / 14;
-                if (statType === Stat.CRITICAL_HIT) return 0.3 / 14;
-                if (statType === Stat.MAX_HEALTH_BONUS) return 0.5;
-                if (statType === Stat.MAX_HEALTH) return 50;
-                if (statType === Stat.LIGHT) return 5 / 7;
-                break;
-            case Tier.MYSTIC:
-                if (D) return 168 / 9;
-                if (statType === Stat.CRITICAL_DAMAGE) return 2.5 / 9;
-                if (statType === Stat.CRITICAL_HIT) return 0.25 / 9;
-                if (statType === Stat.MAX_HEALTH_BONUS) return 5.25 / 9;
-                if (statType === Stat.MAX_HEALTH) return 525 / 9;
-                if (statType === Stat.LIGHT) return 5 / 9;
-                break;
-        }
-        return null;
+    function statRoll(tier, type, element, statType) {
+        const g = upgradeData(tier, type, element);
+        const key = STAT_KEY[statType];
+        return g ? (g.stats.find(r => r.stat + "|" + r.percent === key) || null) : null;
     }
-    function getStatBaseEmpowered(tier, statType) {
-        const D = (statType === Stat.PHYSICAL_DAMAGE || statType === Stat.MAGIC_DAMAGE);
-        // identical to lesser EXCEPT Mystic damage base (28 vs 168/9)
-        if (tier === Tier.MYSTIC && D) return 28;
-        return getStatBaseLesser(tier, statType);
+    function getStatBase(tier, type, element, statType) {
+        const r = statRoll(tier, type, element, statType);
+        return r ? r.step / PR_BASE[tier] : null;
     }
-    function getStatThresholdLesser(tier, statType) {
-        const D = (statType === Stat.PHYSICAL_DAMAGE || statType === Stat.MAGIC_DAMAGE);
-        switch (tier) {
-            case Tier.RADIANT: return [85, 113];
-            case Tier.STELLAR: return [150, 200];
-            case Tier.CRYSTAL:
-                if (D) return [210, 280];
-                if (statType === Stat.CRITICAL_DAMAGE || statType === Stat.CRITICAL_HIT) return [560 / 3, 770 / 3];
-                if (statType === Stat.MAX_HEALTH_BONUS || statType === Stat.MAX_HEALTH) return [245, 315];
-                if (statType === Stat.LIGHT) return [280, 385];
-                break;
-            case Tier.MYSTIC:
-                if (D) return [270, 360];
-                if (statType === Stat.CRITICAL_DAMAGE || statType === Stat.CRITICAL_HIT) return [187.2, 297];
-                if (statType === Stat.MAX_HEALTH_BONUS || statType === Stat.MAX_HEALTH) return [315, 405];
-                if (statType === Stat.LIGHT) return [495, 585];
-                break;
-        }
-        return null;
+    function getStatThreshold(tier, type, element, statType) {
+        const r = statRoll(tier, type, element, statType);
+        if (!r) return null;
+        const base = r.step / PR_BASE[tier];
+        return [r.min / base, r.max / base];
     }
-    function getStatThresholdEmpowered(tier, statType) {
-        const D = (statType === Stat.PHYSICAL_DAMAGE || statType === Stat.MAGIC_DAMAGE);
-        switch (tier) {
-            case Tier.RADIANT: return [113, 150];
-            case Tier.STELLAR: return [200, 266];
-            case Tier.CRYSTAL:
-                if (D) return [245, 350];
-                if (statType === Stat.CRITICAL_DAMAGE || statType === Stat.CRITICAL_HIT) return [700 / 3, 910 / 3];
-                if (statType === Stat.MAX_HEALTH_BONUS || statType === Stat.MAX_HEALTH) return [315, 385];
-                if (statType === Stat.LIGHT) return [350, 420];
-                break;
-            case Tier.MYSTIC:
-                if (D) return [210, 300];
-                if (statType === Stat.CRITICAL_DAMAGE || statType === Stat.CRITICAL_HIT) return [252, 342];
-                if (statType === Stat.MAX_HEALTH_BONUS || statType === Stat.MAX_HEALTH) return [405, 495];
-                if (statType === Stat.LIGHT) return [495, 630];
-                break;
-        }
-        return null;
-    }
-    function getLesserGemPrThreshold(tier) {
-        switch (tier) {
-            case Tier.RADIANT: return [85, 113];
-            case Tier.STELLAR: return [150, 200];
-            case Tier.CRYSTAL: return [175, 250];
-            case Tier.MYSTIC: return [200, 260];
-        }
-        return null;
-    }
-    function getEmpoweredGemPrThreshold(tier) {
-        switch (tier) {
-            case Tier.RADIANT: return [113, 150];
-            case Tier.STELLAR: return [200, 266];
-            case Tier.CRYSTAL: return [220, 280];
-            case Tier.MYSTIC: return [240, 300];
-        }
-        return null;
-    }
+    const getLesserGemPrThreshold = (tier) => LESSER_PR_THRESHOLD[tier] || null;
+    const getEmpoweredGemPrThreshold = (tier) => EMPOWERED_PR_THRESHOLD[tier] || null;
     function getAugmentBase(augment) {
-        switch (augment) {
-            case Augment.ROUGH: return 2.5;
-            case Augment.PRECISE: return 5;
-            case Augment.SUPERIOR: return 12.5;
+        const f = ((DATA && DATA.focuses) || []).find(x => x.item === FOCUS[augment]);
+        return f ? f.amount : null;
+    }
+    function statWeights(tier, type, element) {
+        const g = upgradeData(tier, type, element);
+        const water = upgradeData(tier, type, Element.WATER);
+        const pool = (g && g.pool.length) ? g.pool : (water ? water.pool : []);
+        const out = {};
+        for (const [st, key] of Object.entries(STAT_KEY)) {
+            const p = pool.find(r => r.stat + "|" + r.percent === key);
+            if (p) out[st] = p.weight;
         }
-        return null;
+        return out;
+    }
+    function boosters() {
+        return ((DATA && DATA.boosters) || []).map(b => ({
+            id: b.item.split("/").pop(), item: b.item, name: itemName(b.item),
+            chance_multiplier: b.chance_multiplier, double_multiplier: b.double_multiplier
+        }));
+    }
+    const findBooster = (id) => (id ? boosters().find(b => b.id === id) || null : null);
+    function attemptOdds(attempt, boost) {
+        return [Math.min(1, attempt.chance * (boost ? boost.chance_multiplier : 1)),
+                Math.min(1, attempt.double_chance * (boost ? boost.double_multiplier : 1))];
+    }
+    function attemptCost(element, attempt, boost) {
+        const mats = (DATA && DATA.materials && DATA.materials[COLOR[element]]) || {};
+        const rows = attempt.cost.map(c => [c.item, c.count]);
+        if (attempt.dust && mats.dust) rows.push([mats.dust, attempt.dust]);
+        if (attempt.amber && mats.amber) rows.push([mats.amber, attempt.amber]);
+        if (boost) rows.push([boost.item, 1]);
+        return rows.map(([item, count]) => ({ item, name: itemName(item), count }));
     }
 
     // ---- helpers ----
@@ -210,13 +176,18 @@
     }
     const choice = (arr) => arr[Math.floor(Math.random() * arr.length)];
     const randint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-    function sample(arr, k) {
-        const pool = arr.slice();
-        for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+    function weightedSample(arr, weights, k) {
+        const left = arr.slice();
+        const out = [];
+        while (out.length < k && left.length) {
+            let w = left.map(s => weights[s] || 0);
+            if (!w.some(x => x > 0)) w = left.map(() => 1);
+            let r = Math.random() * w.reduce((a, b) => a + b, 0);
+            let i = 0;
+            while (i < left.length - 1 && r >= w[i]) { r -= w[i]; i++; }
+            out.push(left.splice(i, 1)[0]);
         }
-        return pool.slice(0, k);
+        return out;
     }
     let _idCounter = 0;
     const genId = () => Date.now() * 1000 + (_idCounter++ % 1000);
@@ -291,10 +262,8 @@
         for (let level = 1; level <= gem.level; level++) prIncrements += getIncrementPowerRank(gem.tier, level);
         const out = [];
         for (const stat of gem.stats) {
-            const statBase = (gem.type === Type.LESSER)
-                ? getStatBaseLesser(gem.tier, stat.type) : getStatBaseEmpowered(gem.tier, stat.type);
-            const thresholds = (gem.type === Type.LESSER)
-                ? getStatThresholdLesser(gem.tier, stat.type) : getStatThresholdEmpowered(gem.tier, stat.type);
+            const statBase = getStatBase(gem.tier, gem.type, gem.element, stat.type);
+            const thresholds = getStatThreshold(gem.tier, gem.type, gem.element, stat.type);
             const progress = thresholds[0] + (thresholds[1] - thresholds[0]) * statAugmentationProgress(stat);
             let statValue = statBase * progress * stat.containers.length;
             statValue += statBase * prIncrements;
@@ -309,7 +278,7 @@
         return gem.ability ? ABILITY_NAMES[gem.ability] : null;
     }
     function serializeGem(gem) {
-        const maxLevel = getGemMaxLevel(gem.tier);
+        const maxLevel = getGemMaxLevel(gem.tier, gem.type);
         return {
             id: gem.id,
             tier: gem.tier,
@@ -320,6 +289,8 @@
             level: gem.level,
             stats: gem.stats.map(serializeStat),
             augmentation: (gem.augmentation === undefined ? null : gem.augmentation),
+            attempts: gem.attempts || 0,
+            spent: Object.assign({}, gem.spent || {}),
             ability_name: gem.ability ? ABILITY_NAMES[gem.ability] : null,
             gem_name: gemName(gem),
             is_max_level: gem.level === maxLevel,
@@ -338,6 +309,8 @@
             ability: (g.ability === undefined ? null : g.ability),
             level: g.level,
             augmentation: (g.augmentation === undefined ? null : g.augmentation),
+            attempts: g.attempts || 0,
+            spent: Object.assign({}, g.spent || {}),
             stats: (g.stats || []).map(s => ({
                 type: s.type,
                 locked: !!s.locked,
@@ -366,13 +339,13 @@
         } else {
             restriction = null;
         }
-        const extraContainers = Math.floor(Math.min(level, 15) / 5);
+        const extraContainers = boostsAt(tier, type, level);
 
         let stats;
         const pool = (restriction === null || restriction === undefined)
             ? choice([PHYSICAL_GEM_STAT_POOL, MAGIC_GEM_STAT_POOL])
             : (restriction === Restriction.FIERCE ? PHYSICAL_GEM_STAT_POOL : MAGIC_GEM_STAT_POOL);
-        const statTypes = sample(pool[element], 3);
+        const statTypes = weightedSample(pool[element], statWeights(tier, type, element), 3);
         stats = statTypes.map(makeStat);
         if (element === Element.COSMIC) {
             const index = randint(0, 2);
@@ -384,27 +357,42 @@
             const index = randint(0, 2);
             stats[index].containers.push(makeContainer(augLevel));
         }
-        const maxLevel = getGemMaxLevel(tier);
+        const maxLevel = getGemMaxLevel(tier, type);
         level = Math.min(level, maxLevel);
         const ability = (type === Type.EMPOWERED) ? choice(GEM_ABILITIES[element]) : null;
         return {
             id: genId(), tier, type, element, restriction, ability, level,
-            augmentation: (augLevel === undefined ? null : augLevel), stats
+            augmentation: (augLevel === undefined ? null : augLevel), stats, attempts: 0, spent: {}
         };
     }
 
     const augLevelOf = (gem) => (gem.augmentation === undefined || gem.augmentation === null) ? undefined : gem.augmentation;
     const hasStat = (gem, statType) => gem.stats.some(s => s.type === statType);
 
-    function levelUp(gem) {
-        const maxLevel = getGemMaxLevel(gem.tier);
-        if (gem.level < maxLevel) gem.level += 1;
-        else return false;
-        if (gem.level === 5 || gem.level === 10 || gem.level === 15) {
-            const index = randint(0, 2);
-            gem.stats[index].containers.push(makeContainer(augLevelOf(gem)));
+    function gainLevel(gem) {
+        gem.level += 1;
+        if (boostLevels(gem.tier, gem.type).includes(gem.level)) {
+            gem.stats[randint(0, 2)].containers.push(makeContainer(augLevelOf(gem)));
         }
-        return true;
+    }
+    // One level-up attempt at the game's odds (mirrors Gem.level_up): the materials
+    // and booster are spent whether or not it lands; a double gains two levels.
+    function levelUp(gem, boosterId) {
+        const attempt = levelAttempt(gem.tier, gem.type, gem.element, gem.level + 1);
+        if (!attempt) return null;
+        const boost = findBooster(boosterId);
+        const [chance, double] = attemptOdds(attempt, boost);
+        const cost = attemptCost(gem.element, attempt, boost);
+        gem.attempts = (gem.attempts || 0) + 1;
+        gem.spent = gem.spent || {};
+        for (const c of cost) gem.spent[c.name] = (gem.spent[c.name] || 0) + c.count;
+        let outcome = "failed";
+        if (Math.random() < chance) {
+            const gained = (Math.random() < double && gem.level + 2 <= getGemMaxLevel(gem.tier, gem.type)) ? 2 : 1;
+            for (let i = 0; i < gained; i++) gainLevel(gem);
+            outcome = gained === 2 ? "double" : "success";
+        }
+        return { outcome, chance, double_chance: double, cost };
     }
     function addAugmentToStat(stat, augmentType) {
         if (statAugmentationProgress(stat) === 1) return false;
@@ -477,10 +465,29 @@
             const gem = create(data || {});
             return ok(serializeGem(gem));
         },
-        levelUpGem(gemData) {
+        // Fetches the game data; resolves once the engine can be used.
+        load(url) {
+            return fetch(url || "/gamedata/gem_upgrades.json", { credentials: "same-origin" })
+                .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+                .then(setData);
+        },
+        setData,
+        boosters,
+        itemName,
+        // The next attempt's odds and cost, for the UI (null at max level).
+        nextAttempt(gemData, boosterId) {
             const gem = normalize(gemData);
-            if (!levelUp(gem)) return err("Gem is already at max level.", "GEM_MAX_LEVEL");
-            return ok(serializeGem(gem));
+            const attempt = levelAttempt(gem.tier, gem.type, gem.element, gem.level + 1);
+            if (!attempt) return null;
+            const boost = findBooster(boosterId);
+            const [chance, double] = attemptOdds(attempt, boost);
+            return { level: attempt.level, chance, double_chance: double, cost: attemptCost(gem.element, attempt, boost) };
+        },
+        levelUpGem(gemData, boosterId) {
+            const gem = normalize(gemData);
+            const out = levelUp(gem, boosterId);
+            if (!out) return err("Gem is already at max level.", "GEM_MAX_LEVEL");
+            return Object.assign(ok(serializeGem(gem)), out);
         },
         augmentGem(gemData, statId, augmentId) {
             const gem = normalize(gemData);

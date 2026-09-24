@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from app.trove.decode import store as gamedata
+from app.trove.gems.bases import build_gem_stats
 
 _DATA_DIR = Path(__file__).parent.parent / "gamedata"
 
@@ -241,7 +242,7 @@ class GemOptimizerEngine:
         self.allies = _load("builds/ally.json")
         face = _load("builds/face_damage.json")
         self.face_damage = face.get("Face", 0) if isinstance(face, dict) else 0
-        self.gem_stats = _load("mystic.json")
+        self.gem_stats = build_gem_stats()
         self.star_parser = StarChartParser(_load("star_chart.json"))
         self.classes = {c["name"]: c for c in self.classes_data} if self.classes_data else {}
 

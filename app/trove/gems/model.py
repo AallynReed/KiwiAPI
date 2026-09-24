@@ -5,18 +5,28 @@ Gem, the client holds the JSON, and posts it back to apply an action. Actions
 are addressed by **stat position** (0/1/2) here (the API contract) rather than
 by stat type as in the original UI. Computed fields (value, quality, power_rank,
 …) are output-only and recomputed on every parse, so they round-trip safely.
+
+Stat rolls, the level schedule and level-up odds and costs are the game's own
+(see bases.py). A level-up is an attempt: it spends its materials whether or not
+it lands, and the gem keeps a running total in `attempts` / `spent`.
 """
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from random import choice, randint, random, sample
+from random import choice, choices, randint, random
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.trove.decode import store as gamedata
 
 from .bases import (
+    attempt_cost,
+    attempt_odds,
+    boost_levels,
+    booster,
+    boosters,
+    boosts_at,
     get_augment_base,
     get_empowered_gem_pr_threshold,
     get_gem_max_level,
@@ -27,6 +37,8 @@ from .bases import (
     get_stat_base_lesser,
     get_stat_threshold_empowered,
     get_stat_threshold_lesser,
+    level_attempt,
+    stat_weights,
 )
 from .constants import (
     GEM_ABILITIES,
@@ -107,6 +119,8 @@ class Gem(BaseModel):
     level: int
     stats: list[Stat]
     augmentation: float | None = None
+    attempts: int = 0                                   # level-up attempts made
+    spent: dict[str, int] = Field(default_factory=dict)  # item name -> total spent levelling
 
     @classmethod
     def create(cls, tier=None, type=None, element=None, restriction=None,
@@ -123,7 +137,7 @@ class Gem(BaseModel):
         else:
             restriction = None
 
-        extra_containers = min(level, 15) // 5
+        extra_containers = boosts_at(tier, type, level)
         if not generation:
             if restriction is None:
                 gem_stat_pool = choice([PHYSICAL_GEM_STAT_POOL, MAGIC_GEM_STAT_POOL])
@@ -131,7 +145,7 @@ class Gem(BaseModel):
                 gem_stat_pool = (
                     PHYSICAL_GEM_STAT_POOL if restriction == GemRestriction.FIERCE else MAGIC_GEM_STAT_POOL
                 )
-            stat_types = sample(gem_stat_pool[element], 3)
+            stat_types = _weighted_sample(gem_stat_pool[element], stat_weights(tier, type, element), 3)
             stats = [Stat(type=t) for t in stat_types]
             if element == GemElement.COSMIC:
                 index = randint(0, 2)
@@ -206,14 +220,32 @@ class Gem(BaseModel):
         other.containers.append(moved)
         return True
 
-    def level_up(self) -> bool:
-        max_level = get_gem_max_level(self.tier, self.type)
-        if self.level >= max_level:
-            return False
+    def _gain_level(self) -> None:
         self.level += 1
-        if self.level in (5, 10, 15):
+        if self.level in boost_levels(self.tier, self.type):
             self.stats[randint(0, 2)].containers.append(StatContainer(**self._augment_level))
-        return True
+
+    def level_up(self, booster_id: str | None = None) -> dict:
+        """One level-up attempt at the game's odds, optionally with a booster.
+
+        The attempt's materials (and the booster) are spent whether or not it lands. A
+        double level-up gains two levels for the one attempt, never past max."""
+        attempt = level_attempt(self.tier, self.type, self.element, self.level + 1)
+        if attempt is None:
+            return {"outcome": "max_level", "chance": 0.0, "double_chance": 0.0, "cost": []}
+        boost = booster(booster_id) if booster_id else None
+        chance, double = attempt_odds(attempt, boost)
+        cost = attempt_cost(self.element, attempt, boost)
+        self.attempts += 1
+        for row in cost:
+            self.spent[row["name"]] = self.spent.get(row["name"], 0) + row["count"]
+        outcome = "failed"
+        if random() < chance:
+            gained = 2 if random() < double and self.level + 2 <= get_gem_max_level(self.tier, self.type) else 1
+            for _ in range(gained):
+                self._gain_level()
+            outcome = "double" if gained == 2 else "success"
+        return {"outcome": outcome, "chance": chance, "double_chance": double, "cost": cost}
 
     @property
     def container_count(self) -> int:
@@ -224,7 +256,7 @@ class Gem(BaseModel):
             return False
         max_level = get_gem_max_level(self.tier, self.type)
         self.level = min(level, max_level)
-        final_containers = 3 + sum(1 for milestone in (5, 10, 15) if self.level >= milestone)
+        final_containers = 3 + boosts_at(self.tier, self.type, self.level)
         diff = final_containers - self.container_count
         if diff > 0:
             for _ in range(diff):
@@ -305,6 +337,21 @@ class Gem(BaseModel):
         return calculated
 
 
+def _weighted_sample(pool: list[GemStatType], weights: dict[GemStatType, float], k: int) -> list[GemStatType]:
+    """``k`` distinct stats, each draw weighted by the game's roll weights (uniform
+    over the pool when none of it carries a weight)."""
+    left = list(pool)
+    picked = []
+    for _ in range(min(k, len(left))):
+        w = [weights.get(st, 0.0) for st in left]
+        if not any(w):
+            w = [1.0] * len(left)
+        st = choices(left, weights=w)[0]
+        picked.append(st)
+        left.remove(st)
+    return picked
+
+
 def _empowered_gems() -> list[dict]:
     """The in-game empowered-gem abilities, or `[]` if the file is missing."""
     return gamedata.load("gem_abilities.json", [])
@@ -327,6 +374,7 @@ def gem_lookups() -> dict:
         ],
         "abilities": [{"id": a.value, "name": a.display_name} for a in GemAbility],
         "abilities_by_element": {e.display_name: [ab.value for ab in GEM_ABILITIES[e]] for e in GemElement},
+        "boosters": [{k: b[k] for k in ("id", "name", "chance_multiplier", "double_multiplier")} for b in boosters()],
         # Reference data, decoded from the game files by
         # app/trove/decode/gem_abilities.py. The `abilities` enum above stays as it
         # is because gem build codes round-trip through its ids; this is the full

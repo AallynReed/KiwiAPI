@@ -1742,8 +1742,8 @@ class Handler(SimpleHTTPRequestHandler):
         # Static. Templates reference the minified bundles (built by deploy.sh),
         # which don't exist locally for brand-new pages. Fall back to the
         # unminified source so local preview works without running the minifier.
-        if path == "/gamedata/pvp.json":
-            return self._send_file(ROOT / "app" / "trove" / "gamedata" / "pvp.json", "application/json")
+        if path in ("/gamedata/pvp.json", "/gamedata/gem_upgrades.json"):
+            return self._send_file(ROOT / "app" / "trove" / "gamedata" / path.rsplit("/", 1)[-1], "application/json")
 
         if path.startswith("/static/"):
             rel = path[len("/static/"):]
