@@ -13,6 +13,12 @@ effects run up +Z from the grip; the pistol's cover its barrel to the voxel), an
 the same factor the hat auras orbit and wrap the default head instead of sitting inside
 it.
 
+Guns are the exception to "model frame = effect frame": a gun is modelled with its barrel
+down -Y from the grip, while every pistol aura runs along +Z, so the gun is turned a
+quarter about X. Scoring all 24 rotations against the spawn points of every aura in a
+family picks that turn for guns by a wide margin and the identity for melee, staff and
+spear; the fist gives no clear winner and keeps the identity.
+
 The weapon is the family's starter (``prefabs/equipment/starterweapon_<class>``), taken
 from the first class alphabetically whose starter has an attachment point; a v3/v4
 blueprint stores none. The head is the default Knight's race head and eyes, placed where
@@ -34,6 +40,8 @@ from app.trove.render.source import get_blueprint_bytes
 WEAPON_FAMILIES = {"melee": "Melee", "pistol": "Gun", "staff": "Staff", "spear": "Spear", "fist": "Fist"}
 KINDS = (*WEAPON_FAMILIES, "hat")
 EFFECT_PER_WORLD = 0.5
+# model axes -> effect axes, per family; the rest are the identity
+ORIENT = {"Gun": np.array([[1, 0, 0, 0], [0, 0, 1, 0], [0, -1, 0, 0], [0, 0, 0, 1]], dtype=float)}
 HAT_CLASS = "knight"
 
 _cache: dict[tuple, dict | None] = {}
@@ -60,7 +68,7 @@ async def _weapon(family: str, catalogue: cat.Catalogue, branch: str) -> dict | 
         raw = await _read(opt.blueprint, opt.prefab, opt.ref, branch)
         if not raw or raw[:5] != b"kiwib" or raw[5] != 5:
             continue                      # no stored attachment point to seat it by
-        part = _part(raw, np.diag([EFFECT_PER_WORLD / 12] * 3 + [1.0]))
+        part = _part(raw, ORIENT.get(family, np.eye(4)) @ np.diag([EFFECT_PER_WORLD / 12] * 3 + [1.0]))
         if part:
             return {"label": opt.name, "parts": [part]}
     return None
