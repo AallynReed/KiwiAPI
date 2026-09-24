@@ -246,6 +246,8 @@ async def class_page(request: Request, name: str) -> Response:
         "title": c["name"],
         "slug": slug,
         "d": classes_page._detail(c),
+        "rings": [{"name": r["name"], "description": entities._text(r.get("description")), "url": entities.url("ring", r)}
+                  for r in entities.entries("ring") if r.get("class") == c["name"]],
         # Just what the level slider needs to recompute the sheet client-side.
         "class_data": {"stats": c.get("stats") or [], "levels": c.get("levels") or {}},
         "page": live,

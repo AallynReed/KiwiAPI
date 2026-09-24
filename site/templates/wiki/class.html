@@ -14,6 +14,12 @@
     <section class="cls-detail wk-classdata" id="wk-classdata" aria-label="{{ title }} game data">
         {% include "partials/class_detail.html" %}
     </section>
+    {% if rings %}
+    <section class="cls-detail wk-classrings" aria-labelledby="wk-rings-title">
+        <h3 class="cls-section-title" id="wk-rings-title"><i class="fa-solid fa-ring" aria-hidden="true"></i><span>Class rings</span></h3>
+        <ul class="wk-thinglist" role="list">{% for r in rings %}<li><a href="{{ r.url }}"><strong>{{ r.name }}</strong></a>{% if r.description %}<div class="wk-mute wk-pre">{{ r.description }}</div>{% endif %}</li>{% endfor %}</ul>
+    </section>
+    {% endif %}
     <script type="application/json" id="wk-class-json">{{ class_data | tojson }}</script>
 
     <section class="wk-writeup" aria-labelledby="wk-writeup-title">
