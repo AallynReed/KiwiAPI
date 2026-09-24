@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field
 from app.trove.decode import store as gamedata
 
 from .bases import (
+    KARMA_MAX,
     attempt_cost,
     attempt_odds,
     boost_levels,
@@ -37,6 +38,7 @@ from .bases import (
     get_stat_base_lesser,
     get_stat_threshold_empowered,
     get_stat_threshold_lesser,
+    karma_gain,
     level_attempt,
     stat_weights,
 )
@@ -120,6 +122,7 @@ class Gem(BaseModel):
     stats: list[Stat]
     augmentation: float | None = None
     attempts: int = 0                                   # level-up attempts made
+    karma: int = 0                                      # the karma bar; full guarantees the next level-up
     spent: dict[str, int] = Field(default_factory=dict)  # item name -> total spent levelling
 
     @classmethod
@@ -229,23 +232,32 @@ class Gem(BaseModel):
         """One level-up attempt at the game's odds, optionally with a booster.
 
         The attempt's materials (and the booster) are spent whether or not it lands. A
-        double level-up gains two levels for the one attempt, never past max."""
+        double level-up gains two levels for the one attempt, never past max. A failure
+        fills the karma bar; a full bar guarantees the attempt, and any success empties it."""
         attempt = level_attempt(self.tier, self.type, self.element, self.level + 1)
         if attempt is None:
-            return {"outcome": "max_level", "chance": 0.0, "double_chance": 0.0, "cost": []}
+            return {"outcome": "max_level", "chance": 0.0, "double_chance": 0.0, "cost": [],
+                    "guaranteed": False, "karma_gained": 0}
         boost = booster(booster_id) if booster_id else None
         chance, double = attempt_odds(attempt, boost)
         cost = attempt_cost(self.element, attempt, boost)
         self.attempts += 1
         for row in cost:
             self.spent[row["name"]] = self.spent.get(row["name"], 0) + row["count"]
+        guaranteed = self.karma >= KARMA_MAX
+        karma_gained = 0
         outcome = "failed"
-        if random() < chance:
+        if guaranteed or random() < chance:
             gained = 2 if random() < double and self.level + 2 <= get_gem_max_level(self.tier, self.type) else 1
             for _ in range(gained):
                 self._gain_level()
             outcome = "double" if gained == 2 else "success"
-        return {"outcome": outcome, "chance": chance, "double_chance": double, "cost": cost}
+            self.karma = 0
+        else:
+            karma_gained = karma_gain(attempt, boost)
+            self.karma = min(KARMA_MAX, self.karma + karma_gained)
+        return {"outcome": outcome, "chance": chance, "double_chance": double, "cost": cost,
+                "guaranteed": guaranteed, "karma_gained": karma_gained}
 
     @property
     def container_count(self) -> int:
@@ -256,6 +268,7 @@ class Gem(BaseModel):
             return False
         max_level = get_gem_max_level(self.tier, self.type)
         self.level = min(level, max_level)
+        self.karma = 0
         final_containers = 3 + boosts_at(self.tier, self.type, self.level)
         diff = final_containers - self.container_count
         if diff > 0:
@@ -374,6 +387,7 @@ def gem_lookups() -> dict:
         ],
         "abilities": [{"id": a.value, "name": a.display_name} for a in GemAbility],
         "abilities_by_element": {e.display_name: [ab.value for ab in GEM_ABILITIES[e]] for e in GemElement},
+        "karma_max": KARMA_MAX,
         "boosters": [{k: b[k] for k in ("id", "name", "chance_multiplier", "double_multiplier")} for b in boosters()],
         # Reference data, decoded from the game files by
         # app/trove/decode/gem_abilities.py. The `abilities` enum above stays as it

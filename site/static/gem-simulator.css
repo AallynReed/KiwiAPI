@@ -600,3 +600,11 @@
 .gem-sim .level-result.success { color: var(--accent-green, #3fb950); }
 .gem-sim .level-result.double { color: #e3b341; }
 .gem-sim .level-result.failed { color: #ff7b72; }
+.gem-sim .karma-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; }
+.gem-sim .karma-bar {
+  height: 8px; border-radius: 4px; overflow: hidden;
+  background: var(--bg-deep, #0a0e14); border: 1px solid var(--bg-line, #1f2733);
+}
+.gem-sim .karma-fill { height: 100%; background: #e3b341; transition: width 300ms ease-out; }
+.gem-sim .karma-fill.full { background: var(--accent-green, #3fb950); }
+@media (prefers-reduced-motion: reduce) { .gem-sim .karma-fill { transition: none; } }

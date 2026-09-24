@@ -71,6 +71,7 @@
     let DATA = null;
     let INDEX = {};
     const PR_BASE = { 1: 3, 2: 5, 3: 7, 4: 9 };
+    const KARMA_MAX = 125; // Trove_x64.exe's karma bar size (bases.KARMA_MAX)
     const LESSER_PR_THRESHOLD = { 1: [85, 113], 2: [150, 200], 3: [175, 250], 4: [200, 260] };
     const EMPOWERED_PR_THRESHOLD = { 1: [113, 150], 2: [200, 266], 3: [220, 280], 4: [240, 300] };
     const FILE_TIER = { 1: 9, 2: 10, 3: 11, 4: 12 };
@@ -151,6 +152,11 @@
     function attemptOdds(attempt, boost) {
         return [Math.min(1, attempt.chance * (boost ? boost.chance_multiplier : 1)),
                 Math.min(1, attempt.double_chance * (boost ? boost.double_multiplier : 1))];
+    }
+    // Karma a failed attempt adds: both chances, booster applied, whole percent rounded down.
+    function karmaGain(attempt, boost) {
+        const [chance, double] = attemptOdds(attempt, boost);
+        return Math.floor(Math.round((chance + double) * 1e8) / 1e6);
     }
     function attemptCost(element, attempt, boost) {
         const mats = (DATA && DATA.materials && DATA.materials[COLOR[element]]) || {};
@@ -290,6 +296,7 @@
             stats: gem.stats.map(serializeStat),
             augmentation: (gem.augmentation === undefined ? null : gem.augmentation),
             attempts: gem.attempts || 0,
+            karma: gem.karma || 0,
             spent: Object.assign({}, gem.spent || {}),
             ability_name: gem.ability ? ABILITY_NAMES[gem.ability] : null,
             gem_name: gemName(gem),
@@ -310,6 +317,7 @@
             level: g.level,
             augmentation: (g.augmentation === undefined ? null : g.augmentation),
             attempts: g.attempts || 0,
+            karma: g.karma || 0,
             spent: Object.assign({}, g.spent || {}),
             stats: (g.stats || []).map(s => ({
                 type: s.type,
@@ -362,7 +370,7 @@
         const ability = (type === Type.EMPOWERED) ? choice(GEM_ABILITIES[element]) : null;
         return {
             id: genId(), tier, type, element, restriction, ability, level,
-            augmentation: (augLevel === undefined ? null : augLevel), stats, attempts: 0, spent: {}
+            augmentation: (augLevel === undefined ? null : augLevel), stats, attempts: 0, karma: 0, spent: {}
         };
     }
 
@@ -376,7 +384,8 @@
         }
     }
     // One level-up attempt at the game's odds (mirrors Gem.level_up): the materials
-    // and booster are spent whether or not it lands; a double gains two levels.
+    // and booster are spent whether or not it lands; a double gains two levels. A
+    // failure fills the karma bar; a full bar guarantees the attempt; success empties it.
     function levelUp(gem, boosterId) {
         const attempt = levelAttempt(gem.tier, gem.type, gem.element, gem.level + 1);
         if (!attempt) return null;
@@ -386,13 +395,19 @@
         gem.attempts = (gem.attempts || 0) + 1;
         gem.spent = gem.spent || {};
         for (const c of cost) gem.spent[c.name] = (gem.spent[c.name] || 0) + c.count;
+        const guaranteed = (gem.karma || 0) >= KARMA_MAX;
+        let karmaGained = 0;
         let outcome = "failed";
-        if (Math.random() < chance) {
+        if (guaranteed || Math.random() < chance) {
             const gained = (Math.random() < double && gem.level + 2 <= getGemMaxLevel(gem.tier, gem.type)) ? 2 : 1;
             for (let i = 0; i < gained; i++) gainLevel(gem);
             outcome = gained === 2 ? "double" : "success";
+            gem.karma = 0;
+        } else {
+            karmaGained = karmaGain(attempt, boost);
+            gem.karma = Math.min(KARMA_MAX, (gem.karma || 0) + karmaGained);
         }
-        return { outcome, chance, double_chance: double, cost };
+        return { outcome, chance, double_chance: double, cost, guaranteed, karma_gained: karmaGained };
     }
     function addAugmentToStat(stat, augmentType) {
         if (statAugmentationProgress(stat) === 1) return false;
@@ -473,6 +488,7 @@
         },
         setData,
         boosters,
+        KARMA_MAX,
         itemName,
         // The next attempt's odds and cost, for the UI (null at max level).
         nextAttempt(gemData, boosterId) {
@@ -481,7 +497,10 @@
             if (!attempt) return null;
             const boost = findBooster(boosterId);
             const [chance, double] = attemptOdds(attempt, boost);
-            return { level: attempt.level, chance, double_chance: double, cost: attemptCost(gem.element, attempt, boost) };
+            return {
+                level: attempt.level, chance, double_chance: double, cost: attemptCost(gem.element, attempt, boost),
+                karma: gem.karma || 0, karma_gain: karmaGain(attempt, boost), guaranteed: (gem.karma || 0) >= KARMA_MAX
+            };
         },
         levelUpGem(gemData, boosterId) {
             const gem = normalize(gemData);

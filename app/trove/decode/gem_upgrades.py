@@ -13,7 +13,11 @@ GemUpgradeData:
   6  reselect-stat cost items
   8  {0 KGemTierUpgradeType (2 IncrementTier), 1 minimum level}, 9 the tier-up item
 
-The level entry is the attempt that reaches that level; level 1 is the free roll.
+A level's entry holds two halves of different attempts: its cost and rewards are
+paid and earned by the attempt that reaches it, while its chances are the odds of
+the attempt made *from* it (checked in game 2026-09-25: a failed attempt's karma
+tracks the current level's chance, and the cost shown is the next level's). Each
+output row is one attempt, the one reaching `level`, with both halves joined.
 Reward 3 is "Increase all stats a small fixed amount" (the `step` of every stat);
 1 and 2 are the stat boosts at levels 5, 10 and 15. Boosters (component 367 of
 `item/gem/booster/*`) multiply the two chances: field 2 the level-up chance, 1 the
@@ -109,12 +113,13 @@ def _levels(levels: dict) -> list[dict]:
         if level < 2:
             continue
         e = levels[level].leaf
+        odds = _leaf(levels.get(level - 1))
         rewards = [r for r in (e.get(5) or []) if isinstance(r, int)]
         kind = e.get(10, UPGRADE_DUST)
         out.append({
             "level": level,
-            "chance": round(float(e.get(4, 0)), 6),
-            "double_chance": round(float(e.get(3, 0)), 6),
+            "chance": round(float(odds.get(4, 0)), 6),
+            "double_chance": round(float(odds.get(3, 0)), 6),
             "stat_steps": rewards.count(STAT_STEP),
             "boost": any(r in BOOST_REWARDS for r in rewards),
             "cost": _items(e.get(0)),

@@ -47,7 +47,7 @@
   let selectedBooster = ""; // a GemEngine.boosters() id, or "" for none
   const ATTEMPT_MS = 900;
   let levelBusy = false;
-  let lastAttempt = null; // { gemId, outcome, chance, level } - the latest level-up result shown
+  let lastAttempt = null; // { gemId, outcome, chance, level, guaranteed } - the latest level-up result shown
   const creatorParams = { type: "", tier: "", element: "", restriction: "", level: 1, augmentNull: true, augment: 0 };
   let dragState = { pane: null, idx: -1, gem: null };
   // Keyboard "move" alternative to drag: Enter picks a source slot, Enter on a
@@ -458,6 +458,16 @@
         fmt("{chance} chance", { chance: pct(next.chance) }),
         next.double_chance > 0 ? h("span", { class: "muted" }, " · " + fmt("{double} double", { double: pct(next.double_chance) })) : null));
       panel.appendChild(h("div", { class: "level-cost" }, h("span", { class: "muted" }, t("Each attempt:") + " "), costText(next.cost)));
+      const max = window.GemEngine.KARMA_MAX;
+      if (next.chance < 1 || next.karma > 0) panel.appendChild(h("div", { class: "karma-row" },
+        h("span", { class: "muted" }, t("Karma")),
+        h("div", { class: "karma-bar", role: "meter", "aria-label": t("Karma"), "aria-valuemin": "0",
+          "aria-valuemax": String(max), "aria-valuenow": String(next.karma) },
+          h("div", { class: "karma-fill" + (next.guaranteed ? " full" : ""), style: { width: Math.min(100, next.karma / max * 100) + "%" } })),
+        h("span", null, next.karma + " / " + max)));
+      if (next.chance < 1 || next.karma > 0) panel.appendChild(h("div", { class: "muted" }, next.guaranteed
+        ? t("Karma is full: the next level up is guaranteed.")
+        : fmt("A failed attempt adds {n} karma. A full bar guarantees the next level up.", { n: next.karma_gain })));
     }
     const fill = h("div", { class: "level-attempt-fill" });
     const result = h("div", { class: "level-result", "aria-live": "polite" });
@@ -465,6 +475,7 @@
       fill.classList.add(lastAttempt.outcome);
       result.classList.add(lastAttempt.outcome);
       result.textContent = lastAttempt.outcome === "double" ? fmt("Double level up! Now level {level}.", { level: lastAttempt.level })
+        : lastAttempt.guaranteed ? fmt("Karma guaranteed it! Now level {level}.", { level: lastAttempt.level })
         : lastAttempt.outcome === "success" ? fmt("Success! Now level {level}.", { level: lastAttempt.level })
         : fmt("Failed ({chance} chance). Materials spent.", { chance: pct(lastAttempt.chance) });
     }
@@ -605,7 +616,7 @@
     const source = selectedSource;
     const finish = () => {
       levelBusy = false;
-      lastAttempt = { gemId: resp.gem.id, outcome: resp.outcome, chance: resp.chance, level: resp.gem.level };
+      lastAttempt = { gemId: resp.gem.id, outcome: resp.outcome, chance: resp.chance, level: resp.gem.level, guaranteed: resp.guaranteed };
       if (source) {
         if (source.pane === "inventory") inventory[source.idx] = resp.gem;
         else if (source.pane === "equipped") equipped[source.idx] = resp.gem;

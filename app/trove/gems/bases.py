@@ -7,11 +7,17 @@ increments): base is a stat's per-level step over its tier's Power Rank per step
 base * threshold is exactly the game's roll range and base * increments its level gain.
 """
 
+import math
+
 from app.trove.decode import store as gamedata
 
 from .constants import AugmentType, GemElement, GemStatType, GemTier, GemType
 
 GAMEDATA = "gem_upgrades.json"
+
+# The karma bar's size: a constant in Trove_x64.exe (FUN_140316c60 -> setGemKarma), not in
+# any data file. The fill is the gem's "success" counter, kept by the server.
+KARMA_MAX = 125
 
 # Power Rank each stat step adds, and the PR a container's roll spans.
 _TIER_PR_BASE = {GemTier.RADIANT: 3, GemTier.STELLAR: 5, GemTier.CRYSTAL: 7, GemTier.MYSTIC: 9}
@@ -88,6 +94,13 @@ def attempt_odds(attempt: dict, boost: dict | None = None) -> tuple[float, float
     return min(1.0, chance), min(1.0, double)
 
 
+def karma_gain(attempt: dict, boost: dict | None = None) -> int:
+    """Karma a failed attempt adds: its level-up and double level-up chances, booster
+    applied, in whole percent rounded down (measured in game on 2026-09-25)."""
+    chance, double = attempt_odds(attempt, boost)
+    return math.floor(round((chance + double) * 100, 6))
+
+
 def attempt_cost(gem_element: GemElement, attempt: dict, boost: dict | None = None) -> list[dict]:
     """What one attempt spends, landed or not: {item, name, count}."""
     mats = element_materials(gem_element)
@@ -105,8 +118,9 @@ def level_plan(gem_tier: GemTier, gem_type: GemType, gem_element: GemElement,
                booster_id: str | None = None, from_level: int = 1) -> dict:
     """Every attempt from ``from_level`` to max, and the expected total spend.
 
-    Expected attempts at a level are 1 / chance; double level-ups are left out, so
-    the total leans slightly high."""
+    Karma starts each level at 0 (a success empties it) and a full bar guarantees the
+    next attempt, so a level takes at most ``max_attempts``; the expectation counts
+    that. Double level-ups are left out, so the total leans slightly high."""
     boost = booster(booster_id) if booster_id else None
     rows, expected = [], {}
     for lv in upgrade_data(gem_tier, gem_type, gem_element)["levels"]:
@@ -114,11 +128,19 @@ def level_plan(gem_tier: GemTier, gem_type: GemType, gem_element: GemElement,
             continue
         chance, double = attempt_odds(lv, boost)
         cost = attempt_cost(gem_element, lv, boost)
-        attempts = 1 / chance if chance > 0 else 0
+        gain = karma_gain(lv, boost)
+        fails = -(-KARMA_MAX // gain) if gain > 0 else None  # failures that fill the bar
+        if chance >= 1:
+            attempts, most = 1.0, 1
+        elif fails is None:
+            attempts, most = (1 / chance if chance > 0 else 0), None
+        else:
+            attempts, most = (1 - (1 - chance) ** (fails + 1)) / chance, fails + 1
         for c in cost:
             expected[c["name"]] = expected.get(c["name"], 0) + c["count"] * attempts
         rows.append({"level": lv["level"], "chance": chance, "double_chance": double,
-                     "expected_attempts": round(attempts, 2), "cost": cost})
+                     "karma_per_fail": gain, "expected_attempts": round(attempts, 2),
+                     "max_attempts": most, "cost": cost})
     return {"levels": rows, "expected_total": [{"name": k, "count": round(v)} for k, v in expected.items()]}
 
 

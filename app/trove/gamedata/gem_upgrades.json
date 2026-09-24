@@ -133,8 +133,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -292,6 +292,21 @@
     },
     {
      "level": 3,
+     "chance": 1.0,
+     "double_chance": 0.0,
+     "stat_steps": 1,
+     "boost": false,
+     "cost": [
+      {
+       "item": "item/crafting/flux",
+       "count": 2
+      }
+     ],
+     "dust": 2,
+     "amber": 0
+    },
+    {
+     "level": 4,
      "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
@@ -306,23 +321,8 @@
      "amber": 0
     },
     {
-     "level": 4,
-     "chance": 0.9,
-     "double_chance": 0.005,
-     "stat_steps": 1,
-     "boost": false,
-     "cost": [
-      {
-       "item": "item/crafting/flux",
-       "count": 2
-      }
-     ],
-     "dust": 2,
-     "amber": 0
-    },
-    {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -481,6 +481,21 @@
     },
     {
      "level": 3,
+     "chance": 1.0,
+     "double_chance": 0.0,
+     "stat_steps": 1,
+     "boost": false,
+     "cost": [
+      {
+       "item": "item/crafting/flux",
+       "count": 4
+      }
+     ],
+     "dust": 3,
+     "amber": 0
+    },
+    {
+     "level": 4,
      "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
@@ -495,23 +510,8 @@
      "amber": 0
     },
     {
-     "level": 4,
-     "chance": 0.9,
-     "double_chance": 0.005,
-     "stat_steps": 1,
-     "boost": false,
-     "cost": [
-      {
-       "item": "item/crafting/flux",
-       "count": 4
-      }
-     ],
-     "dust": 3,
-     "amber": 0
-    },
-    {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -526,7 +526,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -541,7 +541,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -556,7 +556,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -715,6 +715,21 @@
     },
     {
      "level": 3,
+     "chance": 1.0,
+     "double_chance": 0.0,
+     "stat_steps": 1,
+     "boost": false,
+     "cost": [
+      {
+       "item": "item/crafting/flux",
+       "count": 7
+      }
+     ],
+     "dust": 4,
+     "amber": 0
+    },
+    {
+     "level": 4,
      "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
@@ -729,23 +744,8 @@
      "amber": 0
     },
     {
-     "level": 4,
-     "chance": 0.9,
-     "double_chance": 0.005,
-     "stat_steps": 1,
-     "boost": false,
-     "cost": [
-      {
-       "item": "item/crafting/flux",
-       "count": 7
-      }
-     ],
-     "dust": 4,
-     "amber": 0
-    },
-    {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -760,7 +760,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -775,7 +775,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -790,7 +790,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -805,7 +805,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -820,7 +820,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -979,6 +979,21 @@
     },
     {
      "level": 3,
+     "chance": 1.0,
+     "double_chance": 0.0,
+     "stat_steps": 1,
+     "boost": false,
+     "cost": [
+      {
+       "item": "item/crafting/flux",
+       "count": 11
+      }
+     ],
+     "dust": 6,
+     "amber": 0
+    },
+    {
+     "level": 4,
      "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
@@ -993,24 +1008,9 @@
      "amber": 0
     },
     {
-     "level": 4,
+     "level": 5,
      "chance": 0.9,
      "double_chance": 0.0005,
-     "stat_steps": 1,
-     "boost": false,
-     "cost": [
-      {
-       "item": "item/crafting/flux",
-       "count": 11
-      }
-     ],
-     "dust": 6,
-     "amber": 0
-    },
-    {
-     "level": 5,
-     "chance": 0.8,
-     "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
      "cost": [
@@ -1024,7 +1024,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1039,7 +1039,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1054,7 +1054,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1069,7 +1069,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1084,7 +1084,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -1099,7 +1099,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1114,7 +1114,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1129,7 +1129,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1288,6 +1288,21 @@
     },
     {
      "level": 3,
+     "chance": 1.0,
+     "double_chance": 0.0,
+     "stat_steps": 1,
+     "boost": false,
+     "cost": [
+      {
+       "item": "item/crafting/flux",
+       "count": 19
+      }
+     ],
+     "dust": 9,
+     "amber": 0
+    },
+    {
+     "level": 4,
      "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
@@ -1302,23 +1317,8 @@
      "amber": 0
     },
     {
-     "level": 4,
-     "chance": 0.9,
-     "double_chance": 0.005,
-     "stat_steps": 1,
-     "boost": false,
-     "cost": [
-      {
-       "item": "item/crafting/flux",
-       "count": 19
-      }
-     ],
-     "dust": 9,
-     "amber": 0
-    },
-    {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -1333,7 +1333,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1348,7 +1348,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1363,7 +1363,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1378,7 +1378,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1393,7 +1393,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -1408,7 +1408,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1423,7 +1423,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1438,7 +1438,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1453,7 +1453,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1468,7 +1468,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -1627,8 +1627,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -1642,7 +1642,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1657,7 +1657,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -1672,7 +1672,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1687,7 +1687,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1702,7 +1702,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1717,7 +1717,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1732,7 +1732,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -1747,7 +1747,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1762,7 +1762,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1777,7 +1777,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1792,7 +1792,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -1807,7 +1807,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -1822,7 +1822,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -1837,7 +1837,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -1852,7 +1852,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2011,8 +2011,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -2026,7 +2026,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2041,7 +2041,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -2056,7 +2056,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2071,7 +2071,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2086,7 +2086,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2101,7 +2101,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2116,7 +2116,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -2131,7 +2131,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2146,7 +2146,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2161,7 +2161,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2176,7 +2176,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2191,7 +2191,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -2206,7 +2206,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2221,7 +2221,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2236,7 +2236,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2251,7 +2251,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2266,7 +2266,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -2425,8 +2425,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -2440,7 +2440,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2455,7 +2455,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -2470,7 +2470,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2485,7 +2485,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2500,7 +2500,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2515,7 +2515,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2530,7 +2530,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -2545,7 +2545,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2560,7 +2560,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2575,7 +2575,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2590,7 +2590,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2605,7 +2605,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -2620,7 +2620,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2635,7 +2635,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2650,7 +2650,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2665,7 +2665,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2680,7 +2680,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -2695,7 +2695,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2710,7 +2710,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2725,7 +2725,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -2884,8 +2884,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -2899,7 +2899,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2914,7 +2914,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -2929,7 +2929,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2944,7 +2944,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2959,7 +2959,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2974,7 +2974,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -2989,7 +2989,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -3004,7 +3004,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3019,7 +3019,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3034,7 +3034,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3049,7 +3049,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3064,7 +3064,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -3079,7 +3079,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3094,7 +3094,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3109,7 +3109,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3124,7 +3124,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3139,7 +3139,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -3154,7 +3154,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3169,7 +3169,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3184,7 +3184,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3199,7 +3199,7 @@
     },
     {
      "level": 24,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3214,7 +3214,7 @@
     },
     {
      "level": 25,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -3376,8 +3376,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -3391,7 +3391,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3406,7 +3406,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -3421,7 +3421,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3436,7 +3436,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3451,7 +3451,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3466,7 +3466,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3481,7 +3481,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -3496,7 +3496,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3511,7 +3511,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3526,7 +3526,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3541,7 +3541,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3556,7 +3556,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -3571,7 +3571,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3586,7 +3586,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3601,7 +3601,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3616,7 +3616,7 @@
     },
     {
      "level": 19,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3631,7 +3631,7 @@
     },
     {
      "level": 20,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -3646,7 +3646,7 @@
     },
     {
      "level": 21,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3661,7 +3661,7 @@
     },
     {
      "level": 22,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3676,7 +3676,7 @@
     },
     {
      "level": 23,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3691,7 +3691,7 @@
     },
     {
      "level": 24,
-     "chance": 0.1,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3706,7 +3706,7 @@
     },
     {
      "level": 25,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -3721,7 +3721,7 @@
     },
     {
      "level": 26,
-     "chance": 0.08,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3731,7 +3731,7 @@
     },
     {
      "level": 27,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3741,7 +3741,7 @@
     },
     {
      "level": 28,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3751,7 +3751,7 @@
     },
     {
      "level": 29,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -3766,7 +3766,7 @@
     },
     {
      "level": 30,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -3928,8 +3928,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -3943,7 +3943,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3958,7 +3958,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -3973,7 +3973,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -3988,7 +3988,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4003,7 +4003,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4018,7 +4018,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4033,7 +4033,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -4048,7 +4048,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4063,7 +4063,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4078,7 +4078,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4093,7 +4093,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4108,7 +4108,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -4123,7 +4123,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4138,7 +4138,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4153,7 +4153,7 @@
     },
     {
      "level": 18,
-     "chance": 0.155,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4168,7 +4168,7 @@
     },
     {
      "level": 19,
-     "chance": 0.15,
+     "chance": 0.155,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4183,7 +4183,7 @@
     },
     {
      "level": 20,
-     "chance": 0.145,
+     "chance": 0.15,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -4198,7 +4198,7 @@
     },
     {
      "level": 21,
-     "chance": 0.14,
+     "chance": 0.145,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4213,7 +4213,7 @@
     },
     {
      "level": 22,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4228,7 +4228,7 @@
     },
     {
      "level": 23,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4243,7 +4243,7 @@
     },
     {
      "level": 24,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4258,7 +4258,7 @@
     },
     {
      "level": 25,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -4273,7 +4273,7 @@
     },
     {
      "level": 26,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4283,7 +4283,7 @@
     },
     {
      "level": 27,
-     "chance": 0.11,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4293,7 +4293,7 @@
     },
     {
      "level": 28,
-     "chance": 0.105,
+     "chance": 0.11,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4303,7 +4303,7 @@
     },
     {
      "level": 29,
-     "chance": 0.1,
+     "chance": 0.105,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4318,7 +4318,7 @@
     },
     {
      "level": 30,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -4333,7 +4333,7 @@
     },
     {
      "level": 31,
-     "chance": 0.08,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4348,7 +4348,7 @@
     },
     {
      "level": 32,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4363,7 +4363,7 @@
     },
     {
      "level": 33,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4378,7 +4378,7 @@
     },
     {
      "level": 34,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4393,7 +4393,7 @@
     },
     {
      "level": 35,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -4522,8 +4522,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -4537,7 +4537,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4552,7 +4552,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -4567,7 +4567,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4582,7 +4582,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4597,7 +4597,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4612,7 +4612,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4627,7 +4627,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -4642,7 +4642,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4657,7 +4657,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4672,7 +4672,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4687,7 +4687,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4702,7 +4702,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -4717,7 +4717,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4732,7 +4732,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4747,7 +4747,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -4876,8 +4876,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -4891,7 +4891,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4906,7 +4906,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -4921,7 +4921,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4936,7 +4936,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4951,7 +4951,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4966,7 +4966,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -4981,7 +4981,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -4996,7 +4996,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5011,7 +5011,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5026,7 +5026,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5041,7 +5041,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5056,7 +5056,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -5071,7 +5071,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5086,7 +5086,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5101,7 +5101,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5116,7 +5116,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5131,7 +5131,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -5260,8 +5260,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -5275,7 +5275,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5290,7 +5290,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -5305,7 +5305,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5320,7 +5320,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5335,7 +5335,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5350,7 +5350,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5365,7 +5365,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -5380,7 +5380,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5395,7 +5395,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5410,7 +5410,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5425,7 +5425,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5440,7 +5440,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -5455,7 +5455,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5470,7 +5470,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5485,7 +5485,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5500,7 +5500,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5515,7 +5515,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -5530,7 +5530,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5545,7 +5545,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5560,7 +5560,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5689,8 +5689,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -5704,7 +5704,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5719,7 +5719,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -5734,7 +5734,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5749,7 +5749,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5764,7 +5764,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5779,7 +5779,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5794,7 +5794,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -5809,7 +5809,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5824,7 +5824,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5839,7 +5839,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5854,7 +5854,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -5869,7 +5869,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -5884,7 +5884,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5899,7 +5899,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5914,7 +5914,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5929,7 +5929,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5944,7 +5944,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -5959,7 +5959,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5974,7 +5974,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -5989,7 +5989,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6004,7 +6004,7 @@
     },
     {
      "level": 24,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6019,7 +6019,7 @@
     },
     {
      "level": 25,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -6187,8 +6187,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -6202,7 +6202,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6217,7 +6217,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -6232,7 +6232,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6247,7 +6247,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6262,7 +6262,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6277,7 +6277,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6292,7 +6292,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -6307,7 +6307,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6322,7 +6322,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6337,7 +6337,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6352,7 +6352,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6367,7 +6367,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -6382,7 +6382,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6397,7 +6397,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6412,7 +6412,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6427,7 +6427,7 @@
     },
     {
      "level": 19,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6442,7 +6442,7 @@
     },
     {
      "level": 20,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -6457,7 +6457,7 @@
     },
     {
      "level": 21,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6472,7 +6472,7 @@
     },
     {
      "level": 22,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6487,7 +6487,7 @@
     },
     {
      "level": 23,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6502,7 +6502,7 @@
     },
     {
      "level": 24,
-     "chance": 0.1,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6517,7 +6517,7 @@
     },
     {
      "level": 25,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -6532,7 +6532,7 @@
     },
     {
      "level": 26,
-     "chance": 0.08,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6542,7 +6542,7 @@
     },
     {
      "level": 27,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6552,7 +6552,7 @@
     },
     {
      "level": 28,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6562,7 +6562,7 @@
     },
     {
      "level": 29,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6577,7 +6577,7 @@
     },
     {
      "level": 30,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -6745,8 +6745,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -6760,7 +6760,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6775,7 +6775,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -6790,7 +6790,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6805,7 +6805,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6820,7 +6820,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6835,7 +6835,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6850,7 +6850,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -6865,7 +6865,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6880,7 +6880,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6895,7 +6895,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6910,7 +6910,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -6925,7 +6925,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -6940,7 +6940,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6955,7 +6955,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6970,7 +6970,7 @@
     },
     {
      "level": 18,
-     "chance": 0.155,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -6985,7 +6985,7 @@
     },
     {
      "level": 19,
-     "chance": 0.15,
+     "chance": 0.155,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7000,7 +7000,7 @@
     },
     {
      "level": 20,
-     "chance": 0.145,
+     "chance": 0.15,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -7015,7 +7015,7 @@
     },
     {
      "level": 21,
-     "chance": 0.14,
+     "chance": 0.145,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7030,7 +7030,7 @@
     },
     {
      "level": 22,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7045,7 +7045,7 @@
     },
     {
      "level": 23,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7060,7 +7060,7 @@
     },
     {
      "level": 24,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7075,7 +7075,7 @@
     },
     {
      "level": 25,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -7090,7 +7090,7 @@
     },
     {
      "level": 26,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7100,7 +7100,7 @@
     },
     {
      "level": 27,
-     "chance": 0.11,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7110,7 +7110,7 @@
     },
     {
      "level": 28,
-     "chance": 0.105,
+     "chance": 0.11,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7120,7 +7120,7 @@
     },
     {
      "level": 29,
-     "chance": 0.1,
+     "chance": 0.105,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7135,7 +7135,7 @@
     },
     {
      "level": 30,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -7150,7 +7150,7 @@
     },
     {
      "level": 31,
-     "chance": 0.08,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7165,7 +7165,7 @@
     },
     {
      "level": 32,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7180,7 +7180,7 @@
     },
     {
      "level": 33,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7195,7 +7195,7 @@
     },
     {
      "level": 34,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7210,7 +7210,7 @@
     },
     {
      "level": 35,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -7369,8 +7369,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -7384,7 +7384,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7399,7 +7399,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -7414,7 +7414,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7429,7 +7429,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7444,7 +7444,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7459,7 +7459,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7474,7 +7474,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -7489,7 +7489,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7504,7 +7504,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7519,7 +7519,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7534,7 +7534,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7549,7 +7549,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -7564,7 +7564,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7579,7 +7579,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7594,7 +7594,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7609,7 +7609,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7624,7 +7624,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -7639,7 +7639,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7654,7 +7654,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7669,7 +7669,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -7833,8 +7833,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -7848,7 +7848,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7863,7 +7863,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -7878,7 +7878,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7893,7 +7893,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7908,7 +7908,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7923,7 +7923,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7938,7 +7938,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -7953,7 +7953,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7968,7 +7968,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7983,7 +7983,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -7998,7 +7998,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8013,7 +8013,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -8028,7 +8028,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8043,7 +8043,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8058,7 +8058,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8073,7 +8073,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8088,7 +8088,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -8103,7 +8103,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8118,7 +8118,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8133,7 +8133,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8148,7 +8148,7 @@
     },
     {
      "level": 24,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8163,7 +8163,7 @@
     },
     {
      "level": 25,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -8325,8 +8325,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -8340,7 +8340,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8355,7 +8355,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -8370,7 +8370,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8385,7 +8385,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8400,7 +8400,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8415,7 +8415,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8430,7 +8430,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -8445,7 +8445,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8460,7 +8460,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8475,7 +8475,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8490,7 +8490,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8505,7 +8505,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -8520,7 +8520,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8535,7 +8535,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8550,7 +8550,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8565,7 +8565,7 @@
     },
     {
      "level": 19,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8580,7 +8580,7 @@
     },
     {
      "level": 20,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -8595,7 +8595,7 @@
     },
     {
      "level": 21,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8610,7 +8610,7 @@
     },
     {
      "level": 22,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8625,7 +8625,7 @@
     },
     {
      "level": 23,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8640,7 +8640,7 @@
     },
     {
      "level": 24,
-     "chance": 0.1,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8655,7 +8655,7 @@
     },
     {
      "level": 25,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -8670,7 +8670,7 @@
     },
     {
      "level": 26,
-     "chance": 0.08,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8680,7 +8680,7 @@
     },
     {
      "level": 27,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8690,7 +8690,7 @@
     },
     {
      "level": 28,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8700,7 +8700,7 @@
     },
     {
      "level": 29,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -8715,7 +8715,7 @@
     },
     {
      "level": 30,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -8877,8 +8877,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -8892,7 +8892,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8907,7 +8907,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -8922,7 +8922,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8937,7 +8937,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8952,7 +8952,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8967,7 +8967,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -8982,7 +8982,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -8997,7 +8997,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9012,7 +9012,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9027,7 +9027,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9042,7 +9042,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9057,7 +9057,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -9072,7 +9072,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9087,7 +9087,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9102,7 +9102,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9117,7 +9117,7 @@
     },
     {
      "level": 19,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9132,7 +9132,7 @@
     },
     {
      "level": 20,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -9147,7 +9147,7 @@
     },
     {
      "level": 21,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9162,7 +9162,7 @@
     },
     {
      "level": 22,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9177,7 +9177,7 @@
     },
     {
      "level": 23,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9192,7 +9192,7 @@
     },
     {
      "level": 24,
-     "chance": 0.1,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9207,7 +9207,7 @@
     },
     {
      "level": 25,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -9222,7 +9222,7 @@
     },
     {
      "level": 26,
-     "chance": 0.080063,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9232,7 +9232,7 @@
     },
     {
      "level": 27,
-     "chance": 0.070125,
+     "chance": 0.080063,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9242,7 +9242,7 @@
     },
     {
      "level": 28,
-     "chance": 0.060187,
+     "chance": 0.070125,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9252,7 +9252,7 @@
     },
     {
      "level": 29,
-     "chance": 0.05025,
+     "chance": 0.060187,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9267,7 +9267,7 @@
     },
     {
      "level": 30,
-     "chance": 0.040312,
+     "chance": 0.05025,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -9282,7 +9282,7 @@
     },
     {
      "level": 31,
-     "chance": 0.030375,
+     "chance": 0.040312,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9297,7 +9297,7 @@
     },
     {
      "level": 32,
-     "chance": 0.020437,
+     "chance": 0.030375,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9312,7 +9312,7 @@
     },
     {
      "level": 33,
-     "chance": 0.009937,
+     "chance": 0.020437,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9327,7 +9327,7 @@
     },
     {
      "level": 34,
-     "chance": 0.0795,
+     "chance": 0.009937,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9342,7 +9342,7 @@
     },
     {
      "level": 35,
-     "chance": 0.0105,
+     "chance": 0.0795,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -9512,8 +9512,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -9527,7 +9527,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9542,7 +9542,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -9557,7 +9557,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9572,7 +9572,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9587,7 +9587,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9602,7 +9602,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9617,7 +9617,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -9632,7 +9632,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9647,7 +9647,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9662,7 +9662,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9677,7 +9677,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -9692,7 +9692,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -9707,7 +9707,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9722,7 +9722,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9737,7 +9737,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9752,7 +9752,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9767,7 +9767,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -9782,7 +9782,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9797,7 +9797,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9812,7 +9812,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -9982,8 +9982,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -9997,7 +9997,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10012,7 +10012,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -10027,7 +10027,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10042,7 +10042,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10057,7 +10057,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10072,7 +10072,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10087,7 +10087,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -10102,7 +10102,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10117,7 +10117,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10132,7 +10132,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10147,7 +10147,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10162,7 +10162,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -10177,7 +10177,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10192,7 +10192,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10207,7 +10207,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10222,7 +10222,7 @@
     },
     {
      "level": 19,
-     "chance": 0.12,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10237,7 +10237,7 @@
     },
     {
      "level": 20,
-     "chance": 0.1,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -10252,7 +10252,7 @@
     },
     {
      "level": 21,
-     "chance": 0.08,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10267,7 +10267,7 @@
     },
     {
      "level": 22,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10282,7 +10282,7 @@
     },
     {
      "level": 23,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10297,7 +10297,7 @@
     },
     {
      "level": 24,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10312,7 +10312,7 @@
     },
     {
      "level": 25,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -10485,8 +10485,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -10500,7 +10500,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10515,7 +10515,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -10530,7 +10530,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10545,7 +10545,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10560,7 +10560,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10575,7 +10575,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10590,7 +10590,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -10605,7 +10605,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10620,7 +10620,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10635,7 +10635,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10650,7 +10650,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -10665,7 +10665,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -10680,7 +10680,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10695,7 +10695,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10710,7 +10710,7 @@
     },
     {
      "level": 18,
-     "chance": 0.14,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10725,7 +10725,7 @@
     },
     {
      "level": 19,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10740,7 +10740,7 @@
     },
     {
      "level": 20,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -10755,7 +10755,7 @@
     },
     {
      "level": 21,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10770,7 +10770,7 @@
     },
     {
      "level": 22,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10785,7 +10785,7 @@
     },
     {
      "level": 23,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10800,7 +10800,7 @@
     },
     {
      "level": 24,
-     "chance": 0.1,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10815,7 +10815,7 @@
     },
     {
      "level": 25,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -10830,7 +10830,7 @@
     },
     {
      "level": 26,
-     "chance": 0.08,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10840,7 +10840,7 @@
     },
     {
      "level": 27,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10850,7 +10850,7 @@
     },
     {
      "level": 28,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10860,7 +10860,7 @@
     },
     {
      "level": 29,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -10875,7 +10875,7 @@
     },
     {
      "level": 30,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -11048,8 +11048,8 @@
     },
     {
      "level": 3,
-     "chance": 0.95,
-     "double_chance": 0.005,
+     "chance": 1.0,
+     "double_chance": 0.0,
      "stat_steps": 1,
      "boost": false,
      "cost": [
@@ -11063,7 +11063,7 @@
     },
     {
      "level": 4,
-     "chance": 0.9,
+     "chance": 0.95,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11078,7 +11078,7 @@
     },
     {
      "level": 5,
-     "chance": 0.8,
+     "chance": 0.9,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -11093,7 +11093,7 @@
     },
     {
      "level": 6,
-     "chance": 0.72,
+     "chance": 0.8,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11108,7 +11108,7 @@
     },
     {
      "level": 7,
-     "chance": 0.64,
+     "chance": 0.72,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11123,7 +11123,7 @@
     },
     {
      "level": 8,
-     "chance": 0.56,
+     "chance": 0.64,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11138,7 +11138,7 @@
     },
     {
      "level": 9,
-     "chance": 0.48,
+     "chance": 0.56,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11153,7 +11153,7 @@
     },
     {
      "level": 10,
-     "chance": 0.4,
+     "chance": 0.48,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -11168,7 +11168,7 @@
     },
     {
      "level": 11,
-     "chance": 0.36,
+     "chance": 0.4,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11183,7 +11183,7 @@
     },
     {
      "level": 12,
-     "chance": 0.32,
+     "chance": 0.36,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11198,7 +11198,7 @@
     },
     {
      "level": 13,
-     "chance": 0.28,
+     "chance": 0.32,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11213,7 +11213,7 @@
     },
     {
      "level": 14,
-     "chance": 0.24,
+     "chance": 0.28,
      "double_chance": 0.005,
      "stat_steps": 1,
      "boost": false,
@@ -11228,7 +11228,7 @@
     },
     {
      "level": 15,
-     "chance": 0.2,
+     "chance": 0.24,
      "double_chance": 0.005,
      "stat_steps": 0,
      "boost": true,
@@ -11243,7 +11243,7 @@
     },
     {
      "level": 16,
-     "chance": 0.18,
+     "chance": 0.2,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11258,7 +11258,7 @@
     },
     {
      "level": 17,
-     "chance": 0.16,
+     "chance": 0.18,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11273,7 +11273,7 @@
     },
     {
      "level": 18,
-     "chance": 0.155,
+     "chance": 0.16,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11288,7 +11288,7 @@
     },
     {
      "level": 19,
-     "chance": 0.15,
+     "chance": 0.155,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11303,7 +11303,7 @@
     },
     {
      "level": 20,
-     "chance": 0.145,
+     "chance": 0.15,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -11318,7 +11318,7 @@
     },
     {
      "level": 21,
-     "chance": 0.14,
+     "chance": 0.145,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11333,7 +11333,7 @@
     },
     {
      "level": 22,
-     "chance": 0.135,
+     "chance": 0.14,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11348,7 +11348,7 @@
     },
     {
      "level": 23,
-     "chance": 0.13,
+     "chance": 0.135,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11363,7 +11363,7 @@
     },
     {
      "level": 24,
-     "chance": 0.125,
+     "chance": 0.13,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11378,7 +11378,7 @@
     },
     {
      "level": 25,
-     "chance": 0.12,
+     "chance": 0.125,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -11393,7 +11393,7 @@
     },
     {
      "level": 26,
-     "chance": 0.115,
+     "chance": 0.12,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11403,7 +11403,7 @@
     },
     {
      "level": 27,
-     "chance": 0.11,
+     "chance": 0.115,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11413,7 +11413,7 @@
     },
     {
      "level": 28,
-     "chance": 0.105,
+     "chance": 0.11,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11423,7 +11423,7 @@
     },
     {
      "level": 29,
-     "chance": 0.1,
+     "chance": 0.105,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11438,7 +11438,7 @@
     },
     {
      "level": 30,
-     "chance": 0.09,
+     "chance": 0.1,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,
@@ -11453,7 +11453,7 @@
     },
     {
      "level": 31,
-     "chance": 0.08,
+     "chance": 0.09,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11468,7 +11468,7 @@
     },
     {
      "level": 32,
-     "chance": 0.04,
+     "chance": 0.08,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11483,7 +11483,7 @@
     },
     {
      "level": 33,
-     "chance": 0.0189,
+     "chance": 0.04,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11498,7 +11498,7 @@
     },
     {
      "level": 34,
-     "chance": 0.0127,
+     "chance": 0.0189,
      "double_chance": 0.005,
      "stat_steps": 2,
      "boost": false,
@@ -11513,7 +11513,7 @@
     },
     {
      "level": 35,
-     "chance": 0.0105,
+     "chance": 0.0127,
      "double_chance": 0.005,
      "stat_steps": 5,
      "boost": false,

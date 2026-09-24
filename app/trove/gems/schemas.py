@@ -54,6 +54,8 @@ class LevelUpResult(BaseModel):
     chance: float                    # level-up chance of this attempt, booster applied
     double_chance: float
     cost: list[ItemCount]            # spent whether or not it landed; also added to gem.spent
+    guaranteed: bool                 # the karma bar was full, so the attempt could not fail
+    karma_gained: int                # added to gem.karma on a failure; a success empties it
     gem: Gem
 
 
@@ -131,6 +133,7 @@ class GemLookups(BaseModel):
     augment_types: list[AugmentLookup]
     abilities: list[LookupItem]
     abilities_by_element: dict[str, list[int]]
+    karma_max: int = 125
     boosters: list[BoosterLookup] = []
     empowered_gems: list[EmpoweredGem] = []
 
@@ -139,7 +142,9 @@ class LevelPlanStep(BaseModel):
     level: int
     chance: float
     double_chance: float
-    expected_attempts: float
+    karma_per_fail: int
+    expected_attempts: float         # counting the karma guarantee
+    max_attempts: int | None         # a full karma bar guarantees success by this attempt
     cost: list[ItemCount]            # per attempt
 
 
