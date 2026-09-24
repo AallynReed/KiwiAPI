@@ -313,6 +313,7 @@ def groups(kind: str, rows: list[dict]) -> list[dict]:
 def _text(s: str | None) -> str:
     # Locale text carries line breaks (and the odd ’) as literal escapes.
     text = (s or "").replace("\\n", "\n")
+    text = re.sub(r"</?font[^>]*>", "", text)  # the game's own colour markup
     return re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), text)
 
 

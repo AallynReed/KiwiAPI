@@ -19,6 +19,7 @@ URL map:
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
+  /worlds, /delve-gateways, /shadow-tower  world lists from worlds.json (app/wiki/worlds_pages.py)
   /titles                every title in the game's title text table + its write-up
   /pvp-stats             the PvP stat curves (pvp.json, docs/pvp-stats.md) + its write-up
   /<slug>                an article
@@ -42,7 +43,7 @@ from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
 from app.trove.decode import store as gamedata
 from app.web import feature_flags as web_flags
-from app.wiki import data_pages, entities, media, pvp_stats
+from app.wiki import data_pages, entities, media, pvp_stats, worlds_pages
 
 logger = logging.getLogger("kiwi.web.wiki")
 
@@ -58,6 +59,10 @@ def _browse(path: str) -> list[dict]:
         rows.append({"url": f"/{spec['plural']}", "title": spec["title"], "icon": spec["icon"],
                      "current": path == f"/{spec['plural']}" or path.startswith(f"/{kind}/")})
     rows.append({"url": "/titles", "title": "Titles", "icon": "fa-signature", "current": path == "/titles"})
+    for url, title, icon in (("/worlds", "Worlds & Biomes", "fa-earth-americas"),
+                             ("/delve-gateways", "Delve Gateways", "fa-dungeon"),
+                             ("/shadow-tower", "Shadow Tower", "fa-tower-observation")):
+        rows.append({"url": url, "title": title, "icon": icon, "current": path == url})
     return rows
 
 
@@ -155,6 +160,13 @@ def _data_cards() -> list[dict]:
             {"name": data_pages.DATA_PAGES["stat-modifiers"], "url": "/stat-modifiers", "kind": "Guide",
              "terms": "stats stat modifiers bonus bonuses percent multiplier add multiplysum multiply set "
                       "nullify minimum maximum order character sheet critical damage health"},
+            {"name": data_pages.DATA_PAGES["worlds"], "url": "/worlds", "kind": "Game data",
+             "terms": "worlds biomes portals difficulty adventure super adventure geode " + " ".join(
+                 w["name"] for g in worlds_pages.worlds_page()["world_groups"] for w in g["rows"])},
+            {"name": data_pages.DATA_PAGES["delve-gateways"], "url": "/delve-gateways", "kind": "Game data",
+             "terms": "delve gateways depth stepper stable gateway boss"},
+            {"name": data_pages.DATA_PAGES["shadow-tower"], "url": "/shadow-tower", "kind": "Game data",
+             "terms": "shadow tower floors flux " + " ".join(f["name"] for f in worlds_pages.shadow_tower_page()["floors"])},
             {"name": data_pages.DATA_PAGES["titles"], "url": "/titles", "kind": "Game data",
              "terms": "titles title prefix suffix name " + " ".join(t["name"] for t in entities.titles_page()["titles"])},
             {"name": data_pages.DATA_PAGES["pvp-stats"], "url": "/pvp-stats", "kind": "Game data",
@@ -391,6 +403,28 @@ async def titles(request: Request) -> HTMLResponse:
         "rev": page["rev"] if page else 0, **entities.titles_page(),
         "description": "Every Trove title the game files hold, with how each is earned.",
     })
+
+
+def _world_route(path: str, template: str, build, description: str) -> None:
+    async def page(request: Request) -> HTMLResponse:
+        slug = f"data/{path}"
+        stored = await _page(slug)
+        live = stored if stored and not stored.get("deleted") else None
+        return _render(request, template, {
+            "title": data_pages.DATA_PAGES[path], "slug": slug, "page": live,
+            "rev": stored["rev"] if stored else 0, **build(), "description": description,
+        })
+
+    app.add_api_route(f"/{path}", page, methods=["GET"], response_class=HTMLResponse,
+                      dependencies=[Depends(_gate)], name=f"data_{path}")
+
+
+_world_route("worlds", "wiki/worlds.html", worlds_pages.worlds_page,
+             "Every Trove world a portal leads to, on the difficulty ladder, and the biomes the challenges name.")
+_world_route("delve-gateways", "wiki/delve_gateways.html", worlds_pages.gateways_page,
+             "Every Trove Delve gateway: the depth it starts at and where to craft it.")
+_world_route("shadow-tower", "wiki/shadow_tower.html", worlds_pages.shadow_tower_page,
+             "The Shadow Tower's floors: Flux cost and loot requirement for every difficulty.")
 
 
 @app.get("/-/{tool}", response_class=HTMLResponse, dependencies=[Depends(_gate)])

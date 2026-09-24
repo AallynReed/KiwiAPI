@@ -1,0 +1,46 @@
+{% extends "wiki/_base.html" %}
+{% block view %}data{% endblock %}
+{% block main %}
+<article class="wk-article wk-data">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/worlds</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ title }}</h1>
+    <p class="wk-lead">Every world a portal can take you to, on the game's difficulty ladder, and the biomes its challenges name. Which dungeons and zones make up a world is decided by the game server, so it isn't listed.</p>
+
+    <section class="wk-section" aria-labelledby="wk-diff">
+        <h2 class="wk-subhead" id="wk-diff">Difficulty ladder</h2>
+        <ul class="wk-chips-list" role="list">{% for d in difficulties %}<li class="wk-fact"><span class="num">{{ d.rank }}</span> {{ d.name }}</li>{% endfor %}</ul>
+    </section>
+
+    {% for g in world_groups %}
+    <section class="wk-section" aria-labelledby="wk-w-{{ loop.index }}">
+        <h2 class="wk-subhead" id="wk-w-{{ loop.index }}">{{ g.name }} <span class="wk-count-muted">{{ g.rows | length }}</span></h2>
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">World</th><th scope="col">Difficulty</th><th scope="col">Needs</th></tr></thead>
+                <tbody>
+                {% for w in g.rows %}
+                <tr>
+                    <th scope="row"><div>{{ w.name }}</div>{% if w.description %}<div class="wk-mute wk-pre">{{ w.description }}</div>{% endif %}</th>
+                    <td class="num">{{ w.difficulty }}</td>
+                    <td>{% for r in w.requires %}<div>{{ r }}</div>{% endfor %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endfor %}
+
+    <section class="wk-section" aria-labelledby="wk-biomes">
+        <h2 class="wk-subhead" id="wk-biomes">Biomes</h2>
+        <p class="wk-hint">The biomes the game's dungeon challenges name, with how many zone layouts each one draws on.</p>
+        <ul class="wk-thinglist" role="list">{% for b in biomes %}<li><strong>{{ b.name }}</strong> <span class="wk-count-muted">{{ b.zones }} zones</span>{% if b.description %}<div class="wk-mute wk-pre">{{ b.description }}</div>{% endif %}</li>{% endfor %}</ul>
+    </section>
+
+    {% set notes_prompt = "No notes yet: which worlds are worth farming at each Power Rank." %}
+    {% include "wiki/_notes.html" %}
+</article>
+{% endblock %}

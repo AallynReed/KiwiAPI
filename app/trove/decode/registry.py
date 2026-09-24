@@ -32,6 +32,7 @@ from app.trove.decode import (
     ring_abilities,
     titles,
     wire,
+    worlds,
 )
 
 _PACKAGE = "app.trove.decode."
@@ -40,7 +41,7 @@ DECODERS: dict[str, ModuleType] = {
     for m in (class_levels, class_abilities, ally_abilities, gem_abilities,
               ring_abilities, mount_abilities, pvp_stat_ranges, delve_modifiers,
               companions, badges, fish, mementos, recipes, collectibles,
-              cosmetics, titles, npcs, placeables, quests)
+              cosmetics, titles, npcs, placeables, quests, worlds)
 }
 
 

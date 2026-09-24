@@ -1,0 +1,45 @@
+{% extends "wiki/_base.html" %}
+{% block view %}data{% endblock %}
+{% block main %}
+<article class="wk-article wk-data">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/delve-gateways</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ title }}</h1>
+    <p class="wk-lead">Every Delve gateway in the game files: {{ count }} in all, with the depth each starts at and the station that crafts it. Delve layouts and loot are decided by the game server.</p>
+    <div class="wk-filterbar" data-filter-root>
+        <label class="wk-filter">
+            <i class="fa-solid fa-filter" aria-hidden="true"></i>
+            <input type="search" placeholder="Filter {{ count }} gateways" aria-label="Filter gateways" data-filter-input autocomplete="off" spellcheck="false">
+        </label>
+        <output class="wk-filter-count" data-filter-count aria-live="polite">{{ count }} shown</output>
+    </div>
+    <div data-filter-list>
+    {% for s in sections %}
+    <section class="wk-section" data-filter-group aria-labelledby="wk-g-{{ loop.index }}">
+        <h2 class="wk-subhead" id="wk-g-{{ loop.index }}">{{ s.name }} <span class="wk-count-muted" data-group-count>{{ s.rows | length }}</span></h2>
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">Gateway</th><th scope="col">Starts at depth</th><th scope="col">Crafted at</th></tr></thead>
+                <tbody>
+                {% for g in s.rows %}
+                <tr data-search="{{ g.search }}">
+                    <th scope="row"><div>{{ g.name }}</div>{% if g.description %}<div class="wk-mute wk-pre">{{ g.description }}</div>{% endif %}</th>
+                    <td class="num">{{ g.depth or "" }}</td>
+                    <td>{% for c in g.crafted %}<div><a href="{{ c.url }}">{{ c.value }}</a></div>{% endfor %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endfor %}
+    </div>
+    <p class="wk-list-empty" data-filter-empty hidden>No gateway matches that filter.</p>
+
+    {% set notes_prompt = "No notes yet: which gateways are worth crafting and what each boss drops." %}
+    {% include "wiki/_notes.html" %}
+</article>
+{% endblock %}
+{% block scripts %}<script src="/static/wiki_filter.min.js" defer></script>{% endblock %}

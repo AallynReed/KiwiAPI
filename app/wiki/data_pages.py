@@ -11,6 +11,9 @@ DATA_PAGES: dict[str, str] = {
     "stat-modifiers": "How Stat Modifiers Work",
     "pvp-stats": "How PvP Stats Work",
     "titles": "Titles",
+    "worlds": "Worlds & Biomes",
+    "delve-gateways": "Delve Gateways",
+    "shadow-tower": "Shadow Tower",
 }
 
 
