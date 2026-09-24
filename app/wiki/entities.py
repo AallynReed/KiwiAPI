@@ -81,6 +81,16 @@ KINDS: dict[str, dict[str, Any]] = {
               "icon": "fa-hat-wizard", "noun": "style slots",
               "lead": "Every hat, face, weapon and banner style, one page per slot, filed the way the "
                       "collection screen files them."},
+    "boss": {"prompt": "how the fight goes and how to win it",
+             "file": "npcs.json", "key": "npcs", "plural": "bosses", "title": "Bosses", "icon": "fa-skull",
+             "where": lambda e: bool(e.get("boss")), "group_by": "boss_type",
+             "group_order": ["Delve bosses", "World bosses", "Shadow Tower bosses"],
+             "lead": "Every boss the game files mark as one: Delve, world and Shadow Tower bosses, with "
+                     "their abilities."},
+    "npc": {"prompt": "who these are and where to find them",
+            "file": "npcs.json", "plural": "npcs", "title": "NPCs", "icon": "fa-person", "noun": "NPC groups",
+            "rows": lambda: npc_groups(),
+            "lead": "Every named NPC, enemies and friends, grouped the way the game's files keep them."},
     "companion": {"prompt": "where to find it and which of its perks matter",
                   "file": "companions.json", "plural": "companions", "title": "Companions",
                   "icon": "fa-dove", "facets": {"rarity": "Rarity"},
@@ -130,6 +140,8 @@ def _rows(spec: dict) -> list[dict]:
     data = gamedata.load(spec["file"], []) or []
     if isinstance(data, dict):
         data = data.get(spec.get("key", ""), [])
+    if spec.get("rows"):
+        return spec["rows"]()
     where = spec.get("where")
     return [e for e in data if where(e)] if where else data
 
@@ -180,6 +192,8 @@ def picture(e: dict) -> str:
     """The blueprint an entry is drawn with: its own, else its highest rank's."""
     if e.get("blueprint"):
         return blueprint_name(e["blueprint"])
+    if (e.get("model") or {}).get("blueprints"):
+        return blueprint_name(e["model"]["blueprints"][0])
     if e.get("styles"):
         return next((blueprint_name(x["blueprint"]) for x in e["styles"] if x.get("blueprint")), "")
     return next((blueprint_name(r["blueprint"]) for r in reversed(e.get("ranks") or []) if r.get("blueprint")), "")
@@ -213,6 +227,12 @@ def summary(kind: str, e: dict) -> dict:
     elif kind == "style":
         row["sub"] = f"{len(e.get('styles') or []):,} styles"
         row["search"] += " " + " ".join(x["name"] for x in e.get("styles") or []).lower()
+    elif kind == "boss":
+        row["sub"] = boss_type(e)
+        row["facets"]["boss_type"] = boss_type(e)
+    elif kind == "npc":
+        row["sub"] = f"{len(e.get('npcs') or []):,} NPCs"
+        row["search"] += " " + " ".join(n["name"] for n in e.get("npcs") or []).lower()
     elif kind == "fishing-pole":
         row["facets"]["liquids"] = "|".join(x.title() for x in e.get("liquids") or [])
         row["sub"] = ", ".join(x.title() for x in e.get("liquids") or [])
@@ -308,6 +328,10 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _costume(d, e)
     elif kind == "style":
         _style_slot(d, e)
+    elif kind == "boss":
+        _boss(d, e)
+    elif kind == "npc":
+        _npc_group(d, e)
     elif kind in ("flask", "fishing-pole", "tome"):
         if e.get("equip_stats"):
             d["stat_groups"] = [{"label": "When equipped", "stats": _stat_rows(e["equip_stats"])}]
@@ -782,3 +806,108 @@ def titles_page() -> dict[str, Any]:
                      "search": " ".join([t["name"], t.get("female", ""), t.get("description", "")]).lower()})
     return {"titles": rows, "with_description": sum(1 for r in rows if r["description"]),
             "crafted": sum(1 for r in rows if r["crafted"])}
+
+
+# ── NPCs and bosses ────────────────────────────────────────────────────────
+
+BOSS_TYPES = {"delve": "Delve bosses", "world": "World bosses", "shadow_tower": "Shadow Tower bosses"}
+BOSS_FACT = {"delve": "Delve boss", "world": "World boss", "shadow_tower": "Shadow Tower boss"}
+SIDES = {"enemies": "Enemy", "players": "Friendly"}
+# Top-level NPC folders whose name differs from what players call the place.
+FOLDER_NAMES = {"": "General", "giantlands": "Sundered Uplands", "battleroyale": "Battle Royale",
+                "goodkarma": "Good Karma", "luxion_lands": "Trials of Luxion", "shadowtitan": "Shadow Tower",
+                "worldboss": "World Bosses", "noncombat": "Non-combat", "soulhunter": "Soul Hunter"}
+
+
+def boss_type(e: dict) -> str:
+    return BOSS_TYPES.get(e.get("boss") or "", "")
+
+
+def _folder(group: str) -> tuple[str, str]:
+    top, _, sub = (group or "").partition("/")
+    return top, sub
+
+
+def _folder_name(top: str) -> str:
+    return FOLDER_NAMES.get(top, top.replace("_", " ").title())
+
+
+@gamedata.cached("npcs.json")
+def _npc_file() -> dict:
+    data = gamedata.load("npcs.json", {}) or {}
+    return data if isinstance(data, dict) else {}
+
+
+def npc_groups() -> list[dict]:
+    """One page per top-level NPC folder; the NPC list rides along on the entry."""
+    groups: dict[str, list[dict]] = {}
+    for n in _npc_file().get("npcs") or []:
+        groups.setdefault(_folder(n.get("group", ""))[0], []).append(n)
+    return [{"slug": top or "general", "name": _folder_name(top), "prefab": f"npc/{top}".rstrip("/"),
+             "npcs": rows} for top, rows in sorted(groups.items(), key=lambda kv: _folder_name(kv[0]).lower())]
+
+
+def _npc_card(n: dict) -> dict:
+    tags = []
+    if n.get("boss"):
+        tags.append(BOSS_FACT[n["boss"]])
+    elif n.get("elite"):
+        tags.append("Elite")
+    if n.get("crafting"):
+        tags.append("Crafts")
+    if n.get("stores"):
+        tags.append("Vendor")
+    if n.get("offers_adventures"):
+        tags.append("Adventures")
+    side = SIDES.get(n.get("side") or "", "")
+    # "DNT" (do not translate) is a working marker on a few nameplates.
+    name = re.sub(r"^\$?DNT\s*-?\s*", "", n["name"])
+    return {"name": name, "side": side, "sub": " · ".join([x for x in [side, *tags] if x]),
+            "url": url("boss", n) if n.get("boss") else "", "blueprint": picture(n),
+            "prefab": f"prefabs/{n['prefab']}.binfab",
+            "search": " ".join([n["name"], side, *tags, (n.get("sign") or {}).get("text", "")]).lower()}
+
+
+def _npc_group(d: dict, e: dict) -> None:
+    sections: dict[str, list[dict]] = {}
+    for n in e.get("npcs") or []:
+        sub = _folder(n.get("group", ""))[1]
+        sections.setdefault(sub.replace("_", " ").title() if sub else "", []).append(_npc_card(n))
+    d["npc_sections"] = [{"name": k or d["name"], "npcs": v} for k, v in sorted(sections.items())]
+    d["npc_count"] = len(e.get("npcs") or [])
+
+
+def _ability_card(ref: str) -> dict | None:
+    a = (_npc_file().get("abilities") or {}).get(ref)
+    if not a:
+        return None
+    c = card(a, name=ref.rsplit("/", 1)[-1].replace("_", " ").title())
+    return c if c["damage"] or c["healing"] or c["effects"] or c["meta"] else None
+
+
+def _carried_card(ref: str) -> dict | None:
+    a = (_npc_file().get("abilities") or {}).get(ref) or {}
+    own = [x for x in a.get("effects") or [] if x.get("prefab") == ref]
+    if not own:
+        return None
+    c = card({"effects": own}, name=ref.rsplit("/", 1)[-1].replace("_", " ").title())
+    return c if c["effects"] else None
+
+
+def _boss(d: dict, e: dict) -> None:
+    d["facts"].insert(0, {"label": "Boss", "value": BOSS_FACT[e["boss"]]})
+    if e.get("elite"):
+        d["facts"].append({"label": "Elite", "value": "Yes"})
+    top = _folder(e.get("group", ""))[0]
+    d["facts"].append({"label": "NPC group", "value": _folder_name(top), "url": f"/npc/{top or 'general'}"})
+    if not d["description"]:
+        d["description"] = _text((e.get("sign") or {}).get("text"))
+    if e.get("stats"):
+        d["stat_groups"] = [{"label": "Base stats in the game files", "stats": [
+            f"{s['name']} {num(s['value'])}" for s in e["stats"]]}]
+    d["abilities"] = [c for c in (_ability_card(a["ref"]) for a in e.get("abilities") or []) if c]
+    # A carried effect's chain can run into what it guards against (an immunity
+    # walks into lava damage), so only effects on the carried prefab itself count.
+    d["carried"] = [c for c in (_carried_card(ref) for ref in e.get("effects") or []) if c]
+    d["adventures"] = [{"name": a.get("name", ""), "description": _text(a.get("description"))}
+                       for a in e.get("defeat_adventures") or []]

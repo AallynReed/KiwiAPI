@@ -42,6 +42,7 @@
             <div class="cls-abilities">{% for a in d.abilities %}{{ ability_card(a) }}{% endfor %}</div>
         </section>
         {% endif %}
+        {% include "wiki/kinds/" ~ kind ~ "_after.html" ignore missing %}
     </section>
 
     <section class="wk-writeup" aria-labelledby="wk-writeup-title">
@@ -59,4 +60,4 @@
     </section>
 </article>
 {% endblock %}
-{% block scripts %}{% if kind in ("station", "style") %}<script src="/static/wiki_filter.min.js" defer></script>{% endif %}{% endblock %}
+{% block scripts %}{% if kind in ("station", "style", "npc") %}<script src="/static/wiki_filter.min.js" defer></script>{% endif %}{% endblock %}

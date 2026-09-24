@@ -12,7 +12,8 @@ URL map:
   /<plural>, /<kind>/<n> generated game-data pages + write-ups, one pair per kind in
                          app/wiki/entities.KINDS: allies, mounts, dragons, wings, boats, sails,
                          auras, Mag Riders, flasks, tomes, fishing poles, costumes, bomb skins, style slots
-                         (/styles, /style/<slot>), companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
+                         (/styles, /style/<slot>), bosses, NPC groups (/npcs, /npc/<group>),
+                         companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
@@ -268,13 +269,16 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
     live = page if page and not page.get("deleted") else None
     d = entities.detail(kind, e)
     found = media.lookup(kind, e, await media.blueprints(kind))
-    # A style slot lists many models; none of them is the page's own.
-    d["image"] = media.thumb_url(e, found, 256) if kind != "style" else ""
-    d["preview"] = media.preview_url(e, found) if kind != "style" else ""
+    # A group page lists many models; none of them is the page's own.
+    d["image"] = media.thumb_url(e, found, 256) if kind not in ("style", "npc") else ""
+    d["preview"] = media.preview_url(e, found) if kind not in ("style", "npc") else ""
     for row in d.get("ranks") or []:
         row["image"] = media.render_url(row.get("blueprint", ""), 64)
     for row in d.get("sizes") or []:
         row["image"] = media.render_url(row.get("trophy_blueprint", ""), 64)
+    for section in d.get("npc_sections") or []:
+        for row in section["npcs"]:
+            row["image"] = media.render_url(row.get("blueprint", ""), 64, row.get("prefab", ""))
     for group in d.get("style_groups") or []:
         for row in group["styles"]:
             row["image"] = media.render_url(row.get("blueprint", ""), 64)

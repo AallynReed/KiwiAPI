@@ -1,0 +1,35 @@
+{# Every NPC in one folder group (entities._npc_group); bosses link to their page. #}
+<div class="wk-filterbar" data-filter-root>
+    <label class="wk-filter">
+        <i class="fa-solid fa-filter" aria-hidden="true"></i>
+        <input type="search" placeholder="Filter {{ "{:,}".format(d.npc_count) }} NPCs" aria-label="Filter NPCs" data-filter-input autocomplete="off" spellcheck="false">
+    </label>
+    <label class="wk-select"><span class="wk-sr">Side</span>
+        <select data-filter-facet="side">
+            <option value="">Side: all</option>
+            <option value="Enemy">Enemy</option>
+            <option value="Friendly">Friendly</option>
+        </select>
+    </label>
+    <output class="wk-filter-count" data-filter-count aria-live="polite">{{ "{:,}".format(d.npc_count) }} shown</output>
+</div>
+<div data-filter-list>
+{% for sec in d.npc_sections %}
+<section class="cls-section wk-entitygroup" data-filter-group aria-labelledby="wk-ns-{{ loop.index }}">
+    <h3 class="cls-section-title" id="wk-ns-{{ loop.index }}"><span>{{ sec.name }}</span><span class="wk-count-muted" data-group-count>{{ sec.npcs | length }}</span></h3>
+    <ul class="wk-entitygrid" role="list">
+        {% for n in sec.npcs %}
+        <li data-search="{{ n.search }}" data-side="{{ n.side }}">{% if n.url %}<a class="wk-entitycard" href="{{ n.url }}">{% else %}<div class="wk-entitycard wk-stylecard">{% endif %}
+            <span class="wk-entitycard-img">{% if n.image %}<img data-lazy-src="{{ n.image }}" alt="" width="48" height="48" decoding="async" data-hide-on-error>{% endif %}</span>
+            <span class="wk-entitycard-text">
+                <span class="wk-entitycard-name">{{ n.name }}</span>
+                {% if n.sub %}<span class="wk-entitycard-sub">{{ n.sub }}</span>{% endif %}
+            </span>
+        {% if n.url %}</a>{% else %}</div>{% endif %}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endfor %}
+</div>
+<p class="wk-list-empty" data-filter-empty hidden>No NPC here matches that filter.</p>
+<p class="wk-hint">Where an NPC spawns, its health and damage, and what it drops are decided by the game server, not the game files.</p>

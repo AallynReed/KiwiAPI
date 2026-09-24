@@ -19,7 +19,7 @@ from app.wiki import entities
 
 # Codex types that hold our ally/mount entries, and which are rigged creatures.
 CODEX_TYPES = {"ally": ("ally",), "mount": ("mount", "dragon"), "dragon": ("mount", "dragon")}
-RIGGED = frozenset({"mount", "dragon"})
+RIGGED = frozenset({"mount", "dragon", "npc"})
 _PAGE = 200
 _TTL = 3600
 
@@ -62,15 +62,19 @@ def lookup(kind: str, entry: dict, found: dict[str, tuple[str, str]]) -> tuple[s
     if kind in CODEX_TYPES:
         return found.get(codex_path(entry))
     blueprint = entities.picture(entry)
+    if blueprint and kind == "boss":
+        return (blueprint, "npc")
     return (blueprint, kind) if blueprint else None
 
 
-def render_url(blueprint: str, dim: int) -> str:
-    """A bare blueprint drawn by the API."""
+def render_url(blueprint: str, dim: int, prefab: str = "") -> str:
+    """A blueprint drawn by the API; with ``prefab``, the whole rigged creature."""
     if not blueprint:
         return ""
-    blueprint = entities.blueprint_name(blueprint)
-    return f"{settings.api_url.rstrip('/')}/site/codexes/render?{urlencode({'blueprint': blueprint, 'dim': dim})}"
+    params = {"blueprint": entities.blueprint_name(blueprint), "dim": dim}
+    if prefab:
+        params["prefab"] = prefab
+    return f"{settings.api_url.rstrip('/')}/site/codexes/render?{urlencode(params)}"
 
 
 def thumb_url(entry: dict, found: tuple[str, str] | None, dim: int) -> str:
