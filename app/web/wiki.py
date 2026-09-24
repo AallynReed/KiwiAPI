@@ -14,6 +14,7 @@ URL map:
                          auras, Mag Riders, flasks, tomes, fishing poles, costumes, bomb skins, style slots
                          (/styles, /style/<slot>), bosses, NPC groups (/npcs, /npc/<group>),
                          placeable groups (/placeables, /placeable/<group>),
+                         quest lines + adventure sets (/adventures, /adventure/<set>),
                          companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
@@ -271,8 +272,8 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
     d = entities.detail(kind, e)
     found = media.lookup(kind, e, await media.blueprints(kind))
     # A group page lists many models; none of them is the page's own.
-    d["image"] = media.thumb_url(e, found, 256) if kind not in ("style", "npc", "placeable") else ""
-    d["preview"] = media.preview_url(e, found) if kind not in ("style", "npc", "placeable") else ""
+    d["image"] = media.thumb_url(e, found, 256) if kind not in ("style", "npc", "placeable", "adventure") else ""
+    d["preview"] = media.preview_url(e, found) if kind not in ("style", "npc", "placeable", "adventure") else ""
     for row in d.get("ranks") or []:
         row["image"] = media.render_url(row.get("blueprint", ""), 64)
     for row in d.get("sizes") or []:

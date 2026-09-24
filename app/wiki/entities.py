@@ -97,6 +97,13 @@ KINDS: dict[str, dict[str, Any]] = {
                   "group_order": ["Blocks", "Decoration", "Building"],
                   "lead": "Every block and decoration a player can own, grouped by the station that crafts it "
                           "or by where it comes from."},
+    "adventure": {"prompt": "tips for finishing these quickly",
+                  "file": "quests.json", "key": "groups", "plural": "adventures", "title": "Quests & Adventures",
+                  "icon": "fa-scroll", "noun": "quest lines and adventure sets", "group_by": "section",
+                  "group_order": ["Quest lines", "NPC adventures", "Geode NPC adventures", "Club adventures",
+                                  "Crystallogy adventures", "Event adventures", "Tiny Quests", "Golden Thread"],
+                  "lead": "Every quest line and adventure set in the game files: what each step asks, what it "
+                          "pays and how long you have."},
     "companion": {"prompt": "where to find it and which of its perks matter",
                   "file": "companions.json", "plural": "companions", "title": "Companions",
                   "icon": "fa-dove", "facets": {"rarity": "Rarity"},
@@ -242,6 +249,10 @@ def summary(kind: str, e: dict) -> dict:
         row["facets"]["category"] = e.get("category", "")
         row["sub"] = f"{len(e.get('entries') or []):,} placeables"
         row["search"] += " " + " ".join(x["name"] for x in e.get("entries") or []).lower()
+    elif kind == "adventure":
+        row["facets"]["section"] = adventure_section(e)
+        row["sub"] = f"{len(e.get('entries') or []):,} {'steps' if e.get('thread') else 'adventures'}"
+        row["search"] += " " + " ".join(x["name"] for x in e.get("entries") or []).lower()
     elif kind == "npc":
         row["sub"] = f"{len(e.get('npcs') or []):,} NPCs"
         row["search"] += " " + " ".join(n["name"] for n in e.get("npcs") or []).lower()
@@ -346,6 +357,8 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _npc_group(d, e)
     elif kind == "placeable":
         _placeable_group(d, e)
+    elif kind == "adventure":
+        _adventure_group(d, e)
     elif kind in ("flask", "fishing-pole", "tome"):
         if e.get("equip_stats"):
             d["stat_groups"] = [{"label": "When equipped", "stats": _stat_rows(e["equip_stats"])}]
@@ -956,3 +969,92 @@ def _placeable_group(d: dict, e: dict) -> None:
     d["rarities"] = [r for r in ("Common", "Uncommon", "Rare", "Epic", "Legendary", "Relic", "Resplendent")
                      if any(x["rarity"] == r for x in rows)]
     d["style_count"] = len(rows)
+
+
+# ── quests and adventures ──────────────────────────────────────────────────
+
+SECTIONS = {"Expertise": "Quest lines", "NPCAdventure": "NPC adventures", "GeodeNPCAdventure": "Geode NPC adventures",
+            "ClubMemberAdventure": "Club adventures", "ClubNonMemberAdventure": "Club adventures",
+            "CrystallogyAdventure": "Crystallogy adventures", "RepeatableEvent": "Event adventures",
+            "Event": "Event adventures", "TinyQuests": "Tiny Quests"}
+# What the player does, per objective kind (the typed payload says how much and of what).
+VERBS = {"itemacquired": "Get", "itemconsumed": "Use", "itemfished": "Catch", "itemlooted": "Loot",
+         "npckilled": "Defeat", "interacted": "Interact with", "craftingcomplete": "Craft",
+         "adventurecompleted": "Complete adventures", "quest": "Complete quests", "jump": "Jump",
+         "walk": "Walk", "blockplaced": "Place blocks", "itemupgrade": "Upgrade items",
+         "upgradematerial": "Use upgrade materials", "tomelevel": "Level up a tome",
+         "tinyquestinstacompleted": "Instantly complete Tiny Quests"}
+
+
+def adventure_section(e: dict) -> str:
+    if e.get("source") == "goldenthread":
+        return "Golden Thread"
+    return SECTIONS.get(e.get("type") or "", _spaced(e.get("type") or "") or "Other")
+
+
+@gamedata.cached("npcs.json")
+def _npc_names() -> dict[str, dict]:
+    return {n["prefab"]: n for n in (_npc_file().get("npcs") or [])}
+
+
+def _named(rows: list[dict], limit: int = 4) -> list[dict]:
+    out = []
+    for r in rows or []:
+        n = _npc_names().get(r.get("prefab", "")) or {}
+        name = r.get("name") or n.get("name") or ""
+        if name:
+            out.append({"text": name, "url": url("boss", n) if n.get("boss") else link(r.get("prefab"))})
+    return out[:limit] + ([{"text": f"and {len(out) - limit} more", "url": ""}] if len(out) > limit else [])
+
+
+def goal_line(o: dict) -> dict:
+    """An objective as a short line plus the things it names; empty when the kind
+    carries nothing a reader needs beyond the adventure's own text."""
+    kind = o.get("kind") or ""
+    if kind in ("objectivesetany", "objectivesetall"):
+        parts = [goal_line(x)["text"] for x in o.get("objectives") or []]
+        parts = [x for x in parts if x]
+        return {"text": (" or " if kind.endswith("any") else " and ").join(parts), "things": []}
+    if kind == "metric" and o.get("metric"):
+        return {"text": f"{num(o.get('goal') or 1)} {o['metric'].get('label') or o['metric'].get('name')}",
+                "things": []}
+    if kind == "mastery" and o.get("level"):
+        return {"text": f"Reach mastery level {num(o['level'])}", "things": []}
+    if kind == "classlevel" and o.get("level"):
+        return {"text": f"Reach class level {num(o['level'])}", "things": []}
+    if kind == "professionrank" and o.get("rank"):
+        return {"text": f"{', '.join(o.get('professions') or [])} rank {num(o['rank'])}".strip(), "things": []}
+    if kind == "stattotal" and o.get("amount"):
+        return {"text": f"{num(o['amount'])} {', '.join(x['name'] for x in o.get('stats') or [])}", "things": []}
+    if kind in VERBS:
+        goal = o.get("goal")
+        text = VERBS[kind] + (f" {num(goal)}" if goal and goal != 1 or kind in ("jump", "walk") else "")
+        things = _named(o.get("items") or o.get("npcs") or o.get("targets") or [])
+        return {"text": text, "things": things}
+    return {"text": "", "things": []}
+
+
+def _reward(r: dict) -> dict:
+    count = r.get("count") or r.get("amount")
+    name = r.get("name") or ""
+    return {"text": f"{num(count)} × {name}" if count and count != 1 and name else name,
+            "url": link(r.get("prefab"))}
+
+
+def _adventure_group(d: dict, e: dict) -> None:
+    d["facts"] = [{"label": "Kind", "value": adventure_section(e)}]
+    rows = []
+    for i, x in enumerate(e.get("entries") or [], 1):
+        timing = []
+        if x.get("time_limit") and x["time_limit"] > 0:
+            timing.append(f"{_duration(x['time_limit'])} once taken")
+        if x.get("daily_reset"):
+            timing.append("Resets daily")
+        rows.append({"step": x.get("step") or (i if e.get("thread") else None), "name": x["name"],
+                     "description": _text(x.get("description") or x.get("summary")),
+                     "goal": goal_line(x.get("objective") or {}),
+                     "rewards": [r for r in (_reward(r) for r in x.get("rewards") or []) if r["text"]],
+                     "timing": timing,
+                     "search": " ".join([x["name"], x.get("description", "")]).lower()})
+    d["adventures"] = rows
+    d["ordered"] = bool(e.get("thread"))

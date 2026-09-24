@@ -4,7 +4,7 @@ Every adventure-like thing is a PersonalObjective (the exe's reflected class). T
 files that list them:
 - `meta/activities/<set>.binfab`: root field 1 the objectives, field 2 the set's
   KActivityType (the exe's enum: Event 0, Expertise 1 ... TinyQuests 11). Expertise
-  sets are the tracker's "Quests" tab.
+  is the tracker's "Quests" tab (`$ActivityExpertiseTitle`).
 - `meta/goldenthread/goldenthread.binfab`: root field 0, the Golden Thread - the
   new-player questline plus every event's story chain.
 - `meta/activity.binfab` (ActivityInfoData): field 3 caps how many adventures of a
@@ -17,8 +17,9 @@ PersonalObjective fields, each from the tracker and accept code: 0 id; 1 name ke
 claim id; 12 seconds the adventure lasts once taken (-1 none; the tracker counts it
 down, and the texts agree: 86400 "available for 24 hours", 259200 "3 days"); 13 icon,
 with 20 saying what it is (the exe's Icon/Blueprint/Prefab table; 3 = a plain .dds);
-14 resets at the daily reset (the client compares completion with today's 11:00 UTC
-boundary). The other fields (Tiny Quest scoring 19/22/29-32 among them) are unproven.
+14 resets daily (the client refuses a retake completed after the day's 11:00 boundary,
+"$DailyActivityCompleted"). The other fields (Tiny Quest scoring 19/22/29-32 among
+them) are unproven, and a Tiny Quest's objective is a placeholder.
 
 An objective is `{0 kind, 1 params}`; kinds register lowercased, so `Mastery` and
 `mastery` are one class. Params keep their fields on the last section. Per kind,
@@ -29,13 +30,16 @@ and its tag list means "any"; `requirement` must hold when the event fires;
 named from Trove_x64.exe like badges; `activity_types` values match the texts
 ("Complete Club Adventures" = [2, 3]).
 
-A claim id resolves in any `prefabs/claim/*` file (one id space); what it grants is
-read as badges.py reads badge claims. Which adventures an NPC offers on a given day,
-which event chain is live, and Tiny Quest outcomes are server-side. Golden Thread
-entries not in a thread are grouped by their id stem (`event_july2025_03` ->
-`event_july2025`), in file order; a chain's name is the "Title n/m:" prefix its
-descriptions share. The world quest/trigger prefabs (`prefabs/quest*`) carry no
-text and are not read.
+A claim id resolves in any `prefabs/claim/*` file (one id space; an id no file has,
+or two files define differently, gets no rewards); what it grants is read as
+badges.py reads badge claims. Which adventures an NPC offers on a given day, which
+event chain is live, and Tiny Quest outcomes are server-side.
+
+Groups: one per activities file, in thread order when a thread shares its name.
+Golden Thread entries go by thread, else by id stem (`event_july2025_03` ->
+`event_july2025`) in file order; a lone id joins the chain its "Title n/m:"
+description prefix names, else "Other". A chain is named by that prefix. The world
+quest/trigger prefabs (`prefabs/quest*`) carry no text and are not read.
 """
 from __future__ import annotations
 
@@ -46,10 +50,10 @@ from typing import Any
 from app.trove.codexes.badges import EXE_PATH, parse_metric_names
 from app.trove.decode.ability import Prefabs, identity
 from app.trove.decode.badges import Text, _grants
-from app.trove.decode.fields import stat_key
-from app.trove.decode.recipes import _requirement
+from app.trove.decode.fields import IDENTITY, stat_key
+from app.trove.decode.recipes import _components, _requirement
 from app.trove.decode.tree import GameTree
-from app.trove.decode.wire import Obj, WireError, parse
+from app.trove.decode.wire import Obj, Prefab, WireError, parse
 
 TITLE = "Quests and Adventures"
 OUTPUT = "quests.json"
@@ -93,7 +97,7 @@ OBJECTIVES: dict[str, dict[int, str]] = {
 }
 PREFAB_LISTS = frozenset({"items", "targets", "npcs", "stations", "removes"})
 SET_KINDS = frozenset({"objectivesetall", "objectivesetany"})
-CHAIN_TITLE = re.compile(r"^(.{3,60}?) \d+\s*/\s*\d+\s*:")
+CHAIN_TITLE = re.compile(r"^(?:(.{3,60}?) \d+\s*/\s*\d+\s*[:.]|\d+\s*/\s*\d+ (.{3,60}?):)")
 ID_STEM = re.compile(r"_\d+(?:_\w+)?$")
 
 
@@ -114,17 +118,38 @@ def _humanize(stem: str) -> str:
     return " ".join(w.upper() if w in ("npc", "pvp", "cm") else w.capitalize() for w in words)
 
 
+class _Identities(Prefabs):
+    """Prefabs reduced to their identity component, the only part the names need."""
+
+    def get(self, rel: str) -> Prefab | None:
+        rel = rel.removesuffix(".binfab")
+        if rel not in self._cache:
+            data = self.tree.read(f"prefabs/{rel}.binfab")
+            comps = _components(data, {IDENTITY}) if data else {}
+            self._cache[rel] = Prefab("entity", components=list(comps.items())) if data else None
+        return self._cache[rel]
+
+
 class _Game:
     def __init__(self, tree: GameTree):
-        self.prefabs = Prefabs(tree)
+        self.prefabs = _Identities(tree)
         self.text = Text(tree)
         exe = tree.read(EXE_PATH)
         self.metrics = parse_metric_names(exe) if exe else []
+        self.tree = tree
         self.claims: dict[str, Any] = {}
+        self.names: dict[str, str] = {}         # objective id -> name, filled before decoding
+
+    def load_claims(self, wanted: set[str]) -> None:
+        """The claim records of ``wanted`` ids, parsing only the claim files naming one."""
         clash: set[str] = set()
-        for path in tree.files("prefabs/claim/", ".binfab"):
+        needles = [w.encode() for w in wanted]
+        for path in self.tree.files("prefabs/claim/", ".binfab"):
+            data = self.tree.read(path) or b""
+            if not any(n in data for n in needles):
+                continue
             try:
-                table = _leaf(parse(tree.read(path) or b"").root).get(0)
+                table = _leaf(parse(data).root).get(0)
             except WireError:
                 continue
             for cid, rec in (table or {}).items():
@@ -133,7 +158,6 @@ class _Game:
                 self.claims.setdefault(cid, rec)
         for cid in clash:                       # the game's winner between files is unknown
             del self.claims[cid]
-        self.names: dict[str, str] = {}         # objective id -> name, filled before decoding
 
     def say(self, key: Any) -> str:
         if isinstance(key, str) and key.startswith("@"):
@@ -226,10 +250,9 @@ def _entry(adv: dict, g: _Game) -> dict:
     if obj:
         row["objective"] = obj
     cid = adv.get(CLAIM)
-    if isinstance(cid, str) and cid:
+    if isinstance(cid, str) and cid and cid in g.claims:     # some ids name no claim
         row["claim"] = cid
-        claim = g.claims.get(cid)
-        grants = _grants(_leaf(claim).get(1), g.prefabs, g.text) if claim is not None else []
+        grants = _grants(_leaf(g.claims[cid]).get(1), g.prefabs, g.text)
         if grants:
             row["rewards"] = grants
     limit = adv.get(TIME_LIMIT)
@@ -245,13 +268,15 @@ def _entry(adv: dict, g: _Game) -> dict:
     return row
 
 
-def _load(g: _Game, rel: str) -> Obj | None:
-    pf = g.prefabs.get(rel)
-    return pf.root if pf is not None else None
+def _load(tree: GameTree, rel: str) -> Obj | None:
+    try:
+        return parse(tree.read(f"prefabs/{rel}.binfab") or b"").root
+    except WireError:
+        return None
 
 
-def _meta(g: _Game) -> tuple[list[dict], dict[str, list[str]]]:
-    root = _leaf(_load(g, META))
+def _meta(tree: GameTree) -> tuple[list[dict], dict[str, list[str]]]:
+    root = _leaf(_load(tree, META))
     limits: dict[int, dict[str, int]] = {}
     for field, label in ((3, "active"), (5, "daily_rewards")):
         for r in _rows(root.get(field)):
@@ -273,7 +298,8 @@ def _ordered(rows: list[dict], order: list[str]) -> list[dict]:
 
 def _chain_title(rows: list[dict]) -> str:
     """The "Title n/m:" prefix most of a chain's descriptions share."""
-    titles = Counter(m.group(1).strip() for r in rows if (m := CHAIN_TITLE.match(r["description"])))
+    titles = Counter((m.group(1) or m.group(2)).strip() for r in rows
+                     if (m := CHAIN_TITLE.match(r["description"])))
     return titles.most_common(1)[0][0] if titles else ""
 
 
@@ -283,20 +309,24 @@ def _slug(text: str) -> str:
 
 def build(tree: GameTree) -> dict:
     g = _Game(tree)
-    limits, threads = _meta(g)
+    limits, threads = _meta(tree)
 
     sources: list[tuple[str, int | None, list[dict]]] = []
     for path in tree.files(SETS_DIR, ".binfab"):
         stem = path[len(SETS_DIR):-len(".binfab")]
-        root = _load(g, path[len("prefabs/"):])
+        root = _load(tree, path[len("prefabs/"):-len(".binfab")])
         advs = _rows(_leaf(root).get(1))
         if advs:
             sources.append((stem, _leaf(root).get(2), advs))
-    golden = _rows(_leaf(_load(g, GOLDEN)).get(0))
+    golden = _rows(_leaf(_load(tree, GOLDEN)).get(0))
+    wanted: set[str] = set()
     for _, _, advs in [*sources, ("", None, golden)]:
         for a in advs:
             if isinstance(a.get(ID), str):
                 g.names.setdefault(a[ID], g.say(a.get(NAME)))
+            if isinstance(a.get(CLAIM), str) and a[CLAIM]:
+                wanted.add(a[CLAIM])
+    g.load_claims(wanted)
 
     groups: list[dict] = []
     for stem, typ, advs in sources:

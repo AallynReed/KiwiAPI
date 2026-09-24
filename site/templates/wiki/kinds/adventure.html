@@ -1,0 +1,27 @@
+{# One quest line or adventure set (entities._adventure_group). #}
+{% if d.adventures | length > 8 %}
+<div class="wk-filterbar" data-filter-root>
+    <label class="wk-filter">
+        <i class="fa-solid fa-filter" aria-hidden="true"></i>
+        <input type="search" placeholder="Filter {{ d.adventures | length }} {{ 'steps' if d.ordered else 'adventures' }}" aria-label="Filter adventures" data-filter-input autocomplete="off" spellcheck="false">
+    </label>
+    <output class="wk-filter-count" data-filter-count aria-live="polite">{{ d.adventures | length }} shown</output>
+</div>
+{% endif %}
+<div class="wk-tablewrap" data-filter-list>
+    <table class="wk-table">
+        <thead><tr>{% if d.ordered %}<th scope="col">Step</th>{% endif %}<th scope="col">Adventure</th><th scope="col">Goal</th><th scope="col">Rewards</th></tr></thead>
+        <tbody>
+        {% for a in d.adventures %}
+        <tr data-search="{{ a.search }}">
+            {% if d.ordered %}<td class="num">{{ a.step or "" }}</td>{% endif %}
+            <th scope="row"><div>{{ a.name or "" }}{% if not a.name %}<span class="wk-mute">No name in the game files</span>{% endif %}</div>{% if a.description %}<div class="wk-mute wk-pre">{{ a.description }}</div>{% endif %}{% for t in a.timing %}<div class="wk-mute"><i class="fa-regular fa-clock" aria-hidden="true"></i> {{ t }}</div>{% endfor %}</th>
+            <td>{% if a.goal.text %}<div>{{ a.goal.text }}</div>{% endif %}{% for t in a.goal.things %}<div class="wk-mute">{% if t.url %}<a href="{{ t.url }}">{{ t.text }}</a>{% else %}{{ t.text }}{% endif %}</div>{% endfor %}</td>
+            <td>{% for r in a.rewards %}<div>{% if r.url %}<a href="{{ r.url }}">{{ r.text }}</a>{% else %}{{ r.text }}{% endif %}</div>{% endfor %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p class="wk-list-empty" data-filter-empty hidden>No adventure here matches that filter.</p>
+<p class="wk-hint">Which adventures are on offer on a given day, and which event is running, is decided by the game server.</p>
