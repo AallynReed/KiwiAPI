@@ -51,7 +51,7 @@ KINDS: dict[str, dict[str, Any]] = {
     "aura": {"prompt": "where to get it and what it looks like in play",
              "file": "collectibles.json", "key": "auras", "plural": "auras", "title": "Auras", "icon": "fa-wand-sparkles",
              "facets": {"group": "Collection"},
-             "lead": "Every weapon aura in the game and where the collection screen files it."},
+             "lead": "Every aura in the game, where the collection screen files it, and how it looks in play."},
     "magrider": {"prompt": "where to get it and how it rides the rails",
                  "file": "collectibles.json", "key": "magriders", "plural": "magriders", "title": "Mag Riders",
                  "icon": "fa-person-snowboarding", "facets": {"group": "Collection"},
@@ -334,7 +334,7 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
     d: dict[str, Any] = {"name": e["name"], "description": _text(e.get("description")), "prefab": e.get("prefab", ""),
                          "facts": [], "stat_groups": [], "abilities": []}
     abilities = [card(a, name=a.get("name", ""), description=a.get("text", "")) for a in e.get("abilities") or []]
-    if kind == "bomb-skin":
+    if kind in ("bomb-skin", "aura"):
         d["vfx"] = vfx_links(e.get("vfx") or [])
     if kind in ("mount", "dragon", "wings", "boat", "magrider"):
         d["stat_groups"] = [{"label": SLOT_NAMES.get(g["slot"], resolve_stat_name({}, g["slot"])),

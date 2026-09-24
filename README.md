@@ -77,7 +77,8 @@ editors (dev portal → Dashboard users) write pages; every other signed-in play
 edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages,
 the Delve Modifiers page and one page per ally (every pet players can own), mount, dragon, wings, boat, sail, aura, Mag Rider, flask, tome, fishing pole, costume, bomb skin, boss, empowered gem, class ring, Geode companion,
 fish, Delve memento, badge and crafting station (with its recipes), plus one page per style slot (hats, faces, weapons, banners), one per NPC group, one per group of blocks and placeables, one per quest line or adventure set, and the Titles, Worlds & Biomes, Delve Gateways and Shadow Tower pages, are generated from the game files, with an editable
-write-up under the data; the main site's `/classes` redirects to the wiki's. The How Gems Work guide lives there too
+write-up under the data. Aura pages preview the aura on each weapon type; no game file links an aura to its effects, so
+they are matched by the particle file names (`weapon_aura_<weapon>_<x>`, `character_aura_stellar_<x>`). The main site's `/classes` redirects to the wiki's. The How Gems Work guide lives there too
 (`/gems`); the main site's `/gems-guide` redirects to it. The data plane is `/site/wiki/*` in `app/wiki/`.
 
 **Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that

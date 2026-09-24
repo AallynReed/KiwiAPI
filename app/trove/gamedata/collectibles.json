@@ -8074,7 +8074,33 @@
             "description": "An old-timey enchantment with plenty of classic appeal.",
             "prefab": "collections/aura/aura_ancient_01",
             "blueprint": "item_aura_ancient_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_ancient_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_ancient_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_ancient_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_ancient_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_ancient_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_ancient_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_electric_01",
@@ -8082,7 +8108,13 @@
             "description": "It really brings out the volume in your hair.",
             "prefab": "collections/aura/aura_stellar_electric_01",
             "blueprint": "item_aura_stellar_electric_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_electric_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_atomic_01",
@@ -8090,7 +8122,13 @@
             "description": "Shroud yourself with a shimmering cloud of charged particles.",
             "prefab": "collections/aura/aura_stellar_atomic_01",
             "blueprint": "item_aura_stellar_atomic_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_atomic_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_glorious_01",
@@ -8098,7 +8136,13 @@
             "description": "A radiance born of grace and honor.",
             "prefab": "collections/aura/aura_stellar_glorious_01",
             "blueprint": "2026/items/item_aura_stellar_glorious_01",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_glorious_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_glorious_01",
@@ -8106,7 +8150,33 @@
             "description": "Pure, burning celestial light.",
             "prefab": "collections/aura/aura_glorious_01",
             "blueprint": "2026/items/item_aura_glorious_01",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_glorious_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_glorious_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_glorious_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_glorious_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_glorious_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_glorious_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_bomb_explosion_01",
@@ -8137,7 +8207,13 @@
             "description": "Creates a carbonated effervescence in the air around you.",
             "prefab": "collections/aura/aura_stellar_bubble_01",
             "blueprint": "item_aura_stellar_bubble_01[SkyRider3217].blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_bubble_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_sticky_bomb_explosion_01",
@@ -8161,7 +8237,33 @@
             "description": "Gives your weapon that extra bite that monsters hate.",
             "prefab": "collections/aura/aura_acid_01",
             "blueprint": "item_aura_acid_01[Novuhz].blueprint",
-            "group": "Chaotic Auras"
+            "group": "Chaotic Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_acid_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_acid_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_acid_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_acid_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_acid_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_acid_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_cosmic_01",
@@ -8169,7 +8271,13 @@
             "description": "It's full of stars!",
             "prefab": "collections/aura/aura_stellar_cosmic_01",
             "blueprint": "2022/items/item_aura_stellar_cosmic_01.blueprint",
-            "group": "Chaotic Auras"
+            "group": "Chaotic Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_cosmic_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_fire_01",
@@ -8177,7 +8285,13 @@
             "description": "All my life I've fought these monsters...",
             "prefab": "collections/aura/aura_stellar_fire_01",
             "blueprint": "item_aura_stellar_fire_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_fire_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_crystal_01",
@@ -8185,7 +8299,13 @@
             "description": "The spirit of the Ancients is fused into every bit of dust and every monument on Geode.",
             "prefab": "collections/aura/aura_stellar_crystal_01",
             "blueprint": "item_aura_stellar_crystal_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_crystal_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_undead_01",
@@ -8193,7 +8313,29 @@
             "description": "Engraves your weapon with one truth: 'All life must end'.",
             "prefab": "collections/aura/aura_undead_01",
             "blueprint": "item_aura_undead_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_undead_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_undead_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_undead_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_undead_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_undead_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_fireflies_01",
@@ -8201,7 +8343,13 @@
             "description": "Made from the finest bioluminescence.",
             "prefab": "collections/aura/aura_stellar_fireflies_01",
             "blueprint": "item_aura_stellar_firefly_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_fireflies_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_magic_01",
@@ -8209,7 +8357,29 @@
             "description": "Coat your weapon with conjured cantrips.",
             "prefab": "collections/aura/aura_magic_01",
             "blueprint": "item_aura_magic_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_magic_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_magic_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_magic_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_magic_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_magic_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_lightning_01",
@@ -8217,7 +8387,29 @@
             "description": "Sparks all manner of shocking revelations for your enemies.",
             "prefab": "collections/aura/aura_lightning_01",
             "blueprint": "item_aura_lightning_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_lightning_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_lightning_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_lightning_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_lightning_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_lightning_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_flower_01",
@@ -8225,7 +8417,29 @@
             "description": "Adorn your arms with blessed blossoms.",
             "prefab": "collections/aura/aura_flower_01",
             "blueprint": "item_aura_flower_01.blueprint",
-            "group": "Chaotic Auras"
+            "group": "Chaotic Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_flower_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_flower_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_flower_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_flower_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_flower_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_spectre_01",
@@ -8233,7 +8447,33 @@
             "description": "Boo on a loop!",
             "prefab": "collections/aura/aura_spectre_01",
             "blueprint": "2025/items/item_aura_spectre_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_spectre_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_spectre_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_spectre_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_spectre_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_spectre_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_spectre_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_ice_01",
@@ -8241,7 +8481,29 @@
             "description": "Keeps your hands sweat-free and sends chills down your foes' spines.",
             "prefab": "collections/aura/aura_ice_01",
             "blueprint": "item_aura_ice_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_ice_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_ice_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_ice_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_ice_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_ice_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_flux_01",
@@ -8249,7 +8511,33 @@
             "description": "All that is gold does, indeed, glitter.",
             "prefab": "collections/aura/aura_flux_01",
             "blueprint": "item_aura_flux_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_flux_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_flux_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_flux_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_flux_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_flux_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_flux_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_halloween_01",
@@ -8257,7 +8545,13 @@
             "description": "Neither light nor darkness, but the terrible twilight in between.",
             "prefab": "collections/aura/aura_stellar_halloween_01",
             "blueprint": "item_aura_stellar_halloween_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_halloween_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_sky_01",
@@ -8265,7 +8559,29 @@
             "description": "Your skill in battle is unmatched.",
             "prefab": "collections/aura/aura_sky_01",
             "blueprint": "item_aura_pvpglory_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_sky_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_sky_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_sky_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_sky_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_sky_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_blank_01",
@@ -8292,7 +8608,13 @@
             "description": "Awash with all the wonderful colors of creation.",
             "prefab": "collections/aura/aura_stellar_glow_01",
             "blueprint": "item_aura_stellar_glow_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_glow_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_radiantflame_01",
@@ -8300,7 +8622,33 @@
             "description": "Sumptuously swathe yourself in this shimmering symbol of status.",
             "prefab": "collections/aura/aura_radiantflame_01",
             "blueprint": "item_aura_mastery_02.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_radiantflame_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_radiantflame_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_radiantflame_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_radiantflame_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_radiantflame_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_radiantflame_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_mastery_01",
@@ -8308,7 +8656,29 @@
             "description": "Brand your weapon with this symbol of supremacy.",
             "prefab": "collections/aura/aura_mastery_01",
             "blueprint": "item_aura_mastery_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_mastery_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_mastery_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_mastery_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_mastery_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_mastery_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_floating_bombs_01",
@@ -8324,7 +8694,29 @@
             "description": "A peculiar lunar charm with inexplicable effects.",
             "prefab": "collections/aura/aura_lunar_01",
             "blueprint": "item_aura_lunar_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_lunar_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_lunar_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_lunar_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_lunar_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_lunar_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_neon_01",
@@ -8332,7 +8724,29 @@
             "description": "Turbo-charge your weapon with termination technology.",
             "prefab": "collections/aura/aura_neon_01",
             "blueprint": "item_aura_neon_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_neon_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_neon_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_neon_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_neon_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_neon_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_prestige_01",
@@ -8348,7 +8762,33 @@
             "description": "Adds a powerful Paragon aura to your weapon.",
             "prefab": "collections/aura/aura_prestige_01",
             "blueprint": "2021/auras/item_aura_prestige_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_prestige_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_prestige_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_prestige_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_prestige_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_prestige_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_prestige_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_onibi_01",
@@ -8356,7 +8796,13 @@
             "description": "Attract an entourage of despondent spirits, silently smoldering with resentment.",
             "prefab": "collections/aura/aura_stellar_onibi_01",
             "blueprint": "item_aura_stellar_onibi_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_onibi_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_shadow_01",
@@ -8372,7 +8818,29 @@
             "description": "Envelops your weapon in perpetual purple patina.",
             "prefab": "collections/aura/aura_corruption_01",
             "blueprint": "item_aura_corruption_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_corruption_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_corruption_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_corruption_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_corruption_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_corruption_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_bomb_01",
@@ -8388,7 +8856,13 @@
             "description": "Come closer, I dare you!",
             "prefab": "collections/aura/aura_stellar_vengeance_01",
             "blueprint": "2026/items/item_aura_stellar_vengeance_01",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_vengeance_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_water_01",
@@ -8396,7 +8870,29 @@
             "description": "Imbue your weapon with the tears of your foes.",
             "prefab": "collections/aura/aura_water_01",
             "blueprint": "item_aura_pvptears_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_water_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_water_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_water_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_water_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_water_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_spectre_01",
@@ -8404,7 +8900,13 @@
             "description": "Wooooooo!",
             "prefab": "collections/aura/aura_stellar_spectre_01",
             "blueprint": "2025/items/item_aura_stellar_spectre_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_spectre_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_dizzy_01",
@@ -8412,7 +8914,13 @@
             "description": "How many fingers am I holding up?",
             "prefab": "collections/aura/aura_stellar_dizzy_01",
             "blueprint": "item_aura_stellar_dizzy_01.blueprint",
-            "group": "Chaotic Auras"
+            "group": "Chaotic Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_dizzy_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_star_01",
@@ -8420,7 +8928,13 @@
             "description": "Its subtle splendor is a fitting testament to the heights you have attained.",
             "prefab": "collections/aura/aura_stellar_star_01",
             "blueprint": "item_aura_stellar_mastery_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_star_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_starlight_01",
@@ -8428,7 +8942,33 @@
             "description": "They may be distant, but the stars lend you their power.",
             "prefab": "collections/aura/aura_starlight_01",
             "blueprint": "item_aura_starlight_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_starlight_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_starlight_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_starlight_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_starlight_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_starlight_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_starlight_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_space_01",
@@ -8436,7 +8976,13 @@
             "description": "Now you really are the center of the universe.",
             "prefab": "collections/aura/aura_stellar_space_01",
             "blueprint": "item_aura_stellar_space_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_space_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_supermagical_01",
@@ -8444,7 +8990,13 @@
             "description": "Fight for justice imbued with this magical mantle of light.",
             "prefab": "collections/aura/aura_stellar_supermagical_01",
             "blueprint": "item_aura_stellar_supermagical_01[bananaboms].blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_supermagical_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_crybaby_01",
@@ -8492,7 +9044,33 @@
             "description": "Makes your weapon relish each and every bite.",
             "prefab": "collections/aura/aura_vampiric_01",
             "blueprint": "item_aura_vampiric_01[Novuhz].blueprint",
-            "group": "Chaotic Auras"
+            "group": "Chaotic Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_vampiric_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_vampiric_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_vampiric_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_vampiric_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_vampiric_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_vampiric_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_heart_01",
@@ -8500,7 +9078,29 @@
             "description": "Bad monsters get no treats.",
             "prefab": "collections/aura/aura_heart_01",
             "blueprint": "item_aura_heart_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_heart_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_heart_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_heart_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_heart_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_heart_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_heart_01",
@@ -8508,7 +9108,13 @@
             "description": "Listen to your heart, not your head.",
             "prefab": "collections/aura/aura_stellar_heart_01",
             "blueprint": "item_aura_stellar_heart_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_heart_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_vengeance_01",
@@ -8516,7 +9122,33 @@
             "description": "Eternal fire of vengeful flames.",
             "prefab": "collections/aura/aura_vengeance_01",
             "blueprint": "2026/items/item_aura_vengeance_01",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_vengeance_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_vengeance_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_vengeance_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_vengeance_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_vengeance_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_vengeance_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_music_01",
@@ -8524,7 +9156,29 @@
             "description": "A fitting ode to the chaos of battle.",
             "prefab": "collections/aura/aura_music_01",
             "blueprint": "item_aura_music_01[bananaboms].blueprint",
-            "group": "Chaos Vault"
+            "group": "Chaos Vault",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_music_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_music_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_music_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_music_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_music_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_neon_01",
@@ -8532,7 +9186,13 @@
             "description": "Become one with the Neolord.\n\nPreviously known as Neon Nemesis.",
             "prefab": "collections/aura/aura_stellar_neon_01",
             "blueprint": "item_aura_stellar_neon_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_neon_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_bone_01",
@@ -8540,7 +9200,29 @@
             "description": "All must bow down, in due time.",
             "prefab": "collections/aura/aura_bone_01",
             "blueprint": "item_aura_bone_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_bone_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_bone_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_bone_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_bone_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_bone_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_heckbug",
@@ -8556,7 +9238,33 @@
             "description": "Chaotic thoughts invade your mind.",
             "prefab": "collections/aura/aura_tentacle_01",
             "blueprint": "item_aura_tentacle_01.blueprint",
-            "group": "Chaotic Auras"
+            "group": "Chaotic Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_tentacle_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_tentacle_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_tentacle_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_tentacle_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_tentacle_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_tentacle_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_winter_2015_01",
@@ -8564,7 +9272,33 @@
             "description": "Makes any weapon that much cooler.",
             "prefab": "collections/aura/aura_winter_2015_01",
             "blueprint": "item_aura_winter_2015_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_winter_2015_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_winter_2015_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_winter_2015_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_winter_2015_01.pkfx"
+                },
+                {
+                    "key": "Spear",
+                    "pkfx": "Particles/weapon_aura_spear_winter_2015_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_winter_2015_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_fire_01",
@@ -8572,7 +9306,29 @@
             "description": "Bathes your weapon in dancing fire.",
             "prefab": "collections/aura/aura_fire_01",
             "blueprint": "item_aura_fire_01.blueprint",
-            "group": "Radiant Auras"
+            "group": "Radiant Auras",
+            "vfx": [
+                {
+                    "key": "Melee",
+                    "pkfx": "Particles/weapon_aura_melee_fire_01.pkfx"
+                },
+                {
+                    "key": "Pistol",
+                    "pkfx": "Particles/weapon_aura_pistol_fire_01.pkfx"
+                },
+                {
+                    "key": "Bow",
+                    "pkfx": "Particles/weapon_aura_bow_fire_01.pkfx"
+                },
+                {
+                    "key": "Staff",
+                    "pkfx": "Particles/weapon_aura_staff_fire_01.pkfx"
+                },
+                {
+                    "key": "Fist",
+                    "pkfx": "Particles/weapon_aura_fist_fire_01.pkfx"
+                }
+            ]
         },
         {
             "slug": "aura_stellar_snowflake_01",
@@ -8580,7 +9336,13 @@
             "description": "Adequately accessorizes your aloof attitude.",
             "prefab": "collections/aura/aura_stellar_snowflake_01",
             "blueprint": "item_aura_stellar_snowflake_01.blueprint",
-            "group": "Stellar Auras"
+            "group": "Stellar Auras",
+            "vfx": [
+                {
+                    "key": "Head",
+                    "pkfx": "Particles/character_aura_stellar_snowflake_01.pkfx"
+                }
+            ]
         }
     ],
     "magriders": [

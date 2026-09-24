@@ -28,6 +28,12 @@ another, so a flask's refs are read as one "Drink" entry. Stat modifiers in
 component 65 are what equipping it grants. A fishing pole's tags (106) name the
 liquids it fishes in. Sails, auras and tomes carry no stats: identity text and
 model (a tome's component 322 numbers are unlabelled and left out).
+
+No client file links an aura to its particles (the server sends the paths), so an
+aura's effects are found by the particle file names, which aura mods depend on too:
+`aura_<x>` plays `weapon_aura_<weapon>_<x>.pkfx` on each weapon type that has one,
+and `aura_stellar_<x>` plays `character_aura_stellar_<x>.pkfx` on the head. Auras
+whose files are named any other way get no effects.
 """
 from __future__ import annotations
 
@@ -44,7 +50,8 @@ from app.trove.decode.wire import Obj
 
 TITLE = "Wings, boats, sails and auras"
 OUTPUT = "collectibles.json"
-PREFIXES = ("prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/")
+PARTICLES = "particles/VFX/Particles/"
+PREFIXES = ("prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/", PARTICLES)
 INDENT, FINAL_NEWLINE = 4, False
 
 # output key -> (prefab folder, collection files)
@@ -56,6 +63,9 @@ BLUEPRINT, STATS, TAGS, DRINK, ALWAYS_ON = 37, 65, 106, 135, 149
 DRINK_REFS, ALWAYS_ON_REFS = 2, 0
 LIQUIDS = ("water", "lava", "chocolate", "plasma")
 MOUNT_EFFECTS = 2
+# the game's weapon types, in its own order
+AURA_WEAPONS = (("melee", "Melee"), ("pistol", "Pistol"), ("bow", "Bow"), ("staff", "Staff"),
+                ("spear", "Spear"), ("fist", "Fist"))
 WORKING_GROUP = re.compile(r"^(InProgress|ReadyForGame|Hidden)")
 
 
@@ -87,6 +97,14 @@ def _effects(mount: Obj) -> list[dict]:
         if isinstance(r.get(0), str) and r[0].lower().endswith(".pkfx"):
             out.append({"key": r.get(1) if isinstance(r.get(1), str) else "", "pkfx": r[0]})
     return out
+
+
+def _aura_effects(slug: str, particles: dict[str, str]) -> list[dict]:
+    if slug.startswith("aura_stellar_"):
+        wanted = [("Head", f"character_{slug}")]
+    else:
+        wanted = [(label, f"weapon_aura_{w}_{slug.removeprefix('aura_')}") for w, label in AURA_WEAPONS]
+    return [{"key": label, "pkfx": particles[name]} for label, name in wanted if name in particles]
 
 
 def _part(prefabs: Prefabs, ref: str) -> dict:
@@ -134,7 +152,8 @@ def _powers(prefabs: Prefabs, refs: list[str], text: dict[str, str]) -> list[dic
     return powers
 
 
-def _entry(prefabs: Prefabs, ref: str, group: str, names: dict[str, str], text: dict[str, str]) -> dict | None:
+def _entry(prefabs: Prefabs, ref: str, group: str, names: dict[str, str], text: dict[str, str],
+           particles: dict[str, str]) -> dict | None:
     pf = prefabs.get(ref)
     if pf is None:
         return None
@@ -171,6 +190,10 @@ def _entry(prefabs: Prefabs, ref: str, group: str, names: dict[str, str], text: 
         effects = _effects(mount)
         if effects:
             entry["vfx"] = effects
+    if ref.startswith("collections/aura/"):
+        effects = _aura_effects(entry["slug"], particles)
+        if effects:
+            entry["vfx"] = effects
     return entry
 
 
@@ -180,13 +203,17 @@ def build(tree: GameTree) -> dict[str, list[dict]]:
     text: dict[str, str] = {}
     for path in tree.files("languages/en/prefabs_abilities", ".binfab"):
         text.update(locale(tree.read(path)))
+    particles = {}
+    for path in tree.files(PARTICLES, ".pkfx"):
+        name = path.rsplit("/", 1)[-1]
+        particles[name[:-5].lower()] = f"Particles/{name}"
     out: dict[str, list[dict]] = {}
     for key, (folder, collections) in KINDS.items():
         own = {**names, **locale(tree.read(f"languages/en/prefabs_collections_{folder}.binfab"))}
         rows = []
         members = [m for c in collections for m in _members(prefabs, folder, c, own)]
         for ref, group in members:
-            entry = _entry(prefabs, ref, group, own, {**own, **text})
+            entry = _entry(prefabs, ref, group, own, {**own, **text}, particles)
             if entry:
                 rows.append(entry)
         out[key] = sorted(rows, key=lambda e: e["name"].lower())
