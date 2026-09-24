@@ -11,11 +11,12 @@ URL map:
   /classes, /class/<n>   generated class pages + their editable write-ups
   /<plural>, /<kind>/<n> generated game-data pages + write-ups, one pair per kind in
                          app/wiki/entities.KINDS: allies, mounts, wings, boats, sails,
-                         auras, Mag Riders, flasks, tomes, fishing poles, costumes, style slots
+                         auras, Mag Riders, flasks, tomes, fishing poles, costumes, bomb skins, style slots
                          (/styles, /style/<slot>), companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
+  /titles                every title in the game's title text table + its write-up
   /pvp-stats             the PvP stat curves (pvp.json, docs/pvp-stats.md) + its write-up
   /<slug>                an article
   /-/...                 tools: edit, history, search, recent, pages, suggestions
@@ -53,6 +54,7 @@ def _browse(path: str) -> list[dict]:
     for kind, spec in entities.KINDS.items():
         rows.append({"url": f"/{spec['plural']}", "title": spec["title"], "icon": spec["icon"],
                      "current": path == f"/{spec['plural']}" or path.startswith(f"/{kind}/")})
+    rows.append({"url": "/titles", "title": "Titles", "icon": "fa-signature", "current": path == "/titles"})
     return rows
 
 
@@ -150,6 +152,8 @@ def _data_cards() -> list[dict]:
             {"name": data_pages.DATA_PAGES["stat-modifiers"], "url": "/stat-modifiers", "kind": "Guide",
              "terms": "stats stat modifiers bonus bonuses percent multiplier add multiplysum multiply set "
                       "nullify minimum maximum order character sheet critical damage health"},
+            {"name": data_pages.DATA_PAGES["titles"], "url": "/titles", "kind": "Game data",
+             "terms": "titles title prefix suffix name " + " ".join(t["name"] for t in entities.titles_page()["titles"])},
             {"name": data_pages.DATA_PAGES["pvp-stats"], "url": "/pvp-stats", "kind": "Game data",
              "terms": "pvp battle royale bloodstone arena stats stat curve cap soft cap diminishing returns "
                       + " ".join(name for _, name, _ in pvp_stats.SHEET)}]
@@ -366,6 +370,18 @@ async def pvp_stats_page(request: Request) -> HTMLResponse:
         **pvp_stats.page(gamedata.load("pvp.json", {"modes": {}})),
         "description": "How Trove turns your character sheet into PvP, Battle Royale and Bloodstone "
                        "stats: the minimums, the slowdown and the caps for every stat.",
+    })
+
+
+@app.get("/titles", response_class=HTMLResponse, dependencies=[Depends(_gate)])
+async def titles(request: Request) -> HTMLResponse:
+    slug = "data/titles"
+    page = await _page(slug)
+    live = page if page and not page.get("deleted") else None
+    return _render(request, "wiki/titles.html", {
+        "title": data_pages.DATA_PAGES["titles"], "slug": slug, "page": live,
+        "rev": page["rev"] if page else 0, **entities.titles_page(),
+        "description": "Every Trove title the game files hold, with how each is earned.",
     })
 
 

@@ -1,10 +1,15 @@
-"""cosmetics.json - costumes and styles (hats, faces, weapons, banners).
+"""cosmetics.json - costumes, bomb skins and styles (hats, faces, weapons, banners).
 
 Costumes are `prefabs/skins/<id>.binfab`, one bare object each: field 0 the class
 (KClass ordinal), 2 the model (rig + parts), 3 which ability visuals it swaps, 4 the
 UI blueprint, 5/6 the `$prefabs_skins_<id>_skinset_name`/`_description` keys. The
 ones a player can own are the members of `collections/collection_skin` (bare ids,
-grouped by class). Bomber Royale bomb skins (`skins/secondary`) are not costumes.
+grouped by class).
+
+Bomb skins (Bomber Royale) are `prefabs/skins/secondary/<id>.binfab`: field 0.0 the
+particle effects they swap in (`{0 $VFX key, 1 .pkfx}`), 2 the model, 3/4 the name
+and description keys. The ownable ones are the members of
+`collections/collection_secondaryskin`, grouped by bomb type.
 
 Styles have no prefab: the style catalogue is the gear loot tables
 `prefabs/loot/<slot>.binfab`. Field 0 lists groups {0 group id, 1 rows}, and a row
@@ -32,6 +37,7 @@ PREFIXES = ("prefabs/skins/", "prefabs/loot/", "prefabs/collections/", "prefabs/
 INDENT, FINAL_NEWLINE = 4, False
 
 SKIN_CLASS, SKIN_BLUEPRINT, SKIN_NAME, SKIN_DESCRIPTION = 0, 4, 5, 6
+BOMB_EFFECTS, BOMB_MODEL, BOMB_NAME, BOMB_DESCRIPTION = 0, 2, 3, 4
 ROW_BLUEPRINT, ROW_NAME, ROW_DESCRIPTION = 0, 1, 2
 BLUEPRINT = 37
 # Loot table -> the slot it styles, in the order the wiki lists them.
@@ -98,6 +104,40 @@ def _costumes(prefabs: Prefabs, names: dict[str, str]) -> list[dict]:
     return sorted(out, key=lambda e: e["name"].lower())
 
 
+def _bomb_skins(prefabs: Prefabs, names: dict[str, str]) -> list[dict]:
+    pf = prefabs.get("collections/collection_secondaryskin")
+    out = []
+    seen: set[str] = set()
+    for group in _leaf(pf.root if pf else None).get(0) or []:
+        g = _leaf(group)
+        gid = g.get(0) if isinstance(g.get(0), str) else ""
+        label = "" if WORKING_GROUP.match(gid) else names.get(g.get(1) or "", "") or gid
+        for row in g.get(3) or []:
+            sid = _leaf(row).get(0)
+            if not isinstance(sid, str) or sid in seen:
+                continue
+            seen.add(sid)
+            skin = prefabs.get(f"skins/secondary/{sid}")
+            leaf = _leaf(skin.root if skin else None)
+            name = names.get(leaf.get(BOMB_NAME) or "", "")
+            if not name:
+                continue
+            entry: dict[str, Any] = {"slug": sid, "name": name,
+                                     "description": names.get(leaf.get(BOMB_DESCRIPTION) or "", ""),
+                                     "prefab": f"skins/secondary/{sid}"}
+            if isinstance(leaf.get(BOMB_MODEL), str) and leaf[BOMB_MODEL]:
+                entry["blueprint"] = leaf[BOMB_MODEL]
+            if label:
+                entry["group"] = label
+            vfx = [{"key": _leaf(r).get(0), "pkfx": _leaf(r).get(1)}
+                   for r in _leaf(leaf.get(BOMB_EFFECTS)).get(0) or []
+                   if isinstance(_leaf(r).get(1), str) and _leaf(r)[1].lower().endswith(".pkfx")]
+            if vfx:
+                entry["vfx"] = vfx
+            out.append(entry)
+    return sorted(out, key=lambda e: e["name"].lower())
+
+
 def _model(prefabs: Prefabs, ref: str) -> str:
     """A style row's blueprint: the row's own, or the named equipment prefab's."""
     if ref.lower().endswith(".blueprint"):
@@ -140,9 +180,9 @@ def _styles(prefabs: Prefabs, names: dict[str, str], groups: dict[str, str]) -> 
 def build(tree: GameTree) -> dict[str, list[dict]]:
     prefabs = Prefabs(tree)
     names = _names(tree)
-    return {"costumes": _costumes(prefabs, names),
+    return {"costumes": _costumes(prefabs, names), "bomb_skins": _bomb_skins(prefabs, names),
             "style_slots": _styles(prefabs, names, _group_names(prefabs, "equipmentappearance", names))}
 
 
 def count(data: dict) -> int:
-    return len(data.get("costumes") or []) + sum(len(s["styles"]) for s in data.get("style_slots") or [])
+    return len(data.get("costumes") or []) + len(data.get("bomb_skins") or []) + sum(len(s["styles"]) for s in data.get("style_slots") or [])

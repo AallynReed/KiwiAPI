@@ -10,6 +10,7 @@ DATA_PAGES: dict[str, str] = {
     "gems": "How Gems Work",
     "stat-modifiers": "How Stat Modifiers Work",
     "pvp-stats": "How PvP Stats Work",
+    "titles": "Titles",
 }
 
 

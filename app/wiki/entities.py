@@ -63,6 +63,10 @@ KINDS: dict[str, dict[str, Any]] = {
                 "file": "cosmetics.json", "key": "costumes", "plural": "costumes", "title": "Costumes",
                 "icon": "fa-shirt", "group_by": "class", "facets": {"class": "Class"},
                 "lead": "Every costume, by class. Each page links to the Dressing Room to try it on."},
+    "bomb-skin": {"prompt": "where to get it",
+                  "file": "cosmetics.json", "key": "bomb_skins", "plural": "bomb-skins", "title": "Bomb Skins",
+                  "icon": "fa-bomb", "group_by": "group", "facets": {"group": "Bomb type"},
+                  "lead": "Every Bomber Royale bomb skin: what it looks like and the effects it swaps in."},
     "style": {"prompt": "which of these styles are worth hunting",
               "file": "cosmetics.json", "key": "style_slots", "plural": "styles", "title": "Styles",
               "icon": "fa-hat-wizard", "noun": "style slots",
@@ -187,7 +191,7 @@ def summary(kind: str, e: dict) -> dict:
     if kind == "companion":
         row.update(sub=e.get("rarity", ""), tone=_tone(e.get("rarity", "")),
                    search=f"{row['search']} {_companion_search(e)}")
-    elif kind in ("wings", "boat", "sail", "aura", "magrider", "flask", "tome"):
+    elif kind in ("wings", "boat", "sail", "aura", "magrider", "flask", "tome", "bomb-skin"):
         row["sub"] = e.get("group", "")
     elif kind == "costume":
         row["facets"]["class"] = class_name(e.get("class", ""))
@@ -250,14 +254,17 @@ def groups(kind: str, rows: list[dict]) -> list[dict]:
 # ── page models ────────────────────────────────────────────────────────────
 
 def _text(s: str | None) -> str:
-    # Locale text carries line breaks as a literal backslash-n.
-    return (s or "").replace("\\n", "\n")
+    # Locale text carries line breaks (and the odd ’) as literal escapes.
+    text = (s or "").replace("\\n", "\n")
+    return re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), text)
 
 
 def detail(kind: str, e: dict) -> dict[str, Any]:
     d: dict[str, Any] = {"name": e["name"], "description": _text(e.get("description")), "prefab": e.get("prefab", ""),
                          "facts": [], "stat_groups": [], "abilities": []}
     abilities = [card(a, name=a.get("name", ""), description=a.get("text", "")) for a in e.get("abilities") or []]
+    if kind == "bomb-skin":
+        d["vfx"] = vfx_links(e.get("vfx") or [])
     if kind in ("mount", "wings", "boat", "magrider"):
         d["stat_groups"] = [{"label": SLOT_NAMES.get(g["slot"], resolve_stat_name({}, g["slot"])),
                              "stats": _stat_rows(g["stats"])} for g in e.get("stats") or []]
@@ -720,3 +727,42 @@ def _style_slot(d: dict, e: dict) -> None:
     d["style_groups"] = sorted(({"name": k, "styles": v} for k, v in groups.items()),
                                key=lambda g: g["name"] == "Other")
     d["style_count"] = len(e.get("styles") or [])
+
+
+# ── titles (one data page) ─────────────────────────────────────────────────
+
+def _title_stations() -> dict[str, list[str]]:
+    """Title id -> stations whose recipe grants exactly that title: a recipe with a
+    Title result whose "not owned yet" requirement names that one id."""
+    out: dict[str, list[str]] = {}
+    recipes = _recipes()
+
+    def owned_check(q: dict) -> list[str]:
+        if q.get("kind") == "hastitle" and q.get("match") == "none":
+            return list(q.get("titles") or [])
+        return [t for c in q.get("of") or [] for t in owned_check(c)]
+
+    for st in _recipe_file().get("stations") or []:
+        for g in st.get("groups") or []:
+            for rid in g.get("recipes") or []:
+                r = recipes.get(rid) or {}
+                ids = owned_check(r.get("requirement") or {})
+                if len(ids) == 1 and any(x.get("kind") == "Title" for x in r.get("results") or []):
+                    rows = out.setdefault(ids[0], [])
+                    if st["slug"] not in rows:
+                        rows.append(st["slug"])
+    return out
+
+
+@gamedata.cached("titles.json", "recipes.json")
+def titles_page() -> dict[str, Any]:
+    rows = []
+    stations = _title_stations()
+    for t in gamedata.load("titles.json", []) or []:
+        crafted = [x for x in (find("station", sid) for sid in stations.get(t["id"], [])) if x]
+        rows.append({"name": t["name"], "male": t.get("male", ""), "female": t.get("female", ""),
+                     "description": _text(t.get("description")),
+                     "crafted": [{"name": x["name"], "url": url("station", x)} for x in crafted],
+                     "search": " ".join([t["name"], t.get("female", ""), t.get("description", "")]).lower()})
+    return {"titles": rows, "with_description": sum(1 for r in rows if r["description"]),
+            "crafted": sum(1 for r in rows if r["crafted"])}

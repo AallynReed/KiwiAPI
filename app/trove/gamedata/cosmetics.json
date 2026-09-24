@@ -5578,6 +5578,701 @@
             "group": "Dino Tamer"
         }
     ],
+    "bomb_skins": [
+        {
+            "slug": "bomberroyale_stickybomb_bigbomb",
+            "name": "Big Bomb",
+            "description": "He mustache your opponents a volatile question.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_bigbomb",
+            "blueprint": "equipment_weapon_bigbomb",
+            "group": "Sticky Bombs"
+        },
+        {
+            "slug": "bomberroyale_stickybomb_geodeflower",
+            "name": "Blastflower Bomb",
+            "description": "Harvested from Moonglow Grotto.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_geodeflower",
+            "blueprint": "C_M_blastflower_purplecave_top",
+            "group": "Sticky Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_STICKY_BOMB_EXPLOSION",
+                    "pkfx": "Particles/gameplay_geode_blastflower_blue_explode_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_cranberry",
+            "name": "Bouncing Cranberry Sauce",
+            "description": "It was so bouncy normally, but who would have thought it was combustive?",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_cranberry",
+            "blueprint": "2023/abilities/ability_pvp_bomb_rubber_cranberry",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_bomb_scare_trail_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_bomb_scare_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_bunfest_bounty",
+            "name": "Bunfest Blasting Bounty",
+            "description": "How could chocolate eggs possibly hurt you?",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_bunfest_bounty",
+            "blueprint": "2022/skins/bomberroyale_stickybomb_eggbasket",
+            "group": "Sticky Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_bunfest_egg_01",
+            "name": "Bunfest Surprise: Avacado",
+            "description": "Its got what bunnies crave, chocolate... and explosions.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_bunfest_egg_01",
+            "blueprint": "2022/placeables/deco_bunfest_egg_avocado[AirRider]",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_bunfest_egg_02",
+            "name": "Bunfest Surprise: Howlug",
+            "description": "Easily the cutest thing that could blow you bits.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_bunfest_egg_02",
+            "blueprint": "2022/placeables/deco_bunfest_egg_howlug[Zeensoon]",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/gameplay_geode_blastflower_orange_explode_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_bunfest_egg_03",
+            "name": "Bunfest Surprise: Luniopolegg",
+            "description": "Proof that everything is better with RGB.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_bunfest_egg_03",
+            "blueprint": "2022/placeables/deco_bunfest_egg_luminopolis[SkyTheVirus]",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_bunfest_egg_04",
+            "name": "Bunfest Surprise: Peaceful Spires",
+            "description": "A calming snack in the busy world of the Forbidden Spires.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_bunfest_egg_04",
+            "blueprint": "2022/placeables/deco_bunfest_egg_sakura[HinamoriAmu]",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_adventurerchaotic",
+            "name": "Chaotic Observer Bomb",
+            "description": "As creepy as it looks.\n\nUnlocked via the Chaotic Wanderer costume for the Boomeranger class.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_adventurerchaotic",
+            "blueprint": "2019/ugc_adventure_box/costumes/adventurer_chaotic/c_p_adventurer_bomb",
+            "group": "Sticky Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_STICKY_BOMB_PROJECTILE",
+                    "pkfx": "Particles/character_mount_dragon_qbthulhu_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_STICKY_BOMB_EXPLOSION",
+                    "pkfx": "Particles/character_mount_dragon_qbthulhu_impact_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_watermelon",
+            "name": "Cinnamellon Rubber Bomb",
+            "description": "This durable Cinnamellon can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Cinnamellon.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_watermelon",
+            "blueprint": "item_crafting_gardening_vegetable_watermelon",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_corn",
+            "name": "Corn on the Cube Rubber Bomb",
+            "description": "This durable Corn on the Cube can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Corn on the Cube.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_corn",
+            "blueprint": "item_crafting_gardening_vegetable_corn",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_cornMan_bomb_trail_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/character_npc_cornMan_ability_bombToss_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_turkey",
+            "name": "Gobbler Bomb",
+            "description": "Capitalizing on those that have to be first to the table.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_turkey",
+            "blueprint": "2023/abilities/ability_pvp_bomb_sticky_turkey",
+            "group": "Sticky Bombs"
+        },
+        {
+            "slug": "bomberroyale_beetlebomb_patchwork_golden",
+            "name": "Golden: Critter Bomb",
+            "description": "Danger: Explodes if dropped.",
+            "prefab": "skins/secondary/bomberroyale_beetlebomb_patchwork_golden",
+            "blueprint": "2022/abilities/ability_pvp_bomb_critter_gold",
+            "group": "Leaderboards (Temporary)",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_BEETLE_BOMB_EXPLOSION",
+                    "pkfx": "Particles/bomberRoyale_ability_critterBomb_explosion_gold_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_patchwork_golden",
+            "name": "Golden: Patchwork Rubber Bomb",
+            "description": "The trick isn't getting to explode, it's getting it to bounce before it does.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_patchwork_golden",
+            "blueprint": "2022/abilities/ability_pvp_bomb_rubber_patchwork_gold",
+            "group": "Leaderboards (Temporary)",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_BomberRoyale_bomb_basic_explosion_gold_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_patchwork_golden",
+            "name": "Golden: Patchwork Sticky Bomb",
+            "description": "The danger is not quite knowing if it's a dud or just a too long fuse.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_patchwork_golden",
+            "blueprint": "2022/abilities/ability_pvp_bomb_sticky_patchwork_gold",
+            "group": "Leaderboards (Temporary)",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_STICKY_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_bomberRoyale_bomb_sticky_explosion_gold_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_beartrapbomb_patchwork_golden",
+            "name": "Golden: Trap Bomb",
+            "description": "Allied target recognition is 99.74% effective.",
+            "prefab": "skins/secondary/bomberroyale_beartrapbomb_patchwork_golden",
+            "blueprint": "2022/abilities/ability_pvp_bomb_beartrap_gold",
+            "group": "Leaderboards (Temporary)",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_TRAP_BOMB_EXPLOSION",
+                    "pkfx": "Particles/bomberRoyale_ability_trap_explosion_gold_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_s3_dragon_golden",
+            "name": "Golden: Zyntryn's Sticky Bomb",
+            "description": "Zyntryn's favorite bombs resemble his favorite dragon, him.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_s3_dragon_golden",
+            "blueprint": "2022/items/item_egg_dragon_bomberroyale_sticky_gold",
+            "group": "Leaderboards (Temporary)",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_STICKY_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_bomberRoyale_bomb_sticky_explosion_gold_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_heckbug_cave_b",
+            "name": "Heckbug Egg Bomb",
+            "description": "Explosions are just par for the course for a creature native to the Dragonfire Peaks.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_heckbug_cave_b",
+            "blueprint": "2022/items/item_egg_companion_hellbug_february2022.blueprint",
+            "group": "Rubber Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_heckbug_cave_c",
+            "name": "Heckbug-Hybrid Egg Bomb",
+            "description": "Twice the ferociousness, twice the explosion!",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_heckbug_cave_c",
+            "blueprint": "2022/items/item_egg_companion_heckbug_february2023.blueprint",
+            "group": "Rubber Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_howlughead",
+            "name": "Howlug Bomb",
+            "description": "AHHHHHHHHH!",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_howlughead",
+            "blueprint": "equipment_weapon_bomb_howlug_purple",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/gameplay_geode_blastflower_orange_explode_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_jackolantern",
+            "name": "Jack O' Lantern Bomb",
+            "description": "This pumpkin's ghastly grin hides an explosive secret.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_jackolantern",
+            "blueprint": "C_C_octopus_pumpkin_ui",
+            "group": "Sticky Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_ornament",
+            "name": "Jingle Bomb",
+            "description": "What's a little holiday cheer without an explosion?",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_ornament",
+            "blueprint": "2023/abilities/ability_pvp_bomb_ornament",
+            "group": "Rubber Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_lunar",
+            "name": "Lunar Rubber Bomb",
+            "description": "Faith in the Moon Goddess is the ultimate weapon. That said, bombs are definitely the penultimate weapon.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_lunar",
+            "blueprint": "2021/equipment/ability_pvp_bomb_moon",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/character_pc_adventurer_teenwerewolf_ability_randomThrow_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_bomb_lunar_seal_explosion_02.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_lunar",
+            "name": "Lunar Sticky Bomb",
+            "description": "Faith in the Moon Goddess is the ultimate weapon. That said, bombs are definitely the penultimate weapon.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_lunar",
+            "blueprint": "2021/equipment/equipment_weapon_bomb_lunar",
+            "group": "Sticky Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_heckbug_cave_a",
+            "name": "Mystical Heckbug Egg Bomb",
+            "description": "Cracking one of these is bad luck for a year, that's almost worse than the explosion!",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_heckbug_cave_a",
+            "blueprint": "2024/items/item_egg_companion_heckbug_february2024.blueprint",
+            "group": "Rubber Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_leek",
+            "name": "Onionito Rubber Bomb",
+            "description": "This durable Onionito can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Onionito.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_leek",
+            "blueprint": "item_crafting_gardening_vegetable_leek",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_patchwork",
+            "name": "Patchwork Rubber Bomb",
+            "description": "The trick isn't getting to explode, it's getting it to bounce before it does.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_patchwork",
+            "blueprint": "2022/abilities/ability_pvp_bomb_rubber_patchwork",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_BomberRoyale_bomb_basic_explosion_varentS3_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_patchwork",
+            "name": "Patchwork Sticky Bomb",
+            "description": "The danger is not quite knowing if it's a dud or just a too long fuse.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_patchwork",
+            "blueprint": "2022/abilities/ability_pvp_bomb_sticky_patchwork",
+            "group": "Sticky Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_STICKY_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_bomberRoyale_bomb_sticky_explosion_varentS3_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_pot_of_gold",
+            "name": "Pot o' Bombs",
+            "description": "Why buy bombs when your money can just be bombs?!",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_pot_of_gold",
+            "blueprint": "2022/interactive/crafting/interactive_crafting_bench_march2022_pot.blueprint",
+            "group": "Rubber Bombs"
+        },
+        {
+            "slug": "bomberroyale_beartrapbomb_pumpkin",
+            "name": "Pumpkin Patch Bomb",
+            "description": "Allied target recognition is 99.74% effective.",
+            "prefab": "skins/secondary/bomberroyale_beartrapbomb_pumpkin",
+            "blueprint": "2023/skins/beartrap_pumpkin/ability_pvp_bomb_beartrap_pumpkin.blueprint",
+            "group": "Trap Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_grape",
+            "name": "Purp'lil Rubber Bomb",
+            "description": "This durable Purp'lil can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Purp'lil.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_grape",
+            "blueprint": "item_crafting_gardening_vegetable_grape",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_beetlebomb_wolf",
+            "name": "Q'rsed Critter Bomb",
+            "description": "Danger: Explodes if dropped.",
+            "prefab": "skins/secondary/bomberroyale_beetlebomb_wolf",
+            "blueprint": "2022/abilities/ability_pvp_bomb_critter_wolf",
+            "group": "Critter Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_BEETLE_BOMB_EXPLOSION",
+                    "pkfx": "Particles/bomberRoyale_ability_critterBomb_explosion_wolf_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_beartrapbomb_wolf",
+            "name": "Q'rsed Trap Bomb",
+            "description": "Allied target recognition is 99.74% effective.",
+            "prefab": "skins/secondary/bomberroyale_beartrapbomb_wolf",
+            "blueprint": "2022/abilities/ability_pvp_bomb_beartrap_wolf",
+            "group": "Trap Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_cabbage",
+            "name": "Qubbage Rubber Bomb",
+            "description": "This durable Qubbage can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Qubbage.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_cabbage",
+            "blueprint": "item_crafting_gardening_vegetable_cabbage",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_tomato",
+            "name": "Qumato Rubber Bomb",
+            "description": "This durable Qumato can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Qumato.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_tomato",
+            "blueprint": "item_crafting_gardening_vegetable_tomato",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_stickybomb_lucky_stone",
+            "name": "Sir O'Unlucky's Bomb",
+            "description": "Hard to think of a bomb as anything but unlucky.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_lucky_stone",
+            "blueprint": "2024/placeables/E_G_like_stone_march2024_base",
+            "group": "Sticky Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_pumpkin",
+            "name": "Smashing Pumpkin Bomb",
+            "description": "Leave your opponents in infinite sadness after this melon floats like a butterfly and stings like a bullet.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_pumpkin",
+            "blueprint": "deco_halloween_pumpkin",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_bomb_scare_trail_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_bomb_scare_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_buggoo",
+            "name": "Sticky Ichor Bomb",
+            "description": "Some potions are more explosive than others.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_buggoo",
+            "blueprint": "item_crafting_buggoo",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_potato",
+            "name": "Totter Tate Rubber Bomb",
+            "description": "This durable Totter Tate can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Totter Tate.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_potato",
+            "blueprint": "item_crafting_gardening_vegetable_potato",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "basic_bomb_scary_pumpkin",
+            "name": "Trick: Explosive Pumpkin",
+            "description": "",
+            "prefab": "skins/secondary/basic_bomb_scary_pumpkin",
+            "blueprint": "deco_halloween_pumpkin",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_BASIC_BOMB_PROJECTILE",
+                    "pkfx": "item_bomb_scare_trail_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_BASIC_BOMB_EXPLOSION",
+                    "pkfx": "item_bomb_scare_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_eggplant",
+            "name": "Uggplant Rubber Bomb",
+            "description": "This durable Uggplant can be used to change the appearance of your Rubber Bombs in Bomber Royale.\n\nFound rarely when harvesting Uggplant.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_eggplant",
+            "blueprint": "item_crafting_gardening_vegetable_eggplant",
+            "group": "Rubber Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_PROJECTILE",
+                    "pkfx": "Particles/item_pvp_bomb_basic_projectile_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_REFLECTION",
+                    "pkfx": "Particles/item_pvp_bomb_bounce_01.pkfx"
+                },
+                {
+                    "key": "$VFX_BATTLEROYALE_RUBBER_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_pvp_bomb_basic_explosion_01.pkfx"
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_lucky_star",
+            "name": "Unlucky Star Bomb",
+            "description": "Explosions are nearly always unlucky... for those nearby.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_lucky_star",
+            "blueprint": "item_gardening_wateringcan_event_star.blueprint",
+            "group": "Rubber Bombs"
+        },
+        {
+            "slug": "bomberroyale_rubberbomb_october2024",
+            "name": "Witch Hat Bomb",
+            "description": "Explodes with a cackling wail.",
+            "prefab": "skins/secondary/bomberroyale_rubberbomb_october2024",
+            "blueprint": "2024/abilities/ability_pvp_bomb_rubber_october2024",
+            "group": "Rubber Bombs"
+        },
+        {
+            "slug": "bomberroyale_stickybomb_october2024",
+            "name": "Witch's Brew Bomb",
+            "description": "Don't ask what's being made in it. You don't want to know.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_october2024",
+            "blueprint": "2024/abilities/ability_pvp_bomb_sticky_october2024",
+            "group": "Sticky Bombs"
+        },
+        {
+            "slug": "bomberroyale_stickybomb_s3_dragon",
+            "name": "Zyntryn's Sticky Bomb",
+            "description": "Zyntryn's favorite bombs resemble his favorite dragon, him.",
+            "prefab": "skins/secondary/bomberroyale_stickybomb_s3_dragon",
+            "blueprint": "2022/items/item_egg_dragon_bomberroyale_sticky",
+            "group": "Sticky Bombs",
+            "vfx": [
+                {
+                    "key": "$VFX_BATTLEROYALE_STICKY_BOMB_EXPLOSION",
+                    "pkfx": "Particles/item_bomberRoyale_bomb_sticky_explosion_varentS3_01.pkfx"
+                }
+            ]
+        }
+    ],
     "style_slots": [
         {
             "slug": "hats",
