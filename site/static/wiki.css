@@ -579,3 +579,7 @@ body.wk { --nav-h: 63px; }
 .wk-stylecard { cursor: default; }
 .wk-stylecard:hover { border-color: var(--bg-line); background: var(--bg-card); }
 .wk-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.wk-swatch { display: block; width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--bg-line); }
+.wk-tiers { margin-top: 4px; font-size: .78rem; color: var(--text-mute); }
+.wk-tiers summary { cursor: pointer; color: var(--accent-blue); }
+.wk-tiers ul { margin: 4px 0 0; padding-left: 16px; display: grid; gap: 4px; }

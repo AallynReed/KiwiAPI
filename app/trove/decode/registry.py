@@ -23,6 +23,7 @@ from app.trove.decode import (
     mementos,
     mount_abilities,
     npcs,
+    placeables,
     pvp_stat_ranges,
     recipes,
     ring_abilities,
@@ -35,7 +36,7 @@ DECODERS: dict[str, ModuleType] = {
     for m in (class_levels, class_abilities, ally_abilities, gem_abilities,
               ring_abilities, mount_abilities, pvp_stat_ranges, delve_modifiers,
               companions, badges, fish, mementos, recipes, collectibles,
-              cosmetics, titles, npcs)
+              cosmetics, titles, npcs, placeables)
 }
 
 

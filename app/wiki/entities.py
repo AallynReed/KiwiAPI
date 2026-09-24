@@ -91,6 +91,12 @@ KINDS: dict[str, dict[str, Any]] = {
             "file": "npcs.json", "plural": "npcs", "title": "NPCs", "icon": "fa-person", "noun": "NPC groups",
             "rows": lambda: npc_groups(),
             "lead": "Every named NPC, enemies and friends, grouped the way the game's files keep them."},
+    "placeable": {"prompt": "what these look good with and where to get them",
+                  "file": "placeables.json", "key": "groups", "plural": "placeables", "title": "Blocks & Placeables",
+                  "icon": "fa-cubes", "noun": "groups", "group_by": "category",
+                  "group_order": ["Blocks", "Decoration", "Building"],
+                  "lead": "Every block and decoration a player can own, grouped by the station that crafts it "
+                          "or by where it comes from."},
     "companion": {"prompt": "where to find it and which of its perks matter",
                   "file": "companions.json", "plural": "companions", "title": "Companions",
                   "icon": "fa-dove", "facets": {"rarity": "Rarity"},
@@ -196,6 +202,8 @@ def picture(e: dict) -> str:
         return blueprint_name(e["model"]["blueprints"][0])
     if e.get("styles"):
         return next((blueprint_name(x["blueprint"]) for x in e["styles"] if x.get("blueprint")), "")
+    if e.get("entries"):
+        return next((blueprint_name(x["blueprint"]) for x in e["entries"] if x.get("blueprint")), "")
     return next((blueprint_name(r["blueprint"]) for r in reversed(e.get("ranks") or []) if r.get("blueprint")), "")
 
 
@@ -230,6 +238,10 @@ def summary(kind: str, e: dict) -> dict:
     elif kind == "boss":
         row["sub"] = boss_type(e)
         row["facets"]["boss_type"] = boss_type(e)
+    elif kind == "placeable":
+        row["facets"]["category"] = e.get("category", "")
+        row["sub"] = f"{len(e.get('entries') or []):,} placeables"
+        row["search"] += " " + " ".join(x["name"] for x in e.get("entries") or []).lower()
     elif kind == "npc":
         row["sub"] = f"{len(e.get('npcs') or []):,} NPCs"
         row["search"] += " " + " ".join(n["name"] for n in e.get("npcs") or []).lower()
@@ -332,6 +344,8 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _boss(d, e)
     elif kind == "npc":
         _npc_group(d, e)
+    elif kind == "placeable":
+        _placeable_group(d, e)
     elif kind in ("flask", "fishing-pole", "tome"):
         if e.get("equip_stats"):
             d["stat_groups"] = [{"label": "When equipped", "stats": _stat_rows(e["equip_stats"])}]
@@ -911,3 +925,34 @@ def _boss(d: dict, e: dict) -> None:
     d["carried"] = [c for c in (_carried_card(ref) for ref in e.get("effects") or []) if c]
     d["adventures"] = [{"name": a.get("name", ""), "description": _text(a.get("description"))}
                        for a in e.get("defeat_adventures") or []]
+
+
+# ── blocks and placeables ──────────────────────────────────────────────────
+
+_HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def _placeable(x: dict) -> dict:
+    bits = [x.get("rarity", "")]
+    if x.get("light"):
+        bits.append(f"Light {num(x['light'])}")
+    if x.get("club_section"):
+        bits.append(x["club_section"])
+    return {"name": x["name"], "description": _text(x.get("description")),
+            "blueprint": x.get("blueprint", ""), "color": x["color"] if _HEX.match(x.get("color") or "") else "",
+            "rarity": x.get("rarity", ""), "sub": " · ".join(b for b in bits if b),
+            "restrictions": x.get("restrictions") or [], "tiers": x.get("tiers") or [],
+            "url": link(x.get("prefab")),
+            "search": " ".join([x["name"], x.get("description", ""), x.get("rarity", "")]).lower()}
+
+
+def _placeable_group(d: dict, e: dict) -> None:
+    d["facts"] = [{"label": "Inventory", "value": e.get("category", "")}]
+    st = find("station", (e.get("station") or {}).get("slug", ""))
+    if st:
+        d["facts"].append({"label": "Crafted at", "value": st["name"], "url": url("station", st)})
+    rows = [_placeable(x) for x in e.get("entries") or []]
+    d["style_groups"] = [{"name": "", "styles": rows}]
+    d["rarities"] = [r for r in ("Common", "Uncommon", "Rare", "Epic", "Legendary", "Relic", "Resplendent")
+                     if any(x["rarity"] == r for x in rows)]
+    d["style_count"] = len(rows)
