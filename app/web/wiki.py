@@ -11,7 +11,8 @@ URL map:
   /classes, /class/<n>   generated class pages + their editable write-ups
   /<plural>, /<kind>/<n> generated game-data pages + write-ups, one pair per kind in
                          app/wiki/entities.KINDS: allies, mounts, dragons, wings, boats, sails,
-                         auras, Mag Riders, flasks, tomes, fishing poles, costumes, bomb skins, style slots
+                         auras, Mag Riders, flasks, tomes, fishing poles, costumes, bomb skins,
+                         empowered gems (/empowered-gems), class rings, style slots
                          (/styles, /style/<slot>), bosses, NPC groups (/npcs, /npc/<group>),
                          placeable groups (/placeables, /placeable/<group>),
                          quest lines + adventure sets (/adventures, /adventure/<set>),

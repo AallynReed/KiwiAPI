@@ -104,6 +104,17 @@ KINDS: dict[str, dict[str, Any]] = {
                                   "Crystallogy adventures", "Event adventures", "Tiny Quests", "Golden Thread"],
                   "lead": "Every quest line and adventure set in the game files: what each step asks, what it "
                           "pays and how long you have."},
+    "empowered-gem": {"prompt": "which builds it suits and how it plays",
+                      "file": "gem_abilities.json", "plural": "empowered-gems", "title": "Empowered Gems",
+                      "icon": "fa-gem", "rows": lambda: empowered_gems(), "group_by": "element",
+                      "group_order": ["Fire", "Water", "Air", "Cosmic", "Prismatic"],
+                      "facets": {"element": "Element"},
+                      "lead": "Every empowered gem and what its ability does, read from the game files. How gems "
+                              "roll, level and stack is in the How Gems Work guide."},
+    "ring": {"prompt": "which builds it suits and how it plays",
+             "file": "ring_abilities.json", "plural": "rings", "title": "Class Rings", "icon": "fa-ring",
+             "group_by": "class", "facets": {"class": "Class"},
+             "lead": "Every class ring and what it changes about its class's abilities, read from the game files."},
     "companion": {"prompt": "where to find it and which of its perks matter",
                   "file": "companions.json", "plural": "companions", "title": "Companions",
                   "icon": "fa-dove", "facets": {"rarity": "Rarity"},
@@ -253,6 +264,8 @@ def summary(kind: str, e: dict) -> dict:
         row["facets"]["section"] = adventure_section(e)
         row["sub"] = f"{len(e.get('entries') or []):,} {'steps' if e.get('thread') else 'adventures'}"
         row["search"] += " " + " ".join(x["name"] for x in e.get("entries") or []).lower()
+    elif kind in ("empowered-gem", "ring"):
+        row["sub"] = e.get("element") or e.get("class") or ""
     elif kind == "npc":
         row["sub"] = f"{len(e.get('npcs') or []):,} NPCs"
         row["search"] += " " + " ".join(n["name"] for n in e.get("npcs") or []).lower()
@@ -358,6 +371,8 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _npc_group(d, e)
     elif kind == "placeable":
         _placeable_group(d, e)
+    elif kind in ("empowered-gem", "ring"):
+        _gem_or_ring(d, e)
     elif kind == "adventure":
         _adventure_group(d, e)
     elif kind in ("flask", "fishing-pole", "tome"):
@@ -1059,3 +1074,23 @@ def _adventure_group(d: dict, e: dict) -> None:
                      "search": " ".join([x["name"], x.get("description", "")]).lower()})
     d["adventures"] = rows
     d["ordered"] = bool(e.get("thread"))
+
+
+# ── empowered gems and class rings ─────────────────────────────────────────
+
+@gamedata.cached("gem_abilities.json")
+def empowered_gems() -> list[dict]:
+    """Gem slugs name the ability, which repeats across elements; the page key adds it."""
+    return [{**g, "slug": f"{g['element'].lower()}_{g['slug']}"}
+            for g in gamedata.load("gem_abilities.json", []) or []]
+
+
+def _gem_or_ring(d: dict, e: dict) -> None:
+    if e.get("element"):
+        d["facts"].append({"label": "Element", "value": e["element"]})
+    if e.get("class"):
+        c = next((c for c in trove_stats.all_classes().get("items") or [] if c["name"] == e["class"]), None)
+        slug = "-".join("".join(ch if ch.isalnum() else " " for ch in e["class"].lower()).split())
+        d["facts"].append({"label": "Class", "value": e["class"], "url": f"/class/{slug}" if c else ""})
+    # The page already shows the description; the card carries only the numbers.
+    d["abilities"] = [card({**e, "description": "", "text": ""}, name="What it does")]
