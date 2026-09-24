@@ -1034,7 +1034,7 @@ def goal_line(o: dict) -> dict:
     return {"text": "", "things": []}
 
 
-def _reward(r: dict) -> dict:
+def _adventure_reward(r: dict) -> dict:
     count = r.get("count") or r.get("amount")
     name = r.get("name") or ""
     return {"text": f"{num(count)} × {name}" if count and count != 1 and name else name,
@@ -1053,7 +1053,7 @@ def _adventure_group(d: dict, e: dict) -> None:
         rows.append({"step": x.get("step") or (i if e.get("thread") else None), "name": x["name"],
                      "description": _text(x.get("description") or x.get("summary")),
                      "goal": goal_line(x.get("objective") or {}),
-                     "rewards": [r for r in (_reward(r) for r in x.get("rewards") or []) if r["text"]],
+                     "rewards": [r for r in (_adventure_reward(r) for r in x.get("rewards") or []) if r["text"]],
                      "timing": timing,
                      "search": " ".join([x["name"], x.get("description", "")]).lower()})
     d["adventures"] = rows
