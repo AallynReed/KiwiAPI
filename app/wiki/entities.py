@@ -59,6 +59,15 @@ KINDS: dict[str, dict[str, Any]] = {
                      "file": "collectibles.json", "key": "fishing_poles", "plural": "fishing-poles",
                      "title": "Fishing Poles", "icon": "fa-water", "facets": {"group": "Collection", "liquids": "Liquid"},
                      "lead": "Every fishing pole and the liquids it can fish in."},
+    "costume": {"prompt": "where to get it and what it goes well with",
+                "file": "cosmetics.json", "key": "costumes", "plural": "costumes", "title": "Costumes",
+                "icon": "fa-shirt", "group_by": "class", "facets": {"class": "Class"},
+                "lead": "Every costume, by class. Each page links to the Dressing Room to try it on."},
+    "style": {"prompt": "which of these styles are worth hunting",
+              "file": "cosmetics.json", "key": "style_slots", "plural": "styles", "title": "Styles",
+              "icon": "fa-hat-wizard", "noun": "style slots",
+              "lead": "Every hat, face, weapon and banner style, one page per slot, filed the way the "
+                      "collection screen files them."},
     "companion": {"prompt": "where to find it and which of its perks matter",
                   "file": "companions.json", "plural": "companions", "title": "Companions",
                   "icon": "fa-dove", "facets": {"rarity": "Rarity"},
@@ -154,6 +163,8 @@ def picture(e: dict) -> str:
     """The blueprint an entry is drawn with: its own, else its highest rank's."""
     if e.get("blueprint"):
         return blueprint_name(e["blueprint"])
+    if e.get("styles"):
+        return next((blueprint_name(x["blueprint"]) for x in e["styles"] if x.get("blueprint")), "")
     return next((blueprint_name(r["blueprint"]) for r in reversed(e.get("ranks") or []) if r.get("blueprint")), "")
 
 
@@ -178,6 +189,12 @@ def summary(kind: str, e: dict) -> dict:
                    search=f"{row['search']} {_companion_search(e)}")
     elif kind in ("wings", "boat", "sail", "aura", "magrider", "flask", "tome"):
         row["sub"] = e.get("group", "")
+    elif kind == "costume":
+        row["facets"]["class"] = class_name(e.get("class", ""))
+        row["sub"] = row["facets"]["class"]
+    elif kind == "style":
+        row["sub"] = f"{len(e.get('styles') or []):,} styles"
+        row["search"] += " " + " ".join(x["name"] for x in e.get("styles") or []).lower()
     elif kind == "fishing-pole":
         row["facets"]["liquids"] = "|".join(x.title() for x in e.get("liquids") or [])
         row["sub"] = ", ".join(x.title() for x in e.get("liquids") or [])
@@ -264,13 +281,17 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _memento(d, e)
     elif kind == "station":
         _station(d, e)
+    elif kind == "costume":
+        _costume(d, e)
+    elif kind == "style":
+        _style_slot(d, e)
     elif kind in ("flask", "fishing-pole", "tome"):
         if e.get("equip_stats"):
             d["stat_groups"] = [{"label": "When equipped", "stats": _stat_rows(e["equip_stats"])}]
         d["abilities"] = abilities
         if e.get("liquids"):
             d["facts"].append({"label": "Fishes in", "value": ", ".join(x.title() for x in e["liquids"])})
-    if e.get("group"):
+    if e.get("group") and kind != "costume":
         d["facts"].append({"label": "Collection", "value": e["group"]})
     d["facts"] += _sources(e.get("prefab") or "")
     return d
@@ -674,3 +695,28 @@ def _sources(prefab: str) -> list[dict]:
         if b:
             facts.append({"label": "Badge reward", "value": b["name"], "url": url("badge", b)})
     return facts
+
+
+# ── costumes and styles ────────────────────────────────────────────────────
+
+def class_name(tech: str) -> str:
+    """A KClass name (``ShadowHunter``) as players know the class."""
+    return _class_name(tech) if tech else ""
+
+
+def _costume(d: dict, e: dict) -> None:
+    tech = (e.get("class") or "").lower()
+    c = trove_stats.class_by_tech_name(tech)
+    if c:
+        slug = "-".join("".join(ch if ch.isalnum() else " " for ch in c["name"].lower()).split())
+        d["facts"].append({"label": "Class", "value": c["name"], "url": f"/class/{slug}"})
+        d["dressing_room"] = {"class": tech, "costume": e["slug"]}
+
+
+def _style_slot(d: dict, e: dict) -> None:
+    groups: dict[str, list[dict]] = {}
+    for x in e.get("styles") or []:
+        groups.setdefault(x.get("group") or "Other", []).append(x)
+    d["style_groups"] = sorted(({"name": k, "styles": v} for k, v in groups.items()),
+                               key=lambda g: g["name"] == "Other")
+    d["style_count"] = len(e.get("styles") or [])

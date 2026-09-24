@@ -11,7 +11,8 @@ URL map:
   /classes, /class/<n>   generated class pages + their editable write-ups
   /<plural>, /<kind>/<n> generated game-data pages + write-ups, one pair per kind in
                          app/wiki/entities.KINDS: allies, mounts, wings, boats, sails,
-                         auras, Mag Riders, flasks, tomes, fishing poles, companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
+                         auras, Mag Riders, flasks, tomes, fishing poles, costumes, style slots
+                         (/styles, /style/<slot>), companions, fish, mementos, badges, and crafting stations (/recipes, /station/<n>)
   /delve-modifiers       generated data page (app/wiki/data_pages.py) + its write-up
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
@@ -21,7 +22,7 @@ URL map:
 """
 import logging
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -261,12 +262,19 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
     live = page if page and not page.get("deleted") else None
     d = entities.detail(kind, e)
     found = media.lookup(kind, e, await media.blueprints(kind))
-    d["image"] = media.thumb_url(e, found, 256)
-    d["preview"] = media.preview_url(e, found)
+    # A style slot lists many models; none of them is the page's own.
+    d["image"] = media.thumb_url(e, found, 256) if kind != "style" else ""
+    d["preview"] = media.preview_url(e, found) if kind != "style" else ""
     for row in d.get("ranks") or []:
         row["image"] = media.render_url(row.get("blueprint", ""), 64)
     for row in d.get("sizes") or []:
         row["image"] = media.render_url(row.get("trophy_blueprint", ""), 64)
+    for group in d.get("style_groups") or []:
+        for row in group["styles"]:
+            row["image"] = media.render_url(row.get("blueprint", ""), 64)
+    if d.get("dressing_room"):
+        d["dressing_room_url"] = (f"{settings.app_url.rstrip('/')}/dressing-room?"
+                                  f"{urlencode(d['dressing_room'])}")
     return _render(request, "wiki/entity.html", {
         "title": e["name"], "kind": kind, "index": entities.KINDS[kind], "slug": slug, "d": d,
         "page": live, "rev": page["rev"] if page else 0,

@@ -576,3 +576,6 @@ body.wk { --nav-h: 63px; }
 .wk-kindcard:hover, .wk-kindcard:focus-visible { border-color: var(--accent-blue); background: var(--bg-card-hi); }
 .wk-kindcard i { color: var(--accent-blue); width: 18px; text-align: center; }
 .wk-kindcard-name { flex: 1; font-weight: 600; font-size: .95rem; }
+.wk-stylecard { cursor: default; }
+.wk-stylecard:hover { border-color: var(--bg-line); background: var(--bg-card); }
+.wk-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
