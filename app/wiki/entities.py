@@ -43,6 +43,22 @@ KINDS: dict[str, dict[str, Any]] = {
              "file": "collectibles.json", "key": "auras", "plural": "auras", "title": "Auras", "icon": "fa-wand-sparkles",
              "facets": {"group": "Collection"},
              "lead": "Every weapon aura in the game and where the collection screen files it."},
+    "magrider": {"prompt": "where to get it and how it rides the rails",
+                 "file": "collectibles.json", "key": "magriders", "plural": "magriders", "title": "Mag Riders",
+                 "icon": "fa-person-snowboarding", "facets": {"group": "Collection"},
+                 "lead": "Every Mag Rider and where the collection screen files it."},
+    "flask": {"prompt": "where to get it and when it is worth drinking",
+              "file": "collectibles.json", "key": "flasks", "plural": "flasks", "title": "Flasks", "icon": "fa-flask",
+              "group_by": "group", "group_order": ["Flasks", "Emblems"], "facets": {"group": "Collection"},
+              "lead": "Every flask and emblem: how many charges a flask holds and what drinking it does."},
+    "tome": {"prompt": "where to get it and what it is worth charging",
+             "file": "collectibles.json", "key": "tomes", "plural": "tomes", "title": "Tomes", "icon": "fa-book",
+             "group_by": "group", "group_order": ["Tomes", "Legendary Tomes", "Mastery"], "facets": {"group": "Collection"},
+             "lead": "Every tome and what it produces when fully charged."},
+    "fishing-pole": {"prompt": "where to get it and where it fishes best",
+                     "file": "collectibles.json", "key": "fishing_poles", "plural": "fishing-poles",
+                     "title": "Fishing Poles", "icon": "fa-water", "facets": {"group": "Collection", "liquids": "Liquid"},
+                     "lead": "Every fishing pole and the liquids it can fish in."},
     "companion": {"prompt": "where to find it and which of its perks matter",
                   "file": "companions.json", "plural": "companions", "title": "Companions",
                   "icon": "fa-dove", "facets": {"rarity": "Rarity"},
@@ -160,8 +176,11 @@ def summary(kind: str, e: dict) -> dict:
     if kind == "companion":
         row.update(sub=e.get("rarity", ""), tone=_tone(e.get("rarity", "")),
                    search=f"{row['search']} {_companion_search(e)}")
-    elif kind in ("wings", "boat", "sail", "aura"):
+    elif kind in ("wings", "boat", "sail", "aura", "magrider", "flask", "tome"):
         row["sub"] = e.get("group", "")
+    elif kind == "fishing-pole":
+        row["facets"]["liquids"] = "|".join(x.title() for x in e.get("liquids") or [])
+        row["sub"] = ", ".join(x.title() for x in e.get("liquids") or [])
     elif kind == "fish":
         row["facets"]["liquid"] = fish_liquid(e)
         row.update(sub=f"{e.get('rarity', '')} · {num(e['weight']['min'])}–{num(e['weight']['max'])} lb"
@@ -189,10 +208,10 @@ def summary(kind: str, e: dict) -> dict:
 
 
 def facets(kind: str, rows: list[dict]) -> list[dict]:
-    """The index's facet dropdowns, values in first-seen order."""
+    """The index's facet dropdowns, values in first-seen order; "a|b" is a multi-value."""
     out = []
     for key, label in KINDS[kind].get("facets", {}).items():
-        values = list(dict.fromkeys(r["facets"][key] for r in rows if r["facets"].get(key)))
+        values = list(dict.fromkeys(v for r in rows for v in (r["facets"].get(key) or "").split("|") if v))
         if len(values) > 1:
             out.append({"key": key, "label": label, "options": values})
     return out
@@ -222,9 +241,12 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
     d: dict[str, Any] = {"name": e["name"], "description": _text(e.get("description")), "prefab": e.get("prefab", ""),
                          "facts": [], "stat_groups": [], "abilities": []}
     abilities = [card(a, name=a.get("name", ""), description=a.get("text", "")) for a in e.get("abilities") or []]
-    if kind in ("mount", "wings", "boat"):
+    if kind in ("mount", "wings", "boat", "magrider"):
         d["stat_groups"] = [{"label": SLOT_NAMES.get(g["slot"], resolve_stat_name({}, g["slot"])),
                              "stats": _stat_rows(g["stats"])} for g in e.get("stats") or []]
+        if kind == "magrider":
+            for g in d["stat_groups"]:
+                g["label"] = "Riding" if g["label"] == SLOT_NAMES["$EquipmentSlot_Cart"] else g["label"]
         d["abilities"] = abilities
         d["vfx"] = [{**v, "label": ATTACH_NAMES.get(row.get("key", ""), v["label"])}
                     for row in e.get("vfx") or [] for v in vfx_links([row])]
@@ -242,6 +264,12 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _memento(d, e)
     elif kind == "station":
         _station(d, e)
+    elif kind in ("flask", "fishing-pole", "tome"):
+        if e.get("equip_stats"):
+            d["stat_groups"] = [{"label": "When equipped", "stats": _stat_rows(e["equip_stats"])}]
+        d["abilities"] = abilities
+        if e.get("liquids"):
+            d["facts"].append({"label": "Fishes in", "value": ", ".join(x.title() for x in e["liquids"])})
     if e.get("group"):
         d["facts"].append({"label": "Collection", "value": e["group"]})
     d["facts"] += _sources(e.get("prefab") or "")
