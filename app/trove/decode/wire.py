@@ -31,7 +31,9 @@ class first. How many sections an object has is not on the wire - the game knows
 from the type - so this reader works it out: at every END it considers both "the
 object is done" and "another section follows", and keeps the reading that fills
 the enclosing length exactly with the fewest sections. The search is memoised per
-start offset, so it stays close to linear rather than exponential.
+start offset, so it stays close to linear rather than exponential. For components
+the exe's own section count (``sections.py``) settles the ties that rule can get
+wrong: a nested object that swallows its parent's END.
 
 Entity prefabs are ``zz type id, zz varint64, uvarint size`` followed by
 ``(zz component id, uvarint length, object)`` records. Everything else (class
@@ -44,6 +46,8 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.trove.decode.sections import COMPONENT_SECTIONS
+
 END, OBJ, ARR, MAP, CUSTOM, BIGMAP, STRMAP = 0x0F, 0x17, 0x1F, 0x27, 0x2F, 0x37, 0x3F
 _EMPTY = object()                   # an array slot created but given no value
 MAX_SECTIONS = 8
@@ -52,6 +56,9 @@ MAX_SECTIONS = 8
 MAX_FIELD = 255
 COUNT_PENALTY = 1000
 GARBAGE_PENALTY = 100_000
+# Trove_x64.exe enumerates every class's properties in ascending index order (bar
+# MaterialCost), so a field index lower than the one before it only breaks ties.
+ORDER_PENALTY = 1e-3
 
 
 def _garbled(text: str) -> bool:
@@ -168,7 +175,7 @@ class _Reader:
     # penalty for each array whose value count strays from its header. Where two
     # readings reach the same end, the cheaper one wins.
 
-    def value_ends(self, p: int, wt: int) -> dict[int, tuple[Any, int]]:
+    def value_ends(self, p: int, wt: int) -> dict[int, tuple[Any, float]]:
         if wt == OBJ:
             return self.obj_ends(p)
         if wt == ARR:
@@ -180,7 +187,7 @@ class _Reader:
         # bytes mean this "string" is really misaligned structure.
         return {q: (v, GARBAGE_PENALTY if wt == 4 and _garbled(v) else 0)}
 
-    def _memoised(self, kind: str, p: int, build) -> dict[int, tuple[Any, int]]:
+    def _memoised(self, kind: str, p: int, build) -> dict[Any, tuple[Any, float]]:
         k = (kind, p)
         hit = self._memo.get(k)
         if hit is None:
@@ -193,12 +200,12 @@ class _Reader:
         return hit
 
     @staticmethod
-    def _search(start, step) -> dict[int, tuple[Any, int]]:
+    def _search(start, step) -> dict[Any, tuple[Any, float]]:
         """Cheapest-first search. ``step(state, acc)`` yields ``("done", end, value, cost)``
         or ``("next", state, acc, cost)``; each state keeps its cheapest accumulator."""
-        best: dict[Any, tuple[int, Any]] = {start: (0, None)}
+        best: dict[Any, tuple[float, Any]] = {start: (0, None)}
         queue = [start]
-        done: dict[int, tuple[Any, int]] = {}
+        done: dict[Any, tuple[Any, float]] = {}
         while queue:
             state = queue.pop()
             cost, acc = best[state]
@@ -212,7 +219,7 @@ class _Reader:
                     queue.append(key)
         return done
 
-    def section_ends(self, p: int) -> dict[int, tuple[dict, int]]:
+    def section_ends(self, p: int) -> dict[int, tuple[dict, float]]:
         # A writer emits each property once per section, in the class's enumeration
         # order. An index may only come back straight after itself (a few classes
         # declare several properties under one index); refusing any other repeat is
@@ -230,12 +237,13 @@ class _Reader:
                 alts = self.value_ends(q, wt)
             except WireError:
                 return
+            order = ORDER_PENALTY if idx < last else 0
             for end, (v, c) in alts.items():
-                yield "next", (end, used | {idx}, idx), (chain, idx, v), c
+                yield "next", (end, used | {idx}, idx), (chain, idx, v), c + order
 
         return self._memoised("section", p, lambda p: self._search((p, frozenset(), -1), step))
 
-    def obj_ends(self, p: int) -> dict[int, tuple[Obj, int]]:
+    def obj_ends(self, p: int) -> dict[int, tuple[Obj, float]]:
         def step(state, secs):
             pos, n = state
             secs = secs or []
@@ -248,7 +256,21 @@ class _Reader:
 
         return self._memoised("obj", p, lambda p: self._search((p, 0), step))
 
-    def array_ends(self, p: int) -> dict[int, tuple[list, int]]:
+    def obj_ends_by_sections(self, p: int) -> dict[tuple[int, int], tuple[Obj, float]]:
+        """Like ``obj_ends``, but keeps the cheapest reading per (end, section count)."""
+        def step(state, secs):
+            pos, n = state
+            secs = secs or []
+            if n >= MAX_SECTIONS:
+                return
+            for end, (sec, c) in self.section_ends(pos).items():
+                grown = [*secs, sec]
+                yield "done", (end, n + 1), Obj(grown), c + 1
+                yield "next", (end, n + 1), grown, c + 1
+
+        return self._memoised("objn", p, lambda p: self._search((p, 0), step))
+
+    def array_ends(self, p: int) -> dict[int, tuple[list, float]]:
         def build(p: int):
             count, ewt, q = self.key(p)
 
@@ -285,7 +307,7 @@ class _Reader:
 
         return self._memoised("array", p, build)
 
-    def map_ends(self, p: int, kind: int) -> dict[int, tuple[dict, int]]:
+    def map_ends(self, p: int, kind: int) -> dict[int, tuple[dict, float]]:
         def build(p: int):
             _, vwt, q = self.key(p)
             if vwt != OBJ:
@@ -354,10 +376,21 @@ def _slots(chain) -> dict:
     return out
 
 
-def read_object(data: bytes, start: int = 0, end: int | None = None) -> Obj:
-    """``data[start:end]`` read as exactly one object."""
+def read_object(data: bytes, start: int = 0, end: int | None = None, sections: int | None = None) -> Obj:
+    """``data[start:end]`` read as exactly one object.
+
+    ``sections`` is the class's section count when known. A nested object can take
+    its parent's END as an extra section of its own and still fill the bytes, so
+    a reading with that many sections wins over a cheaper one; where no reading has
+    it (the exe schema misses a class level on a few components), the cheapest wins.
+    """
     end = len(data) if end is None else end
-    hit = _Reader(data, end).obj_ends(start).get(end)
+    reader = _Reader(data, end)
+    if sections:
+        hit = reader.obj_ends_by_sections(start).get((end, sections))
+        if hit is not None:
+            return hit[0]
+    hit = reader.obj_ends(start).get(end)
     if hit is None:
         raise WireError("no reading fills the object exactly")
     return hit[0]
@@ -380,7 +413,7 @@ def _entity(data: bytes) -> Prefab | None:
             n, p = head.uvar(p)
             if p + n > len(data):
                 return None
-            comps.append((cid, read_object(data, p, p + n)))
+            comps.append((cid, read_object(data, p, p + n, COMPONENT_SECTIONS.get(cid))))
             p += n
     except WireError:
         return None
