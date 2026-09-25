@@ -105,8 +105,8 @@ def _system(sid: str, prefabs: Prefabs, trees: dict[str, Obj], grants: dict[str,
         if isinstance(parent, str) and parent:
             node["parent"] = parent
         pos = nl.get(N_POS)
-        if isinstance(pos, list) and len(pos) == 2:
-            node["position"] = pos
+        if isinstance(pos, (list, tuple)) and len(pos) == 2:  # a packed pair reads as a tuple
+            node["position"] = list(pos)
         opens = _cost_rows(nl.get(N_OPEN), prefabs, names)
         if opens:
             node["opens_with"] = opens

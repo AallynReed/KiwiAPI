@@ -9,17 +9,29 @@
     {
      "id": "gl.gathering",
      "name": "Constellation of Gathering",
-     "description": "Through this constellation you will gain the power of increased gains in harvesting and experience."
+     "description": "Through this constellation you will gain the power of increased gains in harvesting and experience.",
+     "position": [
+      229.0,
+      132.0
+     ]
     },
     {
      "id": "gl.pve",
      "name": "Constellation of Cubesly",
-     "description": "Grants the power of Cubesly. This constellation helps to empower players in dungeons and delves as well as improving flasks."
+     "description": "Grants the power of Cubesly. This constellation helps to empower players in dungeons and delves as well as improving flasks.",
+     "position": [
+      -231.0,
+      135.0
+     ]
     },
     {
      "id": "gl.combat",
      "name": "Constellation of Combat",
-     "description": "This constellation is based around improving Physical and Magic damage as well as increasing critical hits as well as critical hit damage."
+     "description": "This constellation is based around improving Physical and Magic damage as well as increasing critical hits as well as critical hit damage.",
+     "position": [
+      0.0,
+      -267.0
+     ]
     },
     {
      "id": "gl.gathering.a",
@@ -27,6 +39,10 @@
      "description": "Search the lands for greater goods.",
      "detail": "Increases Magic Find by 3%.",
      "parent": "gl.gathering",
+     "position": [
+      351.0,
+      154.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -41,6 +57,10 @@
      "description": "Guides you to finding even more useful ore.",
      "detail": "Grants a 10% chance to get an additional ore while mining. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.a",
+     "position": [
+      474.0,
+      175.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -62,6 +82,10 @@
      "description": "Show how to have more mastery over your laser.",
      "detail": "Increases Lasermancy by 80.",
      "parent": "gl.gathering.a.0",
+     "position": [
+      561.0,
+      143.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -76,6 +100,10 @@
      "description": "Leap for the stars!!!!",
      "detail": "Increases Flask Capacity by 1.\nIncreases Max Health by 5%.\nIncreases Jump by 5.",
      "parent": "gl.gathering.a.0",
+     "position": [
+      545.0,
+      235.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -90,6 +118,10 @@
      "description": "Knowledge is power - with this you will gain even more.",
      "detail": "Increases experience gain by 5%. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.a.0.a",
+     "position": [
+      649.0,
+      111.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -111,6 +143,10 @@
      "description": "With a little luck and brains you can do anything.",
      "detail": "Increases experience gain by 2.5%.\nIncreases Magic Find by 3%.",
      "parent": "gl.gathering.a.0.a.0",
+     "position": [
+      694.0,
+      58.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -125,6 +161,10 @@
      "description": "Speeds up crafting...I know I would love that.",
      "detail": "Increases Magic Find by 3%.\nIncreases crafting speed.",
      "parent": "gl.gathering.a.0.a.0",
+     "position": [
+      718.0,
+      123.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -139,6 +179,10 @@
      "description": "See the weakness of your enemies and know how to exploit it.",
      "detail": "Increases experience gain by 2.5%.\nIncreases Critical Hit Chance by 15%.",
      "parent": "gl.gathering.a.0.a.0.a",
+     "position": [
+      706.0,
+      -10.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -153,6 +197,10 @@
      "description": "A star too small to be a planet but hurts too much to accept the truth.",
      "detail": "Increases experience gain by 2.5%.\nIncreases Critical Hit Damage by 15%. \nGrants Staruable when upgrading",
      "parent": "gl.gathering.a.0.a.0.a.0",
+     "position": [
+      718.0,
+      -79.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -167,6 +215,10 @@
      "description": "So glad to see you all the way out here, the star focuses on finding better gear.",
      "detail": "Increases Magic Find by 8%.",
      "parent": "gl.gathering.a.0.a.0.a",
+     "position": [
+      759.0,
+      34.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -181,6 +233,10 @@
      "description": "Grow even more crops.",
      "detail": "Increases harvesting by 10%. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.a.0.b",
+     "position": [
+      616.0,
+      295.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -202,6 +258,10 @@
      "description": "Grants the feeling of vigor you get from eating a large meal.",
      "detail": "Increases Maximum Health by 10%.\nIncreases Health Regen by 400.",
      "parent": "gl.gathering.a.0.b.0",
+     "position": [
+      709.0,
+      287.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -216,6 +276,10 @@
      "description": "Working on mining has given you a little more edge.",
      "detail": "Increases Outgoing damage by 3%.",
      "parent": "gl.gathering.a.0.b.0",
+     "position": [
+      688.0,
+      355.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -230,6 +294,10 @@
      "description": "An extra flask here and there, soon you'll be invincible...",
      "detail": "Increases Flask Capacity by 1.",
      "parent": "gl.gathering.a.0.b.0",
+     "position": [
+      624.0,
+      388.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -244,6 +312,10 @@
      "description": "Ultimate Harvest upgrade for any gathering min/maxer.",
      "detail": "Increases harvesting by 15%. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.a.0.b.0.a",
+     "position": [
+      802.0,
+      279.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -265,6 +337,10 @@
      "description": "A reward for gathering - hitting hard and fast.",
      "detail": "Increases Attack Speed by 15%.\nIncreases Critical Hit Damage by 15%.",
      "parent": "gl.gathering.a.0.b.0.a.0",
+     "position": [
+      885.0,
+      236.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -279,6 +355,10 @@
      "description": "When searching for items, you have gained greater defense.",
      "detail": "Reduces incoming damage by 15%.",
      "parent": "gl.gathering.a.0.b.0.a.0",
+     "position": [
+      891.0,
+      307.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -293,6 +373,10 @@
      "description": "Lots more shiny ore to collect.",
      "detail": "Grants a 15% chance to get an additional ore while mining. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.a.0.b.0.b",
+     "position": [
+      759.0,
+      415.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -314,6 +398,10 @@
      "description": "This is the end of the path... was it worth it?",
      "detail": "Increases Lasermancy by 100.\nIncreases Max Health by 15%. \nGrants Star Dust when upgrading",
      "parent": "gl.gathering.a.0.b.0.b.0",
+     "position": [
+      830.0,
+      475.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -328,6 +416,10 @@
      "description": "A little bit of coffee will heal anyone.",
      "detail": "Increases Health Regen by 6%.\nIncreases Energy Regen by 6%.",
      "parent": "gl.gathering.a.0.b.0.c",
+     "position": [
+      633.0,
+      481.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -342,6 +434,10 @@
      "description": "Mine with ease of being able to jump a little more.",
      "detail": "Increases Lasermancy by 100.\nIncreases Jump by 3.",
      "parent": "gl.gathering",
+     "position": [
+      271.0,
+      249.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -356,6 +452,10 @@
      "description": "When mounted, Harvest at short range.",
      "detail": "Slightly increases gathering range when mounted. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.b",
+     "position": [
+      314.0,
+      365.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -377,6 +477,10 @@
      "description": "Gain healing and the ability to heal more. Sounds good, right?",
      "detail": "Increases Flask Capacity by 1.\nIncreases Health Regen by 300.",
      "parent": "gl.gathering.b.0",
+     "position": [
+      377.0,
+      434.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -391,6 +495,10 @@
      "description": "This star gains the boon of health and mining.",
      "detail": "Increases Lasermancy by 200.\nIncreases Maximum Health by 10%.",
      "parent": "gl.gathering.b.0",
+     "position": [
+      310.0,
+      459.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -405,6 +513,10 @@
      "description": "Fly free you fools in the Sundered Uplands.",
      "detail": "Reduces glide reduction in Sundered Uplands in Moonless Dark (10) difficulty. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.b.0.a",
+     "position": [
+      440.0,
+      503.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -426,6 +538,10 @@
      "description": "Fly even faster.",
      "detail": "Reduces glide reduction in Sundered Uplands in Mega Dark (13) and lower difficulties.",
      "parent": "gl.gathering.b.0.a.0",
+     "position": [
+      503.0,
+      572.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -440,6 +556,10 @@
      "description": "I am like a dragon, I only fly away.",
      "detail": "Reduces glide reduction in all Sundered Uplands. \nGrants a Caprian Dragon Egg Fragment when upgrading",
      "parent": "gl.gathering.b.0.a.0.a",
+     "position": [
+      566.0,
+      640.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -454,6 +574,10 @@
      "description": "When mounted, Harvest at medium range.",
      "detail": "Moderately increases gathering range when mounted. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.b.0.b",
+     "position": [
+      306.0,
+      552.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -475,6 +599,10 @@
      "description": "After searching the stars, you have gained increased magic.",
      "detail": "Increases Magic Damage by 5%.",
      "parent": "gl.gathering.b.0.b.0",
+     "position": [
+      354.0,
+      631.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -489,6 +617,10 @@
      "description": "Hee Hee this star gives more health.",
      "detail": "Increases Maximum Health by 5%.",
      "parent": "gl.gathering.b.0.b.0",
+     "position": [
+      302.0,
+      645.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -503,6 +635,10 @@
      "description": "Gathering stars together has increased your strength.",
      "detail": "Increases Physical Damage by 5%.",
      "parent": "gl.gathering.b.0.b.0",
+     "position": [
+      251.0,
+      627.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -517,6 +653,10 @@
      "description": "When mounted Harvest at Loooooooooooonger range. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "detail": "Greatly increases gathering range when mounted.",
      "parent": "gl.gathering.b.0.b.0.b",
+     "position": [
+      298.0,
+      738.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -538,6 +678,10 @@
      "description": "Intense searching has led you to greater speed and adaptability.",
      "detail": "Increases Maximum Health by 10%.\nIncreases Attack Speed by 20.\nIncreases Lasermancy by 45. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.gathering.b.0.b.0.b.0",
+     "position": [
+      254.0,
+      820.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -559,6 +703,10 @@
      "description": "Extra flasks are always good.",
      "detail": "Increases Flask Capacity by 3.",
      "parent": "gl.gathering.b.0.b.0.b.0.b",
+     "position": [
+      268.0,
+      898.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -573,6 +721,10 @@
      "description": "Increased experience gain is always good.",
      "detail": "Increases experience gain by 5%.",
      "parent": "gl.gathering.b.0.b.0.b.0.b",
+     "position": [
+      217.0,
+      890.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -587,6 +739,10 @@
      "description": "Little bit of luck on this side of the stars as well.",
      "detail": "Increases Magic Find by 50.",
      "parent": "gl.gathering.b.0.b.0.b.0.b",
+     "position": [
+      182.0,
+      853.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -601,6 +757,10 @@
      "description": "Magic power from gathering so much knowledge.",
      "detail": "Increases Magic Damage by 15%. \nGrants Star Sebastian when upgrading",
      "parent": "gl.gathering.b.0.b.0.b.0.b.0",
+     "position": [
+      307.0,
+      967.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -615,6 +775,10 @@
      "description": "You did so much Mining it improved your Physical Damage. Noice.",
      "detail": "Increases Physical Damage by 15%.",
      "parent": "gl.gathering.b.0.b.0.b.0.b.0",
+     "position": [
+      256.0,
+      977.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -629,6 +793,10 @@
      "description": "Exploring and armoring up.",
      "detail": "Reduces incoming damage by 5%.",
      "parent": "gl.gathering.b.0.b.0.b.0",
+     "position": [
+      334.0,
+      824.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -643,6 +811,10 @@
      "description": "Exploring and armoring up.",
      "detail": "Reduces incoming damage by 10%.",
      "parent": "gl.gathering.b.0.b.0.b.0.a",
+     "position": [
+      370.0,
+      910.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -657,6 +829,10 @@
      "description": "A branch of a constellation related to Flasks? What could go wrong?",
      "detail": "Increases Flask Capacity by 1.",
      "parent": "gl.pve",
+     "position": [
+      -311.0,
+      230.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -671,6 +847,10 @@
      "description": "Random buffs are always great because they are buffs.",
      "detail": "50% chance when using a Flask to gain either an Attack Buff, Defense Buff, or Healing Buff. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.a",
+     "position": [
+      -391.0,
+      325.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -692,6 +872,10 @@
      "description": "Real Critting is more about following your heart than following a build.",
      "detail": "Increases Critical Hit Chance by 6%.\nIncreases Critical Hit Damage by 6%.",
      "parent": "gl.pve.a.0",
+     "position": [
+      -407.0,
+      417.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -706,6 +890,10 @@
      "description": "This should help you jump and not get thrown across the room in delves.",
      "detail": "Increases Jump by 5.\nIncreases Stability by 50.",
      "parent": "gl.pve.a.0.a",
+     "position": [
+      -375.0,
+      505.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -720,6 +908,10 @@
      "description": "Why are flasks so OP... here is a random one.",
      "detail": "10% chance to gain a random emblem effect when using a flask. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.a.0.a.0",
+     "position": [
+      -344.0,
+      592.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -741,6 +933,10 @@
      "description": "More random effects. MOOOOORREEEEE!!!!",
      "detail": "Increases the chance to gain a random emblem effect when using a flask by 3%.",
      "parent": "gl.pve.a.0.a.0.a",
+     "position": [
+      -312.0,
+      680.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -755,6 +951,10 @@
      "description": "A higher chance to get additional effects is always good.",
      "detail": "Increases the chance to gain a random emblem effect when using a flask by 3%. \nGrants a Caprian Dragon Egg Fragment when upgrading",
      "parent": "gl.pve.a.0.a.0.a.0",
+     "position": [
+      -280.0,
+      767.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -769,6 +969,10 @@
      "description": "This shooting star is so fast it teaches trovians to hit faster.",
      "detail": "Increases Attack Speed by 3%.",
      "parent": "gl.pve.a.0.a",
+     "position": [
+      -467.0,
+      489.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -783,6 +987,10 @@
      "description": "Little bit of speed to help you in the world.",
      "detail": "Increases Movement Speed by 5.",
      "parent": "gl.pve.a.0.a.1",
+     "position": [
+      -527.0,
+      560.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -797,6 +1005,10 @@
      "description": "Fighting throughout this Trovian world has given you the intellect to randomly recharge flasks.",
      "detail": "5% chance to gain a flask charge when using a Flask. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.a.0.a.1.a",
+     "position": [
+      -587.0,
+      631.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -818,6 +1030,10 @@
      "description": "When visiting the final frontier, it's always good to have speed.",
      "detail": "Increases Movement Speed by 5.",
      "parent": "gl.pve.a.0.a.1.a.0",
+     "position": [
+      -603.0,
+      723.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -832,6 +1048,10 @@
      "description": "Star of health bless us with more health please.",
      "detail": "Increases Maximum Health by 15%.",
      "parent": "gl.pve.a.0.a.1.a.0",
+     "position": [
+      -675.0,
+      663.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -846,6 +1066,10 @@
      "description": "Attack speed is all some classes need.",
      "detail": "Increases Attack Speed by 6%.",
      "parent": "gl.pve.a.0.a.1.a.0.b",
+     "position": [
+      -735.0,
+      735.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -860,6 +1084,10 @@
      "description": "A Blessing of bountiful flasks... I really hope this is not too OP... Maybe I need to nerf Death-Defying...",
      "detail": "10% chance to gain a flask charge when using a Flask. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.a.0.a.1.a.0.b",
+     "position": [
+      -766.0,
+      647.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -881,6 +1109,10 @@
      "description": "Now that flasks are powered up, heres a few more.",
      "detail": "Increases Flask Capacity by 3.\nGrants Charter's Chair when upgrading",
      "parent": "gl.pve.a.0.a.1.a.0.b.1",
+     "position": [
+      -854.0,
+      679.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -895,6 +1127,10 @@
      "description": "So Many Flasks!!!!!",
      "detail": "Increases Flask Capacity by 3.",
      "parent": "gl.pve.a.0.a.1.a.0.b.1",
+     "position": [
+      -838.0,
+      587.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -909,6 +1145,10 @@
      "description": "You get a buff, and you get a buff, everybody gets a buff.",
      "detail": "100% chance when using a Flask to gain either an Attack Buff, Defense Buff, or Healing Buff. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.a.0",
+     "position": [
+      -479.0,
+      357.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -930,6 +1170,10 @@
      "description": "Drinking too many flasks has made the random buffs gained from them stick.",
      "detail": "Increases Magic Damage by 5%.\nIncreases Physical Damage by 5%.",
      "parent": "gl.pve.a.0.b",
+     "position": [
+      -531.0,
+      434.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -944,6 +1188,10 @@
      "description": "The shield may be just as important as DPS number charts.",
      "detail": "Increases Damage Reduction by 8%.",
      "parent": "gl.pve.a.0.b",
+     "position": [
+      -566.0,
+      389.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -958,6 +1206,10 @@
      "description": "Moooooooooooreeeeeeeee Healing PLEASE!!!",
      "detail": "Increases Health Regen by 8%.",
      "parent": "gl.pve.a.0.b",
+     "position": [
+      -568.0,
+      332.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -972,6 +1224,10 @@
      "description": "Star of speed give me swiftness to strike my foes.",
      "detail": "Increases Attack Speed by 3%.",
      "parent": "gl.pve",
+     "position": [
+      -354.0,
+      113.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -986,6 +1242,10 @@
      "description": "Drain health from your enemies.",
      "detail": "Damaging enemies grants 10% Life Leech. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.b",
+     "position": [
+      -476.0,
+      92.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1007,6 +1267,10 @@
      "description": "Attacks so fast you can not even animate fast enough.",
      "detail": "Increases Attack Speed by 6%.",
      "parent": "gl.pve.b.0",
+     "position": [
+      -572.0,
+      136.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1021,6 +1285,10 @@
      "description": "In this constellation of dungeon seeking we greet thee with more health.",
      "detail": "Increases Health Regen by 175.\nIncreases Maximum Health by 14%.",
      "parent": "gl.pve.b.0.a",
+     "position": [
+      -627.0,
+      226.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1035,6 +1303,10 @@
      "description": "With faster attack and higher life leech you may someday be invincible.",
      "detail": "Damaging enemies grants 20% Life Leech. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.b.0.a.0",
+     "position": [
+      -681.0,
+      317.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1056,6 +1328,10 @@
      "description": "Two damage types, maybe someday we will search the stars and find the 3rd one.",
      "detail": "Increases Physical Damage by 5%.\nIncreases Magic Damage by 5%.",
      "parent": "gl.pve.b.0.a.0.a",
+     "position": [
+      -675.0,
+      422.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1070,6 +1346,10 @@
      "description": "Speed through the stars for greater power.",
      "detail": "Increases Attack Speed by 10%.",
      "parent": "gl.pve.b.0.a.0.a",
+     "position": [
+      -735.0,
+      407.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1084,6 +1364,10 @@
      "description": "One day it will be super important to have a lot of this. Wink Wink",
      "detail": "Increases Critical Hit Chance by 10%.",
      "parent": "gl.pve.b.0.a.0.a",
+     "position": [
+      -777.0,
+      360.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1098,6 +1382,10 @@
      "description": "Fly, you fools, Fly to the end of that Delve.",
      "detail": "Increases Movement Speed by 5.",
      "parent": "gl.pve.b.0.a",
+     "position": [
+      -676.0,
+      117.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1112,6 +1400,10 @@
      "description": "Hunting enemies now grants you boons.",
      "detail": "After defeating a Sundered Uplands 5 Star Boss, gain 10% increased Physical and Magic Damage for 4 hours. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.b.0.a.1",
+     "position": [
+      -780.0,
+      99.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1133,6 +1425,10 @@
      "description": "Looking up at the stars has granted additional buff time.",
      "detail": "Increases Bounty Hunt Boon to give an additional 5% to Physical and Magic Damage.",
      "parent": "gl.pve.b.0.a.1.a",
+     "position": [
+      -852.0,
+      132.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1147,6 +1443,10 @@
      "description": "Grant me the true power of the stars. May I destroy the darkness of the cosmos.",
      "detail": "Increases Light by 50. \nGrants Starry Skyfire when upgrading",
      "parent": "gl.pve.b.0.a.1.a",
+     "position": [
+      -837.0,
+      43.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1161,6 +1461,10 @@
      "description": "Wink Wink...",
      "detail": "Increases Critical Hit Chance by 10%.",
      "parent": "gl.pve.b.0",
+     "position": [
+      -551.0,
+      18.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1175,6 +1479,10 @@
      "description": "Jump up without being pushed around by bullies.",
      "detail": "Increases Jump by 5.\nIncreases Stability by 50.",
      "parent": "gl.pve.b.0.b",
+     "position": [
+      -655.0,
+      0.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1189,6 +1497,10 @@
      "description": "Looking to the stars to decide how to increase those damage numbers.",
      "detail": "Increases Critical Hit Damage by 10%.",
      "parent": "gl.pve.b.0.b.0",
+     "position": [
+      -760.0,
+      -18.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1203,6 +1515,10 @@
      "description": "Greater shining light to destroy the dark.",
      "detail": "Increases Light by 150. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.b.0.b.0.a",
+     "position": [
+      -864.0,
+      -36.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1224,6 +1540,10 @@
      "description": "Oops, did I leave a flask over on this side of the cosmos.",
      "detail": "Increases Flask Capacity by 1.",
      "parent": "gl.pve.b.0.b",
+     "position": [
+      -572.0,
+      -85.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1238,6 +1558,10 @@
      "description": "Delving just got a little bit easier.",
      "detail": "After defeating a delve boss, gain 20% damage reduction for 30 minutes. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.pve.b.0.b.1",
+     "position": [
+      -592.0,
+      -189.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1259,6 +1583,10 @@
      "description": "A little more time to the boon you just got.",
      "detail": "Increases the Depths boon damage reduction to 25% and duration to 1 hour.",
      "parent": "gl.pve.b.0.b.1.a",
+     "position": [
+      -667.0,
+      -263.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1273,6 +1601,10 @@
      "description": "Look up at the sky one night and see the lights above.",
      "detail": "Increases Light by 50. \nGrants Scorpius when upgrading",
      "parent": "gl.pve.b.0.b.1.a",
+     "position": [
+      -550.0,
+      -285.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1287,6 +1619,10 @@
      "description": "Within the Strength side of the constellation we try to make Physical based classes tougher than the squishy magic ones.",
      "detail": "Increases Physical Damage by 3%.",
      "parent": "gl.combat",
+     "position": [
+      -42.0,
+      -384.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1301,6 +1637,10 @@
      "description": "Slot machine of extra damage. I like it.",
      "detail": "5% chance when critical hitting to increase Critical Hit Chance by 20% for 10 seconds. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.a",
+     "position": [
+      -137.0,
+      -464.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1322,6 +1662,10 @@
      "description": "Hitting more often means more Critical Hits.",
      "detail": "Increases Attack Speed by 15.",
      "parent": "gl.combat.a.0",
+     "position": [
+      -229.0,
+      -480.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1336,6 +1680,10 @@
      "description": "A star viewing will lead you to never missing your target's weakness.",
      "detail": "Increases Critical Hit Chance by 6%.",
      "parent": "gl.combat.a.0.a",
+     "position": [
+      -316.0,
+      -448.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1350,6 +1698,10 @@
      "description": "If you get knocked back, you cannot critically hit as much.",
      "detail": "Increases Jump by 5.\nIncreases Stability by 100.",
      "parent": "gl.combat.a.0.a",
+     "position": [
+      -300.0,
+      -540.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1364,6 +1716,10 @@
      "description": "Look to the stars for a class that can use lots of critical hit...It's not up there.",
      "detail": "Increases Critical Hit Chance by 6%.",
      "parent": "gl.combat.a.0.a.1",
+     "position": [
+      -392.0,
+      -556.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1378,6 +1734,10 @@
      "description": "More Strikes then equals less pins to hit.",
      "detail": "10% chance when critical hitting to increase Critical Hit Chance by 30% for 10 seconds. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.a.0.a.1",
+     "position": [
+      -332.0,
+      -628.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1399,6 +1759,10 @@
      "description": "Wow... Magic and Physical Damage with a little Critical Hit... Maybe this should be a Major Star.",
      "detail": "Increases Critical Hit Chance by 5%.\nIncreases Magic Damage by 5%.\nIncreases Physical Damage by 5%.",
      "parent": "gl.combat.a.0.a.1.b",
+     "position": [
+      -404.0,
+      -688.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1413,6 +1777,10 @@
      "description": "Finding this star could grant more then just Health and Critical Hit.",
      "detail": "Increases Critical Hit Chance by 5%.\nIncreases Max Health by 10%.\nGrants a Caprian Dragon Egg Fragment when upgrading",
      "parent": "gl.combat.a.0.a.1.b",
+     "position": [
+      -316.0,
+      -719.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1427,6 +1795,10 @@
      "description": "Accurately read the stars.",
      "detail": "Increases Critical Hit Chance by 6%.",
      "parent": "gl.combat.a.0",
+     "position": [
+      -169.0,
+      -552.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1441,6 +1813,10 @@
      "description": "They hit you and you hit them back.",
      "detail": "When taking damage, you have a 10% chance to gain a 20% reflect shield for 10 seconds.\nHas a 1 minute cooldown. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.a",
+     "position": [
+      -20.0,
+      -507.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1462,6 +1838,10 @@
      "description": "Continue to grow your strength and prove Might is better then brains.",
      "detail": "Increases Physical Damage by 3%.",
      "parent": "gl.combat.a.1",
+     "position": [
+      -63.0,
+      -623.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1476,6 +1856,10 @@
      "description": "Reflect even more damage back at your foes.",
      "detail": "When taking damage, you have a 20% chance to gain a 30% reflect shield for 10 seconds.\nHas a 1 minute cooldown. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.a.1.a",
+     "position": [
+      -105.0,
+      -740.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1497,6 +1881,10 @@
      "description": "Attack and defend is what these stars are about.",
      "detail": "Increases Damage Reduction by 3%.",
      "parent": "gl.combat.a.1.a.0",
+     "position": [
+      -201.0,
+      -820.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1511,6 +1899,10 @@
      "description": "YESSSS... MORE STRENGTH!!!!",
      "detail": "Increases Physical Damage by 6%.",
      "parent": "gl.combat.a.1.a.0",
+     "position": [
+      -84.0,
+      -862.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1525,6 +1917,10 @@
      "description": "Additional shields will be needed for future bosses.",
      "detail": "Increases Damage Reduction by 3%.",
      "parent": "gl.combat.a.1.a.0.b",
+     "position": [
+      -126.0,
+      -979.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1539,6 +1935,10 @@
      "description": "Will need to double check numbers to make sure this is not too much strength.",
      "detail": "Increases Physical Damage by 6%.",
      "parent": "gl.combat.a.1.a.0.b",
+     "position": [
+      -4.0,
+      -958.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1553,6 +1953,10 @@
      "description": "Ultimate Strength star is better than a Magic Star.",
      "detail": "Increases Physical Damage by 15%. \nGrants Ursa Minor when upgrading",
      "parent": "gl.combat.a.1.a.0.b.1",
+     "position": [
+      112.0,
+      -1000.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1567,6 +1971,10 @@
      "description": "This star should help balance melee a little more.",
      "detail": "When taking damage, you have a 30% chance to gain a 45% reflect shield and 30% damage reduction for 10 seconds.\nHas a 1 minute cooldown. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.a.1.a.0.b.1",
+     "position": [
+      17.0,
+      -1080.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1588,6 +1996,10 @@
      "description": "Not going to push around the brawler.",
      "detail": "Increases Stability by 75.",
      "parent": "gl.combat.a.1",
+     "position": [
+      59.0,
+      -602.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1602,6 +2014,10 @@
      "description": "Gain greater arcane knowledge to blast your foe down this path.",
      "detail": "Increases Magic Damage by 3%.",
      "parent": "gl.combat",
+     "position": [
+      79.0,
+      -363.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1616,6 +2032,10 @@
      "description": "Star of ARRRRRRRRRRRRRRR!!!!!",
      "detail": "When dropping below 30% health, gain a 6% Outgoing damage buff and 10% Attack Speed for 10 seconds.\n120 second cooldown. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.b",
+     "position": [
+      101.0,
+      -485.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1637,6 +2057,10 @@
      "description": "This star come with a free library card. Somehow that's what increases your damage.",
      "detail": "Increases Magic Damage by 3%.",
      "parent": "gl.combat.b.0",
+     "position": [
+      117.0,
+      -577.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1651,6 +2075,10 @@
      "description": "Look at this star trying to make you less squishy over here.",
      "detail": "Increases Maximum Health by 10%.",
      "parent": "gl.combat.b.0.a",
+     "position": [
+      85.0,
+      -664.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1665,6 +2093,10 @@
      "description": "Wow, mind exploded.",
      "detail": "Increases Magic Damage by 3%.",
      "parent": "gl.combat.b.0.a",
+     "position": [
+      177.0,
+      -648.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1679,6 +2111,10 @@
      "description": "This star's blessing hopes you live a long and healthy life.",
      "detail": "Increases Maximum Health by 10%.",
      "parent": "gl.combat.b.0.a.1",
+     "position": [
+      193.0,
+      -740.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1693,6 +2129,10 @@
      "description": "Give in to your anger.",
      "detail": "When dropping below 40% health, gain a 8% Outgoing damage buff and 10% Attack Speed for 10 seconds.\n120 second cooldown. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.b.0.a.1",
+     "position": [
+      265.0,
+      -680.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1714,6 +2154,10 @@
      "description": "Even though most magic classes have good range, here is some stability so you don't go flying.",
      "detail": "Increases Stability by 75.",
      "parent": "gl.combat.b.0.a.1.b",
+     "position": [
+      325.0,
+      -751.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1728,6 +2172,10 @@
      "description": "Little bit of speed for slow magic classes.",
      "detail": "Increases Movement Speed by 8.",
      "parent": "gl.combat.b.0.a.1.b.0",
+     "position": [
+      384.0,
+      -823.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1742,6 +2190,10 @@
      "description": "Unlimited Magic... unless you run out of energy regen.",
      "detail": "Increases Magic Damage by 3%.",
      "parent": "gl.combat.b.0.a.1.b",
+     "position": [
+      356.0,
+      -664.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1756,6 +2208,10 @@
      "description": "Oops, didn't I mean to make this a health star?",
      "detail": "Increases Attack Speed by 15.",
      "parent": "gl.combat.b.0.a.1.b.1",
+     "position": [
+      444.0,
+      -696.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1770,6 +2226,10 @@
      "description": "Kind of odd that the intellect tree has a rage mechanic...I guess it's a nerd rage.",
      "detail": "When dropping below 45% health, gain a 10% Outgoing damage buff and 10% Attack Speed for 10 seconds.\n120 second cooldown. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.b.0.a.1.b.1",
+     "position": [
+      428.0,
+      -604.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1791,6 +2251,10 @@
      "description": "Ahhh this is where I put that Health Star.",
      "detail": "Increases Maximum Health by 10%.",
      "parent": "gl.combat.b.0.a.1.b.1.b",
+     "position": [
+      520.0,
+      -588.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1805,6 +2269,10 @@
      "description": "The final star spell is ready. Are you ready to cast it?",
      "detail": "Increases Magic Damage by 15%.",
      "parent": "gl.combat.b.0.a.1.b.1.b",
+     "position": [
+      460.0,
+      -516.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1819,6 +2287,10 @@
      "description": "This Star represents our home which was destroyed by the Void.",
      "detail": "When dropping below 45% health, gain a 12% Outgoing damage buff and 10% Attack Speed for 15 seconds\n120 second cooldown. \nGrants Ursa Major when upgrading \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.b.0.a.1.b.1.b.1",
+     "position": [
+      492.0,
+      -429.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1840,6 +2312,10 @@
      "description": "You have found the Weakness, now keep on attacking.",
      "detail": "5% chance when critical hitting to increase Critical Hit Damage by 15% for 10 seconds. \nGrants a Balefire Dragon Egg Fragment when unlocked",
      "parent": "gl.combat.b",
+     "position": [
+      196.0,
+      -405.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/progression_branch_unlock",
@@ -1861,6 +2337,10 @@
      "description": "Stop being so critical.",
      "detail": "Increases Critical Hit Damage by 5%.",
      "parent": "gl.combat.b.1",
+     "position": [
+      256.0,
+      -476.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1875,6 +2355,10 @@
      "description": "A star all about seeing overly sized numbers appearing.",
      "detail": "10% chance when critical hitting to increases Critical Hit Damage by 25% for 10 seconds.",
      "parent": "gl.combat.b.1.a",
+     "position": [
+      272.0,
+      -568.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1889,6 +2373,10 @@
      "description": "A Critical Hit!",
      "detail": "Increases Critical Hit Damage by 10%.",
      "parent": "gl.combat.b.1.a",
+     "position": [
+      344.0,
+      -508.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1903,6 +2391,10 @@
      "description": "The Star Chart was critically well received by the players.\nThey had nothing negative to say about it.",
      "detail": "Increases Critical Hit Damage by 10%.",
      "parent": "gl.combat.b.1",
+     "position": [
+      288.0,
+      -389.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/progression_node_unlock",
@@ -1923,7 +2415,11 @@
      "id": "fishing.tree",
      "name": "Depths of the Angler",
      "description": "The Depths stir and power is available for those willing to seize it.",
-     "detail": "Meet with Murkwater Mark under in the Hub to gain the Aura of the Angler and begin your delve into the Depths."
+     "detail": "Meet with Murkwater Mark under in the Hub to gain the Aura of the Angler and begin your delve into the Depths.",
+     "position": [
+      0.0,
+      -318.0
+     ]
     },
     {
      "id": "fishing.tree.2",
@@ -1931,6 +2427,10 @@
      "description": "Murkwater Mark can reveal how to channel the power of the Depths, but he demands Marks of the Angler for some reason.",
      "detail": "You have a chance to gain Marks of the Angler while fishing.",
      "parent": "fishing.tree",
+     "position": [
+      0.0,
+      -223.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -1945,6 +2445,10 @@
      "description": "You can only catch fish as cunning as your lure, but the Depths can teach you the weaknesses of your prey.",
      "detail": "Teaches how to craft some basic recipes at the Nautical Assembler.",
      "parent": "fishing.tree.2",
+     "position": [
+      0.0,
+      -127.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -1959,6 +2463,10 @@
      "description": "Freshwater Fran is looking to capture the fish that have escaped the Depths, and she's willing to pay.",
      "detail": "Brings Freshwater Fran to the Hub, who sells Beginner's Special Orders. Special Orders are Trovian Agency fishing Adventures.",
      "parent": "fishing.tree.3",
+     "position": [
+      0.0,
+      -31.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -1973,6 +2481,10 @@
      "description": "A cookbook lost to the Depths now rises to the surface.",
      "detail": "Unlocks Beginner's Seafood recipes at the Angler's Grill.",
      "parent": "fishing.tree.4",
+     "position": [
+      -191.0,
+      -31.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -1994,6 +2506,10 @@
      "description": "Rule 1: If you can't stand the heat get out of the kitchen.",
      "detail": "Reduces the cost of Beginner's Seafood recipes coooked at the Angler's Grill.",
      "parent": "fishing.crafting.1",
+     "position": [
+      -310.0,
+      28.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2008,6 +2524,10 @@
      "description": "Rule 25: Normally it's bad to undercook food, but with fish you can just call it sushi.",
      "detail": "Increases the duration of Beginner's Seafood recipes cooked at the Angler's Grill.",
      "parent": "fishing.crafting.1.1",
+     "position": [
+      -429.0,
+      89.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2022,6 +2542,10 @@
      "description": "Fish can rot quickly, but canned properly it can last for nearly an eternity.",
      "detail": "Unlocks a recipe at the Angler's Grill to convert Basic Canned Fish.",
      "parent": "fishing.crafting.1",
+     "position": [
+      -324.0,
+      -31.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2036,6 +2560,10 @@
      "description": "A lost fragment of a forgotten being.",
      "detail": "Grants a Caprian Dragon Egg Fragment.",
      "parent": "fishing.crafting.1",
+     "position": [
+      -310.0,
+      -92.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2050,6 +2578,10 @@
      "description": "New recipes begin to manifest in the ancient cookbook.",
      "detail": "Unlocks Journeyman's Seafood recipes at the Angler's Grill.",
      "parent": "fishing.crafting.2",
+     "position": [
+      -429.0,
+      -153.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2071,6 +2603,10 @@
      "description": "Rule 78: Fish can be tempremental, the key is focus.",
      "detail": "Reduces the cost of Journeyman's Seafood recipes coooked at the Angler's Grill.",
      "parent": "fishing.crafting.3",
+     "position": [
+      -548.0,
+      -214.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2085,6 +2621,10 @@
      "description": "Rule 4: The joy isn't cooking for yourself, it's cooking for others.",
      "detail": "Increases the duration of Journeyman's Seafood recipes cooked at the Angler's Grill.",
      "parent": "fishing.crafting.3.1",
+     "position": [
+      -668.0,
+      -274.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2099,6 +2639,10 @@
      "description": "A tasty treat today, tomorrow, or next year!",
      "detail": "Unlocks a recipe at the Angler's Grill to convert Select Canned Fish.",
      "parent": "fishing.crafting.3",
+     "position": [
+      -561.0,
+      -132.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2113,6 +2657,10 @@
      "description": "How'd a little crab manage to hide away in this Deltalith?",
      "detail": "Unlocks the Tiny Deltalith Crab ally.",
      "parent": "fishing.crafting.3",
+     "position": [
+      -490.0,
+      -272.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2136,6 +2684,10 @@
       }
      ],
      "parent": "fishing.crafting.4",
+     "position": [
+      -606.0,
+      -340.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2150,6 +2702,10 @@
      "description": "Blotchy ink in the cookbook's final pages finally begins to fade, revealing lost secrets.",
      "detail": "Unlock's Expert Seafood recipes at the Angler's Grill.",
      "parent": "fishing.crafting.4",
+     "position": [
+      -479.0,
+      -405.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2171,6 +2727,10 @@
      "description": "Rule 103: People who love to eat are the best friends of Head Chefs.",
      "detail": "Reduces the cost of Expert's Seafood recipes coooked at the Angler's Grill.",
      "parent": "fishing.crafting.5",
+     "position": [
+      -540.0,
+      -524.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2185,6 +2745,10 @@
      "description": "Rule 140: It's not about the destination, it's about the journey.",
      "detail": "Increases the duration of Expert's Seafood recipes cooked at the Angler's Grill.",
      "parent": "fishing.crafting.5.1",
+     "position": [
+      -601.0,
+      -643.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2199,6 +2763,10 @@
      "description": "The best of the best. No fish fishier, no scales scalier!",
      "detail": "Unlocks a recipe at the Angler's Grill to convert Premium Canned Fish.",
      "parent": "fishing.crafting.5",
+     "position": [
+      -467.0,
+      -538.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2213,6 +2781,10 @@
      "description": "A net capable of catching many fish all at once.\\nCaptures 5 fish when thrown into any pool or fishable liquid.\\n\\nRequires an active Lure.",
      "detail": "Unlocks the Master Angler's Fishing Net (Weekly) recipe at the Nautical Assembler. If you already have a Bubble with this upgrade then you are allowed to craft an additional net weekly.",
      "parent": "fishing.crafting.5",
+     "position": [
+      -398.0,
+      -512.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2236,6 +2808,10 @@
       }
      ],
      "parent": "fishing.crafting.6",
+     "position": [
+      -346.0,
+      -635.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2250,6 +2826,10 @@
      "description": "Canned rare fish.\\n\\nUsed to cook food at the Angler's Grill.",
      "detail": "Unlocks the Premium Canned Fish (Weekly) recipe at the Angler's Grill.",
      "parent": "fishing.crafting.6",
+     "position": [
+      -293.0,
+      -595.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2264,6 +2844,10 @@
      "description": "Murkwater Mark loves his canned fish, but he loves Marks of the Angler more.",
      "detail": "Unlocks the recipe to donate Marks of the Angler at the Nautical Assembler for Premium Canned Fish.",
      "parent": "fishing.crafting.7",
+     "position": [
+      -188.0,
+      -678.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2278,6 +2862,10 @@
      "description": "New fish have appeared all over Trove. The Depths offer ways to catch these elusive creatures.",
      "detail": "Unlocks the Basic recipes for Depth, Quick, and Seeker lures at the Nautical Assembler.",
      "parent": "fishing.tree.4",
+     "position": [
+      0.0,
+      159.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2292,6 +2880,10 @@
      "description": "The trick isn't catching the fish, it's keeping lure afterwards.",
      "detail": "Sometimes restores a lure when you catch a fish.",
      "parent": "fishing.baits.1",
+     "position": [
+      59.0,
+      257.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2306,6 +2898,10 @@
      "description": "As the Depths grow in power so too do your boons.",
      "detail": "Increases the amount of Marks of the Angler gained by the Aura of the Angler.",
      "parent": "fishing.baits.1.1",
+     "position": [
+      171.0,
+      285.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2327,6 +2923,10 @@
      "description": "As the Depths grow in power so too do your boons.",
      "detail": "Increases the amount of Marks of the Angler gained by the Aura of the Angler.",
      "parent": "fishing.baits.1.1",
+     "position": [
+      119.0,
+      354.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2348,6 +2948,10 @@
      "description": "As the Depths grow in power so too do your boons.",
      "detail": "Increases the amount of Marks of the Angler gained by the Aura of the Angler.",
      "parent": "fishing.baits.1.1",
+     "position": [
+      34.0,
+      369.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2369,6 +2973,10 @@
      "description": "The power of the Depths radiates from a lost fragment.",
      "detail": "Grants a Caprian Dragon Egg Fragment.",
      "parent": "fishing.baits.1",
+     "position": [
+      -59.0,
+      257.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2392,6 +3000,10 @@
       }
      ],
      "parent": "fishing.baits.2",
+     "position": [
+      -91.0,
+      367.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2415,6 +3027,10 @@
       }
      ],
      "parent": "fishing.baits.2.1",
+     "position": [
+      -122.0,
+      477.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2429,6 +3045,10 @@
      "description": "Freshwater Fran is looking to capture the fish that have escaped the Depths, and she's willing to pay.",
      "detail": "Freshwater Fran will now sell additional Special Order in the Fishing area of the Hub.",
      "parent": "fishing.baits.2",
+     "position": [
+      -144.0,
+      334.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2443,6 +3063,10 @@
      "description": "For those looking for quantity over quality.",
      "detail": "Unlocks the Quality Quick Lures recipe at the Nautical Assembler.",
      "parent": "fishing.baits.3",
+     "position": [
+      -192.0,
+      438.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2464,6 +3088,10 @@
      "description": "The best lure is the one that works quickly.",
      "detail": "Unlocks the Angler's Quick Lures recipe at the Nautical Assembler.",
      "parent": "fishing.baits.3.1",
+     "position": [
+      -241.0,
+      542.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2478,6 +3106,10 @@
      "description": "At the end of the day it's the biggest fish that goes on the wall.",
      "detail": "Increases the chance of catching a trophy fish while using an Angler's Quick Lure.",
      "parent": "fishing.baits.3.1.1",
+     "position": [
+      -230.0,
+      656.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2492,6 +3124,10 @@
      "description": "You don't always need to sacrifice quality for speed.",
      "detail": "Increases the chance of catching an uncommon or rare fish while using an Angler's Quick Lure.",
      "parent": "fishing.baits.3.1.1",
+     "position": [
+      -337.0,
+      606.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2506,6 +3142,10 @@
      "description": "Such a smug little chub would never be luring you in for a chomp.",
      "detail": "Unlocks the Smug Chubling ally.",
      "parent": "fishing.baits.3",
+     "position": [
+      -251.0,
+      375.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2529,6 +3169,10 @@
       }
      ],
      "parent": "fishing.baits.4",
+     "position": [
+      -344.0,
+      443.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2552,6 +3196,10 @@
       }
      ],
      "parent": "fishing.baits.4.1",
+     "position": [
+      -436.0,
+      510.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2566,6 +3214,10 @@
      "description": "Freshwater Fran is looking to capture the fish that have escaped the Depths, and she's willing to pay.",
      "detail": "Freshwater Fran will now sell an additional Special Order in the Fishing area of the Hub.",
      "parent": "fishing.baits.4",
+     "position": [
+      -365.0,
+      386.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2580,6 +3232,10 @@
      "description": "The biggest fish are the most sought after.",
      "detail": "Unlocks the Quality Depths Lures recipe at the Nautical Assembler.",
      "parent": "fishing.baits.5",
+     "position": [
+      -469.0,
+      433.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2601,6 +3257,10 @@
      "description": "The bigger the fish, the bigger the Trophy.",
      "detail": "Unlocks the Angler's Depth Lures recipe at the Nautical Assembler.",
      "parent": "fishing.baits.5.1",
+     "position": [
+      -574.0,
+      481.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2615,6 +3275,10 @@
      "description": "Sometimes they don't put up as much of a fight, and you can get home early.",
      "detail": "Increases the speed of catching fish while using an Angler's Depth Lure.",
      "parent": "fishing.baits.5.1.1",
+     "position": [
+      -645.0,
+      571.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2629,6 +3293,10 @@
      "description": "You don't always need to sacrifice quality for speed.",
      "detail": "Increases the chance of catching an uncommon or rare fish while using an Angler's Depth Lure.",
      "parent": "fishing.baits.5.1.1",
+     "position": [
+      -688.0,
+      476.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2652,6 +3320,10 @@
       }
      ],
      "parent": "fishing.baits.5",
+     "position": [
+      -476.0,
+      358.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2666,6 +3338,10 @@
      "description": "A net capable of catching many fish all at once.\\nCaptures 5 fish when thrown into any pool or fishable liquid.\\n\\nRequires an active Lure.",
      "detail": "Unlocks the Master Angler's Fishing Net (Weekly) recipe at the Nautical Assembler. If you already have a Bubble with this upgrade then you are allowed to craft an additional net weekly.",
      "parent": "fishing.baits.6",
+     "position": [
+      -588.0,
+      330.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2680,6 +3356,10 @@
      "description": "The best fish are the hardest to find.",
      "detail": "Unlocks the Quality Seeker Lures recipe at the Nautical Assembler.",
      "parent": "fishing.baits.7",
+     "position": [
+      -702.0,
+      340.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2701,6 +3381,10 @@
      "description": "The best fish are the hardest to find.",
      "detail": "Unlocks the Angler's Seeker Lures recipe at the Nautical Assembler.",
      "parent": "fishing.baits.7.1",
+     "position": [
+      -816.0,
+      351.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2715,6 +3399,10 @@
      "description": "Catching better fish faster? Who can say no to that?",
      "detail": "Increases the speed of catching fish while using an Angler's Seeker Lure.",
      "parent": "fishing.baits.7.1.1",
+     "position": [
+      -913.0,
+      412.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2729,6 +3417,10 @@
      "description": "The only thing better than catching a rare fish is catching a big rare fish.",
      "detail": "Increases the chances of catching a trophy fish while using an Angler's Seeker Lure.",
      "parent": "fishing.baits.7.1.1",
+     "position": [
+      -923.0,
+      308.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2743,6 +3435,10 @@
      "description": "Most pools, you get what you can see, but sometimes there's more lurking beneath the surface.",
      "detail": "Gives a chance for pools to refill after they have been fished out.",
      "parent": "fishing.baits.7",
+     "position": [
+      -684.0,
+      267.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2757,6 +3453,10 @@
      "description": "If you want to catch fish it's all about the lure.\\n\\n- Murkwater Mark",
      "detail": "Unlocks the recipe to donate Marks of the Angler at the Nautical Assembler for Angler's Lures.",
      "parent": "fishing.baits.8",
+     "position": [
+      -779.0,
+      204.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2771,6 +3471,10 @@
      "description": "The fear isn't drowning in chocolate. It's not getting a chance to eat it first.",
      "detail": "Increases Attack Speed by 5% for 10 seconds after standing in chocolate.",
      "parent": "fishing.tree.4",
+     "position": [
+      191.0,
+      -31.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2792,6 +3496,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra common fish when fishing in chocolate pools.",
      "parent": "fishing.liquids.1",
+     "position": [
+      332.0,
+      26.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2806,6 +3514,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra uncommon fish when fishing in chocolate pools.",
      "parent": "fishing.liquids.1.1",
+     "position": [
+      473.0,
+      85.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2820,6 +3532,10 @@
      "description": "The power of the Depths radiates from a lost fragment.",
      "detail": "Grants a Caprian Dragon Egg Fragment.",
      "parent": "fishing.liquids.1",
+     "position": [
+      332.0,
+      -90.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2834,6 +3550,10 @@
      "description": "If you can take the pain, you can channel the energy into your enemies.",
      "detail": "Increases Critical Hit Chance by 5% for 10 seconds after standing in plasma.",
      "parent": "fishing.liquids.2",
+     "position": [
+      473.0,
+      -148.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2855,6 +3575,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra common fish when fishing in plasma pools.",
      "parent": "fishing.liquids.3",
+     "position": [
+      625.0,
+      -129.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2869,6 +3593,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra uncommon fish when fishing in plasma pools.",
      "parent": "fishing.liquids.3.1",
+     "position": [
+      777.0,
+      -109.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2883,6 +3611,10 @@
      "description": "Hides in plain sight in the reflections of the night as it cleans up after all the other creatures.",
      "detail": "Unlocks the Starry Snail ally.",
      "parent": "fishing.liquids.3",
+     "position": [
+      567.0,
+      -270.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2906,6 +3638,10 @@
       }
      ],
      "parent": "fishing.liquids.4",
+     "position": [
+      711.0,
+      -321.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2920,6 +3656,10 @@
      "description": "There's not much that can harm someone who has stood in molten lava.",
      "detail": "Decreases damage taken by 10% for 10 seconds after standing in lava.",
      "parent": "fishing.liquids.4",
+     "position": [
+      579.0,
+      -422.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -2941,6 +3681,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra common fish when fishing in lava pools.",
      "parent": "fishing.liquids.5",
+     "position": [
+      685.0,
+      -532.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2955,6 +3699,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra uncommon fish when fishing in lava pools.",
      "parent": "fishing.liquids.5.1",
+     "position": [
+      792.0,
+      -641.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2969,6 +3717,10 @@
      "description": "A net capable of catching many fish all at once.\nCaptures 5 fish when thrown into any pool or fishable liquid.\n\nRequires an active Lure.",
      "detail": "Unlocks the Master Angler's Fishing Net (Weekly) recipe at the Nautical Assembler. If you already have a Bubble with this upgrade then you are allowed to craft an additional net weekly.",
      "parent": "fishing.liquids.5",
+     "position": [
+      492.0,
+      -548.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -2992,6 +3744,10 @@
       }
      ],
      "parent": "fishing.liquids.6",
+     "position": [
+      472.0,
+      -699.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -3006,6 +3762,10 @@
      "description": "A warrior can learn a lot by observing the serene chaos of the seas.",
      "detail": "Increases Critical Hit Damage by 5% for 10 seconds after standing in water.",
      "parent": "fishing.liquids.6",
+     "position": [
+      356.0,
+      -618.0
+     ],
      "opens_with": [
       {
        "item": "item/currency/progression/fishing_branch_unlock",
@@ -3027,6 +3787,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra common fish when fishing in water pools.",
      "parent": "fishing.liquids.7",
+     "position": [
+      251.0,
+      -730.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -3041,6 +3805,10 @@
      "description": "Catching one fish is good, catching two is better!",
      "detail": "Gives a chance to catch extra uncommon fish when fishing in water pools.",
      "parent": "fishing.liquids.7.1",
+     "position": [
+      147.0,
+      -841.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -3055,6 +3823,10 @@
      "description": "Turtles from the Depths are rising to the surface. They must be stopped before they conquer Trove!",
      "detail": "Summons Mr. Thommas Tortoise to the Fishing area of the Hub. Mr. Thommas Tortoise sells items for Turtle Shells that are obtained by catching Turtles while fishing.",
      "parent": "fishing.liquids.7",
+     "position": [
+      205.0,
+      -640.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -3069,6 +3841,10 @@
      "description": "Mr. Thommas Tortoise is a ruthless enemy, and a better friend. So make sure he's your friend.\\n\\n- Murkwater Mark",
      "detail": "Unlocks the recipe to donate Marks of the Angler at the Nautical Assembler for occasional Turtle Shells.",
      "parent": "fishing.liquids.8",
+     "position": [
+      53.0,
+      -662.0
+     ],
      "cost": [
       {
        "item": "item/currency/progression/fishing_node_activate",
@@ -3089,7 +3865,11 @@
      "id": "runecrafting.stone_rune",
      "name": "Runesmith",
      "description": "Runecrafters must first fully unlock this rune before branching into other paths.",
-     "detail": "The first Rune all Runecrafter must learn on the path to mastery over Depth Carving."
+     "detail": "The first Rune all Runecrafter must learn on the path to mastery over Depth Carving.",
+     "position": [
+      32.0,
+      650.0
+     ]
     },
     {
      "id": "runecrafting.stone_node_1",
@@ -3097,6 +3877,10 @@
      "description": "Unlocks the 'Unbreakable Runes' effect for DEPTH CARVER Runecrafters (300 Skill), which allows Runecrafters to prevent their Runes from breaking for 1 hour.",
      "detail": "Break so that you may reforge.",
      "parent": "runecrafting.stone_rune",
+     "position": [
+      -259.0,
+      698.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3111,6 +3895,10 @@
      "description": "Allows Rune Fragments to be found from creatures in The Depths delve biome.",
      "detail": "Always keep an eye out. Always.",
      "parent": "runecrafting.stone_rune",
+     "position": [
+      303.0,
+      690.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3125,6 +3913,10 @@
      "description": "Reduces the duration of the Hardened Rune buff--gained from breaking runes--from 60s to 53s.",
      "detail": "Each crack reveals truth.",
      "parent": "runecrafting.stone_rune",
+     "position": [
+      -219.0,
+      474.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3139,6 +3931,10 @@
      "description": "Ore Runes now have an additional chance to grant Miner's Trove, plus a chance to grant Encrusted Runic Trunks when mining Deepstone, Lichenstone, or Runic Ore.",
      "detail": "So many treasures in the Depths...",
      "parent": "runecrafting.stone_rune",
+     "position": [
+      271.0,
+      461.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3153,6 +3949,10 @@
      "description": "Reduces the duration of the Hardened Rune buff--gained from breaking runes--from 53s to 46s.",
      "detail": "Fractures reveal what lies beneath.",
      "parent": "runecrafting.stone_node_3",
+     "position": [
+      -286.0,
+      317.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3167,6 +3967,10 @@
      "description": "Doubles the duration of Metallic and Rippling Runes.",
      "detail": "Many worship the Depth Lords wishing for salvation.",
      "parent": "runecrafting.stone_node_4",
+     "position": [
+      329.0,
+      322.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3181,6 +3985,10 @@
      "description": "Reduces the duration of the Hardened Rune buff--gained from breaking runes--from 46s to 40s.",
      "detail": "Be wary of truth in the Depths, knowledge can corrupt.",
      "parent": "runecrafting.stone_node_5",
+     "position": [
+      -138.0,
+      262.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3195,6 +4003,10 @@
      "description": "Shining Runes have a 5% chance to trigger an additional time.",
      "detail": "The Depths promise great rewards for those that survive them.",
      "parent": "runecrafting.stone_node_6",
+     "position": [
+      177.0,
+      270.0
+     ],
      "cost": [
       {
        "item": "item/crafting/runecrafting/rune_fragment",
@@ -3207,7 +4019,11 @@
      "id": "runecrafting.air_rune",
      "name": "Zephyr Seeker",
      "description": "Zephyr Seekers find greater rewards as they battle the Depths.",
-     "detail": "The Zephyr value the material above all. They horde wealth and hunt those that plumb the deaths with endless fury."
+     "detail": "The Zephyr value the material above all. They horde wealth and hunt those that plumb the deaths with endless fury.",
+     "position": [
+      -92.0,
+      -236.0
+     ]
     },
     {
      "id": "runecrafting.air_node_1",
@@ -3215,6 +4031,10 @@
      "description": "Unlocks the Swift Rune recipe.",
      "detail": "Increases your Attack Speed by 30% and movement speed by 10.\n\nThe Zephyr strike quickly and leave none to tell the tale.",
      "parent": "runecrafting.air_rune",
+     "position": [
+      -48.0,
+      -336.0
+     ],
      "cost": [
       {
        "item": "item/crafting/deep_core",
@@ -3239,6 +4059,10 @@
      "description": "Unlocks the Zephyr Rune recipe.",
      "detail": "Breaks when you take damage from acid, making you immune for 10 seconds.\n\nIn the battles of the Depths, the Zephyr Carvers protect their warriors from the Abyssal acids with these runes.",
      "parent": "runecrafting.air_node_1",
+     "position": [
+      86.0,
+      -394.0
+     ],
      "cost": [
       {
        "item": "item/crafting/deep_core",
@@ -3263,6 +4087,10 @@
      "description": "Unlocks the Harvest Rune recipe.",
      "detail": "Breaks upon completing a dungeon, granting a buff that gives a chance to obtain Encrusted Runic Trunk when harvesting resources unique to Long Shade difficulty (15).\n\nThe Zephyr's greatest secret to their great wealth, they create their own luck.",
      "parent": "runecrafting.air_node_2",
+     "position": [
+      149.0,
+      -527.0
+     ],
      "cost": [
       {
        "item": "item/crafting/deep_core",
@@ -3287,6 +4115,10 @@
      "description": "Unlocks the Abundance Rune recipe.",
      "detail": "Breaks upon completing a dungeon, spawning a bonus chest.\n\nThe Zephyr's second best secret to their great wealth, they just find more.",
      "parent": "runecrafting.air_node_3",
+     "position": [
+      265.0,
+      -632.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3316,6 +4148,10 @@
      "description": "Runes grant essence when they break.",
      "detail": "The Zephyr hoard all three essences, the question is for what?",
      "parent": "runecrafting.air_node_1",
+     "position": [
+      -84.0,
+      -574.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3345,6 +4181,10 @@
      "description": "Runes grant additional Rune Fragments when they break.",
      "detail": "The Zephyr waste nothing.",
      "parent": "runecrafting.air_node_5",
+     "position": [
+      -10.0,
+      -684.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_air",
@@ -3369,6 +4209,10 @@
      "description": "You have a chance to find Encrusted Runic Trunks when you defeat minor Depth enemies.",
      "detail": "Zephyr Teachings: Evade your enemies, first, crush those you can't.",
      "parent": "runecrafting.air_node_6",
+     "position": [
+      11.0,
+      -803.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_air",
@@ -3393,6 +4237,10 @@
      "description": "You have a chance to find Encrusted Runic Trunks when you defeat major Depth enemies.",
      "detail": "The more the Zephyr believe, the harder they fight.",
      "parent": "runecrafting.air_node_7",
+     "position": [
+      107.0,
+      -903.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3422,6 +4270,10 @@
      "description": "Grants a chance to find Encrusted Runic Trunks when you open Surfaced Depths Caches and Runic Depths Vaults.",
      "detail": "The Zephyr excel at cracking runic Vaults open.",
      "parent": "runecrafting.air_node_5",
+     "position": [
+      -204.0,
+      -795.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3449,7 +4301,11 @@
      "id": "runecrafting.fire_rune",
      "name": "Pyric Soldier",
      "description": "Pyric Soldiers employ the power of Runes for what they believe their true purpose is, destruction.",
-     "detail": "Pyric Teachings: Burn, rend, tear, do what you must to survive. If you can't survive, fight even harder."
+     "detail": "Pyric Teachings: Burn, rend, tear, do what you must to survive. If you can't survive, fight even harder.",
+     "position": [
+      753.0,
+      -67.0
+     ]
     },
     {
      "id": "runecrafting.fire_node_1",
@@ -3457,6 +4313,10 @@
      "description": "Unlocks the Focus Rune recipe.",
      "detail": "Breaks when you spend all of your energy, replenishing your energy to full.\n\nThe first wave of flames is bad, the second wave is even worse.",
      "parent": "runecrafting.fire_rune",
+     "position": [
+      585.0,
+      -148.0
+     ],
      "cost": [
       {
        "item": "item/crafting/deep_core",
@@ -3481,6 +4341,10 @@
      "description": "Unlocks the Pyric Rune recipe.",
      "detail": "Breaks when you use your ultimate ability, creating a large fire around you burning your enemies for 10 seconds.\n\nPyric fury burns so hot it can ignite flames under water.",
      "parent": "runecrafting.fire_node_1",
+     "position": [
+      500.0,
+      -272.0
+     ],
      "cost": [
       {
        "item": "item/crafting/deep_core",
@@ -3505,6 +4369,10 @@
      "description": "Runes that break increase your damage by 5%.",
      "detail": "Pyric Runesmiths imbue their fury into their craft.",
      "parent": "runecrafting.fire_node_1",
+     "position": [
+      656.0,
+      -247.0
+     ],
      "cost": [
       {
        "item": "item/crafting/deep_core",
@@ -3529,6 +4397,10 @@
      "description": "Increases the duration of Condemn and Fury Rune buffs.",
      "detail": "The Pyric funnel their rage into their combat.",
      "parent": "runecrafting.fire_node_3",
+     "position": [
+      706.0,
+      -348.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3558,6 +4430,10 @@
      "description": "You gain an increase of 5% to your Health Regen and Stability while equipping a rune.",
      "detail": "Pyric Teachings: Runes grant power. Through power the Pyric shall conquer.",
      "parent": "runecrafting.fire_node_3",
+     "position": [
+      819.0,
+      -177.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_fire",
@@ -3582,6 +4458,10 @@
      "description": "Unlocks the Condemn Rune recipe.",
      "detail": "Breaks when you're hit by an attack that would kill you, triggering a rage that increases your damage by 20%.\n\nThe only thing the Pyric fight for more than winning is against defeat.",
      "parent": "runecrafting.fire_node_2",
+     "position": [
+      539.0,
+      -424.0
+     ],
      "cost": [
       {
        "item": "item/crafting/deep_core",
@@ -3606,6 +4486,10 @@
      "description": "You gain an increase of 5% to your Critical Hit Rate and Damage while equipping a rune.",
      "detail": "Pyric Soldiers don't last long, fear the old fish.",
      "parent": "runecrafting.fire_node_5",
+     "position": [
+      858.0,
+      -295.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3635,6 +4519,10 @@
      "description": "Runes that break trigger a burning flame that damage enemies around you for 5 seconds.",
      "detail": "The best Pyric Soldiers can manifest their rage to scald those around them.",
      "parent": "runecrafting.fire_node_7",
+     "position": [
+      901.0,
+      -409.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3664,6 +4552,10 @@
      "description": "Unlocks the Fury Rune recipe.",
      "detail": "Breaks sometimes when you deal damage. In addition hitting can trigger one of three Fury Rune buffs, increasing Critical Hit Chance, Critical Hit Damage, and overall Damage.\n\nPyric Soldiers only grow stronger as they fight.",
      "parent": "runecrafting.fire_node_6",
+     "position": [
+      686.0,
+      -622.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3691,7 +4583,11 @@
      "id": "runecrafting.water_rune",
      "name": "Abyssal Smith",
      "description": "Abyssal Smiths focus on the craft of carving runes. They endure attacks of the Zephyr and Pyric through determination.",
-     "detail": "The Abyssal waters claim all."
+     "detail": "The Abyssal waters claim all.",
+     "position": [
+      -801.0,
+      -410.0
+     ]
     },
     {
      "id": "runecrafting.water_node_1",
@@ -3699,6 +4595,10 @@
      "description": "Unlocks the Restoration Rune recipe.",
      "detail": "Breaks after defeating an enemy, restoring a charge of your equipped flask.\n\nAbyssal teachings use healing to outlast their enemies.",
      "parent": "runecrafting.water_rune",
+     "position": [
+      -910.0,
+      -476.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_water",
@@ -3723,6 +4623,10 @@
      "description": "Unlocks the Abyssal Rune recipe.",
      "detail": "Breaks when you would take damage from lava or Jellous's flames but grants immunity to the damage from lava and Jellous's flames.\n\nThe Pyric can burn the water, but not the Abyssal.",
      "parent": "runecrafting.water_node_1",
+     "position": [
+      -886.0,
+      -631.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_water",
@@ -3747,6 +4651,10 @@
      "description": "Unlocks the Replenishment Rune recipe.",
      "detail": "Breaks when you're hit by an attack that would kill you, reducing your cooldowns by 33%.\n\nAbyssal Smiths stop their work only to sleep and defend. They even eat at their anvils.",
      "parent": "runecrafting.water_node_2",
+     "position": [
+      -683.0,
+      -667.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_water",
@@ -3771,6 +4679,10 @@
      "description": "Unlocks the Endurance Rune recipe.",
      "detail": "Breaks sometimes when you take damage. Taking Damage can also trigger an Endurance effect, reducing damage taken, increasing Maximum Health, and granting Stability.\n\nAbyssal Teachings: Endure and outlast.",
      "parent": "runecrafting.water_node_3",
+     "position": [
+      -596.0,
+      -563.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_water",
@@ -3795,6 +4707,10 @@
      "description": "Runes that break grant an increase to your Stability, Maximum Health, and Health Regen.",
      "detail": "Abyssal waters protect those that emprace them.",
      "parent": "runecrafting.water_node_4",
+     "position": [
+      -555.0,
+      -427.0
+     ],
      "cost": [
       {
        "item": "item/crafting/rune_water",
@@ -3819,6 +4735,10 @@
      "description": "You have a chance to craft extra rune slates.",
      "detail": "The greatest slatesmiths are coveted. Every artist desires the perfect palette.",
      "parent": "runecrafting.water_node_5",
+     "position": [
+      -526.0,
+      -275.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3848,6 +4768,10 @@
      "description": "You have a chance to craft extra leaflets.",
      "detail": "Texts don't last long under water, best to read them quickly.",
      "parent": "runecrafting.water_node_6",
+     "position": [
+      -481.0,
+      -112.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3877,6 +4801,10 @@
      "description": "You have a chance to craft extra runes.",
      "detail": "In times of great need quality wane in favor of quantity.",
      "parent": "runecrafting.water_node_6",
+     "position": [
+      -699.0,
+      -241.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3906,6 +4834,10 @@
      "description": "Unlocks recipes to craft Rune Slates directly for Depth Essences at the Depths Runic Master rank.\nAlso unlocks all Zephyr and Pyric Rune crafting.",
      "detail": "Master Abyssal Runesmiths are the most valuable resource in the Depths.",
      "parent": "runecrafting.water_node_7",
+     "position": [
+      -668.0,
+      -68.0
+     ],
      "cost": [
       {
        "item": "item/crafting/depths_soul",
@@ -3940,13 +4872,21 @@
     {
      "id": "gearcrafting.unlock_tier_1",
      "name": "Gearcrafting",
-     "description": "Gearcrafters can further increase their power by investing in the Gearcrafter's Terminus.\nUnlock nodes for one-time rewards. Upgrade up to six (6) nodes to increase your power."
+     "description": "Gearcrafters can further increase their power by investing in the Gearcrafter's Terminus.\nUnlock nodes for one-time rewards. Upgrade up to six (6) nodes to increase your power.",
+     "position": [
+      -290.0,
+      -130.0
+     ]
     },
     {
      "id": "gearcrafting.unlock_tier_2",
      "name": "Master Crafter I",
      "description": "Upgrade for CRYSTAL 2 recipes at the Gearcrafting Forge.\nRequires Gearcrafting Level 250+\nRequires 5000+ Power Rank",
      "parent": "gearcrafting.unlock_tier_1",
+     "position": [
+      -90.0,
+      -130.0
+     ],
      "opens_with": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -3967,6 +4907,10 @@
      "name": "Master Crafter II",
      "description": "Upgrade for CRYSTAL 3 recipes at the Gearcrafting Forge.\nUpgrade Required: Master Crafter I\nRequires 10000+ Power Rank",
      "parent": "gearcrafting.unlock_tier_2",
+     "position": [
+      70.0,
+      -130.0
+     ],
      "opens_with": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -3992,6 +4936,10 @@
      "name": "Master Crafter III",
      "description": "Upgrade for CRYSTAL 4 recipes at the Gearcrafting Forge.\nUpgrade Required: Master Crafter II\nRequires 15000+ Power Rank",
      "parent": "gearcrafting.unlock_tier_3",
+     "position": [
+      220.0,
+      -130.0
+     ],
      "opens_with": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4017,6 +4965,10 @@
      "name": "Craftmaster I",
      "description": "Adds a 2% chance at obtaining a Gearcrafter's Vault whenever crafting a recipe at the Gearcrafting Forge.",
      "parent": "gearcrafting.unlock_tier_2",
+     "position": [
+      -150.0,
+      0.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4030,6 +4982,10 @@
      "name": "Craftmaster II",
      "description": "Adds a 1% chance at obtaining a Gearcrafter's Vault whenever crafting a recipe at the Gearcrafting Forge.",
      "parent": "gearcrafting.lootbox_oncraft_1",
+     "position": [
+      -150.0,
+      100.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4043,6 +4999,10 @@
      "name": "Craftmaster III",
      "description": "Adds a 0.5% chance at obtaining a Gearcrafter's Vault whenever crafting a recipe at the Gearcrafting Forge.",
      "parent": "gearcrafting.lootbox_oncraft_2",
+     "position": [
+      -150.0,
+      200.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4061,6 +5021,10 @@
      "name": "Scavenger I",
      "description": "Adds a 2% chance for 1 or more Gearcrafter's Vaults to drop when completing a dungeon.",
      "parent": "gearcrafting.unlock_tier_3",
+     "position": [
+      70.0,
+      0.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4074,6 +5038,10 @@
      "name": "Scavenger II",
      "description": "Adds a 1% chance for 1 or more Gearcrafter's Vaults to drop when completing a dungeon.",
      "parent": "gearcrafting.lootbox_dungeon_1",
+     "position": [
+      70.0,
+      100.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4087,6 +5055,10 @@
      "name": "Scavenger III",
      "description": "Adds a 0.5% chance for 1 or more Gearcrafter's Vaults to drop when completing a dungeon.",
      "parent": "gearcrafting.lootbox_dungeon_2",
+     "position": [
+      70.0,
+      200.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4105,6 +5077,10 @@
      "name": "Vaunted Vaulter I",
      "description": "Receive 1 Gearcrafter's Vault each time you open one and receive a 'Lucky!' roll.",
      "parent": "gearcrafting.unlock_tier_4",
+     "position": [
+      290.0,
+      0.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4118,6 +5094,10 @@
      "name": "Vaunted Vaulter II",
      "description": "Increases the amount of Gearcrafter's Vault given by Vaunted Vaulter I by 1.",
      "parent": "gearcrafting.lootbox_lootbox_1",
+     "position": [
+      290.0,
+      100.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
@@ -4131,6 +5111,10 @@
      "name": "Vaunted Vaulter III",
      "description": "Increases the amount of Gearcrafter's Vault given by Vaunted Vaulter I by 2.",
      "parent": "gearcrafting.lootbox_lootbox_2",
+     "position": [
+      290.0,
+      200.0
+     ],
      "cost": [
       {
        "item": "item/crafting/gearcrafting/block_element",
