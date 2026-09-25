@@ -1,5 +1,7 @@
-{# Server-rendered class detail for the wiki's class pages.
-   Expects `d`, a detail model from classes_page._detail(). #}
+{# Server-rendered class detail - mirrors classes.js renderDetail exactly (same
+   classes + section order) so the pre-rendered DOM is what the JS would build.
+   Expects `d`, a detail model from classes_page._detail(). Section titles are
+   English (the crawlable default); classes.js re-renders on language switch. #}
 <div class="cls-detail-head">
     <img class="cls-detail-icon" src="/static/class-icons/{{ d.tech }}.png" alt="{{ d.name }}">
     <div class="cls-detail-title">
@@ -48,9 +50,9 @@
     </div>
 </section>
 {% endif %}
-{% from "partials/ability_card.html" import ability_card %}
+{% macro ability_card(a) %}<div class="cls-ability">{% if a.name %}<div class="cls-ability-name">{{ a.name }}{% if a.type %}<span class="cls-ability-kind">{{ a.type }}</span>{% endif %}</div>{% endif %}{% if a.description %}<div class="cls-ability-desc">{{ a.description }}</div>{% endif %}{% if a.stages %}<ul class="cls-stages">{% for s in a.stages %}<li><span class="cls-stage-name">{{ s.name }}</span><span class="cls-stage-val">{{ s.damage }}{% if s.base %}<span class="cls-stage-base">{{ s.base }}</span>{% endif %}</span></li>{% endfor %}</ul>{% endif %}</div>{% endmacro %}
 {% if d.abilities %}
-<section class="cls-section" id="abilities">
+<section class="cls-section">
     <h3 class="cls-section-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>Abilities</span></h3>
     <div class="cls-abilities">{% for a in d.abilities %}{{ ability_card(a) }}{% endfor %}</div>
 </section>

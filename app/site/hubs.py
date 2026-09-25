@@ -19,7 +19,7 @@ HUBS: dict[str, dict[str, Any]] = {
         "entries": (
             {
                 "name": "How Gems Work",
-                "path": "https://kiwiwiki.aallyn.net/gems",
+                "path": "/gems-guide",
                 "flag": "gems_guide_enabled",
                 "icon": "fa-solid fa-gem",
                 "blurb": "Tiers, elements, lesser versus empowered, stat rolls, levelling "

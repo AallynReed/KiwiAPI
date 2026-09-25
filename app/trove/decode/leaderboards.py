@@ -1,4 +1,4 @@
-"""leaderboards.json - every leaderboard the client defines (wiki /leaderboards).
+"""leaderboards.json - every leaderboard the client defines.
 
 `prefabs/leaderboard/leaderboards.binfab` (root):
 

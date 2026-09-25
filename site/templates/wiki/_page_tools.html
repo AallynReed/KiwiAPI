@@ -1,6 +1,0 @@
-{# Edit / suggest / history for one page. wiki.js reveals the right edit action
-   once it knows who is reading; history is always public. #}
-<div class="wk-tools" data-slug="{{ slug }}" data-rev="{{ rev }}">
-    <a class="wk-tool" href="/-/edit/{{ slug }}" data-edit hidden><i class="fa-solid fa-pen" aria-hidden="true"></i> <span data-edit-label>Edit</span></a>
-    {% if rev %}<a class="wk-tool" href="/-/history/{{ slug }}"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> History</a>{% endif %}
-</div>

@@ -155,10 +155,7 @@ def add_security_middleware(app: FastAPI) -> None:
             # makes the ORIGIN's answer unambiguous when debugging a proxy that injects
             # its own (nginx `add_header`, a Cloudflare managed transform).
             del h["X-Frame-Options"]
-            # The wiki is first-party and previews models/effects inline, so it is
-            # always allowed on top of the admin's partner list.
-            ancestors = [*await allowed_origins(), settings.wiki_url.rstrip("/")]
-            h.setdefault("Content-Security-Policy", _embed_csp(list(dict.fromkeys(ancestors))))
+            h.setdefault("Content-Security-Policy", _embed_csp(await allowed_origins()))
             h.setdefault("Cache-Control", "no-cache")
             return response
         h.setdefault("X-Frame-Options", "DENY")
@@ -206,8 +203,8 @@ def _add_vary(headers, *fields: str) -> None:
 
 # The assets the 3D viewers fetch while they run: baked rigs (clips + animation
 # graph), the dressing-room catalogue and assembled models, and the BRDF lighting
-# map; plus the codex thumbnails, which the wiki's indexes load by the hundred and so
-# must stay browser-cacheable for signed-in readers too. Every one is public, tokenless and takes no viewer identity - no cookie, no
+# map; plus the codex thumbnails, which load by the hundred and so must stay
+# browser-cacheable for signed-in readers too. Every one is public, tokenless and takes no viewer identity - no cookie, no
 # Authorization header, pure query params - which is what makes them safe to hand to
 # any origin.
 _PUBLIC_ASSET_PREFIXES = ("/site/rigs/", "/site/dressing/")

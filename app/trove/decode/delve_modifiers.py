@@ -1,4 +1,4 @@
-"""delve_modifiers.json - the Kiwi Wiki's /delve-modifiers page.
+"""delve_modifiers.json - every delve modifier, named from its in-game sign.
 
 Every delve modifier has a sign in the client - `prefabs/placeable/deco/delve/
 <id>_interactable.binfab`, the stone shown when a floor rolls it - carrying a

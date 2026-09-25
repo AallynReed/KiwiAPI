@@ -351,6 +351,18 @@ REGISTRY: dict[str, TunableSetting] = {
             "not this flag), so update prompts keep working while the page is hidden."
         ),
     ),
+    "feature_classes_enabled": _t(
+        key="feature_classes_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Classes reference page. OFF hides the /classes "
+            "page + navbar link and 404s its same-origin /site/stats/classes proxy. "
+            "The public /v1/stats/classes API (driven by scopes) is NOT gated by this "
+            "- only the dedicated reference page is hidden. It's static game data."
+        ),
+    ),
     "feature_star_chart_enabled": _t(
         key="feature_star_chart_enabled",
         default=True,
@@ -418,10 +430,10 @@ REGISTRY: dict[str, TunableSetting] = {
         type="bool",
         category="features",
         description=(
-            "Master switch for the How Gems Work guide (/gems on the wiki; the old "
-            "/gems-guide redirects there). OFF 404s the page and drops its links. "
-            "It's a client-rendered explainer (static /static/gems-guide.js), so "
-            "only the page route is hidden."
+            "Master switch for the How Gems Work guide (/gems-guide). OFF hides the "
+            "page + navbar link. It's a fully client-rendered interactive explainer "
+            "of the gem system (static /static/gems-guide.js, no proxy or /v1 API), "
+            "so only the page route is hidden."
         ),
     ),
     "feature_allies_enabled": _t(
@@ -509,45 +521,6 @@ REGISTRY: dict[str, TunableSetting] = {
             "Nothing about this feature is linked from the site: a link only exists "
             "for whoever it was handed to."
         ),
-    ),
-    "feature_wiki_enabled": _t(
-        key="feature_wiki_enabled",
-        default=True,
-        type="bool",
-        category="features",
-        description=(
-            "Master switch for the wiki (its own host, settings.wiki_url). OFF 404s "
-            "every wiki page and /site/wiki/*, and drops the Wiki links from the main "
-            "site's navbar and footer. Pages, history and suggestions are kept."
-        ),
-    ),
-    "wiki_edit_max": _t(
-        key="wiki_edit_max",
-        default=120,
-        type="int",
-        category="wiki",
-        description="Page saves, reverts and deletes one editor may make within wiki_edit_window_seconds.",
-    ),
-    "wiki_edit_window_seconds": _t(
-        key="wiki_edit_window_seconds",
-        default=3600,
-        type="int",
-        category="wiki",
-        description="Window for wiki_edit_max.",
-    ),
-    "wiki_suggest_max": _t(
-        key="wiki_suggest_max",
-        default=20,
-        type="int",
-        category="wiki",
-        description="Edit suggestions one signed-in account may send within wiki_suggest_window_seconds.",
-    ),
-    "wiki_suggest_window_seconds": _t(
-        key="wiki_suggest_window_seconds",
-        default=3600,
-        type="int",
-        category="wiki",
-        description="Window for wiki_suggest_max.",
     ),
     "feature_delves_enabled": _t(
         key="feature_delves_enabled",

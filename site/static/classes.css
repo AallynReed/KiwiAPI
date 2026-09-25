@@ -1,5 +1,46 @@
-/* Class detail markup for the wiki's class pages. Builds on style.css tokens.
+/* Trove Classes reference (/classes). Builds on style.css tokens.
    Class prefix: .cls-  */
+
+.cls-main {
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 110px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+.cls-hero { text-align: center; margin-bottom: 30px; }
+.cls-eyebrow {
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--accent);
+  font-size: .85rem; letter-spacing: 0.04em; margin: 0 0 8px;
+}
+.cls-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 12px; line-height: 1.05; }
+.cls-sub { color: var(--text-mute); max-width: 660px; margin: 0 auto; line-height: 1.6; font-size: .98rem; }
+.cls-loading, .cls-empty { color: var(--text-mute); font-size: .92rem; padding: 8px 2px; }
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+.cls-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; align-items: start; }
+
+/* ── Class picker ──────────────────────────────────────────────────── */
+.cls-nav {
+  display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow-y: auto;
+  padding-right: 4px;
+}
+.cls-navitem {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px; border-radius: 11px; cursor: pointer; border: 1px solid transparent;
+  background: none; color: var(--text-mute); font: inherit; text-align: left; width: 100%;
+  transition: background .12s ease, color .12s ease;
+}
+.cls-navitem:hover { background: var(--bg-card); color: var(--text); }
+.cls-navitem.active { background: var(--bg-card); color: var(--text); border-color: color-mix(in oklab, var(--accent) 40%, var(--bg-line)); }
+.cls-navitem img { width: 30px; height: 30px; border-radius: 8px; background: var(--bg-deep); flex-shrink: 0; object-fit: cover; }
+.cls-navitem-name { font-size: .92rem; font-weight: 500; }
+.cls-navitem-dmg { margin-left: auto; font-size: .62rem; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 999px; }
+.dmg-magic { color: var(--accent-purple); background: color-mix(in oklab, var(--accent-purple) 14%, transparent); }
+.dmg-physical { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 14%, transparent); }
 
 /* ── Detail panel ──────────────────────────────────────────────────── */
 .cls-detail {
@@ -109,3 +150,14 @@
 
 .cls-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .cls-chip { font-size: .8rem; padding: 4px 10px; border-radius: 999px; background: var(--bg-deep); border: 1px solid var(--bg-line); color: var(--text-mute); }
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .cls-layout { grid-template-columns: 1fr; }
+  .cls-nav {
+    position: static; max-height: none; overflow: visible;
+    flex-direction: row; flex-wrap: wrap; gap: 8px;
+  }
+  .cls-navitem { width: auto; }
+  .cls-navitem-dmg { display: none; }
+}

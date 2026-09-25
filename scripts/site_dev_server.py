@@ -91,7 +91,7 @@ _PREVIEW_FLAGS = {
     "giveaways_enabled", "commands_enabled", "server_time_enabled",
     "webhooks_enabled", "dm_subscriptions_enabled", "image_studio_enabled",
     "calendar_enabled", "streams_enabled", "btt_releases_enabled",
-    "star_chart_enabled", "gem_simulator_enabled",
+    "classes_enabled", "star_chart_enabled", "gem_simulator_enabled",
     "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
     "gems_guide_enabled", "abilities_enabled", "guides_enabled", "allies_enabled", "gem_tools_enabled", "fishing_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
     "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
@@ -224,7 +224,7 @@ STUB_BOARDS = [
      "category_id": "Leaderboard_Category_Clubs", "category": "CLUBS",
      "contest_type": None, "reset_kind": "default", "player_board": False},
     # Three class Effort boards (4000+i, named for the class) flagged as this
-    # week's contests - what the gems guide reads to name the current rotation.
+    # week's contests - what /gems-guide reads to name the current rotation.
     # Copied from a real capture; production rotates these every week, so treat
     # the trio here as a shape to render against, not as the live answer.
     {"uuid": 4005, "name_id": "Leaderboard_Effort_CandyBarbarian", "name": "CANDY BARBARIAN",
@@ -1513,6 +1513,10 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "streams.html", "text/html")
         if path == "/releases":
             return self._send_file(TEMPLATES / "releases.html", "text/html")
+        if path == "/classes":
+            return self._send_file(TEMPLATES / "classes.html", "text/html")
+        if path == "/gems-guide":
+            return self._send_file(TEMPLATES / "gems-guide.html", "text/html")
         if path == "/loot-collector-guide":
             return self._send_file(TEMPLATES / "loot-collector-guide.html", "text/html")
         if path == "/allies":
@@ -2699,6 +2703,33 @@ class Handler(SimpleHTTPRequestHandler):
                 "daily_reset_at": int(day_reset.timestamp()),
                 "weekly_reset_at": int(wk.timestamp()),
             })
+        if path == "/site/stats/classes":
+            # Prefer the real loader so the dev server sees exactly what production
+            # serves - abilities live in class_abilities.json and are merged in there,
+            # so reading classes.json alone would render a page with none.
+            try:
+                from app.trove import stats as _stats
+                return self._send_json(_stats.all_classes())
+            except Exception:
+                pass
+            cj = ROOT / "app" / "trove" / "gamedata" / "classes.json"
+            aj = ROOT / "app" / "trove" / "gamedata" / "class_abilities.json"
+            abil = {}
+            if aj.exists():
+                abil = {c["name"]: c.get("abilities", [])
+                        for c in json.loads(aj.read_text(encoding="utf-8"))}
+            items = []
+            if cj.exists():
+                for c in json.loads(cj.read_text(encoding="utf-8")):
+                    items.append({
+                        "tech_name": c.get("qualified_name"), "name": c.get("name"),
+                        "shorts": c.get("shorts", []), "damage_type": c.get("damage_type", ""),
+                        "weapons": c.get("weapons", []), "attributes": c.get("attributes", []),
+                        "stats": c.get("stats", []), "bonuses": c.get("bonuses", []),
+                        "subclass": c.get("subclass", {}),
+                        "abilities": c.get("abilities") or abil.get(c.get("name"), []),
+                    })
+            return self._send_json({"items": items, "count": len(items)})
         if path == "/site/rotations":
             # "Today in Trove" - resets + buffs + chaos + live merchants/biomes.
             import time as _t

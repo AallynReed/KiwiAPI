@@ -16,7 +16,6 @@ import time
 
 from fastapi import HTTPException, Request
 
-from app.core.config import settings
 from app.core.internal_api import internal_get
 from app.site import search_index
 from app.site.feature_map import SITE_FEATURE_FLAGS, feature_blocks
@@ -65,7 +64,6 @@ def context(request: Request) -> dict:
     # The navbar's Pages menu renders from the search registry, so a page is declared
     # once (app/site/search_index.py) and shows up in both the menu and search.
     return {**flags,
-            "wiki_url": settings.wiki_url.rstrip("/"),
             "nav_menu": search_index.nav_menu(flags),
             "nav_active": search_index.nav_is_active(request.url.path, flags)}
 

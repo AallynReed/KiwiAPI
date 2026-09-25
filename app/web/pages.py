@@ -23,7 +23,7 @@ from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.internal_api import internal_get
-from app.site import abilities_page, allies_page, commands_page, hubs, ssr
+from app.site import abilities_page, allies_page, classes_page, commands_page, hubs, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import feature_flags as web_flags
 
@@ -275,10 +275,16 @@ async def releases_page(request: Request) -> HTMLResponse:
         request, "releases.html", {"ssr": await ssr.releases_view(_ssr_fetch)})
 
 
-@router.get("/classes")
-async def classes() -> RedirectResponse:
-    """The class reference moved to the wiki."""
-    return RedirectResponse(f"{settings.wiki_url.rstrip('/')}/classes", status_code=301)
+@router.get("/classes", response_class=HTMLResponse)
+async def classes(request: Request) -> HTMLResponse:
+    """Trove class reference - a browsable codex of every class: base stats,
+    weapons, damage type, its signature subclass (with the 1→30 level-scaling
+    bonuses) and abilities. The picker + the first class's detail are
+    server-rendered (English) so the page is complete without JS; classes.js
+    fetches ``/site/stats/classes`` to power switching. See classes_page.py."""
+    return _TEMPLATES.TemplateResponse(
+        request, "classes.html", {"cls": classes_page.classes_view()},
+    )
 
 
 @router.get("/star-chart", response_class=HTMLResponse)
@@ -381,10 +387,13 @@ async def mod_stats_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "mod-stats.html", {})
 
 
-@router.get("/gems-guide")
-async def gems_guide_page() -> RedirectResponse:
-    """How Gems Work moved to the wiki."""
-    return RedirectResponse(f"{settings.wiki_url.rstrip('/')}/gems", status_code=301)
+@router.get("/gems-guide", response_class=HTMLResponse)
+async def gems_guide_page(request: Request) -> HTMLResponse:
+    """How Gems Work - an interactive, animated explainer of Trove's gem system
+    (tiers, elements incl. Cosmic/Light, Lesser vs Empowered, stat rolls,
+    leveling/Power Rank and focusing). Fully client-rendered from the static
+    ``/static/gems-guide.js`` - no proxy, no /v1 API."""
+    return _TEMPLATES.TemplateResponse(request, "gems-guide.html", {})
 
 
 @router.get("/abilities", response_class=HTMLResponse)

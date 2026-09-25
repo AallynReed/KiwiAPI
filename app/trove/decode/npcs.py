@@ -17,8 +17,7 @@ class (the exe registers both of its factories under id 44). Read structurally:
 - 111 field 0 names the AI behaviour (`meleeBasic`, `immobile` ...; the exe's own
   behaviour names). 160 field 1 lists effect prefabs the NPC carries on itself
   (Dracocolatl's x5 health); 145 maps animation events to ability prefabs.
-- 40 is the model: field 0 the skeleton, field 1 the part blueprints; the wiki
-  renders a rigged creature by its prefab.
+- 40 is the model: field 0 the skeleton, field 1 the part blueprints.
 - Friendly services: 61 is the crafting component (field 14 tabs `{0 name key,
   1 recipe ids}`, 76 section 1 field 0 the window title), 268 section 1 fields 1-2
   name vendor stores (their stock is server-side), 411 section 1 field 1 offers

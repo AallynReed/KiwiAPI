@@ -44,8 +44,6 @@ class SiteUser(Document):
     # (all PII stripped) so their mods/modpacks stay live under a non-identifying
     # owner, but it can never be logged into or re-linked. See app/site_auth/account.py.
     is_deleted: bool = False
-    # Granted by the master in the dev portal: may write wiki pages and review suggestions.
-    is_wiki_editor: bool = False
 
     # The sole identity for the account - every SiteUser is created via Discord.
     discord_id: int | None = None

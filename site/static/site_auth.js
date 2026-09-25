@@ -22,23 +22,6 @@
   const KEY_REFRESH = `${STORAGE_PREFIX}_refresh`;
   const KEY_USER = `${STORAGE_PREFIX}_user`;        // cached /me snapshot
 
-  // Pages on another host (the wiki) point account links back at the main site,
-  // and the login page lists the other origins it may send you back to.
-  const SITE = (document.body && document.body.dataset.siteOrigin) || '';
-  const NEXT_ORIGINS = ((document.body && document.body.dataset.nextOrigins) || '')
-    .split(/\s+/).filter(Boolean);
-
-  // A post-sign-in destination we may follow: same-origin, or a listed origin.
-  function safeNextUrl(raw) {
-    if (!raw) return null;
-    try {
-      const u = new URL(raw, location.origin);
-      if (u.origin === location.origin) return u.pathname + u.search + u.hash;
-      if (NEXT_ORIGINS.includes(u.origin)) return u.href;
-    } catch (_) { /* malformed */ }
-    return null;
-  }
-
   // ─── Session storage ───────────────────────────────────────────────
   // The session lives in HttpOnly cookies set by /v1/site-auth/* (see
   // app/site_auth/cookies.py). Script cannot read them, which is the point:
@@ -205,9 +188,8 @@
     if (!$el) return;
     if (!user) {
       $el.dataset.state = 'out';
-      const signin = SITE ? `${SITE}/login?next=${encodeURIComponent(location.href)}` : '/login';
       $el.innerHTML = `
-        <a class="nav-account-signin" href="${esc(signin)}" data-i18n>Sign in</a>`;
+        <a class="nav-account-signin" href="/login" data-i18n>Sign in</a>`;
       rerunI18n();
       return;
     }
@@ -228,7 +210,7 @@
           <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
         </button>
         <div class="nav-account-panel" id="nav-account-panel" role="menu" hidden>
-          <a class="nav-account-item" href="${esc(SITE)}/dashboard" role="menuitem">
+          <a class="nav-account-item" href="/dashboard" role="menuitem">
             <i class="fa-solid fa-gauge-high" aria-hidden="true"></i>
             <span data-i18n>Dashboard</span>
           </a>
@@ -372,8 +354,10 @@
     const $btn = document.querySelector('.acc-oauth-discord');
     if (!$btn) return;
     let url = API + '/v1/site-auth/oauth/discord/start';
-    const next = safeNextUrl(new URLSearchParams(location.search).get('next'));
-    if (next) url += '?next=' + encodeURIComponent(next);
+    const next = new URLSearchParams(location.search).get('next');
+    if (next && next.startsWith('/') && !next.startsWith('//')) {
+      url += '?next=' + encodeURIComponent(next);
+    }
     $btn.setAttribute('href', url);
   }
 
@@ -398,9 +382,15 @@
       // exposure this migration removed.
       if (!hasHint()) throw new Error('no-session-cookie');
       await getMe({ force: true });
-      // Only same-origin or a listed origin - defeats "//evil.com",
-      // "https://evil.com" and "javascript:".
-      location.href = safeNextUrl(new URLSearchParams(location.search).get('next')) || '/dashboard';
+      const rawNext = new URLSearchParams(location.search).get('next') || '';
+      // Resolve against our own origin and only keep the path if it stays
+      // same-origin - defeats "//evil.com", "https://evil.com" and "javascript:".
+      let safeNext = '/dashboard';
+      try {
+        const u = new URL(rawNext, location.origin);
+        if (u.origin === location.origin) safeNext = u.pathname + u.search + u.hash;
+      } catch (_) { /* malformed - keep the default */ }
+      location.href = safeNext;
     } catch (_) {
       const $err = document.getElementById('login-error');
       if ($err) {

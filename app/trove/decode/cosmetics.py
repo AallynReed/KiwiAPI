@@ -40,7 +40,7 @@ SKIN_CLASS, SKIN_BLUEPRINT, SKIN_NAME, SKIN_DESCRIPTION = 0, 4, 5, 6
 BOMB_EFFECTS, BOMB_MODEL, BOMB_NAME, BOMB_DESCRIPTION = 0, 2, 3, 4
 ROW_BLUEPRINT, ROW_NAME, ROW_DESCRIPTION = 0, 1, 2
 BLUEPRINT = 37
-# Loot table -> the slot it styles, in the order the wiki lists them.
+# Loot table -> the slot it styles, in display order.
 SLOTS = {"hat": "Hats", "face": "Faces", "weapon_melee": "Melee weapons", "weapon_pistol": "Guns",
          "weapon_staff": "Staffs", "weapon_bow": "Bows", "weapon_spear": "Spears", "weapon_fist": "Fists",
          "pvpbanner": "Banners"}

@@ -1,4 +1,4 @@
-"""daily_bonuses.json - the Daily Bonus for each day of the week (wiki /daily-bonuses).
+"""daily_bonuses.json - the Daily Bonus for each day of the week.
 
 Three files make the welcome screen's Daily Bonus window:
 

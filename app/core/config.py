@@ -392,12 +392,10 @@ class Settings(BaseSettings):
     # docs_url -> static documentation site
     # app_url  -> BetterTroveTools showcase site (the public user-facing pages -
     #             /leaderboards, /updates, /market, /login, /dashboard, etc.)
-    # wiki_url -> the wiki, served by the website container on its own host
     api_url: str = "https://api.aallyn.net"
     dev_url: str = "https://dev.aallyn.net"
     docs_url: str = "https://docs.aallyn.net"
     app_url: str = "https://trove.aallyn.net"
-    wiki_url: str = "https://kiwiwiki.aallyn.net"
 
     # Public base URL for API-SERVED assets that are embedded off-site: the OG/board
     # PNG renders (/board.png, /announce.png, /activity/og.png) and Image-Studio

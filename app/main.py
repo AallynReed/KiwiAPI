@@ -35,7 +35,6 @@ from app.core.features import (
     require_store_enabled,
     require_updates_enabled,
     require_webhooks_enabled,
-    require_wiki_enabled,
 )
 from app.core.idempotency import add_idempotency_middleware
 from app.core.maintenance import maintenance_loop
@@ -131,7 +130,6 @@ from app.usage.middleware import add_usage_middleware
 from app.usage.recorder import recorder as usage_recorder
 from app.webhooks.delivery import start_webhook_delivery, stop_webhook_delivery
 from app.webhooks.router import router as webhooks_router
-from app.wiki.router import router as wiki_router
 
 logger = logging.getLogger("kiwi")
 
@@ -397,7 +395,6 @@ app.include_router(drops_router, include_in_schema=False,
 # Custom art requests for Zakros UI Chat + Nameplate: an open request form and the
 # master's review queue (released by app/custom_art/builder.py in its own container).
 app.include_router(custom_art_router, include_in_schema=False)
-app.include_router(wiki_router, dependencies=[Depends(require_wiki_enabled)])  # wiki data plane (/site/wiki/*)
 app.include_router(custom_art_admin_router, include_in_schema=False)
 app.include_router(mod_stats_router, include_in_schema=False)
 app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema

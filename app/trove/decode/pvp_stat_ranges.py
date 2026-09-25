@@ -10,7 +10,7 @@ PvP converts each PvE stat through a `PVPStatRange` record in
   4 f32    knee                          8 f32  soft-cap ceiling
 
 Trove_x64.exe applies them in FUN_14081dff0 (`pvp_value` below; calculators.js
-`pvpValue`). docs/pvp-stats.md explains the curve; the wiki's /pvp-stats shows it.
+`pvpValue`). docs/pvp-stats.md explains the curve.
 
 Between the floor and the soft cap the game applies class, then role modifiers
 (FUN_14081e290). The client's `pvp_classes` / `pvp_roles` ship empty; the server

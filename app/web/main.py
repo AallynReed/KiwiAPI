@@ -16,7 +16,6 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.routing import Host
 
 from app.core.config import settings
 from app.core.errors import register_error_handlers
@@ -30,8 +29,6 @@ from app.pageviews.beacon import add_pageview_beacon_middleware, beacon
 from app.trove.decode import store as gamedata
 from app.web.meta import router as meta_router
 from app.web.pages import router as pages_router
-from app.web.wiki import WIKI_HOST
-from app.web.wiki import app as wiki_app
 
 logger = logging.getLogger("kiwi.web")
 
@@ -86,11 +83,6 @@ if (_SITE_ROOT / "static").is_dir():
 
 app.include_router(meta_router)    # robots.txt / sitemap.xml / BingSiteAuth.xml
 app.include_router(pages_router)   # the HTML page routes
-
-# The wiki host gets its own app, matched ahead of every route above.
-app.router.routes.insert(0, Host(WIKI_HOST, app=wiki_app))
-if settings.debug:
-    app.router.routes.insert(0, Host("kiwiwiki.localhost", app=wiki_app))
 
 
 @app.get("/health", include_in_schema=False)

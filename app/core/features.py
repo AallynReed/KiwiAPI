@@ -42,6 +42,7 @@ IMAGE_STUDIO_FLAG = "feature_image_studio_enabled"
 CALENDAR_FLAG = "feature_calendar_enabled"
 STREAMS_FLAG = "feature_streams_enabled"
 BTT_RELEASES_FLAG = "feature_btt_releases_enabled"
+CLASSES_FLAG = "feature_classes_enabled"
 STAR_CHART_FLAG = "feature_star_chart_enabled"
 GEM_SIMULATOR_FLAG = "feature_gem_simulator_enabled"
 GEM_EVALUATOR_FLAG = "feature_gem_evaluator_enabled"
@@ -78,8 +79,6 @@ MOD_ISSUES_FLAG = "feature_mod_issues_enabled"
 # linked from the site - the switch exists so the upload surface can be closed
 # outright without deleting the links that are already out there.
 FILE_DROPS_FLAG = "feature_file_drops_enabled"
-# The wiki (kiwiwiki host): its pages, the navbar/footer links and /site/wiki/*.
-WIKI_FLAG = "feature_wiki_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"
@@ -139,7 +138,6 @@ require_leaderboard_renames_enabled = _gate(RENAMES_FLAG, "Rename detection")
 require_leaderboard_duplicates_enabled = _gate(
     DUPLICATES_FLAG, "Duplicate-name detection")
 require_embed_enabled = _gate(EMBED_FLAG, "embeddable viewer")
-require_wiki_enabled = _gate(WIKI_FLAG, "Wiki")
 require_dressing_room_enabled = _gate(DRESSING_ROOM_FLAG, "Dressing Room")
 require_tomes_enabled = _gate(TOMES_FLAG, "Tomes")
 require_unlock_debug_enabled = _gate(UNLOCK_DEBUG_FLAG, "Unlock Debug patcher")

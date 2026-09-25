@@ -1514,7 +1514,7 @@ function openSiteUser(u, after) {
   if (!u) return;
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
-  const badges = `${u.is_active ? '<span class="badge ok">active</span>' : '<span class="badge off">deactivated</span>'} ${u.is_verified ? '<span class="badge ok">verified</span>' : '<span class="badge warn">unverified</span>'}${u.is_wiki_editor ? ' <span class="badge ok">wiki editor</span>' : ''}`;
+  const badges = `${u.is_active ? '<span class="badge ok">active</span>' : '<span class="badge off">deactivated</span>'} ${u.is_verified ? '<span class="badge ok">verified</span>' : '<span class="badge warn">unverified</span>'}`;
   const claim = u.claimed_trove_name
     ? `${esc(u.claimed_trove_name)}${u.claim_verified ? ' <span class="badge ok">verified</span>' : ' <span class="badge warn">unverified</span>'}` : "—";
   overlay.innerHTML = `
@@ -1536,11 +1536,10 @@ function openSiteUser(u, after) {
           <button class="btn small" data-act="username">Change username…</button>
           <button class="btn small" data-act="claimed">Set Trove name…</button>
           <button class="btn small" data-act="refresh-discord"${u.discord_id ? "" : " disabled title='No linked Discord id'"}>Refresh Discord</button>
-          <button class="btn small" data-act="wiki">${u.is_wiki_editor ? "Remove wiki editor" : "Make wiki editor"}</button>
           <button class="btn small" data-act="logout">Force log out</button>
           <button class="btn small ${u.is_active ? "danger" : "primary"}" data-act="toggle">${u.is_active ? "Deactivate" : "Activate"}</button>
         </div>
-        <p class="field-help">Deactivating blocks sign-in and ends every active session immediately. Force log-out ends sessions without disabling the account. Wiki editors write wiki pages and review everyone else's suggestions.</p>
+        <p class="field-help">Deactivating blocks sign-in and ends every active session immediately. Force log-out ends sessions without disabling the account.</p>
       </div>
       <div class="modal-actions"><button class="btn" data-cancel type="button">Close</button></div>
     </div>`;
@@ -1559,10 +1558,6 @@ function openSiteUser(u, after) {
   overlay.querySelector('[data-act="logout"]').addEventListener("click", (e) => run(e.target, async () => {
     await API.call(`/admin/site-users/${u.id}/logout`, { method: "POST" });
     toast("All sessions ended.", "ok");
-  }));
-  overlay.querySelector('[data-act="wiki"]').addEventListener("click", (e) => run(e.target, async () => {
-    await API.call(`/admin/site-users/${u.id}/wiki-editor?enabled=${!u.is_wiki_editor}`, { method: "POST" });
-    toast(u.is_wiki_editor ? "No longer a wiki editor." : "Now a wiki editor.", "ok");
   }));
   overlay.querySelector('[data-act="toggle"]').addEventListener("click", (e) => run(e.target, async () => {
     const path = u.is_active ? "deactivate" : "activate";

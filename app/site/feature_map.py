@@ -41,6 +41,7 @@ SITE_FEATURE_FLAGS = {
     "calendar_enabled": feature_flags.CALENDAR_FLAG,
     "streams_enabled": feature_flags.STREAMS_FLAG,
     "btt_releases_enabled": feature_flags.BTT_RELEASES_FLAG,
+    "classes_enabled": feature_flags.CLASSES_FLAG,
     "star_chart_enabled": feature_flags.STAR_CHART_FLAG,
     "gem_simulator_enabled": feature_flags.GEM_SIMULATOR_FLAG,
     "gem_evaluator_enabled": feature_flags.GEM_EVALUATOR_FLAG,
@@ -61,7 +62,6 @@ SITE_FEATURE_FLAGS = {
     "tomes_enabled": feature_flags.TOMES_FLAG,
     "unlock_debug_enabled": feature_flags.UNLOCK_DEBUG_FLAG,
     "file_drops_enabled": feature_flags.FILE_DROPS_FLAG,
-    "wiki_enabled": feature_flags.WIKI_FLAG,
 }
 
 
@@ -144,6 +144,10 @@ def feature_blocks(p: str, f: dict) -> bool:
         return True
     if not f["btt_releases_enabled"] and (
         p == "/releases" or p.startswith("/site/btt")
+    ):
+        return True
+    if not f["classes_enabled"] and (
+        p == "/classes" or p.startswith("/site/stats/classes")
     ):
         return True
     # Star Chart is fully client-rendered from the static /static/star_chart.json
@@ -261,8 +265,10 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/accessibility", None),
     ("/changelog", None),
     ("/commands", "commands_enabled"),
+    ("/classes", "classes_enabled"),
     ("/star-chart", "star_chart_enabled"),
     ("/gem-simulator", "gem_simulator_enabled"),
+    ("/gems-guide", "gems_guide_enabled"),
     ("/abilities", "abilities_enabled"),
     ("/guides", "guides_enabled"),
     ("/allies", "allies_enabled"),
@@ -305,7 +311,6 @@ _ROBOTS_BLOCKED_HOSTS = frozenset(
     url.split("://", 1)[-1].split("/", 1)[0].lower()
     for url in (settings.api_url, settings.dev_url, settings.docs_url)
 )
-_WIKI_HOST = settings.wiki_url.split("://", 1)[-1].split("/", 1)[0].lower()
 
 def robots_body(host: str) -> str:
     """Host-aware robots.txt body. The public site is fully crawlable and
@@ -332,13 +337,6 @@ def robots_body(host: str) -> str:
         )
     if host in _ROBOTS_BLOCKED_HOSTS:
         return "User-agent: *\nDisallow: /\n"
-    if host == _WIKI_HOST:
-        return (
-            "User-agent: *\n"
-            "Allow: /\n"
-            "Disallow: /-/\n"
-            f"\nSitemap: {settings.wiki_url.rstrip('/')}/sitemap.xml\n"
-        )
     return (
         "User-agent: *\n"
         "Allow: /\n"

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /gems (wiki) - interactive "How Gems Work in Trove" explainer.
+   /gems-guide - interactive "How Gems Work in Trove" explainer.
    Vanilla JS, no deps, CSP-clean. All gem numbers mirror the server-side
    gem model (app/trove/gems/{constants,bases}.py) so the guide stays true
    to the actual game data. Client-only bar one optional read: this week's
@@ -27,11 +27,17 @@
     return n;
   }
   function $(sel, ctx) { return (ctx || doc).querySelector(sel); }
-  // Links into the main site; the page itself is served on the wiki host.
-  var SITE = body.getAttribute("data-site-origin") || "";
 
-  /* ── fill {placeholders} in a copy string ─────────────────────────── */
-  function fillIn(s, map) { return s.replace(/\{(\w+)\}/g, function (_, k) { return (map && map[k] != null) ? map[k] : "{" + k + "}"; }); }
+  /* ── i18n for JS-built content ──────────────────────────────────────────
+     The [data-i18n] sweep only covers static markup, so JS-rendered strings
+     go through window.BTTi18n.t(). tt() = plain lookup; ttf() = lookup a
+     template then fill {placeholders}. Sections register a re-render via
+     onLang() so a mid-page language switch updates them too. */
+  function tt(s) { return (window.BTTi18n && window.BTTi18n.t) ? window.BTTi18n.t(s) : s; }
+  function ttf(s, map) { return tt(s).replace(/\{(\w+)\}/g, function (_, k) { return (map && map[k] != null) ? map[k] : "{" + k + "}"; }); }
+  var RERENDER = [];
+  function onLang(fn) { RERENDER.push(fn); }
+  doc.addEventListener("btt-lang-changed", function () { RERENDER.forEach(function (f) { try { f(); } catch (e) {} }); });
 
   /* ── game data (mirrors constants.py / bases.py) ────────────────────── */
   var COL = { blue: "#58a6ff", orange: "#ff8a3d", yellow: "#ffd166", purple: "#a371f7", green: "#3fb950", red: "#f85149", white: "#eaf1fa", cyan: "#2fd4e6" };
@@ -192,7 +198,7 @@
     // No tier socket here (the low-res socket art looks poor upscaled) - just the
     // gem, which starts desaturated and colours in once its element locks.
     mountGem(stage, { type: 2, element: 4, float: true, alt: "A Mystic Empowered Cosmic gem" });
-    function specVals() { return ["Mystic", "Empowered", "Cosmic", "Magic · Crit Dmg · Light", "Vampirian Vanquisher"]; }
+    function specVals() { return [tt("Mystic"), tt("Empowered"), tt("Cosmic"), tt("Magic · Crit Dmg · Light"), "Vampirian Vanquisher"]; }
     var rows = Array.prototype.slice.call(spec.querySelectorAll(".gg-spec-row"));
     var current = -1;
 
@@ -233,6 +239,7 @@
     window.addEventListener("resize", pickStep);
     window.addEventListener("load", pickStep);
     pickStep();
+    onLang(function () { var sv = specVals(); rows.forEach(function (row, i) { if (row.classList.contains("lit")) row.querySelector("dd").textContent = sv[i]; }); });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -250,9 +257,9 @@
         var card = el("button", {
           class: "gg-tier", role: "radio", "aria-checked": i === active ? "true" : "false", type: "button"
         }, [
-          el("span", { class: "gg-tier-name" }, [el("span", { class: "gg-tier-dot" }), t.name]),
-          el("span", { class: "gg-tier-rank", text: fillIn("TIER {n} / 4", { n: t.id }) }),
-          el("span", { class: "gg-tier-ml", html: fillIn("Levels to <b>{n}</b>", { n: t.max }) })
+          el("span", { class: "gg-tier-name" }, [el("span", { class: "gg-tier-dot" }), tt(t.name)]),
+          el("span", { class: "gg-tier-rank", text: ttf("TIER {n} / 4", { n: t.id }) }),
+          el("span", { class: "gg-tier-ml", html: ttf("Levels to <b>{n}</b>", { n: t.max }) })
         ]);
         card.style.setProperty("--tc", t.color);
         if (i === active) card.classList.add("active");
@@ -273,9 +280,9 @@
       var t = TIERS[active], maxPR = gemPR(t, "emp", t.max);
       detail.style.setProperty("--gem", t.color);
       detail.innerHTML = "";
-      detail.appendChild(stat("Max level", t.max, t.note));
-      detail.appendChild(stat("Each new roll", "+" + PR_HI.emp[t.id], "The PR a milestone roll adds (level 5 / 10 / 15)."));
-      var barCell = stat("Max Power Rank", maxPR.toLocaleString(), "A perfect Empowered gem at max level.");
+      detail.appendChild(stat(tt("Max level"), t.max, tt(t.note)));
+      detail.appendChild(stat(tt("Each new roll"), "+" + PR_HI.emp[t.id], tt("The PR a milestone roll adds (level 5 / 10 / 15).")));
+      var barCell = stat(tt("Max Power Rank"), maxPR.toLocaleString(), tt("A perfect Empowered gem at max level."));
       var bar = el("div", { class: "gg-tier-bar" }, el("i"));
       barCell.appendChild(bar);
       detail.appendChild(barCell);
@@ -289,6 +296,7 @@
       ]);
     }
     buildCards(); render();
+    onLang(function () { buildCards(); render(); });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -306,7 +314,7 @@
     function money(n) { return n.toLocaleString("en-US"); }
     function tierChip(t) {
       var chip = el("span", { class: "gg-conv-tier" }, [
-        el("span", { class: "gg-conv-dot" }), t.name
+        el("span", { class: "gg-conv-dot" }), tt(t.name)
       ]);
       chip.style.setProperty("--tc", t.color);
       return chip;
@@ -318,17 +326,17 @@
         var card = el("div", { class: "gg-conv-card" }, [
           el("img", { class: "gg-conv-ic", src: ICON + c.img + ".png", alt: "", "aria-hidden": "true", loading: "lazy", width: "52", height: "52" }),
           el("div", { class: "gg-conv-body" }, [
-            el("span", { class: "gg-conv-name", text: c.name }),
+            el("span", { class: "gg-conv-name", text: tt(c.name) }),
             el("span", { class: "gg-conv-flow" }, [
               tierChip(from),
               el("i", { class: "fa-solid fa-arrow-right gg-conv-arrow", "aria-hidden": "true" }),
               tierChip(to)
             ]),
-            el("span", { class: "gg-conv-keep", text: "Keeps level + augments" }),
+            el("span", { class: "gg-conv-keep", text: tt("Keeps level + augments") }),
             el("span", { class: "gg-conv-price" }, [
               el("i", { class: "fa-solid fa-coins gg-conv-coin", "aria-hidden": "true" }),
               money(c.credits) + " Credits",
-              el("span", { class: "gg-conv-or", text: "or" }),
+              el("span", { class: "gg-conv-or", text: tt("or") }),
               money(c.cubits) + " Cubits"
             ])
           ])
@@ -338,11 +346,13 @@
       });
     }
     build();
+    onLang(build);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
      6b. Gem Level Up Boosters (verbatim from the game's item strings:
      languages/en/prefabs_item_gem_booster.binfab). Ordered weakest→strongest.
+     Item names go through tt() so they read in the page's language.
      ═══════════════════════════════════════════════════════════════════ */
   (function () {
     var wrap = $("#gg-boost-cards");
@@ -369,22 +379,22 @@
       BOOSTERS.forEach(function (b, i) {
         var meter = el("div", { class: "gg-boost-meter" }, el("i"));
         var tag = b.mystic
-          ? el("span", { class: "gg-boost-badge", text: "Mystic only" })
-          : (b.str === MAXSTR ? el("span", { class: "gg-boost-badge alt", text: "All but Mystic" }) : null);
+          ? el("span", { class: "gg-boost-badge", text: tt("Mystic only") })
+          : (b.str === MAXSTR ? el("span", { class: "gg-boost-badge alt", text: tt("All but Mystic") }) : null);
         var card = el("div", { class: "gg-boost-card" + (b.mystic ? " mystic" : "") }, [
           el("div", { class: "gg-boost-top" }, [
             el("img", { class: "gg-boost-ic", src: ICON + b.img + ".png", alt: "", "aria-hidden": "true", loading: "lazy", width: "44", height: "44" }),
             el("div", { class: "gg-boost-id" }, [
-              el("span", { class: "gg-boost-name", text: b.name }),
+              el("span", { class: "gg-boost-name", text: tt(b.name) }),
               tag
             ])
           ]),
           el("div", { class: "gg-boost-chips" }, [
-            chip("up", "Level Up", "+" + b.up.toLocaleString() + "%"),
-            chip("dbl", "Double Level Up", "+" + b.dbl.toLocaleString() + "%")
+            chip("up", tt("Level Up"), "+" + b.up.toLocaleString() + "%"),
+            chip("dbl", tt("Double Level Up"), "+" + b.dbl.toLocaleString() + "%")
           ]),
           el("div", { class: "gg-boost-strength" }, [
-            el("span", { class: "gg-boost-strength-lbl", text: "Strength" }),
+            el("span", { class: "gg-boost-strength-lbl", text: tt("Strength") }),
             meter
           ])
         ]);
@@ -393,6 +403,7 @@
       });
     }
     build();
+    onLang(build);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -432,11 +443,11 @@
       var d = DATA[type];
       detail.style.setProperty("--gem", type === 2 ? COL.purple : COL.orange);
       detail.innerHTML = "";
-      detail.appendChild(el("h3", {}, [d.name, el("span", { class: "gg-badge " + d.badge, text: d.badgeText })]));
-      detail.appendChild(el("p", { text: d.blurb }));
+      detail.appendChild(el("h3", {}, [tt(d.name), el("span", { class: "gg-badge " + d.badge, text: tt(d.badgeText) })]));
+      detail.appendChild(el("p", { text: tt(d.blurb) }));
       var list = el("div", { class: "gg-feat-list" });
       d.feats.forEach(function (f, i) {
-        var row = el("div", { class: "gg-feat" }, [el("i", { class: "fa-solid " + f[0], "aria-hidden": "true" }), el("span", { html: f[1] })]);
+        var row = el("div", { class: "gg-feat" }, [el("i", { class: "fa-solid " + f[0], "aria-hidden": "true" }), el("span", { html: tt(f[1]) })]);
         row.style.setProperty("--i", i);
         row.style.animationDelay = (REDUCE ? 0 : i * 60) + "ms";
         list.appendChild(row);
@@ -446,6 +457,7 @@
     }
     segs.forEach(function (s) { s.addEventListener("click", function () { select(+s.getAttribute("data-type")); }); });
     select(1);
+    onLang(function () { select(curType); });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -459,12 +471,12 @@
       wrap.innerHTML = "";
       TIERS.forEach(function (t) {
         var card = el("div", { class: "gg-drop-card" }, [
-          el("span", { class: "gg-drop-tier" }, [el("span", { class: "gg-drop-dot" }), t.name]),
+          el("span", { class: "gg-drop-tier" }, [el("span", { class: "gg-drop-dot" }), tt(t.name)]),
           el("span", { class: "gg-drop-diff", text: "D" + t.drop }),
-          el("span", { class: "gg-drop-sub", text: fillIn("Worlds at difficulty {n}", { n: t.drop }) }),
+          el("span", { class: "gg-drop-sub", text: ttf("Worlds at difficulty {n}", { n: t.drop }) }),
           t.delve ? el("span", { class: "gg-drop-delve" }, [
             el("i", { class: "fa-solid fa-stairs", "aria-hidden": "true" }),
-            fillIn("Delve depth {n}", { n: t.delve })
+            ttf("Delve depth {n}", { n: t.delve })
           ]) : null
         ]);
         card.style.setProperty("--tc", t.color);
@@ -472,6 +484,7 @@
       });
     }
     build();
+    onLang(build);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -488,7 +501,7 @@
     ];
     var active = "elemental";
     function groupByKey(k) { for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i].key === k) return GROUPS[i]; return GROUPS[0]; }
-    function groupName(g) { return g.ids.map(function (id) { return elemById(id).name; }).join(" · "); }
+    function groupName(g) { return g.ids.map(function (id) { return tt(elemById(id).name); }).join(" · "); }
 
     function buildEls() {
       wrap.innerHTML = "";
@@ -498,7 +511,7 @@
         var b = el("button", { class: "gg-elem", role: "radio", type: "button", "aria-checked": g.key === active ? "true" : "false" }, [
           orb,
           el("span", { class: "gg-elem-name", text: groupName(g) }),
-          el("span", { class: "gg-elem-slot", text: g.cosmic ? fillIn("{el} socket", { el: "Cosmic" }) : "Three elemental sockets" })
+          el("span", { class: "gg-elem-slot", text: g.cosmic ? ttf("{el} socket", { el: tt("Cosmic") }) : tt("Three elemental sockets") })
         ]);
         b.style.setProperty("--ec", g.color);
         if (g.key === active) b.classList.add("active");
@@ -522,29 +535,30 @@
       detail.className = "gg-element-detail" + (g.cosmic ? " cosmic" : "");
       detail.innerHTML = "";
 
-      var rolls = el("div", { class: "gg-ed-block" }, el("h3", { html: '<i class="fa-solid fa-dice-d6"></i> ' + "Can roll" }));
+      var rolls = el("div", { class: "gg-ed-block" }, el("h3", { html: '<i class="fa-solid fa-dice-d6"></i> ' + tt("Can roll") }));
       var rrow = el("div", { class: "gg-tag-row" });
-      ["Damage", "Critical Damage", "Critical Hit", "Max Health", "Max Health %"].forEach(function (n) { rrow.appendChild(tag(n, false)); });
-      if (g.cosmic) rrow.appendChild(tag("Light", true));
+      ["Damage", "Critical Damage", "Critical Hit", "Max Health", "Max Health %"].forEach(function (n) { rrow.appendChild(tag(tt(n), false)); });
+      if (g.cosmic) rrow.appendChild(tag(tt("Light"), true));
       rolls.appendChild(rrow);
 
-      var abil = el("div", { class: "gg-ed-block" }, el("h3", { html: '<i class="fa-solid fa-bolt"></i> ' + "Empowered abilities" }));
+      var abil = el("div", { class: "gg-ed-block" }, el("h3", { html: '<i class="fa-solid fa-bolt"></i> ' + tt("Empowered abilities") }));
       var arow = el("div", { class: "gg-tag-row" });
       g.abil.forEach(function (n) { arow.appendChild(tag(n, false)); });
       abil.appendChild(arow);
-      abil.appendChild(el("p", { class: "gg-ed-hint", text: "Only one gem of each ability at a time - you can't equip the same ability twice." }));
+      abil.appendChild(el("p", { class: "gg-ed-hint", text: tt("Only one gem of each ability at a time - you can't equip the same ability twice.") }));
 
       detail.appendChild(rolls);
       detail.appendChild(abil);
 
       var note = g.cosmic
-        ? '<b>Cosmic is the special one.</b> One stat slot is always locked to <b>Light</b> - the stat that powers Geode &amp; cosmic content - and its Empowered abilities are a set of their own. Cosmic gems go in their own three sockets on top of your elemental gems.'
-        : 'Water, Fire and Air share the exact same rolls and ability set - only the socket they fit differs. Pick the element your class and slots call for.';
+        ? tt('<b>Cosmic is the special one.</b> One stat slot is always locked to <b>Light</b> - the stat that powers Geode &amp; cosmic content - and its Empowered abilities are a set of their own. Cosmic gems go in their own three sockets on top of your elemental gems.')
+        : tt('Water, Fire and Air share the exact same rolls and ability set - only the socket they fit differs. Pick the element your class and slots call for.');
       detail.appendChild(el("p", { class: "gg-ed-note" + (g.cosmic ? " cosmic" : ""), html: note }));
       detail.appendChild(el("p", { class: "gg-ed-note gg-ed-primo", html:
-        '<i class="fa-solid fa-dragon" aria-hidden="true"></i> ' + 'Each element has its own <b>Primordial Dragon</b> that boosts <b>every gem of that element by +10%</b>. Water, Fire, Air and Cosmic each have one - unlock all four and your whole gem loadout gets the +10%.' }));
+        '<i class="fa-solid fa-dragon" aria-hidden="true"></i> ' + tt('Each element has its own <b>Primordial Dragon</b> that boosts <b>every gem of that element by +10%</b>. Water, Fire, Air and Cosmic each have one - unlock all four and your whole gem loadout gets the +10%.') }));
     }
     buildEls(); select("elemental");
+    onLang(function () { buildEls(); select(active); });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -557,10 +571,11 @@
 
     function buildPool() {
       poolList.innerHTML = "";
-      POOL.forEach(function (n) { poolList.appendChild(el("li", {}, [el("span", { class: "d" }), n])); });
+      POOL.forEach(function (n) { poolList.appendChild(el("li", {}, [el("span", { class: "d" }), tt(n)])); });
     }
     buildPool();
 
+    var lastNames = null, lastQs = null;
     function grade(q) {
       if (q >= 100) return ["Perfect", "q-high"];
       if (q >= 66) return ["Great roll", "q-high"];
@@ -579,25 +594,27 @@
         var barWrap = el("div", { class: "gg-slot-bar " + g[1] }, el("i"));
         var slot = el("div", { class: "gg-slot" }, [
           el("div", { class: "gg-slot-top" }, [
-            el("span", { class: "gg-slot-name", html: '<span class="gg-slot-i"><i class="fa-solid ' + (STAT_ICON[n] || "fa-gem") + '"></i></span>' + n }),
-            el("span", { class: "gg-slot-roll", html: fillIn("roll <b>{q}%</b>", { q: qs[i].toFixed(1) }) })
+            el("span", { class: "gg-slot-name", html: '<span class="gg-slot-i"><i class="fa-solid ' + (STAT_ICON[n] || "fa-gem") + '"></i></span>' + tt(n) }),
+            el("span", { class: "gg-slot-roll", html: ttf("roll <b>{q}%</b>", { q: qs[i].toFixed(1) }) })
           ]),
           barWrap,
-          el("div", { class: "gg-slot-grade", text: g[0] })
+          el("div", { class: "gg-slot-grade", text: tt(g[0]) })
         ]);
         slotsWrap.appendChild(slot);
         (function (bar, q) { requestAnimationFrame(function () { setTimeout(function () { bar.firstChild.style.width = q + "%"; }, 30 + i * 90); }); })(barWrap, qs[i]);
       });
       var avg = qs.reduce(function (a, b) { return a + b; }, 0) / qs.length;
       var g = grade(avg);
-      hint.innerHTML = fillIn("Average quality <b>{q}%</b> — {grade}. Focusing later lifts every stat to 100%.", { q: avg.toFixed(1), grade: g[0] });
+      hint.innerHTML = ttf("Average quality <b>{q}%</b> — {grade}. Focusing later lifts every stat to 100%.", { q: avg.toFixed(1), grade: tt(g[0]) });
     }
     function roll() {
-      var names = pick3();
-      renderRoll(names, names.map(function () { return Math.round(Math.random() * 1000) / 10; }));
+      lastNames = pick3();
+      lastQs = lastNames.map(function () { return Math.round(Math.random() * 1000) / 10; });
+      renderRoll(lastNames, lastQs);
     }
     if (btn) btn.addEventListener("click", roll);
     roll();
+    onLang(function () { buildPool(); if (lastNames) renderRoll(lastNames, lastQs); });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -613,17 +630,17 @@
     var tier = TIERS[3], kind = "emp", lastPR = 0;
     function basePR(t, level) { return gemPR(t, kind, level); }   // Lesser or Empowered, per the toggle
     function kindName() { return kind === "emp" ? "Empowered" : "Lesser"; }
-    function setPrSub() { if (prSub) prSub.textContent = fillIn("perfect {tier} {type} gem", { tier: tier.name, type: kindName() }); }
+    function setPrSub() { if (prSub) prSub.textContent = ttf("perfect {tier} {type} gem", { tier: tt(tier.name), type: tt(kindName()) }); }
 
     TIERS.forEach(function (t, i) {
-      var b = el("button", { type: "button", text: t.name, "aria-checked": i === 3 ? "true" : "false" });
+      var b = el("button", { type: "button", text: tt(t.name), "aria-checked": i === 3 ? "true" : "false" });
       b.style.setProperty("--tc", t.color);   // each tier button carries its own colour
       if (i === 3) b.classList.add("active");
       b.addEventListener("click", function () { setTier(t, b); });
       pick.appendChild(b);
     });
     if (typePick) [["emp", "Empowered"], ["lesser", "Lesser"]].forEach(function (p) {
-      var b = el("button", { type: "button", text: p[1], "data-kind": p[0], "aria-checked": p[0] === kind ? "true" : "false" });
+      var b = el("button", { type: "button", text: tt(p[1]), "data-kind": p[0], "aria-checked": p[0] === kind ? "true" : "false" });
       if (p[0] === kind) b.classList.add("active");
       b.addEventListener("click", function () { setKind(p[0], b); });
       typePick.appendChild(b);
@@ -667,7 +684,7 @@
         var gain = gains[l - 1], milestone = (l === 5 || l === 10 || l === 15);
         var bar = el("div", { class: "gg-bar", "data-lv": l });
         bar.setAttribute("data-h", Math.max(3, gain / maxGain * 100));
-        bar.setAttribute("title", fillIn(milestone ? "Level {lv}: +{n} PR (new roll!)" : "Level {lv}: +{n} PR", { lv: l, n: gain }));
+        bar.setAttribute("title", ttf(milestone ? "Level {lv}: +{n} PR (new roll!)" : "Level {lv}: +{n} PR", { lv: l, n: gain }));
         if (milestone) bar.classList.add("milestone");
         chart.appendChild(bar);
       }
@@ -693,16 +710,21 @@
       Array.prototype.forEach.call(msWrap.children, function (m) { m.classList.toggle("reached", +m.getAttribute("data-lv") <= level); });
       paintChart(level);
       var msg;
-      if (level === 1) msg = fillIn("A perfect gem starts with its <b>3 stats</b> (3 containers), each worth {n} PR. Drag to pour in Gem Dust.", { n: PR_HI[kind][tier.id] });
-      else if (level === 5 || level === 10 || level === 15) msg = fillIn("<b>Milestone level {lv}!</b> A new roll (container) drops in - a <b>+{n} PR</b> jump on its own. This is where the big power is.", { lv: level, n: PR_HI[kind][tier.id] });
-      else if (level < 15) msg = "Steady per-level growth between milestones (×3, one for each stat).";
-      else if (level < 20) msg = "All <b>6 containers</b> unlocked - the gem is full size. Now it's about focusing every container to 100%.";
-      else msg = fillIn("Past 15 only static level gains remain; levels divisible by 5 give the largest (+{n} PR here).", { n: tier.pr * 5 * 3 });
+      if (level === 1) msg = ttf("A perfect gem starts with its <b>3 stats</b> (3 containers), each worth {n} PR. Drag to pour in Gem Dust.", { n: PR_HI[kind][tier.id] });
+      else if (level === 5 || level === 10 || level === 15) msg = ttf("<b>Milestone level {lv}!</b> A new roll (container) drops in - a <b>+{n} PR</b> jump on its own. This is where the big power is.", { lv: level, n: PR_HI[kind][tier.id] });
+      else if (level < 15) msg = tt("Steady per-level growth between milestones (×3, one for each stat).");
+      else if (level < 20) msg = tt("All <b>6 containers</b> unlocked - the gem is full size. Now it's about focusing every container to 100%.");
+      else msg = ttf("Past 15 only static level gains remain; levels divisible by 5 give the largest (+{n} PR here).", { n: tier.pr * 5 * 3 });
       hint.innerHTML = msg;
     }
     slider.addEventListener("input", function () { update(false); });
     if (primo) primo.addEventListener("change", function () { update(true); });
     setTier(TIERS[3], pick.children[3]);
+    onLang(function () {
+      Array.prototype.forEach.call(pick.children, function (b, i) { b.textContent = tt(TIERS[i].name); });
+      if (typePick) Array.prototype.forEach.call(typePick.children, function (b) { b.textContent = tt(b.getAttribute("data-kind") === "emp" ? "Empowered" : "Lesser"); });
+      setPrSub(); buildChart(); update(true);
+    });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -721,14 +743,14 @@
       var perfect = q >= 100 - 1e-6;
       ring.classList.toggle("perfect", perfect);
       var total = used[1] + used[2] + used[3];
-      if (total === 0) countN.innerHTML = fillIn("This stat rolled at <b>{n}%</b>.", { n: start }) + (perfect ? "" : " " + "Add focuses to perfect it.");
+      if (total === 0) countN.innerHTML = ttf("This stat rolled at <b>{n}%</b>.", { n: start }) + (perfect ? "" : " " + tt("Add focuses to perfect it."));
       else {
         var parts = [];
         [3, 2, 1].forEach(function (k) { if (used[k]) parts.push(used[k] + "× " + AUG[k].name); });
         var list = parts.join(", ");
         countN.innerHTML = perfect
-          ? fillIn("<b>Perfect!</b> Reached 100% with <b>{list}</b>.", { list: list })
-          : fillIn("So far: <b>{list}</b> — {n}% to go.", { list: list, n: Math.round((100 - q) * 10) / 10 });
+          ? ttf("<b>Perfect!</b> Reached 100% with <b>{list}</b>.", { list: list })
+          : ttf("So far: <b>{list}</b> — {n}% to go.", { list: list, n: Math.round((100 - q) * 10) / 10 });
       }
       btns.forEach(function (b) { b.disabled = perfect; });
     }
@@ -750,6 +772,7 @@
       }
     });
     render();
+    onLang(render);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -776,7 +799,7 @@
     var MODES = [["damage", "Damage build"], ["farm", "Farm build"]];
     var mode = "damage";
 
-    function shortStat(s) { return s === "Critical Damage" ? "Crit" : (s === "Damage" ? "Damage" : "Light"); }
+    function shortStat(s) { return s === "Critical Damage" ? tt("Crit") : (s === "Damage" ? tt("Damage") : tt("Light")); }
     function hi(g) {
       Array.prototype.forEach.call(viz.querySelectorAll(".gg-code-grp"), function (cl) {
         cl.classList.toggle("hot", g && cl.getAttribute("data-group") === g);
@@ -785,22 +808,22 @@
     }
     function defaultDetail() {
       detail.className = "gg-build-detail";
-      detail.innerHTML = '<p class="gg-bd-hint"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> ' + "Hover or tap any number to see what it means." + "</p>";
+      detail.innerHTML = '<p class="gg-bd-hint"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> ' + tt("Hover or tap any number to see what it means.") + "</p>";
     }
     function showCell(cell) {
       var g = GRP[cell.group];
       detail.className = "gg-build-detail active " + g.cls;
       detail.innerHTML =
-        '<div class="gg-bd-top"><span class="gg-bd-num">' + cell.v + '</span><span class="gg-bd-lbl">' + (cell.v === 1 ? "boost" : "boosts") + "</span></div>" +
-        '<div class="gg-bd-path"><b>' + cell.group + '</b> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> <b>' + cell.stat + "</b></div>" +
-        "<p>" + fillIn("Your {group} gems drop {sum} boosts in total ({gems} × 3). This is how many of them land on {stat}.", { group: cell.group, sum: g.sum, gems: g.gems, stat: cell.stat }) + "</p>";
+        '<div class="gg-bd-top"><span class="gg-bd-num">' + cell.v + '</span><span class="gg-bd-lbl">' + (cell.v === 1 ? tt("boost") : tt("boosts")) + "</span></div>" +
+        '<div class="gg-bd-path"><b>' + tt(cell.group) + '</b> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i> <b>' + tt(cell.stat) + "</b></div>" +
+        "<p>" + ttf("Your {group} gems drop {sum} boosts in total ({gems} × 3). This is how many of them land on {stat}.", { group: tt(cell.group), sum: g.sum, gems: g.gems, stat: tt(cell.stat) }) + "</p>";
     }
 
     function render() {
       if (modes) {
         modes.innerHTML = "";
         MODES.forEach(function (m) {
-          var b = el("button", { type: "button", class: "gg-seg" + (m[0] === mode ? " active" : ""), role: "radio", "aria-checked": m[0] === mode ? "true" : "false", text: m[1] });
+          var b = el("button", { type: "button", class: "gg-seg" + (m[0] === mode ? " active" : ""), role: "radio", "aria-checked": m[0] === mode ? "true" : "false", text: tt(m[1]) });
           b.addEventListener("click", function () { mode = m[0]; render(); });
           modes.appendChild(b);
         });
@@ -818,7 +841,7 @@
           if (isCos && !prevCos) row.appendChild(el("span", { class: "gg-code-sep plus", text: "+" }));
         }
         var g = GRP[gName];
-        var cluster = el("div", { class: "gg-code-grp " + g.cls, "data-group": gName }, el("span", { class: "gg-code-grplabel", text: gName }));
+        var cluster = el("div", { class: "gg-code-grp " + g.cls, "data-group": gName }, el("span", { class: "gg-code-grplabel", text: tt(gName) }));
         var cw = el("div", { class: "gg-code-cells" });
         byGroup[gName].forEach(function (cell, ci) {
           if (ci > 0) cw.appendChild(el("span", { class: "gg-code-sep sm", text: "/" }));
@@ -839,6 +862,7 @@
       defaultDetail();
     }
     render();
+    onLang(render);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -916,7 +940,7 @@
         mat: "brill", bp: "item_crafting_gempower_01.blueprint",
         head: "Three boards, every week", val: "21", unit: "Brilliance a week",
         body: "Three class <b>Effort</b> boards run as contests each week, and finishing <b>rank 125 or better</b> on one pays <b>7 Brilliance</b>. Each board pays separately, so placing on all three is 21 - the largest weekly source there is. They rotate, so the classes worth your time change with them.",
-        note: "Payouts land at the weekly reset, <b>Monday 11:00 UTC</b> - the same rollover the <a href=\"" + SITE + "/server-time\">server clock</a> counts down to. The Class Power Rank boards pay out on their own schedule.",
+        note: "Payouts land at the weekly reset, <b>Monday 11:00 UTC</b> - the same rollover the <a href=\"/server-time\">server clock</a> counts down to. The Class Power Rank boards pay out on their own schedule.",
         live: true
       },
       {
@@ -935,10 +959,10 @@
         var card = el("div", { class: "gg-tg-mat" }, [
           el("span", { class: "gg-tg-matic" }, itemImg(m.bp, "gg-tg-matimg", 96)),
           el("div", { class: "gg-tg-matbody" }, [
-            el("span", { class: "gg-tg-matname", text: m.name }),
+            el("span", { class: "gg-tg-matname", text: tt(m.name) }),
             el("span", { class: "gg-tg-matcap" }, m.cap
-              ? [el("b", { text: m.cap }), " " + m.capUnit]
-              : [el("span", { class: "gg-tg-matcap-soft", text: m.capUnit })])
+              ? [el("b", { text: m.cap }), " " + tt(m.capUnit)]
+              : [el("span", { class: "gg-tg-matcap-soft", text: tt(m.capUnit) })])
           ])
         ]);
         card.style.setProperty("--mc", m.color);
@@ -957,19 +981,19 @@
     function sourceCard(s) {
       var m = MATS[s.mat];
       var body = el("div", { class: "gg-tg-cbody" }, [
-        el("span", { class: "gg-tg-cmat", text: m.name }),
-        el("h5", { class: "gg-tg-chead", text: s.head }),
+        el("span", { class: "gg-tg-cmat", text: tt(m.name) }),
+        el("h5", { class: "gg-tg-chead", text: tt(s.head) }),
         el("div", { class: "gg-tg-yield" }, [
-          el("b", { text: s.val }),
-          el("span", { text: s.unit })
+          el("b", { text: tt(s.val) }),
+          el("span", { text: tt(s.unit) })
         ]),
-        el("p", { class: "gg-tg-ctext", html: s.body })
+        el("p", { class: "gg-tg-ctext", html: tt(s.body) })
       ]);
 
       if (s.floors) {
         // The rail is a sample, not a limit - vaults keep appearing every third
         // floor however deep you go, so it trails off rather than ending.
-        body.appendChild(el("span", { class: "gg-tg-rlabel", text: s.floorsLabel }));
+        body.appendChild(el("span", { class: "gg-tg-rlabel", text: tt(s.floorsLabel) }));
         var ladder = el("div", { class: "gg-tg-ladder", "aria-hidden": "true" });
         s.floors.forEach(function (f) {
           ladder.appendChild(el("span", { class: "gg-tg-floor", text: String(f) }));
@@ -978,12 +1002,12 @@
         body.appendChild(ladder);
       }
       if (s.recipe) {
-        body.appendChild(el("span", { class: "gg-tg-rlabel", text: s.recipeLabel }));
+        body.appendChild(el("span", { class: "gg-tg-rlabel", text: tt(s.recipeLabel) }));
         var rec = el("ul", { class: "gg-tg-recipe" });
         s.recipe.forEach(function (g) {
           rec.appendChild(el("li", {}, [
             el("b", { text: g.a.toLocaleString() }),
-            el("span", { text: g.n })
+            el("span", { text: tt(g.n) })
           ]));
         });
         body.appendChild(rec);
@@ -995,7 +1019,7 @@
       if (s.note) {
         body.appendChild(el("p", { class: "gg-tg-cnote" }, [
           el("i", { class: "fa-solid fa-circle-info", "aria-hidden": "true" }),
-          el("span", { html: s.note })   // notes may carry <b> / links
+          el("span", { html: tt(s.note) })   // notes may carry <b> / links
         ]));
       }
 
@@ -1023,12 +1047,12 @@
       var list = el("div", { class: "gg-tg-live-list" });
       boards.forEach(function (b) {
         list.appendChild(el("a", {
-          class: "gg-tg-live-chip", href: SITE + "/leaderboards#board=" + b.uuid,
+          class: "gg-tg-live-chip", href: "/leaderboards#board=" + b.uuid,
           html: (U ? U.boardIconImg(b.uuid, "gg-tg-live-ic") : "") +
                 "<span>" + (U ? U.esc(b.name || ("#" + b.uuid)) : "") + "</span>"
         }));
       });
-      slot.appendChild(el("span", { class: "gg-tg-live-lbl", text: "Running this week" }));
+      slot.appendChild(el("span", { class: "gg-tg-live-lbl", text: tt("Running this week") }));
       slot.appendChild(list);
     }
 
@@ -1047,6 +1071,7 @@
 
     function build() { buildMats(); buildGrid(); paintLive(); }
     build();
+    onLang(build);
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -1074,21 +1099,21 @@
     }
     function buildControls() {
       controls.innerHTML = "";
-      controls.appendChild(segGroup("Tier",
-        TIERS.map(function (t) { return { label: t.name, t: t }; }),
+      controls.appendChild(segGroup(tt("Tier"),
+        TIERS.map(function (t) { return { label: tt(t.name), t: t }; }),
         function (it) { return it.t.id === st.tier.id; }, function (it) { st.tier = it.t; },
         function (it) { return it.t.color; }));
-      controls.appendChild(segGroup("Type",
-        [{ label: "Lesser", k: "lesser" }, { label: "Empowered", k: "emp" }],
+      controls.appendChild(segGroup(tt("Type"),
+        [{ label: tt("Lesser"), k: "lesser" }, { label: tt("Empowered"), k: "emp" }],
         function (it) { return it.k === st.kind; }, function (it) { st.kind = it.k; }));
-      controls.appendChild(segGroup("Boosts on this stat",
+      controls.appendChild(segGroup(tt("Boosts on this stat"),
         [0, 1, 2, 3].map(function (n) { return { label: String(n), b: n }; }),
         function (it) { return it.b === st.boosts; }, function (it) { st.boosts = it.b; }));
     }
     function render() {
       table.style.setProperty("--gem", st.tier.color);
       var startLvl = Math.max(1, 5 * st.boosts), lv, i;
-      var h = "<thead><tr><th>" + "Level" + "</th><th>" + "PR/lvl" + "</th>";
+      var h = "<thead><tr><th>" + tt("Level") + "</th><th>" + tt("PR/lvl") + "</th>";
       for (i = 0; i < STAT_COLS.length; i++) h += "<th>" + STAT_COLS[i].label + "</th>";
       h += "</tr></thead><tbody>";
       for (lv = startLvl; lv <= st.tier.max; lv++) {
@@ -1103,6 +1128,7 @@
       table.innerHTML = h + "</tbody>";
     }
     buildControls(); render();
+    onLang(function () { buildControls(); render(); });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -1147,7 +1173,7 @@
       window.addEventListener("scroll", sweep, { passive: true });
       window.addEventListener("resize", sweep);
       // 'load' fires after the browser applies any #hash deep-link scroll, so a
-      // section linked directly (e.g. /gems#focus) still reveals.
+      // section linked directly (e.g. /gems-guide#focus) still reveals.
       window.addEventListener("load", sweep);
       sweep();
     }
@@ -1199,10 +1225,10 @@
     }
     var view = readView();
 
-    var lbl = el("span", { class: "gg-view-toggle-lbl", text: "View" });
-    var bGuide = el("button", { type: "button", role: "radio", text: "Guide" });
-    var bWiki = el("button", { type: "button", role: "radio", text: "Wiki" });
-    var seg = el("div", { class: "gg-view-seg", role: "radiogroup", "aria-label": "Page view" }, [bGuide, bWiki]);
+    var lbl = el("span", { class: "gg-view-toggle-lbl", text: tt("View") });
+    var bGuide = el("button", { type: "button", role: "radio", text: tt("Guide") });
+    var bWiki = el("button", { type: "button", role: "radio", text: tt("Wiki") });
+    var seg = el("div", { class: "gg-view-seg", role: "radiogroup", "aria-label": tt("Page view") }, [bGuide, bWiki]);
     var bar = el("div", { class: "gg-view-toggle" }, [lbl, seg]);
     secnav.parentNode.insertBefore(bar, secnav);
 
@@ -1259,6 +1285,11 @@
     bWiki.addEventListener("click", function () { apply("wiki", true); remember("wiki"); });
 
     apply(view, false);
+    onLang(function () {
+      lbl.textContent = tt("View");
+      bGuide.textContent = tt("Guide"); bWiki.textContent = tt("Wiki");
+      seg.setAttribute("aria-label", tt("Page view"));
+    });
   })();
 
 })();

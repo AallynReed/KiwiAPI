@@ -1363,7 +1363,6 @@ def _site_user_dto(u: SiteUser, mod_count: int = 0, modpack_count: int = 0) -> d
         "display_name": u.display_name,
         "is_active": u.is_active,
         "is_verified": u.is_verified,
-        "is_wiki_editor": u.is_wiki_editor,
         "discord_id": str(u.discord_id) if u.discord_id else None,
         "claimed_trove_name": u.claimed_trove_display or u.claimed_trove_name,
         "claim_verified": u.claim_verified,
@@ -1439,16 +1438,6 @@ async def activate_site_user(user_id: str) -> dict:
     u.updated_at = utcnow()
     await u.save()
     return {"id": str(u.id), "is_active": u.is_active}
-
-
-@router.post("/site-users/{user_id}/wiki-editor")
-async def set_site_user_wiki_editor(user_id: str, enabled: bool = Query(...)) -> dict:
-    """Grant or revoke writing on the wiki (and reviewing others' suggestions)."""
-    u = await _get_site_user(user_id)
-    u.is_wiki_editor = enabled
-    u.updated_at = utcnow()
-    await u.save()
-    return {"id": str(u.id), "is_wiki_editor": u.is_wiki_editor}
 
 
 @router.post("/site-users/{user_id}/logout")
