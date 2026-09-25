@@ -118,9 +118,9 @@ def level_plan(gem_tier: GemTier, gem_type: GemType, gem_element: GemElement,
                booster_id: str | None = None, from_level: int = 1) -> dict:
     """Every attempt from ``from_level`` to max, and the expected total spend.
 
-    Karma starts each level at 0 (a success empties it) and a full bar guarantees the
-    next attempt, so a level takes at most ``max_attempts``; the expectation counts
-    that. Double level-ups are left out, so the total leans slightly high."""
+    Karma starts each level at 0 (a success empties it) and the failure that fills the
+    bar levels the gem up there and then, so a level takes at most ``max_attempts``; the
+    expectation counts that. Double level-ups are left out, so the total leans slightly high."""
     boost = booster(booster_id) if booster_id else None
     rows, expected = [], {}
     for lv in upgrade_data(gem_tier, gem_type, gem_element)["levels"]:
@@ -135,7 +135,7 @@ def level_plan(gem_tier: GemTier, gem_type: GemType, gem_element: GemElement,
         elif fails is None:
             attempts, most = (1 / chance if chance > 0 else 0), None
         else:
-            attempts, most = (1 - (1 - chance) ** (fails + 1)) / chance, fails + 1
+            attempts, most = (1 - (1 - chance) ** fails) / chance, fails
         for c in cost:
             expected[c["name"]] = expected.get(c["name"], 0) + c["count"] * attempts
         rows.append({"level": lv["level"], "chance": chance, "double_chance": double,

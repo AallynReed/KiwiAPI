@@ -254,7 +254,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             to mutate it, and it's returned updated. Stat rolls, level-up chances and costs are the game's
             own, decoded from its files: <code>level-up</code> is an attempt that can fail, spends its
             materials either way and adds them to the gem's <code>spent</code> total. A failure fills the
-            gem's <code>karma</code> bar (the game's pity meter, max 125) and a full bar guarantees the next attempt.
+            gem's <code>karma</code> bar (the game's pity meter, max 125), and the failure that fills it levels the gem up anyway.
             <code>evaluate</code> and <code>builds/calculate</code>
             are pure calculators; the <code>lookups</code> and <code>builds/options</code> endpoints tell
             you every valid field value to send.</p>

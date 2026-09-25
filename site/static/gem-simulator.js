@@ -466,8 +466,8 @@
           h("div", { class: "karma-fill" + (next.guaranteed ? " full" : ""), style: { width: Math.min(100, next.karma / max * 100) + "%" } })),
         h("span", null, next.karma + " / " + max)));
       if (next.chance < 1 || next.karma > 0) panel.appendChild(h("div", { class: "muted" }, next.guaranteed
-        ? t("Karma is full: the next level up is guaranteed.")
-        : fmt("A failed attempt adds {n} karma. A full bar guarantees the next level up.", { n: next.karma_gain })));
+        ? t("Karma is almost full: even a failed attempt levels the gem up now.")
+        : fmt("A failed attempt adds {n} karma. The failure that fills the bar levels the gem up.", { n: next.karma_gain })));
     }
     const fill = h("div", { class: "level-attempt-fill" });
     const result = h("div", { class: "level-result", "aria-live": "polite" });
@@ -475,7 +475,7 @@
       fill.classList.add(lastAttempt.outcome);
       result.classList.add(lastAttempt.outcome);
       result.textContent = lastAttempt.outcome === "double" ? fmt("Double level up! Now level {level}.", { level: lastAttempt.level })
-        : lastAttempt.guaranteed ? fmt("Karma guaranteed it! Now level {level}.", { level: lastAttempt.level })
+        : lastAttempt.guaranteed ? fmt("The attempt failed, but it filled the karma bar and levelled up! Now level {level}.", { level: lastAttempt.level })
         : lastAttempt.outcome === "success" ? fmt("Success! Now level {level}.", { level: lastAttempt.level })
         : fmt("Failed ({chance} chance). Materials spent.", { chance: pct(lastAttempt.chance) });
     }

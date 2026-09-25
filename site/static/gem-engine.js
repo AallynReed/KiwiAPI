@@ -385,7 +385,7 @@
     }
     // One level-up attempt at the game's odds (mirrors Gem.level_up): the materials
     // and booster are spent whether or not it lands; a double gains two levels. A
-    // failure fills the karma bar; a full bar guarantees the attempt; success empties it.
+    // failure fills the karma bar and the one that fills it levels up; success empties it.
     function levelUp(gem, boosterId) {
         const attempt = levelAttempt(gem.tier, gem.type, gem.element, gem.level + 1);
         if (!attempt) return null;
@@ -395,17 +395,25 @@
         gem.attempts = (gem.attempts || 0) + 1;
         gem.spent = gem.spent || {};
         for (const c of cost) gem.spent[c.name] = (gem.spent[c.name] || 0) + c.count;
-        const guaranteed = (gem.karma || 0) >= KARMA_MAX;
+        let guaranteed = false;
         let karmaGained = 0;
         let outcome = "failed";
-        if (guaranteed || Math.random() < chance) {
+        if (Math.random() < chance) {
             const gained = (Math.random() < double && gem.level + 2 <= getGemMaxLevel(gem.tier, gem.type)) ? 2 : 1;
             for (let i = 0; i < gained; i++) gainLevel(gem);
             outcome = gained === 2 ? "double" : "success";
             gem.karma = 0;
         } else {
+            // The failure that fills the bar levels the gem up there and then, as in game.
             karmaGained = karmaGain(attempt, boost);
-            gem.karma = Math.min(KARMA_MAX, (gem.karma || 0) + karmaGained);
+            if ((gem.karma || 0) + karmaGained >= KARMA_MAX) {
+                gainLevel(gem);
+                outcome = "success";
+                guaranteed = true;
+                gem.karma = 0;
+            } else {
+                gem.karma = (gem.karma || 0) + karmaGained;
+            }
         }
         return { outcome, chance, double_chance: double, cost, guaranteed, karma_gained: karmaGained };
     }
@@ -499,7 +507,8 @@
             const [chance, double] = attemptOdds(attempt, boost);
             return {
                 level: attempt.level, chance, double_chance: double, cost: attemptCost(gem.element, attempt, boost),
-                karma: gem.karma || 0, karma_gain: karmaGain(attempt, boost), guaranteed: (gem.karma || 0) >= KARMA_MAX
+                karma: gem.karma || 0, karma_gain: karmaGain(attempt, boost),
+                guaranteed: (gem.karma || 0) + karmaGain(attempt, boost) >= KARMA_MAX
             };
         },
         levelUpGem(gemData, boosterId) {

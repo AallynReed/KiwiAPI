@@ -233,7 +233,8 @@ class Gem(BaseModel):
 
         The attempt's materials (and the booster) are spent whether or not it lands. A
         double level-up gains two levels for the one attempt, never past max. A failure
-        fills the karma bar; a full bar guarantees the attempt, and any success empties it."""
+        fills the karma bar, and the failure that fills it levels the gem up there and
+        then (as in game); any level-up empties the bar."""
         attempt = level_attempt(self.tier, self.type, self.element, self.level + 1)
         if attempt is None:
             return {"outcome": "max_level", "chance": 0.0, "double_chance": 0.0, "cost": [],
@@ -244,10 +245,10 @@ class Gem(BaseModel):
         self.attempts += 1
         for row in cost:
             self.spent[row["name"]] = self.spent.get(row["name"], 0) + row["count"]
-        guaranteed = self.karma >= KARMA_MAX
+        guaranteed = False
         karma_gained = 0
         outcome = "failed"
-        if guaranteed or random() < chance:
+        if random() < chance:
             gained = 2 if random() < double and self.level + 2 <= get_gem_max_level(self.tier, self.type) else 1
             for _ in range(gained):
                 self._gain_level()
@@ -255,7 +256,11 @@ class Gem(BaseModel):
             self.karma = 0
         else:
             karma_gained = karma_gain(attempt, boost)
-            self.karma = min(KARMA_MAX, self.karma + karma_gained)
+            if self.karma + karma_gained >= KARMA_MAX:
+                self._gain_level()
+                outcome, guaranteed, self.karma = "success", True, 0
+            else:
+                self.karma += karma_gained
         return {"outcome": outcome, "chance": chance, "double_chance": double, "cost": cost,
                 "guaranteed": guaranteed, "karma_gained": karma_gained}
 
