@@ -18,13 +18,13 @@
     <h3 class="cls-section-title" id="wk-sg-{{ loop.index }}"><span>{{ g.name }}</span><span class="wk-count-muted" data-group-count>{{ g.styles | length }}</span></h3>
     <ul class="wk-entitygrid" role="list">
         {% for x in g.styles %}
-        <li data-search="{{ (x.name ~ ' ' ~ (x.description or '')) | lower }}" data-group="{{ g.name }}"><div class="wk-entitycard wk-stylecard">
+        <li{% if x.anchor %} id="{{ x.anchor }}"{% endif %} data-search="{{ (x.name ~ ' ' ~ (x.description or '')) | lower }}" data-group="{{ g.name }}">{% if x.url %}<a class="wk-entitycard" href="{{ x.url }}">{% else %}<div class="wk-entitycard wk-stylecard">{% endif %}
             <span class="wk-entitycard-img">{% if x.image %}<img data-lazy-src="{{ x.image }}" alt="" width="48" height="48" decoding="async" data-hide-on-error>{% endif %}</span>
             <span class="wk-entitycard-text">
                 <span class="wk-entitycard-name">{{ x.name }}</span>
                 {% if x.description %}<span class="wk-entitycard-sub wk-clamp">{{ x.description }}</span>{% endif %}
             </span>
-        </div></li>
+        {% if x.url %}</a>{% else %}</div>{% endif %}</li>
         {% endfor %}
     </ul>
 </section>

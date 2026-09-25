@@ -21,11 +21,13 @@ URL map:
   /gems                  the How Gems Work guide (moved from the main site) + its write-up
   /stat-modifiers        how the game combines stat modifiers (docs/stat-modifiers.md) + its write-up
   /worlds, /delve-gateways, /shadow-tower  world lists from worlds.json (app/wiki/worlds_pages.py)
+  /daily-bonuses, /leaderboards  daily_bonuses.json and leaderboards.json (app/wiki/meta_pages.py)
   /titles                every title in the game's title text table + its write-up
   /pvp-stats             the PvP stat curves (pvp.json, docs/pvp-stats.md) + its write-up
   /<slug>                an article
   /-/...                 tools: edit, history, search, recent, pages, suggestions
 """
+import functools
 import logging
 from pathlib import Path
 from urllib.parse import quote, urlencode
@@ -44,7 +46,18 @@ from app.site.feature_map import robots_body
 from app.trove import stats as trove_stats
 from app.trove.decode import store as gamedata
 from app.web import feature_flags as web_flags
-from app.wiki import data_pages, entities, media, pvp_stats, subclass_view, worlds_pages
+from app.wiki import (
+    data_pages,
+    entities,
+    links,
+    mastery_page,
+    media,
+    meta_pages,
+    pvp_stats,
+    subclass_view,
+    upgrade_pages,
+    worlds_pages,
+)
 
 logger = logging.getLogger("kiwi.web.wiki")
 
@@ -62,7 +75,18 @@ def _browse(path: str) -> list[dict]:
     rows.append({"url": "/titles", "title": "Titles", "icon": "fa-signature", "current": path == "/titles"})
     for url, title, icon in (("/worlds", "Worlds & Biomes", "fa-earth-americas"),
                              ("/delve-gateways", "Delve Gateways", "fa-dungeon"),
-                             ("/shadow-tower", "Shadow Tower", "fa-tower-observation")):
+                             ("/shadow-tower", "Shadow Tower", "fa-tower-observation"),
+                             ("/daily-bonuses", "Daily Bonuses", "fa-calendar-day"),
+                             ("/mastery", "Mastery", "fa-crown"),
+                             ("/lootbox-odds", "Lootbox Odds", "fa-dice"),
+                             ("/pvp-powerups", "PvP Power-ups", "fa-bomb"),
+                             ("/chat-commands", "Chat Commands", "fa-terminal"),
+                             ("/star-chart", "Star Chart", "fa-star"),
+                             ("/geode-tools", "Geode Tools", "fa-screwdriver-wrench"),
+                             ("/depths-of-the-angler", "Depths of the Angler", "fa-anchor"),
+                             ("/rune-anvil", "Rune Anvil", "fa-hammer"),
+                             ("/gearcrafting-progression", "Gearcrafting", "fa-gears"),
+                             ("/leaderboards", "Leaderboards", "fa-ranking-star")):
         rows.append({"url": url, "title": title, "icon": icon, "current": path == url})
     return rows
 
@@ -168,6 +192,26 @@ def _data_cards() -> list[dict]:
              "terms": "delve gateways depth stepper stable gateway boss"},
             {"name": data_pages.DATA_PAGES["shadow-tower"], "url": "/shadow-tower", "kind": "Game data",
              "terms": "shadow tower floors flux " + " ".join(f["name"] for f in worlds_pages.shadow_tower_page()["floors"])},
+            {"name": data_pages.DATA_PAGES["daily-bonuses"], "url": "/daily-bonuses", "kind": "Game data",
+             "terms": "daily bonus bonuses patron weekday monday tuesday wednesday thursday friday saturday sunday "
+                      + " ".join(d["name"] for d in meta_pages.daily_bonuses_page()["days"])},
+            {"name": data_pages.DATA_PAGES["leaderboards"], "url": "/leaderboards", "kind": "Game data",
+             "terms": "leaderboards leaderboard boards effort paragon power rank delve weekly daily reset contest"},
+            *({"name": data_pages.DATA_PAGES[p], "url": f"/{p}", "kind": "Game data",
+               "terms": " ".join(n.get("name") or "" for n in (upgrade_pages.system(s) or {}).get("nodes") or [])}
+              for p, s in upgrade_pages.SYSTEMS.items()),
+            {"name": data_pages.DATA_PAGES["chat-commands"], "url": "/chat-commands", "kind": "Game data",
+             "terms": "chat commands slash help " + " ".join(c["command"] for c in meta_pages.chat_commands_page()["commands"])},
+            {"name": data_pages.DATA_PAGES["pvp-powerups"], "url": "/pvp-powerups", "kind": "Game data",
+             "terms": "pvp powerups power-ups bomber royale battle arena consumables bombs " + " ".join(
+                 c["name"] for m in meta_pages.pvp_powerups_page()["modes"] for g in m["groups"] for c in g["cards"])},
+            {"name": data_pages.DATA_PAGES["lootbox-odds"], "url": "/lootbox-odds", "kind": "Game data",
+             "terms": "lootbox lockbox odds drop rates chances chaos chest pinata " + " ".join(
+                 b["name"] for b in meta_pages.lootbox_odds_page()["boxes"])},
+            {"name": data_pages.DATA_PAGES["mastery"], "url": "/mastery", "kind": "Game data",
+             "terms": "mastery trove geode pvp mastery rank level rewards points magic find light"},
+            {"name": data_pages.DATA_PAGES["geode-tools"], "url": "/geode-tools", "kind": "Game data",
+             "terms": "geode tools modules upgrade " + " ".join(m["name"] for m in upgrade_pages.geode_tools_page()["modules"])},
             {"name": data_pages.DATA_PAGES["titles"], "url": "/titles", "kind": "Game data",
              "terms": "titles title prefix suffix name " + " ".join(t["name"] for t in entities.titles_page()["titles"])},
             {"name": data_pages.DATA_PAGES["pvp-stats"], "url": "/pvp-stats", "kind": "Game data",
@@ -247,6 +291,9 @@ async def class_page(request: Request, name: str) -> Response:
         "slug": slug,
         "d": classes_page._detail(c),
         "subclass_power": subclass_view.table(c["tech_name"]),
+        "related": links.related(f"class:{c['tech_name']}"),
+        "paragon": upgrade_pages.paragon(c["tech_name"]),
+        "rewards": upgrade_pages.class_rewards(c["tech_name"]),
         "rings": [{"name": r["name"], "description": entities._text(r.get("description")), "url": entities.url("ring", r)}
                   for r in entities.entries("ring") if r.get("class") == c["name"]],
         # Just what the level slider needs to recompute the sheet client-side.
@@ -258,11 +305,24 @@ async def class_page(request: Request, name: str) -> Response:
     })
 
 
-async def _entity_index(request: Request, kind: str) -> HTMLResponse:
+async def _entity_index(request: Request, kind: str, folder: str | None = None) -> HTMLResponse:
     spec = entities.KINDS[kind]
+    if kind == "item" and folder is None:
+        return _item_folders(request)
     found = await media.blueprints(kind)
     rows = sorted(({**entities.summary(kind, e), "thumb": media.thumb_url(e, media.lookup(kind, e, found), 64)}
-                   for e in entities.entries(kind)), key=lambda r: r["name"].lower())
+                   for e in entities.entries(kind) if folder is None or e.get("folder", "") == folder),
+                  key=lambda r: r["name"].lower())
+    if folder is not None:
+        label = entities.item_folder(folder)[0]
+        return _render(request, "wiki/entity_index.html", {
+            "title": label, "kind": kind, "rows": rows, "noun": label.lower(), "with_abilities": 0,
+            "lead": f"Every one of the {len(rows):,} {label.lower()} in the game files.",
+            "crumb": {"url": "/items", "title": spec["title"]},
+            "facets": entities.facets(kind, rows), "groups": entities.groups(kind, rows), "extra": {},
+            "description": f"Every Trove {label.lower()[:-1] if label.endswith('s') else label.lower()} "
+                           f"in the game files: what it does and where it comes from.",
+        })
     with_abilities = sum(1 for r in rows if r["abilities"])
     return _render(request, "wiki/entity_index.html", {
         "title": spec["title"], "kind": kind, "rows": rows, "noun": spec.get("noun", spec["title"].lower()),
@@ -292,6 +352,8 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
     d["preview"] = media.preview_url(e, found) if kind not in ("style", "npc", "placeable", "adventure") else ""
     for row in d.get("ranks") or []:
         row["image"] = media.render_url(row.get("blueprint", ""), 64)
+    for row in (d.get("grows") or {}).get("outcomes") or []:
+        row["image"] = media.render_url(row.get("blueprint", ""), 64) if row.get("blueprint") else ""
     for row in d.get("sizes") or []:
         row["image"] = media.render_url(row.get("trophy_blueprint", ""), 64)
     for section in d.get("npc_sections") or []:
@@ -311,6 +373,31 @@ async def _entity_page(request: Request, kind: str, name: str) -> Response:
     })
 
 
+def _item_folders(request: Request) -> HTMLResponse:
+    """/items: one card per kind of item, each opening its own list."""
+    spec = entities.KINDS["item"]
+    folders = entities.item_folders()
+    groups = [{"title": section, "rows": [{"name": f["name"], "url": f["url"], "sub": f"{f['count']:,} items",
+                                           "tone": "", "abilities": 0, "facets": {}, "search": f["name"].lower(),
+                                           "thumb": ""} for f in folders if f["section"] == section]}
+              for section in entities.ITEM_SECTIONS]
+    groups = [g for g in groups if g["rows"]]
+    total = sum(f["count"] for f in folders)
+    return _render(request, "wiki/entity_index.html", {
+        "title": spec["title"], "kind": "item", "rows": [r for g in groups for r in g["rows"]],
+        "noun": "kinds of item", "with_abilities": 0, "facets": [], "groups": groups, "extra": {},
+        "lead": f"All {total:,} items in the game files, by kind. " + spec["lead"].split(": ", 1)[1].capitalize(),
+        "description": spec["lead"],
+    })
+
+
+async def item_folder_page(request: Request, folder: str) -> Response:
+    found = entities.find_item_folder(folder)
+    if found is None:
+        raise HTTPException(status_code=404)
+    return await _entity_index(request, "item", found)
+
+
 def _entity_routes(kind: str) -> None:
     """``/<plural>`` and ``/<kind>/<name>``, registered ahead of the article catch-all."""
     async def index(request: Request) -> HTMLResponse:
@@ -326,6 +413,8 @@ def _entity_routes(kind: str) -> None:
 
 for _kind in entities.KINDS:
     _entity_routes(_kind)
+app.add_api_route("/items/{folder}", item_folder_page, response_class=HTMLResponse, dependencies=[Depends(_gate)],
+                  methods=["GET"], name="item_folder")
 
 
 @app.get("/delve-modifiers", response_class=HTMLResponse, dependencies=[Depends(_gate)])
@@ -409,7 +498,7 @@ async def titles(request: Request) -> HTMLResponse:
     })
 
 
-def _world_route(path: str, template: str, build, description: str) -> None:
+def _data_route(path: str, template: str, build, description: str) -> None:
     async def page(request: Request) -> HTMLResponse:
         slug = f"data/{path}"
         stored = await _page(slug)
@@ -423,12 +512,29 @@ def _world_route(path: str, template: str, build, description: str) -> None:
                       dependencies=[Depends(_gate)], name=f"data_{path}")
 
 
-_world_route("worlds", "wiki/worlds.html", worlds_pages.worlds_page,
+_data_route("worlds", "wiki/worlds.html", worlds_pages.worlds_page,
              "Every Trove world a portal leads to, on the difficulty ladder, and the biomes the challenges name.")
-_world_route("delve-gateways", "wiki/delve_gateways.html", worlds_pages.gateways_page,
+_data_route("delve-gateways", "wiki/delve_gateways.html", worlds_pages.gateways_page,
              "Every Trove Delve gateway: the depth it starts at and where to craft it.")
-_world_route("shadow-tower", "wiki/shadow_tower.html", worlds_pages.shadow_tower_page,
+_data_route("shadow-tower", "wiki/shadow_tower.html", worlds_pages.shadow_tower_page,
              "The Shadow Tower's floors: Flux cost and loot requirement for every difficulty.")
+_data_route("daily-bonuses", "wiki/daily_bonuses.html", meta_pages.daily_bonuses_page,
+            "Trove's Daily Bonus for every day of the week, for everyone and for Patrons.")
+_data_route("leaderboards", "wiki/leaderboards.html", meta_pages.leaderboards_page,
+            "Every Trove leaderboard: what it counts, when it resets, and how Effort is scored.")
+for _page_name in upgrade_pages.SYSTEMS:
+    _data_route(_page_name, "wiki/progression.html", functools.partial(upgrade_pages.system_page, _page_name),
+                f"Trove's {data_pages.DATA_PAGES[_page_name]}: every node, what it grants and what it costs.")
+_data_route("chat-commands", "wiki/chat_commands.html", meta_pages.chat_commands_page,
+            "Every Trove chat command and what it does.")
+_data_route("pvp-powerups", "wiki/pvp_powerups.html", meta_pages.pvp_powerups_page,
+            "Every Bomber Royale and Battle Arena power-up in Trove, and what it does.")
+_data_route("lootbox-odds", "wiki/lootbox_odds.html", meta_pages.lootbox_odds_page,
+            "The drop rates Trove publishes for its lockboxes, stashes and piñatas.")
+_data_route("mastery", "wiki/mastery.html", mastery_page.page,
+            "Trove, Geode and PvP Mastery: what every level grants, what it costs, and what each collectible is worth.")
+_data_route("geode-tools", "wiki/geode_tools.html", upgrade_pages.geode_tools_page,
+            "Every Trove Geode tool module upgrade: what each level does and what it costs.")
 
 
 @app.get("/-/{tool}", response_class=HTMLResponse, dependencies=[Depends(_gate)])

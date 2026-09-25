@@ -24,7 +24,7 @@
                 <thead><tr><th scope="col">Gateway</th><th scope="col">Starts at depth</th><th scope="col">Crafted at</th></tr></thead>
                 <tbody>
                 {% for g in s.rows %}
-                <tr data-search="{{ g.search }}">
+                <tr id="{{ g.anchor }}" data-search="{{ g.search }}">
                     <th scope="row"><div>{{ g.name }}</div>{% if g.description %}<div class="wk-mute wk-pre">{{ g.description }}</div>{% endif %}</th>
                     <td class="num">{{ g.depth or "" }}</td>
                     <td>{% for c in g.crafted %}<div><a href="{{ c.url }}">{{ c.value }}</a></div>{% endfor %}</td>

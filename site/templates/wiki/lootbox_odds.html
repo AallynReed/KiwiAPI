@@ -1,0 +1,44 @@
+{% extends "wiki/_base.html" %}
+{% block view %}data{% endblock %}
+{% block main %}
+<article class="wk-article wk-data">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/lootbox-odds</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ title }}</h1>
+    <p class="wk-lead">The drop rates the game itself publishes for {{ boxes | length }} boxes, stashes and piñatas, exactly as its store lists them. For every other box, what it holds is decided by the game server.</p>
+    <div class="wk-filterbar" data-filter-root>
+        <label class="wk-filter">
+            <i class="fa-solid fa-filter" aria-hidden="true"></i>
+            <input type="search" placeholder="Filter boxes or prizes" aria-label="Filter boxes or prizes" data-filter-input autocomplete="off" spellcheck="false">
+        </label>
+        <output class="wk-filter-count" data-filter-count aria-live="polite">{{ boxes | length }} shown</output>
+    </div>
+    <div data-filter-list>
+    {% for b in boxes %}
+    <section class="wk-section" id="{{ b.anchor }}" data-search="{{ b.search }}" aria-labelledby="{{ b.anchor }}-t">
+        <h2 class="wk-subhead" id="{{ b.anchor }}-t">{{ b.name }}</h2>
+        {% for n in b.notes %}<p class="wk-hint">{{ n }}</p>{% endfor %}
+        {% if b.tiers %}
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">Prize</th><th scope="col">Chance</th></tr></thead>
+                <tbody>
+                {% for t in b.tiers %}
+                {% if t.name %}<tr><th scope="rowgroup" colspan="1">{{ t.name }}</th><td class="num"><strong>{{ t.chance }}</strong></td></tr>{% endif %}
+                {% for i in t.prizes %}<tr><td class="{% if t.name %}wk-depth-2{% endif %}">{{ i.name }}</td><td class="num">{{ i.chance }}</td></tr>{% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </section>
+    {% endfor %}
+    </div>
+    <p class="wk-list-empty" data-filter-empty hidden>No box matches that filter.</p>
+    {% set notes_prompt = "No notes yet: which boxes are worth opening." %}
+    {% include "wiki/_notes.html" %}
+</article>
+{% endblock %}
+{% block scripts %}<script src="/static/wiki_filter.min.js" defer></script>{% endblock %}

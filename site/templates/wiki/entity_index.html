@@ -1,6 +1,7 @@
 {% extends "wiki/_base.html" %}
 {% block view %}{{ kind }}-index{% endblock %}
 {% block main %}
+{% if crumb %}<nav class="wk-crumbs" aria-label="Breadcrumb"><a href="{{ crumb.url }}">{{ crumb.title }}</a><span aria-hidden="true">/</span><span aria-current="page">{{ title }}</span></nav>{% endif %}
 <header class="wk-pagehead">
     <h1 class="wk-title">{{ title }}</h1>
     <p class="wk-lead">{{ lead }}</p>

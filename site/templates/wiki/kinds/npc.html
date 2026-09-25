@@ -19,7 +19,7 @@
     <h3 class="cls-section-title" id="wk-ns-{{ loop.index }}"><span>{{ sec.name }}</span><span class="wk-count-muted" data-group-count>{{ sec.npcs | length }}</span></h3>
     <ul class="wk-entitygrid" role="list">
         {% for n in sec.npcs %}
-        <li data-search="{{ n.search }}" data-side="{{ n.side }}">{% if n.url %}<a class="wk-entitycard" href="{{ n.url }}">{% else %}<div class="wk-entitycard wk-stylecard">{% endif %}
+        <li id="{{ n.anchor }}" data-search="{{ n.search }}" data-side="{{ n.side }}">{% if n.url %}<a class="wk-entitycard" href="{{ n.url }}">{% else %}<div class="wk-entitycard wk-stylecard">{% endif %}
             <span class="wk-entitycard-img">{% if n.image %}<img data-lazy-src="{{ n.image }}" alt="" width="48" height="48" decoding="async" data-hide-on-error>{% endif %}</span>
             <span class="wk-entitycard-text">
                 <span class="wk-entitycard-name">{{ n.name }}</span>

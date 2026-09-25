@@ -139,6 +139,11 @@ KINDS: dict[str, dict[str, Any]] = {
                 "icon": "fa-hammer", "noun": "crafting stations",
                 "lead": "Every crafting station and the recipes it offers, tab by tab. Filter by a station "
                         "or by anything it makes."},
+    "item": {"prompt": "where to get it and what it is good for",
+             "file": "items.json", "plural": "items", "title": "Items", "icon": "fa-box-open", "noun": "items",
+             "rows": lambda: item_rows(), "facets": {"rarity": "Rarity"},
+             "lead": "Every item in the game files: what it does, what it unlocks, what it's crafted from "
+                     "and what it breaks down into."},
     "badge": {"prompt": "the fastest way to earn each rank",
               "file": "badges.json", "plural": "badges", "title": "Badges", "icon": "fa-medal",
               "group_by": "tag", "group_order": ["Gameplay", "Social", "Dragon"], "facets": {"tag": "Type"},
@@ -199,14 +204,10 @@ def url(kind: str, entry: dict) -> str:
     return f"/{kind}/{url_slug(entry['slug'])}"
 
 
-@gamedata.cached(*(s["file"] for s in KINDS.values()))
-def _by_prefab() -> dict[str, str]:
-    """``collections/pet/x`` -> its wiki URL, for linking one kind's page to another's."""
-    return {e["prefab"]: url(kind, e) for kind in KINDS for e in entries(kind) if e.get("prefab")}
-
-
-def link(prefab: str | None) -> str:
-    return _by_prefab().get((prefab or "").removesuffix(".binfab"), "")
+def link(ref: str | None) -> str:
+    """The wiki URL that shows a game reference (app/wiki/links.py)."""
+    from app.wiki import links
+    return links.link(ref)
 
 
 def blueprint_name(name: str) -> str:
@@ -288,6 +289,9 @@ def summary(kind: str, e: dict) -> dict:
         row["sub"] = f"{len(ids)} recipe{'s' if len(ids) != 1 else ''}"
         row["search"] += " " + " ".join(r.get("name") or "" for rid in ids
                                         for r in (recipes.get(rid) or {}).get("results") or []).lower()
+    elif kind == "item":
+        row.update(sub=e.get("rarity", ""), tone=_tone(e.get("rarity", "")))
+        row["facets"]["rarity"] = e.get("rarity", "")
     elif kind == "badge":
         ranks = e.get("ranks") or []
         row["facets"]["tag"] = (e.get("tags") or [""])[0]
@@ -380,6 +384,8 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         _gem_or_ring(d, e)
     elif kind == "adventure":
         _adventure_group(d, e)
+    elif kind == "item":
+        _item(d, e)
     elif kind in ("flask", "fishing-pole", "tome"):
         if e.get("equip_stats"):
             d["stat_groups"] = [{"label": "When equipped", "stats": _stat_rows(e["equip_stats"])}]
@@ -387,9 +393,46 @@ def detail(kind: str, e: dict) -> dict[str, Any]:
         if e.get("liquids"):
             d["facts"].append({"label": "Fishes in", "value": ", ".join(x.title() for x in e["liquids"])})
     if e.get("group") and kind not in ("costume", "dragon"):
-        d["facts"].append({"label": "Collection", "value": e["group"]})
+        d["facts"].append({"label": "Collection", "value": e["group"], "url": _facet_url(kind, "group", e["group"])})
+    if kind == "dragon" and d["facts"]:
+        d["facts"][0]["url"] = _facet_url(kind, "group", e.get("group", ""))
     d["facts"] += _sources(e.get("prefab") or "")
+    if kind not in ("memento", "badge"):
+        from app.wiki import mastery_page
+        d["facts"] += mastery_page.facts(e.get("prefab"))
+    _connect(kind, e, d)
     return d
+
+
+# Relations a kind's page already shows in its own sections, left out of Related.
+SHOWN = {"fish": {"trophies"}, "costume": {"for_class"}, "boss": {"wanted_by"}, "item": {"unlocks"},
+         "memento": {"used_in", "made_from"}, "station": {"crafted_at"}}
+SIBLINGS = 12
+
+
+def _facet_url(kind: str, key: str, value: str) -> str:
+    from urllib.parse import urlencode
+    if not value or key not in (KINDS[kind].get("facets") or {}):
+        return ""
+    return f"/{KINDS[kind]['plural']}?{urlencode({key: value})}"
+
+
+def _connect(kind: str, e: dict, d: dict) -> None:
+    """Related pages: what points at this one, and the rest of its collection."""
+    from app.wiki import links
+    refs = [e.get("prefab")] + [r.get("prefab") for r in e.get("ranks") or []]
+    d["related"] = links.related(*refs, skip={"crafted_at", "reward_badge"} | SHOWN.get(kind, set()))
+    group = e.get("group") if kind not in ("costume",) else e.get("class")
+    if not group or kind in ("style", "npc", "placeable", "adventure", "boss"):
+        return
+    field = "class" if kind == "costume" else "group"
+    peers = sorted((x for x in entries(kind) if x.get(field) == group and x is not e),
+                   key=lambda x: (x.get("title") or x["name"]).lower())
+    if peers:
+        label = class_name(group) if kind == "costume" else group
+        d["siblings"] = {"title": f"More in {label}", "count": len(peers),
+                         "links": [{"text": x.get("title") or x["name"], "url": url(kind, x)} for x in peers[:SIBLINGS]],
+                         "more": _facet_url(kind, field, label) if len(peers) > SIBLINGS else ""}
 
 
 def index_extra(kind: str) -> dict[str, Any]:
@@ -461,7 +504,7 @@ def _companion(d: dict, e: dict) -> None:
     for lv in e.get("levels") or []:
         for c in lv.get("cost") or []:
             key = c.get("item") or c.get("name")
-            t = totals.setdefault(key, {"name": c.get("name") or key, "quantity": 0})
+            t = totals.setdefault(key, {"name": c.get("name") or key, "quantity": 0, "url": link(c.get("item"))})
             t["quantity"] += c.get("quantity") or 0
         lines = _grant_lines(lv)
         label = lv.get("name") or ""
@@ -471,7 +514,7 @@ def _companion(d: dict, e: dict) -> None:
             label, differs = "; ".join(lines), []
         else:
             differs = [x for x in lines if _NUMBER.findall(x)[:1] != said]
-        levels.append({"level": lv["level"], "cost": lv.get("cost") or [],
+        levels.append({"level": lv["level"], "cost": [{**c, "url": link(c.get("item"))} for c in lv.get("cost") or []],
                        "label": label or "; ".join(lines),
                        "data": differs if label else []})
     d["levels"] = levels
@@ -496,9 +539,16 @@ def requirement_text(req: dict) -> str:
 
 def _reward(rw: dict) -> dict:
     grants = rw.get("grants") or []
-    target = link(grants[0].get("prefab")) if len(grants) == 1 else ""
+    from app.wiki import links
+    target = link(grants[0].get("prefab") or links.blueprint_ref(grants[0].get("blueprint"))) if len(grants) == 1 else ""
     lines = [x.strip() for x in _text(rw.get("name") or rw.get("id") or "").split("\n") if x.strip()]
     return {"lines": lines, "url": target}
+
+
+def _rank_mastery(prefab: str | None) -> str:
+    from app.wiki import mastery_page
+    v = mastery_page.value(prefab).get("trove")
+    return num(v) if v else ""
 
 
 def _badge(d: dict, e: dict) -> None:
@@ -508,6 +558,7 @@ def _badge(d: dict, e: dict) -> None:
                    "blueprint": r.get("blueprint", ""),
                    "description": _text(r.get("description")),
                    "requirement": requirement_text(r.get("requirement") or {}),
+                   "mastery": _rank_mastery(r.get("prefab")),
                    "stats": _stat_rows(r.get("stats") or []),
                    "rewards": [_reward(rw) for rw in r.get("rewards") or []]}
                   for r in e.get("ranks") or []]
@@ -540,8 +591,9 @@ def _fish(d: dict, e: dict) -> None:
     d["sizes"] = [{"size": z.get("size", ""), "weight": f"{num(z['min'])}–{num(z['max'])} lb",
                    "chance": _pct(odds[z["size"]]) if z.get("size") in odds else "",
                    "trophy": (z.get("trophy") or {}).get("name", ""),
+                   "trophy_url": link((z.get("trophy") or {}).get("prefab")),
                    "trophy_blueprint": (z.get("trophy") or {}).get("blueprint", ""),
-                   "yield": [f"{num(y['count'])} × {y['name']}" for y in z.get("deconstruct") or []]}
+                   "yield": [_thing(y["name"], y.get("prefab", ""), y.get("count")) for y in z.get("deconstruct") or []]}
                   for z in e.get("sizes") or []]
 
 
@@ -586,6 +638,11 @@ def _decay_text(decay: dict | None) -> str:
     when = {"Online": " online", "Offline": " offline"}.get(decay.get("trigger", ""), "")
     what = "the whole stack is destroyed" if decay.get("destroys") == "all" else f"{decay.get('destroys')} are destroyed"
     return f"{what} after {_duration(decay['seconds'])}{when}"
+
+
+def _anchor(prefix: str, slug: str) -> str:
+    from app.wiki import links
+    return links.anchor(prefix, slug)
 
 
 def _thing(name: str, prefab: str = "", count: int | None = None) -> dict:
@@ -800,18 +857,22 @@ def class_name(tech: str) -> str:
 
 
 def _costume(d: dict, e: dict) -> None:
+    from app.wiki import links
     tech = (e.get("class") or "").lower()
     c = trove_stats.class_by_tech_name(tech)
     if c:
-        slug = "-".join("".join(ch if ch.isalnum() else " " for ch in c["name"].lower()).split())
-        d["facts"].append({"label": "Class", "value": c["name"], "url": f"/class/{slug}"})
+        d["facts"].append({"label": "Class", "value": c["name"], "url": links.class_url(tech)})
         d["dressing_room"] = {"class": tech, "costume": e["slug"]}
 
 
 def _style_slot(d: dict, e: dict) -> None:
     groups: dict[str, list[dict]] = {}
+    from app.wiki import links
     for x in e.get("styles") or []:
-        groups.setdefault(x.get("group") or "Other", []).append(x)
+        ref = links.blueprint_ref(x.get("blueprint"))
+        page = link(ref) if ref else ""
+        groups.setdefault(x.get("group") or "Other", []).append({**x, "anchor": _anchor("s", ref[3:]) if ref else "",
+                                                                 "url": "" if "#" in page else page})
     d["style_groups"] = sorted(({"name": k, "styles": v} for k, v in groups.items()),
                                key=lambda g: g["name"] == "Other")
     d["style_count"] = len(e.get("styles") or [])
@@ -849,6 +910,7 @@ def titles_page() -> dict[str, Any]:
     for t in gamedata.load("titles.json", []) or []:
         crafted = [x for x in (find("station", sid) for sid in stations.get(t["id"], [])) if x]
         rows.append({"name": t["name"], "male": t.get("male", ""), "female": t.get("female", ""),
+                     "anchor": _anchor("t", t["id"]),
                      "description": _text(t.get("description")),
                      "crafted": [{"name": x["name"], "url": url("station", x)} for x in crafted],
                      "search": " ".join([t["name"], t.get("female", ""), t.get("description", "")]).lower()})
@@ -911,6 +973,7 @@ def _npc_card(n: dict) -> dict:
     # "DNT" (do not translate) is a working marker on a few nameplates.
     name = re.sub(r"^\$?DNT\s*-?\s*", "", n["name"])
     return {"name": name, "side": side, "sub": " · ".join([x for x in [side, *tags] if x]),
+            "anchor": _anchor("n", n["slug"]),
             "url": url("boss", n) if n.get("boss") else "", "blueprint": picture(n),
             "prefab": f"prefabs/{n['prefab']}.binfab",
             "search": " ".join([n["name"], side, *tags, (n.get("sign") or {}).get("text", "")]).lower()}
@@ -947,7 +1010,7 @@ def _boss(d: dict, e: dict) -> None:
     if e.get("elite"):
         d["facts"].append({"label": "Elite", "value": "Yes"})
     top = _folder(e.get("group", ""))[0]
-    d["facts"].append({"label": "NPC group", "value": _folder_name(top), "url": f"/npc/{top or 'general'}"})
+    d["facts"].append({"label": "NPC group", "value": _folder_name(top), "url": f"/npc/{url_slug(top or 'general')}"})
     if not d["description"]:
         d["description"] = _text((e.get("sign") or {}).get("text"))
     if e.get("stats"):
@@ -957,8 +1020,8 @@ def _boss(d: dict, e: dict) -> None:
     # A carried effect's chain can run into what it guards against (an immunity
     # walks into lava damage), so only effects on the carried prefab itself count.
     d["carried"] = [c for c in (_carried_card(ref) for ref in e.get("effects") or []) if c]
-    d["adventures"] = [{"name": a.get("name", ""), "description": _text(a.get("description"))}
-                       for a in e.get("defeat_adventures") or []]
+    d["adventures"] = [{"name": a.get("name", ""), "description": _text(a.get("description")),
+                        "url": link(f"adv:{a['id']}")} for a in e.get("defeat_adventures") or []]
 
 
 # ── blocks and placeables ──────────────────────────────────────────────────
@@ -976,7 +1039,8 @@ def _placeable(x: dict) -> dict:
             "blueprint": x.get("blueprint", ""), "color": x["color"] if _HEX.match(x.get("color") or "") else "",
             "rarity": x.get("rarity", ""), "sub": " · ".join(b for b in bits if b),
             "restrictions": x.get("restrictions") or [], "tiers": x.get("tiers") or [],
-            "url": link(x.get("prefab")),
+            "url": "" if "#" in link(x.get("prefab")) else link(x.get("prefab")),
+            "anchor": _anchor("p", x["slug"]),
             "search": " ".join([x["name"], x.get("description", ""), x.get("rarity", "")]).lower()}
 
 
@@ -1049,10 +1113,22 @@ def goal_line(o: dict) -> dict:
         return {"text": f"{num(o['amount'])} {', '.join(x['name'] for x in o.get('stats') or [])}", "things": []}
     if kind in VERBS:
         goal = o.get("goal")
-        text = VERBS[kind] + (f" {num(goal)}" if goal and goal != 1 or kind in ("jump", "walk") else "")
+        text = VERBS[kind] + (f" {num(goal)}" if goal and (goal != 1 or kind in ("jump", "walk")) else "")
         things = _named(o.get("items") or o.get("npcs") or o.get("targets") or [])
         return {"text": text, "things": things}
     return {"text": "", "things": []}
+
+
+@gamedata.cached("npcs.json")
+def _givers() -> dict[str, list[dict]]:
+    """Adventure id -> the NPCs that offer it."""
+    out: dict[str, list[dict]] = {}
+    for n in _npc_file().get("npcs") or []:
+        for a in n.get("offers_adventures") or []:
+            row = {"text": _npc_card(n)["name"], "url": link(n["prefab"])}
+            if row not in out.setdefault(a["id"], []):
+                out[a["id"]].append(row)
+    return out
 
 
 def _adventure_reward(r: dict) -> dict:
@@ -1072,6 +1148,7 @@ def _adventure_group(d: dict, e: dict) -> None:
         if x.get("daily_reset"):
             timing.append("Resets daily")
         rows.append({"step": x.get("step") or (i if e.get("thread") else None), "name": x["name"],
+                     "anchor": _anchor("a", x["slug"]), "given_by": _givers().get(x["slug"], []),
                      "description": _text(x.get("description") or x.get("summary")),
                      "goal": goal_line(x.get("objective") or {}),
                      "rewards": [r for r in (_adventure_reward(r) for r in x.get("rewards") or []) if r["text"]],
@@ -1099,3 +1176,124 @@ def _gem_or_ring(d: dict, e: dict) -> None:
         d["facts"].append({"label": "Class", "value": e["class"], "url": f"/class/{slug}" if c else ""})
     # The page already shows the description; the card carries only the numbers.
     d["abilities"] = [card({**e, "description": "", "text": ""}, name="What it does")]
+
+
+# ── items ──────────────────────────────────────────────────────────────────
+
+# Item folder -> (what the index calls it, index section). Unlisted folders go under Other.
+ITEM_FOLDERS: dict[str, tuple[str, str]] = {
+    "crafting": ("Crafting materials", "Materials"), "currency": ("Currencies", "Materials"),
+    "key": ("Keys", "Materials"), "terraforming": ("Terraforming", "Materials"),
+    "gardening": ("Gardening", "Materials"), "plantseed": ("Seeds", "Materials"),
+    "consumable": ("Consumables", "Consumables"), "food": ("Food", "Consumables"),
+    "lootbox": ("Lootboxes", "Consumables"), "egg": ("Eggs", "Consumables"),
+    "reliquary": ("Reliquaries", "Consumables"), "holiday": ("Holiday items", "Consumables"),
+    "quest": ("Quest items", "Consumables"), "sport": ("Sports", "Consumables"),
+    "bombs": ("Bombs", "Consumables"), "sponge": ("Sponges", "Consumables"),
+    "bottleworld": ("Bottled worlds", "Consumables"), "luxion_lands": ("Trials of Luxion", "Consumables"),
+    "delve": ("Delve items", "Consumables"),
+    "mount": ("Mount items", "Collectible unlocks"), "pet": ("Ally items", "Collectible unlocks"),
+    "dragon": ("Dragon items", "Collectible unlocks"), "wings": ("Wings items", "Collectible unlocks"),
+    "boat": ("Boat items", "Collectible unlocks"), "sail": ("Sail items", "Collectible unlocks"),
+    "magrider": ("Mag Rider items", "Collectible unlocks"), "aura": ("Aura items", "Collectible unlocks"),
+    "tome": ("Tome items", "Collectible unlocks"), "flask": ("Flask items", "Collectible unlocks"),
+    "fishing": ("Fishing items", "Collectible unlocks"), "skin": ("Costume items", "Collectible unlocks"),
+    "unlocker": ("Unlockers", "Collectible unlocks"), "recipe": ("Recipe scrolls", "Collectible unlocks"),
+    "gem": ("Gems", "Gear"), "equipment": ("Equipment items", "Gear"), "banner": ("Banner items", "Gear"),
+    "gear_banner": ("Banners", "Gear"), "gear_delve": ("Delve gear", "Gear"), "gear_geode": ("Geode gear", "Gear"),
+    "gear_events": ("Event gear", "Gear"), "gear_adventure": ("Adventure gear", "Gear"), "gear_pts": ("Test gear", "Gear"),
+    "gear": ("Other gear", "Gear"),
+}
+ITEM_SECTIONS = ["Materials", "Consumables", "Collectible unlocks", "Gear", "Other"]
+
+
+def item_folder(folder: str) -> tuple[str, str]:
+    return ITEM_FOLDERS.get(folder, (folder.replace("_", " ").title() if folder else "Other items", "Other"))
+
+
+def item_folder_url(folder: str) -> str:
+    return f"/items/{url_slug(folder or 'other')}"
+
+
+@gamedata.cached("items.json", "fish.json", "companions.json", "mementos.json")
+def item_rows() -> list[dict]:
+    """Items without a page of their own elsewhere (fish, companions, mementos)."""
+    owned = {e.get("prefab") for e in gamedata.load("companions.json", []) or []}
+    for f, key in (("fish.json", "fish"), ("mementos.json", "mementos")):
+        data = gamedata.load(f, {}) or {}
+        owned |= {e.get("prefab") for e in (data.get(key) or [] if isinstance(data, dict) else [])}
+    data = gamedata.load("items.json", {}) or {}
+    return [e for e in (data.get("items") or [] if isinstance(data, dict) else []) if e["prefab"] not in owned]
+
+
+def item_folders() -> list[dict]:
+    counts: dict[str, int] = {}
+    for e in entries("item"):
+        counts[e.get("folder", "")] = counts.get(e.get("folder", ""), 0) + 1
+    rows = [{"folder": f, "name": item_folder(f)[0], "section": item_folder(f)[1], "count": n,
+             "url": item_folder_url(f)} for f, n in counts.items()]
+    return sorted(rows, key=lambda r: (ITEM_SECTIONS.index(r["section"]), r["name"].lower()))
+
+
+def find_item_folder(slug: str) -> str | None:
+    return next((r["folder"] for r in item_folders() if r["url"] == f"/items/{slug}"), None)
+
+
+@gamedata.cached("titles.json")
+def _title_names() -> dict[str, str]:
+    return {t["id"]: t["name"] for t in gamedata.load("titles.json", []) or [] if t.get("id")}
+
+
+def _item(d: dict, e: dict) -> None:
+    from app.wiki import links
+    label, _ = item_folder(e.get("folder", ""))
+    d["facts"] = [{"label": "Type", "value": label, "url": item_folder_url(e.get("folder", ""))}]
+    if e.get("rarity"):
+        d["facts"].append({"label": "Rarity", "value": e["rarity"], "tone": _tone(e["rarity"])})
+    if e.get("tradable") is False:
+        d["facts"].append({"label": "Tradable", "value": "No"})
+    if e.get("experience"):
+        d["facts"].append({"label": "Experience", "value": num(e["experience"])})
+    d["guide"] = _text(e.get("guide"))
+    lists = []
+    if e.get("unlocks"):
+        lists.append({"title": "Unlocks", "icon": "fa-key",
+                      "rows": [[{"text": links.name(u) or u.rsplit("/", 1)[-1].replace("_", " "), "url": link(u)}]
+                               for u in e["unlocks"]]})
+    if e.get("titles"):
+        names = _title_names()
+        lists.append({"title": "Grants the title", "icon": "fa-signature",
+                      "rows": [[{"text": names.get(t, t), "url": link(f"title:{t}")}] for t in e["titles"]]})
+    if e.get("adventures"):
+        lists.append({"title": "Starts the adventure", "icon": "fa-scroll",
+                      "rows": [[{"text": links.name(f"adv:{a}") or a, "url": link(f"adv:{a}")}]
+                               for a in e["adventures"]]})
+    for opt in e.get("opens") or []:
+        if opt.get("cost"):
+            lists.append({"title": opt.get("label") or "Opens with", "icon": "fa-lock-open",
+                          "rows": [[_thing(c.get("name") or c["item"], c["item"], c.get("count"))] for c in opt["cost"]]})
+    for dec in e.get("deconstruct") or []:
+        verb = "Loot Collecting gives" if dec["station"] == "Loot Collector" else "Composting gives"
+        lists.append({"title": verb, "icon": "fa-recycle",
+                      "rows": [[_thing(y.get("name") or y["item"], y["item"], y.get("count"))] for y in dec["yields"]]})
+    d["lists"] = lists
+    if e.get("opens") or e.get("folder") == "lootbox":
+        d["opens_note"] = "What a box holds is decided by the game server, so its contents aren't in the game files."
+    if e.get("random_unlock"):
+        members = [{"text": links.name(m), "url": link(m)} for m in e["random_unlock"]["members"]]
+        members = sorted((m for m in members if m["text"]), key=lambda m: m["text"].lower())
+        d["random_pool"] = {"groups": e["random_unlock"]["groups"], "members": members}
+    if e.get("food"):
+        d["stat_groups"].append({"label": "While eaten", "stats": _stat_rows(e["food"])})
+    if e.get("use"):
+        c = card(e["use"], name="When used")
+        if c["damage"] or c["healing"] or c["effects"]:
+            d["abilities"] = [c]
+    if e.get("grows"):
+        d["grows"] = {"time": _duration(e["grows"]["seconds"]),
+                      "outcomes": [{"chance": _pct(o["chance"]), "blueprint": o.get("blueprint", ""),
+                                    "text": links.name(o["ref"]) if o.get("ref") else "", "url": link(o.get("ref"))}
+                                   for o in e["grows"]["outcomes"]]}
+    d["decay"] = _decay_text(e.get("decay"))
+    if e.get("food") and (e.get("decay") or {}).get("trigger") == "Equipped":
+        d["decay"] = f"one is used up every {_duration(e['decay']['seconds'])} in the food slot"

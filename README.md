@@ -76,15 +76,18 @@ Browsing is public; developing and publishing mods is a Discord-login action.
 editors (dev portal → Dashboard users) write pages; every other signed-in player can suggest an
 edit, which an editor accepts or rejects. Every page keeps its full revision history. Class pages,
 the Delve Modifiers page and one page per ally (every pet players can own), mount, dragon, wings, boat, sail, aura, Mag Rider, flask, tome, fishing pole, costume, bomb skin, boss, empowered gem, class ring, Geode companion,
-fish, Delve memento, badge and crafting station (with its recipes), plus one page per style slot (hats, faces, weapons, banners), one per NPC group, one per group of blocks and placeables, one per quest line or adventure set, and the Titles, Worlds & Biomes, Delve Gateways and Shadow Tower pages, are generated from the game files, with an editable
-write-up under the data. Aura pages preview the aura on each weapon type (radiant) or on the hat (stellar); no game file links an aura to its effects, so
+fish, Delve memento, badge, crafting station (with its recipes) and item (materials, consumables, lootboxes, unlockers, gear: about 7,500), plus one page per style slot (hats, faces, weapons, banners), one per NPC group, one per group of blocks and placeables, one per quest line or adventure set, and the Titles, Worlds & Biomes, Delve Gateways, Shadow Tower, Daily Bonuses, Leaderboards, Star Chart, Depths of the Angler, Rune Anvil, Gearcrafting
+Progression, Geode Tools, Mastery, Lootbox Odds, PvP Power-ups and Chat Commands pages, are generated from the game files, with an editable
+write-up under the data. Class pages also list the class's level rewards and Paragon powers; seed items show what they grow into. Pages are cross-linked through `app/wiki/links.py`:
+every game reference resolves to the page (or group-page anchor) that shows it, and each page's Related section lists
+what points at it (crafted from, used to craft, unlocked by, rewards, and the rest of its collection). Aura pages preview the aura on each weapon type (radiant) or on the hat (stellar); no game file links an aura to its effects, so
 they are matched by the particle file names (`weapon_aura_<weapon>_<x>`, `character_aura_stellar_<x>`). The preview draws the aura on that type's starter weapon or on the default head
 (`/site/embed/vfx/backdrop`, `app/embed/backdrop.py`); bows get none, since the rigs don't carry the bow's VFX bone. The main site's `/classes` redirects to the wiki's. The How Gems Work guide lives there too
 (`/gems`); the main site's `/gems-guide` redirects to it. The data plane is `/site/wiki/*` in `app/wiki/`.
 
 **Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that
 comes from the game files (class stats and abilities, allies, mounts, gems, rings, PvP curves,
-delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds, subclass powers) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
+delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds, subclass powers, daily bonuses, leaderboards, items, upgrade trees, mastery, class rewards, lootbox odds, PvP power-ups, chat commands) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
 each decoder reruns and writes to `GAMEDATA_DIR` (`./.gamedata`, shared by the api, web and bot
 containers), which readers prefer over the repo copy. A decoder also reruns when a deploy
 changes its code. One that fails, decodes nothing, or shrinks its output by more than 20% keeps

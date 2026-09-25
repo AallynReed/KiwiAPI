@@ -1,0 +1,26 @@
+{% extends "wiki/_base.html" %}
+{% from "partials/ability_card.html" import ability_card %}
+{% block view %}data{% endblock %}
+{% block styles %}<link rel="stylesheet" href="/static/classes.min.css">{% endblock %}
+{% block main %}
+<article class="wk-article wk-data">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/pvp-powerups</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ title }}</h1>
+    <p class="wk-lead">All {{ count }} power-ups in the game files for Bomber Royale and the Battle Arena, with what each one does. How stats scale in PvP is on <a href="/pvp-stats">How PvP Stats Work</a>.</p>
+    {% for m in modes %}
+    <section class="wk-section" id="{{ m.anchor }}" aria-labelledby="{{ m.anchor }}-t">
+        <h2 class="wk-subhead" id="{{ m.anchor }}-t">{{ m.name }}</h2>
+        <p class="wk-hint">{{ m.lead }}</p>
+        {% for g in m.groups %}
+        <h3 class="wk-subhead">{{ g.name }} <span class="wk-count-muted">{{ g.cards | length }}</span></h3>
+        <div class="cls-abilities">{% for a in g.cards %}{{ ability_card(a) }}{% endfor %}</div>
+        {% endfor %}
+    </section>
+    {% endfor %}
+    {% set notes_prompt = "No notes yet: which power-ups to grab first." %}
+    {% include "wiki/_notes.html" %}
+</article>
+{% endblock %}

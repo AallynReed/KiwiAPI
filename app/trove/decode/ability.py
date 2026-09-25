@@ -73,7 +73,7 @@ def component_values(pf: Prefab) -> Iterator[Any]:
         yield from walk_values(pf.root)
 
 
-def refs(pf: Prefab, prefix: str = "abilities/") -> list[str]:
+def refs(pf: Prefab, prefix: str | tuple[str, ...] = "abilities/") -> list[str]:
     """Prefab paths under ``prefix`` this prefab names, in order, deduped."""
     out: list[str] = []
     for v in component_values(pf):
@@ -264,7 +264,7 @@ def visuals(pf: Prefab) -> dict[str, list[str]]:
 
 
 def walk(prefabs: Prefabs, root: str, stop: Iterable[str] = (), limit: int = WALK_LIMIT,
-         prefix: str = "abilities/") -> list[tuple[str, Prefab, int]]:
+         prefix: str | tuple[str, ...] = "abilities/") -> list[tuple[str, Prefab, int]]:
     """``root`` and every ability prefab it reaches, breadth first, with depth.
 
     ``stop`` holds prefabs that belong to something else (another named ability of
@@ -293,7 +293,7 @@ def stage_name(rel: str) -> str:
     return rel.rsplit("/", 1)[-1].replace("_", " ").title()
 
 
-def describe(prefabs: Prefabs, root: str, stop: Iterable[str] = (), prefix: str = "abilities/") -> dict:
+def describe(prefabs: Prefabs, root: str, stop: Iterable[str] = (), prefix: str | tuple[str, ...] = "abilities/") -> dict:
     """Everything the chain under ``root`` does. Stages and effects carry the
     prefab they came from and a ``_depth`` for callers that de-duplicate across
     abilities sharing sub-prefabs."""

@@ -1,0 +1,1917 @@
+{
+ "classes": {
+  "adventurer": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/adventurer/revamp/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/basic_attack_bow",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/basic_attack_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/boomerang",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/boomerang_bow",
+       "name": "Boomerangs!!!!"
+      },
+      {
+       "ref": "abilities/adventurer/revamp/boomerang_melee",
+       "name": "Boomerang of the Wind"
+      },
+      {
+       "ref": "abilities/adventurer/revamp/passive_dummy",
+       "name": "Final Fairy"
+      },
+      {
+       "ref": "abilities/adventurer/revamp/fairy_familiar",
+       "name": ""
+      }
+     ],
+     "costume": "skins/adventurer_lvl1",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl1[ylva]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Big Bomb ability!",
+     "abilities": [
+      {
+       "ref": "abilities/adventurer/revamp/bomb",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/bomb_bow",
+       "name": "Big Bomb"
+      },
+      {
+       "ref": "abilities/adventurer/revamp/bomb_melee",
+       "name": "Tiny Bombs"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Mysterious Urn ability!",
+     "abilities": [
+      {
+       "ref": "abilities/adventurer/revamp/random_throw",
+       "name": "Mysterious Urn"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/adventurer_lvl2",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl2[ylva]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/adventurer_lvl3",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl3[evilagician]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/adventurer_lvl4",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl4[ylva]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/adventurer",
+      "count": 1,
+      "name": "Primal Loop: Boomeranger"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "bard": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/bard/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/basic_attack_01",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/basic_attack_02",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/basic_attack_03",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/nimble_dance",
+       "name": "Nimble Dance"
+      },
+      {
+       "ref": "abilities/bard/passive",
+       "name": "Melody"
+      }
+     ],
+     "costume": "skins/bard_lvl1",
+     "styles": [
+      "bp:equipment_helm_bard_lvl1"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Singing Crystal ability!",
+     "abilities": [
+      {
+       "ref": "abilities/bard/singing_crystal",
+       "name": "Singing Crystal"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Epic Riff ability!",
+     "abilities": [
+      {
+       "ref": "abilities/bard/ultimate_song",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/epic_riff",
+       "name": "Epic Riff"
+      },
+      {
+       "ref": "abilities/bard/battle_song",
+       "name": "Battle Song"
+      },
+      {
+       "ref": "abilities/bard/jubilant_song",
+       "name": "Jubilant Song"
+      },
+      {
+       "ref": "abilities/bard/peaceful_song",
+       "name": "Peaceful Song"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/bard_lvl2",
+     "styles": [
+      "bp:equipment_helm_bard_lvl2"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/bard_lvl3",
+     "styles": [
+      "bp:equipment_helm_bard_lvl3"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/bard_lvl4",
+     "styles": [
+      "bp:equipment_helm_bard_lvl4"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/bard",
+      "count": 1,
+      "name": "Primal Loop: Bard"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "candybarbarian": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/candybarbarian/basic_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/candybarbarian/swirlwind",
+       "name": "Vanilla Swirlwind"
+      },
+      {
+       "ref": "abilities/candybarbarian/passive_spawncandy",
+       "name": "Gum Drop"
+      }
+     ],
+     "costume": "skins/candybarbarian_lvl1",
+     "styles": [
+      "bp:equipment_helm_candybarbarian_lvl1[magicmate]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Sugar Crash ability!",
+     "abilities": [
+      {
+       "ref": "abilities/candybarbarian/sugarcrash",
+       "name": "Sugar Crash"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Eis-Crom Cone ability!",
+     "abilities": [
+      {
+       "ref": "abilities/candybarbarian/eiscromcone",
+       "name": "Eis-Crom Cone"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/candybarbarian_lvl2",
+     "styles": [
+      "bp:equipment_helm_candybarbarian_lvl2[magicmate]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/candybarbarian_lvl3",
+     "styles": [
+      "bp:equipment_helm_candybarbarian_lvl3[magicmate]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/candybarbarian_lvl4",
+     "styles": [
+      "bp:equipment_helm_candybarbarian_lvl4[magicmate]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/candybarbarian",
+      "count": 1,
+      "name": "Primal Loop: Candy Barbarian"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "chloromancer": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/chloromancer/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/chloromancer/passive",
+       "name": "Mini Bloom"
+      },
+      {
+       "ref": "abilities/chloromancer/seedling",
+       "name": "Green Gatling"
+      }
+     ],
+     "costume": "skins/chloromancer_lvl1",
+     "styles": [
+      "bp:equipment_helm_chloromancer_lvl1[evilagician]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Leafy Lasher ability!",
+     "abilities": [
+      {
+       "ref": "abilities/chloromancer/seedling_lasher",
+       "name": "Leafy Lasher"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Empowered Growth ability!",
+     "abilities": [
+      {
+       "ref": "abilities/chloromancer/spawn_random_seedlings",
+       "name": "Empowered Growth"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/chloromancer_lvl2",
+     "styles": [
+      "bp:equipment_helm_chloromancer_lvl2[evilagician]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/chloromancer_lvl3",
+     "styles": [
+      "bp:equipment_helm_chloromancer_lvl3[evilagician]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/chloromancer_lvl4",
+     "styles": [
+      "bp:equipment_helm_chloromancer_lvl4[evilagician]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/chloromancer",
+      "count": 1,
+      "name": "Primal Loop: Chloromancer"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "crimefighter": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/crimefighter/passive",
+       "name": "Touchdown"
+      },
+      {
+       "ref": "abilities/crimefighter/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/crimefighter/basic_attack_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/crimefighter/fast_attack_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/crimefighter/energy_blast",
+       "name": ""
+      }
+     ],
+     "costume": "skins/crimefighter_lvl1",
+     "styles": [
+      "bp:equipment_helm_crimefighter_lvl1[technoshyft]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Force Flash ability!",
+     "abilities": [
+      {
+       "ref": "abilities/crimefighter/super_buff",
+       "name": ""
+      },
+      {
+       "ref": "abilities/crimefighter/super_buff_melee",
+       "name": "Force Flash"
+      },
+      {
+       "ref": "abilities/crimefighter/super_buff_ranged",
+       "name": "Fired Up"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Laser Leap ability! Use it to leap backward and access your new ranged abilities.",
+     "abilities": [
+      {
+       "ref": "abilities/crimefighter/transform",
+       "name": "Laser Leap"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/crimefighter_lvl2",
+     "styles": [
+      "bp:equipment_helm_crimefighter_lvl2[technoshyft]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/crimefighter_lvl3",
+     "styles": [
+      "bp:equipment_helm_crimefighter_lvl3[technoshyft]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/crimefighter_lvl4",
+     "styles": [
+      "bp:equipment_helm_crimefighter_lvl4[technoshyft]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/crimefighter",
+      "count": 1,
+      "name": "Primal Loop: Vanguardian"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "dinotamer": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/dinotamer/passive_spawnmeatenergy_inactive",
+       "name": "Dino Buddy Food"
+      },
+      {
+       "ref": "abilities/dinotamer/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/dinotamer/clever_snare",
+       "name": "Clever Snare"
+      }
+     ],
+     "costume": "skins/dinotamer_lvl1",
+     "styles": [
+      "bp:equipment_helm_dinotamer_lvl1[evilagician]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Dino Buddy ability!",
+     "abilities": [
+      {
+       "ref": "abilities/dinotamer/passive_spawnmeatenergy",
+       "name": "Dino Buddy Food"
+      },
+      {
+       "ref": "abilities/dinotamer/meat_summon",
+       "name": "Dino Buddy"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "abilities": [
+      {
+       "ref": "abilities/dinotamer/dinomount",
+       "name": "Dino Mount"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/dinotamer_lvl2",
+     "styles": [
+      "bp:equipment_helm_dinotamer_lvl2[evilagician]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/dinotamer_lvl3",
+     "styles": [
+      "bp:equipment_helm_dinotamer_lvl3[ylva]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/dinotamer_lvl4",
+     "styles": [
+      "bp:equipment_helm_dinotamer_lvl4[evilagician]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/dinotamer",
+      "count": 1,
+      "name": "Primal Loop: Dino Tamer"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "dracolyte": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/dracolyte/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/dracolyte/basic_attack_normal",
+       "name": ""
+      },
+      {
+       "ref": "abilities/dracolyte/basic_attack_buffed",
+       "name": ""
+      },
+      {
+       "ref": "abilities/dracolyte/dragon",
+       "name": "Spit Fire"
+      },
+      {
+       "ref": "abilities/dracolyte/passive_master_buff",
+       "name": "Fireborn"
+      },
+      {
+       "ref": "abilities/dracolyte/dragon_familiar",
+       "name": "Lil' Dragon"
+      }
+     ],
+     "costume": "skins/dracolyte_lvl1",
+     "styles": [
+      "bp:equipment_helm_dracolyte_lvl1[delicious]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Burnt Offering ability!",
+     "abilities": [
+      {
+       "ref": "abilities/dracolyte/idol_bomb",
+       "name": "Burnt Offering"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Avatar of Flame ability!",
+     "abilities": [
+      {
+       "ref": "abilities/dracolyte/dragonman",
+       "name": "Avatar of Flame"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/dracolyte_lvl2",
+     "styles": [
+      "bp:equipment_helm_dracolyte_lvl2[delicious]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/dracolyte_lvl3",
+     "styles": [
+      "bp:equipment_helm_dracolyte_lvl3[delicious]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/dracolyte_lvl4",
+     "styles": [
+      "bp:equipment_helm_dracolyte_lvl4[delicious]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/dracolyte",
+      "count": 1,
+      "name": "Primal Loop: Dracolyte"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "faetrickster": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/trickster/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/trickster/basic_attack_normal",
+       "name": ""
+      },
+      {
+       "ref": "abilities/trickster/basic_attack_debuffed",
+       "name": ""
+      },
+      {
+       "ref": "abilities/trickster/passive_attack_swap",
+       "name": "Ego Blast"
+      },
+      {
+       "ref": "abilities/trickster/blink",
+       "name": "Blink"
+      }
+     ],
+     "costume": "skins/fae_trickster_lvl1",
+     "styles": [
+      "bp:equipment_helm_faetrickster_lvl1[delicious]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Glitter Bomb ability!",
+     "abilities": [
+      {
+       "ref": "abilities/trickster/glitterbomb",
+       "name": "Glitterbomb"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Faerie Dance ability!",
+     "abilities": [
+      {
+       "ref": "abilities/trickster/summon_turrets",
+       "name": "Faerie Dance"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/fae_trickster_lvl2",
+     "styles": [
+      "bp:equipment_helm_faetrickster_lvl2[delicious]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/fae_trickster_lvl3",
+     "styles": [
+      "bp:equipment_helm_faetrickster_lvl3[delicious]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/fae_trickster_lvl4",
+     "styles": [
+      "bp:equipment_helm_faetrickster_lvl4[delicious]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/faetrickster",
+      "count": 1,
+      "name": "Primal Loop: Fae Trickster"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "gunslinger": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/gunslinger/revamp/basic_shoot",
+       "name": ""
+      },
+      {
+       "ref": "abilities/gunslinger/revamp/passive_instant_charge_shot",
+       "name": "Lucky Shot"
+      },
+      {
+       "ref": "abilities/gunslinger/revamp/charge_shot",
+       "name": "Charged Sniper Shot"
+      },
+      {
+       "ref": "abilities/gunslinger/revamp/charge_shot_normal",
+       "name": "Charged Shot"
+      },
+      {
+       "ref": "abilities/gunslinger/revamp/charge_shot_full_charge",
+       "name": "Charged Shot"
+      }
+     ],
+     "costume": "skins/gunslinger_lvl1",
+     "styles": [
+      "bp:equipment_helm_gunslinger_lvl1[technoshyft]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Blast Jump ability!",
+     "abilities": [
+      {
+       "ref": "abilities/gunslinger/revamp/blast_jump",
+       "name": "Blast Jump"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Run and Gun ability!",
+     "abilities": [
+      {
+       "ref": "abilities/gunslinger/revamp/fast_attack",
+       "name": "Run and Gun"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/gunslinger_lvl2",
+     "styles": [
+      "bp:equipment_helm_gunslinger_lvl2[technoshyft]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/gunslinger_lvl3",
+     "styles": [
+      "bp:equipment_helm_gunslinger_lvl3[technoshyft]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/gunslinger_lvl4",
+     "styles": [
+      "bp:equipment_helm_gunslinger_lvl4[pendk]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/gunslinger",
+      "count": 1,
+      "name": "Primal Loop: Gunslinger"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "icemage": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/icemage/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/icemage/icicledrop",
+       "name": "Ice Crash"
+      },
+      {
+       "ref": "abilities/icemage/passive_icewalking",
+       "name": "Coldhearted"
+      }
+     ],
+     "costume": "skins/ice_mage_lvl1",
+     "styles": [
+      "bp:equipment_helm_icemage_lvl1[ylva]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Frozen Ward ability!",
+     "abilities": [
+      {
+       "ref": "abilities/icemage/freezeblast",
+       "name": "The Big Chill"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked The Big Chill ability!",
+     "abilities": [
+      {
+       "ref": "abilities/icemage/iceward",
+       "name": "Frozen Ward"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/ice_mage_lvl2",
+     "styles": [
+      "bp:equipment_helm_icemage_lvl2[ylva]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/ice_mage_lvl3",
+     "styles": [
+      "bp:equipment_helm_icemage_lvl3[ylva]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/ice_mage_lvl4",
+     "styles": [
+      "bp:equipment_helm_icemage_lvl4[ylva]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/icemage",
+      "count": 1,
+      "name": "Primal Loop: Ice Sage"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "knight": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/knight/basic_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/knight/passive_target_debuff",
+       "name": "Retribution"
+      },
+      {
+       "ref": "abilities/knight/smash",
+       "name": "Smash"
+      }
+     ],
+     "costume": "skins/knight_lvl1",
+     "styles": [
+      "bp:equipment_helm_knight_lvl1[evilagician]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Charge ability!",
+     "abilities": [
+      {
+       "ref": "abilities/knight/charge",
+       "name": "Charge!"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Iron Will ability!",
+     "abilities": [
+      {
+       "ref": "abilities/knight/shield_heal",
+       "name": "Iron Will"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/knight_lvl2",
+     "styles": [
+      "bp:equipment_helm_knight_lvl2[evilagician]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/knight_lvl3",
+     "styles": [
+      "bp:equipment_helm_knight_lvl3[ylva]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/knight_lvl4",
+     "styles": [
+      "bp:equipment_helm_knight_lvl4[evilagician]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/knight",
+      "count": 1,
+      "name": "Primal Loop: Knight"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "lunarlancer": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/lunarlancer/revamp/basic_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/lunarlancer/revamp/basic_melee_delegate",
+       "name": ""
+      },
+      {
+       "ref": "abilities/lunarlancer/revamp/spear_throw_grapple",
+       "name": "Grapple"
+      },
+      {
+       "ref": "abilities/lunarlancer/revamp/spear_throw_delegate",
+       "name": "Grapple"
+      },
+      {
+       "ref": "abilities/lunarlancer/revamp/madness",
+       "name": "Lunacy"
+      }
+     ],
+     "costume": "skins/lunarlancer_lvl1",
+     "styles": [
+      "bp:equipment_helm_lunarlancer_lvl1[delicious]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Lunar Leap ability!",
+     "abilities": [
+      {
+       "ref": "abilities/lunarlancer/revamp/lunar_leap",
+       "name": "Lunar Leap"
+      },
+      {
+       "ref": "abilities/lunarlancer/revamp/lunar_leap_delegate",
+       "name": "Lunar Leap"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Lunarform ability!",
+     "abilities": [
+      {
+       "ref": "abilities/lunarlancer/revamp/moon_blessing_delegate",
+       "name": "Lunarform"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/lunarlancer_lvl2",
+     "styles": [
+      "bp:equipment_helm_lunarlancer_lvl2[delicious]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/lunarlancer_lvl3",
+     "styles": [
+      "bp:equipment_helm_lunarlancer_lvl3[delicious]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/lunarlancer_lvl4",
+     "styles": [
+      "bp:equipment_helm_lunarlancer_lvl4[delicious]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/lunarlancer",
+      "count": 1,
+      "name": "Primal Loop: Lunar Lancer"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "neonninja": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/neonninja/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/neonninja/basic_attack_normal",
+       "name": ""
+      },
+      {
+       "ref": "abilities/neonninja/shadow_flip",
+       "name": "Shadow Flip"
+      },
+      {
+       "ref": "abilities/neonninja/shadow_flip_effect_shoot",
+       "name": ""
+      },
+      {
+       "ref": "abilities/neonninja/mark_for_death_effect_shoot",
+       "name": ""
+      },
+      {
+       "ref": "abilities/neonninja/shuriken",
+       "name": "Shining Star"
+      }
+     ],
+     "costume": "skins/neon_ninja_lvl1",
+     "styles": [
+      "bp:equipment_helm_neonninja_lvl1[evilagician]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Stasis Blade ability!",
+     "abilities": [
+      {
+       "ref": "abilities/neonninja/stasis_blade",
+       "name": "Stasis Blade"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Final Technique ability!",
+     "abilities": [
+      {
+       "ref": "abilities/neonninja/mark_for_death",
+       "name": "Final Technique"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/neon_ninja_lvl2",
+     "styles": [
+      "bp:equipment_helm_neonninja_lvl2[evilagician]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/neon_ninja_lvl3",
+     "styles": [
+      "bp:equipment_helm_neonninja_lvl3[evilagician]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/neon_ninja_lvl4",
+     "styles": [
+      "bp:equipment_helm_neonninja_lvl4[evilagician]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/neonninja",
+      "count": 1,
+      "name": "Primal Loop: Neon Ninja"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "piratelord": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/piratelord/basic_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/piratelord/passive_spawndoubloon",
+       "name": "Plunderbuss"
+      },
+      {
+       "ref": "abilities/piratelord/cannon",
+       "name": "First Mate"
+      },
+      {
+       "ref": "abilities/piratelord/parrot_familiar",
+       "name": "Parrot"
+      }
+     ],
+     "costume": "skins/pirate_lord_lvl1",
+     "styles": [
+      "bp:equipment_helm_pirate_lvl1[ylva]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the First Mate ability!",
+     "abilities": [
+      {
+       "ref": "abilities/piratelord/pirate_dummy",
+       "name": "Pretend Pirate"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Man o' War ability!",
+     "abilities": [
+      {
+       "ref": "abilities/piratelord/man_o_war",
+       "name": "Man o' War"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/pirate_lord_lvl2",
+     "styles": [
+      "bp:equipment_helm_pirate_lvl2[ylva]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/pirate_lord_lvl3",
+     "styles": [
+      "bp:equipment_helm_pirate_lvl3[ylva]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/pirate_lord_lvl4",
+     "styles": [
+      "bp:equipment_helm_pirate_lvl4[ylva]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/piratelord",
+      "count": 1,
+      "name": "Primal Loop: Pirate Captain"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "shadowhunter": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/shadowhunter/revamp/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/seeker_minion_fuelmanager",
+       "name": "Shadow Seekers"
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/seeker_npc_01",
+       "name": "Shadow Seekers"
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/seeker_npc_02",
+       "name": "Shadow Seekers"
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/seeker_npc_03",
+       "name": "Shadow Seekers"
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/seeker_npc_04",
+       "name": "Shadow Seekers"
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/seeker_npc_05",
+       "name": "Shadow Seekers"
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/seeker_npc_06",
+       "name": "Shadow Seekers"
+      },
+      {
+       "ref": "abilities/shadowhunter/revamp/passive_shadowwhispers",
+       "name": "Dark Whispers"
+      }
+     ],
+     "costume": "skins/shadow_hunter_lvl1",
+     "styles": [
+      "bp:equipment_helm_shadowhunter_lvl1[ylva]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Sun Snare ability!",
+     "abilities": [
+      {
+       "ref": "abilities/shadowhunter/revamp/sun_snare",
+       "name": "Sun Snare"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Sacred Arrow!",
+     "abilities": [
+      {
+       "ref": "abilities/shadowhunter/revamp/sacred_shooter",
+       "name": "Sacred Arrow"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/shadow_hunter_lvl2",
+     "styles": [
+      "bp:equipment_helm_shadowhunter_lvl2[ylva]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/shadow_hunter_lvl3",
+     "styles": [
+      "bp:equipment_helm_shadowhunter_lvl3[ylva]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/shadow_hunter_lvl4",
+     "styles": [
+      "bp:equipment_helm_shadowhunter_lvl4[ylva]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/shadowhunter",
+      "count": 1,
+      "name": "Primal Loop: Shadow Hunter"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "solarion": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/solarion/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/solarion/solar_flare",
+       "name": "Solar Flare"
+      },
+      {
+       "ref": "abilities/solarion/passive",
+       "name": "Phoenix Radiance"
+      }
+     ],
+     "costume": "skins/solarion_lvl1",
+     "styles": [
+      "bp:equipment_helm_solarion_lvl1"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Guiding Light ability!",
+     "abilities": [
+      {
+       "ref": "abilities/solarion/guiding_light",
+       "name": "Guiding Light"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Prismatic Blast ability!",
+     "abilities": [
+      {
+       "ref": "abilities/solarion/prismatic_burst",
+       "name": "Prismatic Blast"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/solarion_lvl2",
+     "styles": [
+      "bp:equipment_helm_solarion_lvl2"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/solarion_lvl3",
+     "styles": [
+      "bp:equipment_helm_solarion_lvl3"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/solarion_lvl4",
+     "styles": [
+      "bp:equipment_helm_solarion_lvl4"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/solarion",
+      "count": 1,
+      "name": "Primal Loop: Solarion"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "spirittank": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/spirittank/basic_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/spirittank/passive_spiritcharge",
+       "name": "Vengeful Spirits"
+      },
+      {
+       "ref": "abilities/spirittank/active_smash",
+       "name": "Bulwark Bash"
+      }
+     ],
+     "costume": "skins/spirittank_lvl1",
+     "styles": [
+      "bp:equipment_helm_spirittank_lvl1[delicious]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Spirit Spears ability!",
+     "abilities": [
+      {
+       "ref": "abilities/spirittank/active_spears",
+       "name": "Spirit Spears"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Spirit Storm ability!",
+     "abilities": [
+      {
+       "ref": "abilities/spirittank/ultimate_spirit_storm",
+       "name": "Spirit Storm"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/spirittank_lvl2",
+     "styles": [
+      "bp:equipment_helm_spirittank_lvl2[delicious]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/spirittank_lvl3",
+     "styles": [
+      "bp:equipment_helm_spirittank_lvl3[delicious]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/spirittank_lvl4",
+     "styles": [
+      "bp:equipment_helm_spirittank_lvl4[delicious]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/spirittank",
+      "count": 1,
+      "name": "Primal Loop: Revenant"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "tombraiser": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/tombraiser/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/tombraiser/basic_attack_normal",
+       "name": ""
+      },
+      {
+       "ref": "abilities/tombraiser/primary_base",
+       "name": "Bonetourage"
+      },
+      {
+       "ref": "abilities/tombraiser/primary_minionfuel_1",
+       "name": "Bonetourage"
+      },
+      {
+       "ref": "abilities/tombraiser/basic_attack_ghost",
+       "name": ""
+      },
+      {
+       "ref": "abilities/tombraiser/passive_soulbuff",
+       "name": "Soul Caller"
+      }
+     ],
+     "costume": "skins/tomb_raiser_lvl1",
+     "styles": [
+      "bp:equipment_helm_tombraiser_lvl1[magicmate]"
+     ]
+    },
+    {
+     "level": 3,
+     "text": "You have unlocked the Banshee's Boon ability!",
+     "abilities": [
+      {
+       "ref": "abilities/tombraiser/ghost_form",
+       "name": "Banshee's Boon"
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "text": "You have unlocked the Grave Goliath ability!",
+     "abilities": [
+      {
+       "ref": "abilities/tombraiser/ultimate_minion",
+       "name": "Grave Goliath"
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/tomb_raiser_lvl2",
+     "styles": [
+      "bp:equipment_helm_tombraiser_lvl2[magicmate]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/tomb_raiser_lvl3",
+     "styles": [
+      "bp:equipment_helm_tombraiser_lvl3[magicmate]"
+     ]
+    },
+    {
+     "level": 25,
+     "text": "You have been granted a Class Gem Key for reaching Level 25!"
+    },
+    {
+     "level": 30,
+     "costume": "skins/tomb_raiser_lvl4",
+     "styles": [
+      "bp:equipment_helm_tombraiser_lvl4[magicmate]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": "Trovian Loop"
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/tombraiser",
+      "count": 1,
+      "name": "Primal Loop: Tomb Raiser"
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  }
+ }
+}

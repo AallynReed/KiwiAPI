@@ -586,3 +586,25 @@ body.wk { --nav-h: 63px; }
 .wk-chips-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .wk-classrings { margin-top: 16px; }
 .wk-subpart + .wk-subpart { margin-top: 8px; }
+.wk-days { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.wk-day { padding: 16px 18px; border: 1px solid var(--bg-line); border-radius: 12px; background: var(--bg-card); }
+.wk-day.is-today { border-color: color-mix(in oklab, var(--accent-blue) 55%, var(--bg-line)); }
+.wk-day-when { margin: 0; font-size: .8rem; color: var(--text-mute); display: flex; gap: 8px; align-items: center; }
+.wk-day-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; margin: 2px 0 10px; }
+.wk-day-sub { margin: 12px 0 4px; font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-mute); }
+.wk-day-list { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: .88rem; }
+.wk-related-group + .wk-related-group { margin-top: 14px; }
+.wk-related-label { margin: 0 0 8px; font-size: .8rem; font-weight: 600; color: var(--text-mute); display: flex; gap: 6px; align-items: center; }
+.wk-related .wk-chip { display: inline-block; padding: 3px 11px; color: var(--text); }
+.wk-related .wk-chip:hover { color: var(--accent-blue); border-color: color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); }
+.wk-related .wk-chip-more { color: var(--accent-blue); }
+.wk-related-more { margin-top: 8px; }
+.wk-related-more summary { cursor: pointer; font-size: .85rem; color: var(--accent-blue); margin-bottom: 8px; }
+:target { scroll-margin-top: calc(var(--nav-h, 63px) + 16px); }
+li:target > .wk-entitycard { outline: 2px solid var(--accent-blue); outline-offset: -2px; }
+tr:target > * { background: color-mix(in oklab, var(--accent-blue) 12%, transparent); }
+.wk-table th.wk-depth-2 { padding-left: 22px; } .wk-table th.wk-depth-3 { padding-left: 32px; }
+.wk-table th.wk-depth-4 { padding-left: 42px; } .wk-table th.wk-depth-5 { padding-left: 52px; }
+.wk-table th.wk-depth-6, .wk-table th.wk-depth-7, .wk-table th.wk-depth-8 { padding-left: 62px; }
+.wk-guide { display: flex; gap: 8px; align-items: baseline; }
+.wk-table td.wk-depth-2 { padding-left: 24px; }

@@ -22,7 +22,7 @@
                 <thead><tr><th scope="col">World</th><th scope="col">Difficulty</th><th scope="col">Needs</th></tr></thead>
                 <tbody>
                 {% for w in g.rows %}
-                <tr>
+                <tr id="{{ w.anchor }}">
                     <th scope="row"><div>{{ w.name }}</div>{% if w.description %}<div class="wk-mute wk-pre">{{ w.description }}</div>{% endif %}</th>
                     <td class="num">{{ w.difficulty }}</td>
                     <td>{% for r in w.requires %}<div>{{ r }}</div>{% endfor %}</td>

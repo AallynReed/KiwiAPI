@@ -19,7 +19,7 @@
 <section class="cls-section wk-entitygroup" data-filter-group>
     <ul class="wk-entitygrid" role="list">
         {% for x in g.styles %}
-        <li data-search="{{ x.search }}" data-rarity="{{ x.rarity }}">{% if x.url %}<a class="wk-entitycard" href="{{ x.url }}">{% else %}<div class="wk-entitycard wk-stylecard">{% endif %}
+        <li id="{{ x.anchor }}" data-search="{{ x.search }}" data-rarity="{{ x.rarity }}">{% if x.url %}<a class="wk-entitycard" href="{{ x.url }}">{% else %}<div class="wk-entitycard wk-stylecard">{% endif %}
             <span class="wk-entitycard-img">{% if x.image %}<img data-lazy-src="{{ x.image }}" alt="" width="48" height="48" decoding="async" data-hide-on-error>{% elif x.color %}<span class="wk-swatch" style="background:{{ x.color }}" role="img" aria-label="Colour {{ x.color }}"></span>{% endif %}</span>
             <span class="wk-entitycard-text">
                 <span class="wk-entitycard-name">{{ x.name }}</span>

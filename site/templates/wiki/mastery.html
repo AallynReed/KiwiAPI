@@ -1,0 +1,60 @@
+{% extends "wiki/_base.html" %}
+{% block view %}data{% endblock %}
+{% block main %}
+<article class="wk-article wk-data">
+    <div class="wk-article-head">
+        <p class="wk-eyebrow">/mastery</p>
+        {% include "wiki/_page_tools.html" %}
+    </div>
+    <h1 class="wk-title">{{ title }}</h1>
+    <p class="wk-lead">Trove has three mastery ladders. Each level takes a set number of points from the one before and can come with a reward. Collectible pages across this wiki show how much mastery each one gives.</p>
+    <nav class="wk-chips" aria-label="Ladders">{% for l in ladders %}<a class="wk-chip" href="#{{ l.slug }}">{{ l.name }}</a>{% endfor %}</nav>
+
+    {% for l in ladders %}
+    <section class="wk-section" id="{{ l.slug }}" aria-labelledby="{{ l.slug }}-title">
+        <h2 class="wk-subhead" id="{{ l.slug }}-title">{{ l.name }} <span class="wk-count-muted">{{ l.max }} levels</span></h2>
+        <p class="wk-hint">{{ l.lead }}</p>
+        {% if l.every %}
+        <p>Every level{% if l.cap and l.cap < l.max %} up to {{ l.cap }}{% endif %} adds {{ l.every | join(", ") }}{% if l.past_cap %}; every level after {{ l.cap }} adds {{ l.past_cap | join(", ") }} instead{% endif %}.</p>
+        {% endif %}
+
+        {% if l.sources %}
+        <h3 class="wk-subhead">Where the points come from</h3>
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">For each</th><th scope="col">Trove Mastery</th><th scope="col">Geode Mastery</th></tr></thead>
+                <tbody>{% for s in l.sources %}<tr><th scope="row">{{ s.name }}</th><td class="num">{{ s.points }}</td><td class="num">{{ s.geode }}</td></tr>{% endfor %}</tbody>
+            </table>
+        </div>
+        <p class="wk-hint">A collectible is worth these points, except the ones the game multiplies by 0, 2, 3 or 5; each collectible's page shows its value. Geode Mastery only comes from the collectibles the game lists for it.</p>
+        {% endif %}
+
+        <h3 class="wk-subhead">Points per level</h3>
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">Levels</th><th scope="col">Points each</th><th scope="col">Total by the last one</th></tr></thead>
+                <tbody>{% for b in l.bands %}<tr><th scope="row" class="num">{{ b.range }}</th><td class="num">{{ b.points }}</td><td class="num">{{ b.total }}</td></tr>{% endfor %}</tbody>
+            </table>
+        </div>
+
+        {% if l.rewards %}
+        <h3 class="wk-subhead">Level rewards <span class="wk-count-muted">{{ l.rewards | length }}</span></h3>
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">Level</th><th scope="col">Reward</th></tr></thead>
+                <tbody>
+                {% for r in l.rewards %}
+                <tr id="{{ r.anchor }}"><th scope="row" class="num">{{ r.level }}</th>
+                    <td>{% for g in r.rewards %}<div>{% if g.url %}<a href="{{ g.url }}">{{ g.text }}</a>{% else %}{{ g.text }}{% endif %}{% for x in g.extra %} · <a href="{{ x.url }}">{{ x.text }}</a>{% endfor %}</div>{% endfor %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </section>
+    {% endfor %}
+
+    {% set notes_prompt = "No notes yet: the fastest ways to earn mastery." %}
+    {% include "wiki/_notes.html" %}
+</article>
+{% endblock %}

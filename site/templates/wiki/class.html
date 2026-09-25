@@ -33,12 +33,37 @@
         </div>
     </section>
     {% endif %}
+    {% if rewards and rewards.levels %}
+    <section class="cls-detail wk-classrings" aria-labelledby="wk-levelrewards-title">
+        <h3 class="cls-section-title" id="wk-levelrewards-title"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i><span>Level rewards</span></h3>
+        <div class="wk-tablewrap">
+            <table class="wk-table">
+                <thead><tr><th scope="col">Level</th><th scope="col">Unlocks</th></tr></thead>
+                <tbody>
+                {% for r in rewards.levels %}
+                <tr><th scope="row" class="num">{{ r.level }}</th>
+                    <td>{% if r.text %}<div>{{ r.text }}</div>{% endif %}{% if r.things %}<div>{% for t in r.things %}{% if t.url %}<a href="{{ t.url }}">{{ t.text }}</a>{% else %}{{ t.text }}{% endif %}{{ ", " if not loop.last else "" }}{% endfor %}</div>{% endif %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if rewards.paragon_every %}<p class="wk-hint">Each of the {{ rewards.paragon_levels }} Paragon levels pays {% for t in rewards.paragon_every %}{% if t.url %}<a href="{{ t.url }}">{{ t.text }}</a>{% else %}{{ t.text }}{% endif %}{{ " and " if not loop.last else "" }}{% endfor %}{% if rewards.paragon_prime %}; a prime Paragon level pays {% for t in rewards.paragon_prime %}{% if t.url %}<a href="{{ t.url }}">{{ t.text }}</a>{% else %}{{ t.text }}{% endif %}{{ " and " if not loop.last else "" }}{% endfor %} instead{% endif %}.</p>{% endif %}
+    </section>
+    {% endif %}
+    {% if paragon %}
+    <section class="cls-detail wk-classrings" aria-labelledby="wk-paragon-title">
+        <h3 class="cls-section-title" id="wk-paragon-title"><i class="fa-solid fa-crown" aria-hidden="true"></i><span>Paragon powers</span></h3>
+        <p class="wk-hint">The {{ title }} Paragon tree's powers, each bought with {% for c in paragon[0].cost %}{% if c.url %}<a href="{{ c.url }}">{{ c.text }}</a>{% else %}{{ c.text }}{% endif %}{% endfor %}.</p>
+        <ul class="wk-thinglist" role="list">{% for p in paragon %}<li><strong>{{ p.name }}</strong>{% if p.description %}<div class="wk-mute wk-pre">{{ p.description }}</div>{% endif %}</li>{% endfor %}</ul>
+    </section>
+    {% endif %}
     {% if rings %}
     <section class="cls-detail wk-classrings" aria-labelledby="wk-rings-title">
         <h3 class="cls-section-title" id="wk-rings-title"><i class="fa-solid fa-ring" aria-hidden="true"></i><span>Class rings</span></h3>
         <ul class="wk-thinglist" role="list">{% for r in rings %}<li><a href="{{ r.url }}"><strong>{{ r.name }}</strong></a>{% if r.description %}<div class="wk-mute wk-pre">{{ r.description }}</div>{% endif %}</li>{% endfor %}</ul>
     </section>
     {% endif %}
+    {% if related %}<div class="cls-detail wk-classrings">{% with siblings = none %}{% include "wiki/_related.html" %}{% endwith %}</div>{% endif %}
     <script type="application/json" id="wk-class-json">{{ class_data | tojson }}</script>
 
     <section class="wk-writeup" aria-labelledby="wk-writeup-title">

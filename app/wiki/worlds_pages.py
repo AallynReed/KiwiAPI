@@ -11,7 +11,7 @@ import re
 from typing import Any
 
 from app.trove.decode import store as gamedata
-from app.wiki import entities
+from app.wiki import entities, links
 from app.wiki.ability_view import num
 
 WORLD_TYPES = ("Adventure Portal", "Super Adventure Portal", "Geode Portal")
@@ -42,7 +42,7 @@ def worlds_page() -> dict[str, Any]:
     difficulties = {d["rank"]: d["name"] for d in data.get("difficulties") or []}
     groups = []
     for kind in WORLD_TYPES:
-        rows = [{"name": w["name"], "description": _clean(w.get("description")),
+        rows = [{"name": w["name"], "description": _clean(w.get("description")), "anchor": links.anchor("w", w["slug"]),
                  "difficulty": f"{w['difficulty']} ({w['rank']})" if w.get("difficulty") else "",
                  "rank": w.get("rank", 99),
                  "requires": [x for x in (_requirement(r, difficulties) for r in w.get("requires") or []) if x],
@@ -62,6 +62,7 @@ def gateways_page() -> dict[str, Any]:
                else "Stable gateways")
         crafted = [f for f in entities._sources(g.get("prefab") or "") if f["label"] == "Crafted at"]
         sections[key].append({"name": g["name"], "description": _clean(g.get("description")),
+                              "anchor": links.anchor("g", g["slug"]),
                               "depth": g.get("depth"), "crafted": crafted,
                               "search": f"{g['name']} {g.get('description', '')}".lower()})
     for rows in sections.values():

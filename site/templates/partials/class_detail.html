@@ -50,7 +50,7 @@
 {% endif %}
 {% from "partials/ability_card.html" import ability_card %}
 {% if d.abilities %}
-<section class="cls-section">
+<section class="cls-section" id="abilities">
     <h3 class="cls-section-title"><i class="fa-solid fa-bolt" aria-hidden="true"></i><span>Abilities</span></h3>
     <div class="cls-abilities">{% for a in d.abilities %}{{ ability_card(a) }}{% endfor %}</div>
 </section>

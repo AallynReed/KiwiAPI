@@ -1,0 +1,222 @@
+{
+ "days": [
+  {
+   "day": 0,
+   "weekday": "Monday",
+   "name": "Delve Day",
+   "set": "shadow",
+   "bonuses": [
+    "Double Crystal Drops",
+    "Double Shadow Shard Drops",
+    "Double Inert Geode Drops"
+   ],
+   "patron_bonuses": [
+    "Triple Crystal Drops",
+    "Triple Shadow Shard Drops",
+    "Triple Inert Geode Drops"
+   ],
+   "stats": [],
+   "multipliers": []
+  },
+  {
+   "day": 1,
+   "weekday": "Tuesday",
+   "name": "Gathering Day",
+   "set": "gathering",
+   "bonuses": [
+    "Double Radiant Shard Drops",
+    "20% Bonus Harvest Chance",
+    "50% Bonus Ore Chance",
+    "20% Bonus Fish Chance"
+   ],
+   "patron_bonuses": [
+    "Triple Radiant Shard Drops",
+    "40% Bonus Harvest Chance",
+    "100% Bonus Ore Chance",
+    "40% Bonus Fish Chance"
+   ],
+   "stats": [],
+   "multipliers": []
+  },
+  {
+   "day": 2,
+   "weekday": "Wednesday",
+   "name": "Gem Day",
+   "set": "gem",
+   "bonuses": [
+    "Gem Upgrade Dust Cost Reduced By 10%",
+    "25% Bonus Gem Box Drop Chance",
+    "Dungeons Can Drop Up To 3 Lustrous Gem Boxes"
+   ],
+   "patron_bonuses": [
+    "Gem Upgrade Dust Cost Reduced By 20%",
+    "50% Bonus Gem Box Drop Chance",
+    "Dungeons Can Drop Up To 6 Lustrous Gem Boxes"
+   ],
+   "stats": [
+    {
+     "stat": "$Stat_GemEfficiency",
+     "name": "Gem Efficiency",
+     "op": "Add",
+     "value": 10.0,
+     "percent": false,
+     "amount": 10.0
+    }
+   ],
+   "multipliers": []
+  },
+  {
+   "day": 3,
+   "weekday": "Thursday",
+   "name": "Adventure Day",
+   "set": "adventure",
+   "bonuses": [
+    "Earn 50% More Adventurine",
+    "Double Chance to Find Adventure Boxes",
+    "Double Chance To Find Talismans"
+   ],
+   "patron_bonuses": [
+    "Earn 100% More Adventurine",
+    "Triple Chance to Find Adventure Boxes",
+    "Triple Chance To Find Talismans"
+   ],
+   "stats": [
+    {
+     "stat": "$Stat_AdventurineGainBoost",
+     "name": "Adventurine",
+     "op": "Add",
+     "value": 50.0,
+     "percent": false,
+     "amount": 50.0
+    }
+   ],
+   "multipliers": []
+  },
+  {
+   "day": 4,
+   "weekday": "Friday",
+   "name": "Dragon Day",
+   "set": "dragon",
+   "bonuses": [
+    "2x Dragon Coins from Challenges",
+    "2x Lesser Dragon Caches from Challenges",
+    "2x Chance Of Finding Dragon Fragments"
+   ],
+   "patron_bonuses": [
+    "3x Dragon Coins from Challenges",
+    "3x Lesser Dragon Caches from Challenges",
+    "3x Chance Of Finding Dragon Fragments"
+   ],
+   "stats": [],
+   "multipliers": [
+    {
+     "kind": "claim",
+     "claim": "challenge_daily",
+     "multiplier": 2.0
+    },
+    {
+     "kind": "claim",
+     "claim": "challenge_level_1",
+     "multiplier": 2.0
+    },
+    {
+     "kind": "claim",
+     "claim": "challenge_level_2",
+     "multiplier": 2.0
+    },
+    {
+     "kind": "claim",
+     "claim": "challenge_level_3",
+     "multiplier": 2.0
+    },
+    {
+     "kind": "claim",
+     "claim": "test_minigame_challenge_level_1",
+     "multiplier": 2.0
+    },
+    {
+     "kind": "claim",
+     "claim": "test_minigame_challenge_level_2",
+     "multiplier": 2.0
+    },
+    {
+     "kind": "claim",
+     "claim": "test_minigame_challenge_level_3",
+     "multiplier": 2.0
+    },
+    {
+     "kind": "claim",
+     "claim": "test_minigame_challenge_level_4",
+     "multiplier": 2.0
+    }
+   ]
+  },
+  {
+   "day": 5,
+   "weekday": "Saturday",
+   "name": "XP Day",
+   "set": "xp",
+   "bonuses": [
+    "50% More Adventure Experience",
+    "50% More Club Experience",
+    "50% More Arena Win Experience"
+   ],
+   "patron_bonuses": [
+    "100% More Adventure Experience",
+    "100% More Club Experience",
+    "100% More Arena Win Experience"
+   ],
+   "stats": [
+    {
+     "stat": "$Stat_ExperienceBoost",
+     "name": "Experience Boost",
+     "op": "Add",
+     "value": 50.0,
+     "percent": false,
+     "amount": 50.0
+    },
+    {
+     "stat": "$Stat_ClubExperienceBoost",
+     "name": "Club Experience Boost",
+     "op": "Add",
+     "value": 50.0,
+     "percent": false,
+     "amount": 50.0
+    }
+   ],
+   "multipliers": [
+    {
+     "kind": "pvpexperience",
+     "multiplier": 1.5
+    }
+   ]
+  },
+  {
+   "day": 6,
+   "weekday": "Sunday",
+   "name": "Loot Day",
+   "set": "loot",
+   "bonuses": [
+    "+100 Magic Find",
+    "Double Chance To Find Flux Artifacts",
+    "Increased Chaos Chest Drop Chance"
+   ],
+   "patron_bonuses": [
+    "+400 Magic Find",
+    "Triple Chance To Find Flux Artifacts",
+    "Increased Chaos Chest Drop Chance"
+   ],
+   "stats": [
+    {
+     "stat": "$Stat_MagicFind",
+     "name": "Magic Find",
+     "op": "Add",
+     "value": 100.0,
+     "percent": false,
+     "amount": 100.0
+    }
+   ],
+   "multipliers": []
+  }
+ ]
+}

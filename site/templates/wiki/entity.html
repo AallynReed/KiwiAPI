@@ -43,6 +43,7 @@
         </section>
         {% endif %}
         {% include "wiki/kinds/" ~ kind ~ "_after.html" ignore missing %}
+        {% with related = d.related, siblings = d.siblings %}{% include "wiki/_related.html" %}{% endwith %}
     </section>
 
     <section class="wk-writeup" aria-labelledby="wk-writeup-title">

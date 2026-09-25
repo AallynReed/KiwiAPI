@@ -22,7 +22,7 @@
             <thead><tr><th scope="col">Title</th><th scope="col">How to get it</th></tr></thead>
             <tbody>
             {% for t in titles %}
-            <tr data-search="{{ t.search }}">
+            <tr id="{{ t.anchor }}" data-search="{{ t.search }}">
                 <th scope="row">{% if t.female and t.female != t.male %}{{ t.male }} <span class="wk-mute">/ {{ t.female }}</span>{% if t.name != t.male %}<div class="wk-mute">{{ t.name }}</div>{% endif %}{% else %}{{ t.name }}{% endif %}</th>
                 <td>
                     {% if t.description %}<div class="wk-pre">{{ t.description }}</div>{% endif %}

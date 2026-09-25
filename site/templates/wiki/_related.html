@@ -1,0 +1,23 @@
+{# What points at this page (app/wiki/links.related) and the rest of its collection. #}
+{% if related or siblings %}
+<section class="cls-section wk-related" aria-labelledby="wk-related-title">
+    <h3 class="cls-section-title" id="wk-related-title"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i><span>Related</span></h3>
+    {% for g in related %}
+    <div class="wk-related-group">
+        <h4 class="wk-related-label"><i class="fa-solid {{ g.icon }}" aria-hidden="true"></i> {{ g.label }} <span class="wk-count-muted">{{ g.links | length }}</span></h4>
+        <ul class="wk-chips-list" role="list">{% for l in g.links[:g.show] %}<li><a class="wk-chip" href="{{ l.url }}">{{ l.text }}</a></li>{% endfor %}</ul>
+        {% if g.links | length > g.show %}
+        <details class="wk-related-more"><summary>Show all {{ g.links | length }}</summary>
+            <ul class="wk-chips-list" role="list">{% for l in g.links[g.show:] %}<li><a class="wk-chip" href="{{ l.url }}">{{ l.text }}</a></li>{% endfor %}</ul>
+        </details>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% if siblings %}
+    <div class="wk-related-group">
+        <h4 class="wk-related-label"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> {{ siblings.title }} <span class="wk-count-muted">{{ siblings.count }}</span></h4>
+        <ul class="wk-chips-list" role="list">{% for l in siblings.links %}<li><a class="wk-chip" href="{{ l.url }}">{{ l.text }}</a></li>{% endfor %}{% if siblings.more %}<li><a class="wk-chip wk-chip-more" href="{{ siblings.more }}">See all {{ siblings.count }}</a></li>{% endif %}</ul>
+    </div>
+    {% endif %}
+</section>
+{% endif %}

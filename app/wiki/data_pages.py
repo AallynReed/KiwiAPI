@@ -14,6 +14,17 @@ DATA_PAGES: dict[str, str] = {
     "worlds": "Worlds & Biomes",
     "delve-gateways": "Delve Gateways",
     "shadow-tower": "Shadow Tower",
+    "daily-bonuses": "Daily Bonuses",
+    "leaderboards": "Leaderboards",
+    "star-chart": "Star Chart",
+    "depths-of-the-angler": "Depths of the Angler",
+    "rune-anvil": "Rune Anvil",
+    "gearcrafting-progression": "Gearcrafting Progression",
+    "geode-tools": "Geode Tools",
+    "mastery": "Mastery",
+    "lootbox-odds": "Lootbox Odds",
+    "pvp-powerups": "PvP Power-ups",
+    "chat-commands": "Chat Commands",
 }
 
 

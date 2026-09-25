@@ -1,0 +1,2362 @@
+{
+ "powerups": [
+  {
+   "slug": "pvp_consumable_aoeenergy_50",
+   "name": "Energizing Wave",
+   "description": "Instantly restores some energy to all nearby allies.",
+   "prefab": "pvp/pvp_consumable_aoeenergy_50",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_aoeenergy_50",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_aoe_energy.png",
+   "healing": [
+    {
+     "name": "Use Consumable Energy 50",
+     "prefab": "abilities/pvp/use_consumable_energy_50",
+     "max_energy_percent": 0.5
+    }
+   ],
+   "effects": [
+    {
+     "name": "Use Consumable Aoeenergy 50",
+     "prefab": "abilities/pvp/use_consumable_aoeenergy_50",
+     "component": 132,
+     "duration": 1.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_aoeheal_35",
+   "name": "Healing Wave",
+   "description": "Instantly restores some health to all nearby allies.",
+   "prefab": "pvp/pvp_consumable_aoeheal_35",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_aoeheal_35",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_aoe_heal.png",
+   "healing": [
+    {
+     "name": "Use Consumable Heal 35",
+     "prefab": "abilities/pvp/use_consumable_heal_35",
+     "max_health_percent": 0.3
+    }
+   ],
+   "effects": [
+    {
+     "name": "Use Consumable Aoeheal 35 Aoe",
+     "prefab": "abilities/pvp/use_consumable_aoeheal_35_aoe",
+     "component": 132,
+     "duration": 1.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_block_air_gold",
+   "name": "Ganda's Gift",
+   "description": "Temporarily transforms air into gold blocks.",
+   "prefab": "pvp/pvp_consumable_block_air_gold",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_block_air_gold",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_placeholder_speed.png"
+  },
+  {
+   "slug": "pvp_consumable_cooldown_reduction",
+   "name": "Chronomantic Cantrip",
+   "description": "Instantly reduces all ability cooldowns.",
+   "prefab": "pvp/pvp_consumable_cooldown_reduction",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_cooldown_reduction",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_cooldown_reduction.png"
+  },
+  {
+   "slug": "pvp_consumable_criticalhit",
+   "name": "Critical Eye",
+   "description": "Temporarily forces all attacks to become critical hits.",
+   "prefab": "pvp/pvp_consumable_criticalhit",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_criticalhit",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_crit_hit.png",
+   "effects": [
+    {
+     "name": "Use Consumable Criticalhit",
+     "prefab": "abilities/pvp/use_consumable_criticalhit",
+     "component": 136,
+     "duration": 5.0,
+     "stats": [
+      {
+       "stat": "$Stat_CriticalHitChance",
+       "name": "Critical Hit",
+       "op": "Set",
+       "value": 1000.0,
+       "percent": false,
+       "amount": 1000.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_energy_50",
+   "name": "Energy Boost",
+   "description": "Instantly restores some energy.",
+   "prefab": "pvp/pvp_consumable_energy_50",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_energy_50",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_aoe_energy.png",
+   "healing": [
+    {
+     "name": "Use Consumable Energy 50",
+     "prefab": "abilities/pvp/use_consumable_energy_50",
+     "max_energy_percent": 0.5
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_energy_80",
+   "name": "Large Energy Boost",
+   "description": "Instantly restores a large amount of energy.",
+   "prefab": "pvp/pvp_consumable_energy_80",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_energy_80",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_aoe_energy.png",
+   "healing": [
+    {
+     "name": "Use Consumable Energy 80",
+     "prefab": "abilities/pvp/use_consumable_energy_80",
+     "max_energy_percent": 0.8
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_energyregen",
+   "name": "Energy Regen",
+   "description": "Grants a temporary boost to Energy Regeneration.",
+   "prefab": "pvp/pvp_consumable_energyregen",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_energyregen",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_aoe_energy.png",
+   "effects": [
+    {
+     "name": "Use Consumable Energyregen",
+     "prefab": "abilities/pvp/use_consumable_energyregen",
+     "component": 136,
+     "duration": 7.0,
+     "stats": [
+      {
+       "stat": "$Stat_EnergyRegenBonus_controller",
+       "name": "Energy Regen Bonus",
+       "op": "MultiplySum",
+       "value": 50.0,
+       "percent": true,
+       "amount": 0.5,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_heal_35",
+   "name": "Health Boost",
+   "description": "Instantly restores some health.",
+   "prefab": "pvp/pvp_consumable_heal_35",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_heal_35",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_health.png",
+   "healing": [
+    {
+     "name": "Use Consumable Heal 35",
+     "prefab": "abilities/pvp/use_consumable_heal_35",
+     "max_health_percent": 0.3
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_juggernaut",
+   "name": "Juggernaut",
+   "description": "Grants temporary immunity to damage, but reduces Movement Speed.",
+   "prefab": "pvp/pvp_consumable_juggernaut",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_juggernaut",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_juggernaut.png",
+   "effects": [
+    {
+     "name": "Use Consumable Juggernaut",
+     "prefab": "abilities/pvp/use_consumable_juggernaut",
+     "component": 136,
+     "duration": 7.0,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Nullify",
+       "value": 0.0,
+       "percent": false,
+       "amount": 0.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      },
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Multiply",
+       "value": -60.0,
+       "percent": true,
+       "amount": 0.4,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      },
+      {
+       "stat": "$Stat_IncomingDamageMod",
+       "name": "Incoming Damage",
+       "op": "Multiply",
+       "value": -100.0,
+       "percent": true,
+       "amount": 0.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_jump_boost",
+   "name": "Jump Boost",
+   "description": "Grants a temporary boost to Jump.",
+   "prefab": "pvp/pvp_consumable_jump_boost",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_jump_boost",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_jump.png",
+   "effects": [
+    {
+     "name": "Use Consumable Jump Boost",
+     "prefab": "abilities/pvp/use_consumable_jump_boost",
+     "component": 136,
+     "duration": 5.0,
+     "stats": [
+      {
+       "stat": "$Stat_Jump",
+       "name": "Jump",
+       "op": "Add",
+       "value": 10.0,
+       "percent": false,
+       "amount": 10.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_knockback",
+   "name": "Kinetic Wave",
+   "description": "Knocks away all nearby enemies.",
+   "prefab": "pvp/pvp_consumable_knockback",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_knockback",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_knockback.png",
+   "effects": [
+    {
+     "name": "Use Consumable Aoeknockback Stun",
+     "prefab": "abilities/pvp/use_consumable_aoeknockback_stun",
+     "component": 242,
+     "duration": 0.33
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_leech",
+   "name": "Bloodthirst",
+   "description": "Damages nearby enemies and heals you.",
+   "prefab": "pvp/pvp_consumable_leech",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_leech",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_revenant_passive.png",
+   "stages": [
+    {
+     "name": "Use Consumable Aoeleech Damage",
+     "prefab": "abilities/pvp/use_consumable_aoeleech_damage",
+     "base": 600,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "attacker_effect": "abilities/pvp/use_consumable_aoeleech_heal",
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Use Consumable Aoeleech",
+     "prefab": "abilities/pvp/use_consumable_aoeleech",
+     "component": 132,
+     "duration": 0.1
+    },
+    {
+     "name": "Use Consumable Aoeleech Damage",
+     "prefab": "abilities/pvp/use_consumable_aoeleech_damage",
+     "component": 156,
+     "duration": 2.0
+    },
+    {
+     "name": "Use Consumable Aoeleech Heal",
+     "prefab": "abilities/pvp/use_consumable_aoeleech_heal",
+     "component": 281,
+     "duration": 2.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_magnet_attract",
+   "name": "Law of Attraction",
+   "description": "Temporarily drags in enemies within range.",
+   "prefab": "pvp/pvp_consumable_magnet_attract",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_magnet_attract",
+   "tier": 1,
+   "icon": "ui/ability_icons/ico_barbarian_whirlwind_01.png",
+   "effects": [
+    {
+     "name": "Use Consumable Magnet Attract Effect",
+     "prefab": "abilities/pvp/use_consumable_magnet_attract_effect",
+     "component": 287,
+     "duration": 2.25
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_minionspawn_melee",
+   "name": "Angry Armorchick",
+   "description": "Spawns a melee minion which attacks enemies.",
+   "prefab": "pvp/pvp_consumable_minionspawn_melee",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_minionspawn_melee",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_minion_melee.png",
+   "stages": [
+    {
+     "name": "Use Consumable Minionspawn Melee Attack",
+     "prefab": "abilities/pvp/use_consumable_minionspawn_melee_attack",
+     "base": 1500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 0.1,
+     "min_knockback": 0.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Use Consumable Minionspawn Melee Mod",
+     "prefab": "abilities/pvp/use_consumable_minionspawn_melee_mod",
+     "component": 136,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Add",
+       "value": 25.0,
+       "percent": false,
+       "amount": 25.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_minionspawn_ranged",
+   "name": "Evilest Eye",
+   "description": "Spawns a ranged minion which attacks enemies.",
+   "prefab": "pvp/pvp_consumable_minionspawn_ranged",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_minionspawn_ranged",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_minion_ranged.png",
+   "stages": [
+    {
+     "name": "Use Consumable Minionspawn Ranged Shoot Bullet",
+     "prefab": "abilities/pvp/use_consumable_minionspawn_ranged_shoot_bullet",
+     "base": 1500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 4,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "min_knockback": 0.5,
+     "damage_stat": -1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_reflect_projectiles",
+   "name": "Mirror Shield",
+   "description": "Temporarily reflects enemies' projectile attacks.",
+   "prefab": "pvp/pvp_consumable_reflect_projectiles",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_reflect_projectiles",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_reflect_projectiles.png",
+   "effects": [
+    {
+     "name": "Use Consumable Reflect Projectiles",
+     "prefab": "abilities/pvp/use_consumable_reflect_projectiles",
+     "component": 64,
+     "duration": 4.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_snarefield",
+   "name": "Gravity Anchor",
+   "description": "Throws an object that decreases Movement Speed of nearby enemies.",
+   "prefab": "pvp/pvp_consumable_snarefield",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_snarefield",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_snare_field.png",
+   "effects": [
+    {
+     "name": "Use Consumable Snarefield Effect",
+     "prefab": "abilities/pvp/use_consumable_snarefield_effect",
+     "component": 136,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Multiply",
+       "value": -60.0,
+       "percent": true,
+       "amount": 0.4,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_speed_boost",
+   "name": "Speed Boost",
+   "description": "Grants a temporary boost to Movement Speed.",
+   "prefab": "pvp/pvp_consumable_speed_boost",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_speed_boost",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_speed.png",
+   "effects": [
+    {
+     "name": "Use Consumable Speed Boost",
+     "prefab": "abilities/pvp/use_consumable_speed_boost",
+     "component": 136,
+     "duration": 4.0,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Add",
+       "value": 24.0,
+       "percent": false,
+       "amount": 24.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_speed_boost_spikes",
+   "name": "Spike Sprint",
+   "description": "Grants a large boost to Movement Speed and spawns spikes while moving.",
+   "prefab": "pvp/pvp_consumable_speed_boost_spikes",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_speed_boost_spikes",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_speed.png",
+   "effects": [
+    {
+     "name": "Use Consumable Speed Boost Large",
+     "prefab": "abilities/pvp/use_consumable_speed_boost_large",
+     "component": 136,
+     "duration": 1.5,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Add",
+       "value": 115.0,
+       "percent": false,
+       "amount": 115.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_speedfield",
+   "name": "Speed Pylon",
+   "description": "Throws an object that increases Movement Speed of nearby allies.",
+   "prefab": "pvp/pvp_consumable_speedfield",
+   "mode": "arena",
+   "group": "Consumables",
+   "base": "pvp_consumable_speedfield",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_speedfield.png",
+   "effects": [
+    {
+     "name": "Use Consumable Speedfield Effect",
+     "prefab": "abilities/pvp/use_consumable_speedfield_effect",
+     "component": 136,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Add",
+       "value": 50.0,
+       "percent": false,
+       "amount": 50.0,
+       "modes": [
+        "PVP",
+        "PostRange"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_bombswap_beartrapbomb",
+   "name": "Trap Bomb",
+   "description": "Arms a few moments after being thrown, then explodes the next time an enemy moves close to it.",
+   "prefab": "pvp/battleroyale/pvp_bombswap_beartrapbomb",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_beartrapbomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_trap.png",
+   "cooldown": 12.0,
+   "stages": [
+    {
+     "name": "Beartrapbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_explosion",
+     "base": 10000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_type": 31,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_bombswap_beetlebomb",
+   "name": "Critter Bomb",
+   "description": "Summons allies to fight your enemies for a short amount of time.",
+   "prefab": "pvp/battleroyale/pvp_bombswap_beetlebomb",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_beetlebomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_critter.png",
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Beetlebomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/beetlebomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Beetlebomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/beetlebomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_bombswap_critterbomb_t2",
+   "name": "Critter Bomb",
+   "description": "Summons allies to fight your enemies for a short amount of time.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_bombswap_critterbomb_t2",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_critterbomb",
+   "tier": 2,
+   "icon": "ui/ability_icons/icon_pvp_critter.png",
+   "cooldown": 30.0
+  },
+  {
+   "slug": "pvp_bombswap_critterbomb_t3",
+   "name": "Critter Bomb",
+   "description": "Summons allies to fight your enemies for a short amount of time.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_bombswap_critterbomb_t3",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_critterbomb",
+   "tier": 3,
+   "icon": "ui/ability_icons/icon_pvp_critter.png",
+   "cooldown": 20.0
+  },
+  {
+   "slug": "pvp_bombswap_icebomb",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/pvp_bombswap_icebomb",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_icebomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/ico_icemage_icedrop_01.png",
+   "cooldown": 20.0
+  },
+  {
+   "slug": "pvp_bombswap_lavabomb",
+   "name": "Lava Bomb",
+   "description": "Lava Bombs explode on contact leaving lava in the explosion radius.",
+   "prefab": "pvp/battleroyale/pvp_bombswap_lavabomb",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_lavabomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_lava.png",
+   "cooldown": 0.5
+  },
+  {
+   "slug": "pvp_bombswap_lavabomb_t2",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_bombswap_lavabomb_t2",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_lavabomb",
+   "tier": 2,
+   "icon": "ui/ability_icons/ico_dracolyte_burntoffering.png",
+   "cooldown": 30.0
+  },
+  {
+   "slug": "pvp_bombswap_lavabomb_t3",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_bombswap_lavabomb_t3",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_lavabomb",
+   "tier": 3,
+   "icon": "ui/ability_icons/ico_dracolyte_burntoffering.png",
+   "cooldown": 20.0
+  },
+  {
+   "slug": "pvp_bombswap_proximity",
+   "name": "Man o' War",
+   "description": "Summons an extra powerful Man o' War turret which lobs explosive shells that deal damage over a small area.",
+   "prefab": "pvp/battleroyale/pvp_bombswap_proximity",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_proximity",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pirate_manowar.png",
+   "cooldown": 30.0,
+   "stages": [
+    {
+     "name": "Proximity Projectile",
+     "prefab": "abilities/battleroyale/proximity_projectile",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 100,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "damage_type": -1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Proximity Mine Turret Kill Self",
+     "prefab": "abilities/battleroyale/proximity_mine_turret_kill_self",
+     "base": 500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Proximity Mine Effect Explosion",
+     "prefab": "abilities/battleroyale/proximity_mine_effect_explosion",
+     "base": 8000,
+     "multiplier": 1.0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 5.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Proximity Mine Turret Kill Self",
+     "prefab": "abilities/battleroyale/proximity_mine_turret_kill_self",
+     "component": 156,
+     "duration": 10.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_bombswap_proximity_t2",
+   "name": "Man o' War",
+   "description": "Summons an extra powerful Man o' War turret which lobs explosive shells that deal damage over a small area.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_bombswap_proximity_t2",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_proximity",
+   "tier": 2,
+   "icon": "ui/ability_icons/icon_pirate_manowar.png",
+   "cooldown": 22.5,
+   "stages": [
+    {
+     "name": "Proximity Projectile",
+     "prefab": "abilities/battleroyale/proximity_projectile",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 100,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "damage_type": -1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Proximity Mine Turret Kill Self",
+     "prefab": "abilities/battleroyale/proximity_mine_turret_kill_self",
+     "base": 500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Proximity Mine Effect Explosion",
+     "prefab": "abilities/battleroyale/proximity_mine_effect_explosion",
+     "base": 8000,
+     "multiplier": 1.0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 5.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Proximity Mine Turret Kill Self",
+     "prefab": "abilities/battleroyale/proximity_mine_turret_kill_self",
+     "component": 156,
+     "duration": 10.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_bombswap_proximity_t3",
+   "name": "Man o' War",
+   "description": "Summons an extra powerful Man o' War turret which lobs explosive shells that deal damage over a small area.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_bombswap_proximity_t3",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_proximity",
+   "tier": 3,
+   "icon": "ui/ability_icons/icon_pirate_manowar.png",
+   "cooldown": 15.0,
+   "stages": [
+    {
+     "name": "Proximity Projectile",
+     "prefab": "abilities/battleroyale/proximity_projectile",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 100,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "damage_type": -1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Proximity Mine Turret Kill Self",
+     "prefab": "abilities/battleroyale/proximity_mine_turret_kill_self",
+     "base": 500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Proximity Mine Effect Explosion",
+     "prefab": "abilities/battleroyale/proximity_mine_effect_explosion",
+     "base": 8000,
+     "multiplier": 1.0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 5.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Proximity Mine Turret Kill Self",
+     "prefab": "abilities/battleroyale/proximity_mine_turret_kill_self",
+     "component": 156,
+     "duration": 10.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_bombswap_waterbomb",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/pvp_bombswap_waterbomb",
+   "mode": "battleroyale",
+   "group": "Bombs",
+   "base": "pvp_bombswap_waterbomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_lunarlancer_teleport.png",
+   "cooldown": 20.0
+  },
+  {
+   "slug": "pvp_consumable_energy",
+   "name": "Energy",
+   "description": "Instantly replenishes your missing energy.",
+   "prefab": "pvp/battleroyale/pvp_consumable_energy",
+   "mode": "battleroyale",
+   "group": "Consumables",
+   "base": "pvp_consumable_energy",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_energy.png",
+   "effects": [
+    {
+     "name": "Consumable Energy",
+     "prefab": "abilities/battleroyale/consumable_energy",
+     "component": 303,
+     "duration": 0.26
+    }
+   ]
+  },
+  {
+   "slug": "pvp_consumable_hot",
+   "name": "Heal",
+   "description": "Heals over time and a slows on use.",
+   "prefab": "pvp/battleroyale/pvp_consumable_hot",
+   "mode": "battleroyale",
+   "group": "Consumables",
+   "base": "pvp_consumable_hot",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_health.png",
+   "effects": [
+    {
+     "name": "Consumable Hot",
+     "prefab": "abilities/battleroyale/consumable_hot",
+     "component": 303,
+     "duration": 5.0
+    },
+    {
+     "name": "Consumable Hot Effect Slow",
+     "prefab": "abilities/battleroyale/consumable_hot_effect_slow",
+     "component": 136,
+     "duration": 5.0,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Add",
+       "value": -25.0,
+       "percent": false,
+       "amount": -25.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_mobility_blast_jump",
+   "name": "Blast Jump",
+   "description": "Launches the Gunslinger up into the air, damaging any nearby enemies.",
+   "prefab": "pvp/battleroyale/pvp_mobility_blast_jump",
+   "mode": "battleroyale",
+   "group": "Mobility",
+   "base": "pvp_mobility_blast_jump",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "energy": 65,
+   "cooldown": 20.0
+  },
+  {
+   "slug": "pvp_mobility_bomb_jump",
+   "name": "Blast Jump",
+   "description": "Launches the Gunslinger up into the air, damaging any nearby enemies.",
+   "prefab": "pvp/battleroyale/pvp_mobility_bomb_jump",
+   "mode": "battleroyale",
+   "group": "Mobility",
+   "base": "pvp_mobility_bomb_jump",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 30.0,
+   "stages": [
+    {
+     "name": "Bomb Jump Explosion",
+     "prefab": "abilities/battleroyale/bomb_jump_explosion",
+     "base": 5000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "knockback": 1.0,
+     "min_knockback": 3.0,
+     "knockup": 2.0,
+     "damage_stat": -1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_mobility_bomb_jump_t2",
+   "name": "Bomb Jump",
+   "description": "Bomb Jump launches you into the air and damages to nearby foes.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_mobility_bomb_jump_t2",
+   "mode": "battleroyale",
+   "group": "Mobility",
+   "base": "pvp_mobility_bomb_jump",
+   "tier": 2,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 24.0,
+   "stages": [
+    {
+     "name": "Bomb Jump Explosion",
+     "prefab": "abilities/battleroyale/bomb_jump_explosion",
+     "base": 5000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "knockback": 1.0,
+     "min_knockback": 3.0,
+     "knockup": 2.0,
+     "damage_stat": -1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_mobility_bomb_jump_t3",
+   "name": "Bomb Jump",
+   "description": "Bomb Jump launches you into the air and damages to nearby foes.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_mobility_bomb_jump_t3",
+   "mode": "battleroyale",
+   "group": "Mobility",
+   "base": "pvp_mobility_bomb_jump",
+   "tier": 3,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 18.0,
+   "stages": [
+    {
+     "name": "Bomb Jump Explosion",
+     "prefab": "abilities/battleroyale/bomb_jump_explosion",
+     "base": 5000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "knockback": 1.0,
+     "min_knockback": 3.0,
+     "knockup": 2.0,
+     "damage_stat": -1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_mobility_bomb_jump_t4",
+   "name": "Bomb Jump",
+   "description": "Bomb Jump launches you into the air and damages to nearby foes.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_mobility_bomb_jump_t4",
+   "mode": "battleroyale",
+   "group": "Mobility",
+   "base": "pvp_mobility_bomb_jump",
+   "tier": 4,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 12.0,
+   "stages": [
+    {
+     "name": "Bomb Jump Explosion",
+     "prefab": "abilities/battleroyale/bomb_jump_explosion",
+     "base": 5000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "knockback": 1.0,
+     "min_knockback": 3.0,
+     "knockup": 2.0,
+     "damage_stat": -1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_mobility_charge",
+   "name": "Charge!",
+   "description": "Launches the Knight forward, taunting, stunning and damaging passing enemies.",
+   "prefab": "pvp/battleroyale/pvp_mobility_charge",
+   "mode": "battleroyale",
+   "group": "Mobility",
+   "base": "pvp_mobility_charge",
+   "tier": 1,
+   "icon": "ui/ability_icons/ico_knight_wildcharge_01.png",
+   "energy": 40,
+   "stages": [
+    {
+     "name": "Pvp Mobility Charge",
+     "prefab": "pvp/battleroyale/pvp_mobility_charge",
+     "base": 50,
+     "multiplier": 4.5,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 10,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "knockback": 1.75,
+     "min_knockback": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Pvp Mobility Charge",
+     "prefab": "pvp/battleroyale/pvp_mobility_charge",
+     "base": 0,
+     "multiplier": 5.0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 1200,
+     "max_block_hardness": 1000,
+     "max_blocks": 10000,
+     "damage_stat": -1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_terraswap_boostbomb",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/pvp_terraswap_boostbomb",
+   "mode": "battleroyale",
+   "group": "Terrain",
+   "base": "pvp_terraswap_boostbomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 20.0
+  },
+  {
+   "slug": "pvp_terraswap_boostbomb_t2",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_terraswap_boostbomb_t2",
+   "mode": "battleroyale",
+   "group": "Terrain",
+   "base": "pvp_terraswap_boostbomb",
+   "tier": 2,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 16.0
+  },
+  {
+   "slug": "pvp_terraswap_boostbomb_t3",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_terraswap_boostbomb_t3",
+   "mode": "battleroyale",
+   "group": "Terrain",
+   "base": "pvp_terraswap_boostbomb",
+   "tier": 3,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 12.0
+  },
+  {
+   "slug": "pvp_terraswap_boostbomb_t4",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_terraswap_boostbomb_t4",
+   "mode": "battleroyale",
+   "group": "Terrain",
+   "base": "pvp_terraswap_boostbomb",
+   "tier": 4,
+   "icon": "ui/ability_icons/icon_pvp_boost.png",
+   "cooldown": 8.0
+  },
+  {
+   "slug": "pvp_terraswap_wallbomb",
+   "name": "Ice Bomb",
+   "description": "Sends a shiver up your spine, or through most blocks near ground sub-zero.",
+   "prefab": "pvp/battleroyale/pvp_terraswap_wallbomb",
+   "mode": "battleroyale",
+   "group": "Terrain",
+   "base": "pvp_terraswap_wallbomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_juggernaut.png",
+   "energy": 40.0,
+   "cooldown": 6.0
+  },
+  {
+   "slug": "pvp_weaponswap_bazooka",
+   "name": "Charged Shot",
+   "description": "Good things come to those who wait.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_bazooka",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_bazooka",
+   "tier": 1,
+   "icon": "ui/ability_icons/ico_gunslinger_chargeshot_01.png",
+   "stages": [
+    {
+     "name": "Charge Shot Nocharge Bullet",
+     "prefab": "abilities/gunslinger/charge_shot_nocharge_bullet",
+     "base": 5,
+     "multiplier": 1.5,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 30,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "knockback_multiplier": 0.75,
+     "knockback": 1.0,
+     "min_knockback": 0.1,
+     "attacker_effect": "abilities/gunslinger/basic_shoot_bullet_effect_slowfall",
+     "damage_type": 1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Charge Shot Partialcharge Bullet",
+     "prefab": "abilities/gunslinger/charge_shot_partialcharge_bullet",
+     "base": 0,
+     "multiplier": 2.0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 1,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "knockback_multiplier": 0.75,
+     "knockback": 1.0,
+     "min_knockback": 0.1,
+     "attacker_effect": "abilities/gunslinger/basic_shoot_bullet_effect_slowfall",
+     "damage_type": 1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Bazooka Bullet",
+     "prefab": "abilities/battleroyale/bazooka_bullet",
+     "base": 0,
+     "multiplier": 2.0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 1,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "attacker_effect": "abilities/gunslinger/basic_shoot_bullet_effect_slowfall",
+     "damage_type": 1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Charge Shot Partialcharge Explosion",
+     "prefab": "abilities/gunslinger/charge_shot_partialcharge_explosion",
+     "base": 25,
+     "multiplier": 1.75,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 10,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.5,
+     "knockback": 1.0,
+     "min_knockback": 0.1,
+     "stability_ignore": 0.15,
+     "damage_type": 1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Bazooka Explosion",
+     "prefab": "abilities/battleroyale/bazooka_explosion",
+     "base": 25,
+     "multiplier": 2.0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 75,
+     "max_block_hardness": 1000,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "knockback": 1.2,
+     "min_knockback": 1.0,
+     "damage_type": 1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Basic Shoot Bullet Effect Slowfall",
+     "prefab": "abilities/gunslinger/basic_shoot_bullet_effect_slowfall",
+     "component": 252,
+     "duration": 1.3
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_beartrapbomb",
+   "name": "Trap Bomb",
+   "description": "Arms a few moments after being thrown, then explodes the next time an enemy moves close to it.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_beartrapbomb",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_beartrapbomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_trap.png",
+   "cooldown": 14.0,
+   "stages": [
+    {
+     "name": "Beartrapbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_explosion",
+     "base": 10000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_type": 31,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_beartrapbomb_t2",
+   "name": "Trap Bomb",
+   "description": "Arms a few moments after being thrown, then explodes the next time an enemy moves close to it.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_beartrapbomb_t2",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_beartrapbomb",
+   "tier": 2,
+   "icon": "ui/ability_icons/icon_pvp_trap.png",
+   "cooldown": 12.0,
+   "stages": [
+    {
+     "name": "Beartrapbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_explosion",
+     "base": 10000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_type": 31,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_beartrapbomb_t3",
+   "name": "Trap Bomb",
+   "description": "Arms a few moments after being thrown, then explodes the next time an enemy moves close to it.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_beartrapbomb_t3",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_beartrapbomb",
+   "tier": 3,
+   "icon": "ui/ability_icons/icon_pvp_trap.png",
+   "cooldown": 10.0,
+   "stages": [
+    {
+     "name": "Beartrapbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_explosion",
+     "base": 10000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_type": 31,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_beartrapbomb_t4",
+   "name": "Trap Bomb",
+   "description": "Arms a few moments after being thrown, then explodes the next time an enemy moves close to it.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_beartrapbomb_t4",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_beartrapbomb",
+   "tier": 4,
+   "icon": "ui/ability_icons/icon_pvp_trap.png",
+   "cooldown": 8.0,
+   "stages": [
+    {
+     "name": "Beartrapbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_explosion",
+     "base": 10000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_type": 31,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Beartrapbomb Effect Trigger",
+     "prefab": "abilities/battleroyale/beartrapbomb_effect_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_beetlebomb",
+   "name": "Critter Bomb",
+   "description": "Summons allies to fight your enemies for a short amount of time.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_beetlebomb",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_beetlebomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_critter.png",
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Beetlebomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/beetlebomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Beetlebomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/beetlebomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_biggerbomb",
+   "name": "Sticky Bomb",
+   "description": "Sticky Bombs explode after a few seconds for massive damage.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_biggerbomb",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_biggerbomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_sticky.png",
+   "cooldown": 12.0,
+   "stages": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Biggerbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_explosion",
+     "base": 12000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_biggerbomb_t2",
+   "name": "Sticky Bomb",
+   "description": "Sticky Bombs explode after a few seconds for massive damage.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_biggerbomb_t2",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_biggerbomb",
+   "tier": 2,
+   "icon": "ui/ability_icons/icon_pvp_sticky.png",
+   "cooldown": 9.0,
+   "stages": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Biggerbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_explosion",
+     "base": 12000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_biggerbomb_t3",
+   "name": "Sticky Bomb",
+   "description": "Sticky Bombs explode after a few seconds for massive damage.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_biggerbomb_t3",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_biggerbomb",
+   "tier": 3,
+   "icon": "ui/ability_icons/icon_pvp_sticky.png",
+   "cooldown": 6.0,
+   "stages": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Biggerbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_explosion",
+     "base": 12000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_biggerbomb_t4",
+   "name": "Sticky Bomb",
+   "description": "Sticky Bombs explode after a few seconds for massive damage.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_biggerbomb_t4",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_biggerbomb",
+   "tier": 4,
+   "icon": "ui/ability_icons/icon_pvp_sticky.png",
+   "cooldown": 6.0,
+   "stages": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Biggerbomb Effect Explosion",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_explosion",
+     "base": 12000,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 150,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 4.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Biggerbomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/biggerbomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_bomb",
+   "name": "Rubber Bomb",
+   "description": "Rubber Bombs bounce once and then explode.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_bomb",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_bomb",
+   "tier": 1,
+   "icon": "ui/ability_icons/icon_pvp_rubber.png",
+   "energy": 35.0,
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Bomb Effect Explosion",
+     "prefab": "abilities/battleroyale/bomb_effect_explosion",
+     "base": 7500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 0.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_bomb_t2",
+   "name": "Rubber Bomb",
+   "description": "Rubber Bombs bounce once and then explode.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_bomb_t2",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_bomb",
+   "tier": 2,
+   "icon": "ui/ability_icons/icon_pvp_rubber.png",
+   "energy": 30.0,
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Bomb Effect Explosion",
+     "prefab": "abilities/battleroyale/bomb_effect_explosion",
+     "base": 7500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 0.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_bomb_t3",
+   "name": "Rubber Bomb",
+   "description": "Rubber Bombs bounce once and then explode.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_bomb_t3",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_bomb",
+   "tier": 3,
+   "icon": "ui/ability_icons/icon_pvp_rubber.png",
+   "energy": 25.0,
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Bomb Effect Explosion",
+     "prefab": "abilities/battleroyale/bomb_effect_explosion",
+     "base": 7500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 0.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_bomb_t4",
+   "name": "Rubber Bomb",
+   "description": "Rubber Bombs bounce once and then explode.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_bomb_t4",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_bomb",
+   "tier": 4,
+   "icon": "ui/ability_icons/icon_pvp_rubber.png",
+   "energy": 20.0,
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Bomb Effect Explosion",
+     "prefab": "abilities/battleroyale/bomb_effect_explosion",
+     "base": 7500,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 0.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Bomb Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/bomb_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_iceshards",
+   "name": "Ice Crash",
+   "description": "Drops an icicle from the heavens, dealing damage over an area that chills enemies, slowing their movement speed. Also turns lava blocks into water blocks for a short time.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_iceshards",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_iceshards",
+   "tier": 1,
+   "icon": "ui/ability_icons/ico_icemage_icedrop_01.png",
+   "energy": 20,
+   "cooldown": 0.66,
+   "stages": [
+    {
+     "name": "Iceshards Bullet",
+     "prefab": "abilities/icemage/iceshards_bullet",
+     "base": 350,
+     "multiplier": 2.25,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 20,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "target_effect": "abilities/icemage/iceshards_npc_effect_spawner",
+     "damage_type": 1,
+     "damage_stat": -1
+    },
+    {
+     "name": "Iceshards Npc Effect Explosion",
+     "prefab": "abilities/icemage/iceshards_npc_effect_explosion",
+     "base": 25,
+     "multiplier": 6.25,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 10,
+     "max_block_hardness": 200,
+     "max_blocks": 10000,
+     "knockback_multiplier": 0.5,
+     "knockback": 1.0,
+     "min_knockback": 0.1,
+     "damage_type": 1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Iceshards Npc Intercept 1 Effect",
+     "prefab": "abilities/icemage/iceshards_npc_intercept_1_effect",
+     "component": 218,
+     "duration": 5.0
+    },
+    {
+     "name": "Iceshards Npc Effect Stun",
+     "prefab": "abilities/icemage/iceshards_npc_effect_stun",
+     "component": 242,
+     "duration": 1.0
+    },
+    {
+     "name": "Basic Attack Effect Snare",
+     "prefab": "abilities/icemage/basic_attack_effect_snare",
+     "component": 136,
+     "duration": 3.5,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Multiply",
+       "value": -64.0,
+       "percent": true,
+       "amount": 0.36
+      }
+     ]
+    },
+    {
+     "name": "Iceshards Npc Intercept 2 Effect",
+     "prefab": "abilities/icemage/iceshards_npc_intercept_2_effect",
+     "component": 218,
+     "duration": 5.0
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_icesnareball",
+   "name": "Rubber Freeze Bomb",
+   "description": "A frozen Rubber Bomb that slows enemies hit for 3.5 seconds.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_icesnareball",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_icesnareball",
+   "tier": 1,
+   "icon": "ui/ability_icons/bounce_snowball_51x51.png",
+   "energy": 30.0,
+   "cooldown": 10.0,
+   "stages": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Icesnareball Effect Explosion",
+     "prefab": "abilities/battleroyale/icesnareball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 1.1,
+     "target_effect": "abilities/battleroyale/icesnareball_stat_mods",
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    },
+    {
+     "name": "Icesnareball Stat Mods",
+     "prefab": "abilities/battleroyale/icesnareball_stat_mods",
+     "component": 136,
+     "duration": 3.5,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Multiply",
+       "value": -75.0,
+       "percent": true,
+       "amount": 0.25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_icesnareball_t2",
+   "name": "Rubber Freeze Bomb",
+   "description": "A frozen Rubber Bomb that slows enemies hit for 3.5 seconds.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_icesnareball_t2",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_icesnareball",
+   "tier": 2,
+   "icon": "ui/ability_icons/bounce_snowball_51x51.png",
+   "energy": 25.0,
+   "cooldown": 10.0,
+   "stages": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Icesnareball Effect Explosion",
+     "prefab": "abilities/battleroyale/icesnareball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 1.1,
+     "target_effect": "abilities/battleroyale/icesnareball_stat_mods",
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    },
+    {
+     "name": "Icesnareball Stat Mods",
+     "prefab": "abilities/battleroyale/icesnareball_stat_mods",
+     "component": 136,
+     "duration": 3.5,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Multiply",
+       "value": -75.0,
+       "percent": true,
+       "amount": 0.25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_icesnareball_t3",
+   "name": "Rubber Freeze Bomb",
+   "description": "A frozen Rubber Bomb that slows enemies hit for 3.5 seconds.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_icesnareball_t3",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_icesnareball",
+   "tier": 3,
+   "icon": "ui/ability_icons/bounce_snowball_51x51.png",
+   "energy": 25.0,
+   "cooldown": 5.0,
+   "stages": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Icesnareball Effect Explosion",
+     "prefab": "abilities/battleroyale/icesnareball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 1.1,
+     "target_effect": "abilities/battleroyale/icesnareball_stat_mods",
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    },
+    {
+     "name": "Icesnareball Stat Mods",
+     "prefab": "abilities/battleroyale/icesnareball_stat_mods",
+     "component": 136,
+     "duration": 3.5,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Multiply",
+       "value": -75.0,
+       "percent": true,
+       "amount": 0.25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_icesnareball_t4",
+   "name": "Rubber Freeze Bomb",
+   "description": "A frozen Rubber Bomb that slows enemies hit for 3.5 seconds.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_icesnareball_t4",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_icesnareball",
+   "tier": 4,
+   "icon": "ui/ability_icons/bounce_snowball_51x51.png",
+   "energy": 15.0,
+   "cooldown": 5.0,
+   "stages": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Icesnareball Effect Explosion",
+     "prefab": "abilities/battleroyale/icesnareball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 1.1,
+     "target_effect": "abilities/battleroyale/icesnareball_stat_mods",
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Icesnareball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/icesnareball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    },
+    {
+     "name": "Icesnareball Stat Mods",
+     "prefab": "abilities/battleroyale/icesnareball_stat_mods",
+     "component": 136,
+     "duration": 3.5,
+     "stats": [
+      {
+       "stat": "$Stat_MovementSpeed",
+       "name": "Movement Speed",
+       "op": "Multiply",
+       "value": -75.0,
+       "percent": true,
+       "amount": 0.25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_snowball",
+   "name": "Snowball",
+   "description": "A Snowball that knocks enemies back and tears the terrain apart.",
+   "prefab": "pvp/battleroyale/pvp_weaponswap_snowball",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_snowball",
+   "tier": 1,
+   "icon": "ui/ability_icons/snowball_51x51.png",
+   "energy": 30.0,
+   "cooldown": 1.0,
+   "stages": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Snowball Effect Explosion",
+     "prefab": "abilities/battleroyale/snowball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 6.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_snowball_t2",
+   "name": "Snowball",
+   "description": "A Snowball that knocks enemies back and tears the terrain apart.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_snowball_t2",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_snowball",
+   "tier": 2,
+   "icon": "ui/ability_icons/snowball_51x51.png",
+   "energy": 25.0,
+   "cooldown": 1.0,
+   "stages": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Snowball Effect Explosion",
+     "prefab": "abilities/battleroyale/snowball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 6.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_snowball_t3",
+   "name": "Snowball",
+   "description": "A Snowball that knocks enemies back and tears the terrain apart.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_snowball_t3",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_snowball",
+   "tier": 3,
+   "icon": "ui/ability_icons/snowball_51x51.png",
+   "energy": 25.0,
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Snowball Effect Explosion",
+     "prefab": "abilities/battleroyale/snowball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 6.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  },
+  {
+   "slug": "pvp_weaponswap_snowball_t4",
+   "name": "Snowball",
+   "description": "A Snowball that knocks enemies back and tears the terrain apart.",
+   "prefab": "pvp/battleroyale/Upgrade/pvp_weaponswap_snowball_t4",
+   "mode": "battleroyale",
+   "group": "Weapons",
+   "base": "pvp_weaponswap_snowball",
+   "tier": 4,
+   "icon": "ui/ability_icons/snowball_51x51.png",
+   "energy": 20.0,
+   "cooldown": 0.5,
+   "stages": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "base": 0,
+     "multiplier": 0.5,
+     "max_health_percent": 100.0,
+     "crit_damage_multiplier": 1.0,
+     "damage_stat": -1
+    },
+    {
+     "name": "Snowball Effect Explosion",
+     "prefab": "abilities/battleroyale/snowball_effect_explosion",
+     "base": 1,
+     "multiplier": 0,
+     "crit_damage_multiplier": 1.0,
+     "block_damage": 100,
+     "max_block_hardness": 500,
+     "max_blocks": 10000,
+     "knockback_multiplier": 1.0,
+     "min_knockback": 6.1,
+     "damage_stat": -1
+    }
+   ],
+   "effects": [
+    {
+     "name": "Snowball Effect Bomb Trigger",
+     "prefab": "abilities/battleroyale/snowball_effect_bomb_trigger",
+     "component": 156,
+     "duration": 0.1
+    }
+   ]
+  }
+ ]
+}

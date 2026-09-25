@@ -40,7 +40,11 @@
   input.addEventListener("input", apply);
   if (onlyAbilities) onlyAbilities.addEventListener("change", apply);
   facets.forEach((f) => f.addEventListener("change", apply));
-  const q = new URLSearchParams(location.search).get("q");
-  if (q) { input.value = q; }
+  const params = new URLSearchParams(location.search);
+  if (params.get("q")) input.value = params.get("q");
+  for (const f of facets) {
+    const v = params.get(f.dataset.filterFacet);
+    if (v && Array.from(f.options).some((o) => o.value === v)) f.value = v;
+  }
   apply();
 })();

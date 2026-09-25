@@ -8,7 +8,7 @@
             {% for lv in d.levels %}
             <tr>
                 <th scope="row" class="num">{{ lv.level }}</th>
-                <td>{% if lv.cost %}{% for c in lv.cost %}<div><span class="num">{{ "{:,}".format(c.quantity) }}</span> × {{ c.name }}</div>{% endfor %}{% else %}<span class="wk-mute">Free</span>{% endif %}</td>
+                <td>{% if lv.cost %}{% for c in lv.cost %}<div><span class="num">{{ "{:,}".format(c.quantity) }}</span> × {% if c.url %}<a href="{{ c.url }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</div>{% endfor %}{% else %}<span class="wk-mute">Free</span>{% endif %}</td>
                 <td>
                     <div>{{ lv.label }}</div>
                     {% if lv.data %}<div class="wk-mute wk-datanote"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> The game data applies {{ lv.data | join("; ") }}</div>{% endif %}
@@ -18,5 +18,5 @@
             </tbody>
         </table>
     </div>
-    {% if d.total_cost %}<p class="wk-hint">To reach level {{ d.levels | length }}: {% for c in d.total_cost %}{{ "{:,}".format(c.quantity) }} {{ c.name }}{{ ", " if not loop.last else "." }}{% endfor %}</p>{% endif %}
+    {% if d.total_cost %}<p class="wk-hint">To reach level {{ d.levels | length }}: {% for c in d.total_cost %}{{ "{:,}".format(c.quantity) }} {% if c.url %}<a href="{{ c.url }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}{{ ", " if not loop.last else "." }}{% endfor %}</p>{% endif %}
 </section>

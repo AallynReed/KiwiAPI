@@ -76,7 +76,9 @@ def _damage(stage: dict) -> dict:
         parts.append(f"{num(stage['multiplier'] * 100)}%")
     if stage.get("base"):
         parts.append(f"+{num(stage['base'])}")
-    if stage.get("max_health_percent"):
+    # 100.0 sits in ~80 records across every ability file, far above the next value
+    # (5.0); it isn't a share of max health, and what it is isn't known, so it's left out.
+    if stage.get("max_health_percent") and stage["max_health_percent"] < 100:
         parts.append(f"{num(stage['max_health_percent'] * 100)}% max health")
     if stage.get("crit_chance_bonus"):
         notes.append(f"+{num(stage['crit_chance_bonus'])} critical hit")
@@ -87,7 +89,7 @@ def _damage(stage: dict) -> dict:
 
 def _heal(row: dict) -> dict:
     parts = []
-    if row.get("max_health_percent"):
+    if row.get("max_health_percent") and row["max_health_percent"] < 100:
         parts.append(f"{num(row['max_health_percent'] * 100)}% max health")
     if row.get("health"):
         parts.append(f"{num(row['health'])} health")

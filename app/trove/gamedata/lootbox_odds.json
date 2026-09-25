@@ -1,0 +1,3684 @@
+{
+ "title": "Item Chance for Lockboxes",
+ "boxes": [
+  {
+   "name": "Titan’s Treasure",
+   "notes": [
+    "This box is a guaranteed rare result every 70 boxes."
+   ],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Flux",
+       "chance": 86.0
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Flux",
+       "chance": 13.0
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "1 Megaflux Tank",
+       "chance": 1.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Gem Booster Box",
+   "notes": [
+    "This box is a guaranteed rare result every 70 boxes (without Patron) and every 35 boxes (with Patron)."
+   ],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Blue Gem Dust",
+       "chance": 16.39
+      },
+      {
+       "name": "Red Gem Dust",
+       "chance": 16.39
+      },
+      {
+       "name": "Yellow Gem Dust",
+       "chance": 16.39
+      },
+      {
+       "name": "Cosmic Gem Dust",
+       "chance": 16.39
+      },
+      {
+       "name": "Glittering Horseshoes",
+       "chance": 16.38
+      },
+      {
+       "name": "Binding Darkness",
+       "chance": 6.14
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Binding Darkness",
+       "chance": 2.6
+      },
+      {
+       "name": "Lapis Luckbugs",
+       "chance": 7.8
+      },
+      {
+       "name": "Golden Gem Keys",
+       "chance": 2.6
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Empowered Gem Box",
+       "chance": 0.95
+      },
+      {
+       "name": "Ninth Life",
+       "chance": 0.05
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Empowered Gem Box",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Class Gem Key Fragment",
+       "chance": 18.88
+      },
+      {
+       "name": "Radiant Fire Empowered Gem",
+       "chance": 16.8
+      },
+      {
+       "name": "Radiant Air Empowered Gem",
+       "chance": 16.8
+      },
+      {
+       "name": "Radiant Water Empowered Gem",
+       "chance": 16.8
+      },
+      {
+       "name": "Radiant Cosmic Empowered Gem",
+       "chance": 16.8
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Class Gem Key",
+       "chance": 2.6
+      },
+      {
+       "name": "Stellar Fire Empowered Gem",
+       "chance": 2.64
+      },
+      {
+       "name": "Stellar Air Empowered Gem",
+       "chance": 2.64
+      },
+      {
+       "name": "Stellar Water Empowered Gem",
+       "chance": 2.64
+      },
+      {
+       "name": "Stellar Cosmic Empowered Gem",
+       "chance": 2.6
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Prism of Light",
+       "chance": 0.75
+      },
+      {
+       "name": "Diamond Dragon Egg",
+       "chance": 0.25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Lustrous Gem Box",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "Builder's Rough Focus",
+       "chance": 54.0
+      },
+      {
+       "name": "Builder's Precise Focus",
+       "chance": 16.0
+      },
+      {
+       "name": "Builder's Superior Focus",
+       "chance": 7.0
+      },
+      {
+       "name": "Contained Chaos Spark",
+       "chance": 16.0
+      },
+      {
+       "name": "Contained Chaos Flare",
+       "chance": 7.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaos Chest",
+   "notes": [
+    "This box is a guaranteed rare result every 70 boxes."
+   ],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Bleached Bones",
+       "chance": 1.69
+      },
+      {
+       "name": "Bottles",
+       "chance": 1.69
+      },
+      {
+       "name": "Sticky Ichor",
+       "chance": 1.69
+      },
+      {
+       "name": "Sunlight Bulbs",
+       "chance": 1.69
+      },
+      {
+       "name": "Wild Cupcakes",
+       "chance": 1.69
+      },
+      {
+       "name": "Enchanted Wood",
+       "chance": 1.69
+      },
+      {
+       "name": "Faerie Dust",
+       "chance": 1.69
+      },
+      {
+       "name": "Diamonds",
+       "chance": 1.69
+      },
+      {
+       "name": "Pasmium",
+       "chance": 1.69
+      },
+      {
+       "name": "Mushroom Chunks",
+       "chance": 1.69
+      },
+      {
+       "name": "Shapestone Ore",
+       "chance": 1.69
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 1.69
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 1.69
+      },
+      {
+       "name": "Cinnabar",
+       "chance": 1.69
+      },
+      {
+       "name": "Robotic Salvage",
+       "chance": 1.69
+      },
+      {
+       "name": "Blank Scrolls",
+       "chance": 1.69
+      },
+      {
+       "name": "Radiant Shards",
+       "chance": 1.69
+      },
+      {
+       "name": "Golden Seashells",
+       "chance": 1.69
+      },
+      {
+       "name": "Meteorite Fragments",
+       "chance": 1.69
+      },
+      {
+       "name": "Somber Souls",
+       "chance": 1.69
+      },
+      {
+       "name": "Golden Souls",
+       "chance": 1.69
+      },
+      {
+       "name": "Flux",
+       "chance": 50.59
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Bleached Bones",
+       "chance": 0.07
+      },
+      {
+       "name": "Bottles",
+       "chance": 0.07
+      },
+      {
+       "name": "Sticky Ichor",
+       "chance": 0.07
+      },
+      {
+       "name": "Sunlight Bulbs",
+       "chance": 0.07
+      },
+      {
+       "name": "Wild Cupcakes",
+       "chance": 0.07
+      },
+      {
+       "name": "Enchanted Wood",
+       "chance": 0.07
+      },
+      {
+       "name": "Faerie Dust",
+       "chance": 0.07
+      },
+      {
+       "name": "Plasmium",
+       "chance": 0.07
+      },
+      {
+       "name": "Diamonds",
+       "chance": 0.07
+      },
+      {
+       "name": "Mushroom Chunks",
+       "chance": 0.07
+      },
+      {
+       "name": "Shapestone Ore",
+       "chance": 0.07
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 0.07
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 0.07
+      },
+      {
+       "name": "Robotic Salvage",
+       "chance": 0.07
+      },
+      {
+       "name": "Blank Scrolls",
+       "chance": 0.07
+      },
+      {
+       "name": "Radiant Shards",
+       "chance": 0.07
+      },
+      {
+       "name": "Golden Seashells",
+       "chance": 0.07
+      },
+      {
+       "name": "Meteorite Fragments",
+       "chance": 0.07
+      },
+      {
+       "name": "Somber Souls",
+       "chance": 0.07
+      },
+      {
+       "name": "Golden Souls",
+       "chance": 0.07
+      },
+      {
+       "name": "Flux",
+       "chance": 1.72
+      },
+      {
+       "name": "Pearl of Wisdom",
+       "chance": 2.15
+      },
+      {
+       "name": "Super Style Stash",
+       "chance": 0.72
+      },
+      {
+       "name": "Glittering Horseshoe",
+       "chance": 1.44
+      },
+      {
+       "name": "Chaos Chests",
+       "chance": 0.5
+      },
+      {
+       "name": "Chaos Core",
+       "chance": 5.03
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Current Item of the Week",
+       "chance": 0.25
+      },
+      {
+       "name": "A Previous Item of the Week",
+       "chance": 0.65
+      },
+      {
+       "name": "Wings: Skeye Stalkers",
+       "chance": 0.002
+      },
+      {
+       "name": "Wings: Chaos Butterfly",
+       "chance": 0.002
+      },
+      {
+       "name": "Aura: Whispers of Chaos",
+       "chance": 0.01
+      },
+      {
+       "name": "Mount: Koroki, the Sower of Chaos",
+       "chance": 0.01
+      },
+      {
+       "name": "Ally: Contorting Contemplator",
+       "chance": 0.01
+      },
+      {
+       "name": "Ally: Winking Tentabox",
+       "chance": 0.01
+      },
+      {
+       "name": "Ally: Chaotic Mimic",
+       "chance": 0.01
+      },
+      {
+       "name": "Ship: Chaotic Clipper",
+       "chance": 0.01
+      },
+      {
+       "name": "Ship: Chaotic Cruiser",
+       "chance": 0.01
+      },
+      {
+       "name": "Chaos Chests",
+       "chance": 0.03
+      },
+      {
+       "name": "Shadow Pinatas",
+       "chance": 0.03
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Golden Chaos Chest",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "Current Item of the Week",
+       "chance": 25.0
+      },
+      {
+       "name": "A Previous Item of the Week",
+       "chance": 65.0
+      },
+      {
+       "name": "Wings: Skeye Stalkers",
+       "chance": 0.21
+      },
+      {
+       "name": "Wings: Chaos Butterfly",
+       "chance": 0.21
+      },
+      {
+       "name": "Aura: Whispers of Chaos",
+       "chance": 0.63
+      },
+      {
+       "name": "Mount: Koroki, the Sower of Chaos",
+       "chance": 0.63
+      },
+      {
+       "name": "Ally: Contorting Contemplator",
+       "chance": 0.63
+      },
+      {
+       "name": "Ally: Winking Tentabox",
+       "chance": 0.63
+      },
+      {
+       "name": "Ally: Chaotic Mimic",
+       "chance": 0.63
+      },
+      {
+       "name": "Ship: Chaotic Clipper",
+       "chance": 0.63
+      },
+      {
+       "name": "Ship: Chaotic Cruiser",
+       "chance": 0.63
+      },
+      {
+       "name": "Chaos Chests",
+       "chance": 2.6
+      },
+      {
+       "name": "Shadow Pinatas",
+       "chance": 2.6
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Chaotic Collection Stash",
+   "notes": [
+    "Unlocks 1 of any Chaotic or Chaos Vault collection for Mounts, Allies, Wings or Mag Riders that the player does not already have unlocked.",
+    "Chances for any one item are dependent on the number of items still available for unlock and are unweighted."
+   ],
+   "tiers": []
+  },
+  {
+   "name": "Primal Paragon Cube",
+   "notes": [
+    "Contains 1 Primal Loop for the currently active class when opened."
+   ],
+   "tiers": []
+  },
+  {
+   "name": "Greater Crystal Cache",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Gleamstone",
+       "chance": 12.29
+      },
+      {
+       "name": "Builderite",
+       "chance": 12.29
+      },
+      {
+       "name": "Ancient Gears",
+       "chance": 12.29
+      },
+      {
+       "name": "Day Drops",
+       "chance": 12.29
+      },
+      {
+       "name": "Moonlit Moss",
+       "chance": 12.29
+      },
+      {
+       "name": "Wallflowers",
+       "chance": 12.29
+      },
+      {
+       "name": "Crystals",
+       "chance": 12.29
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Moonstone",
+       "chance": 1.7
+      },
+      {
+       "name": "Blazine",
+       "chance": 1.7
+      },
+      {
+       "name": "Geminite",
+       "chance": 1.7
+      },
+      {
+       "name": "Dream Dew",
+       "chance": 1.7
+      },
+      {
+       "name": "Sun Sap",
+       "chance": 1.7
+      },
+      {
+       "name": "Cave Kelp",
+       "chance": 1.7
+      },
+      {
+       "name": "Crystals",
+       "chance": 1.7
+      },
+      {
+       "name": "Accelerite",
+       "chance": 0.34
+      },
+      {
+       "name": "Lodestar",
+       "chance": 0.34
+      },
+      {
+       "name": "Luckier Reliquary",
+       "chance": 0.34
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Metamatter",
+       "chance": 0.16
+      },
+      {
+       "name": "Space Expander (tradable)",
+       "chance": 0.03
+      },
+      {
+       "name": "Accelerite",
+       "chance": 0.15
+      },
+      {
+       "name": "Lodestars",
+       "chance": 0.15
+      },
+      {
+       "name": "Silver Companion Egg",
+       "chance": 0.15
+      },
+      {
+       "name": "A Tradable mount",
+       "chance": 0.35
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Glowing Crystal Cache",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "20 Metamatter",
+       "chance": 17.65
+      },
+      {
+       "name": "Space Expander (tradable)",
+       "chance": 2.94
+      },
+      {
+       "name": "Accelerite",
+       "chance": 14.71
+      },
+      {
+       "name": "Lodestars",
+       "chance": 14.71
+      },
+      {
+       "name": "Silver Companion Egg",
+       "chance": 14.71
+      },
+      {
+       "name": "A Tradable mount",
+       "chance": 35.29
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Greater Geodian Topside Cache",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Crystalline Cores",
+       "chance": 86.0
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Crystalline Cores",
+       "chance": 6.13
+      },
+      {
+       "name": "Pearl of Wisdom",
+       "chance": 1.23
+      },
+      {
+       "name": "Radiant Sovereigns",
+       "chance": 1.23
+      },
+      {
+       "name": "Builder's Rough Focus",
+       "chance": 2.45
+      },
+      {
+       "name": "Builder's Precise Focus",
+       "chance": 1.23
+      },
+      {
+       "name": "Builder's Superior Focus",
+       "chance": 0.61
+      },
+      {
+       "name": "Contained Chaos Spark",
+       "chance": 0.12
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Tradable Mount: Sunseeker's Glider",
+       "chance": 0.11
+      },
+      {
+       "name": "Tradable Mount: Surface Stalker",
+       "chance": 0.11
+      },
+      {
+       "name": "Tradable Mount: Twilight Stalker",
+       "chance": 0.11
+      },
+      {
+       "name": "Tradable Mount: No-Leaf Rovre",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Geode Costume for Boomeranger, Candy Barbarian, Vanguardian, Knight, or Revenant",
+       "chance": 0.55
+      },
+      {
+       "name": "Tradable Legendary Tome: Cosmic Gem Dust Omnibus",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Legendary Tome: Crystalline Core Compendium",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Ally: Ochre Sand Squid",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Ally: Burning Bantam",
+       "chance": 0.03
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Glowing Geodian Topside Cache",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "Tradable Mount: Sunseeker's Glider",
+       "chance": 0.11
+      },
+      {
+       "name": "Tradable Mount: Surface Stalker",
+       "chance": 0.11
+      },
+      {
+       "name": "Tradable Mount: Twilight Stalker",
+       "chance": 0.11
+      },
+      {
+       "name": "Tradable Mount: No-Leaf Rovre",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Geode Costume for Boomeranger, Candy Barbarian, Vanguardian, Knight, or Revenant",
+       "chance": 0.55
+      },
+      {
+       "name": "Tradable Legendary Tome: Cosmic Gem Dust Omnibus",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Legendary Tome: Crystalline Core Compendium",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Ally: Ochre Sand Squid",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Ally: Burning Bantam",
+       "chance": 0.03
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Greater Sundered Uplands Caches",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Ashfern Sporeling",
+       "chance": 25.8
+      },
+      {
+       "name": "Irradium Ore",
+       "chance": 17.2
+      },
+      {
+       "name": "Emberslag Ore",
+       "chance": 17.2
+      },
+      {
+       "name": "Irradiant Powercell",
+       "chance": 17.2
+      },
+      {
+       "name": "Unnatural Device",
+       "chance": 8.6
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Ashfern Sporeling",
+       "chance": 3.36
+      },
+      {
+       "name": "Irradium Ore",
+       "chance": 2.35
+      },
+      {
+       "name": "Emberslag Ore",
+       "chance": 2.35
+      },
+      {
+       "name": "Irradiant Powercell",
+       "chance": 2.35
+      },
+      {
+       "name": "Unnatural Device",
+       "chance": 1.23
+      },
+      {
+       "name": "Ashen Soul",
+       "chance": 0.57
+      },
+      {
+       "name": "Irradiant Soul",
+       "chance": 0.57
+      },
+      {
+       "name": "Key: Sunder-Ark Cache",
+       "chance": 0.22
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Key: Sunder-Ark Cache",
+       "chance": 0.49
+      },
+      {
+       "name": "Sundercharge Crystal",
+       "chance": 0.37
+      },
+      {
+       "name": "Phoenix Mote",
+       "chance": 0.12
+      },
+      {
+       "name": "Scroll: Freedom of Flight (Gold)",
+       "chance": 0.0012
+      },
+      {
+       "name": "Scroll: Defense++ (Gold)",
+       "chance": 0.0012
+      },
+      {
+       "name": "Scroll: Jump++ (Gold)",
+       "chance": 0.0012
+      },
+      {
+       "name": "Scroll: Physical Damage++ (Gold)",
+       "chance": 0.0012
+      },
+      {
+       "name": "Scroll: Magic Damage++ (Gold)",
+       "chance": 0.0012
+      },
+      {
+       "name": "Scroll: Resource Collection++ (Gold)",
+       "chance": 0.0012
+      },
+      {
+       "name": "Tradable Ship: Squishy Fishy",
+       "chance": 0.00024
+      },
+      {
+       "name": "Tradable Mount: Doc Duckster",
+       "chance": 0.00024
+      },
+      {
+       "name": "Tradable Ally: Irradiant Gearbox",
+       "chance": 0.00024
+      },
+      {
+       "name": "Tradable Ally: Ashyen Lobber",
+       "chance": 0.00024
+      },
+      {
+       "name": "Tradable Wings: Skyhook Gliders",
+       "chance": 0.00024
+      },
+      {
+       "name": "Tradable Mount: Ashen Wanderer",
+       "chance": 0.00012
+      },
+      {
+       "name": "Tradable Mount: Shinkira, the Cinderwing",
+       "chance": 0.00012
+      },
+      {
+       "name": "Tradable Wings: Irradiantly Unbound",
+       "chance": 0.00012
+      },
+      {
+       "name": "Tradable Wings: Ashen Pappus",
+       "chance": 0.00012
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Golden Sundered Uplands Cache",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "Key: Sunder-Ark Cache",
+       "chance": 49.88
+      },
+      {
+       "name": "Sundercharge Crystal",
+       "chance": 37.08
+      },
+      {
+       "name": "Phoenix Mote",
+       "chance": 12.13
+      },
+      {
+       "name": "Scroll: Freedom of Flight (Gold)",
+       "chance": 0.12
+      },
+      {
+       "name": "Scroll: Defense++ (Gold)",
+       "chance": 0.12
+      },
+      {
+       "name": "Scroll: Jump++ (Gold)",
+       "chance": 0.12
+      },
+      {
+       "name": "Scroll: Physical Damage++ (Gold)",
+       "chance": 0.12
+      },
+      {
+       "name": "Scroll: Magic Damage++ (Gold)",
+       "chance": 0.12
+      },
+      {
+       "name": "Scroll: Resource Collection++ (Gold)",
+       "chance": 0.12
+      },
+      {
+       "name": "Tradable Ship: Squishy Fishy",
+       "chance": 0.024
+      },
+      {
+       "name": "Tradable Mount: Doc Duckster",
+       "chance": 0.024
+      },
+      {
+       "name": "Tradable Ally: Irradiant Gearbox",
+       "chance": 0.024
+      },
+      {
+       "name": "Tradable Ally: Ashyen Lobber",
+       "chance": 0.024
+      },
+      {
+       "name": "Tradable Wings: Skyhook Gliders",
+       "chance": 0.024
+      },
+      {
+       "name": "Tradable Mount: Ashen Wanderer",
+       "chance": 0.012
+      },
+      {
+       "name": "Tradable Mount: Shinkira, the Cinderwing",
+       "chance": 0.012
+      },
+      {
+       "name": "Tradable Wings: Irradiantly Unbound",
+       "chance": 0.012
+      },
+      {
+       "name": "Tradable Wings: Ashen Pappus",
+       "chance": 0.012
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Greater Dragon Cache",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Dragon Coins",
+       "chance": 86.0
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Dragon Coins",
+       "chance": 13.0
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "100 Tradable Ancient, Moonwing, Bone, Winter, or Starlight Dragon Souls",
+       "chance": 0.18
+      },
+      {
+       "name": "40 Tradable Azulian Dragon Souls",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Lunar New Year Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Dusk Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Siege Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Block Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Pinata Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Infineon Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Candorian Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Tidal Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Pirate Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Pumpkin Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Wisdom Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Worldspring Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Joyous Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Lorekeeper Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Iridescent Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Dragon Kami Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Spinner Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Floral Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Valiant Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Lightning Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Ice Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Preserver Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Voidwatcher Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Sarsaponia, The Pristine",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Almakhestia, Host of Starfire",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Sandseasower Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Golden Blossoming Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Mount: Amatrix, the Hexed",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Mount: Vaentaera, the Perpetual",
+       "chance": 0.03
+      },
+      {
+       "name": "A Tradable Mount: A.T.M.O.S. - D-R4C",
+       "chance": 0.03
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bomber Box",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "Common",
+     "chance": 86.0,
+     "items": [
+      {
+       "name": "Bomber Royale Coin: Blast Coin",
+       "chance": 86.0
+      }
+     ]
+    },
+    {
+     "name": "Uncommon",
+     "chance": 13.0,
+     "items": [
+      {
+       "name": "Bomber Royale Coin: Blast Coin",
+       "chance": 6.5
+      },
+      {
+       "name": "Tradable Aura: Sorrow of Defeat",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Aura: Glory of Victory",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Aura: Broken Thunder",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Aura: Short Fuse",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Aura: Booming Brainstorm",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Mount: Blue Battle Tiger",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Mount: Grey War Wolf",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Mount: Blue Terror Turtle",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Mount: Warpainted Javelina",
+       "chance": 0.49
+      },
+      {
+       "name": "Tradable Aura: Cherry Bomb Burst",
+       "chance": 0.33
+      },
+      {
+       "name": "Tradable Aura: Tears of Joy",
+       "chance": 0.33
+      },
+      {
+       "name": "Tradable Aura: Confetti Cannon",
+       "chance": 0.33
+      },
+      {
+       "name": "Tradable Wings: Victorious Paragon Wings",
+       "chance": 0.33
+      },
+      {
+       "name": "Tradable Aura: Shadow Self",
+       "chance": 0.16
+      },
+      {
+       "name": "Tradable Aura: Mental Minefield",
+       "chance": 0.16
+      },
+      {
+       "name": "Tradable Ally: Kyrithite",
+       "chance": 0.16
+      },
+      {
+       "name": "Tradable Ally: San and Cynguine, Burgeoning Virulence",
+       "chance": 0.16
+      },
+      {
+       "name": "Tradable Mount: War Plane",
+       "chance": 0.16
+      }
+     ]
+    },
+    {
+     "name": "Rare",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Tradable Rubber Bomb Style: Patchwork Rubber Bomb",
+       "chance": 0.1
+      },
+      {
+       "name": "Tradable Sticky Bomb Style: Patchwork Sticky Bomb",
+       "chance": 0.1
+      },
+      {
+       "name": "Tradable Sticky Bomb Style: Zyntryn's Sticky Bomb",
+       "chance": 0.1
+      },
+      {
+       "name": "Tradable Mount: Bomb Worm",
+       "chance": 0.07
+      },
+      {
+       "name": "Tradable Ally: Blue Battle Beetle",
+       "chance": 0.07
+      },
+      {
+       "name": "Tradable Ally: Red Battle Beetle",
+       "chance": 0.07
+      },
+      {
+       "name": "Tradable Aura: The Reaper's Malice",
+       "chance": 0.07
+      },
+      {
+       "name": "Tradable Aura: The Reaper's Collection",
+       "chance": 0.07
+      },
+      {
+       "name": "Tradable Ally: Zynny",
+       "chance": 0.06
+      },
+      {
+       "name": "Tradable Aura: The Berserker's Brutality",
+       "chance": 0.06
+      },
+      {
+       "name": "Tradable Aura: The Berserker's Cunning",
+       "chance": 0.06
+      },
+      {
+       "name": "Tradable Mount: Volatile Bounder",
+       "chance": 0.05
+      },
+      {
+       "name": "Tradable Wings: Smoking Skulls of Battle",
+       "chance": 0.05
+      },
+      {
+       "name": "Tradable Golden War Head Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Golden Twin Plague Dragon Egg",
+       "chance": 0.03
+      },
+      {
+       "name": "Tradable Golden Furious Dragon Egg",
+       "chance": 0.01
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Sticky Bomber Box",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "Tradable Rubber Bomb Style: Patchwork Rubber Bomb",
+       "chance": 10.0
+      },
+      {
+       "name": "Tradable Sticky Bomb Style: Patchwork Sticky Bomb",
+       "chance": 10.0
+      },
+      {
+       "name": "Tradable Sticky Bomb Style: Zyntryn's Sticky Bomb",
+       "chance": 10.0
+      },
+      {
+       "name": "Tradable Mount: Bomb Worm",
+       "chance": 7.0
+      },
+      {
+       "name": "Tradable Ally: Blue Battle Beetle",
+       "chance": 7.0
+      },
+      {
+       "name": "Tradable Ally: Red Battle Beetle",
+       "chance": 7.0
+      },
+      {
+       "name": "Tradable Aura: The Reaper's Malice",
+       "chance": 7.0
+      },
+      {
+       "name": "Tradable Aura: The Reaper's Collection",
+       "chance": 7.0
+      },
+      {
+       "name": "Tradable Ally: Zynny",
+       "chance": 6.0
+      },
+      {
+       "name": "Tradable Aura: The Berserker's Brutality",
+       "chance": 6.0
+      },
+      {
+       "name": "Tradable Aura: The Berserker's Cunning",
+       "chance": 6.0
+      },
+      {
+       "name": "Tradable Mount: Volatile Bounder",
+       "chance": 5.0
+      },
+      {
+       "name": "Tradable Wings: Smoking Skulls of Battle",
+       "chance": 5.0
+      },
+      {
+       "name": "Tradable Golden War Head Dragon Egg",
+       "chance": 3.0
+      },
+      {
+       "name": "Tradable Golden Twin Plague Dragon Egg",
+       "chance": 3.0
+      },
+      {
+       "name": "Tradable Golden Furious Dragon Egg",
+       "chance": 1.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Classic Battle Box",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "Tattered",
+     "chance": 40.0,
+     "items": [
+      {
+       "name": "Pistols Banner",
+       "chance": 8.0
+      },
+      {
+       "name": "Angrybug Banner",
+       "chance": 8.0
+      },
+      {
+       "name": "Frostflake Banner",
+       "chance": 8.0
+      },
+      {
+       "name": "Skulls Banner",
+       "chance": 8.0
+      },
+      {
+       "name": "Radiance Banner",
+       "chance": 4.0
+      },
+      {
+       "name": "Shade Banner",
+       "chance": 4.0
+      }
+     ]
+    },
+    {
+     "name": "Ragged",
+     "chance": 30.0,
+     "items": [
+      {
+       "name": "Pistols Banner",
+       "chance": 6.0
+      },
+      {
+       "name": "Angrybug Banner",
+       "chance": 6.0
+      },
+      {
+       "name": "Frostflake Banner",
+       "chance": 6.0
+      },
+      {
+       "name": "Skulls Banner",
+       "chance": 6.0
+      },
+      {
+       "name": "Radiance Banner",
+       "chance": 3.0
+      },
+      {
+       "name": "Shade Banner",
+       "chance": 3.0
+      }
+     ]
+    },
+    {
+     "name": "Battle Worn",
+     "chance": 15.0,
+     "items": [
+      {
+       "name": "Pistols Banner",
+       "chance": 3.0
+      },
+      {
+       "name": "Angrybug Banner",
+       "chance": 3.0
+      },
+      {
+       "name": "Frostflake Banner",
+       "chance": 3.0
+      },
+      {
+       "name": "Skulls Banner",
+       "chance": 3.0
+      },
+      {
+       "name": "Radiance Banner",
+       "chance": 1.5
+      },
+      {
+       "name": "Shade Banner",
+       "chance": 1.5
+      }
+     ]
+    },
+    {
+     "name": "Superior",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "Pistols Banner",
+       "chance": 2.0
+      },
+      {
+       "name": "Angrybug Banner",
+       "chance": 2.0
+      },
+      {
+       "name": "Frostflake Banner",
+       "chance": 2.0
+      },
+      {
+       "name": "Skulls Banner",
+       "chance": 2.0
+      },
+      {
+       "name": "Radiance Banner",
+       "chance": 1.0
+      },
+      {
+       "name": "Shade Banner",
+       "chance": 1.0
+      }
+     ]
+    },
+    {
+     "name": "Pristine",
+     "chance": 5.0,
+     "items": [
+      {
+       "name": "Pistols Banner",
+       "chance": 1.0
+      },
+      {
+       "name": "Angrybug Banner",
+       "chance": 1.0
+      },
+      {
+       "name": "Frostflake Banner",
+       "chance": 1.0
+      },
+      {
+       "name": "Skulls Banner",
+       "chance": 1.0
+      },
+      {
+       "name": "Radiance Banner",
+       "chance": 0.5
+      },
+      {
+       "name": "Shade Banner",
+       "chance": 0.5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bronze Companion Egg (No Lodestar)",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "A Common Companion",
+       "chance": 84.97
+      },
+      {
+       "name": "An Uncommon Companion",
+       "chance": 13.99
+      },
+      {
+       "name": "A Rare Companion",
+       "chance": 1.04
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bronze Companion Egg (Lodestar)",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "A Common Companion",
+       "chance": 74.98
+      },
+      {
+       "name": "An Uncommon Companion",
+       "chance": 23.02
+      },
+      {
+       "name": "A Rare Companion",
+       "chance": 2.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Gold Companion Egg",
+   "notes": [],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "A Jubilant Froleek",
+       "chance": 12.5
+      },
+      {
+       "name": "A Supersonic Howlug",
+       "chance": 12.5
+      },
+      {
+       "name": "A Viridian Cragglepod",
+       "chance": 12.5
+      },
+      {
+       "name": "A Shroudd Gleemur",
+       "chance": 12.5
+      },
+      {
+       "name": "A Effervescent Hoppet",
+       "chance": 12.5
+      },
+      {
+       "name": "A Spectral Jelotl",
+       "chance": 12.5
+      },
+      {
+       "name": "A Enigmatic Qubrik",
+       "chance": 12.5
+      },
+      {
+       "name": "A Majestic Zepperay",
+       "chance": 12.5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Golden Dragon Effigy",
+   "notes": [
+    "Unlocks 1 of 38 Dragons under the Legendary Dragon collection that the player does not already have unlocked.",
+    "Chances for any one dragon are dependent on the number of dragons still available for unlock.",
+    "Probability has been calculated assuming the player owns none of these dragons."
+   ],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "Any individual Legendary Dragon",
+       "chance": 2.63
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Spring Recipe",
+   "notes": [
+    "Unlocks 1 of 35 Spring Recipes under the Spring collection that the player does not already have unlocked.",
+    "Chances for any one Spring Recipe are dependent on the number of Spring Recipes still available for unlock.",
+    "Probability has been calculated assuming the player owns none of these recipes."
+   ],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "Any individual Spring Recipe",
+       "chance": 2.86
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Super Mount Stash",
+   "notes": [
+    "Unlocks 1 of 58 total mounts under the Adventure Box, Cat, Corgi, or Rat collections that the player does not already have unlocked.",
+    "Chances for any one mount are dependent on the number of mounts in these collections still available for unlock.",
+    "Probability has been calculated assuming the player owns none of these mounts."
+   ],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "An Adventure Box Mount",
+       "chance": 43.1
+      },
+      {
+       "name": "A Cat Mount",
+       "chance": 12.07
+      },
+      {
+       "name": "A Corgi Mount",
+       "chance": 12.07
+      },
+      {
+       "name": "A Rat Mount",
+       "chance": 32.76
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Super Style Stash",
+   "notes": [
+    "Unlocks 1 of 3630 styles under the Uncommon, Rare, Epic, Legendary, Relic, Resplendent, Shadow, Highlands, Frontier, Undead, Tundra, Fae, Dragon, Neon City, Candy, Radiant, Treasure Isles, Jurassic Jungle, Forbidden Spires, Vault, Stash Exclusive, Spring, Summer, Autumn, or Winter collections that the player does not already have unlocked.",
+    "Chances for any one style are dependent on the number of styles in these collections still available for unlock.",
+    "Probability has been calculated assuming the player owns none of these styles."
+   ],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "A Vault style",
+       "chance": 32.15
+      },
+      {
+       "name": "A Stash Exclusive style",
+       "chance": 0.88
+      },
+      {
+       "name": "An Uncommon style",
+       "chance": 3.14
+      },
+      {
+       "name": "A Rare style",
+       "chance": 3.17
+      },
+      {
+       "name": "An Epic style",
+       "chance": 3.2
+      },
+      {
+       "name": "A Legendary style",
+       "chance": 4.44
+      },
+      {
+       "name": "A Relic style",
+       "chance": 3.47
+      },
+      {
+       "name": "A Resplendent style",
+       "chance": 3.66
+      },
+      {
+       "name": "A Shadow style",
+       "chance": 3.99
+      },
+      {
+       "name": "A Radiant style",
+       "chance": 3.53
+      },
+      {
+       "name": "A Candy style",
+       "chance": 3.5
+      },
+      {
+       "name": "A Dragon style",
+       "chance": 3.58
+      },
+      {
+       "name": "A Fae style",
+       "chance": 3.47
+      },
+      {
+       "name": "A Frontier style",
+       "chance": 3.44
+      },
+      {
+       "name": "A Highlands style",
+       "chance": 3.44
+      },
+      {
+       "name": "A Tundra style",
+       "chance": 3.72
+      },
+      {
+       "name": "A Neon City style",
+       "chance": 4.38
+      },
+      {
+       "name": "An Undead style",
+       "chance": 3.66
+      },
+      {
+       "name": "A Treasure Isles style",
+       "chance": 3.53
+      },
+      {
+       "name": "A Jurassic Jungle style",
+       "chance": 1.65
+      },
+      {
+       "name": "A Forbidden Spires style",
+       "chance": 1.43
+      },
+      {
+       "name": "An Autumn style",
+       "chance": 0.8
+      },
+      {
+       "name": "A Spring style",
+       "chance": 0.94
+      },
+      {
+       "name": "A Summer style",
+       "chance": 0.58
+      },
+      {
+       "name": "A Winter style",
+       "chance": 0.25
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Super Recipe Stash",
+   "notes": [
+    "Unlocks 1 of 953 recipes under the Cursed Vale, Candoria, Dragonfire Peaks, Fae Wilds, Desert Frontier, Medieval Highlands, Treasure Isles, Neon City, Permafrost, Jurassic Jungle, Forbidden Spires, Shadow's Eve, Sunfest Decorations, Turkeytopia Recipes, Spring, Summer, Winter, or Sports Ball collections.",
+    "Chances for any one recipe are dependent on the number of other recipes in these collections still available to unlock.",
+    "Probability has been calculated assuming the player owns none of these recipes."
+   ],
+   "tiers": [
+    {
+     "name": "",
+     "chance": null,
+     "items": [
+      {
+       "name": "A Cursed Vale recipe",
+       "chance": 7.45
+      },
+      {
+       "name": "A Candoria recipe",
+       "chance": 6.72
+      },
+      {
+       "name": "A Dragonfire Peaks recipe",
+       "chance": 5.46
+      },
+      {
+       "name": "A Fae Wilds recipe",
+       "chance": 9.02
+      },
+      {
+       "name": "A Desert Frontier recipe",
+       "chance": 10.49
+      },
+      {
+       "name": "A Medieval Highlands recipe",
+       "chance": 16.68
+      },
+      {
+       "name": "A Treasure Isles recipe",
+       "chance": 6.93
+      },
+      {
+       "name": "A Neon City recipe",
+       "chance": 14.17
+      },
+      {
+       "name": "A Permafrost recipe",
+       "chance": 4.51
+      },
+      {
+       "name": "A Jurassic Jungle recipe",
+       "chance": 1.36
+      },
+      {
+       "name": "A Forbidden Spires recipe",
+       "chance": 3.67
+      },
+      {
+       "name": "A Shadow's Eve recipe",
+       "chance": 0.94
+      },
+      {
+       "name": "A Sunfest Decorations recipe",
+       "chance": 3.67
+      },
+      {
+       "name": "A Turkeytopia Recipes recipe",
+       "chance": 1.36
+      },
+      {
+       "name": "A Spring recipe",
+       "chance": 3.67
+      },
+      {
+       "name": "A Summer recipe",
+       "chance": 1.99
+      },
+      {
+       "name": "A Winter recipe",
+       "chance": 1.68
+      },
+      {
+       "name": "A Sports Ball recipe",
+       "chance": 0.21
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Bobble Pods",
+   "notes": [
+    "Bobble Pods can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a bobblepod could receive a Blossoming Dragon Egg Fragment, an Onionito Seed, and an Air Gem Duster Seed.  Or they could just receive an Onionito Seed.",
+    "Note that Blossoming Dragon Egg Fragment drops are rolled twice on Dragon Day."
+   ],
+   "tiers": [
+    {
+     "name": "Rare for Bobble Pods spawned with Hats",
+     "chance": 6.0,
+     "items": [
+      {
+       "name": "Mount: Ridable Bobble Pod",
+       "chance": 6.0
+      }
+     ]
+    },
+    {
+     "name": "Blossoming Dragon Egg Fragment for Anyone",
+     "chance": 12.5,
+     "items": [
+      {
+       "name": "Blossoming Dragon Egg Fragment",
+       "chance": 12.5
+      }
+     ]
+    },
+    {
+     "name": "Blossoming Dragon Egg Fragment for Thrower",
+     "chance": 37.5,
+     "items": [
+      {
+       "name": "Blossoming Dragon Egg Fragment",
+       "chance": 37.5
+      }
+     ]
+    },
+    {
+     "name": "Rare for Anyone",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Pearl of Wisdom Seed Pod",
+       "chance": 0.14
+      },
+      {
+       "name": "Chaos Chest Stalk Seed",
+       "chance": 0.14
+      },
+      {
+       "name": "Water Gem Duster Seed",
+       "chance": 0.14
+      },
+      {
+       "name": "Fire Gem Duster Seed",
+       "chance": 0.14
+      },
+      {
+       "name": "Air Gem Duster Seed",
+       "chance": 0.14
+      },
+      {
+       "name": "Cosmic Gem Duster Seed",
+       "chance": 0.14
+      },
+      {
+       "name": "Golden Pitcher Plant Seed",
+       "chance": 0.14
+      }
+     ]
+    },
+    {
+     "name": "Rare for Thrower",
+     "chance": 1.5,
+     "items": [
+      {
+       "name": "Pearl of Wisdom Seed Pod",
+       "chance": 0.29
+      },
+      {
+       "name": "Chaos Chest Stalk Seed",
+       "chance": 0.29
+      },
+      {
+       "name": "Water Gem Duster Seed",
+       "chance": 0.29
+      },
+      {
+       "name": "Fire Gem Duster Seed",
+       "chance": 0.29
+      },
+      {
+       "name": "Air Gem Duster Seed",
+       "chance": 0.29
+      },
+      {
+       "name": "Cosmic Gem Duster Seed",
+       "chance": 0.29
+      },
+      {
+       "name": "Golden Pitcher Plant Seed",
+       "chance": 0.29
+      }
+     ]
+    },
+    {
+     "name": "Uncommon for Anyone",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "Gardener Alchemy Plant Seed Recipes",
+       "chance": 3.81
+      },
+      {
+       "name": "Green Thumb Alchemy Plant Seed Recipes",
+       "chance": 3.57
+      },
+      {
+       "name": "Botanist Alchemy Plant Seed Recipes",
+       "chance": 1.43
+      },
+      {
+       "name": "Horticulturist Alchemy Plant Seed Recipes",
+       "chance": 1.19
+      }
+     ]
+    },
+    {
+     "name": "Uncommon for Thrower",
+     "chance": 15.0,
+     "items": [
+      {
+       "name": "Gardener Alchemy Plant Seed Recipes",
+       "chance": 5.71
+      },
+      {
+       "name": "Green Thumb Alchemy Plant Seed Recipes",
+       "chance": 5.36
+      },
+      {
+       "name": "Botanist Alchemy Plant Seed Recipes",
+       "chance": 2.14
+      },
+      {
+       "name": "Horticulturist Alchemy Plant Seed Recipes",
+       "chance": 1.79
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Qubbage Seed",
+       "chance": 16.0
+      },
+      {
+       "name": "Unicorn Chard Seed",
+       "chance": 16.0
+      },
+      {
+       "name": "Onionito Seed",
+       "chance": 12.0
+      },
+      {
+       "name": "Uggplant Seed",
+       "chance": 12.0
+      },
+      {
+       "name": "Purp'lil Seed",
+       "chance": 12.0
+      },
+      {
+       "name": "Totter Tate Seed",
+       "chance": 8.0
+      },
+      {
+       "name": "Qumato Seed",
+       "chance": 8.0
+      },
+      {
+       "name": "Cinnamellon Seed",
+       "chance": 8.0
+      },
+      {
+       "name": "Bunfeed Seed",
+       "chance": 4.0
+      },
+      {
+       "name": "Corn on the Cube Seed",
+       "chance": 4.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 50.0,
+     "items": [
+      {
+       "name": "Qubbage Seed",
+       "chance": 8.0
+      },
+      {
+       "name": "Unicorn Chard Seed",
+       "chance": 8.0
+      },
+      {
+       "name": "Onionito Seed",
+       "chance": 6.0
+      },
+      {
+       "name": "Uggplant Seed",
+       "chance": 6.0
+      },
+      {
+       "name": "Purp'lil Seed",
+       "chance": 6.0
+      },
+      {
+       "name": "Totter Tate Seed",
+       "chance": 4.0
+      },
+      {
+       "name": "Qumato Seed",
+       "chance": 4.0
+      },
+      {
+       "name": "Cinnamellon Seed",
+       "chance": 4.0
+      },
+      {
+       "name": "Bunfeed Seed",
+       "chance": 2.0
+      },
+      {
+       "name": "Corn on the Cube Seed",
+       "chance": 2.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Party Animals",
+   "notes": [
+    "Party Animals can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Party Animal could receive flux, glim, and a Pin Head.  Or they could just receive flux."
+   ],
+   "tiers": [
+    {
+     "name": "Pinata Dragon Egg for Anyone",
+     "chance": 0.01,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.01
+      }
+     ]
+    },
+    {
+     "name": "Pinata Dragon Egg for Thrower",
+     "chance": 0.2,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.2
+      }
+     ]
+    },
+    {
+     "name": "Mount for Anyone",
+     "chance": 0.03,
+     "items": [
+      {
+       "name": "2 Mount: Prancing Pinata",
+       "chance": 0.03
+      }
+     ]
+    },
+    {
+     "name": "Mount for Thrower",
+     "chance": 2.0,
+     "items": [
+      {
+       "name": "2 Mount: Prancing Pinata",
+       "chance": 2.0
+      }
+     ]
+    },
+    {
+     "name": "Pearl of Wisdom for Thrower",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Pearl of Wisdom",
+       "chance": 1.0
+      }
+     ]
+    },
+    {
+     "name": "Helm for Thrower",
+     "chance": 5.0,
+     "items": [
+      {
+       "name": "Pin Head",
+       "chance": 5.0
+      }
+     ]
+    },
+    {
+     "name": "Block Recipe for Anyone",
+     "chance": 3.0,
+     "items": [
+      {
+       "name": "Standard Block Recipe",
+       "chance": 0.6
+      },
+      {
+       "name": "Glass Block Recipe",
+       "chance": 0.6
+      },
+      {
+       "name": "Metallic Block Recipe",
+       "chance": 0.6
+      },
+      {
+       "name": "Glowing Block Recipe",
+       "chance": 0.6
+      },
+      {
+       "name": "Textured Block Recipe",
+       "chance": 0.6
+      }
+     ]
+    },
+    {
+     "name": "Biome Recipe for Anyone",
+     "chance": 5.0,
+     "items": [
+      {
+       "name": "Highlands Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Frontier Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Permafrost Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Cursed Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Fae Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Dragonfire Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Neon Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Candoria Recipe",
+       "chance": 0.5
+      },
+      {
+       "name": "Jurassic Recipe",
+       "chance": 0.5
+      }
+     ]
+    },
+    {
+     "name": "Biome Recipe for Thrower",
+     "chance": 30.0,
+     "items": [
+      {
+       "name": "Highlands Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Frontier Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Permafrost Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Cursed Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Fae Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Dragonfire Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Neon Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Candoria Recipe",
+       "chance": 3.0
+      },
+      {
+       "name": "Jurassic Recipe",
+       "chance": 3.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Flux",
+       "chance": 33.33
+      },
+      {
+       "name": "Glim",
+       "chance": 33.33
+      },
+      {
+       "name": "Shapestone Ore",
+       "chance": 33.33
+      }
+     ]
+    },
+    {
+     "name": "Common for Owner",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Flux",
+       "chance": 33.33
+      },
+      {
+       "name": "Glim",
+       "chance": 33.33
+      },
+      {
+       "name": "Shapestone Ore",
+       "chance": 33.33
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Crystal Pinatas",
+   "notes": [
+    "Crystal Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Crystal Pinata could receive a Crystalline Dream Aura, Geamstone, and Day Drops.  Or they could just receive Gleamstone."
+   ],
+   "tiers": [
+    {
+     "name": "Pinata Dragon Egg for Anyone",
+     "chance": 0.01,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.01
+      }
+     ]
+    },
+    {
+     "name": "Pinata Dragon Egg for Thrower",
+     "chance": 0.2,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.2
+      }
+     ]
+    },
+    {
+     "name": "Rare Items for Anyone",
+     "chance": 0.06,
+     "items": [
+      {
+       "name": "Mount: Crystal Pinata",
+       "chance": 0.03
+      },
+      {
+       "name": "Aura: Crystalline Dream",
+       "chance": 0.03
+      }
+     ]
+    },
+    {
+     "name": "Rare Items for Owner",
+     "chance": 6.0,
+     "items": [
+      {
+       "name": "Mount: Crystal Pinata",
+       "chance": 3.0
+      },
+      {
+       "name": "Aura: Crystalline Dream",
+       "chance": 3.0
+      }
+     ]
+    },
+    {
+     "name": "Crystal Styles for Anyone",
+     "chance": 2.5,
+     "items": []
+    },
+    {
+     "name": "Crystal Styles for Thrower",
+     "chance": 25.0,
+     "items": []
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Crystal",
+       "chance": 33.33
+      },
+      {
+       "name": "Gleamstone",
+       "chance": 33.33
+      },
+      {
+       "name": "Day Drop",
+       "chance": 33.33
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Crystal",
+       "chance": 33.33
+      },
+      {
+       "name": "Gleamstone",
+       "chance": 33.33
+      },
+      {
+       "name": "Day Drop",
+       "chance": 33.33
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Spring Pinatas",
+   "notes": [
+    "Spring Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Spring Pinata could receive a Spring Pin Head, Flux, and Glim.  Or they could just receive Flux."
+   ],
+   "tiers": [
+    {
+     "name": "Pinata Dragon Egg for Anyone",
+     "chance": 0.01,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.01
+      }
+     ]
+    },
+    {
+     "name": "Pinata Dragon Egg for Thrower",
+     "chance": 0.2,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.2
+      }
+     ]
+    },
+    {
+     "name": "Recipe for Anyone",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "Spring Recipe",
+       "chance": 10.0
+      }
+     ]
+    },
+    {
+     "name": "Recipe for Thrower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Spring Recipe",
+       "chance": 25.0
+      }
+     ]
+    },
+    {
+     "name": "Mount for Anyone",
+     "chance": 0.03,
+     "items": [
+      {
+       "name": "2 Mount: Spring Pinata",
+       "chance": 0.03
+      }
+     ]
+    },
+    {
+     "name": "Mount for Thrower",
+     "chance": 2.0,
+     "items": [
+      {
+       "name": "2 Mount: Spring Pinata",
+       "chance": 2.0
+      }
+     ]
+    },
+    {
+     "name": "Helm for Anyone",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Spring Pin Head",
+       "chance": 1.0
+      }
+     ]
+    },
+    {
+     "name": "Helm for Thrower",
+     "chance": 4.0,
+     "items": [
+      {
+       "name": "Spring Pin Head",
+       "chance": 4.0
+      }
+     ]
+    },
+    {
+     "name": "Style Stash for Anyone",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "Spring Style Stash",
+       "chance": 10.0
+      }
+     ]
+    },
+    {
+     "name": "Style Stash for Thower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Spring Style Stash",
+       "chance": 25.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 50.0
+      },
+      {
+       "name": "Flux",
+       "chance": 25.0
+      },
+      {
+       "name": "Glim",
+       "chance": 25.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 50.0
+      },
+      {
+       "name": "Flux",
+       "chance": 25.0
+      },
+      {
+       "name": "Glim",
+       "chance": 25.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Summer Pinatas",
+   "notes": [
+    "Summer Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Summer Pinata could receive a Summer Pin Head, Flux, and Glim.  Or they could just receive Flux."
+   ],
+   "tiers": [
+    {
+     "name": "Pinata Dragon Egg for Anyone",
+     "chance": 0.01,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.01
+      }
+     ]
+    },
+    {
+     "name": "Pinata Dragon Egg for Thrower",
+     "chance": 0.2,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.2
+      }
+     ]
+    },
+    {
+     "name": "Recipe for Anyone",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "Summer Recipe",
+       "chance": 10.0
+      }
+     ]
+    },
+    {
+     "name": "Recipe for Thrower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Summer Recipe",
+       "chance": 25.0
+      }
+     ]
+    },
+    {
+     "name": "Mount for Anyone",
+     "chance": 0.03,
+     "items": [
+      {
+       "name": "2 Mount: Summer Pinata",
+       "chance": 0.03
+      }
+     ]
+    },
+    {
+     "name": "Mount for Thrower",
+     "chance": 2.0,
+     "items": [
+      {
+       "name": "2 Mount: Summer Pinata",
+       "chance": 2.0
+      }
+     ]
+    },
+    {
+     "name": "Helm for Anyone",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Summer Pin Head",
+       "chance": 1.0
+      }
+     ]
+    },
+    {
+     "name": "Helm for Thrower",
+     "chance": 4.0,
+     "items": [
+      {
+       "name": "Summer Pin Head",
+       "chance": 4.0
+      }
+     ]
+    },
+    {
+     "name": "Style Stash for Anyone",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "Summer Style Stash",
+       "chance": 10.0
+      }
+     ]
+    },
+    {
+     "name": "Style Stash for Thower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Summer Style Stash",
+       "chance": 25.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Autumn Pinatas",
+   "notes": [
+    "Autumn Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Autumn Pinata could receive an Autumn Pin Head, Flux, and Glim.  Or they could just receive Flux."
+   ],
+   "tiers": [
+    {
+     "name": "Pinata Dragon Egg for Anyone",
+     "chance": 0.01,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.01
+      }
+     ]
+    },
+    {
+     "name": "Pinata Dragon Egg for Thrower",
+     "chance": 0.2,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.2
+      }
+     ]
+    },
+    {
+     "name": "Mount for Anyone",
+     "chance": 0.03,
+     "items": [
+      {
+       "name": "2 Mount: Autumn Pinata",
+       "chance": 0.03
+      }
+     ]
+    },
+    {
+     "name": "Mount for Thrower",
+     "chance": 2.0,
+     "items": [
+      {
+       "name": "2 Mount: Autumn Pinata",
+       "chance": 2.0
+      }
+     ]
+    },
+    {
+     "name": "Helm for Anyone",
+     "chance": 1.0,
+     "items": [
+      {
+       "name": "Autumn Pin Head",
+       "chance": 1.0
+      }
+     ]
+    },
+    {
+     "name": "Helm for Thrower",
+     "chance": 4.0,
+     "items": [
+      {
+       "name": "Autumn Pin Head",
+       "chance": 4.0
+      }
+     ]
+    },
+    {
+     "name": "Style Stash for Thower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Autumn Style Stash",
+       "chance": 25.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Winter Pinatas",
+   "notes": [
+    "Winter Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Winter Pinata could receive a Winter Pin Head, Flux, and Glim.  Or they could just receive Flux."
+   ],
+   "tiers": [
+    {
+     "name": "Pinata Dragon Egg for Anyone",
+     "chance": 0.01,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.01
+      }
+     ]
+    },
+    {
+     "name": "Pinata Dragon Egg for Thrower",
+     "chance": 0.2,
+     "items": [
+      {
+       "name": "Dormant Pinata Dragon Egg",
+       "chance": 0.2
+      }
+     ]
+    },
+    {
+     "name": "Recipe for Anyone",
+     "chance": 5.0,
+     "items": [
+      {
+       "name": "Winter Recipe",
+       "chance": 5.0
+      }
+     ]
+    },
+    {
+     "name": "Recipe for Thrower",
+     "chance": 30.0,
+     "items": [
+      {
+       "name": "Winter Recipe",
+       "chance": 30.0
+      }
+     ]
+    },
+    {
+     "name": "Mount for Anyone",
+     "chance": 0.03,
+     "items": [
+      {
+       "name": "2 Mount: Winter Pinata",
+       "chance": 0.03
+      }
+     ]
+    },
+    {
+     "name": "Mount for Thrower",
+     "chance": 2.0,
+     "items": [
+      {
+       "name": "2 Mount: Winter Pinata",
+       "chance": 2.0
+      }
+     ]
+    },
+    {
+     "name": "Winter Styles for Anyone",
+     "chance": 5.0,
+     "items": [
+      {
+       "name": "Chilly Pin Head",
+       "chance": 0.45
+      },
+      {
+       "name": "Shaggy Yeti",
+       "chance": 0.45
+      },
+      {
+       "name": "Prevailing Cool Head",
+       "chance": 0.45
+      },
+      {
+       "name": "Slope Slider",
+       "chance": 0.45
+      },
+      {
+       "name": "Banded Clubsicle",
+       "chance": 0.45
+      },
+      {
+       "name": "Thunderous Sunderer",
+       "chance": 0.45
+      },
+      {
+       "name": "Iceblock Tongs",
+       "chance": 0.45
+      },
+      {
+       "name": "Snow Blower",
+       "chance": 0.45
+      },
+      {
+       "name": "Ice Glider",
+       "chance": 0.45
+      },
+      {
+       "name": "Mistwing Wand",
+       "chance": 0.45
+      },
+      {
+       "name": "Winter Wyrm",
+       "chance": 0.45
+      }
+     ]
+    },
+    {
+     "name": "Winter Styles for Thrower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Chilly Pin Head",
+       "chance": 2.27
+      },
+      {
+       "name": "Shaggy Yeti",
+       "chance": 2.27
+      },
+      {
+       "name": "Prevailing Cool Head",
+       "chance": 2.27
+      },
+      {
+       "name": "Slope Slider",
+       "chance": 2.27
+      },
+      {
+       "name": "Banded Clubsicle",
+       "chance": 2.27
+      },
+      {
+       "name": "Thunderous Sunderer",
+       "chance": 2.27
+      },
+      {
+       "name": "Iceblock Tongs",
+       "chance": 2.27
+      },
+      {
+       "name": "Snow Blower",
+       "chance": 2.27
+      },
+      {
+       "name": "Ice Glider",
+       "chance": 2.27
+      },
+      {
+       "name": "Mistwing Wand",
+       "chance": 2.27
+      },
+      {
+       "name": "Winter Wyrm",
+       "chance": 2.27
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 44.44
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 11.11
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 11.11
+      },
+      {
+       "name": "Glim",
+       "chance": 22.22
+      },
+      {
+       "name": "Flux",
+       "chance": 11.11
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 44.44
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 11.11
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 11.11
+      },
+      {
+       "name": "Glim",
+       "chance": 22.22
+      },
+      {
+       "name": "Flux",
+       "chance": 11.11
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Romancing Pinatas",
+   "notes": [
+    "Romancing Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Romancing Pinata could receive Wings of Love wings, Flux, and Glim.  Or they could just receive Flux."
+   ],
+   "tiers": [
+    {
+     "name": "Rare Items for Thrower",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "2 Mount: Romancing Pinata",
+       "chance": 4.5
+      },
+      {
+       "name": "2 Ally: Cheeky Cherub",
+       "chance": 4.5
+      },
+      {
+       "name": "2 Wings: Wings of Love",
+       "chance": 1.0
+      }
+     ]
+    },
+    {
+     "name": "2 Mount: Romancing Pinata for Anyone",
+     "chance": 0.03,
+     "items": []
+    },
+    {
+     "name": "2 Ally: Cheeky Cherub for Anyone",
+     "chance": 0.03,
+     "items": []
+    },
+    {
+     "name": "2 Wings: Wings of Love for Anyone",
+     "chance": 0.008,
+     "items": []
+    },
+    {
+     "name": "Romancing Styles for Anyone",
+     "chance": 5.0,
+     "items": [
+      {
+       "name": "Romancing Pin Head",
+       "chance": 0.71
+      },
+      {
+       "name": "Bristling Beauty",
+       "chance": 0.71
+      },
+      {
+       "name": "Rosevine Recurve",
+       "chance": 0.71
+      },
+      {
+       "name": "Enamoring Armor Piercer",
+       "chance": 0.71
+      },
+      {
+       "name": "Big Bonbon Baton",
+       "chance": 0.71
+      },
+      {
+       "name": "Heart Halberd",
+       "chance": 0.71
+      },
+      {
+       "name": "Cupid's Ballista Bolt",
+       "chance": 0.71
+      }
+     ]
+    },
+    {
+     "name": "Romancing Styles for Thrower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Romancing Pin Head",
+       "chance": 3.57
+      },
+      {
+       "name": "Bristling Beauty",
+       "chance": 3.57
+      },
+      {
+       "name": "Rosevine Recurve",
+       "chance": 3.57
+      },
+      {
+       "name": "Enamoring Armor Piercer",
+       "chance": 3.57
+      },
+      {
+       "name": "Big Bonbon Baton",
+       "chance": 3.57
+      },
+      {
+       "name": "Heart Halberd",
+       "chance": 3.57
+      },
+      {
+       "name": "Cupid's Ballista Bolt",
+       "chance": 3.57
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Shamrockin' Pinatas",
+   "notes": [
+    "Shamrockin' Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Shamrockin' Pinata could receive Springy Roller allies, Flux, and Glim.  Or they could just receive Flux."
+   ],
+   "tiers": [
+    {
+     "name": "Rare Items for Thrower",
+     "chance": 10.0,
+     "items": [
+      {
+       "name": "2 Mount: Shamrockin' Pinata",
+       "chance": 5.0
+      },
+      {
+       "name": "2 Ally: Springy Roller",
+       "chance": 5.0
+      }
+     ]
+    },
+    {
+     "name": "2 Mount: Shamrockin' Pinata for Anyone",
+     "chance": 0.03,
+     "items": []
+    },
+    {
+     "name": "2 Ally: Springy Roller for Anyone",
+     "chance": 0.03,
+     "items": []
+    },
+    {
+     "name": "Shamrockin' Styles for Anyone",
+     "chance": 5.0,
+     "items": [
+      {
+       "name": "Shamrockin' Pin Head",
+       "chance": 0.71
+      },
+      {
+       "name": "Rainbow's Edge",
+       "chance": 0.71
+      },
+      {
+       "name": "Gilded Horseshoe",
+       "chance": 0.71
+      },
+      {
+       "name": "Little Luckslinger",
+       "chance": 0.71
+      },
+      {
+       "name": "Enshrined Shamrock",
+       "chance": 0.71
+      },
+      {
+       "name": "Clear-Cut Clover",
+       "chance": 0.71
+      },
+      {
+       "name": "Pot o' Gold Poker",
+       "chance": 0.71
+      }
+     ]
+    },
+    {
+     "name": "Shamrockin' Styles for Thrower",
+     "chance": 25.0,
+     "items": [
+      {
+       "name": "Shamrockin' Pin Head",
+       "chance": 3.57
+      },
+      {
+       "name": "Rainbow's Edge",
+       "chance": 3.57
+      },
+      {
+       "name": "Gilded Horseshoe",
+       "chance": 3.57
+      },
+      {
+       "name": "Little Luckslinger",
+       "chance": 3.57
+      },
+      {
+       "name": "Enshrined Shamrock",
+       "chance": 3.57
+      },
+      {
+       "name": "Clear-Cut Clover",
+       "chance": 3.57
+      },
+      {
+       "name": "Pot o' Gold Poker",
+       "chance": 3.57
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Shapestone Ore",
+       "chance": 20.0
+      },
+      {
+       "name": "Formicite Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Infinium Ore",
+       "chance": 10.0
+      },
+      {
+       "name": "Glim",
+       "chance": 30.0
+      },
+      {
+       "name": "Flux",
+       "chance": 30.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Primal Paragon Pinatas",
+   "notes": [
+    "Primal Paragon Pinatas can drop multiple items and have extra rolls for the thrower, so these probabilities will not add up to 100%.",
+    "For example, someone throwing a Primal Paragon Pinata could receive Primal Paragon Wings, Flux, and Nitro-Glitterine. Or they could just receive Flux."
+   ],
+   "tiers": [
+    {
+     "name": "Primal Paragon Wings for Thrower",
+     "chance": 0.005,
+     "items": []
+    },
+    {
+     "name": "Golden Signatory Ring Box for Thrower",
+     "chance": 0.02,
+     "items": []
+    },
+    {
+     "name": "Paragon Aura: Helm for Thrower",
+     "chance": 0.02,
+     "items": []
+    },
+    {
+     "name": "Paragon Aura: Weapon for Thrower",
+     "chance": 0.1,
+     "items": []
+    },
+    {
+     "name": "Paragon's Mark for Thrower",
+     "chance": 0.2,
+     "items": []
+    },
+    {
+     "name": "Paragon Style Unlocker for Thrower",
+     "chance": 0.5,
+     "items": []
+    },
+    {
+     "name": "2 Mount: Primal Paragon Pinata for Thrower",
+     "chance": 1.0,
+     "items": []
+    },
+    {
+     "name": "Primal Paragon Cube for Thrower",
+     "chance": 5.0,
+     "items": []
+    },
+    {
+     "name": "Trovian Loop for Thrower",
+     "chance": 33.0,
+     "items": []
+    },
+    {
+     "name": "Paragon's Mark for Anyone",
+     "chance": 0.025,
+     "items": []
+    },
+    {
+     "name": "1 Mount: Primal Paragon Pinata for Anyone",
+     "chance": 0.03,
+     "items": []
+    },
+    {
+     "name": "Paragon Style Unlocker for Anyone",
+     "chance": 0.125,
+     "items": []
+    },
+    {
+     "name": "Primal Paragon Cube for Anyone",
+     "chance": 1.25,
+     "items": []
+    },
+    {
+     "name": "Trovian Loop for Anyone",
+     "chance": 10.0,
+     "items": []
+    },
+    {
+     "name": "Common for Thrower",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Veridium Ore",
+       "chance": 50.0
+      },
+      {
+       "name": "Cinnabar Ore",
+       "chance": 12.5
+      },
+      {
+       "name": "Nitro Glitterine Ore",
+       "chance": 12.5
+      },
+      {
+       "name": "Glim",
+       "chance": 12.5
+      },
+      {
+       "name": "Flux",
+       "chance": 12.5
+      }
+     ]
+    },
+    {
+     "name": "Common for Anyone",
+     "chance": 100.0,
+     "items": [
+      {
+       "name": "Veridium Ore",
+       "chance": 50.0
+      },
+      {
+       "name": "Cinnabar Ore",
+       "chance": 12.5
+      },
+      {
+       "name": "Nitro Glitterine Ore",
+       "chance": 12.5
+      },
+      {
+       "name": "Glim",
+       "chance": 12.5
+      },
+      {
+       "name": "Flux",
+       "chance": 12.5
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

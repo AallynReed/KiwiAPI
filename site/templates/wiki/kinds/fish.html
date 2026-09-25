@@ -10,8 +10,8 @@
                 <th scope="row">{{ z.size }}</th>
                 <td class="num">{{ z.weight }}</td>
                 <td class="num">{{ z.chance }}</td>
-                <td>{{ z.trophy or "" }}</td>
-                <td>{% for y in z.yield %}<div>{{ y }}</div>{% endfor %}</td>
+                <td>{% if z.trophy_url %}<a href="{{ z.trophy_url }}">{{ z.trophy }}</a>{% else %}{{ z.trophy or "" }}{% endif %}</td>
+                <td>{% for y in z.yield %}<div>{% if y.url %}<a href="{{ y.url }}">{{ y.text }}</a>{% else %}{{ y.text }}{% endif %}</div>{% endfor %}</td>
             </tr>
             {% endfor %}
             </tbody>

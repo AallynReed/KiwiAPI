@@ -13,9 +13,9 @@
         <thead><tr>{% if d.ordered %}<th scope="col">Step</th>{% endif %}<th scope="col">Adventure</th><th scope="col">Goal</th><th scope="col">Rewards</th></tr></thead>
         <tbody>
         {% for a in d.adventures %}
-        <tr data-search="{{ a.search }}">
+        <tr id="{{ a.anchor }}" data-search="{{ a.search }}">
             {% if d.ordered %}<td class="num">{{ a.step or "" }}</td>{% endif %}
-            <th scope="row"><div>{{ a.name or "" }}{% if not a.name %}<span class="wk-mute">No name in the game files</span>{% endif %}</div>{% if a.description %}<div class="wk-mute wk-pre">{{ a.description }}</div>{% endif %}{% for t in a.timing %}<div class="wk-mute"><i class="fa-regular fa-clock" aria-hidden="true"></i> {{ t }}</div>{% endfor %}</th>
+            <th scope="row"><div>{{ a.name or "" }}{% if not a.name %}<span class="wk-mute">No name in the game files</span>{% endif %}</div>{% if a.description %}<div class="wk-mute wk-pre">{{ a.description }}</div>{% endif %}{% if a.given_by %}<div class="wk-mute"><i class="fa-solid fa-comment" aria-hidden="true"></i> From {% for g in a.given_by %}{% if g.url %}<a href="{{ g.url }}">{{ g.text }}</a>{% else %}{{ g.text }}{% endif %}{{ ", " if not loop.last else "" }}{% endfor %}</div>{% endif %}{% for t in a.timing %}<div class="wk-mute"><i class="fa-regular fa-clock" aria-hidden="true"></i> {{ t }}</div>{% endfor %}</th>
             <td>{% if a.goal.text %}<div>{{ a.goal.text }}</div>{% endif %}{% for t in a.goal.things %}<div class="wk-mute">{% if t.url %}<a href="{{ t.url }}">{{ t.text }}</a>{% else %}{{ t.text }}{% endif %}</div>{% endfor %}</td>
             <td>{% for r in a.rewards %}<div>{% if r.url %}<a href="{{ r.url }}">{{ r.text }}</a>{% else %}{{ r.text }}{% endif %}</div>{% endfor %}</td>
         </tr>

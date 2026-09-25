@@ -8,7 +8,7 @@
 {% if d.adventures %}
 <section class="cls-section">
     <h3 class="cls-section-title"><i class="fa-solid fa-scroll" aria-hidden="true"></i><span>Adventures that count it</span></h3>
-    <ul class="wk-thinglist" role="list">{% for a in d.adventures %}<li><strong>{{ a.name }}</strong>{% if a.description %}<div class="wk-mute wk-pre">{{ a.description }}</div>{% endif %}</li>{% endfor %}</ul>
+    <ul class="wk-thinglist" role="list">{% for a in d.adventures %}<li>{% if a.url %}<a href="{{ a.url }}"><strong>{{ a.name }}</strong></a>{% else %}<strong>{{ a.name }}</strong>{% endif %}{% if a.description %}<div class="wk-mute wk-pre">{{ a.description }}</div>{% endif %}</li>{% endfor %}</ul>
 </section>
 {% endif %}
 <p class="wk-hint">Health and damage are set by the game server, so they aren't in the game files. Ability damage is shown as a share of the boss's damage.</p>
