@@ -122,15 +122,15 @@ async def app_showcase(request: Request) -> HTMLResponse:
     )
 
 
-async def _all_public_modpack_cards(cap: int = 25_000) -> list[dict]:
-    """Page through the tokenless ``/site/modpacks/projects`` proxy and return
-    every public modpack card. Truncates at ``cap`` with a warning - a silent cap
-    would read as 'whole catalog indexed' when it isn't."""
+async def _all_public_cards(path: str, cap: int = 25_000) -> list[dict]:
+    """Page through a tokenless catalog proxy (``/site/mods/projects`` or
+    ``/site/modpacks/projects``) and return every public card. Truncates at
+    ``cap`` with a warning - a silent cap would read as 'whole catalog indexed'
+    when it isn't."""
     out: list[dict] = []
     offset, page = 0, 100   # the /site proxy caps limit at 100
     while True:
-        data = await internal_get("/site/modpacks/projects",
-                                  {"limit": page, "offset": offset})
+        data = await internal_get(path, {"limit": page, "offset": offset})
         if not isinstance(data, dict):
             break
         rows = data.get("items") or []
@@ -140,8 +140,8 @@ async def _all_public_modpack_cards(cap: int = 25_000) -> list[dict]:
         if not rows or offset >= total or len(out) >= cap:
             break
     if len(out) > cap:
-        logger.warning("browse: modpack catalog (%d) exceeds cap %d - truncating",
-                       len(out), cap)
+        logger.warning("%s catalog (%d) exceeds cap %d - truncating",
+                       path, len(out), cap)
         out = out[:cap]
     return out
 
@@ -154,7 +154,7 @@ async def browse_index(request: Request) -> HTMLResponse:
     the footer so it's reachable everywhere."""
     packs: list[dict] = []
     if getattr(request.state, "mods_hub_enabled", True):
-        packs = await _all_public_modpack_cards()
+        packs = await _all_public_cards("/site/modpacks/projects")
     packs.sort(key=lambda c: (c.get("title") or c.get("slug") or "").lower())
     return _TEMPLATES.TemplateResponse(request, "browse.html", {"modpacks": packs})
 

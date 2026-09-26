@@ -3596,6 +3596,28 @@ async def profile_view(handle: str, viewer: SiteUser | None) -> dict | None:
     return profile_dto(user, profile, is_owner, mods)
 
 
+async def public_modder_handles() -> list[dict]:
+    """Every modder whose ``/mods/<handle>`` profile resolves for an anonymous
+    visitor (the ``profile_view`` rules), each with their newest public mod's
+    ``updated_at``. Feeds the sitemap."""
+    rows = await ModProject.aggregate([
+        {"$match": {"visibility": "public", "taken_down": False, "owner_id": {"$ne": None}}},
+        {"$group": {"_id": "$owner_id", "at": {"$max": "$updated_at"}}},
+    ]).to_list()
+    latest = {r["_id"]: r["at"] for r in rows}
+    if not latest:
+        return []
+    ids = list(latest)
+    users, hidden = await asyncio.gather(
+        SiteUser.find(In(SiteUser.id, ids), SiteUser.is_active == True).to_list(),  # noqa: E712
+        ModProfile.find(In(ModProfile.site_user_id, ids),
+                        ModProfile.taken_down == True).to_list(),  # noqa: E712
+    )
+    hidden_ids = {p.site_user_id for p in hidden}
+    return [{"handle": u.username, "updated_at": _iso(latest[u.id])}
+            for u in users if u.id not in hidden_ids]
+
+
 async def _get_or_make_profile(actor: SiteUser) -> ModProfile:
     profile = await ModProfile.find_one(ModProfile.site_user_id == actor.id)
     if profile is None:

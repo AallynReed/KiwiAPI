@@ -225,16 +225,6 @@ _SITEMAP_LOCK = asyncio.Lock()
 # ever exceeds it we truncate and log rather than emit an oversized sitemap.
 _SITEMAP_MAX_PER_SECTION = 25_000
 
-# TEMP: individual mod detail pages (/mods/{handle}/{slug}) are excluded from the
-# sitemap for now. The original reason - their above-the-fold content was
-# JS-rendered, so as raw HTML they read thin - no longer applies: they now
-# server-render title, author, description, tags and stats (see app/site/ssr.py
-# ``mod_project_view``). What's left is purely a crawl-budget call: listing
-# thousands of them while the core pages are still establishing indexing spends
-# budget on the long tail. The hub pages (/mods, /mods/why) stay in via
-# _SITEMAP_PAGES. Flip to True to re-list them once the core pages are indexed.
-_SITEMAP_INCLUDE_MOD_PAGES = False
-
 
 def _xml_loc(url: str) -> str:
     return url.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -262,11 +252,11 @@ async def _all_public_cards(list_fn, cap: int, label: str) -> list[dict]:
 
 async def _render_sitemap() -> str:
     """Build the sitemap XML: static feature pages (each gated by its master
-    toggle) plus every public modpack page. Individual mod detail pages are
-    currently excluded (see ``_SITEMAP_INCLUDE_MOD_PAGES``). The mod/modpack
-    sections ride the Mods Hub master toggle, so they vanish wholesale when it's
-    off. Approved strays are addressed as ``/mods/stray/<slug>`` - their card
-    already carries ``handle='stray'``, so the generic URL shape is correct."""
+    toggle) plus every public mod, modpack and modder profile page. Player pages
+    are deliberately not listed. The Mods Hub sections ride its master toggle, so
+    they vanish wholesale when it's off. Approved strays are addressed as
+    ``/mods/stray/<slug>`` - their card already carries ``handle='stray'``, so the
+    generic URL shape is correct."""
     base = settings.app_url.rstrip("/")
     flags = _apply_derived({
         attr: await feature_flags.is_enabled(flag)
@@ -279,13 +269,16 @@ async def _render_sitemap() -> str:
         if attr is None or flags.get(attr, True)
     ]
     if flags.get("mods_hub_enabled", True):
-        if _SITEMAP_INCLUDE_MOD_PAGES:
-            mods = await _all_public_cards(
-                mods_hub_service.list_public, _SITEMAP_MAX_PER_SECTION, "mods")
-            entries += [
-                (f"{base}/mods/{c['handle']}/{c['slug']}", c.get("updated_at"))
-                for c in mods if c.get("handle") and c.get("slug")
-            ]
+        mods = await _all_public_cards(
+            mods_hub_service.list_public, _SITEMAP_MAX_PER_SECTION, "mods")
+        entries += [
+            (f"{base}/mods/{c['handle']}/{c['slug']}", c.get("updated_at"))
+            for c in mods if c.get("handle") and c.get("slug")
+        ]
+        entries += [
+            (f"{base}/mods/{m['handle']}", m.get("updated_at"))
+            for m in await mods_hub_service.public_modder_handles()
+        ]
         packs = await _all_public_cards(
             modpacks_service.list_public, _SITEMAP_MAX_PER_SECTION, "modpacks")
         entries += [
@@ -310,9 +303,8 @@ async def _render_sitemap() -> str:
 @router.get("/sitemap.xml", include_in_schema=False)
 async def sitemap_xml() -> Response:
     """XML sitemap of the public, indexable pages: the static feature pages plus
-    every public modpack (individual mod pages are excluded for now - see
-    ``_SITEMAP_INCLUDE_MOD_PAGES``). Cached in-process for a few minutes
-    (``_SITEMAP_TTL``) so crawler hits don't re-enumerate the catalog each time."""
+    every public mod, modpack and modder profile. Cached in-process for a few
+    minutes (``_SITEMAP_TTL``) so crawler hits don't re-enumerate the catalog."""
     now = time.monotonic()
     if _SITEMAP_CACHE["body"] is None or now - float(_SITEMAP_CACHE["at"]) > _SITEMAP_TTL:
         async with _SITEMAP_LOCK:
@@ -3609,6 +3601,15 @@ async def site_mods_profile(
     if data is None:
         raise HTTPException(status_code=404, detail="No such modder.")
     return JSONResponse(data, headers={"Cache-Control": "no-cache"})
+
+
+@router.get("/site/mods/modders", response_class=JSONResponse)
+async def site_mods_modders() -> JSONResponse:
+    """Handles of every modder with a public profile page - the web tier's sitemap."""
+    return JSONResponse(
+        {"items": await mods_hub_service.public_modder_handles()},
+        headers={"Cache-Control": "public, max-age=300"},
+    )
 
 
 @router.get("/site/mods/me/projects", response_class=JSONResponse)
