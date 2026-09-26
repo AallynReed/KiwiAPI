@@ -12,6 +12,7 @@ The data plane - every ``/site/*`` JSON/binary proxy, the OG PNG renders and the
 CAS reads - lives on the API in ``app/site/router.py``; robots/sitemap live in
 ``app/web/meta.py``.
 """
+import asyncio
 import logging
 import re
 from pathlib import Path
@@ -149,14 +150,21 @@ async def _all_public_cards(path: str, cap: int = 25_000) -> list[dict]:
 @router.get("/browse", response_class=HTMLResponse)
 async def browse_index(request: Request) -> HTMLResponse:
     """Human-readable site index ("HTML sitemap"): real ``<a>`` links to every
-    public modpack page. The catalog grids render client-side, so mod/modpack pages
-    otherwise have no crawlable internal links - only the XML sitemap. Linked from
-    the footer so it's reachable everywhere."""
+    public mod and modpack page. The catalog grids render client-side, so those
+    pages otherwise have no crawlable internal links - only the XML sitemap. Linked
+    from the footer so it's reachable everywhere."""
+    mods: list[dict] = []
     packs: list[dict] = []
     if getattr(request.state, "mods_hub_enabled", True):
-        packs = await _all_public_cards("/site/modpacks/projects")
-    packs.sort(key=lambda c: (c.get("title") or c.get("slug") or "").lower())
-    return _TEMPLATES.TemplateResponse(request, "browse.html", {"modpacks": packs})
+        mods, packs = await asyncio.gather(
+            _all_public_cards("/site/mods/projects"),
+            _all_public_cards("/site/modpacks/projects"),
+        )
+    for cards in (mods, packs):
+        # Leading quotes/dashes in a title shouldn't pull it to the top.
+        cards.sort(key=lambda c: re.sub(r"^\W+", "", c.get("title") or c.get("slug") or "").lower())
+    return _TEMPLATES.TemplateResponse(
+        request, "browse.html", {"mods": mods, "modpacks": packs})
 
 
 @router.get("/documentation", response_class=HTMLResponse)

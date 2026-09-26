@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Browse everything - Better Trove Tools</title>
-    <meta name="description" content="A full index of Better Trove Tools: every section of the site, plus a direct link to every community modpack.">
+    <meta name="description" content="A full index of Better Trove Tools: every section of the site, plus a direct link to every community mod and modpack.">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#0a0e14">
     <meta name="color-scheme" content="dark">
@@ -33,7 +33,7 @@
     <main id="main" class="browse-wrap">
         <header class="browse-head">
             <h1 data-i18n>Browse everything</h1>
-            <p data-i18n>A complete index of the site - every section, plus a direct link to every community modpack.</p>
+            <p data-i18n>A complete index of the site - every section, plus a direct link to every community mod and modpack.</p>
         </header>
 
         <section class="browse-section" aria-labelledby="browse-pages-h">
@@ -64,6 +64,19 @@
         </section>
 
         {% if mods_hub_enabled %}
+        <section class="browse-section" aria-labelledby="browse-mods-h">
+            <h2 id="browse-mods-h"><span data-i18n>Mods</span> <span class="browse-count">{{ mods|length }}</span></h2>
+            {% if mods %}
+            <ul class="browse-links browse-cols">
+                {% for m in mods %}
+                <li><a href="/mods/{{ m.handle }}/{{ m.slug }}">{{ m.title or m.slug }}</a></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="browse-empty" data-i18n>No public mods yet.</p>
+            {% endif %}
+        </section>
+
         <section class="browse-section" aria-labelledby="browse-packs-h">
             <h2 id="browse-packs-h"><span data-i18n>Modpacks</span> <span class="browse-count">{{ modpacks|length }}</span></h2>
             {% if modpacks %}
