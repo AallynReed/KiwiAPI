@@ -2898,11 +2898,11 @@ async def get_player_profile(
     /player/<name> page and a future Discord ``/rank`` deep-link. Unknown names
     return an empty profile rather than 404.
 
-    **Hot-only.** The ``recent`` window is floored at the hot/cold storage
+    **Hot-only.** The ``recent`` and ``last_played`` windows are floored at the hot/cold storage
     boundary (``leaderboards_pg_tier_after_days``), so this endpoint never reads
     cold-tiered partitions. The ``boards`` summary spans all history regardless
     (it's the always-hot ``player_board_agg`` aggregate)."""
-    payload = await leaderboards_service.player_profile(player_name, hot_only=True)
+    payload = await leaderboards_service.player_profile(player_name)
     return PlayerProfileResponse(**payload)
 
 

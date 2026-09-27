@@ -519,25 +519,33 @@ async def player_rows(
     historical partition to find the newest rows - the difference between a
     sub-second read and tens of seconds for a player with years of history. Pass
     it whenever the caller only needs recent appearances (the profile's ``recent``
-    and the leaderboards panel, which shows only the latest capture)."""
-    sql = (
-        "SELECT e.board_uuid AS leaderboard, e.anchor AS created_at, e.rank, e.score, "
-        "p.name AS player_name "
-        "FROM entry e JOIN player p ON p.id = e.player_id WHERE p.name_lower = lower($1)"
-    )
-    args: list = [name]
-    if window_start is not None:
-        args.append(window_start)
-        sql += f" AND e.anchor >= ${len(args)}"
-    if uuid is not None:
-        args.append(uuid)
-        sql += f" AND e.board_uuid = ${len(args)}"
-    args.append(limit)
-    sql += f" ORDER BY e.anchor DESC LIMIT ${len(args)}"
+    and the leaderboards panel, which shows only the latest capture).
+
+    The player is resolved first so the read is by ``player_id``: the planner then
+    walks the (player_id, anchor) index backward newest partition first and stops
+    at ``limit`` rows. Joining on ``name_lower`` instead made it bitmap-collect the
+    whole window and sort it."""
     async with acquire() as con:
+        who = await con.fetchrow(
+            "SELECT id, name FROM player WHERE name_lower = lower($1)", name.strip())
+        if who is None:
+            return []
+        sql = (
+            "SELECT board_uuid AS leaderboard, anchor AS created_at, rank, score "
+            "FROM entry WHERE player_id = $1"
+        )
+        args: list = [who["id"]]
+        if window_start is not None:
+            args.append(window_start)
+            sql += f" AND anchor >= ${len(args)}"
+        if uuid is not None:
+            args.append(uuid)
+            sql += f" AND board_uuid = ${len(args)}"
+        args.append(limit)
+        sql += f" ORDER BY anchor DESC LIMIT ${len(args)}"
         rows = await con.fetch(sql, *args)
     return [
-        {"player_name": r["player_name"], "rank": r["rank"], "score": r["score"],
+        {"player_name": who["name"], "rank": r["rank"], "score": r["score"],
          "leaderboard": r["leaderboard"], "created_at": r["created_at"]}
         for r in rows
     ]
@@ -648,21 +656,25 @@ async def player_last_played(
     slot is always 1 and the result is identical to a plain lag."""
     excl = sorted(excluded)
     async with acquire() as con:
+        pid = await con.fetchval(
+            "SELECT id FROM player WHERE name_lower = lower($1)", name.strip())
+        if pid is None:
+            return None
         val = await con.fetchval(
             "WITH me AS ("
-            "  SELECT e.board_uuid, e.anchor, e.score, "
-            "         row_number() OVER (PARTITION BY e.board_uuid, e.anchor "
-            "                            ORDER BY e.score DESC, e.rank ASC) AS slot "
-            "  FROM entry e JOIN player p ON p.id = e.player_id "
-            "  WHERE p.name_lower = lower($1) AND e.anchor >= $2 "
-            "        AND NOT (e.board_uuid = ANY($3::int[])) "
+            "  SELECT board_uuid, anchor, score, "
+            "         row_number() OVER (PARTITION BY board_uuid, anchor "
+            "                            ORDER BY score DESC, rank ASC) AS slot "
+            "  FROM entry "
+            "  WHERE player_id = $1 AND anchor >= $2 "
+            "        AND NOT (board_uuid = ANY($3::int[])) "
             "), s AS ("
             "  SELECT anchor, score, "
             "         lag(score) OVER (PARTITION BY board_uuid, slot ORDER BY anchor) AS prev "
             "  FROM me "
             ") "
             "SELECT max(anchor) FROM s WHERE prev IS NOT NULL AND score > prev",
-            name.strip().lower(), window_start, excl,
+            pid, window_start, excl,
         )
     return int(val) if val is not None else None
 
@@ -1458,7 +1470,7 @@ async def _entry_partitions(con) -> list[dict]:
     return out
 
 
-def _cold_keep_from(now: int, after_days: int) -> int:
+def cold_keep_from(now: int, after_days: int) -> int:
     """Oldest trove-day-start that stays HOT: keeps ``after_days`` trove-days
     INCLUDING today's. Partitions whose lo is below this move to cold."""
     return trove_day_start(now) - (max(1, after_days) - 1) * 86400
@@ -1469,7 +1481,7 @@ async def tier_status(after_days: int, now: int) -> dict:
     partitions are eligible to move right now (aged, still on pg_default)."""
     if not await cold_tablespace_exists():
         return {"cold_tablespace": False}
-    keep_from = _cold_keep_from(now, after_days)
+    keep_from = cold_keep_from(now, after_days)
     async with acquire() as con:
         parts = await _entry_partitions(con)
     hot = [p for p in parts if p["tablespace"] == "pg_default"]
@@ -1499,7 +1511,7 @@ async def tier_cold_partitions(after_days: int, now: int,
     partition names + bytes relocated."""
     if not await cold_tablespace_exists():
         return {"cold_tablespace": False, "moved": [], "moved_bytes": 0}
-    keep_from = _cold_keep_from(now, after_days)
+    keep_from = cold_keep_from(now, after_days)
     async with acquire() as con:
         parts = await _entry_partitions(con)
         eligible = sorted(

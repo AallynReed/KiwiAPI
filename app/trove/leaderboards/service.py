@@ -474,9 +474,9 @@ async def _attach_player_history_deltas(player_name: str, rows: list[dict]) -> N
     identities being compared against each other. Splitting first means each row
     is compared with its own predecessor. The window split also supersedes the
     slots ``_attach_duplicate_slots`` derived from the (narrower) result rows, so
-    the labels a caller sees match the wider history."""
-    window_start = int(datetime.now(UTC).timestamp()) - 8 * 86400
-    docs = await pg_store.player_rows_window(player_name.strip(), window_start)
+    the labels a caller sees match the wider history. Rows in the oldest hot day
+    get no delta rather than reaching into cold storage for their predecessor."""
+    docs = await pg_store.player_rows_window(player_name.strip(), await hot_window_start())
     if not docs:
         return
     from app.trove.leaderboards.duplicates import split_series
@@ -566,12 +566,14 @@ async def player_history(
     window_start: int | None = None,
 ) -> list[dict]:
     """Most recent dumps that featured a player (case-insensitive), optional board
-    filter. ``window_start`` bounds the scan to recent partitions (see
-    pg_store.player_rows) - callers that only need recent appearances pass it to
-    avoid the slow all-partition scan. (``include_archive`` is a no-op now.)
+    filter. The scan is always floored at ``hot_window_start`` so it never reads a
+    cold partition; ``window_start`` can only narrow it. (``include_archive`` is a
+    no-op now.)
 
     Rows carry ``slot``/``slots`` so a duplicated name renders as distinguishable
     entries rather than two anonymous tiles on the same board."""
+    hot_start = await hot_window_start()
+    window_start = hot_start if window_start is None else max(window_start, hot_start)
     out = await pg_store.player_rows(
         player_name.strip(), limit=limit, uuid=uuid, window_start=window_start,
     )
@@ -611,10 +613,11 @@ async def hot_window_days() -> int:
 
 async def hot_window_start() -> int:
     """Unix-seconds lower bound of the hot partition set (see ``hot_window_days``).
-    Player read paths that must stay off cold storage floor their scan window here
-    - a lookup older than this would fault in a cold-tiered partition. The
-    aggregate-table read (``player_boards``) is hot by construction and skips it."""
-    return int(datetime.now(UTC).timestamp()) - await hot_window_days() * 86400
+    Player read paths floor their scan window here so they never fault in a
+    cold-tiered partition. It is the tierer's own cutoff (a trove-day partition
+    start), not ``now - N days``, which landed inside the newest cold partition.
+    The aggregate-table read (``player_boards``) is hot by construction and skips it."""
+    return pg_store.cold_keep_from(int(datetime.now(UTC).timestamp()), await hot_window_days())
 
 
 async def player_boards(name: str) -> dict:
@@ -666,26 +669,18 @@ async def player_boards(name: str) -> dict:
     }
 
 
-async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False) -> dict:
+async def player_profile(name: str, *, limit: int = 200) -> dict:
     """Public profile aggregate for one player: recent appearances (board names +
     day-over-day deltas), a summary, and whether the name is a verified claimed
     identity. ``recent`` is empty when the name has never been captured.
 
-    ``hot_only`` floors the ``recent`` and ``last_played`` scan windows at the
-    hot/cold storage boundary (``hot_window_start``) so the query never touches a
-    cold-tiered partition. The public /v1 endpoint sets it; the website's /player
-    page leaves it off so it can still reach into the archive."""
+    Never touches a cold-tiered partition: ``boards`` comes from the aggregate
+    table, and ``recent`` / ``last_played`` are floored at ``hot_window_start``
+    inside their helpers."""
     name = name.strip()
-    hot_start = await hot_window_start() if hot_only else None
     # Every lookup below keys on the name and is independent, so run them
-    # concurrently - the profile used to serialize ~6 round-trips (and the
-    # board aggregate scanned the player's whole cross-partition history, which
-    # was 30-90s for prolific players). ``board_rows`` now reads the O(boards)
-    # player_board_agg; ``recent`` is bounded to a recent window (it feeds the
-    # /v1 payload only - the page renders from ``boards``).
-    recent_window = int(datetime.now(UTC).timestamp()) - _PROFILE_RECENT_WINDOW_DAYS * 86400
-    if hot_start is not None:
-        recent_window = max(recent_window, hot_start)   # never scan past the hot line
+    # concurrently. ``board_rows`` reads the O(boards) player_board_agg;
+    # ``recent`` feeds the /v1 payload only - the page renders from ``boards``.
     (
         board_rows, stored_name, verified, renames_out, alt_clusters,
         last_played, rows, duplicate,
@@ -695,8 +690,8 @@ async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False)
         _is_verified_trove_name(name),
         _profile_renames(name),
         _profile_alt_clusters(name, []),
-        _profile_last_played(name, window_floor=hot_start),
-        player_history(name, limit=limit, with_deltas=True, window_start=recent_window),
+        _profile_last_played(name),
+        player_history(name, limit=limit, with_deltas=True),
         _profile_duplicate(name),
     )
     canonical = stored_name or (rows[0]["player_name"] if rows else name)
@@ -779,17 +774,6 @@ def _profile_sigil(board_rows: list[dict]) -> dict | None:
     }
 
 
-# How far back the "last played" query looks. Bounds the per-profile cost to
-# recent partitions; a player whose score hasn't risen in this window reads as
-# no recent activity (last_played=None), which is the honest answer.
-_LAST_PLAYED_WINDOW_DAYS = 90
-
-# Window for the profile's ``recent`` list (the /v1 back-compat per-capture rows;
-# the /player page renders from ``boards``, not this). Bounds the scan to recent
-# partitions so a prolific player's profile no longer scans all of history.
-_PROFILE_RECENT_WINDOW_DAYS = 14
-
-
 def _parse_board_csv(csv: str) -> set[int]:
     """Comma-separated board-UUID string → set of ints. Non-numeric tokens are
     skipped so a typo in the runtime config can't break the profile."""
@@ -805,25 +789,19 @@ def _parse_board_csv(csv: str) -> set[int]:
     return out
 
 
-async def _profile_last_played(
-    canonical: str, *, window_floor: int | None = None,
-) -> int | None:
+async def _profile_last_played(canonical: str) -> int | None:
     """Most recent capture where this player's score rose on a non-excluded board
     (the 'last played' activity signal), or None when no movement in the window.
     Never raises - a lookup failure must not take down the profile.
 
-    ``window_floor`` (when set) clamps the lookback so the scan stays on hot
-    storage; a player whose last rise predates it reads as None (the honest
-    'no recent activity' answer for a hot-only query)."""
+    The lookback is the hot window only: a player whose last rise predates it
+    reads as None ('no recent activity'). The old 90-day lookback read cold
+    partitions off the HDD and timed out at 120s on every prolific profile."""
     from app.admin import runtime_config
     csv = str(await runtime_config.get_setting("last_played_excluded_board_uuids") or "")
-    now = int(datetime.now(UTC).timestamp())
-    window_start = now - _LAST_PLAYED_WINDOW_DAYS * 86400
-    if window_floor is not None:
-        window_start = max(window_start, window_floor)
     try:
         return await pg_store.player_last_played(
-            canonical, excluded=_parse_board_csv(csv), window_start=window_start,
+            canonical, excluded=_parse_board_csv(csv), window_start=await hot_window_start(),
         )
     except Exception:
         logger.exception("profile last-played lookup failed for %s", canonical)
@@ -1027,10 +1005,11 @@ async def board_health(uuid: int, *, top: int = 50) -> dict | None:
 
 async def player_history_series(player_name: str, *, days: int = 7) -> dict:
     """Score-vs-time trajectories for ONE player, grouped per board, over the last
-    ``days`` days, with synthetic reset-zero cliffs."""
+    ``days`` days, with synthetic reset-zero cliffs. The window is floored at
+    ``hot_window_start`` so the chart never reads a cold partition."""
     days = max(1, min(days, 30))
     now = int(datetime.now(UTC).timestamp())
-    window_start = now - days * 86400
+    window_start = max(now - days * 86400, await hot_window_start())
     name = player_name.strip()
 
     all_rows = await pg_store.player_rows_window(name, window_start)
