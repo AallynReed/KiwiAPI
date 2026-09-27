@@ -877,6 +877,32 @@ async def calc_coefficient(req: CoefficientRequest, ctx: AccessContext = _STAT_P
     )
 
 
+@stats_router.get(
+    "/sigil",
+    summary="Render a player sigil",
+    responses={200: {"content": {"image/png": {}},
+                     "description": "The sigil as a transparent 88×88 PNG."}},
+)
+async def get_sigil(
+    ctx: AccessContext = _STAT_PUBLIC,
+    power_rank: int = Query(..., ge=0, le=10_000_000, description="Power Rank; picks the shield"),
+    mastery: int = Query(..., ge=0, le=100_000,
+                         description="Total mastery level (Trove + Geode); picks the wings"),
+) -> Response:
+    """The sigil shown beside a player's name, assembled the way the game does it:
+    the **Power Rank** shield on top of the **Mastery** wings. Each part has a tier
+    per threshold (20 shields from 0 to 65,000 PR, 26 sets of wings from 0 to 1,100
+    mastery), and the highest tier the value reaches is used. The art and thresholds
+    are read from the game files and refresh with each patch. **Tokenless**, so it
+    can be used directly as an `<img>` source."""
+    png = stats.sigil_png(power_rank, mastery)
+    if png is None:
+        raise APIError(status_code=503, code=ErrorCode.service_unavailable,
+                       message="Sigil art is not available yet")
+    return Response(content=png, media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
 # --- Gems: simulator + evaluator + builds (scope: gems:read) ----------------
 # Stateless compute - gem objects round-trip through the client; nothing stored.
 

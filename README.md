@@ -52,7 +52,7 @@ the full per-token limit. See the [API reference](https://docs.aallyn.net) for e
 |---|---|
 | `rotations` | server time, daily/weekly buffs, merchant timers, biomes, chaos chest, hourly challenge, calendar |
 | `feeds` | Trove news, Twitch/YouTube/Bilibili, Trovesaurus events |
-| `stats` · `gems` | stat tables and a stateless gem simulator / build optimizer (the game's own stat rolls, level-up odds and costs) |
+| `stats` · `gems` | stat tables, player sigil images, and a stateless gem simulator / build optimizer (the game's own stat rolls, level-up odds and costs) |
 | `leaderboards` · `activity` | hourly in-game boards (with cheat detection) and player/class activity estimates |
 | `market` | in-game marketplace listings and price history |
 | `store` | the in-game cash-shop catalog — products, prices, sales, deals, lootbox odds |
@@ -73,7 +73,7 @@ Browsing is public; developing and publishing mods is a Discord-login action.
 
 **Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that
 comes from the game files (class stats and abilities, allies, mounts, gems, rings, PvP curves,
-delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds, subclass powers, daily bonuses, leaderboards, items, upgrade trees, mastery, class rewards, lootbox odds, PvP power-ups, chat commands) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
+delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds, subclass powers, daily bonuses, leaderboards, items, upgrade trees, mastery, class rewards, lootbox odds, PvP power-ups, chat commands, the Power Rank / Mastery sigil art) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
 each decoder reruns and writes to `GAMEDATA_DIR` (`./.gamedata`, shared by the api, web and bot
 containers), which readers prefer over the repo copy. A decoder also reruns when a deploy
 changes its code. One that fails, decodes nothing, or shrinks its output by more than 20% keeps

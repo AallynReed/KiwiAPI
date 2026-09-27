@@ -169,6 +169,15 @@ except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
     print(f"[site-dev] gem tools unavailable ({_e}); /site/gems/* will 503")
     _GEMS_OK = False
 
+# The sigil composites the real decoded game art, like production.
+try:
+    from app.trove import stats as _trove_stats
+    from app.trove.leaderboards.service import _profile_sigil
+    _SIGIL_OK = True
+except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
+    print(f"[site-dev] sigil unavailable ({_e}); /site/stats/sigil will 503")
+    _SIGIL_OK = False
+
 # Serve the same CSP the edge does. Without it an inline <script> or `onclick=`
 # works perfectly here and is silently refused in production - the one class of
 # bug this server used to be blind to.
@@ -3652,6 +3661,13 @@ class Handler(SimpleHTTPRequestHandler):
                 "comparison": {"comparable": True,
                                "prev_anchor": STUB_TIMESTAMPS[1], "reason": "ok"},
             })
+        if path == "/site/stats/sigil":
+            if not _SIGIL_OK:
+                return self._send_json({"error": "sigil unavailable"}, status=503)
+            qs = parse_qs(urlparse(self.path).query)
+            png = _trove_stats.sigil_png(int(qs.get("power_rank", ["0"])[0]),
+                                         int(qs.get("mastery", ["0"])[0]))
+            return self._send_bytes(png, "image/png")
         if path.startswith("/site/leaderboards/players/") and path.endswith("/profile"):
             queried = unquote(path.split("/")[4])
             # Boards spanning every category so the /player page's category
@@ -3724,6 +3740,7 @@ class Handler(SimpleHTTPRequestHandler):
                 },
                 "boards": boards, "recent": [],
                 "renames": renames_out, "alt_clusters": alt_clusters,
+                "sigil": _profile_sigil(boards) if _SIGIL_OK else None,
             })
 
         if (path.startswith("/site/leaderboards/")

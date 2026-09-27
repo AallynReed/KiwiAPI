@@ -680,6 +680,16 @@ class PlayerProfileEntry(BaseModel):
     is_new: bool | None = None
 
 
+class PlayerSigil(BaseModel):
+    """The inputs to ``GET /v1/stats/sigil`` for this player."""
+    power_rank: int                          # highest across the per-class boards
+    power_rank_board: int                    # the class's Power Rank board (1000+)
+    power_rank_class: str                    # that class's name
+    trove_mastery: int                       # level
+    geode_mastery: int                       # level, capped at 100
+    mastery: int                             # trove_mastery + geode_mastery
+
+
 class PlayerProfileResponse(BaseModel):
     """Public player profile: leaderboard appearances + a verified-claim flag.
     Powers the /player/<name> page and the Discord bot's rank link."""
@@ -688,6 +698,7 @@ class PlayerProfileResponse(BaseModel):
     summary: PlayerProfileSummary
     boards: list[PlayerBoardSummary] = []    # one row per leaderboard, best first
     recent: list[PlayerProfileEntry]         # flat per-capture rows (legacy/back-compat)
+    sigil: PlayerSigil | None = None         # null unless PR + both mastery boards are on record
 
 
 class PlayerBoardsResponse(BaseModel):

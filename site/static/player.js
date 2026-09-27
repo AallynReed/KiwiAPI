@@ -62,6 +62,7 @@
       const badge = document.getElementById('pl-verified');
       if (badge) badge.hidden = false;
     }
+    renderSigil(data.sigil);
 
     const s = data.summary || {};
     const bestSub = s.best_rank_board_name
@@ -142,6 +143,32 @@
           <span>${num(b.appearances)}&times; ${esc(tr('seen'))}</span>
         </div>
       </div>`;
+  }
+
+  // The in-game sigil (Power Rank shield on Mastery wings) takes the avatar's
+  // place, and the line under the name says what it was built from. The avatar
+  // keeps its letter until the image has actually loaded.
+  function renderSigil(s) {
+    const meta = document.getElementById('pl-sigil-meta');
+    if (!s || !meta) return;
+    meta.innerHTML =
+      `${esc(tr('Power Rank'))} <strong>${num(s.power_rank)}</strong> ` +
+      `<span class="pl-sigil-sub">${esc(s.power_rank_class)}</span> ` +
+      `<span class="pl-sigil-dot" aria-hidden="true">·</span> ` +
+      `${esc(tr('Mastery'))} <strong>${num(s.mastery)}</strong> ` +
+      `<span class="pl-sigil-sub">${num(s.trove_mastery)} ${esc(tr('Trove'))} + ${num(s.geode_mastery)} ${esc(tr('Geode'))}</span>`;
+    meta.hidden = false;
+    if (!avatar) return;
+    const img = new Image(88, 88);
+    img.alt = '';
+    img.decoding = 'async';
+    img.addEventListener('load', () => {
+      avatar.textContent = '';
+      avatar.classList.add('pl-avatar-sigil');
+      avatar.appendChild(img);
+    });
+    img.src = window.BTTUtil.apiUrl(
+      `/site/stats/sigil?power_rank=${encodeURIComponent(s.power_rank)}&mastery=${encodeURIComponent(s.mastery)}`);
   }
 
   // Username history: the rename chain (A → B → current), each name linking to

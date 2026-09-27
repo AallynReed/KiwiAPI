@@ -373,10 +373,13 @@ def _decode_jpeg(
     else:
         plane = b""
 
-    img = img.convert("RGBA")
     if plane:
-        img.putalpha(Image.frombytes("L", img.size, plane))
+        # The colour channels are stored premultiplied by this alpha, like
+        # DefineBitsLossless2 - left as-is, every soft edge goes dark.
+        r, g, b = img.convert("RGB").split()
+        img = Image.merge("RGBa", (r, g, b, Image.frombytes("L", img.size, plane))).convert("RGBA")
         return char_id, img, codec, None
+    img = img.convert("RGBA")
     if spliced or img.mode not in ("RGB", "RGBA", "P", "L"):
         return char_id, img, codec, None
     return char_id, img, codec, payload
@@ -384,20 +387,48 @@ def _decode_jpeg(
 
 # ─── name recovery ────────────────────────────────────────────────────────
 
-def _skip_matrix(bits: _BitReader) -> None:
-    if bits.read(1):                       # HasScale
+@dataclass(slots=True)
+class Matrix:
+    sx: float = 1.0
+    sy: float = 1.0
+    r0: float = 0.0
+    r1: float = 0.0
+    tx: int = 0                            # twips
+    ty: int = 0
+
+
+def _read_matrix(bits: _BitReader) -> Matrix:
+    m = Matrix()
+    if bits.read(1):                       # HasScale, 16.16 fixed
         n = bits.read(5)
-        bits.read(n * 2)
+        m.sx = bits.read_signed(n) / 65536
+        m.sy = bits.read_signed(n) / 65536
     if bits.read(1):                       # HasRotate
         n = bits.read(5)
-        bits.read(n * 2)
+        m.r0 = bits.read_signed(n) / 65536
+        m.r1 = bits.read_signed(n) / 65536
     n = bits.read(5)                       # TranslateBits (always present)
-    bits.read(n * 2)
+    m.tx = bits.read_signed(n)
+    m.ty = bits.read_signed(n)
+    bits.align()
+    return m
+
+
+def _skip_cxform_alpha(bits: _BitReader) -> None:
+    add, mult = bits.read(1), bits.read(1)
+    n = bits.read(4)
+    bits.read(n * 4 * (add + mult))
     bits.align()
 
 
 def _shape_bitmap_refs(body: bytes, version: int) -> list[int]:
     """Bitmap character ids referenced by a DefineShape's fill styles."""
+    return [char_id for char_id, _ in _shape_bitmap_fills(body, version)]
+
+
+def _shape_bitmap_fills(body: bytes, version: int) -> list[tuple[int, Matrix]]:
+    """A DefineShape's bitmap fill styles: the bitmap id and the matrix mapping it
+    into the shape (a 1:1 fill has a scale of 20, pixels to twips)."""
     bits = _BitReader(body)
     bits.read(16)                          # ShapeId
     n = bits.read(5)                       # ShapeBounds RECT
@@ -421,7 +452,7 @@ def _shape_bitmap_refs(body: bytes, version: int) -> list[int]:
         off += 2
 
     rgba = version >= 3
-    refs: list[int] = []
+    fills: list[tuple[int, Matrix]] = []
     for _ in range(count):
         if off >= len(body):
             break
@@ -431,7 +462,7 @@ def _shape_bitmap_refs(body: bytes, version: int) -> list[int]:
             off += 4 if rgba else 3
         elif style in (0x10, 0x12, 0x13):
             sub = _BitReader(body[off:])
-            _skip_matrix(sub)
+            _read_matrix(sub)
             off += sub.byte_pos
             if off >= len(body):
                 break
@@ -442,34 +473,91 @@ def _shape_bitmap_refs(body: bytes, version: int) -> list[int]:
         elif style in (0x40, 0x41, 0x42, 0x43):
             if off + 2 > len(body):
                 break
-            refs.append(struct.unpack("<H", body[off : off + 2])[0])
+            char_id = struct.unpack("<H", body[off : off + 2])[0]
             off += 2
             sub = _BitReader(body[off:])
-            _skip_matrix(sub)
+            fills.append((char_id, _read_matrix(sub)))
             off += sub.byte_pos
         else:
             break                      # unknown style - the rest is unreadable
-    return refs
+    return fills
 
 
-def _sprite_child_refs(body: bytes) -> list[int]:
-    """Character ids placed on a DefineSprite's timeline."""
-    refs: list[int] = []
+def _iter_sprite_tags(body: bytes):
+    """Yield ``(code, body)`` for each tag on a DefineSprite's timeline."""
     buf = io.BytesIO(body[4:])             # SpriteId + FrameCount
     while True:
         head = buf.read(2)
         if len(head) < 2:
-            break
+            return
         (packed,) = struct.unpack("<H", head)
         code, length = packed >> 6, packed & 0x3F
         if length == 0x3F:
             raw = buf.read(4)
             if len(raw) < 4:
-                break
+                return
             (length,) = struct.unpack("<I", raw)
         nested = buf.read(length)
         if code == 0:
-            break
+            return
+        yield code, nested
+
+
+@dataclass(slots=True)
+class Placement:
+    char_id: int
+    name: str | None
+    matrix: Matrix
+
+
+def _sprite_frames(body: bytes) -> list[dict[int, Placement]]:
+    """A DefineSprite's timeline played out: for each frame, what sits at each depth.
+
+    PlaceObject2/3 put or move a character at a depth (a move without a new matrix
+    keeps the old one), RemoveObject(2) clears one, and ShowFrame ends a frame.
+    """
+    frames: list[dict[int, Placement]] = []
+    live: dict[int, Placement] = {}
+    for code, tag in _iter_sprite_tags(body):
+        if code == 1:
+            frames.append(dict(live))
+        elif code == 28 and len(tag) >= 2:
+            live.pop(struct.unpack("<H", tag[:2])[0], None)
+        elif code == 5 and len(tag) >= 4:
+            live.pop(struct.unpack("<H", tag[2:4])[0], None)
+        elif code in (26, 70) and len(tag) >= 3:
+            flags = tag[0]
+            off = 1 if code == 26 else 2
+            depth = struct.unpack("<H", tag[off : off + 2])[0]
+            off += 2
+            if code == 70 and (tag[1] & 0x08 or (tag[1] & 0x10 and flags & 0x02)):
+                end = tag.find(b"\x00", off)
+                off = len(tag) if end < 0 else end + 1
+            prev = live.get(depth) if flags & 0x01 else None
+            char_id = prev.char_id if prev else None
+            if flags & 0x02:
+                char_id = struct.unpack("<H", tag[off : off + 2])[0]
+                off += 2
+            bits = _BitReader(tag[off:])
+            matrix = _read_matrix(bits) if flags & 0x04 else (prev.matrix if prev else Matrix())
+            if flags & 0x08:
+                _skip_cxform_alpha(bits)
+            off += bits.byte_pos
+            if flags & 0x10:
+                off += 2                                # Ratio
+            name = prev.name if prev else None
+            if flags & 0x20:
+                end = tag.find(b"\x00", off)
+                name = tag[off : end if end >= 0 else len(tag)].decode("utf-8", "replace")
+            if char_id is not None:
+                live[depth] = Placement(char_id, name, matrix)
+    return frames
+
+
+def _sprite_child_refs(body: bytes) -> list[int]:
+    """Character ids placed on a DefineSprite's timeline."""
+    refs: list[int] = []
+    for code, nested in _iter_sprite_tags(body):
         if code not in PLACE_TAGS or len(nested) < 4:
             continue
         if code == 4:

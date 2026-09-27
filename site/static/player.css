@@ -37,6 +37,14 @@
   color: #0a0e14;
   background: linear-gradient(135deg, #4cc9f0, #5dd078);
 }
+/* The game's own art replaces the letter tile - no tile behind it. */
+.pl-avatar-sigil {
+  width: 88px;
+  height: 88px;
+  border-radius: 0;
+  background: none;
+}
+.pl-avatar-sigil img { display: block; }
 .pl-name {
   margin: 0;
   font-family: "Space Grotesk", system-ui, sans-serif;
@@ -44,6 +52,18 @@
   letter-spacing: -0.02em;
   word-break: break-word;
 }
+.pl-sigil-meta {
+  margin: 4px 0 0;
+  font-size: .95rem;
+  color: var(--text-mute);
+}
+.pl-sigil-meta strong {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pl-sigil-sub { margin-left: 2px; font-size: .82rem; white-space: nowrap; }
+.pl-sigil-dot { margin: 0 6px; }
 .pl-badge {
   display: inline-flex;
   align-items: center;

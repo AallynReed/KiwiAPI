@@ -17,6 +17,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
 
+from app.trove import stats as trove_stats
 from app.trove.leaderboards import mastery as mastery_calc
 from app.trove.leaderboards import pg_store
 from app.trove.leaderboards.parser import parse_dump
@@ -753,6 +754,28 @@ async def player_profile(name: str, *, limit: int = 200, hot_only: bool = False)
         # warn instead of silently presenting two people's numbers as one
         # player's. None for every unambiguous name.
         "duplicate": duplicate,
+        "sigil": None if duplicate else _profile_sigil(boards),
+    }
+
+
+def _profile_sigil(board_rows: list[dict]) -> dict | None:
+    """What the player's sigil is made of: their highest class Power Rank and total
+    mastery (Trove level + Geode level, Geode capped at 100). None unless all three
+    are on record - a missing Geode level would mean guessing the wings."""
+    scores = {b["leaderboard"]: b["latest_score"] for b in board_rows if b.get("latest_score") is not None}
+    pr_boards = [u for u in trove_stats.class_pr_board_uuids() if u in scores]
+    pr_board = max(pr_boards, key=scores.__getitem__, default=None)
+    if pr_board is None or _TROVE_MASTERY_UUID not in scores or _GEODE_MASTERY_UUID not in scores:
+        return None
+    trove = mastery_calc.level_from_points(round(scores[_TROVE_MASTERY_UUID]))[0]
+    geode = min(mastery_calc.level_from_points(round(scores[_GEODE_MASTERY_UUID]))[0], _GEODE_LEVEL_CAP)
+    return {
+        "power_rank": int(round(scores[pr_board])),
+        "power_rank_board": pr_board,
+        "power_rank_class": trove_stats.class_name(trove_stats.class_index_for_board(pr_board)),
+        "trove_mastery": trove,
+        "geode_mastery": geode,
+        "mastery": trove + geode,
     }
 
 

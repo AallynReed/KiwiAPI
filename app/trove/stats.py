@@ -8,13 +8,18 @@ is and how much it contributes, plus full class objects keyed by a stable
 Sources (copied into gamedata/):
   - stats/power_rank.json · stats/magic_find.json · stats/light.json
   - classes.json
+  - insignia.json (decoded from the game: the sigil art and its tiers)
 """
 
 from __future__ import annotations
 
+import base64
+import io
 import json
 from functools import cache
 from pathlib import Path
+
+from PIL import Image
 
 from app.trove.decode import store as gamedata
 
@@ -85,6 +90,33 @@ def compute_coefficient(
         return None
     base, which = max(candidates, key=lambda c: c[0])
     return int(round(base * (1 + critical_damage / 100), 6)), which
+
+
+# --- Sigil (Power Rank shield on Mastery wings) ----------------------------
+
+
+def _tier(tiers: list[dict], value: int) -> int:
+    return max(i for i, t in enumerate(tiers) if t["from"] <= value)
+
+
+@gamedata.cached("insignia.json")
+def _sigil(shield: int, wings: int) -> bytes:
+    data = gamedata.load("insignia.json")
+    layers = [Image.open(io.BytesIO(base64.b64decode(data[key][i]["image"]))).convert("RGBA")
+              for key, i in (("mastery", wings), ("power_rank", shield))]
+    out = io.BytesIO()
+    Image.alpha_composite(*layers).save(out, format="PNG")
+    return out.getvalue()
+
+
+def sigil_png(power_rank: int, mastery: int) -> bytes | None:
+    """The sigil the game shows for this Power Rank and total mastery level (the
+    shield's and wings' tiers are the highest whose threshold the value reaches),
+    or None when insignia.json is missing."""
+    data = gamedata.load("insignia.json")
+    if not data:
+        return None
+    return _sigil(_tier(data["power_rank"], power_rank), _tier(data["mastery"], mastery))
 
 
 # --- Classes ---------------------------------------------------------------

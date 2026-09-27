@@ -1009,6 +1009,20 @@ async def site_lb_board_icon(name: str) -> Response:
                     headers={"Cache-Control": "public, max-age=604800"})
 
 
+@router.get("/site/stats/sigil")
+async def site_stats_sigil(
+    power_rank: int = Query(..., ge=0, le=10_000_000),
+    mastery: int = Query(..., ge=0, le=100_000),
+) -> Response:
+    """Same-origin twin of /v1/stats/sigil for the /player page, off the /v1
+    per-IP budget."""
+    png = trove_stats.sigil_png(power_rank, mastery)
+    if png is None:
+        raise HTTPException(status_code=404, detail="sigil art not available")
+    return Response(content=png, media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
 _BRDF_PATH = "textures/brdfmap.dds"
 _brdf_png: tuple[str, bytes] | None = None      # (blob sha, converted PNG)
 

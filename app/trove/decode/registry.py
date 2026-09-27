@@ -26,6 +26,7 @@ from app.trove.decode import (
     fish,
     gem_abilities,
     gem_upgrades,
+    insignia,
     items,
     leaderboards,
     lootbox_odds,
@@ -53,7 +54,7 @@ DECODERS: dict[str, ModuleType] = {
               ring_abilities, mount_abilities, pvp_stat_ranges, delve_modifiers,
               companions, badges, fish, mementos, recipes, collectibles,
               cosmetics, titles, npcs, placeables, quests, worlds,
-              subclass_abilities, daily_bonuses, leaderboards, gem_upgrades, upgrade_trees, items, mastery, class_rewards, lootbox_odds, pvp_powerups, chat_commands)
+              subclass_abilities, daily_bonuses, leaderboards, gem_upgrades, upgrade_trees, items, mastery, class_rewards, lootbox_odds, pvp_powerups, chat_commands, insignia)
 }
 
 

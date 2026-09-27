@@ -200,6 +200,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>/v1/stats/light</code></td><td><code>stats:read</code></td><td>Light stat table - each source and the Light it gives</td></tr>
             <tr><td><code>/v1/stats/classes</code></td><td><code>stats:read</code></td><td>All 18 classes as full objects, keyed by <code>tech_name</code></td></tr>
             <tr><td><code>/v1/stats/classes/{tech_name}</code></td><td><code>stats:read</code></td><td>One class by its <code>tech_name</code> token (e.g. <code>knight</code>)</td></tr>
+            <tr><td><code>/v1/stats/sigil?power_rank=&amp;mastery=</code></td><td><code>stats:read</code> (tokenless)</td><td>The player sigil as a PNG - the Power Rank shield on the Mastery wings, as the game draws it</td></tr>
             <tr><td><code>GET /v1/gems/lookups</code></td><td><code>gems:read</code></td><td>Valid gem field values (tiers, types, elements, stats, augments, abilities, level-up boosters)</td></tr>
             <tr><td><code>POST /v1/gems/generate</code></td><td><code>gems:read</code></td><td>Roll a gem (omit any field for random) → a gem object</td></tr>
             <tr><td><code>POST /v1/gems/augment</code></td><td><code>gems:read</code></td><td>Apply a focus augment to a stat by position → updated gem</td></tr>
