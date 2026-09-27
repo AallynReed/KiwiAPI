@@ -1,41 +1,30 @@
-// PopcornFX v1 .pkmm mesh decoder (reverse-engineered against Trove's VFX library;
-// 63/66 referenced meshes decode — the rest fall back to the box proxy).
+// PopcornFX v1 .pkmm mesh decoder, following the engine's own reader
+// (CResourceMeshFileSerializer_V01: file 0x180658df0, submesh 0x18066e530, vertex
+// streams 0x1806737e0 in HH-Bridge_r.dll). Nothing is aligned; numbers are little-endian.
 //
-// Layout: [u32 0][u32 nStrings][len-prefixed strings], then one block per submesh:
-//   [u32 tag]  0x80 always set; 0x100 -> header carries s0,s1 + bbox floats
-//   [u32 0][u32 ?][u32 indexCount]
-//   [f32 s0,s1] [f32 bboxMin xyz, bboxMax xyz]?   (bbox iff tag & 0x100)
-//   [u32 2][u32 0 x3]
-//   index data — u8 / u16 / u32 chosen by vertex count (validated via the table below)
-//   [u32 2][stream record] = { size, V*bpv, V, attrCount, 0, attr ids (670 pos, 990 nrm, 1053 uv) }
-//   size = the rest of the record + vertex bytes, so the vertex data starts at
-//   record + 4 + size - V*bpv. The leading 2 is constant, not a record count (reading it
-//   as one put the data 2 vertices late and pulled the last positions out of the normals).
-//   f32x4 positions[V] · f32x4 normals[V] (bpv>=32) · f32x2 uvs[V] (bpv%16==8)
-// Submesh blocks repeat; all are merged for rendering, and `blocks` keeps each one for
-// shape samplers, which read a single submesh. A file too short to hold any submesh
-// (Trove ships a 40-byte stub) decodes as an empty mesh, which draws nothing.
+//   [u8 version][pad3][u32 nStrings][nStrings x (varlen size, bytes)]
+//   chunks [u8 key][pad3][u32 size] until key 0; key 1 is a submesh (7 and 8 are skipped)
+//   submesh: [flags][flags2][pad2][u32 material][u32 nSub][u32 nIndices]
+//            (+48 bytes when flags2 & 1, else +16 when flags & 0x80), indices (size flags & 3),
+//            then nSub sub-chunks [u8 key][pad3][u32 size]; sub-chunk 2 holds the vertex streams
+//   streams: [u32 bytes][u32 V][u32 nStreams][u8 flags][pad3](+16 when flags & 2), one u32 code
+//            per stream (code >> 8 = its name in the string table, low byte = format), then the
+//            streams one after another
+//
+// Older bakers leave the pad bytes uninitialised, so the submesh header size is the one
+// whose sub-chunks exactly fill the chunk. Returns null for a file this cannot read,
+// and {empty: true, blocks: []} for one with no submesh (Trove ships a 40-byte stub).
+// Otherwise every submesh merged for rendering, plus `blocks`, one per submesh, for
+// shape samplers and SubMeshId.
+
+// bytes per element for the stream format's low 5 bits
+const ELEM = [1, 2, 3, 4, 1, 2, 3, 4, 2, 4, 6, 8, 2, 4, 6, 8, 4, 8, 12, 16, 4, 8, 12, 16, 2, 4, 6, 8, 4, 8, 12, 16];
+const SLOT = { Position: 'positions', Normal: 'normals', Texcoord: 'uvs' };
 
 export function decodePkmm(arrayBuffer) {
-  const buf = new Uint8Array(arrayBuffer);
-  const dv = new DataView(arrayBuffer);
-  const u32 = (p) => dv.getUint32(p, true);
-  if (buf.length <= 8 + 96) return { empty: true, blocks: [] };
-
-  const blocks = [];
-  let scan = 8;
-  while (scan + 96 < buf.length) {
-    const tag = u32(scan);
-    if ((tag & 0x80) && tag < 1024 && u32(scan + 4) === 0) {
-      const N = u32(scan + 12);
-      if (N >= 3 && N <= 10_000_000 && N % 3 === 0) {
-        const b = tryBlock(buf, dv, scan, N);
-        if (b) { blocks.push(b); scan = b.end; continue; }
-      }
-    }
-    scan += 1;
-  }
-  if (!blocks.length) return null;
+  const blocks = readBlocks(arrayBuffer);
+  if (!blocks) return null;
+  if (!blocks.length) return { empty: true, blocks };
 
   let vTotal = 0, iTotal = 0;
   for (const b of blocks) { vTotal += b.V; iTotal += b.indices.length; }
@@ -59,50 +48,78 @@ export function decodePkmm(arrayBuffer) {
   return { positions, normals, uvs, indices, vertexCount: vTotal, bmin, bmax, blocks };
 }
 
-function tryBlock(buf, dv, T, N) {
+function readBlocks(arrayBuffer) {
+  const b = new Uint8Array(arrayBuffer), dv = new DataView(arrayBuffer);
   const u32 = (p) => dv.getUint32(p, true);
-  const u16 = (p) => dv.getUint16(p, true);
-  const f32 = (p) => dv.getFloat32(p, true);
-  for (const [idxStart, esz] of [[T + 64, 2], [T + 64, 1], [T + 64, 4], [T + 32, 2], [T + 32, 1], [T + 32, 4]]) {
-    const idxEnd = idxStart + N * esz;
-    if (idxEnd + 4 + 32 > buf.length) continue;
-    const rec0 = idxEnd + 4;
-    const V = u32(rec0 + 8);
-    if (V < 3 || V > 2_000_000) continue;
-    const bpv = u32(rec0 + 4) / V;                        // bytes per vertex, from the table itself
-    if (bpv !== 24 && bpv !== 32 && bpv !== 40) continue; // pos4 [+nrm4] [+uv2]
-    const recTail = u32(rec0) - u32(rec0 + 4);
-    if (recTail !== 16 + 4 * u32(rec0 + 12)) continue;    // V*bpv, V, attrCount, 0, one id per attribute
-    if (esz === 1 && V > 256) continue;
-    if (esz === 2 && V > 65536) continue;
-    const hasNrm = bpv >= 32, hasUv = bpv % 16 === 8;
-    const rdIdx = (i) => esz === 1 ? buf[idxStart + i] : esz === 2 ? u16(idxStart + i * 2) : u32(idxStart + i * 4);
-    let maxIdx = 0;
-    for (let i = 0; i < N; i++) { const v = rdIdx(i); if (v > maxIdx) maxIdx = v; }
-    if (maxIdx >= V) continue;
-    const vtxStart = rec0 + 4 + recTail;
-    const posEnd = vtxStart + V * 16;
-    const nrmEnd = posEnd + (hasNrm ? V * 16 : 0);
-    const uvEnd = nrmEnd + (hasUv ? V * 8 : 0);
-    if (uvEnd > buf.length) continue;
-    const positions = new Float32Array(V * 3);
-    const normals = hasNrm ? new Float32Array(V * 3) : null;
-    const uvs = hasUv ? new Float32Array(V * 2) : null;
-    let bad = false;
-    for (let i = 0; i < V; i++) {
-      for (let k = 0; k < 3; k++) {
-        const v = f32(vtxStart + i * 16 + k * 4);
-        if (!isFinite(v) || Math.abs(v) > 1e6) { bad = true; break; }
-        positions[i * 3 + k] = v;
-      }
-      if (bad) break;
-      if (hasNrm) for (let k = 0; k < 3; k++) normals[i * 3 + k] = f32(posEnd + i * 16 + k * 4);
-      if (hasUv) { uvs[i * 2] = f32(nrmEnd + i * 8); uvs[i * 2 + 1] = f32(nrmEnd + i * 8 + 4); }
+  try {
+    const names = [];
+    let p = 8;
+    for (let i = u32(4); i > 0; i--) {
+      // size prefix: the top 3 bits of its first byte give 0-3 more big-endian bytes
+      const ext = [0, 0, 0, 0, 1, 1, 2, 3][b[p] >> 5];
+      let n = b[p] & (0xff >> ext);
+      for (let k = 1; k <= ext; k++) n = n * 256 + b[p + k];
+      p += 1 + ext;
+      names.push(new TextDecoder().decode(b.subarray(p, p + n)));
+      if ((p += n) > b.length || names.length > 4096) return null;
     }
-    if (bad) continue;
-    const indices = new (V > 65535 ? Uint32Array : Uint16Array)(N);
-    for (let i = 0; i < N; i++) indices[i] = rdIdx(i);
-    return { V, indices, positions, normals, uvs, end: uvEnd };
+    const blocks = [];
+    for (;;) {
+      const key = b[p], size = u32(p + 4);
+      p += 8;
+      if (key === 0) break;
+      if (p + size > b.length) return null;
+      if (key === 1) {
+        const blk = submesh(b, dv, p, p + size, names);
+        if (!blk) return null;
+        blocks.push(blk);
+      }
+      p += size;
+    }
+    return blocks;
+  } catch {
+    return null;   // ran off the end: not a mesh this reader knows
+  }
+}
+
+function submesh(b, dv, q, end, names) {
+  const u32 = (p) => dv.getUint32(p, true);
+  const fl = b[q], isz = [1, 2, 4, 0][fl & 3], nSub = u32(q + 8), nIdx = u32(q + 12);
+  if (!isz) return null;
+  const x = fl & 0x80 ? 16 : 0;
+  for (const ext of new Set([b[q + 1] & 1 ? 48 : x, x, 0])) {
+    const idx = q + 16 + ext;
+    let r = idx + nIdx * isz, vs = -1, s = 0;
+    for (; s < nSub && r + 8 <= end; s++) {
+      if (b[r] === 2 && vs < 0) vs = r + 8;
+      r += 8 + u32(r + 4);
+    }
+    if (r !== end || s !== nSub || vs < 0) continue;
+    const V = u32(vs + 4), nS = u32(vs + 8);
+    let d = vs + 16 + (b[vs + 12] & 2 ? 16 : 0), data = d + nS * 4;
+    const out = { V, positions: null, normals: null, uvs: null, indices: null };
+    for (let j = 0; j < nS; j++, d += 4) {
+      const code = u32(d), fmt = code & 0xff;
+      // bit 0x80 pads a 12-byte element to 16
+      const el = fmt & 0x80 && ELEM[fmt & 0x1f] === 12 ? 16 : ELEM[fmt & 0x1f];
+      if (data + el * V > end) return null;
+      const slot = SLOT[names[code >> 8]];
+      if (slot && ((fmt >> 2) & 7) !== 7) return null;   // half or quantized floats: no Trove mesh uses them
+      if (slot && !out[slot]) {
+        const n = slot === 'uvs' ? 2 : 3, a = new Float32Array(V * n);
+        for (let i = 0; i < V; i++) for (let k = 0; k < n; k++) a[i * n + k] = dv.getFloat32(data + i * el + k * 4, true);
+        out[slot] = a;
+      }
+      data += el * V;
+    }
+    if (!out.positions) return null;
+    const ind = (out.indices = new (V > 65535 ? Uint32Array : Uint16Array)(nIdx));
+    for (let i = 0; i < nIdx; i++) {
+      const v = isz === 1 ? b[idx + i] : isz === 2 ? dv.getUint16(idx + i * 2, true) : u32(idx + i * 4);
+      if (v >= V) return null;
+      ind[i] = v;
+    }
+    return out;
   }
   return null;
 }
