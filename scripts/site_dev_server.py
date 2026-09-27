@@ -3676,7 +3676,6 @@ class Handler(SimpleHTTPRequestHandler):
                 (1, "TROVE MASTERY POINTS", "META"),
                 (20, "GEODE MASTERY POINTS", "META"),
                 (100, "TOTAL MASTERY POINTS", "META"),
-                (1100, "CLUB POWER RANK", "POWER RANK"),
                 (50000, "Weekly Highest Paragon Level", "PARAGON"),
                 (3, "ENEMIES DEFEATED", "STATS"),
                 (33001, "HART-A-PHONES RECEIVED", "STATS"),

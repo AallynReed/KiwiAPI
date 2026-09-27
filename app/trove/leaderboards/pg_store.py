@@ -19,6 +19,7 @@ from app.trove.leaderboards import pg_schema
 from app.trove.leaderboards.models import (
     RESET_KIND_VALUES,
     is_player_board,
+    non_player_boards,
     reset_kind,
 )
 from app.trove.leaderboards.parser import ParsedBoard
@@ -532,9 +533,9 @@ async def player_rows(
             return []
         sql = (
             "SELECT board_uuid AS leaderboard, anchor AS created_at, rank, score "
-            "FROM entry WHERE player_id = $1"
+            "FROM entry WHERE player_id = $1 AND NOT (board_uuid = ANY($2::int[]))"
         )
-        args: list = [who["id"]]
+        args: list = [who["id"], non_player_boards()]
         if window_start is not None:
             args.append(window_start)
             sql += f" AND anchor >= ${len(args)}"
@@ -561,6 +562,12 @@ async def player_canonical_name(name: str) -> str | None:
         )
 
 
+_IS_A_PLAYER = (
+    "EXISTS (SELECT 1 FROM player_board_agg a "
+    "WHERE a.player_id = p.id AND NOT (a.board_uuid = ANY($4::int[]))) "
+)
+
+
 async def search_players(query: str, *, limit: int = 25) -> tuple[list[str], int]:
     """`(names, total)` for a player name search - prefix matches first.
 
@@ -579,17 +586,18 @@ async def search_players(query: str, *, limit: int = 25) -> tuple[list[str], int
             # Each UNION branch is parenthesised: a branch carrying its own ORDER BY /
             # LIMIT is a syntax error otherwise, because they would bind to the union
             # rather than the branch.
+            # A name only ever seen on a club board is a club, not a player.
             "SELECT name FROM ("
-            "  (SELECT name, name_lower, 0 AS tier FROM player "
-            "    WHERE name_lower LIKE $1 || '%' ESCAPE '\\' "
+            "  (SELECT name, name_lower, 0 AS tier FROM player p "
+            "    WHERE name_lower LIKE $1 || '%' ESCAPE '\\' AND " + _IS_A_PLAYER +
             "    ORDER BY name_lower LIMIT $3)"
             "  UNION ALL "
-            "  (SELECT name, name_lower, 1 AS tier FROM player "
+            "  (SELECT name, name_lower, 1 AS tier FROM player p "
             "    WHERE name_lower LIKE '%' || $1 || '%' ESCAPE '\\' "
-            "      AND name_lower NOT LIKE $1 || '%' ESCAPE '\\' "
+            "      AND name_lower NOT LIKE $1 || '%' ESCAPE '\\' AND " + _IS_A_PLAYER +
             "    LIMIT $3)"
             ") s ORDER BY tier, length(name_lower), name_lower LIMIT $2",
-            like, limit, max(limit * 4, 100),
+            like, limit, max(limit * 4, 100), non_player_boards(),
         )
     names = [r["name"] for r in rows]
     # "How many" is only ever used to size a badge, so an exact count past the page is
@@ -622,9 +630,10 @@ async def player_rows_window(
             return []
         sql = (
             "SELECT board_uuid AS leaderboard, anchor AS created_at, rank, score "
-            "FROM entry WHERE player_id = $1 AND anchor >= $2"
+            "FROM entry WHERE player_id = $1 AND anchor >= $2 "
+            "AND NOT (board_uuid = ANY($3::int[]))"
         )
-        args: list = [who["id"], window_start]
+        args: list = [who["id"], window_start, non_player_boards()]
         if window_end is not None:
             args.append(window_end)
             sql += f" AND anchor <= ${len(args)}"
@@ -651,7 +660,7 @@ async def player_last_played(name: str, *, excluded: set[int]) -> int | None:
             "SELECT max(a.last_rise) FROM player_board_agg a "
             "JOIN player p ON p.id = a.player_id "
             "WHERE p.name_lower = lower($1) AND NOT (a.board_uuid = ANY($2::int[]))",
-            name.strip(), sorted(excluded),
+            name.strip(), sorted(set(excluded) | set(non_player_boards())),
         )
     return int(val) if val is not None else None
 
@@ -665,16 +674,17 @@ async def player_board_summary(name: str) -> list[dict]:
     per capture in write_snapshot). Previously this scanned the player's whole
     cross-partition history, which was 30-90s for prolific players. If the
     aggregate is empty (never rebuilt on an existing dataset), the caller should
-    run ``rebuild_player_board_agg`` once to backfill it."""
+    run ``rebuild_player_board_agg`` once to backfill it. Club boards are left
+    out: their entries are clubs that merely share a name with the player."""
     sql = (
         "SELECT a.board_uuid AS leaderboard, a.best_rank, a.appearances::int AS appearances,"
         "       a.first_seen, a.last_seen, a.latest_rank, a.latest_score "
         "FROM player_board_agg a JOIN player p ON p.id = a.player_id "
-        "WHERE p.name_lower = lower($1) "
+        "WHERE p.name_lower = lower($1) AND NOT (a.board_uuid = ANY($2::int[])) "
         "ORDER BY a.best_rank ASC, a.last_seen DESC"
     )
     async with acquire() as con:
-        rows = await con.fetch(sql, name.strip())
+        rows = await con.fetch(sql, name.strip(), non_player_boards())
     return [dict(r) for r in rows]
 
 

@@ -67,12 +67,18 @@ def is_lifetime_kind(rk: str) -> bool:
     return rk in ("default", "none")
 
 
-# Boards that aren't a leaderboard of PLAYERS (e.g. server-level tallies).
+# Boards that aren't a leaderboard of PLAYERS: Club Power Rank and Club XP rank
+# clubs, whose names share the player table, so a club named like a player
+# must never show up on that player's profile.
 _NON_PLAYER_BOARDS = {1100, 21012}
 
 
 def is_player_board(uuid: int) -> bool:
     return uuid not in _NON_PLAYER_BOARDS
+
+
+def non_player_boards() -> list[int]:
+    return sorted(_NON_PLAYER_BOARDS)
 
 
 # Contest-overlay detection (Leaderboard_Category_Contests[_Daily]) lives in
