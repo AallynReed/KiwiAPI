@@ -674,9 +674,8 @@ async def player_profile(name: str, *, limit: int = 200) -> dict:
     day-over-day deltas), a summary, and whether the name is a verified claimed
     identity. ``recent`` is empty when the name has never been captured.
 
-    Never touches a cold-tiered partition: ``boards`` comes from the aggregate
-    table, and ``recent`` / ``last_played`` are floored at ``hot_window_start``
-    inside their helpers."""
+    Never touches a cold-tiered partition: ``boards`` and ``last_played`` come
+    from the aggregate table, and ``recent`` is floored at ``hot_window_start``."""
     name = name.strip()
     # Every lookup below keys on the name and is independent, so run them
     # concurrently. ``board_rows`` reads the O(boards) player_board_agg;
@@ -750,7 +749,36 @@ async def player_profile(name: str, *, limit: int = 200) -> dict:
         # player's. None for every unambiguous name.
         "duplicate": duplicate,
         "sigil": None if duplicate else _profile_sigil(boards),
+        "classes": _profile_classes(boards),
     }
+
+
+def _profile_classes(boards: list[dict]) -> list[dict]:
+    """Each class the player is ranked on, its Power Rank, Effort and Paragon
+    boards paired by board uuid (``stats._BOARD_CLASS_ORDER``), never by board
+    name. Highest Power Rank first; classes without one follow, by Effort then
+    Paragon."""
+    scores = {b["leaderboard"]: b.get("latest_score") or 0 for b in boards}
+    out = []
+    for i in range(trove_stats.class_count()):
+        ids = {
+            "power_rank_board": trove_stats.class_pr_board_uuid(i),
+            "effort_board": trove_stats.class_effort_board_uuid(i),
+            "paragon_board": trove_stats.class_paragon_board_uuid(i),
+        }
+        if not any(u in scores for u in ids.values()):
+            continue
+        out.append({
+            "class_index": i,
+            "name": trove_stats.class_name(i),
+            "icon": trove_stats.class_icon(i),
+            **{k: (u if u in scores else None) for k, u in ids.items()},
+        })
+    out.sort(key=lambda c: (c["power_rank_board"] is None,
+                            -scores.get(c["power_rank_board"], 0),
+                            -scores.get(c["effort_board"], 0),
+                            -scores.get(c["paragon_board"], 0)))
+    return out
 
 
 def _profile_sigil(board_rows: list[dict]) -> dict | None:
@@ -791,18 +819,13 @@ def _parse_board_csv(csv: str) -> set[int]:
 
 async def _profile_last_played(canonical: str) -> int | None:
     """Most recent capture where this player's score rose on a non-excluded board
-    (the 'last played' activity signal), or None when no movement in the window.
-    Never raises - a lookup failure must not take down the profile.
-
-    The lookback is the hot window only: a player whose last rise predates it
-    reads as None ('no recent activity'). The old 90-day lookback read cold
-    partitions off the HDD and timed out at 120s on every prolific profile."""
+    (the 'last played' activity signal) over all history, or None when no rise
+    was ever recorded. Reads the aggregate's ``last_rise``, never the entry
+    table. Never raises - a lookup failure must not take down the profile."""
     from app.admin import runtime_config
     csv = str(await runtime_config.get_setting("last_played_excluded_board_uuids") or "")
     try:
-        return await pg_store.player_last_played(
-            canonical, excluded=_parse_board_csv(csv), window_start=await hot_window_start(),
-        )
+        return await pg_store.player_last_played(canonical, excluded=_parse_board_csv(csv))
     except Exception:
         logger.exception("profile last-played lookup failed for %s", canonical)
         return None

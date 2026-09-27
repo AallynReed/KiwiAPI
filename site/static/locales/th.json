@@ -3194,5 +3194,10 @@
   "Level scaling": "การเติบโตตามเลเวล",
   "Level scaling view": "มุมมองการเติบโตตามเลเวล",
   "No gear, gems or subclass.": "ไม่รวมอุปกรณ์ เจม หรือซับคลาส",
-  "Total at level": "รวมที่เลเวล"
+  "Total at level": "รวมที่เลเวล",
+  "Effort": "Effort",
+  "Sorted by Power Rank": "เรียงตาม Power Rank",
+  "Total Power Rank": "Power Rank รวม",
+  "Unranked": "ไม่มีอันดับ",
+  "Paragon": "Paragon"
 }

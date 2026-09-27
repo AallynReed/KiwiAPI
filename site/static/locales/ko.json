@@ -3362,5 +3362,10 @@
   "Level scaling": "레벨별 성장",
   "Level scaling view": "레벨별 성장 보기",
   "No gear, gems or subclass.": "장비, 보석, 서브클래스 제외.",
-  "Total at level": "레벨별 합계"
+  "Total at level": "레벨별 합계",
+  "Effort": "노력치",
+  "Sorted by Power Rank": "파워 랭크순",
+  "Total Power Rank": "파워 랭크 합계",
+  "Unranked": "순위 없음",
+  "Paragon": "파라곤"
 }

@@ -3362,5 +3362,10 @@
   "Level scaling": "Рост по уровням",
   "Level scaling view": "Вид роста по уровням",
   "No gear, gems or subclass.": "Без снаряжения, самоцветов и подкласса.",
-  "Total at level": "Итого на уровне"
+  "Total at level": "Итого на уровне",
+  "Effort": "Effort",
+  "Sorted by Power Rank": "По рангу силы",
+  "Total Power Rank": "Суммарный ранг силы",
+  "Unranked": "Без ранга",
+  "Paragon": "Paragon"
 }

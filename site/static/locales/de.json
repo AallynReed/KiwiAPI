@@ -3362,5 +3362,10 @@
   "Level scaling": "Stufenskalierung",
   "Level scaling view": "Ansicht der Stufenskalierung",
   "No gear, gems or subclass.": "Ohne Ausrüstung, Edelsteine oder Unterklasse.",
-  "Total at level": "Gesamt auf Stufe"
+  "Total at level": "Gesamt auf Stufe",
+  "Effort": "Effort",
+  "Sorted by Power Rank": "Nach Machtrang sortiert",
+  "Total Power Rank": "Machtrang gesamt",
+  "Unranked": "Nicht platziert",
+  "Paragon": "Paragon"
 }

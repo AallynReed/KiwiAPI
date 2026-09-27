@@ -655,6 +655,58 @@ async def rebuild_player_board_agg_status() -> dict:
     return _agg_rebuild_status
 
 
+# --- Leaderboards: backfill "last played" over all history -----------------
+# Ingest keeps player_board_agg.last_rise current; this seeds it from every stored
+# capture (one capture per step, ~1-2h over the full archive, mostly cold-disk reads).
+_last_rise_status: dict = {
+    "running": False, "captures": 0, "first_anchor": None, "anchor": None,
+    "rows": None, "started_at": None, "finished_at": None, "error": None,
+}
+
+
+async def _run_last_rise_backfill() -> None:
+    import logging
+    import time as _time
+
+    from app.trove.leaderboards import pg_store
+
+    def progress(done: int, first: int, anchor: int) -> None:
+        _last_rise_status.update(captures=done, first_anchor=first, anchor=anchor)
+
+    _last_rise_status.update(running=True, captures=0, first_anchor=None, anchor=None,
+                             rows=None, error=None, started_at=int(_time.time()),
+                             finished_at=None)
+    try:
+        rows = await pg_store.backfill_last_rise(on_progress=progress)
+        _last_rise_status.update(rows=rows)
+    except Exception as exc:  # noqa: BLE001 - surface via status, never 500 a bg task
+        _last_rise_status.update(error=str(exc))
+        logging.getLogger(__name__).exception("last_rise backfill failed")
+    finally:
+        _last_rise_status.update(running=False, finished_at=int(_time.time()))
+
+
+@router.post("/leaderboards/backfill-last-rise")
+async def backfill_last_rise(background_tasks: BackgroundTasks) -> dict:
+    """Seed every player's "last played" from the whole capture history. Runs in
+    the background; poll ``/admin/leaderboards/backfill-last-rise/status``."""
+    if not settings.postgres_enabled:
+        raise APIError(status_code=400, code=ErrorCode.bad_request,
+                       message="Postgres backend is disabled")
+    if _last_rise_status["running"]:
+        return {"started": False, "message": "A last-played backfill is already running."}
+    background_tasks.add_task(_run_last_rise_backfill)
+    return {"started": True,
+            "message": "Last-played backfill started - poll "
+                       "/admin/leaderboards/backfill-last-rise/status."}
+
+
+@router.get("/leaderboards/backfill-last-rise/status")
+async def backfill_last_rise_status() -> dict:
+    """Progress of the last-played backfill (captures replayed, current anchor)."""
+    return _last_rise_status
+
+
 # --- Leaderboards: cold-tier aged partitions --------------------------------
 # Move entry partitions past the physical retention window (leaderboards_pg_tier_
 # after_days) off the fast NVMe onto the slower `cold` tablespace. The warmer

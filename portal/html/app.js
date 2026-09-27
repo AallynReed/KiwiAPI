@@ -1749,6 +1749,10 @@ async function renderLeaderboards() {
           <button class="btn small" id="rc-agg-rebuild" type="button">Rebuild</button>
         </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="flex:1 1 200px"><strong>Last played</strong> <span class="muted" style="font-size:.78rem">— when each player's score last went up, over all history; kept current at ingest. Seed once (whole archive, ~1–2 h, background).</span></span>
+          <button class="btn small" id="rc-rise-backfill" type="button">Backfill</button>
+        </div>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
           <span style="flex:1 1 200px"><strong>Storage tier</strong> <span class="muted" style="font-size:.78rem" id="rc-tier-info">— move entry partitions past the hot window onto the cold disk (frees NVMe; all history stays queryable). The warmer also drips this daily.</span></span>
           <button class="btn small" id="rc-tier-move" type="button">Tier now</button>
         </div>
@@ -2028,6 +2032,34 @@ function wireRecomputeCard() {
       toast(r.started === false ? "Rebuild already running" : "Aggregate rebuild started", "ok");
       pollAgg();
     } catch (ex) { toast(ex.message || "Failed to start rebuild", "err"); }
+  });
+
+  // Last played: replays every stored capture to seed last_rise. Shows how far
+  // through the archive it is (by capture time).
+  let _risePoll = null;
+  const pollRise = () => {
+    if (_risePoll) clearInterval(_risePoll);
+    _risePoll = setInterval(async () => {
+      let s;
+      try { s = await API.call("/admin/leaderboards/backfill-last-rise/status"); }
+      catch (_) { return; }
+      if (s && s.running) {
+        const at = s.anchor ? new Date(s.anchor * 1000).toISOString().slice(0, 16).replace("T", " ") : "…";
+        show(`Backfilling last played… ${(s.captures || 0).toLocaleString()} captures replayed (at ${at} UTC).`);
+      } else {
+        clearInterval(_risePoll); _risePoll = null;
+        if (s && s.error) show(`Last-played backfill failed: ${s.error}`);
+        else if (s && s.rows != null) show(`Last played backfilled: ${s.captures.toLocaleString()} captures replayed, ${s.rows.toLocaleString()} (player, board) rows updated.`);
+      }
+    }, 3000);
+  };
+  on("rc-rise-backfill", async () => {
+    try {
+      const r = await API.call("/admin/leaderboards/backfill-last-rise", { method: "POST" });
+      show(r.message || "Last-played backfill started (background)…");
+      toast(r.started === false ? "Backfill already running" : "Last-played backfill started", "ok");
+      pollRise();
+    } catch (ex) { toast(ex.message || "Failed to start backfill", "err"); }
   });
 
   // Storage tier: move aged entry partitions to the cold tablespace. Shows the

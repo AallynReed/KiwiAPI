@@ -172,7 +172,7 @@ except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
 # The sigil composites the real decoded game art, like production.
 try:
     from app.trove import stats as _trove_stats
-    from app.trove.leaderboards.service import _profile_sigil
+    from app.trove.leaderboards.service import _profile_classes, _profile_sigil
     _SIGIL_OK = True
 except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
     print(f"[site-dev] sigil unavailable ({_e}); /site/stats/sigil will 503")
@@ -3676,12 +3676,7 @@ class Handler(SimpleHTTPRequestHandler):
                 (1, "TROVE MASTERY POINTS", "META"),
                 (20, "GEODE MASTERY POINTS", "META"),
                 (100, "TOTAL MASTERY POINTS", "META"),
-                (1000, "KNIGHT", "POWER RANK"),
-                (1012, "REVENANT", "POWER RANK"),
                 (1100, "CLUB POWER RANK", "POWER RANK"),
-                (4000, "KNIGHT", "EFFORT"),
-                (4007, "SHADOW HUNTER", "EFFORT"),
-                (5000, "Weekly Highest Paragon Level with Knight", "PARAGON"),
                 (50000, "Weekly Highest Paragon Level", "PARAGON"),
                 (3, "ENEMIES DEFEATED", "STATS"),
                 (33001, "HART-A-PHONES RECEIVED", "STATS"),
@@ -3704,6 +3699,32 @@ class Handler(SimpleHTTPRequestHandler):
                     "appearances": 749 - i,
                     "first_seen": STUB_TIMESTAMPS[-1], "last_seen": STUB_ANCHOR,
                 })
+            # Class boards (Power Rank 1000+i, Effort 4000+i, Paragon 5000+i) for the
+            # class cards: (PR rank, PR score, Effort rank, Effort score). Solarion has
+            # no Power Rank and four classes no Effort, so one-sided cards render;
+            # every third class has a Paragon placing.
+            class_rows = [
+                (5573, 20895, 2324, 69), (4445, 27815, None, None), (6061, 15093, 1047, 0),
+                (1801, 33094, None, None), (8609, 21878, 1085, 58), (27, 56633, 1628, 23),
+                (46, 59668, 213, 136), (548, 54911, 356, 1701), (2625, 25739, 1719, 107),
+                (102, 59668, 335, 4049), (4077, 22158, 1843, 9), (3887, 26181, None, None),
+                (143, 47878, 524, 44), (3719, 21561, None, None), (2228, 31180, 894, 3),
+                (2126, 31923, 995, 0), (290, 42828, 118, 419), (None, None, 219, 690),
+            ]
+            for ci, (pr_rank, pr_score, ef_rank, ef_score) in enumerate(class_rows):
+                cname = _trove_stats.class_name(ci).upper() if _SIGIL_OK else f"CLASS {ci}"
+                pg_rank, pg_score = (40 + ci * 17, 90 - ci * 3) if ci % 3 == 0 else (None, None)
+                for base, cat, rank, sc in ((1000, "POWER RANK", pr_rank, pr_score),
+                                            (4000, "EFFORT", ef_rank, ef_score),
+                                            (5000, "PARAGON", pg_rank, pg_score)):
+                    if rank is None:
+                        continue
+                    boards.append({
+                        "leaderboard": base + ci, "board_name": cname, "board_name_id": None,
+                        "category": cat, "best_rank": max(1, rank - 40), "latest_rank": rank,
+                        "latest_score": float(sc), "appearances": 1335,
+                        "first_seen": STUB_TIMESTAMPS[-1], "last_seen": STUB_ANCHOR,
+                    })
             # Rename chain + alt-cluster membership so the profile's username
             # history + "Possible alt accounts" sections render locally.
             rn_chain = ["xXProGamerXx", "1337Hacker", queried]
@@ -3741,6 +3762,7 @@ class Handler(SimpleHTTPRequestHandler):
                 "boards": boards, "recent": [],
                 "renames": renames_out, "alt_clusters": alt_clusters,
                 "sigil": _profile_sigil(boards) if _SIGIL_OK else None,
+                "classes": _profile_classes(boards) if _SIGIL_OK else [],
             })
 
         if (path.startswith("/site/leaderboards/")

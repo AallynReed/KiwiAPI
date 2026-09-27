@@ -636,45 +636,22 @@ async def player_rows_window(
     ]
 
 
-async def player_last_played(
-    name: str, *, excluded: set[int], window_start: int,
-) -> int | None:
-    """Most recent anchor at/after ``window_start`` where this player's score
-    ROSE on some non-excluded board vs their previous appearance on that board -
-    the "last played" signal (real activity, not mere presence on a lifetime
-    board that carries a score forever). None when no rise is found in the window.
+async def player_last_played(name: str, *, excluded: set[int]) -> int | None:
+    """Most recent capture where this player's score ROSE on some non-excluded
+    board vs their previous appearance on that board - the "last played" signal
+    (real activity, not mere presence on a lifetime board that carries a score
+    forever), over all history. None when no rise was ever recorded.
 
-    Bounded to the window so the query prunes to recent partitions instead of
-    scanning the player's entire cross-partition history on every profile load.
-
-    The ``slot`` rank is what makes this correct for a DUPLICATED name (a name
-    Trove's dump lists twice on one board - see ``duplicates``). Without it the
-    lag alternates between the two co-existing rows, so ``score > prev`` fires on
-    every single capture and the player reads as permanently active. Ranking the
-    rows within each ``(board, anchor)`` by score and lagging per slot compares
-    like with like. For the overwhelming majority - one row per board per anchor -
-    slot is always 1 and the result is identical to a plain lag."""
-    excl = sorted(excluded)
+    An O(boards) read of ``player_board_agg.last_rise`` (see backfill_last_rise).
+    A name Trove lists twice on one board is tracked by its best-ranked row, the
+    same row the aggregate keeps, so the two identities are never compared with
+    each other."""
     async with acquire() as con:
-        pid = await con.fetchval(
-            "SELECT id FROM player WHERE name_lower = lower($1)", name.strip())
-        if pid is None:
-            return None
         val = await con.fetchval(
-            "WITH me AS ("
-            "  SELECT board_uuid, anchor, score, "
-            "         row_number() OVER (PARTITION BY board_uuid, anchor "
-            "                            ORDER BY score DESC, rank ASC) AS slot "
-            "  FROM entry "
-            "  WHERE player_id = $1 AND anchor >= $2 "
-            "        AND NOT (board_uuid = ANY($3::int[])) "
-            "), s AS ("
-            "  SELECT anchor, score, "
-            "         lag(score) OVER (PARTITION BY board_uuid, slot ORDER BY anchor) AS prev "
-            "  FROM me "
-            ") "
-            "SELECT max(anchor) FROM s WHERE prev IS NOT NULL AND score > prev",
-            pid, window_start, excl,
+            "SELECT max(a.last_rise) FROM player_board_agg a "
+            "JOIN player p ON p.id = a.player_id "
+            "WHERE p.name_lower = lower($1) AND NOT (a.board_uuid = ANY($2::int[]))",
+            name.strip(), sorted(excluded),
         )
     return int(val) if val is not None else None
 
@@ -711,7 +688,8 @@ async def _fold_anchor_into_agg(con, anchor: int) -> None:
     (``last_folded_anchor``), so re-ingesting the same hour doesn't double-count.
     best/first/last/latest use LEAST/GREATEST/CASE so an out-of-order backfill
     still corrects best-rank / first-seen (only its appearance count is missed -
-    trued up by rebuild_player_board_agg)."""
+    trued up by rebuild_player_board_agg). ``last_rise`` moves only when this
+    capture is newer than the last one folded AND its score is higher."""
     await con.execute(
         "INSERT INTO player_board_agg AS a "
         "  (player_id, board_uuid, best_rank, appearances, first_seen, last_seen, "
@@ -736,9 +714,85 @@ async def _fold_anchor_into_agg(con, anchor: int) -> None:
         "                      THEN EXCLUDED.latest_rank ELSE a.latest_rank END, "
         "  latest_score = CASE WHEN EXCLUDED.last_seen >= a.last_seen "
         "                      THEN EXCLUDED.latest_score ELSE a.latest_score END, "
+        f"  last_rise    = {_LAST_RISE_RULE}, "
         "  last_folded_anchor = GREATEST(a.last_folded_anchor, EXCLUDED.last_folded_anchor)",
         anchor,
     )
+
+
+# Shared by the ingest fold and backfill_last_rise so both apply one rule. In an
+# ON CONFLICT SET every ``a.*`` is the row BEFORE this update.
+_LAST_RISE_RULE = (
+    "CASE WHEN EXCLUDED.last_seen > a.last_seen AND EXCLUDED.latest_score > a.latest_score "
+    "THEN EXCLUDED.last_seen ELSE a.last_rise END"
+)
+
+
+async def backfill_last_rise(on_progress=None) -> int:
+    """Recompute ``player_board_agg.last_rise`` over the whole capture history.
+
+    Replays every stored capture oldest first, one anchor per statement, through
+    the ingest fold's rise rule into an unlogged scratch table, then merges into
+    the live aggregate with GREATEST so rises that ingest folded meanwhile win.
+    One capture per step keeps each statement the size of an hourly ingest;
+    sorting a whole trove-day partition at once is too heavy for the cold tier.
+    Captures that land while it runs are picked up by the loop. Returns the
+    number of live rows whose ``last_rise`` changed. A session advisory lock
+    refuses a second run from any process, which would drop this one's scratch."""
+    async with acquire() as con:
+        if not await con.fetchval("SELECT pg_try_advisory_lock($1)", _LAST_RISE_LOCK):
+            raise RuntimeError("A last-played backfill is already running.")
+        try:
+            return await _backfill_last_rise(con, on_progress)
+        finally:
+            await con.execute("SELECT pg_advisory_unlock($1)", _LAST_RISE_LOCK)
+
+
+_LAST_RISE_LOCK = 0x4C415354   # "LAST"
+
+
+async def _backfill_last_rise(con, on_progress) -> int:
+    await con.execute("DROP TABLE IF EXISTS player_last_rise_scratch")
+    await con.execute(
+        "CREATE UNLOGGED TABLE player_last_rise_scratch ("
+        "  player_id BIGINT NOT NULL, board_uuid INTEGER NOT NULL,"
+        "  last_seen BIGINT NOT NULL, latest_score DOUBLE PRECISION NOT NULL,"
+        "  last_rise BIGINT, PRIMARY KEY (player_id, board_uuid)"
+        ") WITH (fillfactor = 50)"
+    )
+    try:
+        first = anchor = await con.fetchval("SELECT min(anchor) FROM entry")
+        done = 0
+        while anchor is not None:
+            await con.execute(
+                "INSERT INTO player_last_rise_scratch AS a "
+                "  (player_id, board_uuid, last_seen, latest_score) "
+                "SELECT DISTINCT ON (player_id, board_uuid) player_id, board_uuid, anchor, score "
+                "FROM entry WHERE anchor = $1 "
+                "ORDER BY player_id, board_uuid, rank ASC "
+                "ON CONFLICT (player_id, board_uuid) DO UPDATE SET "
+                f"  last_rise    = {_LAST_RISE_RULE}, "
+                "  latest_score = CASE WHEN EXCLUDED.last_seen >= a.last_seen "
+                "                      THEN EXCLUDED.latest_score ELSE a.latest_score END, "
+                "  last_seen    = GREATEST(a.last_seen, EXCLUDED.last_seen)",
+                anchor, timeout=600,
+            )
+            done += 1
+            if on_progress is not None:
+                on_progress(done, first, anchor)
+            anchor = await con.fetchval(
+                "SELECT min(anchor) FROM entry WHERE anchor > $1", anchor)
+        res = await con.execute(
+            "UPDATE player_board_agg a SET last_rise = s.last_rise "
+            "FROM player_last_rise_scratch s "
+            "WHERE s.player_id = a.player_id AND s.board_uuid = a.board_uuid "
+            "  AND s.last_rise IS NOT NULL "
+            "  AND (a.last_rise IS NULL OR s.last_rise > a.last_rise)",
+            timeout=1800,
+        )
+    finally:
+        await con.execute("DROP TABLE IF EXISTS player_last_rise_scratch")
+    return int(res.split()[-1]) if res.startswith("UPDATE") else 0
 
 
 async def rebuild_player_board_agg() -> int:
@@ -749,21 +803,26 @@ async def rebuild_player_board_agg() -> int:
     async with acquire() as con:
         async with con.transaction():
             await con.execute("TRUNCATE player_board_agg")
+            # One row per (player, board, capture) - the best-ranked, as the ingest
+            # fold keeps - so a name listed twice can't read as a rise against itself.
             await con.execute(
                 "INSERT INTO player_board_agg "
                 "  (player_id, board_uuid, best_rank, appearances, first_seen, "
-                "   last_seen, latest_rank, latest_score, last_folded_anchor) "
-                "WITH r AS ("
-                "  SELECT player_id, board_uuid, rank, score, anchor,"
-                "         ROW_NUMBER() OVER (PARTITION BY player_id, board_uuid "
-                "                            ORDER BY anchor DESC) AS rn"
-                "  FROM entry"
+                "   last_seen, latest_rank, latest_score, last_folded_anchor, last_rise) "
+                "WITH d AS ("
+                "  SELECT DISTINCT ON (player_id, board_uuid, anchor) "
+                "         player_id, board_uuid, anchor, rank, score"
+                "  FROM entry ORDER BY player_id, board_uuid, anchor, rank"
+                "), r AS ("
+                "  SELECT *, lag(score) OVER w AS prev, lead(anchor) OVER w AS next"
+                "  FROM d WINDOW w AS (PARTITION BY player_id, board_uuid ORDER BY anchor)"
                 ") "
                 "SELECT player_id, board_uuid, MIN(rank)::int, COUNT(*)::bigint,"
                 "       MIN(anchor)::bigint, MAX(anchor)::bigint,"
-                "       (MAX(rank)  FILTER (WHERE rn = 1))::int,"
-                "       (MAX(score) FILTER (WHERE rn = 1)),"
-                "       MAX(anchor)::bigint "
+                "       (MAX(rank)  FILTER (WHERE next IS NULL))::int,"
+                "       (MAX(score) FILTER (WHERE next IS NULL)),"
+                "       MAX(anchor)::bigint,"
+                "       MAX(anchor) FILTER (WHERE score > prev) "
                 "FROM r GROUP BY player_id, board_uuid"
             )
             count = await con.fetchval("SELECT count(*) FROM player_board_agg")

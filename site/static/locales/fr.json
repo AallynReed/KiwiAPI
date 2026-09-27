@@ -3362,5 +3362,10 @@
   "Level scaling": "Progression par niveau",
   "Level scaling view": "Affichage de la progression par niveau",
   "No gear, gems or subclass.": "Sans équipement, gemmes ni sous-classe.",
-  "Total at level": "Total par niveau"
+  "Total at level": "Total par niveau",
+  "Effort": "Effort",
+  "Sorted by Power Rank": "Trié par rang de puissance",
+  "Total Power Rank": "Rang de puissance total",
+  "Unranked": "Non classé",
+  "Paragon": "Parangon"
 }

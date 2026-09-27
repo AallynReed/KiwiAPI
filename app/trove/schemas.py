@@ -690,15 +690,30 @@ class PlayerSigil(BaseModel):
     mastery: int                             # trove_mastery + geode_mastery
 
 
+class PlayerProfileActivitySummary(PlayerProfileSummary):
+    last_played: int | None = None           # newest capture a score went up, all history
+
+
+class PlayerClassSummary(BaseModel):
+    """One class the player is ranked on, its Power Rank, Effort and Paragon boards paired."""
+    class_index: int                         # board release order (board uuid % 1000)
+    name: str
+    icon: str | None = None                  # class art URL
+    power_rank_board: int | None = None      # 1000 + class_index, when ranked there
+    effort_board: int | None = None          # 4000 + class_index, when ranked there
+    paragon_board: int | None = None         # 5000 + class_index, when ranked there
+
+
 class PlayerProfileResponse(BaseModel):
     """Public player profile: leaderboard appearances + a verified-claim flag.
     Powers the /player/<name> page and the Discord bot's rank link."""
     player_name: str
     verified: bool                           # a site account claimed + was approved
-    summary: PlayerProfileSummary
+    summary: PlayerProfileActivitySummary
     boards: list[PlayerBoardSummary] = []    # one row per leaderboard, best first
     recent: list[PlayerProfileEntry]         # flat per-capture rows (legacy/back-compat)
     sigil: PlayerSigil | None = None         # null unless PR + both mastery boards are on record
+    classes: list[PlayerClassSummary] = []   # highest Power Rank first, the rest after
 
 
 class PlayerBoardsResponse(BaseModel):

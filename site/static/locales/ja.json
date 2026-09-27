@@ -3362,5 +3362,10 @@
   "Level scaling": "レベルによる成長",
   "Level scaling view": "レベル成長の表示",
   "No gear, gems or subclass.": "装備・ジェム・サブクラスなし。",
-  "Total at level": "レベル別の合計"
+  "Total at level": "レベル別の合計",
+  "Effort": "Effort",
+  "Sorted by Power Rank": "パワーランク順",
+  "Total Power Rank": "パワーランク合計",
+  "Unranked": "ランク外",
+  "Paragon": "Paragon"
 }

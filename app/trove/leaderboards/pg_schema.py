@@ -103,6 +103,8 @@ CREATE TABLE IF NOT EXISTS player_board_agg (
     last_folded_anchor BIGINT  NOT NULL,
     PRIMARY KEY (player_id, board_uuid)
 );
+-- Newest capture where the score beat the previous capture's (the "last played" signal).
+ALTER TABLE player_board_agg ADD COLUMN IF NOT EXISTS last_rise BIGINT;
 
 CREATE TABLE IF NOT EXISTS class_activity_estimate (
     class_index    INTEGER NOT NULL,

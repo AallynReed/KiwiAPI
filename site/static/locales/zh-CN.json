@@ -3362,5 +3362,10 @@
   "Level scaling": "等级成长",
   "Level scaling view": "等级成长视图",
   "No gear, gems or subclass.": "不含装备、宝石和副职业。",
-  "Total at level": "各等级总计"
+  "Total at level": "各等级总计",
+  "Effort": "Effort",
+  "Sorted by Power Rank": "按战力等级排序",
+  "Total Power Rank": "战力等级合计",
+  "Unranked": "未上榜",
+  "Paragon": "Paragon"
 }

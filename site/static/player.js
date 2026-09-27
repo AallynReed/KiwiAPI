@@ -83,14 +83,22 @@
     renderAliases(data.renames);
     renderClusters(data.alt_clusters, data.player_name || name);
 
+    // Class boards render once, as the class cards; the groups below get the rest.
+    const allBoards = data.boards || [];
+    const inCards = renderClasses(data.classes, allBoards);
+
     // One tile PER LEADERBOARD (best rank ever + current standing), not one per
     // capture - so a player on a board across thousands of captures shows a
     // single card. Grouped into collapsible category sections, ordered by
     // leaderboard id (boards within a group by id; groups by their smallest id).
     // The single "Last seen" summary chip above stands in for per-tile dates.
-    const boards = data.boards || [];
-    if (!boards.length) {
+    const boards = allBoards.filter((b) => !inCards.has(b.leaderboard));
+    if (!allBoards.length) {
       recentEl.innerHTML = `<p class="pl-empty">${esc(tr("This name hasn't appeared on any tracked leaderboard yet."))}</p>`;
+      return;
+    }
+    if (!boards.length) {
+      recentEl.closest('.pl-section').hidden = true;
       return;
     }
 
@@ -117,6 +125,74 @@
           <div class="pl-grid">${items.map(tile).join('')}</div>
         </details>`;
     }).join('');
+  }
+
+  // One card per class, highest Power Rank first (the server pairs the boards
+  // by uuid and orders them), with Effort and Paragon underneath. The bar is
+  // this class's Power Rank against the player's best class. Returns the board
+  // uuids the cards cover.
+  function renderClasses(classes, boards) {
+    const el = document.getElementById('pl-classes');
+    const covered = new Set();
+    if (!el || !classes || !classes.length) return covered;
+    const byUuid = new Map(boards.map((b) => [b.leaderboard, b]));
+    const prOf = (c) => {
+      const b = byUuid.get(c.power_rank_board);
+      return b && typeof b.latest_score === 'number' ? b.latest_score : null;
+    };
+    const prs = classes.map(prOf).filter((v) => v != null);
+    const top = Math.max(0, ...prs);
+    const total = prs.reduce((a, v) => a + v, 0);
+    for (const c of classes) {
+      for (const u of [c.power_rank_board, c.effort_board, c.paragon_board]) {
+        if (u != null) covered.add(u);
+      }
+    }
+    // A secondary board's line: label, current rank, score ("—" when unranked).
+    const line = (label, b) => `
+      <p class="pl-class-line">
+        <span>${esc(label)}</span>
+        ${b
+          ? `<span class="pl-class-line-rank">#${num(b.latest_rank)}</span><span class="pl-class-line-score">${score(b.latest_score)}</span>`
+          : '<span class="pl-class-line-rank">—</span>'}
+      </p>`;
+    const cards = classes.map((c) => {
+      const pr = byUuid.get(c.power_rank_board);
+      const v = prOf(c);
+      const pct = v != null && top > 0 ? Math.max(2, (v / top) * 100) : 0;
+      const art = c.icon
+        ? `<img src="${esc(c.icon)}" alt="" width="64" height="64" loading="lazy" decoding="async" onerror="this.remove()">`
+        : '';
+      const rank = pr
+        ? `${window.BTTUtil.crownHtml(pr.latest_rank)}<span class="sr-only">${esc(tr('Rank'))} </span>#${num(pr.latest_rank)}`
+        : esc(tr('Unranked'));
+      return `
+        <article class="pl-class">
+          <h3 class="pl-class-name" title="${esc(c.name)}">${esc(c.name)}</h3>
+          <div class="pl-class-art" aria-hidden="true">${art}</div>
+          <p class="pl-class-pr"><span class="sr-only">${esc(tr('Power Rank'))} </span>${v != null ? score(v) : '—'}</p>
+          <div class="pl-class-bar" aria-hidden="true"><span style="width:${pct.toFixed(1)}%"></span></div>
+          <p class="pl-class-rank">
+            <span class="pl-class-cur">${rank}</span>
+            ${pr ? `<span>${esc(tr('Best'))} #${num(pr.best_rank)}</span>` : ''}
+          </p>
+          <div class="pl-class-lines">
+            ${line(tr('Effort'), byUuid.get(c.effort_board))}
+            ${line(tr('Paragon'), byUuid.get(c.paragon_board))}
+          </div>
+        </article>`;
+    }).join('');
+    el.innerHTML = `
+      <div class="pl-classes-head">
+        <div>
+          <h2 class="pl-subhead" id="pl-classes-title">${esc(tr('Classes'))}</h2>
+          <p class="pl-classes-sub">${esc(tr('Sorted by Power Rank'))}</p>
+        </div>
+        ${prs.length ? `<p class="pl-classes-total"><span>${score(total)}</span>${esc(tr('Total Power Rank'))}</p>` : ''}
+      </div>
+      <div class="pl-class-grid">${cards}</div>`;
+    el.hidden = false;
+    return covered;
   }
 
   // One board card: icon + name, current rank + score headline, best-rank and
