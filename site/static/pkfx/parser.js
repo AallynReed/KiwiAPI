@@ -43,7 +43,8 @@ function lineCol(src, pos) {
 export function parsePkfx(src) {
   if (src.charCodeAt(0) === 0xfeff) src = src.slice(1);   // UTF-8 BOM from some mod tools
   const p = new Cursor(src);
-  const doc = { version: null, generator: null, order: [], objects: Object.create(null) };
+  // `aborted`: the object where the engine's own parser gives up, or null (see Cursor.bad)
+  const doc = { version: null, generator: null, order: [], objects: Object.create(null), aborted: null };
 
   p.skipWs();
   while (!p.eof()) {
@@ -69,6 +70,10 @@ export function parsePkfx(src) {
       p.skipWs();
       p.expect('{');
       const props = p.readBlock();
+      /* A float the engine cannot read (`Infinity`, `-1.#IND000e+000`) fails that object
+         and aborts the file: the engine keeps only the objects before it, and links to
+         the rest resolve to nothing. 13 of Trove's effects are cut short this way. */
+      if (p.bad) { doc.aborted = { id, className: word, value: p.bad }; break; }
       const obj = { className: word, id, props };
       if (id in doc.objects) {
         // duplicate id — keep first, but this should not happen in valid files
@@ -170,6 +175,7 @@ class Cursor {
     }
     if (word === 'true') return true;
     if (word === 'false') return false;
+    if (!this.bad && /^(inf|infinity|nan)$/i.test(word)) this.bad = word;
     return { sym: word };
   }
 
@@ -213,6 +219,8 @@ class Cursor {
     // and C float suffixes (1000.0f).
     while (this.i < this.n && !/[;,)}\s]/.test(this.s[this.i])) this.i++;
     const text = this.s.slice(start, this.i);
+    // the engine reads 1.#INF but not the NaN forms
+    if (!this.bad && /#(ind|qnan|snan)|^-?(infinity|nan)$/i.test(text)) this.bad = text;
     return interpretNumber(text, start, this.s);
   }
 }

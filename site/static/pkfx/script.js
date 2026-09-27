@@ -30,8 +30,6 @@ function vmodT(a, b) {
 }
 
 // ---------------- Values ----------------
-const S = (x) => [x];
-const dim = (v) => v.length;
 
 function broadcast(a, b) {
   // returns [aExpanded, bExpanded, n]
@@ -69,7 +67,7 @@ function tokenize(src) {
         let j = i + 1; while (j < n && /[0-9A-Za-z_]/.test(src[j])) j++;
         push('op', '.'); push('id', src.slice(i + 1, j)); i = j; continue;
       }
-      let j = i; while (j < n && /[0-9.eE]/.test(src[j]) || (/[+\-]/.test(src[j]) && /[eE]/.test(src[j - 1]))) j++;
+      let j = i; while (j < n && /[0-9.eE]/.test(src[j]) || (/[+-]/.test(src[j]) && /[eE]/.test(src[j - 1]))) j++;
       const text = src.slice(i, j);
       let numv = Number(text);
       if (Number.isNaN(numv)) numv = parseFloat(text) || 0; // tolerate typos like "0.5.0"
@@ -126,7 +124,8 @@ class Parser {
       }
       if (this.is('op', '{') && !funcs.size) { funcs.set('Eval', this.parseBlock()); entry = 'Eval'; continue; }
       if (this.is('eof')) break;
-      if (funcs.size) break;   // trailing junk after functions — done
+      // the engine compiles leading junk but not a stray token after the functions
+      if (funcs.size) throw new Error(`script parse: unexpected ${JSON.stringify(this.peek().v)} after the functions`);
       this.next();             // leading junk — skip
     }
     if (!funcs.size) throw new Error('script parse: no function body');
@@ -215,7 +214,13 @@ class Parser {
   parseArgs() {
     this.eat('op', '(');
     const args = [];
-    while (!this.is('op', ')')) { args.push(this.parseExpr()); if (this.is('op', ',')) this.next(); }
+    // a stray ';' inside an argument list compiles in the engine (the baker accepts
+    // `rand(0.5,2.0); ,rand(...)` as two arguments), so skip it
+    while (!this.is('op', ')')) {
+      args.push(this.parseExpr());
+      while (this.is('op', ';')) this.next();
+      if (this.is('op', ',')) this.next();
+    }
     this.eat('op', ')');
     return args;
   }
@@ -246,14 +251,51 @@ function swizzle(v, s) {
 //   spawnerField(name)->array, rand(a,b), vrand(a,b), kill(), triggerEvent(name,args)
 export function compileScript(src) {
   const prog = new Parser(tokenize(src)).parseProgram();
-  const run = (ctx) => {
+  // runFn: one named function (a spawn script's PostEval), after the globals
+  const runFn = (name, ctx) => {
     const st = { funcs: prog.funcs, warned: run._warned };
     const locals = new Map();
     for (const g of prog.globals) execStmt(g, ctx, locals, st);
-    execBlock(prog.funcs.get(prog.entry), ctx, locals, st);
+    execBlock(prog.funcs.get(name), ctx, locals, st);
   };
+  const run = (ctx) => runFn(prog.entry, ctx);
   run._warned = new Set();
-  return { prog, run };
+  return { prog, run, runFn };
+}
+
+const NAMESPACES = new Set(['parent', 'spawner', 'scene', 'effect', 'view', 'fast', 'spatialLayers']);
+
+/** Names a program reads or writes that are not its own locals, constants or namespaces:
+    the fields, attributes, samplers and events it needs from its layer. */
+export function freeNames(prog) {
+  const out = new Set();
+  const expr = (e, L) => {
+    if (!e || typeof e !== 'object') return;
+    if (Array.isArray(e)) { for (const x of e) expr(x, L); return; }
+    switch (e.k) {
+      case 'id': if (!L.has(e.name) && !(e.name in CONSTS)) out.add(e.name); return;
+      case 'member': if (!(e.obj.k === 'id' && NAMESPACES.has(e.obj.name))) expr(e.obj, L); return;
+      case 'method':
+        if (e.obj.k === 'id' && NAMESPACES.has(e.obj.name)) { expr(e.args, L); return; }
+        if (e.obj.k === 'id' && !L.has(e.obj.name)) out.add(e.obj.name); else expr(e.obj, L);
+        expr(e.args, L); return;
+      case 'call': expr(e.args, L); return;
+    }
+    for (const [k, v] of Object.entries(e)) if (k !== 'k' && v && typeof v === 'object') expr(v, L);
+  };
+  const block = (b, outer) => {
+    const L = new Set(outer);
+    for (const s of b.stmts) {
+      if (s.k === 'block') block(s, L);
+      else if (s.k === 'decl') { expr(s.init, L); L.add(s.name); }
+      else if (s.k === 'assign') { expr(s.lhs, L); expr(s.rhs, L); }
+      else if (s.k === 'exprstmt') expr(s.expr, L);
+    }
+  };
+  const globals = new Set();
+  for (const s of prog.globals) if (s.k === 'decl') { expr(s.init, globals); globals.add(s.name); }
+  for (const b of prog.funcs.values()) block(b, globals);
+  return out;
 }
 
 function execBlock(block, ctx, locals, st) {
@@ -397,7 +439,11 @@ function evalCall(e, ctx, locals, st) {
   if (e.name === 'trigger') { if (ctx.trigger) ctx.trigger(args); return [0]; }
   if (fn) return fn(...args);
   // unknown function: warn once, keep the simulation alive
-  if (!st.warned.has(e.name)) { st.warned.add(e.name); console.warn('pkfx script: unknown function', e.name); }
+  if (!st.warned.has(e.name)) {
+    st.warned.add(e.name);
+    const message = `unknown script function ${e.name}()`;
+    if (ctx.warn) ctx.warn(message); else console.warn(`pkfx: ${message}`);
+  }
   return [0];
 }
 
@@ -405,7 +451,8 @@ function evalCall(e, ctx, locals, st) {
 const clamp1 = (x, a, b) => Math.min(Math.max(x, a), b);
 function sat(v) { return v.map((x) => clamp1(x, 0, 1)); }
 function vlen(v) { let s = 0; for (const x of v) s += x * x; return Math.sqrt(s); }
-function vnorm(v) { const l = vlen(v) || 1; return v.map((x) => x / l); }
+// a zero vector gives NaN, as the engine's rsqrt normalize does (FUN_18023e440)
+function vnorm(v) { const l = vlen(v); return v.map((x) => x / l); }
 function vdot(a, b) { const [x, y, n] = broadcast(a, b); let s = 0; for (let i = 0; i < n; i++) s += x[i] * y[i]; return [s]; }
 function vcross(a, b) {
   const a0 = a[0] ?? 0, a1 = a[1] ?? 0, a2 = a[2] ?? 0;
@@ -413,7 +460,6 @@ function vcross(a, b) {
   return [a1 * b2 - a2 * b1, a2 * b0 - a0 * b2, a0 * b1 - a1 * b0];
 }
 function mklerp(a, b, t) { const [x, y, n] = broadcast(a, b); const tt = t.length === 1 ? new Array(n).fill(t[0]) : t; const o = new Array(n); for (let i = 0; i < n; i++) o[i] = x[i] + (y[i] - x[i]) * tt[i]; return o; }
-function smoothstep1(a, b, x) { const t = clamp1((x - a) / ((b - a) || 1e-9), 0, 1); return t * t * (3 - 2 * t); }
 
 function keepAlpha(src, rgb) { return src.length > 3 ? [rgb[0], rgb[1], rgb[2], src[3]] : rgb; }
 function rgb2hsv(c) {

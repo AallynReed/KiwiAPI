@@ -9,11 +9,9 @@ import { TurbulenceRef, TURB_DEFAULTS } from './turbulence.js';
 
 const COMP = { Float: 1, Float2: 2, Float3: 3, Float4: 4 };
 
-function compCount(valueType, times, values) {
-  const s = toSym(valueType);
-  if (s && COMP[s]) return COMP[s];
-  if (times && times.length) return Math.max(1, Math.round(values.length / times.length));
-  return 1;
+// ValueType's width; the engine's default is Float1
+function compCount(valueType) {
+  return COMP[toSym(valueType)] || 1;
 }
 
 class Curve {
@@ -48,15 +46,20 @@ export class CurveSampler {
     const times = toNums(obj.props.Times) || [];
     const values = toNums(obj.props.FloatValues) || [];
     const tangents = toNums(obj.props.FloatTangents) || [];
-    const comp = compCount(obj.props.ValueType, times, values);
+    const comp = compCount(obj.props.ValueType);
     const linear = toSym(obj.props.Interpolator) === 'Linear';
     this.curve = new Curve(times, values, tangents, comp, linear);
     this.comp = comp;
+    // the engine evaluates nothing unless there are 2+ keys and the value and tangent counts
+    // fit them (FUN_1805dc9c0); an invalid curve samples 0 and a Field evolver skips it
+    const n = times.length;
+    this.valid = n > 1 && values.length === n * comp && (!tangents.length || tangents.length === 2 * n * comp);
     // MinLimits/MaxLimits clamp the sampled value (per component; ±Infinity = unbounded)
     this.min = toNums(obj.props.MinLimits) || null;
     this.max = toNums(obj.props.MaxLimits) || null;
   }
   sample(t) {
+    if (!this.valid) return new Array(this.comp).fill(0);
     return clampLimits(this.curve.sample(t == null ? 0 : t[0] ?? t), this.min, this.max);
   }
   // Spawn-flux helpers on the first component, unclamped. The integral only covers the
@@ -87,7 +90,7 @@ export class DoubleCurveSampler {
     const p = obj.props;
     const t0 = toNums(p.Times) || [], v0 = toNums(p.FloatValues) || [], g0 = toNums(p.FloatTangents) || [];
     const t1 = toNums(p.Times1) || [], v1 = toNums(p.FloatValues1) || [], g1 = toNums(p.FloatTangents1) || [];
-    const comp = compCount(p.ValueType, t0, v0);
+    const comp = compCount(p.ValueType);
     const linear = toSym(p.Interpolator) === 'Linear';
     this.c0 = new Curve(t0, v0, g0, comp, linear);
     this.c1 = new Curve(t1, v1, g1, comp, linear);
@@ -218,24 +221,33 @@ export class ShapeSampler {
     this.hemisphere = this.type === 'COMPLEX_ELLIPSOID' && p.Hemisphere === true;
     const euler = toNums(p.EulerOrientation);
     this.rot = euler && (euler[0] || euler[1] || euler[2]) ? eulerMatrix(euler) : null;
+    // MESH: a .pkmm submesh the viewer loads (an .fbx path names the same baked mesh)
+    this.meshRes = this.type === 'MESH' && typeof p.MeshResource === 'string' && p.MeshResource ? p.MeshResource : null;
+    this.meshScale = toNums(p.MeshScale) || [1, 1, 1];
+    this.subMesh = Math.max(0, num(p.SubMeshIndex, 0) | 0);
+    this.mesh = null;
     // set per sampler (CParticleSamplerShape props)
     this.volume = false;
     this.translate = true;
     this.rotate = true;
   }
-  _u() { const r = this.rng; return [r(), r(), r()]; }
-  _pick() {
-    let x = this.rng() * this.wsum;
-    for (let k = 0; k < this.subs.length; k++) { x -= this.weights[k]; if (x < 0) return this.subs[k]; }
-    return this.subs[this.subs.length - 1];
+  meshResourceRef() { return this.meshRes ? this.meshRes.replace(/\.fbx$/i, '.pkmm') : null; }
+  loadMesh(m) {
+    const b = m && m.blocks ? m.blocks[this.subMesh] : null;
+    if (b && b.indices.length >= 3) this.mesh = b;
   }
+  _u() { const r = this.rng; return [r(), r(), r()]; }
   // local-space {p, n} for uniforms u, then the shape transform
   _eval(u) {
     if (this.subs) {
       if (!this.subs.length || !(this.wsum > 0)) return { p: this.pos.slice(), n: [0, 1, 0] };
-      const s = this._pick();
+      // the first uniform picks the sub-shape by weight and is rescaled for it, so the
+      // same pcoords always land on the same point
+      let x = u[0] * this.wsum, k = 0;
+      while (k < this.subs.length - 1 && x >= this.weights[k]) x -= this.weights[k++];
+      const s = this.subs[k];
       s.volume = this.volume;
-      return this._xf(s._eval(u));
+      return this._xf(s._eval([this.weights[k] > 0 ? Math.min(x / this.weights[k], 1 - 1e-7) : 0, u[1], u[2]]));
     }
     const [u0, u1, u2] = u;
     const R = this.radius, Ri = this.inner, H = this.height;
@@ -280,7 +292,21 @@ export class ShapeSampler {
         n = vnorm([c * H, R, sn * H]);
         break;
       }
-      default: { // SPHERE, COMPLEX_ELLIPSOID (+ MESH/PLANE fallback)
+      case 'MESH': {
+        /* CShapeDescriptor_Mesh, MeshSamplingMode Fast (the default): a triangle picked
+           uniformly by index, not by area, then a uniform point in it (FUN_1806464b0),
+           scaled by MeshScale. Until the mesh is loaded the shape has no surface. */
+        const m = this.mesh;
+        if (!m) { p = [0, 0, 0]; n = [0, 1, 0]; break; }
+        const I = m.indices, P = m.positions, N = m.normals, S = this.meshScale, T = (I.length / 3) | 0;
+        const t = Math.min(T - 1, Math.floor(u0 * T)) * 3;
+        const s = Math.sqrt(u1), a = 1 - s, b = s * u2, c = s - b;
+        const i0 = I[t] * 3, i1 = I[t + 1] * 3, i2 = I[t + 2] * 3;
+        p = [0, 1, 2].map((k) => (a * P[i0 + k] + c * P[i1 + k] + b * P[i2 + k]) * S[k]);
+        n = N ? vnorm([0, 1, 2].map((k) => (a * N[i0 + k] + c * N[i1 + k] + b * N[i2 + k]) / (S[k] || 1))) : [0, 1, 0];
+        break;
+      }
+      default: { // SPHERE, COMPLEX_ELLIPSOID (+ PLANE fallback)
         ({ p, n } = sphereSample(u0, u1, u2, R, Ri, this.volume));
         if (this.hemisphere && p[1] < 0) { p[1] = -p[1]; n[1] = -n[1]; }
         if (this.scale) {
@@ -364,9 +390,16 @@ export class ShapeSampler {
     return null;
   }
   projectPCoords(q) { const r = this.project(q, true); const pc = r && r.pc ? r.pc.slice() : [0, 0, 0]; pc.pc = true; return pc; }
+  // script intersect(pos, dir, len): float4(hit normal, distance), a miss is (1,0,0,+inf)
+  // (FUN_18072b8b0, miss fill FUN_18072e670)
+  intersect(o, d, len) {
+    const l = len == null ? Infinity : (len[0] ?? len);
+    const h = o && d ? this.rayHit(o, d, l) : null;
+    return h ? [h.n[0], h.n[1], h.n[2], h.t] : [1, 0, 0, Infinity];
+  }
   /* Ray query for a Collider shape: nearest hit along o + d*t, t in [0, len], from
      either side of the surface. Sphere/ellipsoid only (the one corpus Collider). */
-  intersect(o, d, len) {
+  rayHit(o, d, len) {
     if (this.subs || !(this.type === 'SPHERE' || this.type === 'COMPLEX_ELLIPSOID')) return null;
     const sc = this.scale || [1, 1, 1], R = this.radius;
     let lo = [o[0] - this.pos[0], o[1] - this.pos[1], o[2] - this.pos[2]], ld = d;
@@ -402,7 +435,8 @@ function sphereSample(u0, u1, u2, R, Ri, volume) {
   const z = u0 * 2 - 1, a = u1 * Math.PI * 2, s = Math.sqrt(Math.max(0, 1 - z * z));
   const dir = [s * Math.cos(a), s * Math.sin(a), z];
   let rr;
-  if (volume && R > Ri) rr = Math.cbrt(Ri ** 3 + (R ** 3 - Ri ** 3) * u2);
+  // the engine's shell law (FUN_1806151e0); a plain cube root when there is no inner radius
+  if (volume && R > Ri) rr = Ri + (R - Ri) * Math.pow(u2, (1 + Ri / R) / 3);
   else rr = Ri > 0 && u2 < Ri * Ri / (R * R + Ri * Ri) ? Ri : R;
   return { p: [dir[0] * rr, dir[1] * rr, dir[2] * rr], n: dir };
 }
@@ -411,7 +445,7 @@ function cylinderSample(u0, u1, u2, R, Ri, H, volume) {
   const ang = u0 * Math.PI * 2, c = Math.cos(ang), s = Math.sin(ang);
   const y = H * u1 - H * 0.5;
   let rr, sign = 1;
-  if (volume && R > Ri) rr = Math.sqrt(Ri * Ri + (R * R - Ri * Ri) * u2);
+  if (volume && R > Ri) rr = Ri + (R - Ri) * Math.pow(u2, (1 + Ri / R) / 2);   // FUN_18061fe40
   else if (Ri > 0 && u2 < Ri / (R + Ri)) { rr = Ri; sign = -1; }
   else rr = R;
   return { p: [c * rr, y, s * rr], n: [c * sign, 0, s * sign] };

@@ -25,12 +25,13 @@ function combine(mode, a, b) {
   }
 }
 const MAX_EMISSIONS = 128;
-const FLOOR_DROP = 1;   // preview ground, this far below the emitter
+export const FLOOR_DROP = 1;   // preview ground, this far below the emitter
 
 export class System {
   constructor(effect, rng = Math.random) {
     this.effect = effect;
     this.rng = rng;
+    this.warn = effect.warn || ((message) => console.warn(`pkfx: ${message}`));
     // World offset applied to root spawns. The preview moves this when the user drags
     // the emitter; localspace-attached layers follow it via emitterDelta.
     this.emitter = new Float32Array(3);
@@ -70,29 +71,19 @@ export class System {
   reset() {
     this.time = 0;
     this.nextId = 0;
-    // weighted pick per random-child group: only the chosen alternative spawns (weight 0 never)
-    const picks = new Map();
-    for (const l of this.layers) {
-      const g = l.L.spawn && l.L.spawn.group;
-      if (!g || picks.has(g.id)) continue;
-      const members = this.layers.filter((o) => o.L.spawn && o.L.spawn.group && o.L.spawn.group.id === g.id);
-      let total = 0; for (const m of members) total += m.L.spawn.group.weight;
-      if (!(total > 0)) { picks.set(g.id, -1); continue; }
-      let r = this.rng() * total;
-      let chosen = members[members.length - 1];
-      for (const m of members) { r -= m.L.spawn.group.weight; if (r < 0) { chosen = m; break; } }
-      picks.set(g.id, chosen.L.spawn.group.alt);
-    }
+    const picks = pickAlternatives(this.layers.map((l) => l.L.spawn).filter(Boolean), this.rng);
+    const rolls = new Map();
     for (const l of this.layers) {
       l.clear();
       const spec = l.L.spawn;
       if (!spec) continue;
       if (spec.group && picks.get(spec.group.id) !== spec.group.alt) continue;
-      l.queueEmission(spec, null, null);
+      l.queueEmission(spec, null, null, null, rolls);
     }
   }
 
   update(dt) {
+    this.dt = dt;
     this.time += dt;
     this.clock += dt;
     this.emitterDelta[0] = this.emitter[0] - this._emitterPrev[0];
@@ -193,12 +184,17 @@ class LayerSim {
   field(name) { return this.L.fieldIndex[name]; }
 
   // Start an emission of `spec` at world `origin` (null -> the moving emitter),
-  // optionally seeding spawned particles with an inherited velocity.
-  queueEmission(spec, origin, vel0, parentSnap) {
+  // optionally seeding spawned particles with an inherited velocity and turning them by
+  // `rot` (a trigger's axes). `rolls` shares each action node's random delay between
+  // the spawners one start of it reaches.
+  queueEmission(spec, origin, vel0, parentSnap, rolls = new Map(), rot = null) {
     if (this.emissions.length >= MAX_EMISSIONS) return;
     const rng = this.rng;
     let delay = 0;
-    for (const [d, rd] of spec.delays) delay += d * (rd ? 1 + (rng() * 2 - 1) * rd : 1);
+    for (const [d, rd, id] of spec.delays) {
+      if (rd && !rolls.has(id)) rolls.set(id, 1 + (rng() * 2 - 1) * rd);
+      delay += d * (rd ? rolls.get(id) : 1);
+    }
     let dur = spec.duration;
     if (isFinite(dur) && dur > 0 && spec.durationDeviation > 0) dur *= 1 + (rng() - 0.5) * spec.durationDeviation;
     let rate = spec.count;
@@ -212,6 +208,8 @@ class LayerSim {
       origin: origin ? [origin[0], origin[1], origin[2]] : null,
       vel0: vel0 || null,
       parentSnap: parentSnap || null,
+      rot,
+      flux: 1,
       fresh: !!this.sys._inFrame,
     });
     if (this.sys._inFrame) this._fresh = true;
@@ -228,6 +226,27 @@ class LayerSim {
     const a = this.attributes && this.attributes[spec.fluxAttr];
     // a declared default of 0 means "off until the game drives it" — preview at 1
     return a && a[0] ? a[0] : 1;
+  }
+
+  /* The spawner's layer script (Evaluator, `Run()`), run every frame of the emission:
+     its Flux output scales the stream rate and the burst count (FUN_18073f4f0), and
+     children read spawner.SpawnCount scaled by it. A script that fails leaves Flux 1. */
+  _layerFlux(e) {
+    const sc = e.spec.layerScript;
+    if (!sc) return 1;
+    const v = {
+      Flux: [1], Age: [e.age], Life: [e.duration], SpawnCount: [e.spec.count], EmittedCount: [e.emitted],
+      LifeRatio: [isFinite(e.duration) && e.duration > 0 ? e.age / e.duration : 0],
+    };
+    const ctx = {
+      getField: (n) => v[n] || null, setField: (n, x) => { v[n] = x; }, hasField: (n) => n in v,
+      attribute: (n) => (this.attributes && this.attributes[n]) || null,
+      sampler: (n) => this.L.samplers[n] || null,
+      spawnerField: (n) => v[n] || [0],
+      rand: (a, b) => a + this.rng() * (b - a),
+    };
+    try { sc.run(ctx); } catch { return (e.flux = 1); }
+    return (e.flux = Number.isFinite(v.Flux[0]) ? v.Flux[0] : 1);
   }
 
   // Particles a stream owes this frame at its base rate (FUN_180740830): dt without a
@@ -269,11 +288,12 @@ class LayerSim {
       // the frame the emission starts in only counts from its start instant
       const fdt = before < 0 ? e.t : dt;
       const spec = e.spec;
+      const lf = this._layerFlux(e);
       if (e.burst) {
         // CActionInstanceParticleSpawnerBaseBurst: truncated count, no curve flux,
         // every particle pre-aged by how far into the frame the burst was due
         let m = spec.countDeviation > 0 ? 1 + (this.rng() - 0.5) * spec.countDeviation : 1;
-        m *= this._attrFlux(spec);
+        m *= this._attrFlux(spec) * lf;
         const n = Math.trunc(spec.count * m);
         for (let k = 0; k < n; k++) this.spawnFrom(e, n > 1 ? Math.min(k / (n - 1), 1) : 0, k, 0, fdt, 1);
         done.push(e);
@@ -281,7 +301,7 @@ class LayerSim {
       }
       // CActionInstanceParticleSpawnerBaseStream
       if (fdt > 0) {
-        const cf = this._attrFlux(spec) * this._curveFlux(e, fdt) * e.rate;
+        const cf = this._attrFlux(spec) * this._curveFlux(e, fdt) * e.rate * lf;
         const rem = Math.min(fdt, e.duration - e.age);
         if (cf > 1e-10 && rem > 0) {
           const iv = fdt / cf;
@@ -319,7 +339,9 @@ class LayerSim {
     const i = this.count;
     this.data.fill(0, i * this.stride, (i + 1) * this.stride);
     this.setAt(i, 'Life', [1]);
-    this.setAt(i, 'Color', [1, 1, 1, 1]);
+    // a Color the effect declares starts at 0 like every declared field; one it never
+    // declares is the renderer's missing stream, white
+    if (this.L.fieldIndex.Color.decl == null) this.setAt(i, 'Color', [1, 1, 1, 1]);
     this.setAt(i, '__rand', [this.rng()]);
     this.setAt(i, '__sLR', [lr]);
     this.setAt(i, '__sEC', [sEC]);
@@ -352,28 +374,27 @@ class LayerSim {
     if (this.count >= MAX) return;
     const i = this._newParticle(lr, sEC, sAge, preAge, e.id);
     e.emitted++;
-    if (this.L.spawnScript) {
-      const ctx = this.bindCtx(i, 0, 0);
-      ctx._spawnCount = e.spec.count;
-      if (e.parentSnap) ctx._parent = { snap: e.parentSnap };
-      try { this.L.spawnScript.run(ctx); } catch (err) { warnOnce(this, 'spawn', err); }
-      ctx._parent = null;
-      if (ctx._dead) { this.count--; return; }
-    }
-    if (!(this.getAt(i, 'Life')[0] > 0)) { this.count--; return; }
+    const parent = e.parentSnap ? { snap: e.parentSnap } : null, spawnCount = e.spec.count * e.flux;
+    if (!this._spawnScript(i, 'run', parent, spawnCount)) return;
     // place: at the emission origin (event position), else along the emitter's motion
     let base = e.origin;
     if (!base) {
       const m = this.sys.emitter, d = this.sys.emitterDelta, back = e.spec.interpolate ? 1 - lerpT : 0;
       base = [m[0] - d[0] * back, m[1] - d[1] * back, m[2] - d[2] * back];
     }
+    if (e.rot) this.rotateTf(i, e.rot);
     this.offsetTf(i, base);   // spawn-script positions are relative to the spawn point
-    if (e.vel0) {
-      const v = this.getAt(i, 'Velocity');
-      this.setAt(i, 'Velocity', [v[0] + e.vel0[0], v[1] + e.vel0[1], v[2] + e.vel0[2]]);
+    let vel0 = e.vel0;
+    // a root spawn inherits the emitter's own velocity (the spawner transforms' velocity)
+    if (!vel0 && !e.origin && this.L.inheritVelocity && this.sys.dt > 0) {
+      const d = this.sys.emitterDelta, f = this.L.inheritVelocity / this.sys.dt;
+      if (d[0] || d[1] || d[2]) vel0 = [d[0] * f, d[1] * f, d[2] * f];
     }
-    this.savePrev(i);
-    this.fireEvent('OnSpawn', i);
+    if (vel0) {
+      const v = this.getAt(i, 'Velocity');
+      this.setAt(i, 'Velocity', [v[0] + vel0[0], v[1] + vel0[1], v[2] + vel0[2]]);
+    }
+    this._finishSpawn(i, parent, spawnCount);
   }
 
   // spawn a particle at a parent particle's world position (trail child). The child's
@@ -381,14 +402,8 @@ class LayerSim {
   spawnAt(pos, parentLS, parentIdx, seq, lr, sAge, preAge, rot) {
     if (this.count >= MAX) return;
     const i = this._newParticle(lr, seq, sAge, preAge, parentLS ? parentLS.getAt(parentIdx, '__sid')[0] : 0);
-    if (this.L.spawnScript) {
-      const ctx = this.bindCtx(i, 0, 0);
-      ctx._parent = { ls: parentLS, i: parentIdx };
-      try { this.L.spawnScript.run(ctx); } catch (err) { warnOnce(this, 'spawn', err); }
-      ctx._parent = null;
-      if (ctx._dead) { this.count--; return; }
-    }
-    if (!(this.getAt(i, 'Life')[0] > 0)) { this.count--; return; }
+    const parent = { ls: parentLS, i: parentIdx };
+    if (!this._spawnScript(i, 'run', parent, 0)) return;
     if (rot) this.rotateTf(i, rot);
     this.offsetTf(i, pos);
     if (this.L.inheritVelocity && parentLS) {
@@ -397,21 +412,48 @@ class LayerSim {
       const f = this.L.inheritVelocity;
       this.setAt(i, 'Velocity', [v[0] + pv[0] * f, v[1] + pv[1] * f, v[2] + pv[2] * f]);
     }
+    this._finishSpawn(i, parent, 0);
+  }
+
+  // Run the spawn script's Eval (`fn` 'run') or PostEval on the newest particle; false
+  // when the script killed it, which removes it.
+  _spawnScript(i, fn, parent, spawnCount) {
+    const sc = this.L.spawnScript;
+    if (!sc) return true;
+    const ctx = this.bindCtx(i, 0, 0);
+    ctx._spawnCount = spawnCount;
+    ctx._parent = parent;
+    try { if (fn === 'run') sc.run(ctx); else sc.runFn(fn, ctx); } catch (err) { warnOnce(this, 'spawn', err); }
+    ctx._parent = null;
+    if (ctx._dead) { this.count--; return false; }
+    return true;
+  }
+
+  /* SetupStream's tail and _Spawn (FUN_1807323f0): PostEval after placement and inherited
+     velocity, then OnSpawn. A particle born with no life still fires OnSpawn, and dies
+     at once through the newborn pass, firing OnDeath without ever evolving. */
+  _finishSpawn(i, parent, spawnCount) {
+    if (this.L.postEval && !this._spawnScript(i, 'PostEval', parent, spawnCount)) return;
     this.savePrev(i);
     this.fireEvent('OnSpawn', i);
+    if (!(this.getAt(i, 'Life')[0] > 0)) { this.fireEvent('OnDeath', i); this.kill(i); }
   }
 
   // Queue this layer's event emissions for particle i (OnSpawn/OnDeath + script events).
   // The parent's fields are snapshotted so child spawn scripts can read parent.<field>
-  // even after the parent dies. OnSpawn carries no velocity, so it inherits nothing.
-  fireEvent(name, i, at, over) {
+  // even after the parent dies, except through a folder, which passes none. OnSpawn
+  // carries no velocity, so it inherits nothing. Each firing starts the action anew:
+  // one pick per random-children group, one roll per random delay.
+  fireEvent(name, i, at, over, rot = null) {
     const targets = this.L.events && this.L.events[name];
     if (!targets) return;
     const pos = at && at.length >= 3 ? at : this.getAt(i, 'Position');
+    const picks = pickAlternatives(targets.map((t) => t.spec), this.rng), rolls = new Map();
     let snap = null;
     for (const t of targets) {
       const child = this.sys.layers[t.layer];
       if (!child) continue;
+      if (t.spec.group && picks.get(t.spec.group.id) !== t.spec.group.alt) continue;
       if (!snap) {
         snap = {}; for (const f of this.L.fields) snap[f.name] = this.getAt(i, f.name);
         snap.LifeRatio = [snap.Age[0] / (snap.Life[0] || 1)];
@@ -423,7 +465,7 @@ class LayerSim {
         const f = child.L.inheritVelocity;
         vel0 = [pv[0] * f, pv[1] * f, pv[2] * f];
       }
-      child.queueEmission(t.spec, pos, vel0, snap);
+      child.queueEmission(t.spec, pos, vel0, t.noParent ? null : snap, rolls, rot);
     }
   }
 
@@ -462,28 +504,33 @@ class LayerSim {
     switch (ev.type) {
       case 'physics': {
         // CParticleKernelCPU_Evolver_Physics. k = Drag * inverse mass; Drag 0 ignores wind.
-        // Adaptive strategy: Fast at dt <= IntegrationDtTreshold (0.02), Stable otherwise
-        // and always for particles evolved in their spawn frame. Fast/Stable force one.
+        // Adaptive strategy: Fast at dt <= IntegrationDtTreshold (0.02), Stable otherwise.
+        // The Fast and Stable bodies only take a constant dt and acceleration; anything
+        // per-particle (the newborn pass, an Accel or Force field) falls through to the
+        // Stable tail loop of FUN_18075a050, whatever the strategy.
         const v = this.getAt(i, ev.velName), p = this.getAt(i, ev.posField);
-        const im = this.field(ev.massField) ? this.getAt(i, ev.massField)[0] : ev.mass;
+        const massF = this.field(ev.massField);
+        const im = massF ? this.getAt(i, ev.massField)[0] : ev.mass;
         let ax = ev.accel[0], ay = ev.accel[1], az = ev.accel[2];
-        if (this.field(ev.accelField)) { const q = this.getAt(i, ev.accelField); ax += q[0]; ay += q[1]; az += q[2]; }
-        if (this.field(ev.forceField)) { const q = this.getAt(i, ev.forceField); ax += im * q[0]; ay += im * q[1]; az += im * q[2]; }
+        const accF = this.field(ev.accelField), forceF = this.field(ev.forceField);
+        if (accF) { const q = this.getAt(i, ev.accelField); ax += q[0]; ay += q[1]; az += q[2]; }
+        if (forceF) { const q = this.getAt(i, ev.forceField); ax += im * q[0]; ay += im * q[1]; az += im * q[2]; }
         const k = ev.drag * im;
-        const stable = ev.strategy === 'Stable' ||
-          (ev.strategy !== 'Fast' && (dt > ev.dtThresh || this.getAt(i, '__born')[0] > 0));
+        const stable = ev.strategy === 'Stable' || accF || forceF || this.getAt(i, '__born')[0] > 0 ||
+          (ev.strategy !== 'Fast' && dt > ev.dtThresh);
         if (ev.drag === 0 || k === 0) {
           const v0x = v[0], v0y = v[1], v0z = v[2];
           v[0] += ax * dt; v[1] += ay * dt; v[2] += az * dt;
           if (stable) { p[0] += 0.5 * dt * (v0x + v[0]); p[1] += 0.5 * dt * (v0y + v[1]); p[2] += 0.5 * dt * (v0z + v[2]); }
           else { p[0] += v[0] * dt; p[1] += v[1] * dt; p[2] += v[2] * dt; }
         } else {
-          let wx = 0, wy = 0, wz = 0;
+          let wx = 0, wy = 0, wz = 0, windStream = false;
           if (ev.constVel) { wx = ev.constVel[0]; wy = ev.constVel[1]; wz = ev.constVel[2]; }
-          if (this.field(ev.windField)) { const q = this.getAt(i, ev.windField); wx += q[0]; wy += q[1]; wz += q[2]; }
-          if (ev.velField) {
+          // a VelocityFieldField overrides the sampler (FUN_18075b100)
+          if (this.field(ev.windField)) { const q = this.getAt(i, ev.windField); wx += q[0]; wy += q[1]; wz += q[2]; windStream = true; }
+          else if (ev.velField) {
             const s = this.L.samplers[ev.velField];
-            if (s && s.sampleCurl) { const t = s.sampleCurl(p); wx += t[0]; wy += t[1]; wz += t[2]; }
+            if (s && s.sampleCurl) { const t = s.sampleCurl(p); wx += t[0]; wy += t[1]; wz += t[2]; windStream = true; }
           }
           const kd = k * dt;
           const e = k > 0.1 ? Math.exp(-kd) : (kd * 0.5 - 1) * kd + 1;
@@ -497,15 +544,28 @@ class LayerSim {
           } else {
             const c = k > 0.1 ? (1 - e) / k : dt - (1 - kd / 3) * dt * 0.5 * kd;
             const ux = v[0] + ax * dt - wx, uy = v[1] + ay * dt - wy, uz = v[2] + az * dt - wz;
+            // FUN_18075a5c0's loop for a constant zero wind and mass steps the position
+            // with last frame's velocity, leaving this frame's acceleration out
+            if (!windStream && !massF && !wx && !wy && !wz) { p[0] += c * v[0]; p[1] += c * v[1]; p[2] += c * v[2]; }
+            else { p[0] += c * ux + wx * dt; p[1] += c * uy + wy * dt; p[2] += c * uz + wz * dt; }
             v[0] = e * ux + wx; v[1] = e * uy + wy; v[2] = e * uz + wz;
-            p[0] += c * ux + wx * dt; p[1] += c * uy + wy * dt; p[2] += c * uz + wz * dt;
           }
         }
         this.setAt(i, ev.velName, v); this.setAt(i, ev.posField, p);
         break;
       }
       case 'field': {
+        if (ev.curve.valid === false) break;
+        // the engine's LifeRatio/InvLife streams are ours as Age/Life
+        if (ev.field === 'LifeRatio' || ev.field === 'InvLife') {
+          const v = ev.curve.sample([lifeRatio])[0], life = this.getAt(i, 'Life')[0] || 1;
+          if (ev.field === 'LifeRatio') this.setAt(i, 'Age', [v * life]);
+          else if (v > 0) this.setAt(i, 'Life', [1 / v]), this.setAt(i, 'Age', [lifeRatio / v]);
+          break;
+        }
         const fi = this.field(ev.field); if (!fi) break;
+        // a Size nothing declared is the renderer's float
+        if ((fi.decl ?? (ev.field === 'Size' ? 1 : fi.comp)) !== ev.dim) break;
         const val = ev.curve.sample([lifeRatio]);
         const out = broadcastTo(val, fi.comp);
         this.setAt(i, ev.field, out);
@@ -592,7 +652,7 @@ class LayerSim {
         // CParticleKernelCPU_Evolver_Localspace: the viewer only translates the emitter, so
         // local = world - E(enter), children run on local values, world = local + E(leave).
         // E(Previous) is last frame's emitter; newborns always enter with Current.
-        if (ev.neutral) { if (ev.children.length) this.runEvolvers(ev.children, i, dt, lifeRatio, ctx); break; }
+        if (!ev.translate || (ev.spawnerTf && this.L.isChild)) { if (ev.children.length) this.runEvolvers(ev.children, i, dt, lifeRatio, ctx); break; }
         const E = this.sys.emitter, d = this.sys.emitterDelta;
         const enterCur = ev.enterCur || this.getAt(i, '__born')[0] > 0;
         const ex = enterCur ? 0 : d[0], ey = enterCur ? 0 : d[1], ez = enterCur ? 0 : d[2];
@@ -652,7 +712,7 @@ class LayerSim {
         let query = null;
         if (ev.collider) {
           const s = this.L.samplers[ev.collider];
-          if (s && s.intersect) query = (o, d, l) => s.intersect(o, d, l);
+          if (s && s.rayHit) query = (o, d, l) => s.rayHit(o, d, l);
         } else query = this.sys.sceneIntersect;
         if (!query) break;
         let P0 = this.getAt(i, ev.prevField), P1 = this.getAt(i, ev.posField), rdt = dt;
@@ -707,7 +767,9 @@ class LayerSim {
             if (this.field(ev.countField)) this.setAt(i, ev.countField, [this.getAt(i, ev.countField)[0] + 1]);
             this.fireEvent(ev.event, i, Pn, { Velocity: ev.eventPostVel ? vPost : V });
           }
-          if (die) { ctx._dead = true; break; }
+          // the response writes LifeRatio = 1, which the post-evolve kill (> 1) lets through:
+          // the particle shows at the contact point this frame and dies at the next pre-kill
+          if (die) { this.setAt(i, 'Age', this.getAt(i, 'Life')); break; }
           P0 = Pn; P1 = P; rdt = rem;
         }
         break;
@@ -737,6 +799,28 @@ class LayerSim {
         if (!(L2 > 0) || !isFinite(L2) || !amt) break;
         const k = amt / Math.sqrt(L2);
         this.setAt(i, ev.posField, [p[0] + V[0] * k, p[1] + V[1] * k, p[2] + V[2] * k]);
+        break;
+      }
+      case 'containment': {
+        // Homing pulls with an impulse ramping in over the border, Wrap scales the absolute
+        // position (an engine quirk kept as is), WrapBox wraps per axis, Bounce flips velocity
+        if (!(dt > 0)) break;
+        const p = this.getAt(i, ev.posField), [cx, cy, cz] = ev.center, R = ev.radius;
+        if (ev.mode === 2) {
+          const w = (x, c) => { const u = (x - c) * (0.5 / R) + 0.5; return (u - Math.floor(u)) * 2 * R + c - R; };
+          this.setAt(i, ev.posField, [w(p[0], cx), w(p[1], cy), w(p[2], cz)]);
+          break;
+        }
+        const dx = cx - p[0], dy = cy - p[1], dz = cz - p[2], d2 = dx * dx + dy * dy + dz * dz;
+        if (!(d2 > R * R)) break;
+        const d = Math.sqrt(d2);
+        if (ev.mode === 1) { const k = (d - R * 1.99999) / d; this.setAt(i, ev.posField, [p[0] * k, p[1] * k, p[2] * k]); break; }
+        if (!this.field(ev.velField)) break;
+        const v = this.getAt(i, ev.velField);
+        if (ev.mode === 0) {
+          const t = Math.min(Math.max((d - R) / ev.border, 0), 1), k = ev.impulse * dt * t * t / d;
+          this.setAt(i, ev.velField, [v[0] + dx * k, v[1] + dy * k, v[2] + dz * k]);
+        } else if (v[0] * dx + v[1] * dy + v[2] * dz < 0) this.setAt(i, ev.velField, [-v[0], -v[1], -v[2]]);
         break;
       }
       case 'spatialinsert': {
@@ -853,10 +937,14 @@ class LayerSim {
         if (name === 'SpawnCount') return [c._spawnCount || (self.L.spawn ? self.L.spawn.count : 0)];
         return [0];
       },
-      // EventName.trigger(cond[, position, axis1, axis2]): queue the event's child emission
+      // EventName.trigger(cond[, position, axis1, axis2]): queue the event's child emission,
+      // turned by the frame the axes give
       triggerEvent(name, args) {
         const cond = args && args.length ? args[0][0] : 1;
-        if (cond) self.fireEvent(name, self._ctx._i, args && args.length >= 2 ? args[1] : null);
+        // a particle already killed this frame (LifeRatio past 1) triggers nothing
+        if (!cond || self._ctx._dead) return;
+        const rot = args && args.length >= 3 ? triggerBasis(args[2], args[3]) : null;
+        self.fireEvent(name, self._ctx._i, args && args.length >= 2 ? args[1] : null, null, rot);
       },
       rand(a, b) { return a + self.rng() * (b - a); },
       // vrand(a, b): uniform direction, radius between min and max (so vrand(-k, k) is ON
@@ -891,15 +979,52 @@ class LayerSim {
       },
       kill() { self._ctx._dead = true; },
       trigger() {},
+      warn(message) { self.sys.warn(`layer ${self.L.name}: ${message}`); },
     };
   }
-  bindCtx(i, dt, lifeRatio) { const c = this._ctx; c._i = i; c._dt = dt; c._lr = lifeRatio; c._dead = false; c._parent = null; return c; }
+  bindCtx(i, dt, lifeRatio) { const c = this._ctx; c._i = i; c._dt = dt; c._lr = lifeRatio; c._dead = false; c._parent = null; c._spawnCount = 0; return c; }
+}
+
+// One weighted pick per WithRandomChilds group among `specs` (FUN_1805f1090): an
+// alternative's weight counts once however many spawners it holds; weight 0 never wins.
+function pickAlternatives(specs, rng) {
+  const groups = new Map();
+  for (const { group: g } of specs) {
+    if (!g) continue;
+    if (!groups.has(g.id)) groups.set(g.id, new Map());
+    groups.get(g.id).set(g.alt, g.weight);
+  }
+  const picks = new Map();
+  for (const [id, alts] of groups) {
+    let total = 0; for (const w of alts.values()) total += w;
+    let r = rng() * total, pick = -1;
+    if (total > 0) for (const [alt, w] of alts) { if (w > 0 && (r -= w) < 0) { pick = alt; break; } }
+    picks.set(id, pick);
+  }
+  return picks;
+}
+
+// A trigger's spawn frame, rows = where local X, Y, Z land: Z = axis1, and with axis2
+// X = normalize(cross(axis2, axis1)), Y = cross(Z, X) (FUN_180609570); with axis1 alone
+// the up is world Y, as for oriented trail spawns
+function triggerBasis(a1, a2) {
+  const norm = (v) => { const l = Math.hypot(v[0] || 0, v[1] || 0, v[2] || 0); return l > 1e-7 ? [v[0] / l, v[1] / l, v[2] / l] : null; };
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const z = a1 && norm(a1);
+  if (!z) return null;
+  const b = a2 && norm(a2);
+  if (b) {
+    const x = norm(cross(b, z));
+    return x ? [x, cross(z, x), z] : null;
+  }
+  const y = norm([-z[0] * z[1], (z[2] + 0.01) * z[2] + z[0] * z[0], -(z[2] + 0.01) * z[1]]);
+  return y ? [cross(y, z), y, z] : null;
 }
 
 function warnOnce(ls, phase, err) {
   if (ls._warned) return;
   ls._warned = true;
-  console.warn(`pkfx ${phase} script error in layer ${ls.L.name}:`, err.message);
+  ls.sys.warn(`${phase} script error in layer ${ls.L.name}: ${err.message}`);
 }
 
 function broadcastTo(v, comp) {

@@ -26,7 +26,6 @@ uniform int uMode;  // 0 screen, 1 viewpos, 2 axis, 3 spheroid, 4 planar, 5 caps
 out vec2 vUV; out vec2 vUV2; out vec4 vColor; out float vBlend; out float vCursor;
 void main(){
   float s = sin(aRot), c = cos(aRot);
-  vec2 rot = vec2(aCorner.x*c - aCorner.y*s, aCorner.x*s + aCorner.y*c);
   vec3 world;
   if (uMode == 5) {
     /* CAxialBillboarderCapsule (FUN_1808a3650): an axial quad plus a pointed cap at
@@ -72,7 +71,8 @@ void main(){
     S = sl > 1e-5 ? S / sl : normalize(cross(N, vec3(uView[0][0], uView[1][0], uView[2][0])));
     S *= aSize.x;
     vec3 U = dir * (0.5*L) + cross(N, S);
-    world = aCenter + U*(aCorner.y*2.0) + S*(aCorner.x*2.0);
+    // corners P+S-U (0,1), P-S-U (1,1): u runs along -S
+    world = aCenter + U*(aCorner.y*2.0) - S*(aCorner.x*2.0);
   } else if (uMode == 2) {
     // CAxialBillboarderQuad: S = normalize(cross(axis, viewDir)) * Size.x, T = 0.5*AxisScale*axis,
     // corners = P +- S +- T. Same half-width-is-Size.x convention as the spheroidal above.
@@ -84,30 +84,29 @@ void main(){
     side = sl > 1e-5 ? side / sl : vec3(uView[0][0], uView[1][0], uView[2][0]);
     world = aCenter + side*(aCorner.x*2.0*aSize.x) + dir*(aCorner.y*L);
   } else if (uMode == 4) {
-    /* CPlanarBillboarderQuad builds X = normalize(cross(Axis, Axis2)) and
-       Y = cross(X, Axis2), then spends Size.x on X and Size.y on Y. So the width runs
-       ACROSS the axis field and the height along it - the opposite of the obvious
-       reading, and invisible while Size.x == Size.y. */
-    vec3 n = length(aAxis2) > 1e-5 ? normalize(aAxis2) : vec3(0.0, 1.0, 0.0);
-    vec3 x = cross(aAxis, n);
-    vec3 X = length(x) > 1e-5 ? normalize(x)
-           : normalize(abs(n.y) < 0.99 ? cross(n, vec3(0.0, 1.0, 0.0)) : vec3(1.0, 0.0, 0.0));
-    vec3 Y = cross(X, n);
-    // rotate the in-plane basis around the normal
-    vec3 Tr = X*c + Y*s, Br = -X*s + Y*c;
-    world = aCenter + Tr*(aCorner.x*aSize.x) + Br*(aCorner.y*aSize.y);
-  } else if (uMode == 1) {
-    vec3 fwd = normalize(uEye - aCenter);
-    vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), fwd));
-    if (length(cross(vec3(0.0,1.0,0.0), fwd)) < 1e-4) right = vec3(1.0, 0.0, 0.0);
-    vec3 up = cross(fwd, right);
-    world = aCenter + right*(rot.x*2.0*aSize.x) + up*(rot.y*2.0*aSize.y);
+    /* CPlanarBillboarderQuad (FUN_1808a6280 / FUN_1808a71c0, read in the disassembly):
+       X = normalize(cross(Axis2, Axis)), Y = cross(X, Axis2) with Axis2 NOT normalized, so
+       the height scales with |Axis2|; Size.x (times AxisScale) goes on X, Size.y on Y.
+       The rotation turns the already scaled half-vectors, so a non-square quad shears. */
+    vec3 x = cross(aAxis2, aAxis);
+    vec3 X = dot(x, x) > 1e-8 ? normalize(x) : normalize(cross(aAxis2, vec3(-aAxis2.z, 0.0, aAxis2.x + 0.01)));
+    vec3 Y = cross(X, aAxis2);
+    vec3 Xs = X*aSize.x, Ys = Y*aSize.y;
+    world = aCenter - aCorner.x*(c*Xs + s*Ys) + aCorner.y*(c*Ys - s*Xs);
   } else {
-    /* CScreenBillboarderQuad (FUN_18089d520): corners = P +- Size*(right +- up) on the
-       unit camera axes, so Size is the HALF extent. aCorner is +-0.5, hence the 2. */
+    /* CScreenBillboarderQuad (FUN_18089d520) and the viewpos quad (FUN_18089f6b0): the
+       rotation turns the size-scaled corner, a rigid rectangle, with Size the HALF extent
+       (aCorner is +-0.5, hence the 2). Viewpos builds its axes facing the particle. */
     vec3 right = vec3(uView[0][0], uView[1][0], uView[2][0]);
     vec3 up    = vec3(uView[0][1], uView[1][1], uView[2][1]);
-    world = aCenter + right*(rot.x*2.0*aSize.x) + up*(rot.y*2.0*aSize.y);
+    if (uMode == 1) {
+      vec3 fwd = normalize(uEye - aCenter);
+      vec3 r = cross(vec3(0.0, 1.0, 0.0), fwd);
+      right = length(r) < 1e-4 ? vec3(1.0, 0.0, 0.0) : normalize(r);
+      up = cross(fwd, right);
+    }
+    vec2 q = aCorner*2.0*aSize;
+    world = aCenter + right*(q.x*c - q.y*s) + up*(q.x*s + q.y*c);
   }
   gl_Position = uProj * uView * vec4(world, 1.0);
   vUV = aUVRect.xy + aUV * aUVRect.zw;
@@ -122,7 +121,7 @@ uniform sampler2D uTex;
 uniform sampler2D uRemap;
 uniform sampler2D uDepth;
 uniform int uHasRemap;
-uniform int uKind;   // 0 alpha, 1 additive, 2 alphablend_additive, 3 additive_noalpha, 4 alpha-weighted add
+uniform int uKind;   // 0 alpha, 1 additive, 2 alphablend_additive, 3 additive_noalpha, 4 alpha-weighted add, 5 distortion
 uniform float uSoft;     // SoftnessDistance in world units; 0 = not a _Soft material
 uniform float uDissolve; // DissolveWidth from the renderer's UserData; 0 = plain alpha
 uniform vec2 uInvRes;
@@ -130,6 +129,19 @@ uniform vec2 uClip;  // near, far
 out vec4 frag;
 float linearZ(float z){ float n = uClip.x, f = uClip.y; return (2.0*n*f) / (f + n - (z*2.0 - 1.0)*(f - n)); }
 void main(){
+  if (uKind == 5) {
+    /* AlphaBlend_Distortion as Trove draws it (embedded HLSL 29/30, blend ONE,ONE): the
+       offset it computes is added as colour, C*C*(2*tex - 1)/depth in red and green and
+       C*C*tex.b/depth in blue, a faint glow; pixels behind the scene are dropped. */
+    vec4 tx = texture(uTex, vUV);
+    vec2 suv = gl_FragCoord.xy * uInvRes;
+    float scene = linearZ(texture(uDepth, suv).r), fz = linearZ(gl_FragCoord.z);
+    float df = clamp(0.75 * (scene - fz), 0.0, 1.0);
+    vec4 d = vColor * vec4(df, df, 1.0, 1.0) * (tx * vec4(2.0, 2.0, 1.0, 0.0) - vec4(1.00392, 1.00392, 0.0, -vColor.a)) / fz;
+    if (scene < fz || fz > linearZ(texture(uDepth, suv + vec2(d.x, -d.y) * 0.26).r)) discard;
+    frag = d * vColor;
+    return;
+  }
   vec4 t = mix(texture(uTex, vUV), texture(uTex, vUV2), vBlend);
   // the remapper REPLACES the sampled alpha before anything else consumes it
   float texA = t.a;
@@ -145,9 +157,10 @@ void main(){
     ta = clamp((ta - 0.1) / (0.2 - 0.1), 0.0, 1.0);
     float upper = (1.0 - vColor.a) * (1.0 + uDissolve);
     float lower = max(0.0, upper - uDissolve);
-    // the engine divides by (upper-lower), which is 0 at full alpha; take the limit
-    // rather than the NaN, which is what that case converges to anyway
-    float strength = clamp((texA - lower) / max(upper - lower, 1e-5), 0.0, 1.0);
+    // the shader divides by (upper-lower): 0 at alpha 1 (x/0 saturates to 1, 0/0 to 0),
+    // negative above 1, which dissolves the particle away entirely
+    float d = upper - lower;
+    float strength = d == 0.0 ? (texA > lower ? 1.0 : 0.0) : clamp((texA - lower) / d, 0.0, 1.0);
     c = vec4(t.rgb * vColor.rgb, ta * strength);
   } else {
     c = vec4(t.rgb * vColor.rgb, texA * vColor.a);
@@ -170,7 +183,10 @@ void main(){
   if (uKind == 3) { frag = vec4(c.rgb * soft, 1.0); return; }
   c.a *= soft;
   if (uKind == 2 || uKind == 4) { frag = vec4(c.rgb * soft, c.a); return; }
-  if (uKind == 1) { frag = c; return; }
+  // premultiplied in the shader, as an alpha above 1 must still brighten (blend ONE,ONE)
+  if (uKind == 1) { frag = vec4(c.rgb * c.a, 0.0); return; }
+  // the soft shader fades all four channels, so colour goes by the square
+  c.rgb *= soft;
   if (c.a < 0.002) discard;   // AlphaTestMode GreaterOrEqual, AlphaTestValue 0.002
   frag = c;
 }`;
@@ -268,7 +284,8 @@ void main(){
     vec3 n = normalize(vN);
     c.rgb *= 0.55 + 0.45 * max(dot(n, normalize(vec3(0.45, 0.8, 0.4))), 0.0);
   }
-  frag = uLit == 1 ? vec4(c.rgb, 1.0) : c;
+  // additive meshes premultiply, Additive_NoAlpha included (Trove flags Material < 2)
+  frag = uLit == 1 ? vec4(c.rgb, 1.0) : vec4(c.rgb * c.a, 0.0);
 }`;
 export const MESH_FLOATS_PER_INSTANCE = 16; // basis 9, center 3, color 4
 
@@ -386,6 +403,8 @@ export class Renderer {
     this.fboW = 0; this.fboH = 0;
 
     this.white = makeTexture(gl, 1, 1, new Uint8ClampedArray([255, 255, 255, 255]));
+    // stands in for a missing sprite texture, so the effect still reads as particles
+    this.placeholder = makeTexture(gl, 64, 64, softDot(64));
     this.cam = { az: 0.6, el: 0.3, dist: 14, target: [0, 1.5, 0] };
     // set by the viewer once it has measured the effect; null = no ground
     this.ground = null;
@@ -438,7 +457,18 @@ export class Renderer {
     const msetup = (loc, size, off) => { gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, ms, off); gl.vertexAttribDivisor(loc, 1); };
     msetup(3, 3, 0); msetup(4, 3, 12); msetup(5, 3, 24); msetup(6, 3, 36); msetup(7, 4, 48);
     gl.bindVertexArray(null);
-    return { vao, instBuf, indexCount: mesh.indices.length, indexType: idx32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT };
+    return { vao, instBuf, buffers: [vbuf, ibuf, instBuf], indexCount: mesh.indices.length, indexType: idx32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT };
+  }
+
+  deleteMeshGeometry(geom) {
+    const gl = this.gl;
+    if (!geom.vao) return;   // an empty mesh uploads nothing
+    gl.deleteVertexArray(geom.vao);
+    for (const b of geom.buffers) gl.deleteBuffer(b);
+  }
+
+  deleteTexture(tex) {
+    if (tex && tex !== this.white && tex !== this.placeholder) this.gl.deleteTexture(tex);
   }
 
   resize() {
@@ -454,10 +484,10 @@ export class Renderer {
 
   _blend(kind) {
     const gl = this.gl;
-    if (kind === 1) gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    if (kind === 1) gl.blendFunc(gl.ONE, gl.ONE);
     else if (kind === 2) gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     else if (kind === 4) gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
-    else if (kind === 3) gl.blendFunc(gl.ONE, gl.ONE);
+    else if (kind === 3 || kind === 5) gl.blendFunc(gl.ONE, gl.ONE);
     else gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
   }
 
@@ -651,10 +681,51 @@ function buildCubeMesh() {
   };
 }
 
+// white, alpha falling off quadratically from the centre
+function softDot(size) {
+  const px = new Uint8ClampedArray(size * size * 4).fill(255);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const d = Math.hypot(x + 0.5 - size / 2, y + 0.5 - size / 2) / (size / 2);
+    px[(y * size + x) * 4 + 3] = 255 * Math.max(0, 1 - d) ** 2;
+  }
+  return px;
+}
+
 export function makeTexture(gl, w, h, rgba) {
   const tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, rgba);
+  return finishTexture(gl, tex);
+}
+
+// A DDS as Trove uploads it: the file's own mip levels and no generated ones, sampled
+// trilinearly (FUN_14049dba0), so a single-level texture minifies from level 0 alone.
+export function makeLevelsTexture(gl, levels) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  levels.forEach((l, i) => gl.texImage2D(gl.TEXTURE_2D, i, gl.RGBA, l.width, l.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, l.rgba));
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAX_LEVEL, levels.length - 1);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, levels.length > 1 ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tex;
+}
+
+// Browser-decoded images (PNG) keep straight alpha: a 2D canvas round trip would
+// premultiply, zeroing the colour of transparent texels that Additive_NoAlpha reads.
+export function makeImageTexture(gl, image) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  return finishTexture(gl, tex);
+}
+
+function finishTexture(gl, tex) {
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);

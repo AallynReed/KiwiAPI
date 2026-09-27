@@ -12,12 +12,15 @@
 //   record + 4 + size - V*bpv. The leading 2 is constant, not a record count (reading it
 //   as one put the data 2 vertices late and pulled the last positions out of the normals).
 //   f32x4 positions[V] · f32x4 normals[V] (bpv>=32) · f32x2 uvs[V] (bpv%16==8)
-// Submesh blocks repeat; all are merged for rendering.
+// Submesh blocks repeat; all are merged for rendering, and `blocks` keeps each one for
+// shape samplers, which read a single submesh. A file too short to hold any submesh
+// (Trove ships a 40-byte stub) decodes as an empty mesh, which draws nothing.
 
 export function decodePkmm(arrayBuffer) {
   const buf = new Uint8Array(arrayBuffer);
   const dv = new DataView(arrayBuffer);
   const u32 = (p) => dv.getUint32(p, true);
+  if (buf.length <= 8 + 96) return { empty: true, blocks: [] };
 
   const blocks = [];
   let scan = 8;
@@ -53,7 +56,7 @@ export function decodePkmm(arrayBuffer) {
     const v = positions[i * 3 + k];
     if (v < bmin[k]) bmin[k] = v; if (v > bmax[k]) bmax[k] = v;
   }
-  return { positions, normals, uvs, indices, vertexCount: vTotal, bmin, bmax };
+  return { positions, normals, uvs, indices, vertexCount: vTotal, bmin, bmax, blocks };
 }
 
 function tryBlock(buf, dv, T, N) {

@@ -1,6 +1,8 @@
 // Minimal DDS decoder -> RGBA8. Handles the formats present in the corpus:
 // BC1/DXT1, BC2/DXT3, BC3/DXT5 (the vast majority), BC7 and uncompressed 24/32-bit.
-// Returns { width, height, rgba: Uint8ClampedArray }.
+// Returns { width, height, rgba: Uint8ClampedArray, levels } where `levels` holds every
+// mip level the file stores ({width, height, rgba}, level 0 first). Trove uploads
+// exactly those and generates none, so a single-level texture is never mipmapped.
 
 const FOURCC = (s) => s.charCodeAt(0) | (s.charCodeAt(1) << 8) | (s.charCodeAt(2) << 16) | (s.charCodeAt(3) << 24);
 const MAGIC = FOURCC('DDS ');
@@ -10,32 +12,50 @@ export function decodeDDS(buffer) {
   if (view.getUint32(0, true) !== MAGIC) throw new Error('not a DDS file');
   const height = view.getUint32(12, true);
   const width = view.getUint32(16, true);
+  const mipCount = Math.max(1, view.getUint32(28, true));
   const pfFlags = view.getUint32(80, true);
   const fourCC = view.getUint32(84, true);
   const rgbBits = view.getUint32(88, true);
   const rMask = view.getUint32(92, true), gMask = view.getUint32(96, true), bMask = view.getUint32(100, true), aMask = view.getUint32(104, true);
 
-  let dataOffset = 128;
+  let offset = 128;
   const DDPF_FOURCC = 0x4;
-  const rgba = new Uint8ClampedArray(width * height * 4);
-
+  // decode(offset, w, h, rgba) for one level, and that level's size in bytes
+  let decode, size;
+  const blocks = (bytes) => (w, h) => Math.max(1, (w + 3) >> 2) * Math.max(1, (h + 3) >> 2) * bytes;
   if (pfFlags & DDPF_FOURCC) {
-    if (fourCC === FOURCC('DXT1')) decodeBC(view, dataOffset, width, height, rgba, 1);
-    else if (fourCC === FOURCC('DXT3')) decodeBC(view, dataOffset, width, height, rgba, 2);
-    else if (fourCC === FOURCC('DXT5')) decodeBC(view, dataOffset, width, height, rgba, 3);
+    let bc = 0;
+    if (fourCC === FOURCC('DXT1')) bc = 1;
+    else if (fourCC === FOURCC('DXT3')) bc = 2;
+    else if (fourCC === FOURCC('DXT5')) bc = 3;
     else if (fourCC === FOURCC('DX10')) {
-      const dxgi = view.getUint32(128, true); dataOffset = 148;
+      const dxgi = view.getUint32(128, true); offset = 148;
       // 71/72=BC1, 74/75=BC2, 77/78=BC3
-      if (dxgi === 71 || dxgi === 72) decodeBC(view, dataOffset, width, height, rgba, 1);
-      else if (dxgi === 74 || dxgi === 75) decodeBC(view, dataOffset, width, height, rgba, 2);
-      else if (dxgi === 77 || dxgi === 78) decodeBC(view, dataOffset, width, height, rgba, 3);
-      else if (dxgi === 98 || dxgi === 99) decodeBC7(view, dataOffset, width, height, rgba);
+      if (dxgi === 71 || dxgi === 72) bc = 1;
+      else if (dxgi === 74 || dxgi === 75) bc = 2;
+      else if (dxgi === 77 || dxgi === 78) bc = 3;
+      else if (dxgi === 98 || dxgi === 99) bc = 7;
       else throw new Error('unsupported DX10 dxgiFormat ' + dxgi);
     } else throw new Error('unsupported FourCC ' + fourCC.toString(16));
+    decode = bc === 7 ? (o, w, h, px) => decodeBC7(view, o, w, h, px) : (o, w, h, px) => decodeBC(view, o, w, h, px, bc);
+    size = blocks(bc === 1 ? 8 : 16);
   } else {
-    decodeUncompressed(view, dataOffset, width, height, rgba, rgbBits, rMask, gMask, bMask, aMask);
+    decode = (o, w, h, px) => decodeUncompressed(view, o, w, h, px, rgbBits, rMask, gMask, bMask, aMask);
+    size = (w, h) => w * h * (rgbBits / 8);
   }
-  return { width, height, rgba };
+
+  const levels = [];
+  for (let l = 0, w = width, h = height; l < mipCount; l++) {
+    // a truncated chain keeps the levels that are complete
+    if (l > 0 && offset + size(w, h) > buffer.byteLength) break;
+    const rgba = new Uint8ClampedArray(w * h * 4);
+    decode(offset, w, h, rgba);
+    levels.push({ width: w, height: h, rgba });
+    offset += size(w, h);
+    if (w === 1 && h === 1) break;
+    w = Math.max(1, w >> 1); h = Math.max(1, h >> 1);
+  }
+  return { width, height, rgba: levels[0].rgba, levels };
 }
 
 function color565(c, out, o) {
@@ -59,7 +79,7 @@ function decodeBC(view, offset, width, height, rgba, bcType) {
         cOff = p + 8;
       } else if (bcType === 3) {
         const a0 = view.getUint8(p), a1 = view.getUint8(p + 1);
-        const aIdx = []; let bits = 0n;
+        let bits = 0n;
         for (let i = 0; i < 6; i++) bits |= BigInt(view.getUint8(p + 2 + i)) << BigInt(8 * i);
         for (let i = 0; i < 16; i++) { const code = Number((bits >> BigInt(3 * i)) & 7n); alpha[i] = bc3Alpha(a0, a1, code); }
         cOff = p + 8;
@@ -78,9 +98,7 @@ function decodeBC(view, offset, width, height, rgba, bcType) {
           const ci = (idx >> (2 * (py * 4 + px))) & 3;
           const o = (y * width + x) * 4;
           rgba[o] = c[ci * 3]; rgba[o + 1] = c[ci * 3 + 1]; rgba[o + 2] = c[ci * 3 + 2];
-          let a = 255;
-          if (bcType === 1) { a = (c0 <= c1 && ci === 3) ? 0 : 255; }
-          else a = alpha[py * 4 + px];
+          const a = bcType === 1 ? (c0 <= c1 && ci === 3 ? 0 : 255) : alpha[py * 4 + px];
           rgba[o + 3] = a;
         }
       }

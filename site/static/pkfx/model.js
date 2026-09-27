@@ -11,7 +11,7 @@
 //   SampleDimensionality absent-> Surface
 //   BillboardMode absent       -> ScreenAlignedQuad
 import { deref, toNums, toSym } from './parser.js';
-import { compileScript } from './script.js';
+import { compileScript, freeNames } from './script.js';
 import { AnimTrackSampler, CurveSampler, DoubleCurveSampler, ShapeSampler, TurbulenceSampler } from './curves.js';
 
 const FIELD_COMP = { float: 1, float2: 2, float3: 3, float4: 4, int: 1, int2: 2, int3: 3, int4: 4 };
@@ -24,12 +24,25 @@ const BUILTINS = { Life: 1, Age: 1, Position: 3, Velocity: 3, Size: 2, Color: 4,
 // Billboard mode -> renderer geometry program:
 // 0 screen-aligned, 1 viewpos-aligned, 2 axis-stretched, 3 axis-spheroidal, 4 planar, 5 capsule
 const BB_MODE = {
-  ScreenAlignedQuad: 0, ScreenPoint: 0, ViewposAlignedQuad: 1,
+  ScreenAlignedQuad: 0, ViewposAlignedQuad: 1,
   VelocityAxisAligned: 2, VelocityCapsuleAlign: 5, VelocitySpheroidalAlign: 3,
-  PlanarAlignedQuad: 4, NormalAxisAligned: 2, SideAxisAligned: 2,
+  PlanarAlignedQuad: 4,
 };
 
-export function buildEffect(doc, rng) {
+// Names every layer has without declaring them: the LifeRatio/InvLife streams, their
+// script aliases, the frame's dt, and Position.
+const IMPLICIT = ['Life', 'LifeRatio', 'InvLife', 'Age', 'dt', 'Position'];
+
+const consoleWarn = (message) => console.warn(`pkfx: ${message}`);
+
+/**
+ * Build the runtime Effect for a parsed document.
+ * @param {ReturnType<import('./parser.js').parsePkfx>} doc
+ * @param {() => number} rng uniform [0, 1) source
+ * @param {{warn?: (message: string) => void}} [options] `warn` receives script compile
+ *   and runtime problems; the simulation keeps running either way. Defaults to console.
+ */
+export function buildEffect(doc, rng, { warn = consoleWarn } = {}) {
   const root = findRoot(doc);
   if (!root) throw new Error('no CParticleEffect found');
 
@@ -43,19 +56,24 @@ export function buildEffect(doc, rng) {
     for (const ref of al.props.SamplerList || []) addSampler(doc, deref(doc, ref), globalSamplers, rng);
     for (const ref of al.props.AttributeList || []) {
       const a = deref(doc, ref); if (!a || !a.props.AttributeName) continue;
-      attributes[a.props.AttributeName] = trimVec(toNums(a.props.DefaultValueF4 || a.props.DefaultValueI4) || [0, 0, 0, 0]);
+      // int and float attributes keep separate defaults; the type gives the width
+      const ty = toSym(a.props.AttributeType) || 'float', isInt = /^int/.test(ty);
+      const v = (toNums(isInt ? a.props.DefaultValueI4 : a.props.DefaultValueF4) || []).slice(0, FIELD_COMP[ty] || 1);
+      while (v.length < (FIELD_COMP[ty] || 1)) v.push(0);
+      if (isInt) v.i = true;
+      attributes[a.props.AttributeName] = v;
     }
   }
 
   // Build the layer TREE: root layers (OnSpawn) + child layers reached via sub-emitters
   // (trail spawner-evolvers and events). Layers reference children BY INDEX, so a
   // parent particle can spawn into its child layer at runtime.
-  const ctx = { doc, rng, globalSamplers, attributes, layers: [], indexByDesc: new Map(), groupCount: 0 };
+  const ctx = { doc, rng, warn, globalSamplers, attributes, layers: [], indexByDesc: new Map(), groupCount: 0 };
   const rootSpawners = [];
   collectSpawners(doc, deref(doc, root.props.OnSpawn), rootSpawners, 0, [], null, ctx);
   for (const sp of rootSpawners) ensureLayer(ctx, deref(doc, sp.node.props.Descriptor), sp);
 
-  return { root, layers: ctx.layers, attributes, randomGroups: ctx.groupCount };
+  return { root, layers: ctx.layers, attributes, randomGroups: ctx.groupCount, warn };
 }
 
 // Build a layer for a descriptor if not already built; return its index. `spawner` is
@@ -77,29 +95,24 @@ function ensureLayer(ctx, desc, spawner) {
   return idx;
 }
 
-// keep at least one component, drop trailing zeros (float4(1,0,0,0)->[1]; (r,g,b,a) stays)
-function trimVec(v) {
-  let n = v.length;
-  while (n > 1 && v[n - 1] === 0) n--;
-  return v.slice(0, n);
-}
-
 function findRoot(doc) {
   for (const id of doc.order) if (doc.objects[id].className === 'CParticleEffect') return doc.objects[id];
   return null;
 }
 
 // Walk an action tree down to particle spawners, collecting each node's Delay and
-// RandomDelay (Delay * U[1-r, 1+r], rolled per start) down the chain.
+// RandomDelay (Delay * U[1-r, 1+r], rolled once per start of that node, so a folder's
+// children share its roll) down the chain as [delay, randomDelay, node id].
 // WithRandomChilds children become alternatives of a random group: at reset the
 // runtime picks ONE per group (weighted) instead of firing all of them.
 function collectSpawners(doc, node, out, depth, delays, group, ctx) {
   if (!node || depth > 32) return;
   const cn = node.className;
   const d = num(node.props.Delay, 0);
-  const chain = d > 0 ? delays.concat([[d, Math.min(Math.max(num(node.props.RandomDelay, 0), 0), 1)]]) : delays;
+  const chain = d > 0 ? delays.concat([[d, Math.min(Math.max(num(node.props.RandomDelay, 0), 0), 1), node.id]]) : delays;
   if (cn === 'CActionFactoryParticleSpawnerBase') {
-    out.push({ node, delays: chain, group });
+    // an event reaching its layer through a folder gets no parent fields (FUN_1806cac90)
+    out.push({ node, delays: chain, group, viaFolder: depth > 0 });
     return;
   }
   if (cn === 'CActionFactoryWithChilds') {
@@ -125,7 +138,11 @@ function collectSpawners(doc, node, out, depth, delays, group, ctx) {
 // ContinuousSpawner only lerps spawn positions along the emitter's motion.
 function spawnSpec(ctx, spawner) {
   const p = spawner.node.props;
+  // the layer script's Run() sets Flux, which scales the rate and burst count every frame
+  const ls = deref(ctx.doc, p.Evaluator);
   return {
+    layerScript: ls && typeof ls.props.Expression === 'string' && /\bFlux\b/.test(ls.props.Expression)
+      ? tryCompile(ctx, ls.props.Expression, ls.id) : null,
     count: num(p.SpawnCount, 1),
     infinite: p.Infinite === true,
     duration: p.Infinite === true ? Infinity : Math.max(num(p.DurationInSeconds, 0), 0),
@@ -149,13 +166,22 @@ function buildLayer(ctx, desc, spawner) {
   const { doc, rng, globalSamplers } = ctx;
   // ---- fields ----
   const fields = []; const fieldIndex = {};
+  // `decl` is the width the effect itself declared (custom field, renderer or evolver);
+  // null for a field only our built-ins provide
+  let declaring = false;
   const addField = (name, comp, tf, isInt) => {
     if (!name) return;
     // a field added twice keeps its type; the transform filters combine
-    if (fieldIndex[name]) { const f = fieldIndex[name]; if (tf && f.tf !== tf) f.tf = f.tf ? 'full' : tf; return; }
-    fieldIndex[name] = { offset: 0, comp, tf: tf || null, int: !!isInt }; fields.push({ name, comp });
+    if (fieldIndex[name]) {
+      const f = fieldIndex[name];
+      if (tf && f.tf !== tf) f.tf = f.tf ? 'full' : tf;
+      if (declaring && f.decl == null) f.decl = comp;
+      return;
+    }
+    fieldIndex[name] = { offset: 0, comp, tf: tf || null, int: !!isInt, decl: declaring ? comp : null }; fields.push({ name, comp });
   };
   for (const [name, comp] of Object.entries(BUILTINS)) addField(name, comp);
+  declaring = true;
   for (const ref of desc.props.CustomFields || []) {
     const f = deref(doc, ref); if (!f) continue;
     const comp = FIELD_COMP[toSym(f.props.FieldType)] ?? 1;
@@ -171,16 +197,18 @@ function buildLayer(ctx, desc, spawner) {
   // ---- spawn script ----
   let spawnScript = null;
   const se = deref(doc, desc.props.SpawnEvaluator);
-  if (se && typeof se.props.Expression === 'string') spawnScript = tryCompile(se.props.Expression);
+  if (se && typeof se.props.Expression === 'string') spawnScript = tryCompile(ctx, se.props.Expression, se.id);
 
   // ---- evolvers (ordered tree; localspace keeps its children nested) ----
   // samplerRefs: LimitDistance binds its sampler by object, not by name
   // Collisions and trail spawners read last frame's value of THEIR position field (which
   // is not always Position), so each such field gets its own "__prev:<field>" slot.
+  // LocalSpaceSpawn trails keep theirs transform-filtered (PrevPositionTr), so it moves with
+  // the particle through the spawn transform and Localspace.
   const prevFields = new Map();
-  const prevOf = (posField) => {
-    const name = `__prev:${posField}`;
-    if (!prevFields.has(posField)) { prevFields.set(posField, name); addField(name, 3); }
+  const prevOf = (posField, tr) => {
+    const name = `${tr ? '__prevTr' : '__prev'}:${posField}`;
+    if (!prevFields.has(name)) { prevFields.set(name, posField); addField(name, 3, tr ? 'full' : null); }
     return name;
   };
   const layerCtx = { ctx, samplers, fieldIndex, addField, prevOf, spawnerAcc: 0, samplerRefs: new Set(desc.props.Samplers || []) };
@@ -197,7 +225,7 @@ function buildLayer(ctx, desc, spawner) {
     const targets = [];
     for (const sp of evSpawners) {
       const cd = deref(doc, sp.node.props.Descriptor); if (!cd) continue;
-      targets.push({ layer: ensureLayer(ctx, cd, null), spec: spawnSpec(ctx, sp) });
+      targets.push({ layer: ensureLayer(ctx, cd, null), spec: spawnSpec(ctx, sp), noParent: sp.viaFolder });
     }
     if (targets.length) events[ed.props.EventName] = (events[ed.props.EventName] || []).concat(targets);
   }
@@ -206,6 +234,25 @@ function buildLayer(ctx, desc, spawner) {
   const renderers = [];
   collectRenderers(doc, deref(doc, desc.props.Renderer), renderers, fieldIndex);
 
+  /* A script naming anything its layer does not have (a field nothing declares, an
+     attribute or sampler that does not exist) fails to compile in the engine with
+     "Unresolved symbol" (FUN_1805adac0): a spawn script is then skipped, so particles keep
+     their field defaults, and a script evolver does nothing. Checked against the engine's
+     own compiler (PK-AssetBaker) on all of Trove's scripts. */
+  const known = new Set([...IMPLICIT, ...Object.keys(samplers), ...Object.keys(ctx.attributes)]);
+  for (const ref of desc.props.CustomEvents || []) { const ed = deref(doc, ref); if (ed && ed.props.EventName) known.add(ed.props.EventName); }
+  for (const [n, fi] of Object.entries(fieldIndex)) if (fi.decl != null) known.add(n);
+  const unresolved = (sc) => {
+    for (const n of freeNames(sc.prog)) if (!known.has(n)) { ctx.warn(`script ${sc.id.replace('$LOCAL$/', '')} does not compile: unresolved symbol "${n}"`); return true; }
+    return false;
+  };
+  if (spawnScript && unresolved(spawnScript)) spawnScript = null;
+  const dropUnresolved = (list) => list.filter((ev) => {
+    if (ev.children) ev.children = dropUnresolved(ev.children);
+    return !(ev.type === 'script' && unresolved(ev.script));
+  });
+  evolvers.splice(0, evolvers.length, ...dropUnresolved(evolvers));
+
   // assign field offsets (SoA stride) — after evolvers may have added scratch fields
   let stride = 0; for (const f of fields) { fieldIndex[f.name].offset = stride; stride += f.comp; }
 
@@ -213,8 +260,10 @@ function buildLayer(ctx, desc, spawner) {
     name: (spawner ? spawner.node.id : desc.id).replace('$LOCAL$/', ''),
     isChild: !spawner,
     fields, fieldIndex, stride,
-    prevFields: [...prevFields],   // [positionField, "__prev:<field>"]
+    prevFields: [...prevFields].map(([name, pos]) => [pos, name]),   // [positionField, "__prev:<field>"]
     samplers, spawnScript, evolvers, events, renderers,
+    // PostEval runs after placement and inherited velocity (FUN_1807323f0)
+    postEval: !!(spawnScript && spawnScript.prog.entry === 'Eval' && spawnScript.prog.funcs.has('PostEval')),
     spawn: spawner ? spawnSpec(ctx, spawner) : null,
     inheritVelocity: num(desc.props.InheritInitialVelocity, 0),
   };
@@ -249,7 +298,7 @@ function samplerFor(doc, ref, rng) {
 function addEvolver(lc, ev, out) {
   if (!ev) return;
   if (ev.props && ev.props.Active === false) return; // disabled in the editor
-  const { ctx, samplers, fieldIndex } = lc;
+  const { ctx, fieldIndex } = lc;
   const { doc, rng } = ctx;
   switch (ev.className) {
     case 'CParticleEvolver_Physics':
@@ -281,20 +330,25 @@ function addEvolver(lc, ev, out) {
       }
       break;
     case 'CParticleEvolver_Field': {
-      const curve = makeSampler(doc, deref(doc, ev.props.Evaluator), rng);
-      out.push({ type: 'field', field: ev.props.Name, curve });
+      // the engine writes only when the curve's ValueType width (default Float1) equals
+      // the field's; a mismatch logs and writes nothing (FUN_180754610)
+      const cobj = deref(doc, ev.props.Evaluator);
+      const curve = makeSampler(doc, cobj, rng);
+      const dim = { Float1: 1, Float2: 2, Float3: 3, Float4: 4 }[toSym(cobj && cobj.props.ValueType)] ?? 1;
+      out.push({ type: 'field', field: ev.props.Name, curve, dim });
       break;
     }
     case 'CParticleEvolver_Script': {
       const expr = deref(doc, ev.props.Expression);
-      const sc = expr && typeof expr.props.Expression === 'string' ? tryCompile(expr.props.Expression) : null;
+      const sc = expr && typeof expr.props.Expression === 'string' ? tryCompile(ctx, expr.props.Expression, expr.id) : null;
       if (sc) out.push({ type: 'script', script: sc, errors: 0 });
       break;
     }
     case 'CParticleEvolver_FlipBook': {
       // Output is a float frame (the renderer floors it / soft-blends the fraction). A
-      // cursor naming no field ("0", "") never animates: the frame keeps its spawn value.
-      const cursor = fieldName(ev.props.AnimationCursor, 'LifeRatio');
+      // cursor naming no field ("0", "") never animates: the frame keeps its spawn value
+      // (FUN_180754b00 returns when the cursor's string id is 0).
+      const cursor = typeof ev.props.AnimationCursor === 'string' ? ev.props.AnimationCursor : 'LifeRatio';
       const first = num(ev.props.FirstFrameID, 0), last = num(ev.props.LastFrameID, 1);
       out.push({
         type: 'flipbook',
@@ -347,7 +401,7 @@ function addEvolver(lc, ev, out) {
         lc.addField(countField, 1);
         const posField = fieldName(ev.props.PositionField, 'Position');
         out.push({
-          type: 'spawner', child, posField, prevField: lc.prevOf(posField),
+          type: 'spawner', child, posField, prevField: lc.prevOf(posField, ev.props.LocalSpaceSpawn === true),
           metric: toSym(ev.props.SpawnMetric) || 'Distance',
           interval: Math.max(num(ev.props.SpawnInterval, 0.1), 1e-5),
           firstDelay: Math.min(Math.max(num(ev.props.FirstSpawnDelay, 1), 0), 1),   // fraction of one interval
@@ -373,7 +427,10 @@ function addEvolver(lc, ev, out) {
         type: 'localspace', children,
         enterCur: toSym(ev.props.ModeEnter) === 'WorldToLocal_Current',
         leaveCur: toSym(ev.props.ModeLeave) !== 'LocalToWorld_Previous',
-        neutral: ev.props.UseEffectTransforms === false || ev.props.TransformTranslate === false,
+        // UseEffectTransforms=false means the spawner's transforms: a root spawner shares
+        // the effect's live ones (FUN_180722120), a child layer's are static
+        spawnerTf: ev.props.UseEffectTransforms === false,
+        translate: ev.props.TransformTranslate !== false,
       });
       break;
     }
@@ -453,6 +510,21 @@ function addEvolver(lc, ev, out) {
       });
       break;
     }
+    case 'CParticleEvolver_Containment': {
+      // keeps particles inside a sphere around WorldCenter (kernel FUN_1807522d0)
+      const mode = { Mode_Homing: 0, Mode_Wrap: 1, Mode_WrapBox: 2, Mode_Bounce: 3 }[toSym(ev.props.Mode)] ?? 0;
+      const velField = fieldName(ev.props.VelocityField, 'Velocity');
+      if (mode === 0 || mode === 3) lc.addField(velField, 3, 'rotate');
+      out.push({
+        type: 'containment', mode,
+        center: toNums(ev.props.WorldCenter) || [0, 0, 0],
+        radius: num(ev.props.WorldRadius, 20),
+        border: num(ev.props.BorderThickness, 10),
+        impulse: num(ev.props.HomingImpulse, 5),
+        posField: fieldName(ev.props.PositionField, 'Position'), velField,
+      });
+      break;
+    }
     // unsupported evolvers are recorded and skipped
     default:
       out.push({ type: 'unsupported', cls: ev.className });
@@ -502,18 +574,21 @@ function declareRendererFields(doc, node, addField, fieldIndex, depth = 0) {
     case 'CParticleRenderer_List':
       for (const r of p.Renderers || []) declareRendererFields(doc, deref(doc, r), addField, fieldIndex, depth + 1);
       return;
-    case 'CParticleRenderer_Billboard': {
+    case 'CParticleRenderer_Billboard':
+    case 'CParticleRenderer_Light': {
       addField(s(p.PositionField, 'Position'), 3, 'full');
       const size = s(p.SizeField, 'Size');
-      if (!fieldIndex[size]) addField(size, 1);
+      if (!fieldIndex[size] || fieldIndex[size].decl == null) addField(size, 1);
       if (hasAtlas) addField(s(p.TextureIDField, 'TextureID'), 1);
       return;
     }
-    case 'CParticleRenderer_Ribbon':
+    case 'CParticleRenderer_Ribbon': {
       addField(s(p.PositionField, 'Position'), 3, 'full');
-      if (typeof p.WidthField === 'string' && p.WidthField) addField(p.WidthField, 1);
+      const width = p.WidthField === '' ? null : s(p.WidthField, 'Size');
+      if (width && (!fieldIndex[width] || fieldIndex[width].decl == null)) addField(width, 1);
       if (hasAtlas) addField(s(p.TextureIDField, 'TextureID'), 1);
       return;
+    }
     case 'CParticleRenderer_Mesh':
       addField(s(p.MeshIdField, ''), 1);
       addField(s(p.PositionField, 'Position'), 3, 'full');
@@ -521,9 +596,9 @@ function declareRendererFields(doc, node, addField, fieldIndex, depth = 0) {
       addField(s(p.ForwardAxisField, ''), 3, 'rotate');
       addField(s(p.UpAxisField, ''), 3, 'rotate');
       addField(s(p.EulerRotationField, ''), 3);
-      if (s(p.RotationAxisField, '') && s(p.RotationAxisAngleField, '')) {
-        addField(p.RotationAxisField, 3); addField(p.RotationAxisAngleField, 1);
-      }
+      // the axis-angle field defaults to "Rotation" and is always declared (FUN_180714ac0)
+      addField(s(p.RotationAxisField, ''), 3);
+      addField(p.RotationAxisAngleField === '' ? '' : s(p.RotationAxisAngleField, 'Rotation'), 1);
       return;
   }
 }
@@ -561,6 +636,8 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
   }
   if (node.className === 'CParticleRenderer_Billboard') {
     const mode = toSym(node.props.BillboardMode) || 'ScreenAlignedQuad';
+    // the point billboarder is deprecated and has no kernel (CBillboarderPoint::vf20 is pure)
+    if (mode === 'ScreenPoint') return;
     out.push({
       kind: 'billboard',
       // PopcornFX v1 default billboard material is Additive (glow textures with a
@@ -570,20 +647,15 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
       modeName: mode,
       diffuse: node.props.Diffuse || null,
       atlas: node.props.AtlasDefinition || null,
-      axisField: fieldName(node.props.AxisField, null),
-      axis2Field: fieldName(node.props.Axis2Field, null),
+      axisField: fieldName(node.props.AxisField, 'Velocity'),
+      axis2Field: fieldName(node.props.Axis2Field, null),   // no default (FUN_18067f9f0)
       sizeField: fieldName(node.props.SizeField, 'Size'),
       colorField: fieldName(node.props.ColorField, 'Color'),
       rotationField: fieldName(node.props.RotationField, 'Rotation'),
       positionField: fieldName(node.props.PositionField, 'Position'),
       textureIDField: fieldName(node.props.TextureIDField, 'TextureID'),
       drawOrder: num(node.props.DrawOrder, 0),
-      // Particles within one batch composite in draw order, so alpha-blended layers
-      // must go back-to-front. The corpus writes SortMode in 37 of 9,369 effects
-      // (FieldAscending/FieldDescending over SortField); everything else takes the
-      // editor's default, CameraDistance.
-      sortMode: toSym(node.props.SortMode) || 'CameraDistance',
-      sortField: fieldName(node.props.SortField, null),
+      userData: typeof node.props.UserData === 'string' ? node.props.UserData : '',
       axisScale: num(node.props.AxisScale, 0.1),
       constantRadius: num(node.props.ConstantRadius, 0),   // > 0 overrides the size field
       // only meaningful on a _Soft material; the editor shows 1 as its default
@@ -639,6 +711,7 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
     out.push({
       kind: 'mesh',
       mesh: mp.Mesh || null,
+      subMesh: num(mp.SubMeshId, -1),   // -1 draws every submesh
       diffuse: mp.Diffuse || null,
       material: toSym(mp.Material) || 'Solid',
       diffuseColor: toNums(mp.DiffuseColor) || [1, 1, 1],
@@ -666,5 +739,7 @@ function collectRenderers(doc, node, out, fieldIndex, depth = 0) {
   out.push({ kind: 'unsupported', cls: node.className });
 }
 
-function tryCompile(src) { try { return compileScript(src); } catch (e) { console.warn('script compile failed:', e.message); return null; } }
+function tryCompile(ctx, src, id) {
+  try { return Object.assign(compileScript(src), { id }); } catch (e) { ctx.warn(`script ${id.replace('$LOCAL$/', '')} failed to compile: ${e.message}`); return null; }
+}
 function num(v, d) { return typeof v === 'number' ? v : (v == null ? d : (toNums(v)?.[0] ?? d)); }
