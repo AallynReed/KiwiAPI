@@ -1111,7 +1111,11 @@ async def _previous_captures_bulk(
     if not player_names:
         return {}
     from app.trove.leaderboards import pg_store
-    cycle_start = _reset_boundary_before(current_anchor, reset_kind)
+    # Never past the hot window: a lifetime board's cycle starts at 0, which read
+    # every cold partition off the HDD on each warm. A player with no capture in
+    # the hot window has no velocity to measure.
+    cycle_start = max(_reset_boundary_before(current_anchor, reset_kind),
+                      await lb_service.hot_window_start())
     return await pg_store.previous_captures_bulk(
         player_names, board_uuid, current_anchor, cycle_start,
     )

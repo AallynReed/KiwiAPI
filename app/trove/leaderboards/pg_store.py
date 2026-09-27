@@ -499,15 +499,21 @@ async def previous_captures_bulk(player_names: list[str], board_uuid: int,
         return {}
     lowered = [n.lower() for n in player_names]
     async with acquire() as con:
+        # Players first, then entries by id: the (player_id, anchor) index probes
+        # each player instead of walking the board's whole window and joining back.
+        who = await con.fetch(
+            "SELECT id, name FROM player WHERE name_lower = ANY($1)", lowered)
+        if not who:
+            return {}
+        names = {r["id"]: r["name"] for r in who}
         rows = await con.fetch(
-            "SELECT DISTINCT ON (p.name_lower) p.name AS player_name, e.score, e.anchor "
-            "FROM entry e JOIN player p ON p.id = e.player_id "
-            "WHERE e.board_uuid = $1 AND p.name_lower = ANY($2) "
-            "AND e.anchor < $3 AND e.anchor >= $4 "
-            "ORDER BY p.name_lower, e.anchor DESC",
-            board_uuid, lowered, anchor, cycle_start,
+            "SELECT DISTINCT ON (player_id) player_id, score, anchor FROM entry "
+            "WHERE board_uuid = $1 AND player_id = ANY($2::bigint[]) "
+            "AND anchor < $3 AND anchor >= $4 "
+            "ORDER BY player_id, anchor DESC",
+            board_uuid, list(names), anchor, cycle_start,
         )
-    return {r["player_name"]: (r["score"], r["anchor"]) for r in rows}
+    return {names[r["player_id"]]: (r["score"], r["anchor"]) for r in rows}
 
 
 async def player_rows(
