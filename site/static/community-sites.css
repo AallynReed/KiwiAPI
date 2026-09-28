@@ -149,6 +149,7 @@
   color: var(--text-mute);
 }
 .cs-lang i { color: var(--accent-blue); font-size: .8rem; }
+.cs-lang-note { align-self: center; font-size: .8rem; line-height: 1.4; color: var(--text-mute); }
 
 .cs-desc {
   margin: 0;
