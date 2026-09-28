@@ -79,6 +79,8 @@ MOD_ISSUES_FLAG = "feature_mod_issues_enabled"
 # linked from the site - the switch exists so the upload surface can be closed
 # outright without deleting the links that are already out there.
 FILE_DROPS_FLAG = "feature_file_drops_enabled"
+# Community Sites: a written page pointing at other players' Trove sites.
+COMMUNITY_SITES_FLAG = "feature_community_sites_enabled"
 
 # ── Calculation switches (gate compute, not a page) ───────────────────────
 CHEATER_DETECTION_FLAG = "feature_cheater_detection_enabled"

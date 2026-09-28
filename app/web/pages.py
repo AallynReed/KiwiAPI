@@ -480,6 +480,15 @@ async def loot_collector_guide_page(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "loot-collector-guide.html", {})
 
 
+@router.get("/community-sites", response_class=HTMLResponse)
+async def community_sites_page(request: Request) -> HTMLResponse:
+    """Community Sites - Trove sites made by other players (Trovesaurus, Soruden,
+    Mystic Cave), each with a screenshot and a short description. A written page:
+    the screenshots are self-hosted under ``/static/assets/community/`` so nothing
+    reaches those sites until a visitor clicks through."""
+    return _TEMPLATES.TemplateResponse(request, "community-sites.html", {})
+
+
 @router.get("/dressing-room", response_class=HTMLResponse)
 async def dressing_room_page(request: Request) -> HTMLResponse:
     """Dressing Room - build a Trove character out of the game's own parts: pick a

@@ -96,7 +96,7 @@ _PREVIEW_FLAGS = {
     "gems_guide_enabled", "abilities_enabled", "guides_enabled", "allies_enabled", "gem_tools_enabled", "fishing_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
     "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
     "dressing_room_enabled", "dressing_room_page_enabled",
-    "sound_studio_enabled", "mod_workshop_enabled",
+    "sound_studio_enabled", "mod_workshop_enabled", "community_sites_enabled",
 }
 
 
@@ -1528,6 +1528,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "gems-guide.html", "text/html")
         if path == "/loot-collector-guide":
             return self._send_file(TEMPLATES / "loot-collector-guide.html", "text/html")
+        if path == "/community-sites":
+            return self._send_file(TEMPLATES / "community-sites.html", "text/html")
         if path == "/allies":
             try:
                 from app.site.allies_page import allies_view

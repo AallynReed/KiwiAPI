@@ -144,6 +144,7 @@ PAGES: tuple[Destination, ...] = (
     _p("Recipe Cost Calculator", "/codexes/crafting", "codexes_enabled", "fa-solid fa-flask", "Learn", "crafting", "cost", in_nav=False),
     _p("Updates", "/updates", "updates_enabled", "fa-solid fa-code-branch", "Learn", "patch notes", "changes", "datamining"),
     _p("Streams", "/streams", "streams_enabled", "fa-solid fa-video", "Learn", "twitch", "live"),
+    _p("Community Sites", "/community-sites", "community_sites_enabled", "fa-solid fa-handshake", "Learn", "trovesaurus", "soruden", "mystic cave", "other sites", "fan sites", "links", "french", "spanish"),
     _p("Giveaways", "/giveaways", "giveaways_enabled", "fa-solid fa-gift", "Learn", "free"),
     _p("App Releases", "/releases", "btt_releases_enabled", "fa-solid fa-cloud-arrow-down", "Learn", "app", "download", "versions"),
 

@@ -508,6 +508,18 @@ REGISTRY: dict[str, TunableSetting] = {
             "and no /v1 API - so only the page route is hidden."
         ),
     ),
+    "feature_community_sites_enabled": _t(
+        key="feature_community_sites_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for Community Sites (/community-sites) - the page "
+            "showcasing Trove sites made by other players, plus its homepage "
+            "rail and footer link. OFF hides all three. It is a written page - "
+            "no scripts, no proxy and no /v1 API - so only the page route is hidden."
+        ),
+    ),
     "feature_file_drops_enabled": _t(
         key="feature_file_drops_enabled",
         default=True,

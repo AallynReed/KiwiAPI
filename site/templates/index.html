@@ -332,6 +332,37 @@
                 </div>
             </section>
             {% endif %}
+            {% if community_sites_enabled %}
+            <section class="dash-rail" id="community-sites">
+                <header class="dash-section-head">
+                    <h2><i class="fa-solid fa-handshake" aria-hidden="true"></i> <span data-i18n>Community sites</span></h2>
+                    <a class="dash-seeall" href="/community-sites"><span data-i18n>All</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </header>
+                <div class="dash-modlist dash-sitelist">
+                    <a class="dash-modrow" href="https://trovesaurus.com" target="_blank" rel="noopener">
+                        <div class="dash-modrow-thumb"><img src="/static/assets/community/trovesaurus-thumb.webp" alt="" width="64" height="40" loading="lazy" decoding="async"></div>
+                        <div class="dash-modrow-body">
+                            <div class="dash-modrow-title">Trovesaurus</div>
+                            <div class="dash-modrow-meta" data-i18n>10 languages</div>
+                        </div>
+                    </a>
+                    <a class="dash-modrow" href="https://soruden.fr" target="_blank" rel="noopener">
+                        <div class="dash-modrow-thumb"><img src="/static/assets/community/soruden-thumb.webp" alt="" width="64" height="40" loading="lazy" decoding="async"></div>
+                        <div class="dash-modrow-body">
+                            <div class="dash-modrow-title">Soruden</div>
+                            <div class="dash-modrow-meta" lang="fr">Français</div>
+                        </div>
+                    </a>
+                    <a class="dash-modrow" href="https://mystic-cave.com" target="_blank" rel="noopener">
+                        <div class="dash-modrow-thumb"><img src="/static/assets/community/mystic-cave-thumb.webp" alt="" width="64" height="40" loading="lazy" decoding="async"></div>
+                        <div class="dash-modrow-body">
+                            <div class="dash-modrow-title">Mystic Cave</div>
+                            <div class="dash-modrow-meta"><span lang="es">Español</span> · English</div>
+                        </div>
+                    </a>
+                </div>
+            </section>
+            {% endif %}
         </aside>
     </main>
 

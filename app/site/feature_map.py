@@ -62,6 +62,7 @@ SITE_FEATURE_FLAGS = {
     "tomes_enabled": feature_flags.TOMES_FLAG,
     "unlock_debug_enabled": feature_flags.UNLOCK_DEBUG_FLAG,
     "file_drops_enabled": feature_flags.FILE_DROPS_FLAG,
+    "community_sites_enabled": feature_flags.COMMUNITY_SITES_FLAG,
 }
 
 
@@ -220,6 +221,8 @@ def feature_blocks(p: str, f: dict) -> bool:
     # A written page with no reads at all, so only the route is blocked.
     if not f["loot_collector_guide_enabled"] and p == "/loot-collector-guide":
         return True
+    if not f["community_sites_enabled"] and p == "/community-sites":
+        return True
     # Tomes: the page plus its valuation proxy. It prices payouts from market
     # medians, but degrades to "not evaluated" without them, so it does not ride
     # the /market toggle.
@@ -285,6 +288,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/updates", "updates_enabled"),
     ("/market", "market_enabled"),
     ("/tomes", "tomes_enabled"),
+    ("/community-sites", "community_sites_enabled"),
     ("/store", "store_enabled"),
     ("/codexes", "codexes_enabled"),
     ("/codexes/crafting", "codexes_enabled"),

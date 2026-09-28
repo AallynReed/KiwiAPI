@@ -1,0 +1,240 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /community-sites - Trove sites made by other players. No JS.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.cs-main {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px) 88px;
+}
+
+/* ─── Hero ──────────────────────────────────────────────────────────── */
+
+.cs-hero {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 56px 0 40px;
+  text-align: center;
+}
+.cs-eyebrow {
+  margin: 0;
+  padding: 4px 12px;
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  background: var(--bg-card);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .8rem;
+  letter-spacing: .06em;
+  color: var(--accent-blue);
+}
+.cs-title {
+  margin: 0;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: clamp(2.2rem, 3.5vw + .8rem, 3.4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.cs-sub {
+  margin: 0;
+  max-width: 60ch;
+  text-wrap: pretty;
+  color: var(--text-mute);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+/* ─── Site cards ────────────────────────────────────────────────────── */
+
+.cs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The name link stretches over the whole card, so each site is one tab stop
+   and one accessible name, and the screenshot is clickable too. */
+.cs-site {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(20px, 3vw, 44px);
+  padding: clamp(12px, 1.4vw, 18px);
+  background: var(--bg-card);
+  border: 1px solid var(--bg-line);
+  border-radius: var(--radius-lg);
+  transition: border-color .2s var(--ease-out), box-shadow .2s var(--ease-out);
+}
+.cs-site:nth-child(even) .cs-shot { order: 2; }
+.cs-site:hover,
+.cs-site:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--bg-line));
+  box-shadow: var(--shadow-soft);
+}
+
+.cs-shot {
+  overflow: hidden;
+  border: 1px solid var(--bg-line);
+  border-radius: 18px;
+  background: var(--bg-deep);
+}
+.cs-shot-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--bg-line);
+  background: var(--bg-deep);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: .75rem;
+  color: var(--text-mute);
+}
+.cs-shot-bar i { font-size: .65rem; }
+.cs-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  transition: transform .5s var(--ease-out);
+}
+.cs-site:hover .cs-shot img { transform: scale(1.025); }
+
+.cs-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 8px 12px;
+}
+
+.cs-name {
+  margin: 0;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.cs-link { color: var(--text); text-decoration: none; }
+.cs-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: var(--radius-lg);
+}
+
+.cs-langs { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 0; }
+.cs-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--bg-line);
+  border-radius: 999px;
+  background: var(--bg-deep);
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--text-mute);
+}
+.cs-lang i { color: var(--accent-blue); font-size: .8rem; }
+
+.cs-desc {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--text-mute);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.cs-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cs-tags li {
+  padding: 4px 10px;
+  border: 1px solid var(--bg-line);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--accent) 7%, var(--bg-deep));
+  font-size: .8rem;
+  color: var(--text);
+}
+
+.cs-visit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+}
+.cs-visit i { font-size: .8rem; transition: transform .2s var(--ease-out); }
+.cs-site:hover .cs-visit i { transform: translate(2px, -2px); }
+
+/* ─── "Your site here" ──────────────────────────────────────────────── */
+
+/* Dashed on purpose: it reads as an open slot in the list above. */
+.cs-join {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 32px;
+  padding: 24px 28px;
+  border: 1px dashed color-mix(in oklab, var(--text-mute) 35%, transparent);
+  border-radius: var(--radius-lg);
+}
+.cs-join-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--bg-line);
+  border-radius: 14px;
+  background: var(--bg-card);
+  color: var(--accent-blue);
+  font-size: 1.3rem;
+}
+.cs-join-body { flex: 1; min-width: 0; }
+.cs-join-title {
+  margin: 0 0 4px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.cs-join-text { margin: 0; color: var(--text-mute); line-height: 1.55; }
+.cs-join-btn { flex: 0 0 auto; }
+
+/* ─── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 820px) {
+  .cs-hero { padding: 40px 0 28px; }
+  .cs-site { grid-template-columns: 1fr; gap: 16px; }
+  .cs-site:nth-child(even) .cs-shot { order: 0; }
+  .cs-body { padding: 2px 6px 8px; gap: 12px; }
+  .cs-name { font-size: 1.5rem; }
+}
+@media (max-width: 600px) {
+  .cs-join { flex-direction: column; align-items: flex-start; padding: 22px 20px; }
+  .cs-join-btn { width: 100%; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-site, .cs-shot img, .cs-visit i { transition: none; }
+  .cs-site:hover .cs-shot img, .cs-site:hover .cs-visit i { transform: none; }
+}
