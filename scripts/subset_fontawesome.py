@@ -18,6 +18,7 @@ so they are listed in EXTRA below.
 
 from __future__ import annotations
 
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -82,7 +83,7 @@ def subset_css(css: str, names: set[str]) -> tuple[str, set[int]]:
 
 
 def subset_font(src: Path, dst: Path, codepoints: set[int]) -> None:
-    font = TTFont(src)
+    font = TTFont(src, recalcTimestamp=False)
     have = codepoints & set(font.getBestCmap())
     options = Options()
     options.flavor = "woff2"
@@ -108,12 +109,17 @@ def main() -> int:
     css, codepoints = subset_css(
         (VENDOR / "fontawesome.min.css").read_text(encoding="utf-8"), names
     )
-    OUT_CSS.write_text(css, encoding="utf-8")
     OUT_FONTS.mkdir(parents=True, exist_ok=True)
     # Subset from the vendor .ttf: fontTools chokes decoding some of Font
     # Awesome's shipped woff2, and the two carry identical outlines anyway.
     for name in ("fa-solid-900", "fa-regular-400", "fa-brands-400", "fa-v4compatibility"):
-        subset_font(VENDOR / "fa" / f"{name}.ttf", OUT_FONTS / f"{name}.woff2", codepoints)
+        dst = OUT_FONTS / f"{name}.woff2"
+        subset_font(VENDOR / "fa" / f"{name}.ttf", dst, codepoints)
+        # Content-versioned URL: a browser holding the previous subset would
+        # otherwise keep it and draw every newly added icon as a codepoint box.
+        version = hashlib.sha256(dst.read_bytes()).hexdigest()[:10]
+        css = css.replace(f"/{name}.woff2)", f"/{name}.woff2?v={version})")
+    OUT_CSS.write_text(css, encoding="utf-8")
     print(f"\ncss: {OUT_CSS.stat().st_size:,} bytes")
     return 0
 
