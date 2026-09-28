@@ -9,13 +9,6 @@
 
 /* ── Hero ─────────────────────────────────────────────────────────── */
 .st-hero { text-align: center; margin-bottom: 28px; }
-.st-eyebrow {
-  font-family: SFMono-Regular, Consolas, monospace;
-  color: var(--accent);
-  font-size: .85rem;
-  letter-spacing: 0.04em;
-  margin: 0 0 8px;
-}
 .st-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: clamp(2rem, 5vw, 3rem);

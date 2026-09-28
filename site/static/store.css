@@ -8,10 +8,6 @@
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .st-hero { padding: 40px 0 20px; }
-.st-eyebrow { font-family: var(--type-mono, "JetBrains Mono", monospace); font-size: .8rem;
-    color: var(--text-mute); letter-spacing: .06em; margin: 0 0 8px; }
-.st-eyebrow span { background: var(--bg-card); border: 1px solid var(--bg-line);
-    padding: 3px 9px; border-radius: 999px; }
 .st-title { font-family: var(--type-display, "Space Grotesk", sans-serif);
     font-size: clamp(1.7rem, 4vw, 2.6rem); margin: 0 0 10px; }
 .st-subtitle { color: var(--text-soft); max-width: 68ch; line-height: 1.55; margin: 0 0 18px; }

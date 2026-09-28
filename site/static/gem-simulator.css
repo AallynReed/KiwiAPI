@@ -15,13 +15,6 @@
   padding: 24px 0 64px;
 }
 .gs-hero { text-align: center; margin: 12px 0 26px; }
-.gs-eyebrow {
-  font-family: monospace;
-  color: var(--accent-blue);
-  font-size: .85rem;
-  letter-spacing: .04em;
-  margin-bottom: 8px;
-}
 .gs-title {
   font-family: "Space Grotesk", system-ui, sans-serif;
   font-size: var(--type-h2, 2.6rem);

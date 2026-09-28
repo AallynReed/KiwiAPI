@@ -11,13 +11,6 @@
   padding: 90px 20px 80px;
 }
 
-.pl-eyebrow {
-  margin: 0 0 8px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: .8rem;
-  letter-spacing: .04em;
-  color: var(--accent-blue, #4cc9f0);
-}
 
 .pl-head {
   display: flex;

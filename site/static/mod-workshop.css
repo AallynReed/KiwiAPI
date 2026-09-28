@@ -26,13 +26,6 @@
 /* ─── Hero ──────────────────────────────────────────────────────────── */
 
 .mw-hero { padding: 56px 0 22px; }
-.mw-eyebrow {
-  margin: 0 0 6px;
-  font-family: var(--font-mono, monospace);
-  font-size: .76rem;
-  letter-spacing: .12em;
-  color: var(--accent-blue);
-}
 .mw-title {
   margin: 0 0 10px;
   font-size: clamp(2rem, 4.5vw, 2.9rem);

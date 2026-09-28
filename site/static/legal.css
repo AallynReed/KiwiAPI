@@ -17,13 +17,6 @@
   margin-bottom: 32px;
   border-bottom: 1px solid var(--bg-line);
 }
-.legal-eyebrow {
-  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: .9rem;
-  color: var(--accent-blue);
-  letter-spacing: .04em;
-  margin: 0 0 10px;
-}
 .legal-title {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   font-size: clamp(2rem, 4vw + .5rem, 3rem);

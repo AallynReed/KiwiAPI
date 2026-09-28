@@ -30,12 +30,6 @@
   gap: 16px;
   justify-items: center;
 }
-.lb-eyebrow {
-  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: .9rem;
-  color: var(--accent-blue);
-  letter-spacing: .04em;
-}
 .lb-title {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   font-size: clamp(2.2rem, 5vw + .5rem, 4rem);
@@ -1852,7 +1846,6 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   .lb-hero { padding: 28px 0 18px; }
   .lb-title { font-size: 1.9rem; }
   .lb-subtitle { font-size: .95rem; }
-  .lb-eyebrow { font-size: .8rem; }
 
   /* The day row is a grid item, and grid items get ``min-width: auto`` - the
      archive CTA is ``white-space: nowrap`` and the picker's flex-basis kept the

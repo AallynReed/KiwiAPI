@@ -6,7 +6,6 @@
 .ab-main { max-width: 1180px; margin: 0 auto; padding: 40px 20px 80px; }
 
 .ab-hero { text-align: center; margin-bottom: 28px; }
-.ab-eyebrow { font-family: monospace; font-size: .8rem; color: var(--text-mute); margin: 0 0 6px; }
 .ab-title { font-size: clamp(2rem, 5vw, 2.9rem); margin: 0 0 10px; }
 .ab-sub { color: var(--text-mute); max-width: 62ch; margin: 0 auto; line-height: 1.6; }
 

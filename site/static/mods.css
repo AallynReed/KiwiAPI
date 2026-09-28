@@ -21,11 +21,6 @@
 
 .mh-hero { padding: 60px 0 16px; text-align: center; }
 .mh-hero-inner { display: grid; gap: 14px; justify-items: center; }
-.mh-eyebrow {
-  display: inline-flex; align-items: center; gap: 10px;
-  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: .9rem; color: var(--accent-blue); letter-spacing: .04em; margin: 0;
-}
 .mh-beta-pill {
   display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px;
   background: linear-gradient(135deg, #f8961e, #ff5e7e); color: #1a0c0c;

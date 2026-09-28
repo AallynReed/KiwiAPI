@@ -27,16 +27,6 @@
   gap: 14px;
   justify-items: center;
 }
-.mkt-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: .9rem;
-  color: var(--accent-blue);
-  letter-spacing: .04em;
-  margin: 0;
-}
 .mkt-title {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   font-size: clamp(2.2rem, 5vw + .5rem, 4rem);

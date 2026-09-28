@@ -10,11 +10,6 @@
 
 /* ── Hero ──────────────────────────────────────────────────────────── */
 .cls-hero { text-align: center; margin-bottom: 30px; }
-.cls-eyebrow {
-  font-family: SFMono-Regular, Consolas, monospace;
-  color: var(--accent);
-  font-size: .85rem; letter-spacing: 0.04em; margin: 0 0 8px;
-}
 .cls-title { font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 12px; line-height: 1.05; }
 .cls-sub { color: var(--text-mute); max-width: 660px; margin: 0 auto; line-height: 1.6; font-size: .98rem; }
 .cls-loading, .cls-empty { color: var(--text-mute); font-size: .92rem; padding: 8px 2px; }

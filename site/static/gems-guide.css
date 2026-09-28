@@ -68,10 +68,6 @@ body.gems-guide-page { overflow-x: clip; }
   display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(1.5rem, 4vw, 3.5rem);
   align-items: center; padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(1.5rem, 4vw, 3rem);
 }
-.gg-eyebrow {
-  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .82rem; letter-spacing: .06em;
-  color: var(--accent-blue); margin-bottom: 1rem;
-}
 .gg-title { font-size: clamp(2.4rem, 5vw + 1rem, 4.2rem); line-height: 1.02; text-wrap: balance; margin-bottom: 1.1rem; }
 .gg-lead { color: var(--text-mute); font-size: var(--type-lead); max-width: 54ch; text-wrap: pretty; }
 .gg-hero-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.6rem 0 1.8rem; }
@@ -938,7 +934,7 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-view-seg button.active { background: var(--accent-blue); color: var(--bg-base); }
 
 .gg-wiki .gg-hero { min-height: auto; padding-block: 1.4rem .2rem; display: block; }
-.gg-wiki .gg-hero-gem, .gg-wiki .gg-lead, .gg-wiki .gg-hero-chips, .gg-wiki .gg-hero-cue, .gg-wiki .gg-eyebrow { display: none; }
+.gg-wiki .gg-hero-gem, .gg-wiki .gg-lead, .gg-wiki .gg-hero-chips, .gg-wiki .gg-hero-cue { display: none; }
 .gg-wiki .gg-title { font-size: clamp(1.55rem, 4vw, 2.15rem); margin: 0; }
 .gg-wiki .gg-asks, .gg-wiki .gg-ceiling, .gg-wiki .gg-recap { display: none; }
 .gg-wiki [data-reveal] { opacity: 1 !important; transform: none !important; }

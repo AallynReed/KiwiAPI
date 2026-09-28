@@ -18,17 +18,6 @@
   padding: 56px 0 40px;
   text-align: center;
 }
-.cs-eyebrow {
-  margin: 0;
-  padding: 4px 12px;
-  border: 1px solid var(--bg-line);
-  border-radius: 999px;
-  background: var(--bg-card);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: .8rem;
-  letter-spacing: .06em;
-  color: var(--accent-blue);
-}
 .cs-title {
   margin: 0;
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;

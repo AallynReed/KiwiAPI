@@ -8,13 +8,6 @@
 }
 
 .ms-hero { text-align: center; margin-bottom: 28px; }
-.ms-eyebrow {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  color: var(--accent);
-  font-size: .85rem;
-  letter-spacing: 0.04em;
-  margin: 0 0 8px;
-}
 .ms-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 2.6rem;

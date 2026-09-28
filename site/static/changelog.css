@@ -13,13 +13,6 @@
     max-width: 60ch;
     margin: 0 auto clamp(1.5rem, 4vw, 2.75rem);
 }
-.cl-eyebrow {
-    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-    font-size: 0.85rem;
-    letter-spacing: 0.04em;
-    color: var(--accent-blue, #58a6ff);
-    margin: 0 0 0.5rem;
-}
 .cl-title {
     font-size: clamp(1.9rem, 5vw, 2.75rem);
     line-height: 1.1;

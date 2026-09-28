@@ -27,12 +27,6 @@
   gap: 14px;
   justify-items: center;
 }
-.sp-eyebrow {
-  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-  font-size: .9rem;
-  color: var(--accent-blue);
-  letter-spacing: .04em;
-}
 .sp-title {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   font-size: clamp(2.2rem, 5vw + .5rem, 4rem);
