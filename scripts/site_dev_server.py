@@ -1491,7 +1491,8 @@ class Handler(SimpleHTTPRequestHandler):
 
         # Page routes.
         if path == "/":
-            return self._send_file(TEMPLATES / "index.html", "text/html")
+            home = "index.html" if self._appearance()["design"] == "classic" else "home_voxel.html"
+            return self._send_file(TEMPLATES / home, "text/html")
         if path == "/commands":
             return self._send_file(TEMPLATES / "commands.html", "text/html")
         if path == "/leaderboards":
@@ -2755,7 +2756,7 @@ class Handler(SimpleHTTPRequestHandler):
                 wk += timedelta(days=1)
             daily_reset = int(day_reset.timestamp())
             weekly_reset = int(wk.timestamp())
-            def _biome(n, icon="permafrost"):
+            def _biome(n, icon="tundra"):
                 return {"name": n, "icon": icon}
             _days = ["Sunny Sunday", "Mining Monday", "Trove Tuesday", "Watery Wednesday",
                      "Thorny Thursday", "Fried Friday", "Shadow Saturday"]
@@ -2792,17 +2793,17 @@ class Handler(SimpleHTTPRequestHandler):
                      "schedule": [{"starts_at": now + 3600, "ends_at": now + 10800, "state": "arriving"}]},
                     {"id": "wild_mana", "name": "Wild Mana", "active": True,
                      "starts_at": now - 3600, "ends_at": now + 7200,
-                     "biomes": [_biome("Permafrost"), _biome("Cursed Vale", "cursedvale")],
+                     "biomes": [_biome("Permafrost"), _biome("Cursed Vale", "undead")],
                      "schedule": [{"starts_at": now + 7200, "ends_at": now + 18000,
-                                   "biomes": [_biome("Fae Forest", "faeforest")]}]},
+                                   "biomes": [_biome("Fae Forest", "fae")]}]},
                     {"id": "d15", "name": "Long Shade Rotation", "active": True,
                      "starts_at": now - 5400, "ends_at": now + 5400,
-                     "biomes": [_biome("Neon City", "neoncity")],
+                     "biomes": [_biome("Neon City", "neon")],
                      "schedule": [{"starts_at": now + 5400, "ends_at": now + 16200,
-                                   "biomes": [_biome("Jurassic Jungle", "jurassicjungle")]}]},
+                                   "biomes": [_biome("Jurassic Jungle", "dinosaur")]}]},
                     {"id": "stampy", "name": "Stampy", "active": True,
                      "starts_at": now - 7200, "ends_at": now + 100800,
-                     "biomes": [_biome("Candoria", "candoria")],
+                     "biomes": [_biome("Candoria", "candy")],
                      "schedule": []},
                 ],
             })
@@ -4276,6 +4277,12 @@ class Handler(SimpleHTTPRequestHandler):
         if path == "/site/unlock-debug":
             return self._unlock_debug()
 
+        if path == "/site/design-feedback":
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            if length:
+                self.rfile.read(length)
+            return self._send_json({"ok": True}, status=202)
+
         if path.startswith("/site/drops/"):
             # Accept whatever the form sends so the PIN step + the upload can be
             # walked through locally. Nothing is stored and no PIN is checked -
@@ -4364,7 +4371,8 @@ class Handler(SimpleHTTPRequestHandler):
             }.get(suffix, "application/octet-stream")
         data = p.read_bytes()
         if content_type == "text/html" and p.parent == TEMPLATES:
-            data = _render_page_template(p, self.path.split("?", 1)[0], extra_ctx)
+            data = _render_page_template(p, self.path.split("?", 1)[0],
+                                         {**self._appearance(), **(extra_ctx or {})})
         self.send_response(200)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
@@ -4373,6 +4381,18 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Content-Security-Policy", _SITE_CSP)
         self.end_headers()
         self.wfile.write(data)
+
+    def _appearance(self) -> dict:
+        """The visitor's look from the btt_design / btt_theme cookies, resolved the
+        same way the web container does (app/web/appearance.py)."""
+        from http.cookies import SimpleCookie
+        jar = SimpleCookie()
+        try:
+            jar.load(self.headers.get("Cookie", ""))
+        except Exception:  # noqa: BLE001 - a malformed header just means defaults
+            pass
+        from app.web.appearance import resolve
+        return resolve({k: v.value for k, v in jar.items()})
 
     def _send_json(self, obj, status=200):
         data = json.dumps(obj).encode("utf-8")

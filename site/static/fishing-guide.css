@@ -216,10 +216,10 @@ body.fishing-guide-page { overflow-x: clip; }
 .fg-tree-svg { width: 100%; aspect-ratio: 1; display: block; }
 .fg-tree-rim { fill: color-mix(in oklab, var(--bg-card) 70%, transparent); stroke: var(--bg-line); stroke-width: 1; }
 .fg-tree-link { stroke: var(--bg-line); stroke-width: 1.6; }
-.fg-tree-link-blue { stroke: color-mix(in oklab, #58a6ff 60%, var(--bg-line)); stroke-width: 2.2; }
+.fg-tree-link-blue { stroke: color-mix(in oklab, var(--accent-blue, #58a6ff) 60%, var(--bg-line)); stroke-width: 2.2; }
 .fg-tree-node { fill: var(--bg-deep); stroke: var(--text-soft); stroke-width: 1.4; transition: opacity .2s var(--ease-out); }
 .fg-tree-node-reward { fill: var(--bg-base); stroke-width: 2.6; }
-.fg-tree-node-reward[data-kind="blue"] { stroke: #58a6ff; }
+.fg-tree-node-reward[data-kind="blue"] { stroke: var(--accent-blue, #58a6ff); }
 .fg-tree-node-reward[data-kind="pink"] { stroke: #f778ba; }
 .fg-tree-node-reward[data-kind="orange"] { stroke: #ff8a3d; }
 .fg-tree-node-reward[data-kind="white"] { stroke: #eaf1fa; }

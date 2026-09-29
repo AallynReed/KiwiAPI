@@ -178,7 +178,7 @@
   transition: border-color .12s ease, background .12s ease;
 }
 .sp-free-card:hover {
-  border-color: rgba(76,201,240,.30);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 30%, transparent);
   background: rgba(255,255,255,.04);
 }
 /* The "Tell a Trove friend" tile is a <button> (copy-to-clipboard), not a link -
@@ -192,8 +192,8 @@ button.sp-free-card {
   appearance: none;
 }
 button.sp-free-card.copied {
-  border-color: rgba(76,201,240,.55);
-  background: rgba(76,201,240,.08);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 55%, transparent);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 8%, transparent);
 }
 .sp-free-card > i {
   font-size: 1.6rem;

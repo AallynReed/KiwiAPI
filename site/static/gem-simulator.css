@@ -416,7 +416,7 @@
 .gem-sim .save-gem-btn:hover:not(:disabled),
 .gem-sim .primary-btn:hover:not(:disabled) {
   background: var(--accent-blue, #58a6ff);
-  color: #0a0e14;
+  color: var(--bg-deep, #0a0e14);
 }
 .gem-sim .gem-action-btn:disabled, .gem-sim .primary-btn:disabled {
   opacity: 0.5; cursor: not-allowed; border-color: #555; color: var(--text-soft, #6e7785);

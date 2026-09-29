@@ -179,7 +179,7 @@
    nothing, so it gets a dot instead of vanishing. */
 .act-point { fill: #5dd078; }
 .act-guide { stroke: rgba(93, 208, 120, .45); stroke-width: 1; stroke-dasharray: 3 3; }
-.act-dot { fill: #8ee5a0; stroke: #0a0e14; stroke-width: 2; }
+.act-dot { fill: #8ee5a0; stroke: var(--bg-deep, #0a0e14); stroke-width: 2; }
 /* Reset markers: faint dashed verticals at each daily 11:00 UTC reset; the
    weekly (Monday) reset is amber + a touch bolder so it reads as the bigger one. */
 .act-reset-line { stroke: rgba(230, 237, 243, .20); stroke-width: 1; stroke-dasharray: 4 4; }

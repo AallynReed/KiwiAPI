@@ -877,8 +877,8 @@
 .mp-issue-tab:hover { color: var(--text); }
 .mp-issue-tab.is-sel {
   color: var(--text);
-  border-color: rgba(76,201,240,.45);
-  background: rgba(76,201,240,.10);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 45%, transparent);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 10%, transparent);
 }
 .mp-issues { display: grid; gap: 4px; }
 .mp-issue-row {
@@ -924,7 +924,7 @@
   background: rgba(255,255,255,.02);
 }
 /* The creator's own replies are the answer people scan for. */
-.mp-issue-post.is-owner { border-color: rgba(76,201,240,.35); }
+.mp-issue-post.is-owner { border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 35%, transparent); }
 .mp-issue-post-head {
   display: flex;
   align-items: center;
@@ -935,7 +935,7 @@
 .mp-issue-tag {
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(76,201,240,.14);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 14%, transparent);
   color: var(--accent-blue);
   font: 700 .7rem 'Inter', sans-serif;
 }

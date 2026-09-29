@@ -134,7 +134,7 @@
   gap: 8px;
   padding: 12px 18px;
   background: var(--accent-blue, #4cc9f0);
-  color: #06080d;
+  color: var(--bg-base, #06080d);
   border: none;
   border-radius: 10px;
   font: inherit;
@@ -469,7 +469,7 @@
   gap: 8px;
   padding: 10px 16px;
   background: var(--accent-blue, #4cc9f0);
-  color: #06080d;
+  color: var(--bg-base, #06080d);
   border: none;
   border-radius: 9px;
   font: inherit;
@@ -788,7 +788,7 @@
   color: var(--text);
 }
 .dash-discord-menu-item.active {
-  background: var(--accent-soft, rgba(76,201,240,.12));
+  background: var(--accent-soft, color-mix(in srgb, var(--accent-cyan, #4cc9f0) 12%, transparent));
   color: var(--text);
   border-color: color-mix(in oklab, var(--accent-blue, #4cc9f0) 35%, transparent);
 }
@@ -937,7 +937,7 @@
 .dash-mw-item .dash-mw-price { flex: 0 0 130px; width: 130px; }
 .dash-mw-item input:focus {
   outline: none;
-  border-color: rgba(76,201,240,.5);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 50%, transparent);
 }
 .dash-mw-remove {
   flex: 0 0 auto;
@@ -1222,7 +1222,7 @@
 }
 .dash-club-tab:hover { background: rgba(255,255,255,.09); }
 .dash-club-tab.active {
-  background: var(--accent-soft, rgba(76,201,240,.14));
+  background: var(--accent-soft, color-mix(in srgb, var(--accent-cyan, #4cc9f0) 14%, transparent));
   border-color: var(--accent-blue, #4cc9f0);
 }
 .dash-club-bar .dash-btn-mini { margin-left: auto; flex: 0 0 auto; }
@@ -1300,7 +1300,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-soft, rgba(76,201,240,.2));
+  background: var(--accent-soft, color-mix(in srgb, var(--accent-cyan, #4cc9f0) 20%, transparent));
   color: var(--accent-blue, #4cc9f0);
   font-size: .7rem;
   font-weight: 700;
@@ -1403,8 +1403,8 @@
 .wh-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
 .wh-chip {
   padding: 3px 9px;
-  background: rgba(76,201,240,.12);
-  border: 1px solid rgba(76,201,240,.25);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan, #4cc9f0) 25%, transparent);
   border-radius: 999px;
   font-size: .76rem;
   color: var(--text);
@@ -1436,10 +1436,10 @@
 .ee-palette-label { font-size: .76rem; color: var(--text-mute, #9aa6b6); margin-right: 4px; }
 .ee-chip {
   padding: 2px 8px; font-family: ui-monospace, Menlo, monospace; font-size: .74rem;
-  background: rgba(76,201,240,.12); border: 1px solid rgba(76,201,240,.25);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent-cyan, #4cc9f0) 25%, transparent);
   border-radius: 6px; color: var(--text); cursor: pointer;
 }
-.ee-chip:hover { background: rgba(76,201,240,.22); }
+.ee-chip:hover { background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 22%, transparent); }
 .ee-ctrls { display: flex; flex-wrap: wrap; gap: 8px; }
 .ee-btn { padding: 6px 11px; border-radius: 8px; font: inherit; font-size: .82rem; cursor: pointer; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--text); }
 .ee-btn-ghost:hover { background: rgba(255,255,255,.09); }
@@ -1510,7 +1510,7 @@
 .is-preview { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 .is-handle { position: absolute; border: 1px dashed rgba(255,255,255,.35); cursor: move; box-sizing: border-box; }
 .is-handle:hover { border-color: rgba(255,255,255,.6); }
-.is-handle.is-sel { border: 1.5px solid var(--accent-blue, #4cc9f0); background: rgba(76,201,240,.08); }
+.is-handle.is-sel { border: 1.5px solid var(--accent-blue, #4cc9f0); background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 8%, transparent); }
 .is-panels { display: flex; flex-direction: column; gap: 14px; }
 .is-section { background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
 .is-section-h { margin: 0; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-mute, #9aa6b6); }
@@ -1531,8 +1531,8 @@
 .dash-token-reveal {
   display: grid; gap: 8px; justify-items: start;
   margin: 0 0 14px; padding: 12px 14px;
-  background: rgba(76,201,240,.06);
-  border: 1px solid rgba(76,201,240,.22);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan, #4cc9f0) 22%, transparent);
   border-radius: 10px;
 }
 .dash-token-value {

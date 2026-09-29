@@ -725,6 +725,25 @@ REGISTRY: dict[str, TunableSetting] = {
         min_value=10, max_value=86400,
         description="Sliding-window length for the per-IP Unlock Debug bucket, in seconds.",
     ),
+    "design_feedback_rate_limit_max": _t(
+        key="design_feedback_rate_limit_max",
+        default=5,
+        type="int",
+        category="api_rate_limits",
+        min_value=1, max_value=100000,
+        description=(
+            "Per-IP cap on the site-design thumbs up/down (/site/design-feedback). "
+            "The browser only ever asks once, so a handful covers a shared connection."
+        ),
+    ),
+    "design_feedback_rate_limit_window_seconds": _t(
+        key="design_feedback_rate_limit_window_seconds",
+        default=3600,
+        type="int",
+        category="api_rate_limits",
+        min_value=10, max_value=86400,
+        description="Sliding-window length for the per-IP design-feedback bucket, in seconds.",
+    ),
     "file_drop_rate_limit_max": _t(
         key="file_drop_rate_limit_max",
         default=12,

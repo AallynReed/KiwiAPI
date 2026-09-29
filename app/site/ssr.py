@@ -197,6 +197,10 @@ async def home_view(fetch: Fetch, *, flags: dict[str, bool] | None = None) -> di
                       if isinstance(m, dict)],
         # Shop-offer posts are hidden by default on the client; mirror that here
         # so the server copy and the hydrated copy list the same headlines.
+        # The Voxel homepage (home_voxel.html) also reads these: the week of bonus
+        # days, and the raw rotations its island and timetable draw on first paint.
+        "days": _days(rot.get("daily_rotation")),
+        "island": _island(rot),
         "news": [_news(n) for n in _items(news)
                  if "Shop Offers" not in (n.get("categories") or [])][:12],
         "videos": [_video(v) for v in _items(videos)][:12],
@@ -218,9 +222,43 @@ def _buff(buff: Any, kicker: str) -> dict | None:
     return {
         "kicker": kicker,
         "name": (str(buff.get("emoji") or "") + " ").lstrip() + str(buff["name"]),
+        "title": str(buff["name"]),
         "list": [b for b in (buff.get("normal_buffs") or buff.get("buffs") or [])
                  if isinstance(b, str)][:4],
+        "patron": [b for b in (buff.get("premium_buffs") or []) if isinstance(b, str)][:4],
     }
+
+
+def _days(rotation: Any) -> list[dict]:
+    """Mon→Sun bonus days, the current one flagged."""
+    return [{"weekday": str(d.get("weekday") or "")[:3], "name": str(d.get("name") or ""),
+             "current": bool(d.get("is_current"))}
+            for d in (rotation or []) if isinstance(d, dict)]
+
+
+def _island(rot: dict) -> dict:
+    """The rotation fields the Voxel homepage's island + timetable read, trimmed to
+    plain JSON so the template can hand them to home_voxel.js with ``tojson``."""
+    def biomes(bs: Any) -> list[dict]:
+        return [{"name": str(b.get("name") or ""), "icon": str(b.get("icon") or "")}
+                for b in (bs or []) if isinstance(b, dict)]
+    merchants = []
+    for m in rot.get("merchants") or []:
+        if not isinstance(m, dict):
+            continue
+        merchants.append({
+            "id": m.get("id"), "name": m.get("name"), "active": bool(m.get("active")),
+            "state": m.get("state"), "starts_at": m.get("starts_at"),
+            "ends_at": m.get("ends_at"), "biomes": biomes(m.get("biomes")),
+            "window": m.get("window") if isinstance(m.get("window"), dict) else None,
+            "schedule": [{"starts_at": s.get("starts_at"), "ends_at": s.get("ends_at"),
+                          "biomes": biomes(s.get("biomes"))}
+                         for s in (m.get("schedule") or [])[:4] if isinstance(s, dict)],
+        })
+    st_raw = rot.get("server_time")
+    st: dict = st_raw if isinstance(st_raw, dict) else {}
+    return {"now": st.get("now_unix"), "daily_reset_at": st.get("daily_reset_at"),
+            "weekly_reset_at": st.get("weekly_reset_at"), "merchants": merchants}
 
 
 def _chaos(chaos: Any) -> dict | None:
@@ -228,7 +266,8 @@ def _chaos(chaos: Any) -> dict | None:
         return None
     item = chaos.get("item") if isinstance(chaos.get("item"), dict) else {}
     return {"name": (item or {}).get("name") or "Featured item",
-            "ends_at": datetime_attr(chaos.get("ends_at"))}
+            "ends_at": datetime_attr(chaos.get("ends_at")),
+            "ends_unix": chaos.get("ends_at") if isinstance(chaos.get("ends_at"), int) else None}
 
 
 def _merchant(m: dict) -> dict:
@@ -270,6 +309,9 @@ def _records(data: Any) -> list[dict]:
         if not isinstance(r, dict):
             continue
         out.append({
+            "key": key,
+            "raw": r.get("level") if is_level else r.get("value"),
+            "points": num(r.get("points")) if is_level and r.get("points") is not None else "",
             "kicker": kicker,
             "value": ("Level " + num(r.get("level"))) if is_level else num(r.get("value")),
             "meta": (num(r.get("points")) + " pts") if is_level

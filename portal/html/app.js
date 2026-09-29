@@ -1394,6 +1394,45 @@ async function renderPageviews(days = 30) {
 
   const sel = document.getElementById("pv-days"); sel.value = String(days);
   sel.addEventListener("change", () => renderPageviews(Number(sel.value)));
+
+  // Design feedback: the homepage's "Do you like the new design?" thumbs, anonymous tallies.
+  const fbCard = document.createElement("div");
+  fbCard.className = "card";
+  fbCard.style.marginTop = "18px";
+  fbCard.innerHTML = `<div class="loading">Loading design feedback…</div>`;
+  body.appendChild(fbCard);
+  try {
+    const fb = await API.call(`/admin/design-feedback?days=${days}`);
+    fbCard.innerHTML = designFeedbackHTML(fb, days, num);
+  } catch (ex) { fbCard.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
+}
+
+function designFeedbackHTML(fb, days, num) {
+  const liked = (v) => (v.up + v.down) ? `${Math.round(v.up / (v.up + v.down) * 100)}%` : "—";
+  const total = fb.total || { up: 0, down: 0 };
+  const row = (label, v) => `<tr><td>${esc(label)}</td><td>${num(v.up)}</td><td>${num(v.down)}</td><td>${liked(v)}</td></tr>`;
+  const THEME = { auto: "Trove time", light: "Light", dark: "Dark" };
+  const themes = Object.entries(fb.by_theme || {}).map(([k, v]) => row(THEME[k] || k, v)).join("");
+  const series = (fb.series || []).slice().reverse();
+  const dayRows = series.length
+    ? series.map((r) => row(r.day, r)).join("")
+    : `<tr><td colspan="4" class="muted">No votes in this window yet.</td></tr>`;
+  return `
+    <h2 style="margin:0 0 6px">Design feedback - last ${days === 1 ? "24 hours" : days + " days"}</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="n">${liked(total)}</div><div class="l">Like the new design</div></div>
+      <div class="stat"><div class="n">${num(total.up)}</div><div class="l">Thumbs up</div></div>
+      <div class="stat"><div class="n">${num(total.down)}</div><div class="l">Thumbs down</div></div>
+    </div>
+    <p class="hint" style="margin-top:14px">From the corner prompt on the Voxel homepage, asked once per browser. Only the tally is stored (day, look, theme, vote) - nothing about the visitor.</p>
+    <table>
+      <thead><tr><th>Homepage theme</th><th>Up</th><th>Down</th><th>Liked</th></tr></thead>
+      <tbody>${themes}</tbody>
+    </table>
+    <table style="margin-top:14px">
+      <thead><tr><th>Day (UTC)</th><th>Up</th><th>Down</th><th>Liked</th></tr></thead>
+      <tbody>${dayRows}</tbody>
+    </table>`;
 }
 
 // Admin · Users - searchable roster; click a row to drill into one account.

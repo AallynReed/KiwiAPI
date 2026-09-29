@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-vx-tod="{{ vx_tod or 'day' }}" data-vx-theme="{{ theme or 'auto' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Better Trove Tools</title>
+    <meta name="description" content="Trove right now: who's in town, today's bonus, record highs, news, mods and server status, on Trove server time. Free and open source.">
+    <meta name="keywords" content="Trove, Better Trove Tools, Trove dashboard, Trove news, Trove daily bonus, Trove server time, Trove mods, Trove leaderboards, Trove codexes, Trove rotations, chaos chest">
+    <meta name="author" content="Aallyn Reed">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0c1120">
+    <meta name="color-scheme" content="light dark">
+
+    <link rel="canonical" href="https://trove.aallyn.net/">
+
+    <link rel="preconnect" href="https://api.aallyn.net">
+    <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/assets/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/assets/favicon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trove.aallyn.net/">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="Better Trove Tools">
+    <meta property="og:description" content="Who's in town, today's bonus, news, mods, leaderboards and server status for Trove. Free &amp; open source.">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <meta property="og:image:secure_url" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+    <meta property="og:image:alt" content="Better Trove Tools">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Better Trove Tools">
+    <meta name="twitter:description" content="Who's in town, today's bonus, news, mods &amp; leaderboards for Trove.">
+    <meta name="twitter:image" content="https://trove.aallyn.net/static/assets/home_dashboard.png">
+
+    <meta name="application-name" content="Better Trove Tools">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Better Trove Tools",
+      "alternateName": "BTT",
+      "url": "https://trove.aallyn.net/",
+      "description": "Community hub for the game Trove: news, daily bonus, mods, modpacks, leaderboards, codexes and server status.",
+      "publisher": { "@type": "Person", "name": "Aallyn Reed" }
+    }
+    </script>
+
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
+    <link rel="stylesheet" href="/static/style.min.css">
+    <link rel="stylesheet" href="/static/home_voxel.min.css">
+</head>
+
+<body class="landing vx-home">
+{# DIRECTION CONTRACT
+   THESIS: The homepage is a small, living piece of Trove - a voxel island on Trove
+   server time, built from the biomes in rotation right now, with each merchant
+   standing where it is. The world is the live data.
+   OWN-WORLD: Colour comes from Trove's biomes, lit by the server clock (morning,
+   day, dusk, night) unless the visitor pins Light or Dark. Components speak in
+   cubes: flat-shaded iso markers, block podiums, a stepped horizon; no outlines.
+   FORM: Voxel Island, grounded direction, seed key b605909b-reroll. #}
+
+    <a class="skip-link" href="#main" data-i18n>Skip to main content</a>
+
+    <svg width="0" height="0" class="vx-defs" aria-hidden="true" focusable="false">
+        <symbol id="vx-cube" viewBox="0 0 20 20.7">
+            <path style="fill:var(--c,var(--vx-accent))" d="M10 1 18.5 5.25 10 9.5 1.5 5.25z"/>
+            <path style="fill:color-mix(in srgb,var(--c,var(--vx-accent)) 80%,#101020)" d="M1.5 5.25 10 9.5v10.2l-8.5-4.25z"/>
+            <path style="fill:color-mix(in srgb,var(--c,var(--vx-accent)) 62%,#101020)" d="M10 9.5l8.5-4.25v10.2L10 19.7z"/>
+        </symbol>
+        <symbol id="vx-pin" viewBox="0 0 16 9">
+            <path style="fill:var(--vx-surface)" d="M8 0 16 4.5 8 9 0 4.5z"/>
+            <path style="fill:var(--c,var(--vx-accent))" d="M8 2.1 12.3 4.5 8 6.9 3.7 4.5z"/>
+        </symbol>
+    </svg>
+
+    {% include "partials/navbar.html" %}
+
+    <main id="main">
+        <section class="vx-hero" aria-labelledby="vx-hero-title">
+            <canvas id="vx-world" class="vx-world" role="img"
+                    aria-label="A voxel island made of the Trove biomes in rotation right now, lit for the current Trove server time. The same information is in Who's in town below."
+                    data-i18n-aria-label></canvas>
+            <div class="vx-hero-inner">
+                <div class="vx-hero-copy">
+                    <h1 id="vx-hero-title" data-i18n>Here's Trove, right now.</h1>
+                    <p class="vx-facts">
+                        <span><b><time id="vx-clock">--:--:--</time></b> <span data-i18n>server time</span></span>
+                        {%- if ssr and ssr.buffs %}
+                        <span class="vx-sep" aria-hidden="true"></span>
+                        <span id="vx-facts-day">{{ ssr.buffs[0].title }}</span>
+                        {%- endif %}
+                        <span class="vx-sep" aria-hidden="true"></span>
+                        <span><span data-i18n>daily reset in</span> <b data-vx-cd="daily">—</b></span>
+                    </p>
+                    <div class="home-search vx-search-wrap" id="home-search">
+                        <form class="vx-search" id="home-search-form" action="/search" method="get"
+                              role="search" aria-label="Search Better Trove Tools" data-i18n-aria-label autocomplete="off">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <input type="search" name="q" id="home-search-input" class="vx-search-input"
+                                   autocomplete="off" spellcheck="false"
+                                   data-i18n-placeholder placeholder="Search players, items, mods, pages"
+                                   aria-label="Search" data-i18n-aria-label
+                                   role="combobox" aria-expanded="false" aria-autocomplete="list"
+                                   aria-controls="home-search-results">
+                            <button type="submit" class="vx-btn vx-btn-accent" data-i18n>Search</button>
+                        </form>
+                        <div class="home-search-panel" id="home-search-panel" hidden>
+                            <ul class="home-search-results" id="home-search-results" role="listbox"
+                                aria-label="Search results" data-i18n-aria-label></ul>
+                            <p class="home-search-empty" id="home-search-empty" role="status" hidden
+                               data-i18n>No matches</p>
+                            <a class="home-search-all" id="home-search-all" href="/search"><span data-i18n>See all results</span>
+                                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="vx-stage" id="vx-stage" aria-hidden="true"></div>
+                <ul class="vx-tags" id="vx-tags" aria-hidden="true"></ul>
+                <div class="vx-theme" role="radiogroup" aria-labelledby="vx-theme-label">
+                    <span class="vx-theme-label" id="vx-theme-label" data-i18n>Theme</span>
+                    <div class="vx-theme-track">
+                        <input type="radio" name="vx-theme" id="vx-theme-auto" value="auto" data-btt-theme {{ 'checked' if theme not in ('light', 'dark') else '' }}><label for="vx-theme-auto"><span class="vx-live-dot" aria-hidden="true"></span><span data-i18n>Trove time</span></label>
+                        <input type="radio" name="vx-theme" id="vx-theme-light" value="light" data-btt-theme {{ 'checked' if theme == 'light' else '' }}><label for="vx-theme-light" data-i18n>Light mode</label>
+                        <input type="radio" name="vx-theme" id="vx-theme-dark" value="dark" data-btt-theme {{ 'checked' if theme == 'dark' else '' }}><label for="vx-theme-dark" data-i18n>Dark mode</label>
+                    </div>
+                </div>
+            </div>
+            <svg class="vx-horizon" id="vx-horizon" aria-hidden="true" preserveAspectRatio="none"><path d=""/></svg>
+            <script type="application/json" id="vx-island-data">{{ (ssr.island if ssr else {}) | tojson }}</script>
+        </section>
+
+        <section class="vx-section vx-today" id="today" aria-labelledby="vx-today-title">
+            <div class="vx-wrap vx-today-grid">
+                <div>
+                    {%- set today = ssr.buffs[0] if (ssr and ssr.buffs) else None %}
+                    <h2 id="vx-today-title"><span class="vx-pre" data-i18n>Today is</span> <span class="vx-day" id="vx-today-day">{{ today.title if today else '—' }}</span></h2>
+                    <ul class="vx-bonus-list" id="vx-today-bonuses">
+                        {%- if today %}{% for b in today.list %}
+                        <li><svg class="vx-cube" aria-hidden="true"><use href="#vx-cube"/></svg><span>{{ b }}</span></li>
+                        {%- endfor %}{% endif %}
+                    </ul>
+                    <p class="vx-patron" id="vx-today-patron">
+                        {%- if today and today.patron %}<b data-i18n>Patrons get</b> {{ today.patron | join(' · ') }}{% endif -%}
+                    </p>
+                    <ol class="vx-week" id="vx-week" aria-label="Bonus days this week" data-i18n-aria-label>
+                        {%- if ssr and ssr.days %}{% for d in ssr.days %}
+                        <li{% if d.current %} aria-current="date"{% endif %}><b>{{ d.weekday }}</b>{{ d.name | replace(' Day', '') }}</li>
+                        {%- endfor %}{% endif %}
+                    </ol>
+                </div>
+                <dl class="vx-status">
+                    {%- set week = ssr.buffs[1] if (ssr and ssr.buffs and ssr.buffs | length > 1) else None %}
+                    <div class="vx-fact">
+                        <dt data-i18n>All week</dt>
+                        <dd id="vx-weekly"><strong>{{ week.title if week else '—' }}</strong>{% if week %}<span id="vx-weekly-text">{{ week.list | join(' · ') }}</span> {% endif %}<span class="vx-sub"><span data-i18n>Changes at the weekly reset in</span> <b data-vx-cd="weekly">—</b>.</span></dd>
+                    </div>
+                    {%- if ssr and ssr.chaos %}
+                    <div class="vx-fact">
+                        <dt data-i18n>Chaos Chest</dt>
+                        <dd id="vx-chaos"><strong>{{ ssr.chaos.name }}</strong><span data-i18n>Leaves the chest in</span> <b data-vx-cd="chaos" data-vx-at="{{ ssr.chaos.ends_unix or '' }}">—</b>.</dd>
+                    </div>
+                    {%- endif %}
+                    {% if server_status_enabled %}
+                    <div class="vx-fact">
+                        <dt data-i18n>Servers</dt>
+                        <dd id="vx-servers"><a href="/status"><strong><svg class="vx-cube vx-status-cube" aria-hidden="true"><use href="#vx-cube"/></svg><span id="vx-status-text" data-i18n>Checking…</span></strong></a>
+                            {% if player_activity_enabled %}<span id="vx-players"></span>{% endif %}</dd>
+                    </div>
+                    {% endif %}
+                    {% if updates_enabled %}
+                    <div class="vx-fact" id="vx-patch" hidden>
+                        <dt data-i18n>Latest update</dt>
+                        <dd><a href="/updates"><strong id="vx-patch-text"></strong></a></dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+        </section>
+
+        <section class="vx-section" id="town" aria-labelledby="vx-town-title">
+            <div class="vx-wrap">
+                <div class="vx-sec-head">
+                    <div>
+                        <h2 id="vx-town-title" data-i18n>Who's in town</h2>
+                        <p data-i18n>Merchants and rotating biomes, where they are and when they move on.</p>
+                    </div>
+                    {% if calendar_enabled %}<a class="vx-go" href="/calendar"><span data-i18n>Full rotation calendar</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{% endif %}
+                </div>
+                <table class="vx-timetable">
+                    <caption class="sr-only" data-i18n>Merchants and rotations right now, in Trove server time</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col" data-i18n>Who</th>
+                            <th scope="col" data-i18n>Where</th>
+                            <th scope="col" data-i18n>Next change</th>
+                            <th scope="col" data-i18n>Then</th>
+                            <th scope="col" class="vx-tl-col"><span class="sr-only" data-i18n>Next 12 hours</span><div class="vx-tl-ticks" id="vx-ticks" aria-hidden="true"></div></th>
+                        </tr>
+                    </thead>
+                    <tbody id="vx-merchants">
+                        {%- if ssr and ssr.merchants %}{% for m in ssr.merchants %}
+                        <tr>
+                            <td class="vx-p"><div class="vx-who"><b>{{ m.name }}</b></div></td>
+                            <td class="vx-w"><div class="vx-where">{% if m.biomes %}{{ m.biomes | join(', ') }}{% else %}<span class="vx-away">{{ m.badge }}</span>{% endif %}</div></td>
+                            <td class="vx-l"><span class="vx-when">{{ m.badge }}</span></td>
+                            <td class="vx-n"></td>
+                            <td class="vx-tl-col"></td>
+                        </tr>
+                        {%- endfor %}{% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {% if leaderboards_enabled %}
+        <section class="vx-section" id="records" aria-labelledby="vx-records-title">
+            <div class="vx-wrap">
+                <div class="vx-sec-head">
+                    <div>
+                        <h2 id="vx-records-title" data-i18n>Records</h2>
+                        <p data-i18n>The highest anyone in Trove has climbed.</p>
+                    </div>
+                    <a class="vx-go" href="/leaderboards"><span data-i18n>All leaderboards</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <ul class="vx-records" id="vx-records">
+                    {%- if ssr and ssr.records %}{% for r in ssr.records %}
+                    <li class="vx-record" data-key="{{ r.key }}" data-raw="{{ r.raw if r.raw is not none else '' }}">
+                        <div class="vx-podium" aria-hidden="true"></div>
+                        <div>
+                            <p class="vx-metric">{{ r.kicker }}</p>
+                            <p class="vx-holder">{% if r.holder %}<a href="/player/{{ r.holder | urlencode }}">{{ r.holder }}</a>{% else %}—{% endif %}</p>
+                            <p class="vx-value">{{ r.value }}{% if r.points %} · {{ r.points }} <span data-i18n>points</span>{% endif %}</p>
+                        </div>
+                    </li>
+                    {%- endfor %}{% endif %}
+                </ul>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if giveaways_enabled %}
+        <section class="vx-section vx-band" id="giveaways" aria-labelledby="vx-give-title" hidden>
+            <div class="vx-wrap vx-give">
+                <svg class="vx-gift" id="vx-gift" aria-hidden="true"></svg>
+                <div>
+                    <h2 id="vx-give-title"></h2>
+                    <p id="vx-give-meta"></p>
+                </div>
+                <a class="vx-btn vx-btn-accent" href="/giveaways" data-i18n>Enter the giveaway</a>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="vx-section" aria-label="News and videos" data-i18n-aria-label>
+            <div class="vx-wrap vx-two-col">
+                <div>
+                    <h2 data-i18n>From the Trove team</h2>
+                    <ul class="vx-rows vx-news" id="vx-news">
+                        {%- if ssr and ssr.news %}{% for n in ssr.news[:5] %}
+                        <li><a href="{{ n.url }}" target="_blank" rel="noopener"><span class="vx-t">{{ n.title }}</span><span class="vx-meta">{% if n.category %}<svg class="vx-cube" aria-hidden="true"><use href="#vx-cube"/></svg>{{ n.category }} · {% endif %}<time datetime="{{ n.datetime }}">{{ n.date }}</time></span></a></li>
+                        {%- endfor %}{% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h2 data-i18n>Community videos</h2>
+                    <ul class="vx-rows vx-videos" id="vx-videos">
+                        {%- if ssr and ssr.videos %}{% for v in ssr.videos[:4] %}
+                        <li><a href="{{ v.url }}" target="_blank" rel="noopener"><span class="vx-thumb">{% if v.thumb %}<img src="{{ v.thumb }}" alt="" loading="lazy" decoding="async" width="148" height="83">{% endif %}</span><span><span class="vx-t">{{ v.title }}</span><span class="vx-meta">{{ v.channel }}</span></span></a></li>
+                        {%- endfor %}{% endif %}
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        {% if mods_hub_enabled %}
+        <section class="vx-section" aria-labelledby="vx-mods-title">
+            <div class="vx-wrap vx-mods">
+                <div class="vx-mods-intro">
+                    <h2 id="vx-mods-title" data-i18n>New in the Mods Hub</h2>
+                    <p data-i18n>Fresh from the people who make Trove look and play their way.</p>
+                    <a class="vx-go" href="/mods"><span data-i18n>Browse the Mods Hub</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <div>
+                    <ul class="vx-mod-list" id="vx-mods">
+                        {%- if ssr and ssr.mods %}{% for m in ssr.mods[:6] %}
+                        <li><a href="{{ m.url }}"><svg class="vx-cube" aria-hidden="true" style="--c:{{ ['#7a82b8', '#e79a7c', '#8fc3a3', '#e6bf62', '#c58fd0', '#6fb4d8'][loop.index0 % 6] }}"><use href="#vx-cube"/></svg><span><b>{{ m.title }}</b><span>{% if m.author %}<span data-i18n>by</span> {{ m.author }}{% endif %}</span></span></a></li>
+                        {%- endfor %}{% endif %}
+                    </ul>
+                    <p class="vx-creator-line"><span data-i18n>Made something?</span> <a href="/mods" data-i18n>Publish it on the Mods Hub</a></p>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if community_sites_enabled %}
+        <section class="vx-section" aria-labelledby="vx-sites-title">
+            <div class="vx-wrap">
+                <div class="vx-sec-head">
+                    <div>
+                        <h2 id="vx-sites-title" data-i18n>More Trove sites</h2>
+                        <p data-i18n>Other players build great things for Trove too.</p>
+                    </div>
+                    <a class="vx-go" href="/community-sites"><span data-i18n>All community sites</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                </div>
+                <ul class="vx-sites">
+                    <li><a href="https://trovesaurus.com" target="_blank" rel="noopener"><span><b>Trovesaurus</b><span data-i18n>10 languages</span></span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></li>
+                    <li><a href="https://soruden.fr" target="_blank" rel="noopener"><span><b>Soruden</b><span><span lang="fr">Français</span> <span data-i18n>and 5 more</span></span></span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></li>
+                    <li><a href="https://mystic-cave.com" target="_blank" rel="noopener"><span><b>Mystic Cave</b><span><span lang="es">Español</span> · English</span></span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a></li>
+                </ul>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+
+    <aside class="vx-feedback" id="vx-feedback" aria-labelledby="vx-feedback-q" hidden>
+        <button type="button" class="vx-feedback-close" id="vx-feedback-close" aria-label="Dismiss" data-i18n-aria-label>
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+        <p class="vx-feedback-q" id="vx-feedback-q" data-i18n>Do you like the new design?</p>
+        <div class="vx-feedback-votes" id="vx-feedback-votes">
+            <button type="button" class="vx-feedback-vote" data-vote="up" aria-label="Yes, I like it" data-i18n-aria-label>
+                <i class="fa-regular fa-thumbs-up" aria-hidden="true"></i></button>
+            <button type="button" class="vx-feedback-vote" data-vote="down" aria-label="No, not really" data-i18n-aria-label>
+                <i class="fa-regular fa-thumbs-down" aria-hidden="true"></i></button>
+        </div>
+        <p class="vx-feedback-thanks" id="vx-feedback-thanks" role="status"></p>
+    </aside>
+
+    {% include "partials/footer.html" %}
+
+    <script src="/static/app.min.js"></script>
+    <script src="/static/_site_util.min.js"></script>
+    <script src="/static/i18n.min.js"></script>
+    <script src="/static/site_auth.min.js" defer></script>
+    <script src="/static/home_voxel.min.js" defer></script>
+    <script src="/static/design_feedback.min.js" defer></script>
+</body>
+</html>

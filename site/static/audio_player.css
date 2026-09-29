@@ -244,26 +244,26 @@
 .apv-title {
   font-weight: 700;
   font-size: .98rem;
-  color: #e6edf3;
+  color: var(--text, #e6edf3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.apv-meta { margin-left: auto; flex: 0 0 auto; font-size: .75rem; color: #9aa4b2; }
+.apv-meta { margin-left: auto; flex: 0 0 auto; font-size: .75rem; color: var(--text-mute, #9aa4b2); }
 
 .apv-close {
   flex: 0 0 auto;
   padding: 0 4px;
   border: 0;
   background: transparent;
-  color: #9aa4b2;
+  color: var(--text-mute, #9aa4b2);
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
 }
-.apv-close:hover { color: #e6edf3; }
-.apv-close:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
+.apv-close:hover { color: var(--text, #e6edf3); }
+.apv-close:focus-visible { outline: 2px solid var(--accent-blue, #58a6ff); outline-offset: 2px; }
 
 /* mount() adds .kv-audio to this element itself, which supplies the column
    layout - so this only has to claim the modal's remaining height. */

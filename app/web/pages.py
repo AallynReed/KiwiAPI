@@ -26,6 +26,7 @@ from app.core.config import settings
 from app.core.internal_api import internal_get
 from app.site import abilities_page, allies_page, classes_page, commands_page, hubs, ssr
 from app.site.feature_map import SITE_FEATURE_FLAGS
+from app.web import appearance
 from app.web import feature_flags as web_flags
 
 logger = logging.getLogger("kiwi.web.pages")
@@ -53,7 +54,7 @@ _APP = settings.app_url.rstrip("/")   # this site's own origin (trove.aallyn.net
 
 _TEMPLATES = Jinja2Templates(
     directory=str(Path(settings.site_root) / "templates"),
-    context_processors=[web_flags.context],
+    context_processors=[web_flags.context, appearance.context],
 )
 
 router = APIRouter(
@@ -107,11 +108,19 @@ async def embed_viewer(
 async def home(request: Request) -> HTMLResponse:
     """The content-hub homepage - a live front door (server status, leaderboard
     movers, latest mods, newest update, featured codex, reference). The app
-    *showcase* lives at ``/app``."""
-    return _TEMPLATES.TemplateResponse(request, "index.html", {
+    *showcase* lives at ``/app``.
+
+    Two looks share one route: the Voxel Island page by default, or the previous
+    dashboard for a visitor who switched to Classic (``btt_design`` cookie, see
+    ``app/web/appearance.py``). ``Vary: Cookie`` keeps any shared cache from
+    handing one visitor's look to another."""
+    template = "index.html" if appearance.design(request) == "classic" else "home_voxel.html"
+    response = _TEMPLATES.TemplateResponse(request, template, {
         "discord_install_url": settings.discord_install_link,
         "ssr": await ssr.home_view(_ssr_fetch, flags=_flag_map(request)),
     })
+    response.headers["Vary"] = "Cookie"
+    return response
 
 
 @router.get("/app", response_class=HTMLResponse)

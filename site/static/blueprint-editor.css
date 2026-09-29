@@ -907,7 +907,7 @@ body.bpe-working .bpe-workspace { margin-top: 6px; }
 .bpe-btn.bpe-primary {
   background: var(--accent-blue);
   border-color: var(--accent-blue);
-  color: #06080d;
+  color: var(--bg-base, #06080d);
   font-weight: 600;
 }
 .bpe-btn.bpe-primary:hover:not(:disabled) { filter: brightness(1.08); }

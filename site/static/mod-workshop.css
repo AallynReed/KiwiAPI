@@ -176,7 +176,7 @@
   width: 100%;
   border-color: transparent;
   background: var(--accent-blue);
-  color: #06080d;
+  color: var(--bg-base, #06080d);
 }
 .mw-btn-go:hover { border-color: transparent; background: #7cb8ff; }
 

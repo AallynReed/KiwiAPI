@@ -27,8 +27,8 @@
   font-family: "Space Grotesk", system-ui, sans-serif;
   font-weight: 700;
   font-size: 1.7rem;
-  color: #0a0e14;
-  background: linear-gradient(135deg, #4cc9f0, #5dd078);
+  color: var(--bg-deep, #0a0e14);
+  background: linear-gradient(135deg, var(--accent-cyan, #4cc9f0), #5dd078);
 }
 /* The game's own art replaces the letter tile - no tile behind it. */
 .pl-avatar-sigil {
@@ -216,8 +216,8 @@
 }
 .pl-cl-chip:hover { color: var(--text); }
 .pl-cl-chip-me {
-  background: rgba(76, 201, 240, .15);
-  border-color: rgba(76, 201, 240, .4);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 15%, transparent);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 40%, transparent);
   color: var(--text);
   font-weight: 700;
 }

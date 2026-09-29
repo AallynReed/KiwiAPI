@@ -19,6 +19,11 @@
    whenever someone added a page and missed it. Sub-paths count: /mods/<author>/<mod>
    still belongs to Mods Hub. #}
 {% set _pages_active = nav_active | default(false) %}
+{# The visitor's look (app/web/appearance.py): the Voxel skin repaints this bar and the
+   footer unless they chose Classic. Linked ahead of the header so it never paints
+   in the other look first. #}
+{% if design != 'classic' %}<link rel="stylesheet" href="/static/voxel.min.css">{% endif %}
+<link rel="stylesheet" href="/static/appearance.min.css">
 <header class="navbar" role="banner">
         <div class="nav-container">
             <a class="nav-logo" href="{{ '#hero' if _p == '/' else '/' }}" aria-label="Better Trove Tools home">
@@ -130,6 +135,32 @@
                     <a class="nav-support {{ 'active' if _p == '/support' else '' }}" href="/support" aria-label="Support" data-i18n-title title="Support the project"><i class="fa-solid fa-heart"></i></a>
                     <span id="nav-account" class="nav-account" data-state="loading"></span>
 
+                    <div class="nav-appearance" id="nav-appearance">
+                        <button type="button" class="nav-appearance-trigger" id="nav-appearance-trigger"
+                                aria-expanded="false" aria-controls="nav-appearance-panel"
+                                aria-label="Appearance" data-i18n-aria-label title="Appearance" data-i18n-title>
+                            <i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+                        </button>
+                        <div class="nav-appearance-panel" id="nav-appearance-panel" hidden>
+                            <fieldset class="nav-appearance-group">
+                                <legend data-i18n>Design</legend>
+                                <div class="nav-seg">
+                                    <input type="radio" name="nav-design" id="nav-design-voxel" value="voxel" data-btt-design {{ 'checked' if design != 'classic' else '' }}><label for="nav-design-voxel" data-i18n>New</label>
+                                    <input type="radio" name="nav-design" id="nav-design-classic" value="classic" data-btt-design {{ 'checked' if design == 'classic' else '' }}><label for="nav-design-classic" data-i18n>Classic</label>
+                                </div>
+                            </fieldset>
+                            <fieldset class="nav-appearance-group" {{ 'hidden' if design == 'classic' else '' }}>
+                                <legend data-i18n>Homepage theme</legend>
+                                <div class="nav-seg">
+                                    <input type="radio" name="nav-theme" id="nav-theme-auto" value="auto" data-btt-theme {{ 'checked' if theme not in ('light', 'dark') else '' }}><label for="nav-theme-auto" data-i18n>Trove time</label>
+                                    <input type="radio" name="nav-theme" id="nav-theme-light" value="light" data-btt-theme {{ 'checked' if theme == 'light' else '' }}><label for="nav-theme-light" data-i18n>Light mode</label>
+                                    <input type="radio" name="nav-theme" id="nav-theme-dark" value="dark" data-btt-theme {{ 'checked' if theme == 'dark' else '' }}><label for="nav-theme-dark" data-i18n>Dark mode</label>
+                                </div>
+                            </fieldset>
+                            <p class="nav-appearance-note" data-i18n>Saved in this browser only.</p>
+                        </div>
+                    </div>
+
                     {# data-no-dropdown: i18n.js builds its own compact switcher
                        here, so the shared select enhancer has to keep off. #}
                     <span class="lang-picker">
@@ -152,3 +183,4 @@
          it without anyone remembering to add a tag. `defer` runs it after the
          bottom-of-body `_site_util`, which it depends on for BTTUtil. -->
     <script src="/static/site_search.min.js" defer></script>
+    <script src="/static/appearance.min.js" defer></script>

@@ -1574,7 +1574,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   background: linear-gradient(90deg, rgba(199,155,255,.08), transparent 42%);
 }
 .lb-board.contest-daily:not(.active):not(:hover) {
-  background: linear-gradient(90deg, rgba(76,201,240,.08), transparent 42%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent-cyan, #4cc9f0) 8%, transparent), transparent 42%);
 }
 /* Virtual contest tab headers tinted to match their boards' cadence. */
 .lb-category.contest-weekly .lb-category-name,

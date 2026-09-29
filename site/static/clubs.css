@@ -66,7 +66,7 @@
 .cl-card:hover {
   transform: translateY(-2px);
   background: rgba(255, 255, 255, .05);
-  border-color: rgba(76, 201, 240, .30);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 30%, transparent);
 }
 
 .cl-banner {
@@ -140,8 +140,8 @@
   font-size: .8rem;
   font-weight: 700;
   color: var(--accent-blue);
-  background: rgba(76, 201, 240, .12);
-  border: 1px solid rgba(76, 201, 240, .25);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan, #4cc9f0) 25%, transparent);
   border-radius: 999px;
   padding: 3px 9px;
 }
@@ -177,7 +177,7 @@
 }
 .cl-link:hover {
   background: rgba(255, 255, 255, .07);
-  border-color: rgba(76, 201, 240, .35);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 35%, transparent);
 }
 .cl-link .fa-discord { color: #5865f2; }
 .cl-link .fa-globe { color: var(--accent-blue); }

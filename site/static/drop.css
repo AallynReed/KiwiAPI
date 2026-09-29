@@ -209,7 +209,7 @@
   padding: 14px 18px;
   font: inherit;
   font-weight: 650;
-  color: #06080d;
+  color: var(--bg-base, #06080d);
   background: var(--accent-blue);
   border: none;
   border-radius: var(--radius-sm);

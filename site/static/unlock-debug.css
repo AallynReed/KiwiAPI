@@ -184,7 +184,7 @@
   cursor: pointer;
   font: inherit;
   font-weight: 650;
-  color: #06080d;
+  color: var(--bg-base, #06080d);
   background: var(--accent-blue);
   box-shadow: 0 8px 26px color-mix(in oklab, var(--accent-blue) 22%, transparent);
   transition: box-shadow .18s var(--ease-out), background .18s var(--ease-out);

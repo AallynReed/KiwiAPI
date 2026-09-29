@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Voxel design - the site-wide layer.
+
+   Linked from partials/navbar.html on every page unless the visitor picked the
+   Classic look (btt_design cookie, app/web/appearance.py). It changes paint,
+   never behaviour: the same tokens style.css and every page stylesheet already
+   read are re-bound to the Voxel night palette, and the two brand faces are
+   re-pointed at Rubik, so all pages switch at once without per-page edits.
+
+   The homepage (body.vx-home) binds these tokens to its time-of-day palette in
+   home_voxel.css instead; its html[data-vx-tod] selectors outrank :root here.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-base: #0c1120;
+  --bg-deep: #10162b;
+  --bg-card: #172039;
+  --bg-card-hi: #1f2a48;
+  --bg-line: #27324e;
+  --text: #e8edf7;
+  --text-mute: #aab5cb;
+  --text-soft: #97a3bd;
+  --accent-blue: #f2c46b;
+  --accent-cyan: #f2c46b;
+  --accent-orange: #f4a261;
+  --accent-yellow: #ffd166;
+  --accent-purple: #b4a4ec;
+  --accent-green: #5cc98a;
+  --accent-red: #f07178;
+  --accent: var(--accent-blue);
+  --accent-soft: color-mix(in srgb, var(--accent) 30%, transparent);
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow-soft: 0 20px 44px -18px rgba(4, 8, 20, .6), 0 2px 6px rgba(4, 8, 20, .2);
+  --shadow-glow: 0 16px 40px -18px rgba(4, 8, 20, .65), 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  --ease-spring: var(--ease-out);
+  color-scheme: dark;
+}
+
+/* Rubik under the two brand names, so every rule that asks for Inter or Space
+   Grotesk gets Rubik without touching the page stylesheets. Declared after
+   fonts.css, so these win for the same family + weight; scripts Rubik lacks
+   (Greek, Vietnamese, CJK) still fall through to the original faces. */
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 500; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 700; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-cyrillic-ext.woff2) format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-latin-ext.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 800; font-display: swap; src: url(/static/fonts/rubik-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+/* ── Page ground ────────────────────────────────────────────────────── */
+body.landing:not(.vx-home) {
+  background-color: var(--bg-base);
+  background-image: none;
+}
+h1, h2, h3 { letter-spacing: -.02em; }
+/* Gradient headline text reads as generated chrome; the words carry weight alone. */
+.grad {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: inherit;
+  animation: none;
+}
+::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--text); }
+
+/* ── Navbar ─────────────────────────────────────────────────────────── */
+.navbar {
+  background: color-mix(in srgb, var(--bg-base) 96%, transparent);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.navbar.scrolled { background: var(--bg-base); }
+.nav-logo { font-weight: 800; letter-spacing: -.015em; }
+.nav-logo .highlight-blue,
+.footer-brand .highlight-blue { color: inherit; }
+
+.nav-links a,
+.nav-dropdown-trigger,
+.nav-links a.nav-icon,
+.nav-links a.nav-support,
+.lang-dd-trigger,
+.nav-toggle { border-radius: 8px; }
+.nav-links a:hover,
+.nav-dropdown-trigger:hover,
+.nav-links a.nav-icon:hover,
+.lang-dd-trigger:hover,
+.lang-dd-trigger[aria-expanded="true"] {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.nav-links a.nav-quick.active,
+.nav-dropdown-trigger.active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+.nav-links a.nav-cta {
+  color: var(--bg-base);
+  background: var(--text);
+  border-radius: 10px;
+}
+.nav-links a.nav-cta:hover {
+  color: var(--bg-base);
+  background: color-mix(in srgb, var(--text) 86%, var(--bg-base));
+}
+.nav-dropdown-panel { border-radius: 12px; }
+.nav-dropdown-panel a:hover,
+.nav-dropdown-panel a.active,
+.nav-dropdown-panel.nav-mega a.nav-mega-cursor { color: var(--text); background: var(--bg-card-hi); }
+.nav-dropdown-panel a:hover i,
+.nav-dropdown-panel a.active i,
+.nav-dropdown-panel.nav-mega a.nav-mega-cursor i { color: var(--accent); }
+.nav-mega-title {
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.nav-mega-search { border-radius: 10px; }
+.nav-pill-beta { background: var(--accent); color: #1a1406; }
+.nav-account-signin {
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--text) 32%, transparent);
+  color: var(--text);
+}
+.nav-account-signin:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.nav-account-trigger,
+.nav-bell-trigger { border-radius: 10px; }
+.nav-account-avatar:not(img) { background: var(--accent); color: #1a1406; }
+.lang-dd-item.active .lang-dd-tag {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--text);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+.site-footer {
+  background: var(--bg-base);
+  border-top: 1px solid var(--bg-line);
+}
+.footer-brand strong { font-weight: 800; letter-spacing: -.015em; }
+.footer-col h3 {
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}
+.footer-col a { color: var(--text-mute); }
+.footer-col a:hover { color: var(--text); text-decoration: underline; text-underline-offset: .2em; }
+.footer-fineprint a:hover { color: var(--text); }
+
+/* ── Support pill ───────────────────────────────────────────────────── */
+.support-trigger {
+  background: #c2456a;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px -10px rgba(120, 30, 60, .6), 0 1px 2px rgba(0, 0, 0, .2);
+}
+.support-trigger:hover {
+  background: #ad3a5d;
+  box-shadow: 0 14px 30px -12px rgba(120, 30, 60, .7), 0 1px 2px rgba(0, 0, 0, .2);
+}
+.support-panel { border-radius: 12px; }
+.support-link { border-radius: 8px; }

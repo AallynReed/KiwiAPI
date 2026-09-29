@@ -51,6 +51,8 @@ from app.core.redis import close_redis, init_redis
 from app.core.scopes import catalog as scope_catalog
 from app.custom_art.admin import router as custom_art_admin_router
 from app.custom_art.router import router as custom_art_router
+from app.design_feedback.admin import router as design_feedback_admin_router
+from app.design_feedback.router import router as design_feedback_router
 from app.discord.router import router as discord_router
 from app.dm_subs.delivery import start_dm_delivery, stop_dm_delivery
 from app.dm_subs.router import router as dm_subs_router
@@ -397,6 +399,9 @@ app.include_router(drops_router, include_in_schema=False,
 app.include_router(custom_art_router, include_in_schema=False)
 app.include_router(custom_art_admin_router, include_in_schema=False)
 app.include_router(mod_stats_router, include_in_schema=False)
+# Anonymous thumbs up/down on the site design: public tally + master readout.
+app.include_router(design_feedback_router, include_in_schema=False)
+app.include_router(design_feedback_admin_router, include_in_schema=False)
 app.include_router(supporters_public_router)  # public misc:read (tokenless) - in schema
 app.include_router(discord_bot_router, include_in_schema=False)  # User Dashboard "Discord Bot" tab (site_auth)
 app.include_router(  # User Dashboard "DM Alerts" tab (site_auth); inbound Discord DM subscriptions

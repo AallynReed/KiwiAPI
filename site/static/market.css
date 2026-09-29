@@ -140,8 +140,8 @@
 }
 .mkt-item:hover { background: rgba(255,255,255,.05); }
 .mkt-item.active {
-  background: rgba(76,201,240,.10);
-  border-color: rgba(76,201,240,.30);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 30%, transparent);
 }
 /* Small blueprint-render thumbnail beside each sidebar item. Voxel art, so
    nearest-neighbour scaling keeps the pixels crisp instead of blurred. The
@@ -270,7 +270,7 @@
 .mkt-detail-empty[hidden] { display: none; }
 .mkt-detail-empty i {
   font-size: 2rem;
-  color: rgba(76,201,240,.5);
+  color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 50%, transparent);
 }
 .mkt-detail-head {
   display: flex;
@@ -591,8 +591,8 @@
 }
 .mkt-load-more {
   padding: 10px 22px;
-  background: rgba(76,201,240,.10);
-  border: 1px solid rgba(76,201,240,.30);
+  background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-cyan, #4cc9f0) 30%, transparent);
   border-radius: 8px;
   color: var(--accent-blue);
   font: inherit;
@@ -600,7 +600,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.mkt-load-more:hover { background: rgba(76,201,240,.20); }
+.mkt-load-more:hover { background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 20%, transparent); }
 .mkt-load-more:disabled { opacity: .5; cursor: not-allowed; }
 
 .mkt-loading {
