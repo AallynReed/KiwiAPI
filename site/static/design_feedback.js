@@ -5,7 +5,8 @@
    the bottom-left corner (the support pill owns the right). A vote posts an
    anonymous tally to /site/design-feedback (design + theme + up/down, nothing
    about the visitor); the answer or a dismissal is remembered in localStorage
-   so it never asks again. It never takes focus.
+   so it never asks again. It never takes focus. A thumbs-down switches the
+   visitor to the classic look straight away.
    ========================================================================== */
 (function () {
   "use strict";
@@ -48,8 +49,11 @@
   function vote(v) {
     remember(v);
     var theme = window.BTTAppearance ? window.BTTAppearance.theme() : "auto";
-    fetch("/site/design-feedback", {
+    // keepalive: a thumbs-down reloads into the classic look straight after, and
+    // the tally must still arrive.
+    var sent = fetch("/site/design-feedback", {
       method: "POST",
+      keepalive: true,
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ design: "voxel", theme: theme, vote: v }),
     }).catch(function () {});
@@ -58,17 +62,12 @@
     if (v === "up") {
       thanks.textContent = tr("Thanks! Glad you like it.");
       setTimeout(hide, 5000);
-    } else {
-      thanks.textContent = tr("Thanks for telling us.") + " ";
-      var sw = document.createElement("button");
-      sw.type = "button";
-      sw.textContent = tr("Switch to the classic look");
-      sw.addEventListener("click", function () {
-        if (window.BTTAppearance) window.BTTAppearance.setDesign("classic");
-      });
-      thanks.appendChild(sw);
-      setTimeout(hide, 15000);
+      return;
     }
+    // Not for them: take them straight to the classic look (the Appearance menu brings it back).
+    thanks.textContent = tr("Thanks for telling us. Switching you to the classic look…");
+    var go = function () { if (window.BTTAppearance) window.BTTAppearance.setDesign("classic"); };
+    Promise.race([sent, new Promise(function (r) { setTimeout(r, 1200); })]).then(function () { setTimeout(go, 600); });
   }
   box.addEventListener("click", function (e) {
     var b = e.target.closest("[data-vote]");
