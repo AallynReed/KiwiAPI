@@ -3458,5 +3458,9 @@
   "To keep you signed in we store session and refresh tokens in your browser's <strong>local storage</strong> (not cookies), and we use local storage for preferences like language, and to remember that you have already answered the design feedback question. We don't use advertising or cross-site tracking cookies or storage. The only other cookie is the developer portal's bot-protection widget, which may set a strictly-necessary cookie during sign-in to tell humans from bots.": "Um dich angemeldet zu halten, speichern wir Sitzungs- und Refresh-Tokens im <strong>Local Storage</strong> deines Browsers (keine Cookies), und wir nutzen Local Storage für Einstellungen wie die Sprache sowie um uns zu merken, dass du die Frage zum neuen Design bereits beantwortet hast. Wir verwenden keine Werbe- oder websiteübergreifenden Tracking-Cookies oder -Speicher. Das einzige weitere Cookie stammt vom Bot-Schutz-Widget des Entwicklerportals, das bei der Anmeldung ein unbedingt erforderliches Cookie setzen kann, um Menschen von Bots zu unterscheiden.",
   "Light mode": "Hell",
   "Dark mode": "Dunkel",
-  "rotates": "wechselt"
+  "rotates": "wechselt",
+  "changes in": "wechselt in",
+  "Bonuses for": "Boni für",
+  "Everyone": "Alle",
+  "Patrons": "Patrons"
 }

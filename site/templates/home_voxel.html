@@ -116,6 +116,7 @@
                                 <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                         </div>
                     </div>
+                    <ul class="vx-legend" id="vx-legend" aria-label="On the island right now" data-i18n-aria-label hidden></ul>
                 </div>
                 <div class="vx-stage" id="vx-stage" aria-hidden="true"></div>
                 <ul class="vx-tags" id="vx-tags" aria-hidden="true"></ul>
@@ -137,14 +138,23 @@
                 <div>
                     {%- set today = ssr.buffs[0] if (ssr and ssr.buffs) else None %}
                     <h2 id="vx-today-title"><span class="vx-pre" data-i18n>Today is</span> <span class="vx-day" id="vx-today-day">{{ today.title if today else '—' }}</span></h2>
-                    <ul class="vx-bonus-list" id="vx-today-bonuses">
+                    <div class="vx-tier" id="vx-tier" role="radiogroup" aria-labelledby="vx-tier-label"{% if not (today and today.patron) %} hidden{% endif %}>
+                        <span class="vx-tier-label" id="vx-tier-label" data-i18n>Bonuses for</span>
+                        <div class="vx-tier-track">
+                            <input type="radio" name="vx-tier" id="vx-tier-all" value="all" checked><label for="vx-tier-all" data-i18n>Everyone</label>
+                            <input type="radio" name="vx-tier" id="vx-tier-patron" value="patron"><label for="vx-tier-patron" data-i18n>Patrons</label>
+                        </div>
+                    </div>
+                    <ul class="vx-bonus-list" id="vx-today-bonuses" data-tier="all">
                         {%- if today %}{% for b in today.list %}
                         <li><svg class="vx-cube" aria-hidden="true"><use href="#vx-cube"/></svg><span>{{ b }}</span></li>
                         {%- endfor %}{% endif %}
                     </ul>
-                    <p class="vx-patron" id="vx-today-patron">
-                        {%- if today and today.patron %}<b data-i18n>Patrons get</b> {{ today.patron | join(' · ') }}{% endif -%}
-                    </p>
+                    <ul class="vx-bonus-list" id="vx-today-patron" data-tier="patron">
+                        {%- if today %}{% for b in today.patron %}
+                        <li><svg class="vx-cube" aria-hidden="true"><use href="#vx-cube"/></svg><span>{{ b }}</span></li>
+                        {%- endfor %}{% endif %}
+                    </ul>
                     <ol class="vx-week" id="vx-week" aria-label="Bonus days this week" data-i18n-aria-label>
                         {%- if ssr and ssr.days %}{% for d in ssr.days %}
                         <li{% if d.current %} aria-current="date"{% endif %}><b>{{ d.weekday }}</b>{{ d.name | replace(' Day', '') }}</li>

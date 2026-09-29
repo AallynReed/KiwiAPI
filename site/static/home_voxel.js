@@ -465,7 +465,7 @@
       var list = items.map(function (li) {
         var a = world.anchors[li.dataset.anchor] || world.anchors.hub, p = Pr(a[0], a[1], a[2]), card = $(".vx-tag-card", li);
         var w = card.offsetWidth, h = card.offsetHeight, al = li.dataset.align;
-        return { li: li, x: p[0] + offX, y: p[1] + offY, w: w, h: h, stem: 26, dx: al === "start" ? w / 2 - 14 : al === "end" ? -(w / 2 - 14) : 0 };
+        return { li: li, x: p[0] + offX, y: p[1] + offY, w: w, h: h, stem: 16, dx: al === "start" ? w / 2 - 14 : al === "end" ? -(w / 2 - 14) : 0 };
       });
       function box(t) { return { l: t.x + t.dx - t.w / 2, r: t.x + t.dx + t.w / 2, b: t.y - t.stem - 5, t: t.y - t.stem - 5 - t.h }; }
       list.forEach(function (t) {
@@ -583,16 +583,24 @@
     });
     regions.sort(function (a, b) { return (STYLE[b].tall ? 1 : 0) - (STYLE[a].tall ? 1 : 0); });
     if (!regions.length) regions = ["tundra", "neon", "candy", "fae", "undead"];
+    // One label per biome on the island, named in full, with a row for every
+    // rotation happening there; merchants with no biome share one card at the Hub.
     var tags = [];
-    list.forEach(function (m) {
-      if (!m.active) return;
-      var anchor = null;
-      if (m.biomes && m.biomes.length) {
-        for (var i = 0; i < m.biomes.length; i++) if (regions.indexOf(m.biomes[i].icon) > -1) { anchor = m.biomes[i].icon; break; }
-        if (!anchor) return;
-      } else anchor = "hub";
-      tags.push({ m: m, anchor: anchor });
+    regions.forEach(function (icon) {
+      var rows = [], name = null;
+      ISLAND_ORDER.forEach(function (id) {
+        var m = byId[id];
+        if (!m || !m.active) return;
+        (m.biomes || []).forEach(function (b) {
+          if (!b || b.icon !== icon) return;
+          if (!name) name = b.name;
+          if (rows.indexOf(m) < 0) rows.push(m);
+        });
+      });
+      if (name) tags.push({ anchor: icon, title: name, color: STYLE[icon].marker, rows: rows });
     });
+    var hub = list.filter(function (m) { return m.active && !(m.biomes && m.biomes.length); });
+    if (hub.length) tags.push({ anchor: "hub", title: null, color: STYLE.hub.marker, rows: hub });
     return { regions: regions, tags: tags };
   }
 
@@ -601,13 +609,10 @@
     var w = m.window;
     if (m.active && w && w.open && w.ends_at) return { at: w.ends_at, label: tr("closes"), line: tr("open · closes in") };
     if (m.active && w && !w.open && w.starts_at) return { at: w.starts_at, label: tr("opens"), line: tr("next window in") };
-    if (m.active && m.ends_at) return { at: m.ends_at, label: m.biomes && m.biomes.length && m.id !== "stampy" ? tr("rotates") : tr("leaves"), line: tr("leaves in") };
+    var rotating = m.biomes && m.biomes.length && m.id !== "stampy";
+    if (m.active && m.ends_at) return { at: m.ends_at, label: rotating ? tr("rotates") : tr("leaves"), line: rotating ? tr("changes in") : tr("leaves in") };
     if (!m.active && m.starts_at) return { at: m.starts_at, label: tr("back"), line: tr("back in") };
     return null;
-  }
-  function biomeText(bs) {
-    if (!bs || !bs.length) return "";
-    return bs[0].name + (bs.length > 1 ? " +" + (bs.length - 1) : "");
   }
   function iconImgs(bs) {
     return (bs || []).filter(function (b) { return b.icon && b.icon !== "unknown"; }).slice(0, 3).map(function (b) {
@@ -618,17 +623,40 @@
     return '<svg class="vx-cube' + (cls ? " " + cls : "") + '" aria-hidden="true" style="--c:' + color + '"><use href="#vx-cube"/></svg>';
   }
 
+  // Every label says what is there in words, no key needed: a biome's full name over
+  // the rotations running in it, or a Hub merchant over when it leaves. The list under
+  // the search keeps the countdowns.
   function renderTags(p) {
     var el = $("#vx-tags");
     if (!el) return;
-    el.innerHTML = p.tags.map(function (t, i) {
-      var m = t.m, ch = change(m), line;
-      if (t.anchor === "hub") line = esc(ch ? ch.line : tr("here")) + ' <span class="vx-cd" data-vx-cd="m:' + esc(m.id) + '"></span>';
-      else line = esc(biomeText(m.biomes)) + (ch ? ' · <span class="vx-cd" data-vx-cd="m:' + esc(m.id) + '"></span>' : "");
+    var cards = [];
+    p.tags.forEach(function (t) {
+      if (t.title) {
+        cards.push({ anchor: t.anchor, color: t.color, title: esc(t.title),
+          sub: esc(t.rows.map(function (m) { return m.name; }).join(" · ")) });
+      } else {
+        t.rows.forEach(function (m) {
+          var ch = change(m);
+          cards.push({ anchor: t.anchor, color: mColor(m), title: esc(m.name),
+            sub: esc(ch ? ch.line : tr("here")) + (ch ? ' <span class="vx-cd" data-vx-cd="m:' + esc(m.id) + '"></span>' : "") });
+        });
+      }
+    });
+    el.innerHTML = cards.map(function (c, i) {
       var align = i % 3 === 1 ? "start" : i % 3 === 2 ? "end" : "center";
-      return '<li class="vx-tag" data-anchor="' + esc(t.anchor) + '" data-align="' + align + '" style="--c:' + mColor(m) + '">' +
-        '<div class="vx-tag-card">' + cube(mColor(m)) + "<strong>" + esc(m.name) + "</strong><span>" + line + "</span></div>" +
+      return '<li class="vx-tag" data-anchor="' + esc(c.anchor) + '" data-align="' + align + '" style="--c:' + c.color + '">' +
+        '<div class="vx-tag-card"><strong>' + c.title + '</strong><span class="vx-tag-sub">' + c.sub + "</span></div>" +
         '<span class="vx-tag-stem" aria-hidden="true"></span><svg class="vx-tag-pin" aria-hidden="true"><use href="#vx-pin"/></svg></li>';
+    }).join("");
+    var legend = $("#vx-legend");
+    if (!legend) return;
+    var shown = [];
+    p.tags.forEach(function (t) { t.rows.forEach(function (m) { if (shown.indexOf(m) < 0) shown.push(m); }); });
+    legend.hidden = !shown.length;
+    legend.innerHTML = shown.map(function (m) {
+      var ch = change(m), cd = ch ? '<span class="vx-cd" data-vx-cd="m:' + esc(m.id) + '"></span>' : "";
+      var when = esc(ch ? ch.line : tr("here")) + " " + cd;
+      return "<li>" + cube(mColor(m)) + "<b>" + esc(m.name) + '</b><span class="vx-legend-when">' + when + "</span></li>";
     }).join("");
   }
 
@@ -697,10 +725,10 @@
       $("#vx-today-day").textContent = db.name;
       var fd = $("#vx-facts-day");
       if (fd) fd.textContent = db.name;
-      var list = $("#vx-today-bonuses");
-      list.innerHTML = (db.normal_buffs || []).map(function (b) { return "<li>" + cube("var(--vx-accent)") + "<span>" + esc(b) + "</span></li>"; }).join("");
-      var pt = $("#vx-today-patron"), prem = db.premium_buffs || [];
-      pt.innerHTML = prem.length ? "<b>" + esc(tr("Patrons get")) + "</b> " + esc(prem.join(" · ")) : "";
+      function items(bs) { return (bs || []).map(function (b) { return "<li>" + cube("var(--vx-accent)") + "<span>" + esc(b) + "</span></li>"; }).join(""); }
+      $("#vx-today-bonuses").innerHTML = items(db.normal_buffs);
+      $("#vx-today-patron").innerHTML = items(db.premium_buffs);
+      $("#vx-tier").hidden = !(db.premium_buffs || []).length;
     }
     var week = $("#vx-week");
     if (week && d.daily_rotation && d.daily_rotation.length) {
@@ -969,6 +997,13 @@
     function onScroll() { if (nav) nav.classList.toggle("scrolled", window.scrollY > 12); }
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
+
+    try {
+      if (localStorage.getItem("btt-bonus-tier") === "patron") $("#vx-tier-patron").checked = true;
+    } catch (_) {}
+    $$('input[name="vx-tier"]').forEach(function (i) {
+      i.addEventListener("change", function () { try { localStorage.setItem("btt-bonus-tier", i.value); } catch (_) {} });
+    });
 
     document.addEventListener("btt-theme-changed", function () { applyTod(wantedTod(now()), true); });
     document.addEventListener("btt-lang-changed", function () {

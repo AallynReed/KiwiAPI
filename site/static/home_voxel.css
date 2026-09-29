@@ -176,17 +176,29 @@ body.vx-home {
   display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%);
 }
 .vx-tag-card {
-  display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center;
-  transform: translateX(var(--dx, 0px)); padding: 8px 12px 9px; white-space: nowrap;
-  font-size: .875rem; line-height: 1.3;
-  background: var(--vx-surface); color: var(--vx-ink); border-radius: 10px;
-  box-shadow: 0 12px 26px -12px rgba(12, 16, 34, .5), 0 1px 2px rgba(12, 16, 34, .14);
+  display: flex; flex-direction: column; gap: 1px;
+  transform: translateX(var(--dx, 0px)); padding: 6px 11px 7px; white-space: nowrap;
+  font-size: .8125rem; line-height: 1.3;
+  background: var(--vx-surface); color: var(--vx-ink); border-radius: 8px;
+  box-shadow: 0 10px 22px -12px rgba(12, 16, 34, .5), 0 1px 2px rgba(12, 16, 34, .14);
 }
-.vx-tag-card .vx-cube { grid-row: span 2; }
 .vx-tag-card strong { font-weight: 700; }
-.vx-tag-card span { color: var(--vx-ink-2); }
-.vx-tag-card .vx-cd { color: var(--vx-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-.vx-tag-stem { display: block; width: 2px; height: var(--stem, 30px); background: var(--vx-surface); }
+.vx-tag-sub { color: var(--vx-ink-2); font-size: .75rem; }
+.vx-cd { color: var(--vx-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* The map key under the search: every rotation on the island, in full, with its countdown. */
+.vx-legend {
+  display: grid; grid-template-columns: auto auto auto; justify-content: start; align-items: center; gap: 7px 12px;
+  margin: 26px 0 0; padding: 0; list-style: none;
+  color: var(--vx-hero-ink-2); font-size: .9375rem;
+}
+.vx-legend[hidden] { display: none; }
+.vx-legend li { display: contents; }
+.vx-legend .vx-cube { width: 14px; height: 14px; }
+.vx-legend b { color: var(--vx-hero-ink); font-weight: 600; white-space: nowrap; }
+.vx-legend-when { white-space: nowrap; }
+.vx-legend .vx-cd { color: var(--vx-hero-ink); }
+.vx-tag-stem { display: block; width: 2px; height: var(--stem, 18px); background: var(--vx-surface); }
 .vx-tag-pin { display: block; width: 16px; height: 9px; margin-top: -1px; transform: translateY(50%); }
 
 .vx-theme { position: absolute; right: 0; bottom: 18px; z-index: 3; display: flex; align-items: center; gap: 12px; }
@@ -227,9 +239,23 @@ body.vx-home {
 .vx-bonus-list { list-style: none; margin: 34px 0 0; padding: 0; display: grid; gap: 14px; font-size: clamp(1.125rem, 1.6vw, 1.3125rem); font-weight: 500; }
 .vx-bonus-list li { display: flex; align-items: baseline; gap: 14px; }
 .vx-bonus-list .vx-cube { width: 18px; height: 18px; transform: translateY(2px); }
-.vx-patron { margin: 20px 0 0; color: var(--vx-ink-2); max-width: 60ch; }
-.vx-patron b { color: var(--vx-ink); font-weight: 600; }
-.vx-patron:empty { display: none; }
+/* Everyone / Patrons: the same segmented control as the theme picker; CSS alone swaps the lists. */
+.vx-tier { display: flex; align-items: center; gap: 12px; margin-top: 28px; }
+.vx-tier[hidden] { display: none; }
+.vx-tier-label { color: var(--vx-ink-2); font-size: .875rem; font-weight: 500; }
+.vx-tier-track { display: flex; padding: 4px; gap: 2px; background: var(--vx-surface); border: 1px solid var(--vx-line); border-radius: 11px; }
+.vx-tier input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.vx-tier label {
+  display: flex; align-items: center; min-height: 34px; padding: 0 14px; border-radius: 8px; cursor: pointer;
+  color: var(--vx-ink-2); font-size: .875rem; font-weight: 500;
+  transition: background-color .2s var(--vx-ease), color .2s var(--vx-ease);
+}
+.vx-tier label:hover { color: var(--vx-ink); }
+.vx-tier input:checked + label { background: var(--vx-ink); color: var(--vx-surface); }
+.vx-tier input:focus-visible + label { outline: 2px solid var(--vx-accent); outline-offset: 2px; }
+.vx-tier:not([hidden]) ~ .vx-bonus-list { margin-top: 22px; }
+.vx-today:has(#vx-tier-patron:checked) .vx-bonus-list[data-tier="all"],
+.vx-today:not(:has(#vx-tier-patron:checked)) .vx-bonus-list[data-tier="patron"] { display: none; }
 .vx-week { list-style: none; margin: 44px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .vx-week li { padding-top: 12px; border-top: 2px solid var(--vx-line); color: var(--vx-ink-2); font-size: .875rem; line-height: 1.35; }
 .vx-week li b { display: block; color: var(--vx-ink); font-weight: 600; font-size: .9375rem; }
@@ -276,13 +302,13 @@ body.vx-home {
 .vx-tl i.open { border-radius: 3px 0 0 3px; -webkit-mask-image: linear-gradient(90deg, #000 72%, transparent); mask-image: linear-gradient(90deg, #000 72%, transparent); }
 
 /* Records */
-.vx-records { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 5vw, 72px); align-items: end; margin: 0; padding: 0; list-style: none; }
-.vx-record { margin: 0; }
-.vx-podium { display: flex; justify-content: flex-start; height: 220px; align-items: flex-end; margin-bottom: 22px; }
+.vx-records { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 4vw, 56px); align-items: end; margin: 0; padding: 0; list-style: none; }
+.vx-record { margin: 0; display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 18px; align-items: end; }
+.vx-podium { display: flex; justify-content: center; height: 136px; align-items: flex-end; }
 .vx-podium svg { height: 100%; width: auto; max-width: 100%; overflow: visible; }
 .vx-record p { margin: 0; }
 .vx-metric { color: var(--vx-ink-2); }
-.vx-holder { font-size: clamp(1.75rem, 2.6vw, 2.25rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin: 4px 0 6px !important; overflow-wrap: anywhere; }
+.vx-holder { font-size: clamp(1.5rem, 2.1vw, 1.875rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin: 4px 0 6px !important; overflow-wrap: anywhere; }
 .vx-holder a { text-decoration: none; }
 .vx-holder a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .15em; }
 .vx-value { font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -386,9 +412,7 @@ body.vx-home {
 }
 @media (max-width: 760px) {
   .vx-give { grid-template-columns: minmax(0, 1fr); justify-items: start; }
-  .vx-records { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-  .vx-record { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 20px; align-items: end; }
-  .vx-podium { height: 170px; margin: 0; }
+  .vx-records { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .vx-sites, .vx-mod-list { grid-template-columns: minmax(0, 1fr); }
   .vx-week { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 14px; }
 }

@@ -3458,5 +3458,9 @@
   "To keep you signed in we store session and refresh tokens in your browser's <strong>local storage</strong> (not cookies), and we use local storage for preferences like language, and to remember that you have already answered the design feedback question. We don't use advertising or cross-site tracking cookies or storage. The only other cookie is the developer portal's bot-protection widget, which may set a strictly-necessary cookie during sign-in to tell humans from bots.": "로그인 상태를 유지하기 위해 세션 및 갱신 토큰을 브라우저의 <strong>로컬 스토리지</strong>(쿠키가 아님)에 저장하며, 언어 같은 환경설정과 디자인 피드백 질문에 이미 답했다는 사실을 기억하는 데에도 로컬 스토리지를 사용합니다. 광고용이나 사이트 간 추적용 쿠키나 저장소는 사용하지 않습니다. 그 밖의 유일한 쿠키는 개발자 포털의 봇 방지 위젯이 사용하는 것으로, 로그인 시 사람과 봇을 구별하기 위해 반드시 필요한 쿠키를 설정할 수 있습니다.",
   "Light mode": "라이트 모드",
   "Dark mode": "다크 모드",
-  "rotates": "교체"
+  "rotates": "교체",
+  "changes in": "교체까지",
+  "Bonuses for": "보너스 대상",
+  "Everyone": "모두",
+  "Patrons": "후원자"
 }

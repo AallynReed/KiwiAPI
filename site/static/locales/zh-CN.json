@@ -3458,5 +3458,9 @@
   "To keep you signed in we store session and refresh tokens in your browser's <strong>local storage</strong> (not cookies), and we use local storage for preferences like language, and to remember that you have already answered the design feedback question. We don't use advertising or cross-site tracking cookies or storage. The only other cookie is the developer portal's bot-protection widget, which may set a strictly-necessary cookie during sign-in to tell humans from bots.": "为使你保持登录状态，我们将会话令牌和刷新令牌存储在你浏览器的<strong>本地存储</strong>（而非 Cookie）中，并使用本地存储保存语言等偏好，以及记住你已回答过设计反馈问题。我们不使用广告或跨站跟踪的 Cookie 或存储。唯一的其他 Cookie 来自开发者门户的机器人防护小工具，它可能在登录时设置一个严格必要的 Cookie，以区分真人和机器人。",
   "Light mode": "浅色模式",
   "Dark mode": "深色模式",
-  "rotates": "轮换"
+  "rotates": "轮换",
+  "changes in": "轮换倒计时",
+  "Bonuses for": "加成对象",
+  "Everyone": "所有人",
+  "Patrons": "赞助者"
 }
