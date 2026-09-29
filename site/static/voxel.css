@@ -359,6 +359,15 @@ h1, h2, h3 { letter-spacing: -.02em; }
   color: var(--text);
 }
 
+/* One focus ring, never two: the field's own border turns accent and a 1px
+   shadow thickens it to 2px, instead of a second outline floating beside it. */
+.nav-mega-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.nav-mega-search:has(.nav-mega-search-input:focus-visible) { outline: none; }
+:root :is(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea, select):focus-visible {
+  outline-offset: 0 !important;
+  border-color: var(--accent);
+}
+
 /* ── Footer ─────────────────────────────────────────────────────────── */
 .site-footer {
   background: var(--bg-base);
