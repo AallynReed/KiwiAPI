@@ -80,7 +80,6 @@ body.vx-home {
 .vx-home h1, .vx-home h2, .vx-home h3 { font-family: inherit; color: inherit; text-wrap: balance; }
 .vx-home a { color: inherit; }
 .vx-home a:hover { color: inherit; }
-.vx-home :focus-visible { outline: 2px solid var(--vx-accent); outline-offset: 3px; border-radius: 4px; }
 .vx-home time, .vx-num { font-variant-numeric: tabular-nums; }
 .vx-defs { position: absolute; }
 .vx-wrap { width: min(1240px, 100% - 64px); margin-inline: auto; }
