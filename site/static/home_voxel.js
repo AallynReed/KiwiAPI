@@ -986,6 +986,7 @@
       var it = d && d.items && d.items[0], tag = it && (it.version_tag || it.ordinal);
       if (!tag) return;
       $("#vx-patch-text").textContent = tag;
+      $("#vx-patch-when").textContent = ago(it.captured_at);
       $("#vx-patch").hidden = false;
     }).catch(function () {});
     if ($("#giveaways")) getJSON("/site/giveaways").then(function (d) {

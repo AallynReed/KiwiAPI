@@ -2347,7 +2347,7 @@ class Handler(SimpleHTTPRequestHandler):
             if sub == "versions":
                 return self._send_json({"items": [
                     {"branch": branch, "ordinal": 2, "version_tag": "1.0.stub",
-                     "captured_at": None, "completed_at": None,
+                     "captured_at": "2026-09-24T15:15:55+00:00", "completed_at": None,
                      "files_added": 3, "files_modified": 1, "files_removed": 0,
                      "bytes_added": 4096},
                     {"branch": branch, "ordinal": 1, "version_tag": "0.9.stub",
