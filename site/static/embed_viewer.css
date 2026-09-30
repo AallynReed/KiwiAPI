@@ -14,7 +14,7 @@
   --kv-raised: #1a212c;
   --kv-ink: #e6edf3;
   --kv-mute: #9aa4b2;          /* the readable gray — all reading copy */
-  --kv-soft: #6e7785;          /* non-content metadata only */
+  --kv-soft: #838c9c;          /* metadata and hints */
   --kv-accent: #58a6ff;
   --kv-danger: #f0997b;
   --kv-radius: 10px;

@@ -44,7 +44,7 @@
 }
 .gw-badge-open { background: rgba(63,185,80,.16); color: var(--accent-green); }
 .gw-badge-scheduled { background: rgba(88,166,255,.16); color: var(--accent-blue); }
-.gw-badge-drawn { background: rgba(163,113,247,.16); color: var(--accent-purple); }
+.gw-badge-drawn { background: rgba(163,113,247,.16); color: color-mix(in srgb, var(--accent-purple) 75%, white); }
 .gw-badge-closed { background: rgba(255,255,255,.08); color: var(--text-mute); }
 
 .gw-prize { font-size: 1.4rem; margin: 12px 0 4px; color: var(--text); }

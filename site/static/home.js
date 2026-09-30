@@ -756,7 +756,9 @@
       var r = parseInt(hex.substr(0, 2), 16), g = parseInt(hex.substr(2, 2), 16), b = parseInt(hex.substr(4, 2), 16);
       if (isNaN(r) || isNaN(g) || isNaN(b)) return;
       var dr = Math.floor(r * 0.8), dg = Math.floor(g * 0.8), db = Math.floor(b * 0.8);
-      var isDark = ((dr * 299) + (dg * 587) + (db * 114)) / 1000 < 128;
+      var lin = function (c) { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      var lum = 0.2126 * lin(dr) + 0.7152 * lin(dg) + 0.0722 * lin(db);
+      var isDark = 1.05 / (lum + 0.05) > (lum + 0.05) / 0.05;   // whichever ink contrasts more (WCAG)
       bar.style.background = "rgb(" + dr + "," + dg + "," + db + ")";
       bar.style.color = isDark ? "#fff" : "#000";
       bar.style.border = "1px solid rgba(255,255,255,0.2)";

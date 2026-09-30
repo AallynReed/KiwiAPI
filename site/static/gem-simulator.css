@@ -528,7 +528,7 @@
   padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 700; font: inherit; font-weight: 700; border: 1px solid var(--bg-line, #1f2733);
   background: var(--bg-deep, #0a0e14); color: var(--text, #e6edf3); transition: filter 0.2s, background 0.2s;
 }
-.gem-modal-actions .danger-btn { background: var(--accent-red, #f85149); color: #fff; border-color: transparent; }
+.gem-modal-actions .danger-btn { background: color-mix(in oklab, var(--accent-red, #f85149) 70%, black); color: #fff; border-color: transparent; }
 .gem-modal-actions .danger-btn:hover { filter: brightness(1.15); }
 .gem-modal-actions .cancel-btn:hover { background: var(--bg-card-hi, #1a212c); }
 

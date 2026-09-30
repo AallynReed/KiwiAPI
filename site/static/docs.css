@@ -76,7 +76,7 @@ a:hover { text-decoration: underline; }
 .nav-link.primary { background: var(--accent-blue); color: #06131c; }
 .nav-link.primary:hover { background: #7ad2ff; }
 .nav-link.discord { background: var(--discord-blurple); color: #fff; }
-.nav-link.discord:hover { background: #6b76f4; }
+.nav-link.discord:hover { background: #4752c4; }
 
 .mobile-menu-btn {
     display: none; background: transparent; border: 1px solid var(--border-color);

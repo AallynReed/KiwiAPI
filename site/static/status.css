@@ -135,7 +135,7 @@
 }
 .st-outage-badge { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
 .st-outage.is-maint .st-outage-badge { background: rgba(245,185,66,.16); color: #f5b942; }
-.st-outage.is-down  .st-outage-badge { background: rgba(240,85,106,.16); color: #f0556a; }
+.st-outage.is-down  .st-outage-badge { background: rgba(240,85,106,.16); color: #ff8595; }
 .st-outage-when { color: var(--text-mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .st-outage-dur { font-variant-numeric: tabular-nums; font-weight: 600; }
 .st-outage-none { color: var(--text-mute); padding: 12px; text-align: center; }

@@ -97,7 +97,7 @@
   font-size: .72rem; color: var(--text-mute); background: rgba(255,255,255,.05);
   border-radius: 999px; padding: 1px 8px; font-variant-numeric: tabular-nums;
 }
-.cdx-tab.active .cdx-tab-count { color: var(--accent-blue); background: rgba(86,156,255,.16); }
+.cdx-tab.active .cdx-tab-count { color: color-mix(in srgb, var(--accent-blue) 75%, white); background: rgba(86,156,255,.16); }
 
 .cdx-controls-filters { gap: 14px; }
 .cdx-field { display: grid; gap: 5px; }
@@ -162,9 +162,9 @@
 /* Per-type chip accents. */
 .cdx-type-ally    { background: rgba(108,207,142,.16); color: var(--accent-green); }
 .cdx-type-mount   { background: rgba(86,156,255,.16);  color: var(--accent-blue); }
-.cdx-type-dragon  { background: rgba(255,107,107,.16); color: var(--accent-red); }
+.cdx-type-dragon  { background: rgba(255,107,107,.16); color: color-mix(in srgb, var(--accent-red) 75%, white); }
 .cdx-type-badge   { background: rgba(249,199,79,.16);  color: var(--accent-yellow); }
-.cdx-type-memento { background: rgba(177,140,255,.16); color: var(--accent-purple); }
+.cdx-type-memento { background: rgba(177,140,255,.16); color: color-mix(in srgb, var(--accent-purple) 75%, white); }
 .cdx-type-fish    { background: rgba(86,196,255,.16);  color: #56c4ff; }
 .cdx-type-recipe  { background: rgba(249,150,30,.16);  color: var(--accent-orange); }
 .cdx-type-style   { background: rgba(255,121,198,.16); color: #ff79c6; }

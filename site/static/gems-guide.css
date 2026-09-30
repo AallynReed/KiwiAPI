@@ -862,7 +862,7 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-boost-badge {
   align-self: flex-start; font-size: .68rem; font-weight: 700; letter-spacing: .03em;
   text-transform: uppercase; padding: .12rem .45rem; border-radius: 999px;
-  color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, transparent);
+  color: color-mix(in srgb, var(--accent-purple) 75%, white); background: color-mix(in srgb, var(--accent-purple) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent);
 }
 .gg-boost-badge.alt {

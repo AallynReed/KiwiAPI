@@ -134,7 +134,7 @@
   font-size: .8rem;
 }
 .kv-ap-filter:hover { border-color: var(--kv-accent, #58a6ff); }
-.kv-ap-filter::placeholder { color: var(--kv-soft, #6e7785); }
+.kv-ap-filter::placeholder { color: var(--kv-soft, var(--text-soft, #838c9c)); }
 
 .kv-ap-list {
   flex: 1;

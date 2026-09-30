@@ -258,7 +258,7 @@
   padding: 1px 7px;
   border-radius: 999px;
   background: rgba(248,113,113,.18);
-  color: var(--accent-red);
+  color: color-mix(in srgb, var(--accent-red) 75%, white);
   font-size: .72rem;
   font-weight: 700;
 }
@@ -1081,7 +1081,7 @@ body.up-modal-open { overflow: hidden; }
   cursor: pointer;
   font-family: inherit;
 }
-.up-preview-3dbtn:hover { background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 22%, transparent); }
+.up-preview-3dbtn:hover { background: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 22%, transparent); color: color-mix(in srgb, var(--accent-blue) 75%, white); }
 
 /* Per-file version history rows. Type pill on the left, ordinal +
    tag in the middle, captured-at on the right. Each row is also a
@@ -1120,7 +1120,7 @@ body.up-modal-open { overflow: hidden; }
 }
 .up-history-type-added    { background: rgba(93,208,120,.12);  color: var(--accent-green); }
 .up-history-type-modified { background: rgba(249,199,79,.12);  color: var(--accent-yellow); }
-.up-history-type-removed  { background: rgba(248,113,113,.12); color: var(--accent-red); }
+.up-history-type-removed  { background: rgba(248,113,113,.12); color: color-mix(in srgb, var(--accent-red) 75%, white); }
 .up-history-tag {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1172,7 +1172,7 @@ body.up-modal-open { overflow: hidden; }
 }
 .up-chip-add.active { background: rgba(93,208,120,.15); border-color: rgba(93,208,120,.40); color: var(--accent-green); }
 .up-chip-mod.active { background: rgba(249,199,79,.15); border-color: rgba(249,199,79,.40); color: var(--accent-yellow); }
-.up-chip-rem.active { background: rgba(248,113,113,.15); border-color: rgba(248,113,113,.40); color: var(--accent-red); }
+.up-chip-rem.active { background: rgba(248,113,113,.15); border-color: rgba(248,113,113,.40); color: color-mix(in srgb, var(--accent-red) 75%, white); }
 .up-chip-count {
   padding: 1px 6px;
   background: rgba(0,0,0,.25);
@@ -1213,7 +1213,7 @@ body.up-modal-open { overflow: hidden; }
 }
 .up-change-type-added    { background: rgba(93,208,120,.12);  color: var(--accent-green); }
 .up-change-type-modified { background: rgba(249,199,79,.12);  color: var(--accent-yellow); }
-.up-change-type-removed  { background: rgba(248,113,113,.12); color: var(--accent-red); }
+.up-change-type-removed  { background: rgba(248,113,113,.12); color: color-mix(in srgb, var(--accent-red) 75%, white); }
 .up-change-path {
   overflow: hidden;
   text-overflow: ellipsis;

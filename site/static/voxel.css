@@ -94,6 +94,10 @@ h1, h2, h3 { letter-spacing: -.02em; }
   animation: none;
 }
 ::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--text); }
+::placeholder { color: var(--text-soft); }
+/* Ink on page ground, inverted: readable in every palette, homepage included. */
+:root .skip-link,
+:root .skip-link:hover { background: var(--text); color: var(--bg-base); }
 
 /* ── Sentence case, not small caps ─────────────────────────────────── */
 /* Every rule in the page stylesheets that uppercased its text, found by

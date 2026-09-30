@@ -65,7 +65,7 @@
   border: 1px dashed var(--bg-line);
   border-radius: var(--radius);
 }
-.bpe-empty i { font-size: 2.2rem; color: var(--text-soft); }
+.bpe-empty > i { font-size: 2.2rem; color: var(--text-soft); }
 .bpe-empty h2 { margin: 14px 0 6px; font-size: 1.25rem; }
 .bpe-empty p { margin: 0 auto 18px; max-width: 52ch; color: var(--text-mute); line-height: 1.6; }
 .bpe-dragging .bpe-empty { border-color: var(--accent-blue); background: var(--bg-card-hi); }

@@ -98,7 +98,7 @@
   box-shadow: 0 18px 40px -24px color-mix(in oklab, var(--accent) 60%, transparent);
   outline: none;
 }
-.cal-merchant.is-inactive { opacity: .72; }
+.cal-merchant.is-inactive { opacity: .85; }
 .cal-merchant-top {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   margin-bottom: 10px;

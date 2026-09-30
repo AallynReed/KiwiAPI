@@ -2252,7 +2252,7 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
    notice; a stalled leftover row is milder; idle is neutral. */
 .lb-dupe-verdict-hot {
   background: rgba(255,138,128,.14);
-  color: var(--accent-red, #ff8a80);
+  color: color-mix(in srgb, var(--accent-red, #ff8a80) 75%, white);
 }
 .lb-dupe-verdict-warm {
   background: rgba(255,183,77,.14);

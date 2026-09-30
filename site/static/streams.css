@@ -64,7 +64,7 @@
   display: inline-flex; align-items: center; gap: 6px;
   font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
   padding: 4px 9px; border-radius: 999px; color: #fff;
-  background: #e0374b;
+  background: #c92a3e;
 }
 .stm-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: stm-pulse 1.6s ease-in-out infinite; }
 @keyframes stm-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }

@@ -306,7 +306,7 @@
 
 .mp-badge { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; border-radius: 999px; padding: 3px 9px; }
 .mp-badge-draft { color: var(--accent-yellow); background: rgba(255,206,107,.14); }
-.mp-badge-unlisted { color: var(--text-soft); background: rgba(255,255,255,.08); }
+.mp-badge-unlisted { color: var(--text-mute); background: rgba(255,255,255,.08); }
 .mp-badge-public { color: var(--accent-green); background: rgba(116,224,142,.12); }
 .mp-badge-stray { color: #9bb4ff; background: rgba(86,156,255,.14); display: inline-flex; align-items: center; gap: 5px; }
 .mp-badge-uploaded { color: #7fd4c8; background: rgba(127,212,200,.14); display: inline-flex; align-items: center; gap: 5px; }

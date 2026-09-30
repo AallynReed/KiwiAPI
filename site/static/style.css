@@ -31,7 +31,7 @@
   --bg-line:        #1f2733;
   --text:           #e6edf3;
   --text-mute:      #9aa4b2;
-  --text-soft:      #6e7785;
+  --text-soft:      #838c9c;
 
   --accent-blue:    #58a6ff;
   --accent-orange:  #ff8a3d;
@@ -129,7 +129,9 @@ img, picture, video, canvas, svg { max-width: 100%; display: block; }
 .board-crown-bronze { color: #cd7f32; }
 
 a { color: var(--accent-blue); text-decoration: none; }
-a:hover { color: color-mix(in oklab, var(--accent-blue) 80%, white); }
+/* :where() keeps this below any component's own colour, so link-buttons keep their ink on hover. */
+:where(a):hover { color: color-mix(in oklab, var(--accent-blue) 80%, white); }
+::placeholder { color: var(--text-mute); opacity: 1; }
 
 h1, h2, h3 {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
@@ -2327,7 +2329,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  background: linear-gradient(135deg, #ff6f91, #ff8a3d);
+  background: linear-gradient(135deg, #cc3560, #b85414);
   color: #fff;
   border: none;
   border-radius: 999px;

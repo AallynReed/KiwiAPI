@@ -34,7 +34,7 @@
 .cls-navitem img { width: 30px; height: 30px; border-radius: 8px; background: var(--bg-deep); flex-shrink: 0; object-fit: cover; }
 .cls-navitem-name { font-size: .92rem; font-weight: 500; }
 .cls-navitem-dmg { margin-left: auto; font-size: .62rem; text-transform: uppercase; letter-spacing: .04em; padding: 2px 6px; border-radius: 999px; }
-.dmg-magic { color: var(--accent-purple); background: color-mix(in oklab, var(--accent-purple) 14%, transparent); }
+.dmg-magic { color: color-mix(in srgb, var(--accent-purple) 75%, white); background: color-mix(in oklab, var(--accent-purple) 14%, transparent); }
 .dmg-physical { color: var(--accent-orange); background: color-mix(in oklab, var(--accent-orange) 14%, transparent); }
 
 /* ── Detail panel ──────────────────────────────────────────────────── */

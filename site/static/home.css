@@ -196,10 +196,10 @@
 /* ---- Merchants ---------------------------------------------------------- */
 .dash-merchants { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.7rem; margin-top: 0.85rem; }
 .dash-merchant { background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius); padding: 0.7rem 0.85rem; display: flex; flex-direction: column; gap: 0.3rem; }
-.dash-merchant.is-inactive { opacity: 0.6; }
+.dash-merchant.is-inactive { opacity: 0.85; }
 .dash-merchant-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .dash-merchant-name { font-weight: 600; }
-.dash-merchant-badge { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.1rem 0.45rem; border-radius: 999px; border: 1px solid var(--bg-line); color: var(--text-soft); }
+.dash-merchant-badge { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.1rem 0.45rem; border-radius: 999px; border: 1px solid var(--bg-line); color: var(--text-mute); }
 .dash-merchant.is-active .dash-merchant-badge { color: var(--accent-green); border-color: color-mix(in oklab, var(--accent-green) 45%, transparent); }
 .dash-merchant-time { font-size: 0.8rem; color: var(--text-mute); font-variant-numeric: tabular-nums; }
 .dash-merchant-biomes { display: flex; flex-wrap: wrap; gap: 0.25rem; }
@@ -462,9 +462,9 @@
 /* Track colours (weekly buffs + gardening + fluxion also carry a per-entry hex
    applied inline by home.js, which overrides these class fallbacks). */
 .event-corruxion { background: #7a1e8a; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
-.event-fluxion   { background: #3a9cbd; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
+.event-fluxion   { background: #287592; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); }
 .event-mana      { background: #3e5a63; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); border: 1px solid rgba(255, 255, 255, .1); }
 .event-stampy    { background: #6b513d; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .8); border: 1px solid rgba(255, 255, 255, .1); }
-.event-gardening { background: #4caf50; color: #063; }
+.event-gardening { background: #4caf50; color: #000; }
 .event-luxion    { background: #f5c542; }
 .event-weekly    { text-transform: uppercase; font-weight: 600; }

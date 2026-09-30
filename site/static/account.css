@@ -279,7 +279,7 @@
 .dash-nav-item i { width: 18px; text-align: center; font-size: 1rem; }
 .dash-nav-item:hover { background: var(--bg-card); color: var(--text); }
 .dash-nav-item.active {
-  background: var(--accent-soft); color: var(--accent);
+  background: var(--accent-soft); color: color-mix(in srgb, var(--accent) 75%, white);
   border-color: color-mix(in oklab, var(--accent) 35%, transparent);
 }
 .dash-nav-badge {
@@ -1301,7 +1301,7 @@
   align-items: center;
   justify-content: center;
   background: var(--accent-soft, color-mix(in srgb, var(--accent-cyan, #4cc9f0) 20%, transparent));
-  color: var(--accent-blue, #4cc9f0);
+  color: color-mix(in srgb, var(--accent-blue, #4cc9f0) 75%, white);
   font-size: .7rem;
   font-weight: 700;
 }

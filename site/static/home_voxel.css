@@ -125,6 +125,9 @@ body.vx-home {
   --text-mute: var(--vx-ink-2);
 }
 .vx-home .support-trigger { color: #fff; }
+/* The pink heart washes out against the light morning and day skies. */
+html[data-vx-tod="morning"] .vx-home .nav-links a.nav-support,
+html[data-vx-tod="day"] .vx-home .nav-links a.nav-support { color: #c8264b; }
 
 /* ── Hero: the island ────────────────────────────────────────────────── */
 .vx-hero { position: relative; overflow: hidden; color: var(--vx-hero-ink); background: var(--vx-bg); }
