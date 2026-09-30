@@ -47,6 +47,7 @@ from typing import Any
 
 from app.trove.decode import fields as F
 from app.trove.decode.common import locale, stem
+from app.trove.decode.sections import COMPONENT_SECTIONS
 from app.trove.decode.tree import GameTree
 from app.trove.decode.wire import Obj, WireError, _Reader, parse, read_object, strings
 
@@ -105,7 +106,10 @@ def _rel(path: Any) -> str:
 
 
 def _components(data: bytes, wanted: set[int]) -> dict[int, Obj]:
-    """The wanted components of an entity prefab, parsing only their own bytes."""
+    """The wanted components of an entity prefab, parsing only their own bytes.
+
+    Passes each component's section count, like ``_entity`` does: without it a field
+    added to a component can make the reader pick a wrong single-section reading."""
     r = _Reader(data, len(data))
     spans: dict[int, tuple[int, int]] = {}
     try:
@@ -120,7 +124,7 @@ def _components(data: bytes, wanted: set[int]) -> dict[int, Obj]:
             if cid in wanted:
                 spans.setdefault(cid, (p, p + n))
             p += n
-        return {cid: read_object(data, a, b) for cid, (a, b) in spans.items()}
+        return {cid: read_object(data, a, b, COMPONENT_SECTIONS.get(cid)) for cid, (a, b) in spans.items()}
     except WireError:
         return {}
 
