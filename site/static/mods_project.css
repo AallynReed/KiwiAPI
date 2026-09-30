@@ -519,6 +519,8 @@
 .mp-release-tag { font: 700 1rem 'Inter', system-ui, sans-serif; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
 .mp-release-tag [data-rel-title] { min-width: 0; overflow-wrap: anywhere; }
 .mp-release-tagchip { font: 600 .72rem 'JetBrains Mono', monospace; color: var(--accent-blue); background: rgba(86,156,255,.12); border-radius: 6px; padding: 2px 8px; flex: none; }
+/* On a filled button the chip takes the button's ink, not the accent it sits on. */
+.mp-btn-primary .mp-release-tagchip { color: inherit; background: rgba(0,0,0,.16); }
 .mp-release-stats { color: var(--text-mute); font-size: .82rem; display: flex; gap: 14px; flex-wrap: wrap; }
 .mp-release-changelog { color: var(--text-mute); font-size: .9rem; line-height: 1.55; white-space: pre-wrap; }
 /* The changelog folds shut: a wordy one pushed every other version off screen,
