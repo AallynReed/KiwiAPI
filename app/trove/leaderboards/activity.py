@@ -245,10 +245,17 @@ def _active_set(
         return None   # board reset inside this window -> ignore it here
     if not early_scores:
         return None
+    # New appearances count only ABOVE the previous capture's floor - a shallower
+    # (truncated) early dump must not read as a surge of "new" players. See the
+    # floor-guard rationale in _board_active_names.
+    early_floor = min(early_scores.values())
     active: set[str] = set()
     for name, score in late_scores.items():
         prev = early_scores.get(name)
-        if prev is None or score > prev:
+        if prev is None:
+            if score > early_floor:
+                active.add(name)
+        elif score > prev:
             active.add(name)
     return active
 
@@ -258,18 +265,30 @@ def _board_active_names(
     early_scores: dict[str, float],
 ) -> set[str]:
     """Players active on ONE board between two captures: their score ROSE vs the
-    previous capture, OR they newly appear with a non-zero score
-    (``score > prev``, treating an absent previous as 0). No score ceilings, no
-    board filters. A reset needs no special-casing - the post-reset score is LOWER
-    than the pre-reset one, so it isn't a rise (the player is counted on the
-    captures where they actually climb). Pure (no I/O)."""
+    previous capture, OR they newly appear with a score ABOVE the previous
+    capture's floor. A reset needs no special-casing - the post-reset score is
+    LOWER than the pre-reset one, so it isn't a rise (the player is counted on
+    the captures where they actually climb). Pure (no I/O).
+
+    The floor guard on new appearances is what keeps a truncated/partial board
+    dump from faking a spike: if the previous capture only reached rank ~10k
+    (score floor 872) but this one reaches ~20k (floor 139), the ~10k players in
+    the newly-captured tail are NOT new activity - they were simply below the
+    previous capture's horizon. Only a newcomer whose score clears that horizon
+    (``score > early_floor``) would have been captured last time had they held
+    it, so only they are a trustworthy "appeared and is active" signal. This
+    costs at most a sliver of genuine tail entrants right at the boundary - fine
+    for a metric that's explicitly a lower bound."""
     if not early_scores:
         return set()
+    early_floor = min(early_scores.values())
     out: set[str] = set()
     for name, score in late_scores.items():
         prev = early_scores.get(name)
-        baseline = prev if prev is not None else 0
-        if score > baseline:
+        if prev is None:
+            if score > early_floor:
+                out.add(name)
+        elif score > prev:
             out.add(name)
     return out
 
@@ -285,7 +304,7 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
     boards = await lb_service.list_boards_at(anchor_late)
     duration_h = (anchor_late - anchor_early) / 3600.0
 
-    # 1h = the distinct players who rose (or appeared with a non-zero score) this
+    # 1h = the distinct players who rose (or appeared above the previous floor) this
     # capture. 24h / 7d = the distinct UNION of those per-capture active sets across
     # the period, read from the materialized ``activity_active`` table (each capture
     # stores its own set once - see record_active_window - so a rollup is an indexed
@@ -404,7 +423,8 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
         "boards_analyzed": boards_count,
         "methodology": (
             "Distinct top-N leaderboard players whose score rose on at least one board "
-            "since the previous capture (or who newly appear with a non-zero score). A "
+            "since the previous capture (or who newly appear above the previous capture's "
+            "floor, so a shallower dump can't fake a surge). A "
             "reset isn't counted as activity (the score drops, it doesn't rise). A "
             "window that spans a missed capture (markedly longer than the median "
             "cadence) is skipped. The 24h / 7d figures are the distinct UNION of each "
@@ -436,7 +456,7 @@ def _pair_estimate(
     """Distinct active player NAMES + boards-analyzed for one ``(early, late)`` pair
     from the two anchors' pre-loaded score maps. SAME rule as the live 1h compute
     (``_board_active_names``): a player counts on a board if their score rose there
-    (or they appear with a non-zero score). Returns the SET so the backfill can
+    (or they newly appear above the previous capture's floor). Returns the SET so the backfill can
     both store the count (chart) and materialize the names (rollup table)."""
     active_union: set[str] = set()
     boards_analyzed = 0
