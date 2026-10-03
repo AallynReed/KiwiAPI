@@ -98,12 +98,31 @@
 }
 .mpk-dl { display: flex; gap: 8px; align-items: center; }
 
+/* Authors in this edition, as filter chips. */
+.mpk-authors { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 2px; }
+.mpk-authors-label {
+  display: inline-flex; align-items: center; gap: 6px; margin-right: 2px;
+  font-size: .8rem; font-weight: 600; color: var(--text-soft);
+}
+.mpk-author-chip {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  font-size: .8rem; font-weight: 600; color: var(--text-mute);
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: 999px; padding: 4px 11px; font-family: inherit;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.mpk-author-chip:hover { color: var(--text); border-color: var(--text-soft); }
+.mpk-author-chip.active { color: var(--bg-deep); background: var(--accent-blue); border-color: var(--accent-blue); }
+.mpk-chip-n { font-variant-numeric: tabular-nums; opacity: .75; font-size: .74rem; }
+.mpk-author-chip.active .mpk-chip-n { opacity: .85; }
+
 .mpk-entries { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 0; }
 .mpk-entry {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   border: 1px solid var(--bg-line); border-radius: var(--radius);
   background: var(--bg-deep); padding: 11px 14px;
 }
+.mpk-entry[hidden] { display: none; }   /* author filter: beats the flex display */
 .mpk-entry-warn { border-color: rgba(255,193,93,.35); background: rgba(255,193,93,.05); }
 .mpk-entry-main { min-width: 0; flex: 1 1 auto; }
 .mpk-entry-titlerow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
@@ -157,6 +176,13 @@
 .mpk-result-main { display: flex; flex-direction: column; min-width: 0; }
 .mpk-result-title { font-weight: 600; color: var(--text); }
 .mpk-result-by { font-size: .78rem; color: var(--text-mute); }
+
+/* Bulk add: each result is a checkbox row; selection persists across searches. */
+.mpk-result-pick { cursor: pointer; align-items: center; }
+.mpk-result-pick .mpk-pick { flex: none; width: 17px; height: 17px; margin: 0; accent-color: var(--accent-blue); cursor: pointer; }
+.mpk-result-pick:hover { border-color: var(--text-soft); }
+.mpk-result-pick:has(.mpk-pick:checked) { border-color: var(--accent-blue); background: color-mix(in oklab, var(--accent-blue) 10%, var(--bg-deep)); }
+.mpk-add-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
 
 @media (max-width: 640px) {
   .mpk-entry { flex-wrap: wrap; }

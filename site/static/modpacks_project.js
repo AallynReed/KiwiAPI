@@ -214,22 +214,49 @@
   function modsHTML(d) {
     const v = activeVariant();
     if (!v) return '';
-    const rows = (v.entries || []).map((e, i) => entryRow(e, i, d.is_owner)).join('');
-    const empty = !(v.entries || []).length
+    const entries = v.entries || [];
+    const rows = entries.map((e, i) => entryRow(e, i, d.is_owner)).join('');
+    const empty = !entries.length
       ? `<p class="mpk-empty">${esc(t('No mods in this edition yet.'))}</p>` : '';
     const addMod = d.is_owner
       ? `<div class="mpk-add-row">
-          <button type="button" class="mp-btn mp-btn-primary mpk-add-mod" id="mpk-add-mod"><i class="fa-solid fa-plus"></i> ${esc(t('Add a mod'))}</button>
+          <button type="button" class="mp-btn mp-btn-primary mpk-add-mod" id="mpk-add-mod"><i class="fa-solid fa-plus"></i> ${esc(t('Add mods'))}</button>
           <button type="button" class="mp-btn mpk-add-mod" id="mpk-upload-mod"><i class="fa-solid fa-upload"></i> ${esc(t('Upload a .tmod'))}</button>
           <input type="file" id="mpk-upload-input" accept=".tmod" hidden>
         </div>` : '';
     return `<section class="mp-section mpk-mods">
       <div class="mp-section-head">
-        <h2 class="mp-section-title"><i class="fa-solid fa-cubes"></i> ${esc(t('Included mods'))} <span class="mpk-count">${(v.entries || []).length}</span></h2>
+        <h2 class="mp-section-title"><i class="fa-solid fa-cubes"></i> ${esc(t('Included mods'))} <span class="mpk-count">${entries.length}</span></h2>
       </div>
+      ${authorsBar(entries)}
       <div class="mpk-entries">${rows}${empty}</div>
       ${addMod}
     </section>`;
+  }
+
+  // The authors whose mods are in this edition, as filter chips (also the way the
+  // page "shows the authors included"). Only shown when there's more than one to
+  // choose between. Custom uploads with no named author are grouped out.
+  function authorsBar(entries) {
+    const counts = new Map();   // lowercased author -> { name, n }
+    (entries || []).forEach((e) => {
+      const name = (e.author || '').trim();
+      if (!name) return;
+      const key = name.toLowerCase();
+      const cur = counts.get(key) || { name, n: 0 };
+      cur.n += 1;
+      counts.set(key, cur);
+    });
+    if (counts.size < 2) return '';
+    const chips = Array.from(counts.values())
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+      .map((c) => `<button type="button" class="mpk-author-chip" data-author-filter="${esc(c.name.toLowerCase())}">${esc(c.name)} <span class="mpk-chip-n">${c.n}</span></button>`)
+      .join('');
+    return `<div class="mpk-authors" role="group" aria-label="${esc(t('Filter mods by author'))}">
+      <span class="mpk-authors-label"><i class="fa-solid fa-user-pen" aria-hidden="true"></i> ${esc(t('Authors'))}</span>
+      <button type="button" class="mpk-author-chip active" data-author-filter="">${esc(t('All'))} <span class="mpk-chip-n">${(entries || []).length}</span></button>
+      ${chips}
+    </div>`;
   }
 
   function downloadHTML(v) {
@@ -276,7 +303,7 @@
         ? `<span class="mpk-entry-by">${esc(t('by'))} ${esc(e.author)}</span>`
         : `<span class="mpk-entry-by">${esc(t('by'))} <a href="/mods/${encodeURIComponent(e.handle)}">${esc(e.author)}</a></span>`)
       : '';
-    return `<div class="mpk-entry ${e.available ? '' : 'mpk-entry-warn'}">
+    return `<div class="mpk-entry ${e.available ? '' : 'mpk-entry-warn'}" data-author="${esc((e.author || '').toLowerCase())}">
       <div class="mpk-entry-main">
         <div class="mpk-entry-titlerow">
           ${titleEl}
@@ -323,6 +350,18 @@
       removeEntry(+b.getAttribute('data-remove'))));
     $root.querySelectorAll('[data-edit-entry]').forEach((b) => b.addEventListener('click', () =>
       openEntryEditor(+b.getAttribute('data-edit-entry'))));
+    $root.querySelectorAll('[data-author-filter]').forEach((b) => b.addEventListener('click', () =>
+      filterByAuthor(b)));
+  }
+
+  // Client-side author filter: toggle `hidden` on rows so the owner's edit indices
+  // (data-remove / data-edit-entry) stay pointing at the same entries.
+  function filterByAuthor(btn) {
+    const key = btn.getAttribute('data-author-filter') || '';
+    $root.querySelectorAll('.mpk-author-chip').forEach((c) => c.classList.toggle('active', c === btn));
+    $root.querySelectorAll('.mpk-entry').forEach((row) => {
+      row.hidden = !!key && (row.getAttribute('data-author') || '') !== key;
+    });
   }
 
   // ─── Download (fetch with auth so owners can pull their own drafts) ──
@@ -719,19 +758,38 @@
   }
 
   // Add a mod: search the hub, pick one, then choose branch/version.
+  // Bulk add: tick any number of mods across one or more searches, then add them
+  // all in one go. Each is added tracking its latest build on its default edition;
+  // the owner can lock a version per mod afterwards with its settings button.
   function openAddMod() {
     openModal(`
       <button type="button" class="mp-modal-close" data-close aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-      <h2 class="mp-modal-title">${esc(t('Add a mod'))}</h2>
+      <h2 class="mp-modal-title">${esc(t('Add mods'))}</h2>
       <div class="mp-form">
         <label class="mp-form-field"><span>${esc(t('Search mods'))}</span>
           <input type="search" id="mpk-mod-search" placeholder="${esc(t('Search the Mods Hub…'))}" autocomplete="off"></label>
+        <p class="mp-form-hint">${esc(t('Tick every mod you want and add them all at once. You can lock a specific version per mod afterwards.'))}</p>
         <div class="mpk-search-results" id="mpk-mod-results"></div>
+        <p class="mp-form-error" id="mpk-add-error" hidden></p>
+        <div class="mpk-add-actions">
+          <button type="button" class="mp-btn mp-btn-primary" id="mpk-add-selected" disabled><i class="fa-solid fa-plus" aria-hidden="true"></i> <span>${esc(t('Add selected'))}</span></button>
+        </div>
       </div>`);
     const input = document.getElementById('mpk-mod-search');
     const results = document.getElementById('mpk-mod-results');
+    const errEl = document.getElementById('mpk-add-error');
+    const addBtn = document.getElementById('mpk-add-selected');
     const SHOW = 20;
     let timer = null;
+    const selected = new Map();   // "handle/slug" -> { handle, slug }
+
+    const refreshBtn = () => {
+      const n = selected.size;
+      addBtn.disabled = !n;
+      addBtn.querySelector('span').textContent = n
+        ? t('Add selected') + ' (' + n + ')' : t('Add selected');
+    };
+
     const run = async () => {
       const q = input.value.trim();
       // Mods already in this variant are dropped from the results, browsing and
@@ -745,27 +803,44 @@
       const data = r.ok ? await r.json() : { items: [] };
       const items = (data.items || [])
         .filter((m) => !existing.has(m.handle + '/' + m.slug)).slice(0, SHOW);
-      results.innerHTML = items.map((m) => `<div class="mpk-result">
-          <div class="mpk-result-main">
-            <span class="mpk-result-title">${esc(m.title)}</span>
-            <span class="mpk-result-by">${esc(m.owner_username)}</span>
-          </div>
-          <button type="button" class="mp-btn mp-btn-sm mp-btn-primary"
-            data-add-handle="${esc(m.handle)}" data-add-slug="${esc(m.slug)}" data-add-title="${esc(m.title)}">
-            ${esc(t('Choose'))}</button>
-        </div>`).join('') || `<p class="mpk-empty">${esc(t('No mods found.'))}</p>`;
-      results.querySelectorAll('[data-add-handle]').forEach((b) => b.addEventListener('click', async () => {
-        const h = b.getAttribute('data-add-handle'), s = b.getAttribute('data-add-slug'), ti = b.getAttribute('data-add-title');
-        const mod = await loadModDetail(h, s);
-        // Default to the mod's first real variant (one with a build), not "main" -
-        // a releases-only mod may have no "main" branch at all.
-        const branch = modVariants(mod)[0] || mod.default_branch || 'main';
-        showEntryForm({ handle: h, slug: s, title: ti, branch,
-          version_locked: false, locked_tag: null, index: null, mod });
+      results.innerHTML = items.map((m) => {
+        const key = m.handle + '/' + m.slug;
+        const on = selected.has(key) ? ' checked' : '';
+        return `<label class="mpk-result mpk-result-pick">
+            <input type="checkbox" class="mpk-pick"${on} data-key="${esc(key)}" data-handle="${esc(m.handle)}" data-slug="${esc(m.slug)}">
+            <span class="mpk-result-main">
+              <span class="mpk-result-title">${esc(m.title)}</span>
+              <span class="mpk-result-by">${esc(m.owner_username)}</span>
+            </span>
+          </label>`;
+      }).join('') || `<p class="mpk-empty">${esc(t('No mods found.'))}</p>`;
+      results.querySelectorAll('.mpk-pick').forEach((c) => c.addEventListener('change', () => {
+        const key = c.getAttribute('data-key');
+        if (c.checked) selected.set(key, { handle: c.getAttribute('data-handle'), slug: c.getAttribute('data-slug') });
+        else selected.delete(key);
+        refreshBtn();
       }));
       rerunI18n();
     };
+
+    addBtn.addEventListener('click', async () => {
+      if (!selected.size) return;
+      errEl.hidden = true;
+      addBtn.disabled = true;
+      // Resolve each mod's default build edition in parallel (its first branch with a
+      // published .tmod) - the same default the single-add form picked.
+      const picks = Array.from(selected.values());
+      const added = await Promise.all(picks.map(async (p) => {
+        const mod = await loadModDetail(p.handle, p.slug);
+        const branch = (mod && (modVariants(mod)[0] || mod.default_branch)) || 'main';
+        return { handle: p.handle, slug: p.slug, branch, version_locked: false, locked_tag: null };
+      }));
+      const ok = await putEntries(currentEntries().concat(added), errEl);
+      if (!ok) refreshBtn();
+    });
+
     input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(run, 250); });
+    refreshBtn();
     run();
   }
 
