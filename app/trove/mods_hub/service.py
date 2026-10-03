@@ -725,21 +725,34 @@ async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
     }
 
 
+def _browse_match() -> dict:
+    cutoff = utcnow() - REMIX_AUTO_APPROVE
+    return {
+        "taken_down": False,
+        "visibility": {"$in": ["public", "public_website_only"]},
+        "$and": [{"$or": [
+            {"is_remix": {"$ne": True}},
+            {"is_remix": True, "remix_status": "approved"},
+            {"is_remix": True, "remix_status": "pending",
+             "remix_requested_at": {"$lte": cutoff}},
+        ]}],
+    }
+
+
 async def list_public(
     *, q: str | None = None, tag: str | None = None, author: str | None = None,
     sort: str = "recent", limit: int = 30, offset: int = 0,
 ) -> tuple[list[dict], int]:
     if sort == "popular":
         await ensure_popularity_fresh()
-    query: dict = {"visibility": {"$in": ["public", "public_website_only"]},
-                   "taken_down": False, "is_remix": {"$ne": True}}
+    query = _browse_match()
     if tag:
         query["tags"] = tag.strip().lower()
     if author:
         query["owner_username"] = _author_eq(author)
     if q:
         # Case-insensitive substring across title/summary/tags/author.
-        query.update(_search_clause(q))
+        query["$and"].append(_search_clause(q))
     sort_key = _SORTS.get(sort, "-updated_at")
     total = await ModProject.find(query).count()
     docs = await ModProject.find(query).sort(sort_key).skip(offset).limit(limit).to_list()
@@ -753,8 +766,7 @@ async def tag_facets() -> dict:
     public mod appear. Category matching is case-insensitive (tags are stored
     lowercased), so a stored ``"gui"`` counts under the ``"GUI"`` category."""
     rows = await ModProject.aggregate([
-        {"$match": {"visibility": {"$in": ["public", "public_website_only"]},
-                    "taken_down": False, "is_remix": {"$ne": True}}},
+        {"$match": _browse_match()},
         {"$unwind": "$tags"},
         {"$group": {"_id": "$tags", "n": {"$sum": 1}}},
     ]).to_list()
