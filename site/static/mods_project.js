@@ -244,6 +244,7 @@
   async function loadForks() {
     const box = document.getElementById('mp-forks');
     if (!box) return;
+    if (state.detail && state.detail.is_owner) { await loadRemixAdmin(box); return; }
     try {
       const r = await fetch('/site/mods/projects/' + PROJ_PATH + '/forks');
       const data = r.ok ? await r.json() : { items: [] };
@@ -255,6 +256,46 @@
           </a>`).join('')
         : `<p class="mp-muted">${esc(t('No remixes yet.'))}</p>`;
     } catch (_) { box.innerHTML = ''; }
+  }
+
+  async function loadRemixAdmin(box) {
+    try {
+      const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/remixes');
+      const items = (r.ok && r.data && r.data.items) || [];
+      if (!items.length) { box.innerHTML = `<p class="mp-muted">${esc(t('No remixes yet.'))}</p>`; return; }
+      box.innerHTML = items.map((f) => {
+        const st = f.remix_status;
+        const label = st === 'approved' ? t('Approved')
+          : st === 'denied' ? t('Private')
+          : f.remix_auto_at ? t('Pending') : t('Draft');
+        const auto = (st === 'pending' && f.remix_auto_at)
+          ? `<span class="mp-muted"> · ${esc(t('auto-approves'))} ${esc(new Date(f.remix_auto_at).toLocaleDateString())}</span>` : '';
+        const canApprove = st !== 'approved'
+          ? `<button type="button" class="mp-btn mp-btn-sm" data-remix-approve="${esc(f.id)}">${esc(t('Approve'))}</button>` : '';
+        const canDeny = st !== 'denied'
+          ? `<button type="button" class="mp-btn mp-btn-sm" data-remix-deny="${esc(f.id)}">${esc(t('Deny'))}</button>` : '';
+        return `<div class="mp-fork-item" style="justify-content:space-between">
+          <a href="${modUrl(f)}" style="display:flex;gap:.5em;align-items:center;flex:1;min-width:0">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span class="mp-fork-title">${esc(f.title)}</span>
+            <span class="mp-muted">${esc(t('by'))} ${esc(f.owner_username)} · ${esc(label)}${auto}</span>
+          </a>
+          <span style="display:flex;gap:.4em">${canApprove}${canDeny}</span>
+        </div>`;
+      }).join('');
+      box.querySelectorAll('[data-remix-approve]').forEach((b) => b.addEventListener('click',
+        () => setRemix(b.getAttribute('data-remix-approve'), 'approved')));
+      box.querySelectorAll('[data-remix-deny]').forEach((b) => b.addEventListener('click',
+        () => setRemix(b.getAttribute('data-remix-deny'), 'denied')));
+      rerunI18n();
+    } catch (_) { box.innerHTML = ''; }
+  }
+
+  async function setRemix(id, status) {
+    const r = await apiJSON('/v1/mods/hub/projects/' + PROJ_PATH + '/remixes/' + encodeURIComponent(id) + '/status',
+      { json: { status } });
+    if (r.ok) { const box = document.getElementById('mp-forks'); if (box) await loadRemixAdmin(box); }
+    else toast(errMsg(r, 'Could not update the remix.'), true);
   }
 
   function headerHTML(d) {
@@ -2178,6 +2219,8 @@
           <option value="draft" ${d.visibility === 'draft' ? 'selected' : ''}>${esc(t('Draft (only you)'))}</option>
           <option value="unlisted" ${d.visibility === 'unlisted' ? 'selected' : ''}>${esc(t('Unlisted (link only)'))}</option>
           <option value="public" ${d.visibility === 'public' ? 'selected' : ''}>${esc(t('Public'))}</option>
+          <option value="public_website_only" ${d.visibility === 'public_website_only' ? 'selected' : ''}>${esc(t('Public (website only)'))}</option>
+          <option value="hidden" ${d.visibility === 'hidden' ? 'selected' : ''}>${esc(t('Hidden'))}</option>
         </select></label>
       <label class="mp-form-check"><input type="checkbox" name="is_beta" ${d.is_beta ? 'checked' : ''}>
         <span>${esc(t('Still in development'))}<small class="mp-form-hint">${esc(t('Shows a Beta badge, so players know to expect changes.'))}</small></span></label>

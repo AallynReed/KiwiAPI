@@ -42,6 +42,7 @@ from app.trove.mods_hub.models import (
     ModProject,
     ModRelease,
     ModStar,
+    RemixClaim,
     Visibility,
 )
 from app.trove.render import bp_cache
@@ -249,7 +250,13 @@ def _lineage(p: ModProject) -> dict:
             "fork_count": p.fork_count}
 
 
-def project_card(p: ModProject) -> dict:
+def _shown_visibility(p: ModProject, reveal: bool) -> str:
+    if not reveal and p.visibility == "public_website_only":
+        return "public"
+    return p.visibility
+
+
+def project_card(p: ModProject, *, reveal: bool = False) -> dict:
     return {
         "slug": p.slug,
         "handle": p.owner_handle,
@@ -259,7 +266,7 @@ def project_card(p: ModProject) -> dict:
         "summary_i18n": p.summary_i18n,
         "tags": p.tags,
         "owner_username": p.owner_username,
-        "visibility": p.visibility,
+        "visibility": _shown_visibility(p, reveal),
         "taken_down": p.taken_down,
         # The creator's own "still in development" flag - a badge for players, not
         # a visibility state (a beta mod is public and downloadable like any other).
@@ -444,6 +451,7 @@ async def fork_project(actor: SiteUser, original: ModProject) -> ModProject:
         forked_from_id=original.id, forked_from_slug=original.slug,
         forked_from_handle=original.owner_handle, forked_from_title=original.title,
         forked_from_owner=original.owner_username,
+        is_remix=True, remix_status="pending",
     )
     await fork.insert()
     # Copy the original's default-branch HEAD tree into the fork's repo as an
@@ -464,9 +472,48 @@ async def list_forks(original: ModProject) -> list[dict]:
     # Match by the original's stable id (slugs are per-owner + handles can change).
     docs = await ModProject.find(
         ModProject.forked_from_id == original.id,
-        ModProject.visibility == "public", ModProject.taken_down == False,  # noqa: E712
+        ModProject.taken_down == False,  # noqa: E712
     ).sort("-updated_at").to_list()
-    return [project_card(p) for p in docs]
+    return [project_card(p) for p in docs
+            if effective_visibility(p) in ("public", "public_website_only")]
+
+
+def _remix_card(p: ModProject) -> dict:
+    card = project_card(p, reveal=True)
+    card["id"] = str(p.id)
+    card["remix_status"] = p.remix_status
+    card["effective_visibility"] = effective_visibility(p)
+    card["remix_requested_at"] = _iso(p.remix_requested_at) if p.remix_requested_at else None
+    card["remix_auto_at"] = (
+        _iso(p.remix_requested_at + REMIX_AUTO_APPROVE)
+        if p.remix_requested_at and p.remix_status == "pending" else None
+    )
+    return card
+
+
+async def list_remixes_for_owner(original: ModProject, actor: SiteUser) -> list[dict]:
+    _require_owner(original, actor)
+    docs = await ModProject.find(
+        ModProject.forked_from_id == original.id,
+    ).sort("-updated_at").to_list()
+    return [_remix_card(p) for p in docs if p.is_remix]
+
+
+async def set_remix_status(
+    original: ModProject, actor: SiteUser, remix_id: str, status: str,
+) -> dict:
+    _require_owner(original, actor)
+    if status not in ("approved", "denied", "pending"):
+        raise APIError(400, ErrorCode.bad_request, "Bad status.")
+    oid = to_oid(remix_id)
+    remix = await ModProject.get(oid) if oid else None
+    if remix is None or remix.forked_from_id != original.id or not remix.is_remix:
+        raise _not_found("Remix not found")
+    remix.remix_status = status  # type: ignore[assignment]
+    remix.remix_resolved_at = utcnow()
+    remix.remix_resolved_by = actor.id
+    await remix.save()
+    return _remix_card(remix)
 
 
 # --- stars (favourites) ----------------------------------------------------
@@ -546,6 +593,26 @@ async def get_project(handle: str, slug: str) -> ModProject | None:
     )
 
 
+REMIX_AUTO_APPROVE = timedelta(days=7)
+
+_REACHABLE = ("public", "public_website_only", "unlisted")
+
+
+def effective_visibility(project: ModProject) -> str:
+    if not project.is_remix:
+        return project.visibility
+    if project.visibility not in ("public", "public_website_only"):
+        return project.visibility
+    if project.remix_status == "denied":
+        return "hidden"
+    if project.remix_status == "approved" or (
+        project.remix_requested_at is not None
+        and utcnow() - project.remix_requested_at >= REMIX_AUTO_APPROVE
+    ):
+        return "public_website_only"
+    return "hidden"
+
+
 def can_view(project: ModProject, viewer: SiteUser | None) -> bool:
     """Visibility gate. Owners + collaborators always see their projects (incl.
     drafts and taken-down ones, flagged); everyone else is bound by visibility +
@@ -554,7 +621,7 @@ def can_view(project: ModProject, viewer: SiteUser | None) -> bool:
         return True
     if project.taken_down:
         return False
-    return project.visibility in ("public", "unlisted")
+    return effective_visibility(project) in _REACHABLE
 
 
 def source_visible(project: ModProject, viewer: SiteUser | None) -> bool:
@@ -569,7 +636,7 @@ def source_visible(project: ModProject, viewer: SiteUser | None) -> bool:
         return True
     if project.taken_down or project.source_visibility != "public":
         return False
-    return project.visibility in ("public", "unlisted")
+    return effective_visibility(project) in _REACHABLE
 
 
 def ensure_source_visible(project: ModProject, viewer: SiteUser | None) -> None:
@@ -624,7 +691,7 @@ async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
         commit_count = await gitstore.count_commits(str(project.id), project.default_branch)
         clone_url = f"{settings.api_url.rstrip('/')}/git/mods/{project.owner_handle}/{project.slug}.git"
     return {
-        **project_card(project),
+        **project_card(project, reveal=is_owner),
         "description": project.description,
         "description_i18n": project.description_i18n,
         "readme_text": project.readme_text,
@@ -664,7 +731,8 @@ async def list_public(
 ) -> tuple[list[dict], int]:
     if sort == "popular":
         await ensure_popularity_fresh()
-    query: dict = {"visibility": "public", "taken_down": False}
+    query: dict = {"visibility": {"$in": ["public", "public_website_only"]},
+                   "taken_down": False, "is_remix": {"$ne": True}}
     if tag:
         query["tags"] = tag.strip().lower()
     if author:
@@ -685,7 +753,8 @@ async def tag_facets() -> dict:
     public mod appear. Category matching is case-insensitive (tags are stored
     lowercased), so a stored ``"gui"`` counts under the ``"GUI"`` category."""
     rows = await ModProject.aggregate([
-        {"$match": {"visibility": "public", "taken_down": False}},
+        {"$match": {"visibility": {"$in": ["public", "public_website_only"]},
+                    "taken_down": False, "is_remix": {"$ne": True}}},
         {"$unwind": "$tags"},
         {"$group": {"_id": "$tags", "n": {"$sum": 1}}},
     ]).to_list()
@@ -797,6 +866,9 @@ async def update_project(
         project.inspired_by_title = None
         project.inspired_by_owner = None
         project.mode = "releases"
+    if (project.is_remix and project.remix_requested_at is None
+            and project.visibility in ("public", "public_website_only")):
+        project.remix_requested_at = utcnow()
     # Keep the URL handle current with the owner's username (Discord renames).
     project.owner_handle = actor.username
     project.updated_at = utcnow()
@@ -1422,7 +1494,7 @@ async def _emit_release_event(project: ModProject, release: ModRelease) -> None:
     here leaves the release itself untouched, unstamped, and free to retry."""
     if release.status != "published":
         return
-    if project.visibility != "public" or project.taken_down:
+    if project.visibility != "public" or project.taken_down or project.is_remix:
         return
     if release.branch in (project.hidden_release_branches or []):
         return
@@ -1496,7 +1568,7 @@ async def _announce_newly_visible(
     versions is one piece of news, not five - and leaving them unstamped would fire
     all five the next time anything called the emitter. Builds still behind a
     block stay unstamped, because their moment hasn't come yet."""
-    if project.visibility != "public" or project.taken_down:
+    if project.visibility != "public" or project.taken_down or project.is_remix:
         return
     # Silent builds are skipped outright, not just left unannounced: picking one as
     # "the" announcement would swallow the reveal for the build that IS news.
@@ -3104,6 +3176,95 @@ async def _get_claim(claim_id: str) -> ModClaimRequest:
     return claim
 
 
+def _remix_claim_dto(c: RemixClaim) -> dict:
+    return {
+        "id": str(c.id),
+        "target": {"id": str(c.target_id), "slug": c.target_slug, "title": c.target_title},
+        "original": {"id": str(c.original_id), "slug": c.original_slug, "title": c.original_title},
+        "claimant_username": c.claimant_username,
+        "message": c.message,
+        "status": c.status,
+        "created_at": _iso(c.created_at),
+        "resolved_at": _iso(c.resolved_at) if c.resolved_at else None,
+    }
+
+
+async def create_remix_claim(
+    actor: SiteUser, original: ModProject, target: ModProject, message: str = "",
+) -> dict:
+    _require_owner(original, actor)
+    if target.id == original.id:
+        raise APIError(400, ErrorCode.bad_request, "A mod can't reference itself.")
+    existing = await RemixClaim.find_one(
+        RemixClaim.target_id == target.id, RemixClaim.status == "pending",
+    )
+    if existing is not None:
+        return {**_remix_claim_dto(existing), "already": True}
+    claim = RemixClaim(
+        target_id=target.id, target_slug=target.slug, target_title=target.title,
+        original_id=original.id, original_slug=original.slug, original_title=original.title,
+        claimant_id=actor.id, claimant_username=actor.username,
+        message=(message or "")[:2000],
+    )
+    await claim.insert()
+    return {**_remix_claim_dto(claim), "already": False}
+
+
+async def list_remix_claims(status: str | None = "pending", limit: int = 100) -> list[dict]:
+    query: dict = {}
+    if status:
+        query["status"] = status
+    docs = await RemixClaim.find(query).sort("-created_at").limit(limit).to_list()
+    return [_remix_claim_dto(c) for c in docs]
+
+
+async def _get_remix_claim(claim_id: str) -> RemixClaim:
+    oid = to_oid(claim_id)
+    claim = await RemixClaim.get(oid) if oid else None
+    if claim is None:
+        raise _not_found("Claim not found")
+    return claim
+
+
+async def approve_remix_claim(claim_id: str, master_id: PydanticObjectId) -> dict:
+    claim = await _get_remix_claim(claim_id)
+    if claim.status != "pending":
+        raise APIError(400, ErrorCode.bad_request, "This claim is already resolved.")
+    target = await ModProject.get(claim.target_id)
+    original = await ModProject.get(claim.original_id)
+    if target is None or original is None:
+        raise _not_found("Mod no longer exists.")
+    already_linked = target.forked_from_id == original.id
+    target.is_remix = True
+    target.remix_status = "approved"
+    target.remix_requested_at = target.remix_requested_at or utcnow()
+    target.remix_resolved_at = utcnow()
+    target.remix_resolved_by = master_id
+    target.forked_from_id = original.id
+    target.forked_from_slug = original.slug
+    target.forked_from_handle = original.owner_handle
+    target.forked_from_title = original.title
+    target.forked_from_owner = original.owner_username
+    await target.save()
+    if not already_linked:
+        original.fork_count += 1
+        await original.save()
+    claim.status = "approved"
+    claim.resolved_by = master_id
+    claim.resolved_at = utcnow()
+    await claim.save()
+    return _remix_claim_dto(claim)
+
+
+async def reject_remix_claim(claim_id: str, master_id: PydanticObjectId) -> dict:
+    claim = await _get_remix_claim(claim_id)
+    claim.status = "rejected"
+    claim.resolved_by = master_id
+    claim.resolved_at = utcnow()
+    await claim.save()
+    return _remix_claim_dto(claim)
+
+
 async def backfill_owner_handles() -> None:
     """One-time-ish: set ``owner_handle`` on mods created before per-owner slugs
     (the field defaulted to ""). Safe to run every boot - it only touches rows
@@ -3317,7 +3478,7 @@ async def public_list(
     """Browse public mods (cards, no releases) with app-facing DTOs."""
     if sort == "popular":
         await ensure_popularity_fresh()
-    query: dict = {"visibility": "public", "taken_down": False}
+    query: dict = {"visibility": "public", "taken_down": False, "is_remix": {"$ne": True}}
     if tag:
         query["tags"] = tag.strip().lower()
     if author:
@@ -3341,7 +3502,7 @@ async def public_popular(limit: int = 25) -> list[dict]:
     await ensure_popularity_fresh()
     limit = max(1, min(limit, 25))
     docs = await ModProject.find(
-        {"visibility": "public", "taken_down": False},
+        {"visibility": "public", "taken_down": False, "is_remix": {"$ne": True}},
     ).sort("-popularity_score").limit(limit).to_list()
     return [public_mod_dto(p) for p in docs]
 
@@ -3385,7 +3546,7 @@ async def lookup_by_hashes(
                 for p in await ModProject.find({"_id": {"$in": proj_ids}}).to_list()
             }
         visible = [p for p in projects.values()
-                   if not p.taken_down and p.visibility != "draft"]
+                   if not p.taken_down and effective_visibility(p) in ("public", "unlisted")]
         want_releases = releases_mode in ("latest", "all")
         by_project = await _published_releases_for(
             visible, latest_per_branch=releases_mode == "latest",
@@ -3396,7 +3557,8 @@ async def lookup_by_hashes(
             if not keys:
                 continue  # newest already chosen (sorted desc)
             proj = projects.get(r.project_id)
-            if proj is None or proj.taken_down or proj.visibility == "draft":
+            if (proj is None or proj.taken_down
+                    or effective_visibility(proj) not in ("public", "unlisted")):
                 continue
             hit = {
                 "mod": public_mod_dto(

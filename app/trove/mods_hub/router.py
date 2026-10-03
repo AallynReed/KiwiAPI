@@ -52,6 +52,8 @@ from app.trove.mods_hub.schemas import (
     HashLookupRequest,
     IssueCommentRequest,
     IssueStatusRequest,
+    RemixClaimRequest,
+    RemixStatusRequest,
     UpdateProfileRequest,
     UpdateProjectRequest,
     UpdateReleaseRequest,
@@ -626,6 +628,32 @@ async def delete_project(handle: str, slug: str, user: SiteUser = _USER) -> Resp
     project = await _require_owned(handle, slug, user)
     await service.delete_project(project, user)
     return Response(status_code=204)
+
+
+@mods_hub_write_router.get("/projects/{handle}/{slug}/remixes")
+async def list_remixes(handle: str, slug: str, user: SiteUser = _USER) -> dict:
+    project = await _require_owned(handle, slug, user)
+    return {"items": await service.list_remixes_for_owner(project, user)}
+
+
+@mods_hub_write_router.post("/projects/{handle}/{slug}/remixes/{remix_id}/status")
+async def set_remix_status(
+    handle: str, slug: str, remix_id: str, req: RemixStatusRequest,
+    user: SiteUser = _USER,
+) -> dict:
+    project = await _require_owned(handle, slug, user)
+    return await service.set_remix_status(project, user, remix_id, req.status)
+
+
+@mods_hub_write_router.post("/projects/{handle}/{slug}/remix-claim")
+async def submit_remix_claim(
+    handle: str, slug: str, req: RemixClaimRequest, user: SiteUser = _USER,
+) -> dict:
+    original = await _require_owned(handle, slug, user)
+    target = await service.get_project(req.target_handle, req.target_slug)
+    if target is None or not service.can_view(target, user):
+        raise APIError(404, ErrorCode.not_found, "That mod could not be found.")
+    return await service.create_remix_claim(user, original, target, req.message)
 
 
 @mods_creator_write_router.post("/projects/{handle}/{slug}/banner")

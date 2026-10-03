@@ -27,7 +27,7 @@ class Collaborator(BaseModel):
     username: str                               # denormalized handle (resynced on writes)
 
 
-Visibility = Literal["draft", "unlisted", "public"]
+Visibility = Literal["draft", "unlisted", "public", "public_website_only", "hidden"]
 ReleaseStatus = Literal["draft", "published"]
 # Project mode. "files" = full versioned workflow (git commits, branches, clone)
 # plus releases. "releases" = releases-only: the modder just uploads already-
@@ -172,6 +172,12 @@ class ModProject(Document):
     inspired_by_owner: str | None = None
     fork_count: int = 0
 
+    is_remix: bool = False
+    remix_status: Literal["pending", "approved", "denied"] = "pending"
+    remix_requested_at: datetime | None = None
+    remix_resolved_at: datetime | None = None
+    remix_resolved_by: PydanticObjectId | None = None
+
     # Master moderation. A taken-down project drops out of all public listings
     # and detail reads (the owner still sees it, flagged) until restored.
     taken_down: bool = False
@@ -203,6 +209,7 @@ class ModProject(Document):
             IndexModel([("visibility", ASCENDING), ("popularity_score", DESCENDING)]),
             IndexModel([("tags", ASCENDING)]),
             IndexModel([("forked_from_id", ASCENDING)]),   # list a project's forks
+            IndexModel([("forked_from_id", ASCENDING), ("is_remix", ASCENDING)]),
             # Stray (imported) mods: idempotent upsert by source + dedup, and the
             # admin pending/approval queue. PARTIAL (source is a string) so regular
             # mods are excluded - sparse was WRONG: Beanie writes source=null (present,
@@ -519,6 +526,31 @@ class ModClaimRequest(Document):
         indexes = [
             IndexModel([("status", ASCENDING), ("created_at", DESCENDING)]),
             IndexModel([("project_id", ASCENDING)]),
+            IndexModel([("claimant_id", ASCENDING), ("created_at", DESCENDING)]),
+        ]
+
+
+class RemixClaim(Document):
+    target_id: PydanticObjectId
+    target_slug: str = ""
+    target_title: str = ""
+    original_id: PydanticObjectId
+    original_slug: str = ""
+    original_title: str = ""
+    claimant_id: PydanticObjectId               # SiteUser.id
+    claimant_username: str
+    message: str = ""
+    status: Literal["pending", "approved", "rejected"] = "pending"
+    resolved_by: PydanticObjectId | None = None
+    resolved_at: datetime | None = None
+
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_remix_claims"
+        indexes = [
+            IndexModel([("status", ASCENDING), ("created_at", DESCENDING)]),
+            IndexModel([("target_id", ASCENDING)]),
             IndexModel([("claimant_id", ASCENDING), ("created_at", DESCENDING)]),
         ]
 

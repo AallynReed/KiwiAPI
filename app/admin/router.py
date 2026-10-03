@@ -1334,6 +1334,26 @@ async def reject_mod_claim(claim_id: str, admin: User = Depends(get_current_supe
     return await mods_hub_service.reject_claim(claim_id, admin.id)
 
 
+@router.get("/mods/remix-claims")
+async def list_remix_claims(
+    status: str | None = Query(default="pending", description="pending | approved | rejected"),
+) -> dict:
+    from app.trove.mods_hub import service as mods_hub_service
+    return {"items": await mods_hub_service.list_remix_claims(status=status)}
+
+
+@router.post("/mods/remix-claims/{claim_id}/approve")
+async def approve_remix_claim(claim_id: str, admin: User = Depends(get_current_superuser)) -> dict:
+    from app.trove.mods_hub import service as mods_hub_service
+    return await mods_hub_service.approve_remix_claim(claim_id, admin.id)
+
+
+@router.post("/mods/remix-claims/{claim_id}/reject")
+async def reject_remix_claim(claim_id: str, admin: User = Depends(get_current_superuser)) -> dict:
+    from app.trove.mods_hub import service as mods_hub_service
+    return await mods_hub_service.reject_remix_claim(claim_id, admin.id)
+
+
 # --- Modpack moderation (mirror of /mods/projects) --------------------------
 
 @router.get("/modpacks")

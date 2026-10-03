@@ -175,6 +175,16 @@ class ClaimRequest(BaseModel):
                          description="Optional note to the admin (e.g. proof you're the author).")
 
 
+class RemixStatusRequest(BaseModel):
+    status: Literal["approved", "denied", "pending"]
+
+
+class RemixClaimRequest(BaseModel):
+    target_handle: str = Field(min_length=1, max_length=80)
+    target_slug: str = Field(min_length=1, max_length=120)
+    message: str = Field(default="", max_length=2000)
+
+
 class CollaboratorRequest(BaseModel):
     """Add a co-owner (collaborator) to a mod/modpack by their site username."""
 

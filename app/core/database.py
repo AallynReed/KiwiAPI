@@ -56,6 +56,7 @@ from app.trove.mods_hub.models import (
     ModProject,
     ModRelease,
     ModStar,
+    RemixClaim,
     StrayImportState,
 )
 from app.trove.render.models import BlueprintCacheEntry
@@ -82,6 +83,8 @@ DOCUMENT_MODELS = [
     ModProfile,                          # mods hub: modder profile pages
     ModIssue, ModIssueEvent,             # mods hub: issues/requests + their timelines
     ModClaimRequest, StrayImportState,   # mods hub: stray (imported) mod claims + import job state
+    RemixClaim,
+
     ModCreatorLink,                      # mods hub: creator ↔ dev-portal account API access
     ModpackProject, ModpackStar,         # modpacks: user-curated bundles of mods (refs only) + likes
     BlueprintCacheEntry,                 # decoded .blueprint payloads (index; bodies live in the CAS)
