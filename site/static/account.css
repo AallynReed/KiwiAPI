@@ -297,6 +297,76 @@
 }
 .dash-section-sub { margin: -10px 0 18px; color: var(--text-mute); font-size: .98rem; }
 
+/* Sidebar group label (sentence case, not a loud uppercase kicker). */
+.dash-nav-group {
+  margin: 14px 0 2px; padding: 0 12px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .02em;
+  color: var(--text-soft); text-transform: none;
+}
+.dash-nav-item[data-section="overview"] ~ .dash-nav-group:first-of-type,
+.dash-nav > .dash-nav-group:first-child { margin-top: 2px; }
+
+/* ── Stat tiles (Overview + atop My Mods) ────────────────────────────────── */
+.dash-tiles {
+  display: grid; gap: 14px; margin: 4px 0 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.dash-tiles[hidden] { display: none; }
+.dash-tile {
+  display: flex; flex-direction: column; gap: 4px;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: 14px; padding: 16px 18px;
+}
+.dash-tile-num {
+  font-size: 1.6rem; font-weight: 700; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.dash-tile-num i { font-size: .95rem; color: var(--text-soft); margin-right: 6px; }
+.dash-tile-label { font-size: .82rem; color: var(--text-mute); }
+
+/* ── Overview quick links ────────────────────────────────────────────────── */
+.dash-quicklinks {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+.dash-quick {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 15px; text-decoration: none;
+  background: var(--bg-card); border: 1px solid var(--bg-line);
+  border-radius: 12px; color: var(--text); font-weight: 500;
+  transition: border-color .15s, transform .12s, background .15s;
+}
+.dash-quick:hover { border-color: var(--accent); transform: translateY(-1px); }
+.dash-quick i { width: 18px; text-align: center; color: var(--text-soft); }
+
+/* ── Mod filter ──────────────────────────────────────────────────────────── */
+.dash-filter {
+  display: flex; align-items: center; gap: 10px; margin: 16px 0 0;
+  padding: 0 14px; background: var(--bg-card);
+  border: 1px solid var(--bg-line); border-radius: 10px;
+}
+.dash-filter[hidden] { display: none; }
+.dash-filter i { color: var(--text-soft); }
+.dash-filter input {
+  flex: 1; border: 0; background: none; color: var(--text);
+  padding: 11px 0; font: inherit; outline: none;
+}
+
+/* ── Collapsible subsections (Starred, API access) ───────────────────────── */
+.dash-collapse { margin-top: 20px; border-top: 1px solid var(--bg-line); }
+.dash-collapse > summary {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 14px 2px; font-weight: 600; color: var(--text); list-style: none;
+}
+.dash-collapse > summary::-webkit-details-marker { display: none; }
+.dash-collapse > summary::after {
+  content: "\f078"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+  margin-left: auto; font-size: .8rem; color: var(--text-soft);
+  transition: transform .15s;
+}
+.dash-collapse[open] > summary::after { transform: rotate(180deg); }
+.dash-collapse > summary > i { width: 18px; text-align: center; color: var(--text-soft); }
+
 /* ── "My giveaways" cards ────────────────────────────────────────────── */
 .gw-my-card {
   background: var(--bg-card); border: 1px solid var(--bg-line);
@@ -331,8 +401,10 @@
 @media (max-width: 760px) {
   .dash-shell { flex-direction: column; gap: 18px; }
   .dash-sidebar { position: static; flex: none; width: 100%; }
-  .dash-nav { flex-direction: row; flex-wrap: wrap; }
+  .dash-nav { flex-direction: row; flex-wrap: wrap; align-items: center; }
   .dash-nav-item { width: auto; }
+  /* Full-width label forces a line break, so each group's items wrap beneath it. */
+  .dash-nav-group { width: 100%; margin: 8px 0 0; padding: 0 2px; }
   .dash-side-logout { margin-top: 6px; }
 }
 
@@ -647,15 +719,20 @@
    must escape the generic .dash-mod-form input padding above. */
 .dash-mod-check { display: flex; align-items: center; gap: 8px; color: var(--text-mute); font-size: .9rem; cursor: pointer; }
 .dash-mod-check input { flex: 0 0 auto; width: auto; padding: 0; }
-#dash-mods-list { display: grid; gap: 10px; margin-top: 16px; }
+/* Responsive card grid: My Mods / My Modpacks / Starred / Overview recents. */
+.dash-mod-grid {
+  display: grid; gap: 12px; margin-top: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+}
 .dash-mod-card {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
   text-decoration: none; color: inherit;
   background: var(--bg-card, #11161d); border: 1px solid var(--border, #222b36);
-  border-radius: 11px; padding: 13px 16px;
+  border-radius: 11px; padding: 14px 16px;
   transition: border-color .15s, transform .12s, background .15s;
 }
 .dash-mod-card:hover { border-color: var(--accent-blue, #4cc9f0); transform: translateY(-1px); }
+.dash-mod-card[hidden] { display: none; }
 .dash-mod-title { font-weight: 600; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dash-mod-meta { color: var(--text-mute); font-size: .84rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 

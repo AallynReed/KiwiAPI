@@ -310,8 +310,16 @@ async def cards_with_avatars(projects: list[ModProject]) -> list[dict]:
     )
     by_user = {pr.site_user_id: pr for pr in profiles}
     urls = {u.id: _profile_avatar_url(u, by_user.get(u.id)) for u in users}
+    # Emit the owner's CURRENT username as the link handle, even if the stored
+    # owner_handle has drifted - otherwise /mods/<stale-handle>/<slug> resolves to
+    # the wrong/no owner and the real owner sees read-only viewer mode. (The boot
+    # resync fixes the stored field; this keeps the hot listing path correct.)
+    names = {u.id: u.username for u in users}
     for card, project in zip(cards, projects, strict=True):
         card["owner_avatar_url"] = urls.get(project.owner_id)
+        canonical = names.get(project.owner_id)
+        if canonical:
+            card["handle"] = canonical
     return cards
 
 
@@ -3278,19 +3286,27 @@ async def reject_remix_claim(claim_id: str, master_id: PydanticObjectId) -> dict
 
 
 async def backfill_owner_handles() -> None:
-    """One-time-ish: set ``owner_handle`` on mods created before per-owner slugs
-    (the field defaulted to ""). Safe to run every boot - it only touches rows
-    still missing a handle."""
-    missing = await ModProject.find(
-        {"$or": [{"owner_handle": ""}, {"owner_handle": {"$exists": False}}]}
-    ).to_list()
-    for proj in missing:
-        user = await SiteUser.get(proj.owner_id)
-        if user is not None:
-            proj.owner_handle = user.username
-            await proj.save()
-    if missing:
-        logger.info("mods_hub: backfilled owner_handle on %d project(s)", len(missing))
+    """Resync ``owner_handle`` to the owner's current username. Fixes both mods
+    created before per-owner slugs (the field defaulted to "") and any handle that
+    has drifted from the owner's current username - a drifted handle makes the
+    mod's public URL (/mods/<handle>/<slug>) resolve to the wrong/no owner, so the
+    real owner opening it from the Mods Hub lands in read-only viewer mode. Safe to
+    run every boot: the aggregation returns only rows that actually need fixing, so
+    once clean it does nothing. Stray mods (no owner) are left alone - they address
+    by the reserved ``stray`` handle, not owner_handle."""
+    users_coll = SiteUser.Settings.name
+    drifted = await ModProject.aggregate([
+        {"$lookup": {"from": users_coll, "localField": "owner_id",
+                     "foreignField": "_id", "as": "_owner"}},
+        {"$unwind": "$_owner"},
+        {"$match": {"$expr": {"$ne": ["$owner_handle", "$_owner.username"]}}},
+        {"$project": {"_id": 1, "username": "$_owner.username"}},
+    ]).to_list()
+    for row in drifted:
+        await ModProject.find_one(ModProject.id == row["_id"]).update(
+            Set({ModProject.owner_handle: row["username"]}))
+    if drifted:
+        logger.info("mods_hub: resynced owner_handle on %d project(s)", len(drifted))
 
 
 # --- git access tokens (PATs for git clone/pull/push) ----------------------

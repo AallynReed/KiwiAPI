@@ -17,7 +17,7 @@ import zipfile
 from urllib.parse import quote
 
 from beanie import PydanticObjectId
-from beanie.operators import Inc
+from beanie.operators import Inc, Set
 from pymongo.errors import DuplicateKeyError
 
 from app.core.config import settings
@@ -337,6 +337,27 @@ async def list_owned(actor: SiteUser) -> list[dict]:
             p.owner_handle = actor.username
             await p.save()
     return [{**pack_card(p), "is_collaborator": p.owner_id != actor.id} for p in docs]
+
+
+async def backfill_modpack_handles() -> None:
+    """Resync ``owner_handle`` to the owner's current username (same drift fix as
+    mods - see mods_hub.service.backfill_owner_handles). A drifted handle makes
+    /modpacks/<handle>/<slug> resolve to the wrong/no owner, so the owner opening it
+    from the Modpacks page lands in read-only viewer mode. Safe every boot: the
+    aggregation returns only rows that need fixing."""
+    users_coll = SiteUser.Settings.name
+    drifted = await ModpackProject.aggregate([
+        {"$lookup": {"from": users_coll, "localField": "owner_id",
+                     "foreignField": "_id", "as": "_owner"}},
+        {"$unwind": "$_owner"},
+        {"$match": {"$expr": {"$ne": ["$owner_handle", "$_owner.username"]}}},
+        {"$project": {"_id": 1, "username": "$_owner.username"}},
+    ]).to_list()
+    for row in drifted:
+        await ModpackProject.find_one(ModpackProject.id == row["_id"]).update(
+            Set({ModpackProject.owner_handle: row["username"]}))
+    if drifted:
+        logger.info("modpacks: resynced owner_handle on %d project(s)", len(drifted))
 
 
 # --- create / update -------------------------------------------------------

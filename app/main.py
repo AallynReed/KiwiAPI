@@ -163,7 +163,9 @@ async def lifespan(app: FastAPI):
     from app.supporters.service import seed_supporters_if_empty
     await seed_supporters_if_empty()
     from app.trove.mods_hub.service import backfill_owner_handles
-    await backfill_owner_handles()   # set owner_handle on mods predating per-owner slugs
+    await backfill_owner_handles()   # resync mod owner_handle to the owner's current username
+    from app.trove.modpacks.service import backfill_modpack_handles
+    await backfill_modpack_handles()  # same resync for modpacks
     usage_recorder.start()
     pageview_recorder.start()  # buffered writer for showcase-site page-view analytics
     start_email_worker()

@@ -69,6 +69,7 @@
     renderUser(user);
     setupSections();
     loadMyGiveaways();
+    loadOverview();
     if (user.claimed_trove_name) await loadTroveStats();
   }
 
@@ -85,6 +86,8 @@
     if ($body) $body.hidden = false;
 
     if ($sideName) $sideName.textContent = user.display_name || user.username;
+    const $ovName = $('ov-name');
+    if ($ovName) $ovName.textContent = ', ' + (user.display_name || user.username);
     if ($avatar && user.avatar_url) { $avatar.src = user.avatar_url; $avatar.hidden = false; }
     const $myProfile = document.getElementById('dash-my-profile');
     if ($myProfile && user.username) $myProfile.href = '/mods/' + encodeURIComponent(user.username);
@@ -394,7 +397,7 @@
   }
 
   // Sidebar section switching.
-  const SECTIONS = ['profile', 'giveaways', 'mods', 'modpacks', 'leaderboard', 'discord', 'webhooks', 'dmsubs', 'images'];
+  const SECTIONS = ['overview', 'profile', 'giveaways', 'mods', 'modpacks', 'leaderboard', 'discord', 'webhooks', 'dmsubs', 'images'];
   function setupSections() {
     const navItems = Array.prototype.slice.call(document.querySelectorAll('.dash-nav-item'));
     const nav = navItems[0] ? navItems[0].closest('.dash-nav') : null;
@@ -426,7 +429,7 @@
       if (next) { e.preventDefault(); showSection(next.dataset.section); next.focus(); }
     });
     const hash = location.hash.replace(/^#/, '');
-    showSection(SECTIONS.includes(hash) ? hash : 'profile');
+    showSection(SECTIONS.includes(hash) ? hash : 'overview');
     window.addEventListener('hashchange', () => {
       const h = location.hash.replace(/^#/, '');
       if (SECTIONS.includes(h)) showSection(h);
@@ -455,6 +458,80 @@
     }
   }
   let _imagesLoaded = false;
+
+  // ── Shared data getters ────────────────────────────────────────────────
+  // The Overview and the Mods/Modpacks/Giveaways panes all read the same lists.
+  // Fetch each once and share the promise so opening a pane doesn't refetch what
+  // Overview already pulled. Each resolves to the items array, or null on error
+  // (so a pane can tell "couldn't load" from "nothing yet").
+  let _modsReq = null, _modpacksReq = null, _giveawaysReq = null;
+  function getMods(force) {
+    if (force) _modsReq = null;
+    return _modsReq || (_modsReq = Auth.callJSON('/v1/mods/hub/me/projects')
+      .then((r) => (r.ok && r.data && Array.isArray(r.data.items)) ? r.data.items : null));
+  }
+  function getModpacks(force) {
+    if (force) _modpacksReq = null;
+    return _modpacksReq || (_modpacksReq = Auth.callJSON('/v1/modpacks/hub/me/projects')
+      .then((r) => (r.ok && r.data && Array.isArray(r.data.items)) ? r.data.items : null));
+  }
+  function getGiveaways() {
+    return _giveawaysReq || (_giveawaysReq = Auth.callJSON('/v1/giveaways/me')
+      .then((r) => (r.ok && Array.isArray(r.data)) ? r.data : null));
+  }
+
+  // ── Stat tiles ─────────────────────────────────────────────────────────
+  function statTile(label, value, icon) {
+    const n = typeof value === 'number' ? value.toLocaleString() : esc(value);
+    return `<div class="dash-tile">
+        <span class="dash-tile-num"><i class="fa-solid ${icon}" aria-hidden="true"></i> ${n}</span>
+        <span class="dash-tile-label">${esc(label)}</span>
+      </div>`;
+  }
+  function sumBy(items, key) {
+    return (items || []).reduce((a, p) => a + (Number(p[key]) || 0), 0);
+  }
+
+  // ── Overview (landing) ─────────────────────────────────────────────────
+  async function loadOverview() {
+    const box = $('ov-tiles');
+    if (!box) return;
+    const [mods, modpacks, gws] = await Promise.all([
+      getMods().catch(() => null),
+      getModpacks().catch(() => null),
+      getGiveaways().catch(() => null),
+    ]);
+    const tiles = [];
+    const hasMods = Array.isArray(mods);
+    if (hasMods) {
+      tiles.push(statTile(t('Mods'), mods.length, 'fa-cubes'));
+      tiles.push(statTile(t('Downloads'), sumBy(mods, 'download_count'), 'fa-download'));
+      tiles.push(statTile(t('Stars'), sumBy(mods, 'star_count'), 'fa-star'));
+      tiles.push(statTile(t('Forks'), sumBy(mods, 'fork_count'), 'fa-code-fork'));
+    }
+    if (Array.isArray(modpacks)) {
+      tiles.push(statTile(t('Modpacks'), modpacks.length, 'fa-box-open'));
+    }
+    if (Array.isArray(gws)) {
+      tiles.push(statTile(t('Giveaways won'), gws.filter((g) => g.won).length, 'fa-gift'));
+    }
+    box.innerHTML = tiles.length
+      ? tiles.join('')
+      : `<p class="dash-empty">${esc(t('Nothing to show yet. Create a mod or enter a giveaway to get started.'))}</p>`;
+
+    // Recently-updated mods (top 3), reusing the mod card.
+    const recentWrap = $('ov-recent-wrap');
+    const recent = $('ov-recent');
+    if (recent && hasMods && mods.length) {
+      const top = mods.slice()
+        .sort((a, b) => String(b.updated_at || '').localeCompare(String(a.updated_at || '')))
+        .slice(0, 3);
+      recent.innerHTML = top.map(modCard).join('');
+      if (recentWrap) recentWrap.hidden = false;
+    } else if (recentWrap) {
+      recentWrap.hidden = true;
+    }
+  }
 
   // My Modpacks section.
   let _modpacksLoaded = false;
@@ -487,8 +564,7 @@
   async function renderOwnedModpacks() {
     const list = $('dash-modpacks-list');
     if (!list) return;
-    const r = await Auth.callJSON('/v1/modpacks/hub/me/projects');
-    const items = (r.ok && r.data && Array.isArray(r.data.items)) ? r.data.items : null;
+    const items = await getModpacks();
     if (items === null) {
       list.innerHTML = `<p class="dash-empty">${esc(t("Couldn't load your modpacks right now."))}</p>`;
     } else if (!items.length) {
@@ -718,8 +794,8 @@
   async function renderOwnedMods() {
     const list = $('dash-mods-list');
     if (!list) return;
-    const r = await Auth.callJSON('/v1/mods/hub/me/projects');
-    const items = (r.ok && r.data && Array.isArray(r.data.items)) ? r.data.items : null;
+    const items = await getMods();
+    renderModsTiles(items);
     if (items === null) {
       list.innerHTML = `<p class="dash-empty">${esc(t("Couldn't load your mods right now."))}</p>`;
     } else if (!items.length) {
@@ -727,6 +803,44 @@
     } else {
       list.innerHTML = items.map(modCard).join('');
     }
+    setupModsFilter(Array.isArray(items) ? items.length : 0);
+  }
+
+  function renderModsTiles(items) {
+    const box = $('mods-tiles');
+    if (!box) return;
+    if (!Array.isArray(items) || !items.length) { box.hidden = true; return; }
+    box.innerHTML = [
+      statTile(t('Mods'), items.length, 'fa-cubes'),
+      statTile(t('Downloads'), sumBy(items, 'download_count'), 'fa-download'),
+      statTile(t('Stars'), sumBy(items, 'star_count'), 'fa-star'),
+      statTile(t('Forks'), sumBy(items, 'fork_count'), 'fa-code-fork'),
+    ].join('');
+    box.hidden = false;
+  }
+
+  // Client-side title filter - only worth showing once the list is long enough to
+  // need it. Toggles `hidden` on each card; no network.
+  function setupModsFilter(count) {
+    const wrap = $('mods-filter-wrap');
+    const input = $('mods-filter');
+    const list = $('dash-mods-list');
+    const empty = $('mods-filter-empty');
+    if (!wrap || !input || !list) return;
+    if (count <= 6) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    if (input.dataset.wired) return;
+    input.dataset.wired = '1';
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      let shown = 0;
+      list.querySelectorAll('.dash-mod-card').forEach((card) => {
+        const match = !q || (card.dataset.title || '').includes(q);
+        card.hidden = !match;
+        if (match) shown++;
+      });
+      if (empty) empty.hidden = shown !== 0;
+    });
   }
 
   async function renderStarredMods() {
@@ -749,7 +863,7 @@
     const collab = p.is_collaborator ? `<span class="dash-tag">${esc(t('collaborator'))}</span>` : '';
     const removed = p.taken_down ? `<span class="dash-tag dash-tag-removed">${esc(t('removed'))}</span>` : '';
     return `
-      <a class="dash-mod-card" href="/mods/${encodeURIComponent(p.handle)}/${encodeURIComponent(p.slug)}">
+      <a class="dash-mod-card" href="/mods/${encodeURIComponent(p.handle)}/${encodeURIComponent(p.slug)}" data-title="${esc((p.title || '').toLowerCase())}">
         <span class="dash-mod-title">${esc(p.title)} ${removed} ${vis} ${modeTag} ${collab}</span>
         <span class="dash-mod-meta">
           <i class="fa-solid fa-download" aria-hidden="true"></i> ${Number(p.download_count || 0).toLocaleString()}
@@ -762,12 +876,11 @@
   // Giveaways section.
   async function loadMyGiveaways() {
     if (!$gwList) return;
-    const r = await Auth.callJSON('/v1/giveaways/me');
-    if (!r.ok || !Array.isArray(r.data)) {
+    const items = await getGiveaways();
+    if (items === null) {
       $gwList.innerHTML = `<p class="dash-empty">${esc(t("Couldn't load your giveaways right now."))}</p>`;
       return;
     }
-    const items = r.data;
     const won = items.filter((g) => g.won).length;
     if ($wonBadge) {
       $wonBadge.hidden = won === 0;
