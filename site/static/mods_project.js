@@ -129,6 +129,7 @@
     await loadDetail();
   }
 
+  let _ownerRetried = false;
   async function loadDetail() {
     try {
       const r = await siteGET('/site/mods/projects/' + PROJ_PATH);
@@ -143,7 +144,19 @@
         $root.innerHTML = `<p class="mp-error">${esc(msg)}</p>`;
         return;
       }
-      state.detail = await r.json();
+      const d = await r.json();
+      // Self-heal a stale-auth first load: signed in as this mod's owner (our
+      // username is the URL handle) but served viewer mode -> refresh once and
+      // refetch so the owner's edit tools appear.
+      const viewerName = state.viewer && state.viewer.username;
+      const ownerIsViewer = !!viewerName && !!d.handle
+        && viewerName.toLowerCase() === String(d.handle).toLowerCase();
+      if (!d.is_owner && !_ownerRetried && ownerIsViewer
+          && window.BTTAuth && window.BTTAuth.refresh) {
+        _ownerRetried = true;
+        if (await window.BTTAuth.refresh()) { await loadDetail(); return; }
+      }
+      state.detail = d;
       state.branch = state.detail.default_branch || 'main';
       render();
     } catch (err) {

@@ -68,6 +68,14 @@
     await loadDetail();
   }
 
+  // True when the signed-in viewer is this pack's primary owner (their username is
+  // the URL handle) - so `is_owner:false` from the server can only be stale auth.
+  function ownerIsViewer(d) {
+    const u = state.viewer && state.viewer.username;
+    return !!u && !!d.handle && u.toLowerCase() === String(d.handle).toLowerCase();
+  }
+  let _ownerRetried = false;
+
   async function loadDetail() {
     try {
       const r = await siteGET('/site/modpacks/projects/' + PACK_PATH);
@@ -76,7 +84,15 @@
         rerunI18n();
         return;
       }
-      setDetail(await r.json());
+      const d = await r.json();
+      // Self-heal a stale-auth first load: signed in as the owner but served viewer
+      // mode -> refresh the session once and refetch so the edit controls appear.
+      if (!d.is_owner && !_ownerRetried && ownerIsViewer(d)
+          && window.BTTAuth && window.BTTAuth.refresh) {
+        _ownerRetried = true;
+        if (await window.BTTAuth.refresh()) { await loadDetail(); return; }
+      }
+      setDetail(d);
     } catch (err) {
       console.error('[modpack] load failed', err);
       $root.innerHTML = `<p class="mp-error">${esc(t('Failed to load this modpack.'))}</p>`;
