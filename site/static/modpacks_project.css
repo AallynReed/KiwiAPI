@@ -98,8 +98,11 @@
 }
 .mpk-dl { display: flex; gap: 8px; align-items: center; }
 
-/* Authors in this edition, as filter chips. */
-.mpk-authors { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 2px; }
+/* Authors in this edition, as filter chips (shown under the download buttons). */
+.mpk-authors {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 14px 0 0; padding-top: 14px; border-top: 1px solid var(--bg-line);
+}
 .mpk-authors-label {
   display: inline-flex; align-items: center; gap: 6px; margin-right: 2px;
   font-size: .8rem; font-weight: 600; color: var(--text-soft);

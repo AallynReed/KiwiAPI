@@ -199,6 +199,7 @@
       ${picker}
       ${variantOwnerCtl(d)}
       ${v ? downloadHTML(v) : ''}
+      ${v ? authorsBar(v.entries) : ''}
     </section>`;
   }
 
@@ -228,10 +229,15 @@
       <div class="mp-section-head">
         <h2 class="mp-section-title"><i class="fa-solid fa-cubes"></i> ${esc(t('Included mods'))} <span class="mpk-count">${entries.length}</span></h2>
       </div>
-      ${authorsBar(entries)}
       <div class="mpk-entries">${rows}${empty}</div>
       ${addMod}
     </section>`;
+  }
+
+  // A mod's "author" field can credit several people, comma-separated
+  // ("Jus7Ace,abbie,Geoflay") - each is its own author.
+  function splitAuthors(s) {
+    return (s || '').split(',').map((x) => x.trim()).filter(Boolean);
   }
 
   // The authors whose mods are in this edition, as filter chips (also the way the
@@ -240,12 +246,15 @@
   function authorsBar(entries) {
     const counts = new Map();   // lowercased author -> { name, n }
     (entries || []).forEach((e) => {
-      const name = (e.author || '').trim();
-      if (!name) return;
-      const key = name.toLowerCase();
-      const cur = counts.get(key) || { name, n: 0 };
-      cur.n += 1;
-      counts.set(key, cur);
+      const seen = new Set();   // a mod counts once per distinct author it credits
+      splitAuthors(e.author).forEach((name) => {
+        const key = name.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        const cur = counts.get(key) || { name, n: 0 };
+        cur.n += 1;
+        counts.set(key, cur);
+      });
     });
     if (counts.size < 2) return '';
     const chips = Array.from(counts.values())
@@ -303,7 +312,9 @@
         ? `<span class="mpk-entry-by">${esc(t('by'))} ${esc(e.author)}</span>`
         : `<span class="mpk-entry-by">${esc(t('by'))} <a href="/mods/${encodeURIComponent(e.handle)}">${esc(e.author)}</a></span>`)
       : '';
-    return `<div class="mpk-entry ${e.available ? '' : 'mpk-entry-warn'}" data-author="${esc((e.author || '').toLowerCase())}">
+    const authorKeys = splitAuthors(e.author).map((a) => a.toLowerCase());
+    const authorsAttr = authorKeys.length ? '|' + authorKeys.join('|') + '|' : '';
+    return `<div class="mpk-entry ${e.available ? '' : 'mpk-entry-warn'}" data-authors="${esc(authorsAttr)}">
       <div class="mpk-entry-main">
         <div class="mpk-entry-titlerow">
           ${titleEl}
@@ -360,7 +371,7 @@
     const key = btn.getAttribute('data-author-filter') || '';
     $root.querySelectorAll('.mpk-author-chip').forEach((c) => c.classList.toggle('active', c === btn));
     $root.querySelectorAll('.mpk-entry').forEach((row) => {
-      row.hidden = !!key && (row.getAttribute('data-author') || '') !== key;
+      row.hidden = !!key && !(row.getAttribute('data-authors') || '').includes('|' + key + '|');
     });
   }
 
