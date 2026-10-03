@@ -219,6 +219,8 @@ async def _resolve_entry(entry: ModpackEntry) -> tuple[dict, ModRelease | None]:
 async def _variant_view(variant: ModpackVariant) -> dict:
     resolved = [await _resolve_entry(e) for e in variant.entries]
     entries = [view for view, _ in resolved]
+    # Mods are shown alphabetically by title (case-insensitive) for everyone.
+    entries.sort(key=lambda v: (v.get("title") or "").casefold())
     return {
         "name": variant.name,
         "label": variant.label or variant.name,
