@@ -3464,5 +3464,20 @@
   "Patrons": "支援者",
   "Thanks for telling us. Switching you to the classic look…": "ご意見ありがとうございます。クラシックデザインに切り替えます…",
   "Not enough history stored for this range yet - it fills in as captures accumulate.": "この期間の履歴はまだ十分に保存されていません。キャプチャが蓄積されるにつれて埋まっていきます。",
-  "Daily active-player trend for this period; latest ~{n} in 24 hours": "この期間の日次アクティブプレイヤー推移。最新は24時間で約{n}人"
+  "Daily active-player trend for this period; latest ~{n} in 24 hours": "この期間の日次アクティブプレイヤー推移。最新は24時間で約{n}人",
+  "Component": "コンポーネント",
+  "1 component": "1 個のコンポーネント",
+  "%n components": "%n 個のコンポーネント",
+  "Type %n": "タイプ %n",
+  "Section %n": "セクション %n",
+  "1 field": "1 個のフィールド",
+  "%n fields": "%n 個のフィールド",
+  "1 item": "1 個の要素",
+  "%n items": "%n 個の要素",
+  "empty": "空",
+  "Key": "キー",
+  "%n text entries": "%n 件のテキスト",
+  "Search keys and text…": "キーとテキストを検索…",
+  "Showing the first %n — search to narrow it down.": "最初の %n 件を表示しています — 検索して絞り込んでください。",
+  "This file is too large to show in full — some fields were left out.": "このファイルは大きすぎるため全体を表示できません — 一部のフィールドは省略されました。"
 }

@@ -3464,5 +3464,20 @@
   "Patrons": "赞助者",
   "Thanks for telling us. Switching you to the classic look…": "感谢你的反馈。正在为你切换到经典设计…",
   "Not enough history stored for this range yet - it fills in as captures accumulate.": "此范围内尚未存储足够的历史数据——随着采集积累会逐渐补全。",
-  "Daily active-player trend for this period; latest ~{n} in 24 hours": "此时段的每日活跃玩家趋势；最新 24 小时约 {n}"
+  "Daily active-player trend for this period; latest ~{n} in 24 hours": "此时段的每日活跃玩家趋势；最新 24 小时约 {n}",
+  "Component": "组件",
+  "1 component": "1 个组件",
+  "%n components": "%n 个组件",
+  "Type %n": "类型 %n",
+  "Section %n": "第 %n 节",
+  "1 field": "1 个字段",
+  "%n fields": "%n 个字段",
+  "1 item": "1 项",
+  "%n items": "%n 项",
+  "empty": "空",
+  "Key": "键",
+  "%n text entries": "%n 条文本",
+  "Search keys and text…": "搜索键和文本…",
+  "Showing the first %n — search to narrow it down.": "仅显示前 %n 条 — 搜索以缩小范围。",
+  "This file is too large to show in full — some fields were left out.": "此文件太大，无法完整显示 — 部分字段已省略。"
 }

@@ -276,6 +276,19 @@ def describe(data: bytes) -> dict:
     }
 
 
+def swf_bytes(data: bytes, path: str) -> bytes | None:
+    """One packed ``.swf`` out of a ``.tmod``, for the code view - the Mods Hub's own
+    lookup, so both pages match a movie by the same path rule."""
+    from app.trove.mods_hub.service import _tmod_swf_bytes_sync
+
+    if not data:
+        raise WorkshopError("That file is empty.")
+    try:
+        return _tmod_swf_bytes_sync(data, path)
+    except tmod.TmodError as e:
+        raise WorkshopError(f"That isn't a readable .tmod file: {e}") from e
+
+
 def looks_like_zip(data: bytes, filename: str = "") -> bool:
     return data[:2] == b"PK" or (filename or "").lower().endswith(".zip")
 

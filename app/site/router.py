@@ -2914,7 +2914,9 @@ async def site_workshop_extract(
     for entry in plan["entries"]:
         entry["size"] = sizes.get(entry["index"], 0)
     plan.pop("mapping", None)
-    return JSONResponse({**plan, **info}, headers={"Cache-Control": "no-store"})
+    from app.trove.swf import decompile as swf_decompile
+    return JSONResponse({**plan, **info, "decompiler": swf_decompile.available()},
+                        headers={"Cache-Control": "no-store"})
 
 
 @router.post("/site/mod-workshop/preview/blueprint", response_class=Response)
@@ -2938,6 +2940,57 @@ async def site_workshop_blueprint(
     cached = await bp_cache.get_or_build(
         bp_cache.key_for_tmod(hashlib.sha256(data).hexdigest(), path), build, fmt)
     return bp_cache.respond(request, cached)
+
+
+@router.post("/site/mod-workshop/swf/scripts", response_class=JSONResponse)
+async def site_workshop_swf_scripts(
+    request: Request, file: UploadFile = File(...),
+    path: str = Form(..., min_length=1, max_length=400),
+) -> JSONResponse:
+    """One ``.swf`` inside an uploaded ``.tmod`` decompiled back to ActionScript - the
+    payload the Mods Hub's code viewer reads. Unlike the hub's, it is never cached:
+    the upload is read and forgotten, so every call costs a decompile and rides the
+    decompiler's own per-IP bucket."""
+    from app.trove.swf import service as swf_service
+
+    await swf_service.decompile_throttle(request)
+    data = await file.read()
+    try:
+        raw = await asyncio.to_thread(mods_workshop.swf_bytes, data, path)
+    except mods_workshop.WorkshopError as e:
+        raise _workshop_error(e) from e
+    if raw is None:
+        raise APIError(404, ErrorCode.not_found, "No such Flash movie in that mod.")
+    payload = await swf_service.scripts_uncached(raw)
+    return JSONResponse({"path": path, "size": len(raw), **payload},
+                        headers={"Cache-Control": "no-store"})
+
+
+@router.post("/site/mod-workshop/preview/binfab", response_class=JSONResponse)
+async def site_workshop_binfab(
+    file: UploadFile = File(...),
+    path: str = Form(..., min_length=1, max_length=400),
+    _limit: None = _WORKSHOP_LIMIT,
+) -> JSONResponse:
+    """One ``.binfab`` inside an uploaded ``.tmod`` laid out field by field (or, for a
+    language table, as key/text rows). Read in a bounded child process, since the
+    reader is a search and the file is a stranger's; nothing is kept."""
+    from app.trove.decode import view as binfab_view
+
+    data = await file.read()
+    try:
+        _, files = mods_workshop.read_mod(data)
+    except mods_workshop.WorkshopError as e:
+        raise _workshop_error(e) from e
+    wanted = mods_workshop.norm_path(path).lower()
+    raw = next((b for p, b in files if p.lower() == wanted), None)
+    if raw is None or not wanted.endswith(".binfab"):
+        raise APIError(404, ErrorCode.not_found, "No such prefab in that mod.")
+    try:
+        payload = await binfab_view.describe_isolated(raw)
+    except binfab_view.BinfabViewError as e:
+        raise APIError(422, ErrorCode.bad_request, str(e)) from e
+    return JSONResponse({"path": path, **payload}, headers={"Cache-Control": "no-store"})
 
 
 @router.post("/site/mod-workshop/extract/download", response_class=Response)

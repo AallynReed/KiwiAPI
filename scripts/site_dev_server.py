@@ -4245,7 +4245,32 @@ class Handler(SimpleHTTPRequestHandler):
                 for entry in plan["entries"]:
                     entry["size"] = sizes.get(entry["index"], 0)
                 plan.pop("mapping", None)
-                return self._send_json({**plan, **info})
+                return self._send_json({**plan, **info, "decompiler": True})
+
+            # The real decompiler when this box has FFDec, else the hand-written tree.
+            if path == "/site/mod-workshop/swf/scripts":
+                from app.trove.swf import decompile
+                want = fields.get("path") or ""
+                raw = workshop.swf_bytes(blobs["file"][1], want)
+                if raw is None:
+                    return self._send_json({"detail": "no such movie"}, 404)
+                if not decompile.available():
+                    return self._send_json({**_SWF_SCRIPTS_STUB, "path": want, "size": len(raw)})
+                return self._send_json({"path": want, "size": len(raw),
+                                        **decompile.decompile_scripts(raw)})
+
+            if path == "/site/mod-workshop/preview/binfab":
+                from app.trove.decode import view
+                want = (fields.get("path") or "").lower()
+                _, entries = workshop.read_mod(blobs["file"][1])
+                raw = next((b for p, b in entries if p.lower() == want), None)
+                if raw is None:
+                    return self._send_json({"detail": "no such prefab"}, 404)
+                try:
+                    payload = asyncio.run(view.describe_isolated(raw))
+                except view.BinfabViewError as e:
+                    return self._send_json({"error": {"code": "bad_request", "message": str(e)}}, 422)
+                return self._send_json({"path": fields.get("path"), **payload})
 
             if path == "/site/mod-workshop/extract/download":
                 _, entries = workshop.read_mod(blobs["file"][1])

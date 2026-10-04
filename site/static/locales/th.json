@@ -3296,5 +3296,20 @@
   "Patrons": "Patron",
   "Thanks for telling us. Switching you to the classic look…": "ขอบคุณที่บอกเรา กำลังเปลี่ยนเป็นดีไซน์แบบคลาสสิก…",
   "Not enough history stored for this range yet - it fills in as captures accumulate.": "ยังมีประวัติสำหรับช่วงนี้ไม่เพียงพอ - ข้อมูลจะเพิ่มขึ้นเมื่อมีการเก็บข้อมูลสะสมมากขึ้น",
-  "Daily active-player trend for this period; latest ~{n} in 24 hours": "แนวโน้มผู้เล่นที่ใช้งานรายวันในช่วงนี้ ล่าสุด ~{n} ใน 24 ชั่วโมง"
+  "Daily active-player trend for this period; latest ~{n} in 24 hours": "แนวโน้มผู้เล่นที่ใช้งานรายวันในช่วงนี้ ล่าสุด ~{n} ใน 24 ชั่วโมง",
+  "Component": "คอมโพเนนต์",
+  "1 component": "1 คอมโพเนนต์",
+  "%n components": "%n คอมโพเนนต์",
+  "Type %n": "ประเภท %n",
+  "Section %n": "ส่วนที่ %n",
+  "1 field": "1 ฟิลด์",
+  "%n fields": "%n ฟิลด์",
+  "1 item": "1 รายการ",
+  "%n items": "%n รายการ",
+  "empty": "ว่าง",
+  "Key": "คีย์",
+  "%n text entries": "%n รายการข้อความ",
+  "Search keys and text…": "ค้นหาคีย์และข้อความ…",
+  "Showing the first %n — search to narrow it down.": "แสดง %n รายการแรก — ค้นหาเพื่อจำกัดผลลัพธ์ให้แคบลง",
+  "This file is too large to show in full — some fields were left out.": "ไฟล์นี้ใหญ่เกินกว่าจะแสดงทั้งหมด — บางฟิลด์ถูกละไว้"
 }

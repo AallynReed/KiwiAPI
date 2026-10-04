@@ -3464,5 +3464,20 @@
   "Patrons": "후원자",
   "Thanks for telling us. Switching you to the classic look…": "알려 주셔서 감사합니다. 클래식 디자인으로 전환합니다…",
   "Not enough history stored for this range yet - it fills in as captures accumulate.": "이 기간의 기록이 아직 충분히 저장되지 않았습니다. 캡처가 쌓이면서 채워집니다.",
-  "Daily active-player trend for this period; latest ~{n} in 24 hours": "이 기간의 일일 활성 플레이어 추세, 최근 24시간 약 {n}명"
+  "Daily active-player trend for this period; latest ~{n} in 24 hours": "이 기간의 일일 활성 플레이어 추세, 최근 24시간 약 {n}명",
+  "Component": "컴포넌트",
+  "1 component": "컴포넌트 1개",
+  "%n components": "컴포넌트 %n개",
+  "Type %n": "유형 %n",
+  "Section %n": "섹션 %n",
+  "1 field": "필드 1개",
+  "%n fields": "필드 %n개",
+  "1 item": "항목 1개",
+  "%n items": "항목 %n개",
+  "empty": "비어 있음",
+  "Key": "키",
+  "%n text entries": "텍스트 항목 %n개",
+  "Search keys and text…": "키와 텍스트 검색…",
+  "Showing the first %n — search to narrow it down.": "처음 %n개를 표시하고 있습니다 — 검색해서 범위를 좁혀 보세요.",
+  "This file is too large to show in full — some fields were left out.": "이 파일은 너무 커서 전체를 표시할 수 없습니다 — 일부 필드가 생략되었습니다."
 }

@@ -3464,5 +3464,20 @@
   "Patrons": "Usuarios Patrón",
   "Thanks for telling us. Switching you to the classic look…": "Gracias por decírnoslo. Te pasamos al diseño clásico…",
   "Not enough history stored for this range yet - it fills in as captures accumulate.": "Aún no hay suficiente historial guardado para este rango; se irá completando a medida que lleguen capturas.",
-  "Daily active-player trend for this period; latest ~{n} in 24 hours": "Tendencia diaria de jugadores activos en este periodo; último ~{n} en 24 horas"
+  "Daily active-player trend for this period; latest ~{n} in 24 hours": "Tendencia diaria de jugadores activos en este periodo; último ~{n} en 24 horas",
+  "Component": "Componente",
+  "1 component": "1 componente",
+  "%n components": "%n componentes",
+  "Type %n": "Tipo %n",
+  "Section %n": "Sección %n",
+  "1 field": "1 campo",
+  "%n fields": "%n campos",
+  "1 item": "1 elemento",
+  "%n items": "%n elementos",
+  "empty": "vacío",
+  "Key": "Clave",
+  "%n text entries": "%n entradas de texto",
+  "Search keys and text…": "Buscar claves y textos…",
+  "Showing the first %n — search to narrow it down.": "Se muestran los primeros %n: busca para acotar la lista.",
+  "This file is too large to show in full — some fields were left out.": "Este archivo es demasiado grande para mostrarlo completo: se omitieron algunos campos."
 }

@@ -3464,5 +3464,20 @@
   "Patrons": "Обладателей Патрона",
   "Thanks for telling us. Switching you to the classic look…": "Спасибо, что сообщили. Переключаем вас на классический дизайн…",
   "Not enough history stored for this range yet - it fills in as captures accumulate.": "Для этого диапазона пока недостаточно сохранённой истории - она будет пополняться по мере поступления снимков.",
-  "Daily active-player trend for this period; latest ~{n} in 24 hours": "Ежедневная динамика активных игроков за этот период; последнее значение ~{n} за 24 часа"
+  "Daily active-player trend for this period; latest ~{n} in 24 hours": "Ежедневная динамика активных игроков за этот период; последнее значение ~{n} за 24 часа",
+  "Component": "Компонент",
+  "1 component": "1 компонент",
+  "%n components": "компонентов: %n",
+  "Type %n": "Тип %n",
+  "Section %n": "Раздел %n",
+  "1 field": "1 поле",
+  "%n fields": "полей: %n",
+  "1 item": "1 элемент",
+  "%n items": "элементов: %n",
+  "empty": "пусто",
+  "Key": "Ключ",
+  "%n text entries": "текстовых записей: %n",
+  "Search keys and text…": "Поиск по ключам и тексту…",
+  "Showing the first %n — search to narrow it down.": "Показаны первые %n — уточните поиск, чтобы сузить список.",
+  "This file is too large to show in full — some fields were left out.": "Этот файл слишком велик, чтобы показать его целиком — часть полей пропущена."
 }

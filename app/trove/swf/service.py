@@ -109,25 +109,33 @@ async def scripts(raw: bytes, content_sha: str) -> dict:
     Cached under the movie's own content hash, so the JVM runs once per distinct
     ``.swf`` no matter how many releases ship it or how often it is opened.
     """
+    cached = await bp_cache.get_or_build(bp_cache.key_for_swf_scripts(content_sha),
+                                         lambda: _decompile(raw, content_sha))
+    return await asyncio.to_thread(cached.payload)
+
+
+async def scripts_uncached(raw: bytes) -> dict:
+    """The same decompile with nothing kept: for the Mod Workshop, whose uploads are
+    promised to be read and forgotten. Every open costs a JVM; the page remembers
+    what it has already read for as long as the tab holds the mod."""
+    return await _decompile(raw, "upload")
+
+
+async def _decompile(raw: bytes, label: str) -> dict:
     if not decompile.available():
         raise APIError(503, ErrorCode.service_unavailable,
                        "The Flash decompiler is not available on this server.")
-
-    async def build() -> dict:
-        async with _decompile_gate:
-            try:
-                return await asyncio.to_thread(decompile.decompile_scripts, raw)
-            except decompile.DecompilerUnavailable as exc:
-                logger.warning("swf: decompiler unavailable: %s", exc)
-                raise APIError(503, ErrorCode.service_unavailable,
-                               "The Flash decompiler is not available on this "
-                               "server.") from None
-            except decompile.DecompileError as exc:
-                logger.info("swf: cannot decompile %s: %s", content_sha[:12], exc)
-                raise APIError(422, ErrorCode.bad_request, str(exc)) from None
-
-    cached = await bp_cache.get_or_build(bp_cache.key_for_swf_scripts(content_sha), build)
-    return await asyncio.to_thread(cached.payload)
+    async with _decompile_gate:
+        try:
+            return await asyncio.to_thread(decompile.decompile_scripts, raw)
+        except decompile.DecompilerUnavailable as exc:
+            logger.warning("swf: decompiler unavailable: %s", exc)
+            raise APIError(503, ErrorCode.service_unavailable,
+                           "The Flash decompiler is not available on this "
+                           "server.") from None
+        except decompile.DecompileError as exc:
+            logger.info("swf: cannot decompile %s: %s", label[:12], exc)
+            raise APIError(422, ErrorCode.bad_request, str(exc)) from None
 
 
 async def asset_bytes(sha: str) -> bytes | None:

@@ -750,7 +750,13 @@
       const preview = kind
         ? `<button type="button" class="mw-icon-btn" data-preview="${esc(path)}"
              title="${esc(t('Preview'))}" aria-label="${esc(t('Preview'))} ${esc(path)}">
-             <i class="fa-solid ${kind === 'model' ? 'fa-cube' : kind === 'text' ? 'fa-file-lines' : 'fa-image'}" aria-hidden="true"></i></button>`
+             <i class="fa-solid ${PREVIEW_ICON[kind] || 'fa-image'}" aria-hidden="true"></i></button>`
+        : '';
+      // No decompiler on this server: no button, rather than one that fails when pressed.
+      const code = d.decompiler && low.endsWith('.swf')
+        ? `<button type="button" class="mw-icon-btn" data-code="${esc(path)}"
+             title="${esc(t('View the ActionScript inside this movie'))}" aria-label="${esc(t('View code'))} ${esc(path)}">
+             <i class="fa-solid fa-code" aria-hidden="true"></i></button>`
         : '';
       return `<div class="mw-file ${esc(row.status || '')}">
         ${mark}
@@ -760,7 +766,7 @@
           ${detail}
         </span>
         <span class="mw-file-size">${esc(formatBytes(f.size))}</span>
-        ${preview}
+        ${code}${preview}
         <button type="button" class="mw-icon-btn" data-get="${esc(path)}"
                 title="${esc(t('Save this file'))}" aria-label="${esc(t('Save this file'))} ${esc(path)}">
           <i class="fa-solid fa-download" aria-hidden="true"></i></button>
@@ -783,6 +789,7 @@
      so the model preview posts the mod back and gets the payload the Mods Hub
      viewer already knows how to draw. */
 
+  const PREVIEW_ICON = { model: 'fa-cube', text: 'fa-file-lines', binfab: 'fa-sitemap' };
   const IMAGE_EXT = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'];
   const TEXT_EXT = ['.txt', '.cfg', '.ini', '.json', '.xml', '.csv', '.md',
                     '.lua', '.js', '.html', '.htm', '.yaml', '.yml', '.log'];
@@ -790,6 +797,7 @@
   function previewKind(path) {
     const low = path.toLowerCase();
     if (low.endsWith('.blueprint')) return 'model';
+    if (low.endsWith('.binfab')) return 'binfab';
     if (low.endsWith('.dds')) return 'dds';
     if (IMAGE_EXT.some((e) => low.endsWith(e))) return 'image';
     if (TEXT_EXT.some((e) => low.endsWith(e))) return 'text';
@@ -813,6 +821,7 @@
     }
 
     const box = openPreview(path);
+    if (kind === 'binfab') { showBinfab(box, path); return; }
     try {
       const buf = await fileBytes(path);
       if (kind === 'text') {
@@ -844,6 +853,217 @@
     } catch (err) {
       box.innerHTML = `<p class="mw-alert bad">${esc(message(err))}</p>`;
     }
+  }
+
+  /* ── Reading a movie's code ──────────────────────────────────────────
+     An interface mod's behaviour is compiled ActionScript inside its .swf. The
+     server decompiles one on request and keeps nothing, so the tab remembers
+     each answer for as long as it holds this mod - a second look is free. */
+
+  function openCode(path) {
+    if (!state.open) return;
+    if (!window.SwfCode) { setAnStatus(t('The code viewer is unavailable.'), true); return; }
+    const mod = state.open;
+    window.SwfCode.open({
+      url: path,
+      title: path.split('/').pop(),
+      subtitle: t('Decompiled ActionScript'),
+      fetcher: () => codeFor(mod, path),
+    });
+  }
+
+  async function codeFor(mod, path) {
+    mod.code = mod.code || new Map();
+    let pending = mod.code.get(path);
+    if (!pending) {
+      const form = new FormData();
+      form.append('file', mod.file, mod.file.name);
+      form.append('path', path);
+      pending = fetch(apiUrl('/site/mod-workshop/swf/scripts'), { method: 'POST', body: form })
+        .then(async (res) => ({ status: res.status, body: await res.text() }));
+      mod.code.set(path, pending);
+    }
+    let got;
+    try {
+      got = await pending;
+    } catch (err) {
+      mod.code.delete(path);
+      throw err;
+    }
+    // Only a real answer is remembered; a refusal (rate limit, busy server) is worth asking again.
+    if (got.status !== 200) mod.code.delete(path);
+    return new Response(got.body, {
+      status: got.status, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  /* ── Reading a prefab (.binfab) ──────────────────────────────────────
+     The server reads it with the game-data decoders' own structural reader
+     and answers with a tree: components, their sections (root class first)
+     and every field by number, named only where the decoders already know
+     the name. A language table comes back as key/text rows instead, since
+     text is all a translation mod changes. */
+
+  const LOCALE_ROWS = 400;
+
+  async function showBinfab(box, path) {
+    box.classList.add('is-doc');
+    try {
+      const form = new FormData();
+      form.append('file', state.open.file, state.open.file.name);
+      form.append('path', path);
+      const res = await fetch(apiUrl('/site/mod-workshop/preview/binfab'),
+                              { method: 'POST', body: form });
+      const data = await readJSON(res);
+      if (data.kind === 'locale') renderLocale(box, data);
+      else renderPrefab(box, data);
+    } catch (err) {
+      box.innerHTML = `<p class="mw-alert bad">${esc(message(err))}</p>`;
+    }
+  }
+
+  function bfChip(icon, text) {
+    return `<span class="mw-chip-static"><i class="fa-solid ${icon}" aria-hidden="true"></i>${esc(text)}</span>`;
+  }
+
+  function bfTruncated(data) {
+    return data.truncated
+      ? `<p class="mw-empty">${esc(t('This file is too large to show in full — some fields were left out.'))}</p>`
+      : '';
+  }
+
+  function renderLocale(box, data) {
+    const rows = data.rows || [];
+    const label = t('Search keys and text…');
+    box.innerHTML = `<div class="mw-bf">
+      <div class="mw-bf-bar">
+        ${bfChip('fa-language', t('%n text entries').replace('%n', formatInt(rows.length)))}
+        <label class="mw-bf-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" placeholder="${esc(label)}" aria-label="${esc(label)}"></label>
+      </div>
+      ${bfTruncated(data)}
+      <div class="mw-bf-rows"></div>
+    </div>`;
+    const list = box.querySelector('.mw-bf-rows');
+    const input = box.querySelector('.mw-bf-search input');
+    const paint = () => {
+      const q = input.value.trim().toLowerCase();
+      const hits = q
+        ? rows.filter(([k, v]) => k.toLowerCase().includes(q) || v.toLowerCase().includes(q))
+        : rows;
+      if (!hits.length) {
+        list.innerHTML = `<p class="mw-empty">${esc(t('Nothing matches that.'))}</p>`;
+        return;
+      }
+      list.innerHTML = `<table class="mw-props mw-bf-locale"><thead><tr>
+          <th scope="col">${esc(t('Key'))}</th><th scope="col">${esc(t('Text'))}</th></tr></thead>
+        <tbody>${hits.slice(0, LOCALE_ROWS).map(([k, v]) =>
+          `<tr><th scope="row">${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</tbody></table>`
+        + (hits.length > LOCALE_ROWS
+          ? `<p class="mw-empty">${esc(t('Showing the first %n — search to narrow it down.')
+              .replace('%n', formatInt(LOCALE_ROWS)))}</p>`
+          : '');
+    };
+    input.addEventListener('input', window.BTTUtil.debounce(paint, 140));
+    paint();
+  }
+
+  /* A big prefab is tens of thousands of values, so only one level is drawn up
+     front; a nested value is drawn the first time it is opened. */
+  function renderPrefab(box, data) {
+    const lazy = [];
+    const comps = data.components || [];
+    const chips = [];
+    if (data.kind === 'entity') {
+      chips.push(bfChip('fa-cube', t('Type %n').replace('%n', String(data.type_id))));
+      chips.push(bfChip('fa-puzzle-piece', comps.length === 1 ? t('1 component')
+        : t('%n components').replace('%n', formatInt(comps.length))));
+    }
+    chips.push(bfChip('fa-weight-hanging', formatBytes(data.size)));
+    const body = data.kind === 'entity'
+      ? comps.map((c) => `<details class="mw-bf-comp"${comps.length <= 8 ? ' open' : ''}>
+          <summary><span class="mw-bf-cid">${esc(t('Component'))} ${esc(String(c.id))}</span>
+            ${c.name ? `<span class="mw-bf-cname">${esc(c.name)}</span>` : ''}</summary>
+          <div class="mw-bf-kids">${objectBody(c.v, lazy)}</div></details>`).join('')
+      : `<div class="mw-bf-comp mw-bf-root">${objectBody(data.root, lazy)}</div>`;
+    box.innerHTML = `<div class="mw-bf"><div class="mw-bf-bar">${chips.join('')}</div>
+      ${bfTruncated(data)}${body}</div>`;
+    // `toggle` doesn't bubble, so the listener sits in the capture phase.
+    box.addEventListener('toggle', (e) => {
+      const el = e.target;
+      if (!el.open || !el.matches('details[data-lazy]') || el.dataset.drawn) return;
+      el.dataset.drawn = '1';
+      el.querySelector('.mw-bf-kids').innerHTML = childrenHTML(lazy[Number(el.dataset.lazy)], lazy);
+    }, true);
+  }
+
+  function objectBody(node, lazy) {
+    if (!node || node.t !== 'o') return childrenHTML(node, lazy);
+    const sections = node.v || [];
+    if (!sections.length) return `<p class="mw-empty">${esc(t('empty'))}</p>`;
+    return sections.map((s, i) => {
+      const many = sections.length > 1;
+      const head = many || s.note
+        ? `<div class="mw-bf-sec">${many ? esc(t('Section %n').replace('%n', String(i + 1))) : ''}
+             ${s.note ? `<span class="mw-bf-note">${esc(s.note)}</span>` : ''}</div>`
+        : '';
+      const rows = (s.f || []).map((f) => fieldRow('#' + f.i, f.l, f.v, lazy)).join('');
+      return head + (rows || `<p class="mw-empty">${esc(t('empty'))}</p>`);
+    }).join('');
+  }
+
+  function childrenHTML(node, lazy) {
+    if (!node) return '';
+    if (node.t === 'o') return objectBody(node, lazy);
+    if (node.t === 'm') return node.v.map(([k, v]) => fieldRow(String(k), '', v, lazy)).join('');
+    if (node.t === 'a' || node.t === 'r') {
+      return node.v.length
+        ? node.v.map((v, i) => fieldRow('[' + i + ']', '', v, lazy)).join('')
+        : `<p class="mw-empty">${esc(t('empty'))}</p>`;
+    }
+    return valueHTML(node, lazy);
+  }
+
+  function fieldRow(key, label, node, lazy) {
+    return `<div class="mw-bf-row"><span class="mw-bf-idx">${esc(key)}</span>`
+      + (label ? `<span class="mw-bf-label">${esc(label.replace(/_/g, ' '))}</span>` : '')
+      + `<div class="mw-bf-val">${valueHTML(node, lazy)}</div></div>`;
+  }
+
+  // Nine significant digits round-trip any float32 without the double's noise.
+  function bfFloat(v) {
+    return typeof v === 'number' ? String(+v.toPrecision(9)) : String(v);
+  }
+
+  function bfNumber(v) {
+    return Number.isInteger(v) && Math.abs(v) < 2 ** 31 ? String(v) : bfFloat(v);
+  }
+
+  function valueHTML(node, lazy) {
+    if (!node) return '<span class="mw-bf-mute">…</span>';
+    switch (node.t) {
+      case 'i': return `<span class="mw-bf-num">${esc(String(node.v))}</span>`;
+      case 'f': return `<span class="mw-bf-num">${esc(bfFloat(node.v))}</span>`;
+      case 's': return `<span class="mw-bf-str">"${esc(node.v)}"</span>`;
+      case 'p': return `<span class="mw-bf-num">(${esc(node.v.map(bfNumber).join(', '))})</span>`;
+      case 'b': return `<span class="mw-bf-mute">${esc(formatBytes(node.n))} · ${esc(node.v)}${node.n > 48 ? '…' : ''}</span>`;
+      case 'z': return `<span class="mw-bf-mute">${esc(t('empty'))}</span>`;
+      default:
+        lazy.push(node);
+        return `<details class="mw-bf-node" data-lazy="${lazy.length - 1}">
+          <summary>${esc(bfSummary(node))}</summary><div class="mw-bf-kids"></div></details>`;
+    }
+  }
+
+  function bfSummary(node) {
+    if (node.t === 'o') {
+      const only = node.v.length === 1 ? node.v[0] : null;
+      if (only && only.note) return only.note;
+      const n = node.v.reduce((sum, s) => sum + (s.f || []).length, 0);
+      return n === 1 ? t('1 field') : t('%n fields').replace('%n', formatInt(n));
+    }
+    const n = node.v.length;
+    return n === 1 ? t('1 item') : t('%n items').replace('%n', formatInt(n));
   }
 
   /** One file's bytes, pulled back out of the mod that is still sitting in the tab. */
@@ -1017,6 +1237,8 @@
       }
       const get = e.target.closest('[data-get]');
       if (get) { openDownload(get.getAttribute('data-get')); return; }
+      const code = e.target.closest('[data-code]');
+      if (code) { openCode(code.getAttribute('data-code')); return; }
       const look = e.target.closest('[data-preview]');
       if (look) preview(look.getAttribute('data-preview'));
     });
