@@ -2327,13 +2327,15 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 .support-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
+  gap: 9px;
+  padding: 11px 20px;
   background: linear-gradient(135deg, #cc3560, #b85414);
   color: #fff;
   border: none;
   border-radius: 999px;
-  font: 600 .95rem inherit;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: .95rem;
   cursor: pointer;
   box-shadow: 0 4px 20px rgba(255, 111, 145, .35);
   transition: transform .2s, box-shadow .2s;
@@ -2411,7 +2413,7 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 
 @media (max-width: 480px) {
   .support-widget { bottom: 16px; right: 16px; }
-  .support-trigger { padding: 8px 14px; font-size: .88rem; }
+  .support-trigger { padding: 10px 16px; font-size: .92rem; }
   .support-panel { width: calc(100vw - 32px); max-width: 320px; }
 }
 

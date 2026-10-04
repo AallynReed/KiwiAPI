@@ -495,14 +495,29 @@ document.addEventListener("DOMContentLoaded", () => {
         // it on kills the open animation. Closed-state visibility is handled by
         // CSS opacity + pointer-events; aria-hidden below covers screen readers.
         panel.removeAttribute('hidden');
-        const setOpen = (open) => {
+        let hoverOpened = false;
+        let closeTimer = 0;
+        const setOpen = (open, byHover = false) => {
+            clearTimeout(closeTimer);
+            hoverOpened = open && byHover;
             widget.classList.toggle('open', open);
             trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
             panel.setAttribute('aria-hidden', open ? 'false' : 'true');
         };
         setOpen(false);
+        // Mouse hover opens it; the close delay covers the gap above the pill.
+        widget.addEventListener('pointerenter', (e) => {
+            if (e.pointerType !== 'mouse') return;
+            clearTimeout(closeTimer);
+            if (!widget.classList.contains('open')) setOpen(true, true);
+        });
+        widget.addEventListener('pointerleave', (e) => {
+            if (e.pointerType !== 'mouse' || !hoverOpened) return;
+            closeTimer = setTimeout(() => setOpen(false), 250);
+        });
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (hoverOpened) return;
             setOpen(!widget.classList.contains('open'));
         });
         document.addEventListener('click', (e) => {
