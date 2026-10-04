@@ -536,7 +536,7 @@
     if (!tile) return;
     getJSON("/site/leaderboards/activity").then(function (a) {
       var set = function (id, v) { var e = document.getElementById(id); if (e && v != null) e.textContent = Number(v).toLocaleString(); };
-      set("act-1h", a.estimate); set("act-24h", a.estimate_24h); set("act-7d", a.estimate_7d);
+      set("act-24h", a.estimate_24h); set("act-7d", a.estimate_7d);
     }).catch(function () {});
   })();
 

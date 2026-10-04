@@ -21,20 +21,12 @@ from app.i18n import t
 
 logger = logging.getLogger(__name__)
 
-VALID_PERIODS = ("1d", "7d", "1m")   # longer ranges removed from /activity
-_PERIOD_LABEL = {
-    "1d": "Last 24 hours", "7d": "Last 7 days", "1m": "Last 30 days",
-}
+VALID_PERIODS = ("7d", "1m")   # 1d went with the hourly captures
+_PERIOD_LABEL = {"7d": "Last 7 days", "1m": "Last 30 days"}
 
 
 def _axis_fmt(period: str) -> str:
-    if period == "1d":
-        return "%H:%M"
-    if period == "7d":
-        return "%a"
-    if period in ("1m", "3m"):
-        return "%b %d"
-    return "%b '%y"
+    return "%a" if period == "7d" else "%b %d"
 
 
 # In-process render cache: dedupe scraper / spam hits so each card renders at
@@ -274,12 +266,12 @@ def _rel_coarse(ts) -> str:
     return t("in {d}d", d=val)
 
 
-async def render_activity_og(period: str = "1d", lang: str = "en") -> bytes:
+async def render_activity_og(period: str = "7d", lang: str = "en") -> bytes:
     """Fetch the ``period`` series + live estimate and render the card PNG.
     Cached in-process for ``_CACHE_TTL`` per (period, language)."""
-    period = (period or "1d").lower()
+    period = (period or "7d").lower()
     if period not in VALID_PERIODS:
-        period = "1d"
+        period = "7d"
     lang = i18n.normalize_lang(lang)
     i18n.set_current_language(lang)
     cached = _cache_get(f"activity:{period}:{lang}")
@@ -293,7 +285,7 @@ async def render_activity_og(period: str = "1d", lang: str = "en") -> bytes:
     return png
 
 
-def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
+def _draw(series: dict, live: dict, period: str = "7d") -> bytes:
     img = Image.new("RGBA", (W, H), BG + (255,))
     d = ImageDraw.Draw(img, "RGBA")
     M = 64
@@ -311,19 +303,18 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
     _fit_text(d, (M + 28, cy - 16), t("PLAYER ACTIVITY"), W - M - (M + 28), 26,
               bold=True, fill=MUTE + (255,))
 
-    num = live.get("estimate")
+    num = live.get("estimate_24h")
     if num is None and series.get("latest"):
         num = round(series["latest"])
     num_txt = ("~" + f"{int(num):,}") if num is not None else "—"
     d.text((M, 116), num_txt, font=f_big, fill=GREEN_HI + (255,))
     after = M + _w(d, num_txt, f_big) + 24
 
-    # 24h / 7d rollups drawn first so the header sub-lines below can be constrained
-    # not to collide with them in any locale.
+    # The 7d rollup is drawn first so the header sub-lines below can be constrained
+    # not to collide with it in any locale.
     rx, ry = W - M, 92
     stats_left = rx
-    for label, val in ((t("ACTIVE · 24H"), live.get("estimate_24h")),
-                       (t("ACTIVE · 7D"), live.get("estimate_7d"))):
+    for label, val in ((t("ACTIVE · 7D"), live.get("estimate_7d")),):
         if val is None:
             continue
         vt = f"~{int(val):,}"
@@ -335,7 +326,7 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
 
     sub_max = max(160, stats_left - 20 - after)
     _fit_text(d, (after, 150), t("active players"), sub_max, 33, fill=TEXT + (255,))
-    _fit_text(d, (after, 192), t("in the last hour"), sub_max, 33, fill=MUTE + (255,))
+    _fit_text(d, (after, 192), t("in the last 24 hours"), sub_max, 33, fill=MUTE + (255,))
 
     px0, px1, py0, py1 = M, W - M, 322, 540
     points = series.get("points") or []
@@ -362,9 +353,8 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
                 d.polygon(seg + [(seg[-1][0], py1), (seg[0][0], py1)], fill=AREA)
         d.line([(px0, py1), (px1, py1)], fill=GRID + (255,), width=2)  # baseline
 
-        # Reset markers only on the short ranges (daily/weekly rhythm); on
-        # longer ranges they'd be a forest of lines. Labelled only on 1d.
-        if period in ("1d", "7d"):
+        # Daily reset markers only on 7d; on 1m they'd be a forest of lines.
+        if period == "7d":
             for r in _resets(xmin, xmax):
                 x = fx(r)
                 if px0 - 1 <= x <= px1 + 1:
@@ -372,9 +362,6 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
                     while y < py1:                   # dashed vertical
                         d.line([(x, y), (x, min(y + 9, py1))], fill=RESET_C, width=2)
                         y += 15
-                    if period == "1d":
-                        d.text((x + 7, py0 - 1), _trove(r, "%H:%M"),
-                               font=f_axis, fill=MUTE + (210,))
 
         for a, b in bridges:
             _dashed(d, (fx(a["t"]), fy(a["active"])), (fx(b["t"]), fy(b["active"])),
@@ -403,7 +390,7 @@ def _draw(series: dict, live: dict, period: str = "1d") -> bytes:
 
     d.text((M, H - 54), "trove.aallyn.net/activity", font=f_foot, fill=MUTE + (255,))
     lw = _w(d, "trove.aallyn.net/activity", f_foot)
-    fr = f"{t(_PERIOD_LABEL.get(period, 'Last 24 hours'))} · {t('Trove server time (UTC−11)')}"
+    fr = f"{t(_PERIOD_LABEL.get(period, 'Last 7 days'))} · {t('Trove server time (UTC−11)')}"
     _fit_text(d, (W - M, H - 54), fr, (W - M) - (M + lw + 24), 24, align="right",
               fill=MUTE + (210,))
 

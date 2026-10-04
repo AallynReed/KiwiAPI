@@ -1129,13 +1129,13 @@ async def get_activity_current(
     response: Response,
     ctx: AccessContext = _ACTIVITY_PUBLIC,
 ) -> ActivityResponse:
-    """**Tokenless.** Lower-bound count of active players in the most recent
-    capture window - distinct top-N leaderboard players whose score increased
-    on at least one lifetime board (or who appear in the new cycle of a
-    daily/weekly board where a reset crossed the window) between the two
-    latest captures. Also carries distinct 24h / 7d rollups (`estimate_24h` /
-    `estimate_7d`). `estimate` is null until two captures exist. Cached for
-    the cheater-detection TTL; a new hourly capture invalidates it."""
+    """**Tokenless.** Lower-bound count of active players - distinct top-N
+    leaderboard players whose score rose on at least one board (or who newly
+    appear above the previous capture's floor). The headline figures are the
+    distinct 24h / 7d rollups (`estimate_24h` / `estimate_7d`); `estimate`
+    covers only the latest capture window (`window_start` → `window_end`) and
+    is null until two captures exist. Cached for the cheater-detection TTL; a
+    new capture invalidates it."""
     from app.admin import runtime_config
     payload = await leaderboards_activity.estimate_active_players()
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -1153,11 +1153,11 @@ async def get_activity_history(
     ctx: AccessContext = _ACTIVITY_PUBLIC,
 ) -> ActivityHistoryResponse:
     """**Tokenless.** Time-series of active-player estimates over the last
-    ``days`` days, one point per consecutive capture pair. ``estimate_per_hour``
-    (= estimate / duration_hours) is the value a chart should plot - a missed
-    capture makes the next window span 2-3h and inflates the raw count because
-    more players had time to score; the per-hour rate normalises that out.
-    Points persist on each ingest, so the series survives restarts."""
+    ``days`` days, one point per consecutive capture pair. ``estimate_24h``
+    (distinct players active in the 24h up to that capture) is the value a
+    chart should plot - it doesn't depend on how often captures land.
+    ``estimate_per_hour`` is kept for older clients. Points persist on each
+    ingest, so the series survives restarts."""
     from app.admin import runtime_config
     payload = await leaderboards_activity.estimate_active_players_history(days=days)
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -1167,18 +1167,19 @@ async def get_activity_history(
 
 @activity_router.get(
     "/series", response_model=ActivitySeriesResponse,
-    summary="Bucketed active-player series for a period (1d … all)",
+    summary="Bucketed daily active-player series for a period (7d / 1m)",
 )
 async def get_activity_series(
     response: Response,
-    period: str = Query(default="7d", description="1d / 7d / 1m / 3m / 6m / 1y / all"),
+    period: str = Query(default="7d", description="7d / 1m (anything else falls back to 7d)"),
     ctx: AccessContext = _ACTIVITY_PUBLIC,
 ) -> ActivitySeriesResponse:
-    """**Tokenless.** Downsampled activity-level series for one period - the
-    data behind the Player Activity page's charts. Each bucket is the average
-    active-players-per-hour over the captures it spans (hourly for 1d up to
-    weekly for 1y/all, sized so the line stays readable); also returns the
-    period peak / average / latest level for stat cards."""
+    """**Tokenless.** Downsampled daily-activity series for one period - the
+    data behind the Player Activity page's chart. Each bucket is the average
+    number of players active in the 24h up to each capture it spans (6-hourly
+    buckets for 7d, daily for 1m, never narrower than the capture cadence);
+    also returns the period peak / quietest / average / latest for stat
+    cards."""
     from app.admin import runtime_config
     payload = await leaderboards_activity.activity_series(period=period)
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -3427,7 +3428,8 @@ async def delete_leaderboard_anchor(
     )
     if recompute and deleted:
         # reset=True rebuilds the whole activity series consistently (no orphan
-        # rows, rollups correct); the deleted capture's windows resolve to gaps.
+        # rows, rollups correct); the windows either side of the deleted capture
+        # merge into one.
         background_tasks.add_task(
             leaderboards_activity.backfill_history_chunked, reset=True, total_days=0,
         )

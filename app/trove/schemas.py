@@ -854,11 +854,11 @@ class ActivityResponse(BaseModel):
     window_start: int | None  # unix seconds - earlier of the two anchors
     window_end: int | None    # unix seconds - later (more recent) anchor
     duration_hours: float | None
-    estimate: int | None      # distinct active players (union across all tracked boards); None = data unavailable
-    # Wider rollups: distinct active players over the last 24h / 7d (same
-    # late anchor, earlier endpoint). None until enough history exists to
-    # reach back that far. ``span_*_hours`` is the window actually covered
-    # (shorter than the nominal 24/168 right after a fresh deploy).
+    estimate: int | None      # distinct active players since the previous capture (window_start -> window_end); None = data unavailable
+    # Daily / weekly rollups: distinct active players over the last 24h / 7d
+    # (same late anchor, earlier endpoint) - the headline figures. None until
+    # enough history exists, or while a capture gap stretches the span past
+    # 1.5x the period. ``span_*_hours`` is the window actually covered.
     estimate_24h: int | None = None
     estimate_7d: int | None = None
     window_24h_start: int | None = None
@@ -872,21 +872,20 @@ class ActivityResponse(BaseModel):
 
 
 class ActivityHistoryPoint(BaseModel):
-    """One point on the activity time-series - distinct active players
-    in the window ``(window_start, window_end]``. Two numeric metrics:
+    """One point on the activity time-series, per consecutive capture pair:
 
-    * ``estimate`` - raw count; what the per-window pill shows.
-    * ``estimate_per_hour`` - count divided by window duration. This is
-      the "flattened" metric: a missed-capture gap makes the next
-      window span 2-3h instead of 1h, which naturally inflates the
-      raw count because more players had time to score. Dividing
-      restores the per-hour rate so the chart line stays smooth across
-      irregular window sizes.
+    * ``estimate_24h`` - distinct players active in the 24h up to
+      ``window_end``; the value to chart. Null where a capture gap stretches
+      that span past 36h.
+    * ``estimate`` - distinct players active in ``(window_start, window_end]``.
+    * ``estimate_per_hour`` - ``estimate`` / duration. Kept for older clients;
+      it under-counts on long windows, since the same players stay active.
     """
     window_end: int        # late anchor, unix seconds
     window_start: int      # early anchor
     duration_hours: float
     estimate: int
+    estimate_24h: int | None = None
     estimate_per_hour: float
 
 
@@ -903,31 +902,33 @@ class ActivityHistoryResponse(BaseModel):
 
 
 class ActivitySeriesPoint(BaseModel):
-    """One bucket on the multi-period activity chart. ``active`` is the
-    average active-players-per-hour across the windows that fell in the
-    bucket; ``peak`` is the busiest single window in it."""
-    t: int            # bucket start, unix seconds
-    active: float     # avg active players / hour in the bucket
-    peak: float       # busiest hour in the bucket
+    """One bucket on the activity chart. ``active`` is the average number of
+    players active in the 24h up to each capture in the bucket (the period's
+    busiest / quietest bucket plots its true extreme instead); ``peak`` is the
+    busiest capture in it."""
+    t: int            # plotted time, unix seconds
+    active: float     # players active in 24h, as plotted
+    peak: float       # busiest capture in the bucket
     samples: int      # number of captures aggregated into the bucket
 
 
 class ActivitySeriesPeak(BaseModel):
-    t: int            # bucket start of the period's busiest bucket
+    t: int            # capture time of the period's busiest (or quietest) 24h
     active: float
 
 
 class ActivitySeriesResponse(BaseModel):
-    """Bucketed activity-level series for one period (1d … all). Buckets
-    are sized to the period so the line stays readable; ``peak`` /
-    ``average`` / ``latest`` summarise it for stat cards. Empty ``points``
-    when the estimate collection has nothing in range."""
+    """Bucketed daily-activity series for one period (7d / 1m). Buckets are
+    sized to the period and never narrower than the capture cadence;
+    ``peak`` / ``low`` / ``average`` / ``latest`` summarise it for stat
+    cards. Empty ``points`` when nothing is stored in range."""
     period: str
     bucket_seconds: int
     window_start: int
     window_end: int
     points: list[ActivitySeriesPoint]
     peak: ActivitySeriesPeak | None = None
+    low: ActivitySeriesPeak | None = None
     average: float | None = None
     latest: float | None = None
     methodology: str

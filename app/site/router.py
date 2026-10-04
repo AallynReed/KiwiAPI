@@ -812,20 +812,12 @@ def _plain_excerpt(md: str | None, limit: int = 280) -> str:
     return t[:limit]
 
 
-# Period-keyed social cards: a shared `/activity?period=1y` link previews the
-# 1Y graph. `period` MUST be a query param (or path) - URL #fragments never
+# Period-keyed social cards: a shared `/activity?period=1m` link previews the
+# 1M graph. `period` MUST be a query param (or path) - URL #fragments never
 # reach the server/scrapers, so they can't drive a per-period embed.
-_OG_PERIODS = ("1d", "7d", "1m", "3m", "6m", "1y", "all")
-_OG_PERIOD_LABEL = {
-    "1d": "Last 24 hours", "7d": "Last 7 days", "1m": "Last 30 days",
-    "3m": "Last 3 months", "6m": "Last 6 months", "1y": "Last 12 months",
-    "all": "All time",
-}
-
-
 @router.get("/activity/og.png")
-async def activity_og_image(period: str = "1d") -> Response:
-    """OG / Twitter card image: the activity chart for ``period`` (default 1d)
+async def activity_og_image(period: str = "7d") -> Response:
+    """OG / Twitter card image: the activity chart for ``period`` (default 7d)
     rendered to a 1200x630 PNG so a shared ``/activity?period=…`` link previews
     that graph. Cached in-process per period; falls back to the favicon if a
     render ever fails so the meta tag never 500s."""
@@ -1886,8 +1878,7 @@ async def site_lb_activity() -> JSONResponse:
 @router.get("/site/leaderboards/activity/history", response_class=JSONResponse)
 async def site_lb_activity_history(days: int = 7) -> JSONResponse:
     """Same payload as the public ``/v1/activity/history``: a time-series of
-    activity estimates with both raw counts and per-hour rates. The chart line
-    plots the rates so missed-capture gaps don't show as spikes."""
+    per-capture activity estimates with their 24h rollups."""
     days = max(1, min(int(days), 30))
     payload = await leaderboards_activity.estimate_active_players_history(days=days)
     return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
@@ -1895,11 +1886,11 @@ async def site_lb_activity_history(days: int = 7) -> JSONResponse:
 
 @router.get("/site/leaderboards/activity/series", response_class=JSONResponse)
 async def site_lb_activity_series(period: str = "7d") -> JSONResponse:
-    """Bucketed activity-level series for the Player Activity page's charts.
+    """Bucketed daily-activity series for the Player Activity page's chart.
 
-    ``period`` is one of 1d / 7d / 1m / 3m / 6m / 1y / all. Returns the
-    downsampled points plus period peak / average / latest so the page
-    paints a chart and its stat cards from a single request."""
+    ``period`` is 7d or 1m. Returns the downsampled points plus period peak /
+    quietest / average / latest so the page paints a chart and its stat cards
+    from a single request."""
     payload = await leaderboards_activity.activity_series(period=period)
     return JSONResponse(payload, headers={"Cache-Control": "no-cache"})
 

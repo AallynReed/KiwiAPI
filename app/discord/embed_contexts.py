@@ -324,6 +324,10 @@ def _sample_giveaways() -> dict:
 
 # ── activity ─────────────────────────────────────────────────────────────────
 
+def _count(v) -> str:
+    return f"{round(v):,}" if isinstance(v, (int, float)) else "—"
+
+
 async def _ctx_activity() -> dict:
     from app.trove.leaderboards.activity import activity_series, estimate_active_players
     live = await estimate_active_players()
@@ -331,10 +335,8 @@ async def _ctx_activity() -> dict:
     peak = series.get("peak") or {}
     cb = live.get("computed_at") or series.get("window_end") or 0
     return {"label": "Last 7 days",
-            "active_now": f"{live.get('estimate', 0):,}", "last_24h": f"{live.get('estimate_24h', 0):,}",
-            "last_7d": f"{live.get('estimate_7d', 0):,}",
-            "peak": f"{round(peak['active']):,}/h" if isinstance(peak.get("active"), (int, float)) else "—",
-            "average": f"{round(series['average']):,}/h" if isinstance(series.get("average"), (int, float)) else "—",
+            "last_24h": _count(live.get("estimate_24h")), "last_7d": _count(live.get("estimate_7d")),
+            "peak": _count(peak.get("active")), "average": _count(series.get("average")),
             "image_url": f"{_ASSET}/activity/og.png?period=7d&v={cb}"}
 
 
@@ -342,9 +344,8 @@ def _default_activity() -> EmbedTemplate:
     return EmbedTemplate(
         title=t("Player activity — {label}", label="{label}"), url=f"{SITE}/activity",
         color="#4CC9F0",
-        description=t("Estimated distinct active players, from hourly leaderboard captures."),
+        description=t("Active players per day and per week, estimated from the leaderboard captures."),
         fields=[
-            EmbedField(name=t("Active now"), value="{active_now}", inline=True),
             EmbedField(name=t("Last 24h"), value="{last_24h}", inline=True),
             EmbedField(name=t("Last 7d"), value="{last_7d}", inline=True),
             EmbedField(name=t("Peak"), value="{peak}", inline=True),
@@ -354,8 +355,8 @@ def _default_activity() -> EmbedTemplate:
 
 
 def _sample_activity() -> dict:
-    return {"label": "Last 7 days", "active_now": "4,231", "last_24h": "18,764",
-            "last_7d": "52,310", "peak": "5,120/h", "average": "3,480/h", "image_url": None}
+    return {"label": "Last 7 days", "last_24h": "18,764", "last_7d": "52,310",
+            "peak": "21,120", "average": "17,480", "image_url": None}
 
 
 # ── server_status ────────────────────────────────────────────────────────────

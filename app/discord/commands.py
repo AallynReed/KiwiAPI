@@ -82,13 +82,8 @@ def _gem_value_opt(n: int) -> dict:
 
 # Period choices for /activity (value = the api period token; default 7d).
 _ACTIVITY_CHOICES = [
-    {"name": "1 Day", "value": "1d"},
     {"name": "7 Days", "value": "7d"},
     {"name": "1 Month", "value": "1m"},
-    {"name": "3 Months", "value": "3m"},
-    {"name": "6 Months", "value": "6m"},
-    {"name": "1 Year", "value": "1y"},
-    {"name": "All Time", "value": "all"},
 ]
 
 

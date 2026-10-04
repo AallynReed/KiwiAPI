@@ -3079,10 +3079,8 @@ class Handler(SimpleHTTPRequestHandler):
             import math
             qs = parse_qs(url.query)
             period = (qs.get("period", ["7d"])[0]).lower()
-            # /activity only exposes up to 1 month (longer ranges removed).
-            spec = {
-                "1d":  (3600, 24), "7d": (3 * 3600, 56), "1m": (86400, 30),
-            }.get(period, (3 * 3600, 56))
+            # /activity exposes 7d (6-hourly buckets) and 1m (daily).
+            spec = {"7d": (6 * 3600, 28), "1m": (86400, 30)}.get(period, (6 * 3600, 28))
             bucket, count = spec
             end = STUB_ANCHOR
             start = end - bucket * count
@@ -3094,8 +3092,8 @@ class Handler(SimpleHTTPRequestHandler):
                 if count // 3 <= i < count // 3 + max(2, count // 10) or i in (count - 5, count - 3):
                     continue
                 ti = start + i * bucket
-                base = 3500 + 1500 * math.sin(i / 3.0) + (i * 12)
-                active = max(180, round(base))
+                base = 17500 + 2500 * math.sin(i / 3.0) + (i * 40)
+                active = max(900, round(base))
                 points.append({"t": ti, "active": float(active),
                                "peak": float(active + 420), "samples": 1})
             peak = max(points, key=lambda p: p["active"])

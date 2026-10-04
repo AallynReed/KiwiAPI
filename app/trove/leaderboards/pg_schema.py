@@ -175,6 +175,9 @@ CREATE INDEX IF NOT EXISTS class_activity_we ON class_activity_estimate (window_
 -- table shipped; ADD it idempotently so an existing deploy gains the column.
 -- NULL = clean unmeasurable for that window (no Power Rank board snapshot).
 ALTER TABLE class_activity_estimate ADD COLUMN IF NOT EXISTS estimate_clean INTEGER;
+-- Distinct players active in the 24h ending at window_end (the chart's value).
+-- NULL = unmeasurable there (a capture gap stretches the window past ~36h).
+ALTER TABLE activity_estimate ADD COLUMN IF NOT EXISTS estimate_24h INTEGER;
 """
 
 

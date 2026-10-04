@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Player Activity - Better Trove Tools</title>
-    <meta name="description" content="How busy is Trove? A live estimate of active players from the leaderboard captures, with trend charts from the last day to all-time.">
+    <meta name="description" content="How busy is Trove? How many players are active each day and each week, estimated from the leaderboard captures, with the trend over the last month.">
     <meta name="theme-color" content="#0a0e14">
     <meta name="color-scheme" content="dark">
 
@@ -18,14 +18,14 @@
     <meta property="og:site_name" content="Better Trove Tools">
     <meta property="og:url" content="{{ og_page_url|default('https://trove.aallyn.net/activity') }}">
     <meta property="og:title" content="{{ og_title|default('Trove Player Activity') }}">
-    <meta property="og:description" content="{{ og_desc|default('Live active-player estimate and trend charts (1D to all-time), from the leaderboard captures.') }}">
+    <meta property="og:description" content="{{ og_desc|default('How many players are active in Trove each day and week, from the leaderboard captures.') }}">
     <meta property="og:image" content="{{ og_image_url|default('https://trove.aallyn.net/activity/og.png') }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ og_title|default('Trove Player Activity') }}">
-    <meta name="twitter:description" content="{{ og_desc|default('Live active-player estimate over the last 24 hours, from the leaderboard captures.') }}">
+    <meta name="twitter:description" content="{{ og_desc|default('How many players are active in Trove each day and week, from the leaderboard captures.') }}">
     <meta name="twitter:image" content="{{ og_image_url|default('https://trove.aallyn.net/activity/og.png') }}">
 
     <link rel="stylesheet" href="/static/fonts/fonts.css">
@@ -43,17 +43,16 @@
     <main id="main" class="act-main">
         <section class="act-hero">
             <h1 class="act-title" data-i18n>Player Activity</h1>
-            <p class="act-sub" data-i18n>How busy is Trove? A live estimate of active players, with trends from the last day to all-time.</p>
+            <p class="act-sub" data-i18n>How busy is Trove? See how many players are active each day and each week, and how that has changed over the last month.</p>
         </section>
 
-        <!-- Live pulse: the most-recent-hour estimate, plus the distinct
-             24h / 7d rollups. Filled by JS from /site/leaderboards/activity;
-             hidden when the API can't compute one yet (needs 2+ captures). -->
+        <!-- Live pulse: the distinct 24h count, plus the 7d one. Filled by JS
+             from /site/leaderboards/activity; hidden until the API has one. -->
         <section class="act-live" id="act-live" {% if not (ssr and ssr.estimate) %}hidden{% endif %}>
             <div class="act-now">
                 <span class="act-now-dot" aria-hidden="true"></span>
                 <span class="act-now-num" id="act-now-num">{% if ssr and ssr.estimate %}~{{ ssr.estimate }}{% else %}—{% endif %}</span>
-                <span class="act-now-label" data-i18n>active players in the last hour</span>
+                <span class="act-now-label" data-i18n>active players in the last 24 hours</span>
             </div>
             <!-- Server-rendered first paint (see app/site/ssr.py); activity.js
                  replaces these chips with the live figures on load. -->
@@ -69,7 +68,6 @@
         <section class="act-chart-card">
             <div class="act-chart-head">
                 <div class="act-periods" id="act-periods" role="tablist" aria-label="Time range">
-                    <button type="button" data-period="1d" id="act-tab-1d" role="tab" aria-controls="act-chart" aria-selected="false">1D</button>
                     <button type="button" data-period="7d" id="act-tab-7d" role="tab" aria-controls="act-chart" class="active" aria-selected="true">7D</button>
                     <button type="button" data-period="1m" id="act-tab-1m" role="tab" aria-controls="act-chart" aria-selected="false">1M</button>
                 </div>
@@ -85,26 +83,26 @@
         </section>
 
         <!-- Stat cards scoped to the selected period (from the same series
-             payload). Peak / Average / Quietest active-players-per-hour. -->
+             payload). Peak / Average / Quietest 24h active-player counts. -->
         <section class="act-stats" id="act-stats">
             <div class="act-stat">
                 <span class="act-stat-label" data-i18n>Peak</span>
                 <span class="act-stat-num act-stat-peak" id="act-peak">—</span>
-                <span class="act-stat-sub" id="act-peak-when" data-i18n>active players / hour</span>
+                <span class="act-stat-sub" id="act-peak-when" data-i18n>active players / day</span>
             </div>
             <div class="act-stat">
                 <span class="act-stat-label" data-i18n>Average</span>
                 <span class="act-stat-num" id="act-avg">—</span>
-                <span class="act-stat-sub" data-i18n>active players / hour</span>
+                <span class="act-stat-sub" data-i18n>active players / day</span>
             </div>
             <div class="act-stat">
                 <span class="act-stat-label" data-i18n>Quietest</span>
                 <span class="act-stat-num act-stat-low" id="act-low">—</span>
-                <span class="act-stat-sub" id="act-low-when" data-i18n>active players / hour</span>
+                <span class="act-stat-sub" id="act-low-when" data-i18n>active players / day</span>
             </div>
         </section>
 
-        <p class="act-method" data-i18n>Player counts are estimated each hour from leaderboard movement, so they reflect active, higher-ranked players rather than a full headcount. The 24h and 7d figures count each player once across the whole period.</p>
+        <p class="act-method" data-i18n>Player counts are estimated from leaderboard movement between captures, so they reflect active, higher-ranked players rather than a full headcount. Each figure counts a player once across its whole period, and each point on the chart covers the 24 hours before it.</p>
     </main>
 
     {% include "partials/footer.html" %}

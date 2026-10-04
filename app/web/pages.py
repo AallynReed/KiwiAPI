@@ -809,30 +809,26 @@ async def clubs_page_view(request: Request) -> HTMLResponse:
     return _TEMPLATES.TemplateResponse(request, "clubs.html", {"clubs": clubs or []})
 
 
-# Period-keyed social cards: a shared `/activity?period=1y` link previews the
-# 1Y graph. `period` MUST be a query param (or path) - URL #fragments never
+# Period-keyed social cards: a shared `/activity?period=1m` link previews the
+# 1M graph. `period` MUST be a query param (or path) - URL #fragments never
 # reach the server/scrapers, so they can't drive a per-period embed.
-_OG_PERIODS = ("1d", "7d", "1m", "3m", "6m", "1y", "all")
-_OG_PERIOD_LABEL = {
-    "1d": "Last 24 hours", "7d": "Last 7 days", "1m": "Last 30 days",
-    "3m": "Last 3 months", "6m": "Last 6 months", "1y": "Last 12 months",
-    "all": "All time",
-}
+_OG_PERIODS = ("7d", "1m")
+_OG_PERIOD_LABEL = {"7d": "Last 7 days", "1m": "Last 30 days"}
 
 
 @router.get("/activity", response_class=HTMLResponse)
 async def activity_page(request: Request, period: str | None = None) -> HTMLResponse:
-    """Player Activity page - the live active-player pulse plus multi-period
-    trend charts (1D … all-time). An optional ``?period=`` selects the graph
-    AND drives the OG/Twitter card so each period previews its own chart."""
+    """Player Activity page - daily and weekly active players plus a daily trend
+    chart (7D / 1M). An optional ``?period=`` selects the graph AND drives the
+    OG/Twitter card so each period previews its own chart."""
     p = (period or "").lower()
-    p = p if p in _OG_PERIODS else ""        # "" = default (bare URL → 1d card)
+    p = p if p in _OG_PERIODS else ""        # "" = default (bare URL → 7d card)
     qs = f"?period={p}" if p else ""
     label = _OG_PERIOD_LABEL.get(p)
     title = f"Trove Player Activity · {label}" if label else "Trove Player Activity"
-    desc = (f"Live active-player count over {label.lower()}, from the leaderboard "
-            "captures." if label
-            else "Live active-player estimate and trend charts (1D to all-time), "
+    desc = (f"How many players were active each day over the {label.lower()}, "
+            "from the leaderboard captures." if label
+            else "How many players are active in Trove each day and week, "
                  "from the leaderboard captures.")
     return _TEMPLATES.TemplateResponse(request, "activity.html", {
         "og_title": title,

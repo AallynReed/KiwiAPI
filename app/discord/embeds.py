@@ -125,10 +125,7 @@ async def status_embed() -> dict:
 
 # ── /activity ──────────────────────────────────────────────────────────────
 
-ACTIVITY_LABELS = {
-    "1d": "Last 24 hours", "7d": "Last 7 days", "1m": "Last month",
-    "3m": "Last 3 months", "6m": "Last 6 months", "1y": "Last year", "all": "All time",
-}
+ACTIVITY_LABELS = {"7d": "Last 7 days", "1m": "Last month"}
 
 
 def _num(v) -> str:
@@ -144,16 +141,15 @@ async def activity_embed(period: str = "7d") -> dict:
     series = await activity_series(period)
 
     fields = [
-        {"name": t("Active now"), "value": _num(live.get("estimate")), "inline": True},
         {"name": t("Last 24h"), "value": _num(live.get("estimate_24h")), "inline": True},
         {"name": t("Last 7d"), "value": _num(live.get("estimate_7d")), "inline": True},
     ]
     peak = series.get("peak") or {}
     if isinstance(peak.get("active"), (int, float)):
         when = f" ({_ts(peak['t'], 'd')})" if peak.get("t") else ""
-        fields.append({"name": t("Peak · {label}", label=label), "value": f"{round(peak['active']):,}/h{when}", "inline": True})
+        fields.append({"name": t("Peak · {label}", label=label), "value": f"{round(peak['active']):,}{when}", "inline": True})
     if isinstance(series.get("average"), (int, float)):
-        fields.append({"name": t("Average"), "value": f"{round(series['average']):,}/h", "inline": True})
+        fields.append({"name": t("Average"), "value": f"{round(series['average']):,}", "inline": True})
 
     # Cache-bust the chart image by the data's compute time so Discord refreshes
     # it when new captures land (it caches embed images by URL otherwise).
@@ -162,7 +158,7 @@ async def activity_embed(period: str = "7d") -> dict:
         "title": t("Player activity — {label}", label=label),
         "url": f"{SITE}/activity?period={period}",
         "color": 0x4CC9F0,
-        "description": t("Estimated distinct active players, from hourly leaderboard captures."),
+        "description": t("Active players per day and per week, estimated from the leaderboard captures."),
         "fields": fields,
         "image": {"url": f"{_ASSET}/activity/og.png?period={period}&v={cb}"},
         "footer": {"text": "trove.aallyn.net/activity · Trove server time (UTC−11)"},

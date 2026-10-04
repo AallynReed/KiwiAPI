@@ -978,17 +978,20 @@ async def board_kinds(uuids: list[int]) -> dict[int, str]:
 # ── activity estimates ────────────────────────────────────────────────────────
 
 async def upsert_estimate(window_end: int, window_start: int, duration_hours: float,
-                          estimate: int, boards_analyzed: int, computed_at: int) -> None:
+                          estimate: int, boards_analyzed: int, computed_at: int,
+                          estimate_24h: int | None = None) -> None:
     async with acquire() as con:
         await con.execute(
             "INSERT INTO activity_estimate "
-            "(window_end, window_start, duration_hours, estimate, boards_analyzed, computed_at) "
-            "VALUES ($1, $2, $3, $4, $5, $6) "
+            "(window_end, window_start, duration_hours, estimate, boards_analyzed, computed_at, "
+            " estimate_24h) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7) "
             "ON CONFLICT (window_end) DO UPDATE SET "
             "window_start = EXCLUDED.window_start, duration_hours = EXCLUDED.duration_hours, "
             "estimate = EXCLUDED.estimate, boards_analyzed = EXCLUDED.boards_analyzed, "
-            "computed_at = EXCLUDED.computed_at",
+            "computed_at = EXCLUDED.computed_at, estimate_24h = EXCLUDED.estimate_24h",
             window_end, window_start, duration_hours, estimate, boards_analyzed, computed_at,
+            estimate_24h,
         )
 
 
@@ -1002,12 +1005,13 @@ async def get_estimates(window_start: int | None = None) -> list[dict]:
         if window_start is None:
             rows = await con.fetch(
                 "SELECT window_end, window_start, duration_hours, estimate, boards_analyzed, "
-                "computed_at FROM activity_estimate ORDER BY window_end"
+                "computed_at, estimate_24h FROM activity_estimate ORDER BY window_end"
             )
         else:
             rows = await con.fetch(
                 "SELECT window_end, window_start, duration_hours, estimate, boards_analyzed, "
-                "computed_at FROM activity_estimate WHERE window_end >= $1 ORDER BY window_end",
+                "computed_at, estimate_24h FROM activity_estimate WHERE window_end >= $1 "
+                "ORDER BY window_end",
                 window_start,
             )
     return [dict(r) for r in rows]

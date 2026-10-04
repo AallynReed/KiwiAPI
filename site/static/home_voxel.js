@@ -1122,8 +1122,8 @@
     var pl = $("#vx-players");
     if (pl && activityData) {
       var a = activityData;
-      pl.innerHTML = "<b>" + num(a.estimate) + "</b> " + esc(tr("players active in the last hour,")) + " <b>" + num(a.estimate_24h) + "</b> " +
-        esc(tr("in the last 24 hours and")) + " <b>" + num(a.estimate_7d) + "</b> " + esc(tr("in the last 7 days."));
+      pl.innerHTML = "<b>" + num(a.estimate_24h) + "</b> " + esc(tr("players active in the last 24 hours and")) + " <b>" +
+        num(a.estimate_7d) + "</b> " + esc(tr("in the last 7 days."));
     }
   }
   function renderGiveaway() {

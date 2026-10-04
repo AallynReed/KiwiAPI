@@ -555,15 +555,13 @@ async def status_view(fetch: Fetch) -> dict:
 
 
 async def activity_view(fetch: Fetch) -> dict:
-    """The live active-player estimate plus its 24h / 7d rollups."""
+    """The active players in the last 24h (the headline) plus the 7d rollup."""
     data = await cached(fetch, "/site/leaderboards/activity", ttl=120)
     d = _dict(data)
-    rows = [(label, d.get(key)) for label, key in (
-        ("right now", "estimate"), ("in the last 24h", "estimate_24h"),
-        ("in the last 7 days", "estimate_7d"),
-    )]
+    rows = [("in the last 7 days", d.get("estimate_7d"))]
+    day = d.get("estimate_24h")
     return {
-        "estimate": num(d["estimate"]) if isinstance(d.get("estimate"), (int, float)) else "",
+        "estimate": num(day) if isinstance(day, (int, float)) else "",
         "rollups": [{"label": label, "value": num(v)}
                     for label, v in rows if isinstance(v, (int, float))],
         "as_of": date(d.get("window_end")),

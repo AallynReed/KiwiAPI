@@ -1,5 +1,5 @@
 /* Player Activity page (/activity). Two same-origin JSON proxies:
-   /site/leaderboards/activity (live estimate + 24h/7d rollups) and
+   /site/leaderboards/activity (the 24h/7d active-player rollups) and
    .../activity/series?period=… (bucketed time-series). The estimate derives
    from the leaderboard captures, hence the shared /site/leaderboards/* path. */
 (function () {
@@ -7,7 +7,7 @@
 
   const { esc, fetchJSON, segmentGaps } = window.BTTUtil;
 
-  const PERIODS = ['1d', '7d', '1m'];   // longer ranges (3m/6m/1y/all) removed
+  const PERIODS = ['7d', '1m'];   // every point is a 24h count, so no 1d chart
   const state = {
     period: '7d',
     series: {},          // period -> payload cache
@@ -38,9 +38,9 @@
     const roll = document.getElementById('act-rollups');
     const d = state.live;
     if (!wrap || !numEl) return;
-    if (!d || d.estimate == null) { wrap.hidden = true; return; }
+    if (!d || d.estimate_24h == null) { wrap.hidden = true; return; }
     wrap.hidden = false;
-    numEl.textContent = '~' + Number(d.estimate).toLocaleString();
+    numEl.textContent = '~' + Number(d.estimate_24h).toLocaleString();
 
     if (roll) {
       const chip = (label, n, title) =>
@@ -48,8 +48,6 @@
         `<span class="act-roll-num">~${Number(n).toLocaleString()}</span>` +
         `<span class="act-roll-label">${esc(label)}</span></span>`;
       const chips = [];
-      if (d.estimate_24h != null)
-        chips.push(chip(t('in the last 24h'), d.estimate_24h, t('Active players in the last 24 hours')));
       if (d.estimate_7d != null)
         chips.push(chip(t('in the last 7 days'), d.estimate_7d, t('Active players in the last 7 days')));
       if (chips.length) { roll.innerHTML = chips.join(''); roll.hidden = false; }
@@ -67,14 +65,12 @@
   function troveDate(unix) { return new Date((unix + TROVE_OFFSET_SEC) * 1000); }
   function fmtAxis(unix, period) {
     const dte = troveDate(unix);
-    if (period === '1d') return dte.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hourCycle: 'h23' });
     if (period === '7d') return dte.toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' });
-    if (period === '1m' || period === '3m') return dte.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
-    return dte.toLocaleDateString(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' }); // 6m/1y/all
+    return dte.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
   }
   function fmtFull(unix, period) {
     const dte = troveDate(unix);
-    if (period === '1d' || period === '7d')
+    if (period === '7d')
       return dte.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hourCycle: 'h23' }) + ' server';
     return dte.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
   }
@@ -89,16 +85,16 @@
     const pts = (p && p.points) || [];
 
     if (peakEl) peakEl.textContent = p && p.peak ? intl(p.peak.active) : '—';
-    if (peakWhen) peakWhen.textContent = p && p.peak ? fmtFull(p.peak.t, p.period) : t('active players / hour');
+    if (peakWhen) peakWhen.textContent = p && p.peak ? fmtFull(p.peak.t, p.period) : t('active players / day');
     if (avgEl) avgEl.textContent = p && p.average != null ? intl(p.average) : '—';
 
-    // Quietest = the true minimum captured hour (server-provided, timestamped at
+    // Quietest = the true minimum 24h count (server-provided, timestamped at
     // the actual trough). Fall back to scanning the plotted points for older
     // cached payloads that predate the `low` field.
     let low = (p && p.low) || null;
     if (!low) for (const pt of pts) if (low === null || pt.active < low.active) low = pt;
     if (lowEl) lowEl.textContent = low ? intl(low.active) : '—';
-    if (lowWhen) lowWhen.textContent = low ? fmtFull(low.t, p.period) : t('active players / hour');
+    if (lowWhen) lowWhen.textContent = low ? fmtFull(low.t, p.period) : t('active players / day');
   }
 
   // ─── Chart ─────────────────────────────────────────────────────────
@@ -142,7 +138,7 @@
     }
     if (points.length < 2) {
       host.innerHTML = `<div class="act-empty" data-i18n>${
-        t('Not enough history stored for this range yet - it fills in as hourly captures accumulate.')
+        t('Not enough history stored for this range yet - it fills in as captures accumulate.')
       }</div>`;
       if (tip) tip.hidden = true;
       rerunI18n();
@@ -158,7 +154,7 @@
     const xs = points.map((q) => q.t);
     const ys = points.map((q) => q.active || 0);
     // Anchor the X axis to the SELECTED PERIOD window (relative: last
-    // 1d/7d/1m/…), not just the data's extent - so a sparse range still shows
+    // 7d/1m), not just the data's extent - so a sparse range still shows
     // the full timeline with points where they actually fall, instead of
     // collapsing to "today" when only a couple of captures exist.
     const xMin = Math.min(p.window_start, xs[0]);
@@ -253,9 +249,9 @@
     }
 
     // Reset markers - vertical lines at each daily 11:00 UTC reset (Monday's
-    // is the weekly reset, drawn distinct). Only on the short ranges where an
-    // individual reset is meaningful; on 1m+ they'd be a forest of lines.
-    if (p.period === '1d' || p.period === '7d') {
+    // is the weekly reset, drawn distinct). Only on 7d; on 1m they'd be a
+    // forest of lines.
+    if (p.period === '7d') {
       const rg = svgEl('g', { class: 'act-resets' });
       for (const r of resetLines(xMin, xMax)) {
         const x = xToPx(r.t);
@@ -301,7 +297,7 @@
       if (!tip) return;
       tip.innerHTML =
         `<strong>${intl(q.active)}</strong> ` +
-        `<span class="act-tip-unit">${esc(t('active / hr'))}</span>` +
+        `<span class="act-tip-unit">${esc(t('active in 24h'))}</span>` +
         `<span class="act-tip-when">${esc(fmtFull(q.t, p.period))}</span>`;
       tip.hidden = false;
       const cardW = host.clientWidth || W;
@@ -320,7 +316,7 @@
     overlay.addEventListener('touchend', onLeave);
 
     const last = points[points.length - 1];
-    const summary = t('Active-player trend for this period; latest ~{n} per hour').replace('{n}', intl(last.active));
+    const summary = t('Daily active-player trend for this period; latest ~{n} in 24 hours').replace('{n}', intl(last.active));
     svg.setAttribute('aria-label', summary);
     const liveEl = document.getElementById('act-live-status');
     if (liveEl) liveEl.textContent = summary;
