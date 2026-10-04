@@ -239,6 +239,7 @@ a:hover { text-decoration: underline; }
     opacity: 0; transform: translateY(8px) scale(0.96); pointer-events: none;
     transition: opacity 0.18s, transform 0.22s ease;
 }
+.support-panel::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 12px; }
 .support-widget.open .support-panel { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 .support-headline { color: var(--text-main); font-size: 0.85rem; line-height: 1.5; margin: 0 0 4px; }
 .support-link {

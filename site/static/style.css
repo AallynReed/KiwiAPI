@@ -2370,6 +2370,8 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
   transition: opacity .18s, transform .22s var(--ease-spring);
   pointer-events: none;
 }
+/* Hover bridge over the gap to the pill, so moving up doesn't close it. */
+.support-panel::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 12px; }
 .support-widget.open .support-panel {
   opacity: 1;
   transform: translateY(0) scale(1);

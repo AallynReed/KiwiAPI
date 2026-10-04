@@ -505,7 +505,7 @@ document.addEventListener("DOMContentLoaded", () => {
             panel.setAttribute('aria-hidden', open ? 'false' : 'true');
         };
         setOpen(false);
-        // Mouse hover opens it; the close delay covers the gap above the pill.
+        // Mouse hover opens it; a CSS bridge covers the gap above the pill.
         widget.addEventListener('pointerenter', (e) => {
             if (e.pointerType !== 'mouse') return;
             clearTimeout(closeTimer);
@@ -513,7 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         widget.addEventListener('pointerleave', (e) => {
             if (e.pointerType !== 'mouse' || !hoverOpened) return;
-            closeTimer = setTimeout(() => setOpen(false), 250);
+            closeTimer = setTimeout(() => setOpen(false), 80);
         });
         trigger.addEventListener('click', (e) => {
             e.stopPropagation();
