@@ -63,6 +63,16 @@ services:
   postgres:
     image: postgres:17
     restart: unless-stopped
+    # Sized for mem_limit 4g; the stock 128MB buffers thrashed (TBs of re-reads).
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c effective_cache_size=2560MB
+      -c work_mem=16MB
+      -c maintenance_work_mem=256MB
+      -c wal_compression=zstd
+      -c max_wal_size=8GB
+      -c checkpoint_timeout=15min
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-kiwi_lb}
       POSTGRES_USER: ${POSTGRES_USER:-kiwi}
