@@ -33,7 +33,7 @@ _STAT = {
     GemStatType.PHYSICAL_DAMAGE: ("PhysicalDamage", False), GemStatType.MAGIC_DAMAGE: ("SpellDamage", False),
     GemStatType.CRITICAL_DAMAGE: ("CriticalHitDamage", False), GemStatType.CRITICAL_HIT: ("CriticalHitChance", False),
     GemStatType.MAX_HEALTH: ("MaxHealth", False), GemStatType.MAX_HEALTH_BONUS: ("MaxHealth", True),
-    GemStatType.LIGHT: ("Light", False),
+    GemStatType.LIGHT: ("Light", False), GemStatType.HEALTH_REGEN: ("HealthRegen_controller", False),
 }
 _FOCUS = {AugmentType.ROUGH: "item/gem/booster/augment1", AugmentType.PRECISE: "item/gem/booster/augment2",
           AugmentType.SUPERIOR: "item/gem/booster/augment3"}

@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "目前：<b>{list}</b> — 还差 {n}%。",
   "Every stat, every level - generated": "每条属性、每个等级 — 自动生成",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "指南背后的精确数字。选择品阶、类型以及某条属性带有多少 增益，即可逐级读出该属性在最低与最高随机下的数值。这与游戏使用的算法完全一致。",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>LT</b> = Light. Rows shaded are milestone levels.": "每个单元格是该属性在<b>最低</b>随机（左）和<b>最高</b>随机（右）下的数值。<b>PD/MD</b> = Physical / 魔法伤害，<b>CD</b> = 暴击伤害，<b>CH</b> = 暴击，<b>MH% / MH</b> = 最大生命% 与固定值，<b>LT</b> = 光。带底色的行为里程碑等级。",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "每个单元格是该属性在<b>最低</b>随机（左）和<b>最高</b>随机（右）下的数值。<b>PD/MD</b> = Physical / 魔法伤害，<b>CD</b> = 暴击伤害，<b>CH</b> = 暴击，<b>MH% / MH</b> = 最大生命% 与固定值，<b>HR</b> = 生命恢复（仅限旧宝石——新宝石已无法获得），<b>LT</b> = 光。带底色的行为里程碑等级。",
   "Stat tables": "属性表",
   "Boosts on this stat": "该属性的 增益 数",
   "PR/lvl": "PR/级",

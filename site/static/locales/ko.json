@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "현재까지: <b>{list}</b> — {n}% 남음.",
   "Every stat, every level - generated": "모든 스탯, 모든 레벨 - 자동 생성",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "가이드 뒤의 정확한 수치. 등급, 종류, 그리고 스탯이 지닌 부스트 수를 고르면 최소·최대 굴림에서 그 스탯의 값을 레벨별로 확인할 수 있습니다. 게임과 똑같은 계산입니다.",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>LT</b> = Light. Rows shaded are milestone levels.": "각 셀은 해당 스탯의 <b>최소</b> 굴림(왼쪽)과 <b>최대</b> 굴림(오른쪽) 값입니다. <b>PD/MD</b> = Physical / 마법 데미지, <b>CD</b> = 치명타 데미지, <b>CH</b> = 치명타, <b>MH% / MH</b> = 최대 체력 %와 고정값, <b>LT</b> = 빛. 음영 처리된 행은 마일스톤 레벨입니다.",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "각 셀은 해당 스탯의 <b>최소</b> 굴림(왼쪽)과 <b>최대</b> 굴림(오른쪽) 값입니다. <b>PD/MD</b> = Physical / 마법 데미지, <b>CD</b> = 치명타 데미지, <b>CH</b> = 치명타, <b>MH% / MH</b> = 최대 체력 %와 고정값, <b>HR</b> = 체력 재생 (예전 보석만 - 새 보석에는 붙지 않음), <b>LT</b> = 빛. 음영 처리된 행은 마일스톤 레벨입니다.",
   "Stat tables": "스탯 표",
   "Boosts on this stat": "이 스탯의 부스트 수",
   "PR/lvl": "PR/레벨",

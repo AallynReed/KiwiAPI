@@ -76,8 +76,9 @@
   const tierMaxLevel = (id) => (lookups.tiers.find((x) => x.id === Number(id)) || {}).max_level || 35;
   const typeName = (id) => (lookups.types.find((x) => x.id === Number(id)) || {}).name || ("Type " + id);
   const statName = (id) => (lookups.stat_types.find((x) => x.id === Number(id)) || {}).name || ("Stat " + id);
-  // Which stat types can a player actually put on a gem (excludes movement/jump).
-  const SELECTABLE_STATS = [1, 2, 3, 4, 5, 6, 7];
+  // Which stat types a gem can carry (excludes movement/jump). Health Regen no
+  // longer rolls, but older gems still have it.
+  const SELECTABLE_STATS = [1, 2, 3, 4, 5, 6, 7, 10];
   const statOptions = () => lookups.stat_types.filter((s) => SELECTABLE_STATS.includes(s.id));
 
   // ── API ──────────────────────────────────────────────────────────────────

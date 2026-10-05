@@ -30,7 +30,8 @@
     const ELEMENT_NAMES = { 1: "Water", 2: "Fire", 3: "Air", 4: "Cosmic" };
     const STAT_NAMES = {
         1: "Physical Damage", 2: "Magic Damage", 3: "Critical Damage", 4: "Critical Hit",
-        5: "Max Health", 6: "Max Health %", 7: "Light", 8: "Movement Speed", 9: "Jump"
+        5: "Max Health", 6: "Max Health %", 7: "Light", 8: "Movement Speed", 9: "Jump",
+        10: "Health Regen"
     };
     const RESTRICTION_NAMES = { 1: "Fierce", 2: "Arcane" };
     const ABILITY_NAMES = {
@@ -78,7 +79,8 @@
     const COLOR = { 1: "blue", 2: "red", 3: "yellow", 4: "opal" };
     const STAT_KEY = {
         1: "PhysicalDamage|false", 2: "SpellDamage|false", 3: "CriticalHitDamage|false",
-        4: "CriticalHitChance|false", 5: "MaxHealth|false", 6: "MaxHealth|true", 7: "Light|false"
+        4: "CriticalHitChance|false", 5: "MaxHealth|false", 6: "MaxHealth|true", 7: "Light|false",
+        10: "HealthRegen_controller|false"   // no longer rolls (pool weight 0); older gems keep it
     };
     const FOCUS = { 1: "item/gem/booster/augment1", 2: "item/gem/booster/augment2", 3: "item/gem/booster/augment3" };
 
@@ -475,7 +477,8 @@
                 restrictions: { "Fierce": 1, "Arcane": 2 },
                 stat_types: {
                     "Physical Damage": 1, "Magic Damage": 2, "Critical Damage": 3, "Critical Hit": 4,
-                    "Max Health": 5, "Max Health Bonus": 6, "Light": 7, "Movement Speed": 8, "Jump": 9
+                    "Max Health": 5, "Max Health Bonus": 6, "Light": 7, "Movement Speed": 8, "Jump": 9,
+                    "Health Regen": 10
                 },
                 augment_types: { "Rough": 1, "Precise": 2, "Superior": 3 }
             }

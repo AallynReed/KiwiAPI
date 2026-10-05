@@ -106,8 +106,16 @@
     { key: "ch", label: "CH", cat: "crit", dec: 2 },
     { key: "mhp", label: "MH%", cat: "health", dec: 2 },
     { key: "mh", label: "MH", cat: "health", dec: 0 },
+    { key: "hr", label: "HR", cat: "health", dec: 0 },
     { key: "lt", label: "LT", cat: "light", dec: 0 }
   ];
+  // Health Regen no longer rolls on new gems (pool weight 0) but older gems keep it.
+  // [min, max, step] straight from gem_upgrades.json - Mystic Empowered breaks the
+  // shared base/threshold pattern, so the rolls are listed rather than derived.
+  var HR_ROLL = {
+    lesser: { 1: [2975, 3955, 105], 2: [5250, 7000, 175], 3: [7000, 9000, 200], 4: [9100, 11700, 260] },
+    emp: { 1: [3955, 5250, 105], 2: [7000, 9310, 175], 3: [9000, 11000, 200], 4: [13000, 15000, 150] }
+  };
   var STAT_BASE = {
     1: { dmg: 14, cd: 0.2, ch: 0.02, mhp: 0.5, mh: 50, lt: 1 },
     2: { dmg: 14, cd: 0.2, ch: 0.02, mhp: 0.5, mh: 50, lt: 1 },
@@ -136,6 +144,10 @@
   }
   function prCum(tier, level) { var s = 0, l; for (l = 1; l <= level; l++) s += prInc(l, tier.pr); return s; }
   function statValue(tier, kind, col, level, boosts) {
+    if (col.key === "hr") {
+      var r = HR_ROLL[kind][tier.id], steps = prCum(tier, level) / tier.pr;
+      return [r[0] * (1 + boosts) + r[2] * steps, r[1] * (1 + boosts) + r[2] * steps];
+    }
     var base = statBase(tier.id, kind, col.key), th = statThresh(tier.id, kind, col.cat),
         containers = 1 + boosts, cum = prCum(tier, level);
     return [base * (th[0] * containers + cum), base * (th[1] * containers + cum)];

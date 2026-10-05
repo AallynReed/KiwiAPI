@@ -56,6 +56,7 @@ GEM_STAT_TYPE_NAMES = {
     7: "Light",
     8: "Movement Speed",
     9: "Jump",
+    10: "Health Regen",
 }
 
 
@@ -69,6 +70,7 @@ class GemStatType(IntEnum):
     LIGHT = 7
     MOVEMENT_SPEED = 8
     JUMP = 9
+    HEALTH_REGEN = 10    # no longer rolls on new gems (pool weight 0); older gems keep it
 
     @property
     def display_name(self) -> str:

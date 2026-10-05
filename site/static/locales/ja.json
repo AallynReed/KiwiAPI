@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "ここまで：<b>{list}</b> — 残り {n}%。",
   "Every stat, every level - generated": "すべてのステータス、全レベル - 自動生成",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "ガイドの裏側にある正確な数値。ティア・タイプ・そのステータスが持つブースト数を選ぶと、最小抽選と最大抽選での値をレベルごとに読み取れます。ゲームと同じ計算です。",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>LT</b> = Light. Rows shaded are milestone levels.": "各セルはそのステータスの<b>最小</b>抽選（左）と<b>最大</b>抽選（右）の値です。<b>PD/MD</b> = Physical / 魔法ダメージ、<b>CD</b> = クリティカルダメージ、<b>CH</b> = クリティカルヒット、<b>MH% / MH</b> = 最大HP%と実数、<b>LT</b> = 光。網掛けの行は節目レベルです。",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "各セルはそのステータスの<b>最小</b>抽選（左）と<b>最大</b>抽選（右）の値です。<b>PD/MD</b> = Physical / 魔法ダメージ、<b>CD</b> = クリティカルダメージ、<b>CH</b> = クリティカルヒット、<b>MH% / MH</b> = 最大HP%と実数、<b>HR</b> = 体力回復（古いジェムのみ - 新しいジェムには付きません）、<b>LT</b> = 光。網掛けの行は節目レベルです。",
   "Stat tables": "ステータス表",
   "Boosts on this stat": "このステータスのブースト数",
   "PR/lvl": "PR/レベル",

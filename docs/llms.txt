@@ -249,7 +249,9 @@ A gem is a JSON object `{id, tier, type, element, restriction?, ability?, level,
 attempts, spent, + computed: gem_name, quality, power_rank, stat_values, …}`. A stat is `{type, locked, containers:[{base,
 augments:[{type,count}]}]}`. Nothing is stored server-side - you hold the gem and POST it back to mutate it.
 Use `GET /v1/gems/lookups` for all valid ids (tiers 1-4, types 1 Lesser/2 Empowered, elements 1-4, stat
-types 1-9, augments 1 Rough/2 Precise/3 Superior, level-up boosters). Stat roll ranges, stat roll weights, the level
+types 1-10, augments 1 Rough/2 Precise/3 Superior, level-up boosters). Stat type 10 is Health Regen: the game no
+longer rolls it (pool weight 0, so `generate` and `spark` never pick it) but older gems keep it, and `evaluate` /
+`stat-range` read its rolls from the game files like any other stat. Stat roll ranges, stat roll weights, the level
 schedule and level-up chances and costs come from the game files (`gems/meta/gem_upgradedata.binfab`).
 
 - `POST /v1/gems/generate` body `{tier?, type?, element?, restriction?, level?, augmentation?}` (omit→random) → a gem object
