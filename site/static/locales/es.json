@@ -3629,5 +3629,6 @@
   "Per item": "Por objeto",
   "All {n} items": "Los {n} objetos",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Lleva cada objeto a +5. Pearls: 2 en cada línea de estadística, más 1 por cada línea que le falte a un objeto.",
-  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Lleva cada objeto a {from} +5, lo sube a {to} y luego otra vez a +5. Pearls: 2 en cada línea de estadística, más 1 por cada línea que le falte a un objeto."
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Lleva cada objeto a {from} +5, lo sube a {to} y luego otra vez a +5. Pearls: 2 en cada línea de estadística, más 1 por cada línea que le falte a un objeto.",
+  "Legacy": "Obsoleto"
 }

@@ -3629,5 +3629,6 @@
   "Per item": "아이템당",
   "All {n} items": "아이템 {n}개 전체",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "각 아이템을 +5로 올립니다. Pearl: 능력치 줄마다 2개, 그리고 아이템에 없는 줄마다 1개씩 추가.",
-  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "각 아이템을 {from} +5로 올리고 {to}로 승급한 다음 다시 +5로 올립니다. Pearl: 능력치 줄마다 2개, 그리고 아이템에 없는 줄마다 1개씩 추가."
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "각 아이템을 {from} +5로 올리고 {to}로 승급한 다음 다시 +5로 올립니다. Pearl: 능력치 줄마다 2개, 그리고 아이템에 없는 줄마다 1개씩 추가.",
+  "Legacy": "레거시"
 }

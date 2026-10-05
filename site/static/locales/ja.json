@@ -3629,5 +3629,6 @@
   "Per item": "1個あたり",
   "All {n} items": "全{n}個",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "各アイテムを+5にします。Pearl：ステータス枠ごとに2個、さらに足りない枠1つにつき1個。",
-  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "各アイテムを{from} +5にし、{to}に上げてから、もう一度+5にします。Pearl：ステータス枠ごとに2個、さらに足りない枠1つにつき1個。"
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "各アイテムを{from} +5にし、{to}に上げてから、もう一度+5にします。Pearl：ステータス枠ごとに2個、さらに足りない枠1つにつき1個。",
+  "Legacy": "旧仕様"
 }

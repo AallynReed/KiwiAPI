@@ -22,6 +22,8 @@
 
   // Still usable in game but no longer handed out (not marked in the game files).
   const RETIRED_ITEMS = new Set(["item/crafting/tome_notrade"]);
+  // Stations still in the files but no longer used in game (not marked in the files).
+  const LEGACY_STATIONS = new Set(["placeable/crafting/forge_vfx_interactive"]);
 
   let data = null;
   const state = { rarity: "Crystal5", star: 5, pearls: [2, 2, 2], costRarity: "Crystal5", mode: "pve", query: "" };
@@ -320,7 +322,8 @@
     f.stations.forEach((s) => s.operations.forEach((op, i) => {
       body.appendChild(h("tr", {},
         i === 0 ? h("th", { class: "l", scope: "rowgroup", rowspan: s.operations.length },
-          h("span", { class: "gr-named" }, itemIcon(s.prefab.replace(/_interactive$/, "")), s.name)) : null,
+          h("span", { class: "gr-named" }, itemIcon(s.prefab.replace(/_interactive$/, "")), s.name),
+          LEGACY_STATIONS.has(s.prefab) ? h("span", { class: "gr-tag" }, t("Legacy")) : null) : null,
         h("td", { class: "l" }, t(op.label)),
         h("td", { class: "l" }, op.cost ? costList(op.cost) : t("Depends on the item's rarity (see above)"), retiredTag(op.cost))));
     }));

@@ -3629,5 +3629,6 @@
   "Per item": "Pro Gegenstand",
   "All {n} items": "Alle {n} Gegenstände",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Bringt jeden Gegenstand auf +5. Pearls: 2 auf jede Wertezeile, plus 1 für jede Zeile, die einem Gegenstand noch fehlt.",
-  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Bringt jeden Gegenstand auf {from} +5, hebt ihn auf {to} an und bringt ihn dann wieder auf +5. Pearls: 2 auf jede Wertezeile, plus 1 für jede Zeile, die einem Gegenstand noch fehlt."
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Bringt jeden Gegenstand auf {from} +5, hebt ihn auf {to} an und bringt ihn dann wieder auf +5. Pearls: 2 auf jede Wertezeile, plus 1 für jede Zeile, die einem Gegenstand noch fehlt.",
+  "Legacy": "Veraltet"
 }
