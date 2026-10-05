@@ -29,10 +29,11 @@ from app.trove.decode.wire import Obj
 TITLE = "Gear"
 OUTPUT = "gear.json"
 PREFIXES = ("prefabs/equipment/", "prefabs/item/banner/", "prefabs/item/crafting/",
-            "prefabs/crafting/", "prefabs/meta/", "prefabs/placeable/crafting/", "languages/en/")
+            "prefabs/crafting/", "prefabs/meta/", "prefabs/placeable/crafting/", "languages/en/",
+            "blueprints/")   # listing only: an item's model must exist before it is offered as its icon
 INDENT, FINAL_NEWLINE = 1, True
 
-IDENTITY, SLOT_COMP, TEMPLATE, BANNER_TIERS, STATION = 49, 65, 128, 351, 146
+IDENTITY, SLOT_COMP, TEMPLATE, BANNER_TIERS, STATION, BLUEPRINT = 49, 65, 128, 351, 146, 37
 
 RARITIES = ("Common", "Uncommon", "Rare", "Epic", "Legendary", "Relic", "Resplendent",
             "Shadow1", "Shadow2", "Shadow3", "Shadow4", "Shadow5",
@@ -58,6 +59,7 @@ UPGRADE_LABEL = {0: "$ItemUpgrade_AddStat", 1: "$ItemUpgrade_AddQuality", 2: "$I
                  6: "$ItemUpgrade_NewParticles"}
 GEAR_UPGRADES = frozenset(range(7))   # the rest are gem / companion / upgrade-tree operations
 PVE = 1   # KModFlags
+_BLUEPRINT_NAME = re.compile(rb"[A-Za-z0-9_/\[\]\-]+\.blueprint")
 EXTRA_STATS = {45: "$Stat_HealDoneMultiplier", 46: "$Stat_HealReceiveMultiplier"}
 
 # Rules compiled into Trove_x64.exe (2026-10-01 build), not in any prefab.
@@ -114,6 +116,24 @@ def _en(tree: GameTree) -> dict[str, str]:
 def _name(prefabs: Prefabs, ref: str, loc: dict[str, str]) -> str:
     key = identity(prefabs.get(ref)).get("name_key", "")
     return loc.get(key) or ref.rsplit("/", 1)[-1]
+
+
+def _model(tree: GameTree, prefabs: Prefabs, ref: str, valid: set[str]) -> str | None:
+    """The blueprint the game draws ``ref`` with: component 37 (its icon model), else
+    the one model the prefab names. A banner built from a pole and a flag is shown by
+    its flag; anything else naming several models gets no icon rather than a guess."""
+    pf = prefabs.get(ref)
+    bp = _leaf(pf.component(BLUEPRINT)).get(0) if pf else None
+    if isinstance(bp, str) and bp:
+        name = bp if bp.lower().endswith(".blueprint") else bp + ".blueprint"
+        if name.lower() in valid:
+            return name
+    data = tree.read(f"prefabs/{ref}.binfab") or b""
+    named = {m.decode("ascii").lower() for m in _BLUEPRINT_NAME.findall(data)} & valid
+    flags = {n for n in named if "flag" in n.rsplit("/", 1)[-1]}
+    if len(named) > 1 and len(flags) == 1:
+        return flags.pop()                        # pole + flag: the flag is what identifies it
+    return named.pop() if len(named) == 1 else None
 
 
 def _costs(v: Any, prefabs: Prefabs, loc: dict[str, str]) -> list[dict]:
@@ -233,6 +253,15 @@ def build(tree: GameTree) -> dict:
                 profile["items"].append({"name": name, "rarity": rarity, "prefab": rel,
                                          "description": loc.get(desc) if desc else None})
 
+    # One map of item -> model, rather than a blueprint on every cost row it appears in.
+    valid = {p.removeprefix("blueprints/").lower() for p in tree.files("blueprints/", ".blueprint")}
+    stations = _stations(tree, prefabs, loc)
+    refs = {c["item"] for r in rarities for lst in [*(r["improve_cost"] or {}).values(), r["raise_cost"] or []] for c in lst}
+    refs |= {c["item"] for st in stations for op in st["operations"] for c in op["cost"] or []}
+    refs |= {st["prefab"].removesuffix("_interactive") for st in stations}
+    refs |= {i["prefab"] for b in banners.values() for i in b["items"]}
+    icons = {ref: bp for ref in sorted(refs) if (bp := _model(tree, prefabs, ref, valid))}
+
     slots = [{"key": key, "name": loc.get(label, key),
               "item_types": [{"key": tkey, "name": loc.get(tlabel, tkey)}
                              for tslot, tkey, tlabel in ITEM_TYPES.values() if tslot == sid]}
@@ -254,11 +283,12 @@ def build(tree: GameTree) -> dict:
         "forge": {**{k: v for k, v in EXE.items() if not k.startswith("pr_")},
                   "raise_from": raise_from,
                   "raise_to": RARITIES[RARITIES.index(raise_from) + 1] if raise_from else None,
-                  "stations": _stations(tree, prefabs, loc)},
+                  "stations": stations},
         "power_rank": {"per_stat_boost": EXE["pr_per_stat_boost"], "per_star": EXE["pr_per_star"]},
         "slots": slots,
         "named_items": named,
         "banners": profiles,
+        "icons": icons,
     }
 
 

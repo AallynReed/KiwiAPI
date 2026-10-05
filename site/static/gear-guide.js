@@ -32,6 +32,18 @@
   const byKey = () => Object.fromEntries(data.rarities.map((r) => [r.key, r]));
 
   const lang = () => document.documentElement.lang || undefined;
+  const apiUrl = (window.BTTUtil && window.BTTUtil.apiUrl) || ((u) => u);
+
+  // The item's own model, rendered by the codex (same thumbnails the codex and the
+  // fishing guide use). No model in gear.json, or a failed render: no icon at all.
+  function itemIcon(ref) {
+    const bp = data.icons && data.icons[ref];
+    if (!bp) return null;
+    const img = h("img", { class: "gr-ic", loading: "lazy", alt: "", width: 28, height: 28,
+      src: apiUrl("/site/codexes/render?blueprint=" + encodeURIComponent(bp) + "&dim=96") });
+    img.addEventListener("error", () => img.remove());
+    return img;
+  }
   const fmt = (n, digits) => Number(n).toLocaleString(lang(), { maximumFractionDigits: digits == null ? 2 : digits });
   const rarityName = (r) => (r.level ? t(r.family) + " " + r.level : t(r.family));
   // The game's rarity list interleaves Radiant and Stellar (Radiant 1, Stellar 1,
@@ -153,7 +165,8 @@
   }
 
   // ── Forging ──────────────────────────────────────────────────────────────
-  const costText = (list) => (list || []).map((c) => fmt(c.count, 0) + " " + c.name).join(" · ");
+  const costList = (list) => h("span", { class: "gr-mats" }, (list || []).map((c) =>
+    h("span", { class: "gr-mat" }, itemIcon(c.item), h("strong", {}, fmt(c.count, 0)), " " + c.name)));
   const retiredTag = (list) => ((list || []).some((c) => RETIRED_ITEMS.has(c.item))
     ? h("span", { class: "gr-tag" }, t("Retired")) : null);
 
@@ -181,7 +194,7 @@
       h("label", { class: "gr-field gr-inline", for: "gr-cost-rarity" },
         h("span", { class: "gr-field-label" }, t("Rarity")), sel)));
     const rows = Object.keys(r.improve_cost || {}).sort((a, b) => a - b).map((lv) =>
-      h("tr", {}, h("th", { class: "l", scope: "row" }, "+" + lv), h("td", { class: "l" }, costText(r.improve_cost[lv]))));
+      h("tr", {}, h("th", { class: "l", scope: "row" }, "+" + lv), h("td", { class: "l" }, costList(r.improve_cost[lv]))));
     costs.appendChild(h("div", { class: "gr-table-wrap" }, h("table", { class: "gr-table" },
       h("thead", {}, h("tr", {}, h("th", { class: "l", scope: "col" }, t("Star")), h("th", { class: "l", scope: "col" }, t("Materials")))),
       h("tbody", {}, rows))));
@@ -192,7 +205,7 @@
         h("h3", {}, t("Raising the rarity")),
         h("p", {}, t("The only rarity you can raise is {from} at +5, which the Forge turns into {to}.")
           .replace("{from}", rarityName(byKey()[f.raise_from])).replace("{to}", rarityName(to))),
-        to.raise_cost ? h("p", { class: "gr-cost-line" }, h("strong", {}, t("Cost") + ": "), costText(to.raise_cost)) : null));
+        to.raise_cost ? h("p", { class: "gr-cost-line" }, h("strong", {}, t("Cost") + ": "), costList(to.raise_cost)) : null));
     }
   }
 
@@ -201,7 +214,7 @@
     const f = data.forge;
     const bag = new Map();
     const add = (list, times) => (list || []).forEach((c) => {
-      const e = bag.get(c.item) || { name: c.name, count: 0 };
+      const e = bag.get(c.item) || { item: c.item, name: c.name, count: 0 };
       e.count += c.count * times;
       bag.set(c.item, e);
     });
@@ -259,7 +272,7 @@
     const items = pieces * maxOut.classes;
     const bag = maxOutBag();
     const rows = [...bag.values()].map((e) => h("tr", {},
-      h("th", { class: "l", scope: "row" }, e.name),
+      h("th", { class: "l", scope: "row" }, h("span", { class: "gr-named" }, itemIcon(e.item), e.name)),
       h("td", { class: "r" }, fmt(e.count, 0)),
       h("td", { class: "r strong" }, fmt(e.count * items, 0))));
     const result = h("div", { class: "gr-maxout-result" },
@@ -306,9 +319,10 @@
     const body = h("tbody", {});
     f.stations.forEach((s) => s.operations.forEach((op, i) => {
       body.appendChild(h("tr", {},
-        i === 0 ? h("th", { class: "l", scope: "rowgroup", rowspan: s.operations.length }, s.name) : null,
+        i === 0 ? h("th", { class: "l", scope: "rowgroup", rowspan: s.operations.length },
+          h("span", { class: "gr-named" }, itemIcon(s.prefab.replace(/_interactive$/, "")), s.name)) : null,
         h("td", { class: "l" }, t(op.label)),
-        h("td", { class: "l" }, op.cost ? costText(op.cost) : t("Depends on the item's rarity (see above)"), retiredTag(op.cost))));
+        h("td", { class: "l" }, op.cost ? costList(op.cost) : t("Depends on the item's rarity (see above)"), retiredTag(op.cost))));
     }));
     host.appendChild(h("table", { class: "gr-table" },
       h("thead", {}, h("tr", {},
@@ -368,8 +382,9 @@
         stats = h("ul", { class: "gr-stat-list" }, b.stats.map((s) =>
           h("li", {}, h("span", {}, t(s.name)), h("strong", {}, statText(s)))));
       }
+      const pic = b.items.map((i) => itemIcon(i.prefab)).find(Boolean) || null;
       host.appendChild(h("article", { class: "gr-banner" },
-        h("h3", {}, head), more, stats));
+        h("h3", { class: "gr-named" }, pic, h("span", {}, head)), more, stats));
     });
   }
 

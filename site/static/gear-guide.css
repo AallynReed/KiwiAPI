@@ -122,6 +122,15 @@
 .gr-tier-table { font-size: .88rem; }
 .gr-banner .gr-table-wrap { margin-top: .4rem; }
 
+/* ── Item icons (codex blueprint renders) ──────────────────────────────────── */
+.gr-ic { width: 28px; height: 28px; flex-shrink: 0; object-fit: contain; }
+.gr-named { display: inline-flex; align-items: center; gap: .55rem; }
+.gr-banner h3.gr-named { display: flex; }
+.gr-banner h3 .gr-ic { width: 36px; height: 36px; }
+.gr-mats { display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; }
+.gr-mat { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; }
+.gr-mat strong { color: var(--text); font-variant-numeric: tabular-nums; }
+
 /* ── Note ─────────────────────────────────────────────────────────────────── */
 .gr-note { display: flex; gap: .8rem; align-items: flex-start; margin-top: 1rem; padding: 1rem 1.2rem; border: 1px solid var(--bg-line); border-left: 3px solid var(--accent); border-radius: var(--radius-sm, 8px); background: var(--bg-card); color: var(--text-mute); max-width: 80ch; }
 .gr-note i { color: var(--accent); margin-top: .2rem; }
