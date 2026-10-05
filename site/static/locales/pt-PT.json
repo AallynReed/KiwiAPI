@@ -3640,5 +3640,7 @@
   "Faces": "Caras",
   "Hats": "Chapéus",
   "Set by the ring box you open": "Depende da caixa de anel que abres",
-  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "Um atributo nunca aparece duas vezes no mesmo item. A Vida máxima fixa e a Vida máxima % contam como atributos diferentes."
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "Um atributo nunca aparece duas vezes no mesmo item. A Vida máxima fixa e a Vida máxima % contam como atributos diferentes.",
+  "Crystal and Mystic rings": "Anéis de Cristal e Místicos",
+  "Other rings": "Outros anéis"
 }

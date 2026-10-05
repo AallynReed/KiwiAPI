@@ -3640,5 +3640,7 @@
   "Faces": "Лица",
   "Hats": "Шляпы",
   "Set by the ring box you open": "Зависит от открытой шкатулки с кольцом",
-  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "Одна характеристика никогда не встречается на предмете дважды. Максимальное здоровье и Максимальное здоровье % считаются разными характеристиками."
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "Одна характеристика никогда не встречается на предмете дважды. Максимальное здоровье и Максимальное здоровье % считаются разными характеристиками.",
+  "Crystal and Mystic rings": "Кристальные и мистические кольца",
+  "Other rings": "Другие кольца"
 }

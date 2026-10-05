@@ -3640,5 +3640,7 @@
   "Faces": "面部",
   "Hats": "帽子",
   "Set by the ring box you open": "由你打开的戒指盒决定",
-  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "同一件物品上不会出现两条相同的属性。固定最大生命值与最大生命值% 算作不同的属性。"
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "同一件物品上不会出现两条相同的属性。固定最大生命值与最大生命值% 算作不同的属性。",
+  "Crystal and Mystic rings": "水晶与神秘戒指",
+  "Other rings": "其他戒指"
 }

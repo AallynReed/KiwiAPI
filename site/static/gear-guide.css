@@ -114,6 +114,8 @@
 .gr-pool li { color: var(--text); }
 .gr-roll-table td { min-width: 10rem; }
 .gr-roll-table tbody th { white-space: nowrap; }
+.gr-ring-part + .gr-ring-part { margin-top: .7rem; }
+.gr-ring-which { display: block; font-size: .82rem; font-weight: 600; color: var(--text-mute); margin-bottom: .2rem; }
 
 /* ── Banners ──────────────────────────────────────────────────────────────── */
 .gr-banner-controls { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin-bottom: 1rem; }

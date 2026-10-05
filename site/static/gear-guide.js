@@ -380,7 +380,9 @@
       h("tbody", {},
         h("tr", {}, h("th", { class: "l", scope: "row" }, "1"),
           h("td", { class: "l" }, t("Set by the ring box you open"), kinds.length ? ": " + kinds.join(", ") : "")),
-        h("tr", {}, h("th", { class: "l", scope: "row" }, "2"), h("td", { class: "l" }, pool(RING_ROLL)))))));
+        h("tr", {}, h("th", { class: "l", scope: "row" }, "2"), h("td", { class: "l" },
+          h("div", { class: "gr-ring-part" }, h("span", { class: "gr-ring-which" }, t("Crystal and Mystic rings")), pool([LT])),
+          h("div", { class: "gr-ring-part" }, h("span", { class: "gr-ring-which" }, t("Other rings")), pool(RING_ROLL))))))));
     host.appendChild(h("p", { class: "gr-fine" }, t("A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.")));
   }
 

@@ -3477,5 +3477,7 @@
   "Faces": "ใบหน้า",
   "Hats": "หมวก",
   "Set by the ring box you open": "ขึ้นกับกล่องแหวนที่เปิด",
-  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "ค่าสถานะเดียวกันจะไม่ขึ้นซ้ำบนไอเทมชิ้นเดียว พลังชีวิตสูงสุดแบบตัวเลขและพลังชีวิตสูงสุด % นับเป็นคนละค่าสถานะ"
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "ค่าสถานะเดียวกันจะไม่ขึ้นซ้ำบนไอเทมชิ้นเดียว พลังชีวิตสูงสุดแบบตัวเลขและพลังชีวิตสูงสุด % นับเป็นคนละค่าสถานะ",
+  "Crystal and Mystic rings": "แหวน Crystal และ Mystic",
+  "Other rings": "แหวนอื่น ๆ"
 }

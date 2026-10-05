@@ -3640,5 +3640,7 @@
   "Faces": "얼굴",
   "Hats": "모자",
   "Set by the ring box you open": "여는 반지 상자에 따라 정해짐",
-  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "같은 아이템에 같은 능력치가 두 번 붙지 않습니다. 고정 최대 체력과 최대 체력 %는 서로 다른 능력치로 칩니다."
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "같은 아이템에 같은 능력치가 두 번 붙지 않습니다. 고정 최대 체력과 최대 체력 %는 서로 다른 능력치로 칩니다.",
+  "Crystal and Mystic rings": "크리스탈 및 미스틱 반지",
+  "Other rings": "그 밖의 반지"
 }
