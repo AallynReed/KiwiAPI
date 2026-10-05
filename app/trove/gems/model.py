@@ -47,6 +47,7 @@ from .constants import (
     GEM_STAT_RESTRICTIONS,
     MAGIC_GEM_STAT_POOL,
     PHYSICAL_GEM_STAT_POOL,
+    RETIRED_GEM_STATS,
     AugmentType,
     GemAbility,
     GemElement,
@@ -127,7 +128,7 @@ class Gem(BaseModel):
 
     @classmethod
     def create(cls, tier=None, type=None, element=None, restriction=None,
-               augmentation=None, level=1, procs=None, generation=None) -> Gem:
+               augmentation=None, level=1, procs=None, generation=None, retired_stats=False) -> Gem:
         tier = choice(list(GemTier)) if not tier else GemTier(tier)
         type = choice(list(GemType)) if not type else GemType(type)
         element = choice(list(GemElement)) if not element else GemElement(element)
@@ -148,7 +149,13 @@ class Gem(BaseModel):
                 gem_stat_pool = (
                     PHYSICAL_GEM_STAT_POOL if restriction == GemRestriction.FIERCE else MAGIC_GEM_STAT_POOL
                 )
-            stat_types = _weighted_sample(gem_stat_pool[element], stat_weights(tier, type, element), 3)
+            pool, weights = list(gem_stat_pool[element]), stat_weights(tier, type, element)
+            if retired_stats:
+                # The game zeroed their weight, so their old odds are gone; roll them like Critical Hit.
+                for st in sorted(RETIRED_GEM_STATS):
+                    pool.append(st)
+                    weights[st] = weights.get(GemStatType.CRITICAL_HIT, 0.0)
+            stat_types = _weighted_sample(pool, weights, 3)
             stats = [Stat(type=t) for t in stat_types]
             if element == GemElement.COSMIC:
                 index = randint(0, 2)
@@ -385,7 +392,7 @@ def gem_lookups() -> dict:
         "types": [{"id": t.value, "name": t.display_name} for t in GemType],
         "elements": [{"id": e.value, "name": e.display_name} for e in GemElement],
         "restrictions": [{"id": r.value, "name": r.display_name} for r in GemRestriction],
-        "stat_types": [{"id": s.value, "name": s.display_name} for s in GemStatType],
+        "stat_types": [{"id": s.value, "name": s.display_name, "retired": s.retired} for s in GemStatType],
         "augment_types": [
             {"id": a.value, "name": a.display_name, "increase_percent": get_augment_base(a)}
             for a in AugmentType

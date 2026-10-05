@@ -925,7 +925,7 @@ async def generate_gem(req: GenerateGemRequest, ctx: TokenContext = _GEM) -> Gem
     try:
         return Gem.create(
             tier=req.tier, type=req.type, element=req.element, restriction=req.restriction,
-            augmentation=req.augmentation, level=req.level,
+            augmentation=req.augmentation, level=req.level, retired_stats=req.retired_stats,
         )
     except (ValueError, KeyError) as e:
         raise _bad_request(f"Invalid gem parameters: {e}") from e

@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "Пока что: <b>{list}</b> — осталось {n}%.",
   "Every stat, every level - generated": "Каждая характеристика, каждый уровень - расчёт",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "Точные числа за гайдом. Выбери уровень, тип и сколько бустов несёт характеристика, и смотри, сколько она стоит при минимальном и максимальном ролле, уровень за уровнем. Это тот же расчёт, что и в игре.",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "Каждая ячейка - значение характеристики при <b>минимальном</b> ролле (слева) и <b>максимальном</b> (справа). <b>PD/MD</b> = Physical / Магический урон, <b>CD</b> = Критический урон, <b>CH</b> = Критический удар, <b>MH% / MH</b> = Макс. здоровье % и абсолютное, <b>HR</b> = Восстановление здоровья (только старые самоцветы - новые его больше не получают), <b>LT</b> = Свет. Затенённые строки - ключевые уровни.",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen, a retired stat - only older gems have it, <b>LT</b> = Light. Rows shaded are milestone levels.": "Каждая ячейка - значение характеристики при <b>минимальном</b> ролле (слева) и <b>максимальном</b> (справа). <b>PD/MD</b> = Physical / Магический урон, <b>CD</b> = Критический урон, <b>CH</b> = Критический удар, <b>MH% / MH</b> = Макс. здоровье % и абсолютное, <b>HR</b> = Восстановление здоровья, упразднённая характеристика - есть только у старых самоцветов, <b>LT</b> = Свет. Затенённые строки - ключевые уровни.",
   "Stat tables": "Таблицы характеристик",
   "Boosts on this stat": "Бусты на этой характеристике",
   "PR/lvl": "PR/ур",
@@ -3516,5 +3516,16 @@
   "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.": "4-часовой бафф с 5-звёздочного босса Sundered Uplands. Снимите отметку, чтобы оценивать сборки без него.",
   "Lead vs #2": "Отрыв от №2",
   "High precision decimals": "Высокая точность",
-  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "Показывает до 8 знаков после запятой вместо округления до 1-2."
+  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "Показывает до 8 знаков после запятой вместо округления до 1-2.",
+  "Retired": "Упразднена",
+  "Allow retired stats": "Разрешить упразднённые характеристики",
+  "The game no longer rolls this stat on new gems.": "Игра больше не выдаёт эту характеристику новым самоцветам.",
+  "Lets new gems roll Health Regen, a stat the game retired. Its old odds aren't in the game files, so it rolls as often as Critical Hit.": "Позволяет новым самоцветам получать Восстановление здоровья - характеристику, которую игра упразднила. Прежних шансов в файлах игры нет, поэтому она выпадает так же часто, как Критический удар.",
+  "Booster": "Усилитель",
+  "No booster": "Без усилителя",
+  "Each attempt:": "Каждая попытка:",
+  "Karma": "Карма",
+  "Karma is almost full: even a failed attempt levels the gem up now.": "Карма почти заполнена: теперь даже неудачная попытка повысит уровень самоцвета.",
+  "The gem data could not be loaded.": "Не удалось загрузить данные о самоцветах.",
+  "The gem data could not be loaded. Reload the page to try again.": "Не удалось загрузить данные о самоцветах. Перезагрузите страницу, чтобы попробовать снова."
 }

@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "Bisher: <b>{list}</b> — noch {n}%.",
   "Every stat, every level - generated": "Jeder Wert, jede Stufe - generiert",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "Die genauen Zahlen hinter dem Guide. Wähle eine Stufe, einen Typ und wie viele Boosts ein Wert trägt, und lies ab, was dieser Wert bei einem Min- und einem Max-Wurf wert ist, Stufe für Stufe. Es ist dieselbe Rechnung wie im Spiel.",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "Jede Zelle ist der Wert der Stat bei einem <b>Min</b>-Wurf (links) und einem <b>Max</b>-Wurf (rechts). <b>PD/MD</b> = Physical / Magischer Schaden, <b>CD</b> = Kritischer Schaden, <b>CH</b> = Kritischer Treffer, <b>MH% / MH</b> = Max. Leben % und absolut, <b>HR</b> = Lebensregeneration (nur ältere Edelsteine - neue können sie nicht mehr erhalten), <b>LT</b> = Licht. Schattierte Zeilen sind Meilenstein-Stufen.",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen, a retired stat - only older gems have it, <b>LT</b> = Light. Rows shaded are milestone levels.": "Jede Zelle ist der Wert der Stat bei einem <b>Min</b>-Wurf (links) und einem <b>Max</b>-Wurf (rechts). <b>PD/MD</b> = Physical / Magischer Schaden, <b>CD</b> = Kritischer Schaden, <b>CH</b> = Kritischer Treffer, <b>MH% / MH</b> = Max. Leben % und absolut, <b>HR</b> = Lebensregeneration, ein ausgemusterter Wert - nur ältere Edelsteine haben ihn, <b>LT</b> = Licht. Schattierte Zeilen sind Meilenstein-Stufen.",
   "Stat tables": "Werte-Tabellen",
   "Boosts on this stat": "Boosts auf diesem Wert",
   "PR/lvl": "PR/Stufe",
@@ -3516,5 +3516,16 @@
   "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.": "Der 4-Stunden-Buff von einem 5-Sterne-Boss in den Sundered Uplands. Abwählen, um deine Builds ohne ihn zu bewerten.",
   "Lead vs #2": "Vorsprung vor #2",
   "High precision decimals": "Hochpräzise Dezimalstellen",
-  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "Zeigt bei jeder Zahl bis zu 8 Nachkommastellen statt auf 1-2 zu runden."
+  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "Zeigt bei jeder Zahl bis zu 8 Nachkommastellen statt auf 1-2 zu runden.",
+  "Retired": "Ausgemustert",
+  "Allow retired stats": "Ausgemusterte Werte erlauben",
+  "The game no longer rolls this stat on new gems.": "Das Spiel vergibt diesen Wert bei neuen Edelsteinen nicht mehr.",
+  "Lets new gems roll Health Regen, a stat the game retired. Its old odds aren't in the game files, so it rolls as often as Critical Hit.": "Lässt neue Edelsteine Lebensregeneration erhalten, einen vom Spiel ausgemusterten Wert. Die alten Chancen stehen nicht mehr in den Spieldateien, daher kommt er so oft wie Kritischer Treffer.",
+  "Booster": "Booster",
+  "No booster": "Kein Booster",
+  "Each attempt:": "Pro Versuch:",
+  "Karma": "Karma",
+  "Karma is almost full: even a failed attempt levels the gem up now.": "Das Karma ist fast voll: Jetzt bringt selbst ein Fehlversuch den Edelstein eine Stufe höher.",
+  "The gem data could not be loaded.": "Die Edelsteindaten konnten nicht geladen werden.",
+  "The gem data could not be loaded. Reload the page to try again.": "Die Edelsteindaten konnten nicht geladen werden. Lade die Seite neu, um es erneut zu versuchen."
 }

@@ -249,12 +249,13 @@ A gem is a JSON object `{id, tier, type, element, restriction?, ability?, level,
 attempts, spent, + computed: gem_name, quality, power_rank, stat_values, …}`. A stat is `{type, locked, containers:[{base,
 augments:[{type,count}]}]}`. Nothing is stored server-side - you hold the gem and POST it back to mutate it.
 Use `GET /v1/gems/lookups` for all valid ids (tiers 1-4, types 1 Lesser/2 Empowered, elements 1-4, stat
-types 1-10, augments 1 Rough/2 Precise/3 Superior, level-up boosters). Stat type 10 is Health Regen: the game no
-longer rolls it (pool weight 0, so `generate` and `spark` never pick it) but older gems keep it, and `evaluate` /
-`stat-range` read its rolls from the game files like any other stat. Stat roll ranges, stat roll weights, the level
+types 1-10, augments 1 Rough/2 Precise/3 Superior, level-up boosters). Stat type 10 is Health Regen, a retired stat
+(`retired: true` in lookups): the game no longer rolls it (pool weight 0, so `generate` skips it unless `retired_stats`
+is set, and `spark` never picks it) but older gems keep it, and `evaluate` / `stat-range` read its rolls from the game
+files like any other stat. Stat roll ranges, stat roll weights, the level
 schedule and level-up chances and costs come from the game files (`gems/meta/gem_upgradedata.binfab`).
 
-- `POST /v1/gems/generate` body `{tier?, type?, element?, restriction?, level?, augmentation?}` (omit→random) → a gem object
+- `POST /v1/gems/generate` body `{tier?, type?, element?, restriction?, level?, augmentation?, retired_stats?}` (omit→random) → a gem object. `retired_stats` (default false) lets retired stats (Health Regen) roll; the game zeroed their roll weight, so they roll as often as Critical Hit
 - `POST /v1/gems/augment` body `{gem, stat_position (0-2), augment_type (1-3)}` → `{applied, gem}` (applied=false if the stat is already maxed)
 - `POST /v1/gems/spark` · `flare` body `{gem, stat_position}` → `{applied, gem}` (reroll stat type / move a proc)
 - `POST /v1/gems/level-up` body `{gem, booster?}` → `{applied, outcome, chance, double_chance, cost:[{item,name,count}], gem}`. One attempt at the game's own odds for the next level: `outcome` is `success`, `double` (two levels), `failed` or `max_level`. The cost is spent either way and added to `gem.spent` (item name → count); `gem.attempts` counts attempts. `booster` is an id from `lookups.boosters` (multiplies the chance and double chance, and is spent too). Karma (the game's pity bar, `gem.karma`, max `lookups.karma_max` = 125): a failure adds its level-up + double chance in whole percent (booster applied, rounded down; returned as `karma_gained`), the failure that fills the bar levels the gem up on the spot (`outcome: success`, `guaranteed: true`), and any level-up empties it. The response also carries `guaranteed` and `karma_gained`

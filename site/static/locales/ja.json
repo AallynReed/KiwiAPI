@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "ここまで：<b>{list}</b> — 残り {n}%。",
   "Every stat, every level - generated": "すべてのステータス、全レベル - 自動生成",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "ガイドの裏側にある正確な数値。ティア・タイプ・そのステータスが持つブースト数を選ぶと、最小抽選と最大抽選での値をレベルごとに読み取れます。ゲームと同じ計算です。",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "各セルはそのステータスの<b>最小</b>抽選（左）と<b>最大</b>抽選（右）の値です。<b>PD/MD</b> = Physical / 魔法ダメージ、<b>CD</b> = クリティカルダメージ、<b>CH</b> = クリティカルヒット、<b>MH% / MH</b> = 最大HP%と実数、<b>HR</b> = 体力回復（古いジェムのみ - 新しいジェムには付きません）、<b>LT</b> = 光。網掛けの行は節目レベルです。",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen, a retired stat - only older gems have it, <b>LT</b> = Light. Rows shaded are milestone levels.": "各セルはそのステータスの<b>最小</b>抽選（左）と<b>最大</b>抽選（右）の値です。<b>PD/MD</b> = Physical / 魔法ダメージ、<b>CD</b> = クリティカルダメージ、<b>CH</b> = クリティカルヒット、<b>MH% / MH</b> = 最大HP%と実数、<b>HR</b> = 体力回復（廃止されたステータス - 古いジェムのみ）、<b>LT</b> = 光。網掛けの行は節目レベルです。",
   "Stat tables": "ステータス表",
   "Boosts on this stat": "このステータスのブースト数",
   "PR/lvl": "PR/レベル",
@@ -3516,5 +3516,16 @@
   "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.": "Sundered Uplands の5つ星ボスから得られる4時間のバフ。外すとこのバフなしでビルドを順位付けします。",
   "Lead vs #2": "2位との差",
   "High precision decimals": "高精度の小数",
-  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "すべての数値を1〜2桁に丸めず、最大8桁の小数で表示します。"
+  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "すべての数値を1〜2桁に丸めず、最大8桁の小数で表示します。",
+  "Retired": "廃止",
+  "Allow retired stats": "廃止されたステータスを許可",
+  "The game no longer rolls this stat on new gems.": "このステータスは新しいジェムにはもう付きません。",
+  "Lets new gems roll Health Regen, a stat the game retired. Its old odds aren't in the game files, so it rolls as often as Critical Hit.": "新しいジェムに、ゲームで廃止された体力回復が付くようにします。以前の確率はゲームファイルに残っていないため、クリティカルヒットと同じ頻度で付きます。",
+  "Booster": "ブースター",
+  "No booster": "ブースターなし",
+  "Each attempt:": "1回の挑戦ごと:",
+  "Karma": "カルマ",
+  "Karma is almost full: even a failed attempt levels the gem up now.": "カルマがほぼ満タンです。今なら失敗してもジェムのレベルが上がります。",
+  "The gem data could not be loaded.": "ジェムのデータを読み込めませんでした。",
+  "The gem data could not be loaded. Reload the page to try again.": "ジェムのデータを読み込めませんでした。ページを再読み込みしてもう一度お試しください。"
 }

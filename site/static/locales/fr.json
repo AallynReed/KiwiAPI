@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "Jusqu'ici : <b>{list}</b> — reste {n}%.",
   "Every stat, every level - generated": "Chaque stat, chaque niveau - généré",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "Les chiffres exacts derrière le guide. Choisis un palier, un type et combien de boosts porte une stat, et lis ce que vaut cette stat avec un tirage min et max, niveau par niveau. C'est le même calcul que celui du jeu.",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "Chaque cellule est la valeur de la stat pour un tirage <b>min</b> (gauche) et <b>max</b> (droite). <b>PD/MD</b> = Physical / Dégâts Magiques, <b>CD</b> = Dégâts Critiques, <b>CH</b> = Coup Critique, <b>MH% / MH</b> = PV Max % et fixe, <b>HR</b> = Régénération de santé (anciennes gemmes uniquement - les nouvelles ne peuvent plus l'obtenir), <b>LT</b> = Lumière. Les lignes ombrées sont des paliers.",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen, a retired stat - only older gems have it, <b>LT</b> = Light. Rows shaded are milestone levels.": "Chaque cellule est la valeur de la stat pour un tirage <b>min</b> (gauche) et <b>max</b> (droite). <b>PD/MD</b> = Physical / Dégâts Magiques, <b>CD</b> = Dégâts Critiques, <b>CH</b> = Coup Critique, <b>MH% / MH</b> = PV Max % et fixe, <b>HR</b> = Régénération de santé, une stat retirée - seules les anciennes gemmes l'ont, <b>LT</b> = Lumière. Les lignes ombrées sont des paliers.",
   "Stat tables": "Tables de stats",
   "Boosts on this stat": "Boosts sur cette stat",
   "PR/lvl": "PR/niv",
@@ -3516,5 +3516,16 @@
   "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.": "Le bonus de 4 heures d'un boss 5 étoiles de Sundered Uplands. Décochez-le pour classer vos builds sans lui.",
   "Lead vs #2": "Avance sur le n°2",
   "High precision decimals": "Décimales haute précision",
-  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "Affiche jusqu'à 8 décimales sur chaque nombre au lieu d'arrondir à 1-2."
+  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "Affiche jusqu'à 8 décimales sur chaque nombre au lieu d'arrondir à 1-2.",
+  "Retired": "Retirée",
+  "Allow retired stats": "Autoriser les stats retirées",
+  "The game no longer rolls this stat on new gems.": "Le jeu n'attribue plus cette stat aux nouvelles gemmes.",
+  "Lets new gems roll Health Regen, a stat the game retired. Its old odds aren't in the game files, so it rolls as often as Critical Hit.": "Permet aux nouvelles gemmes d'obtenir Régénération de santé, une stat retirée par le jeu. Ses anciennes chances ne figurent plus dans les fichiers du jeu, elle sort donc aussi souvent que Coup Critique.",
+  "Booster": "Booster",
+  "No booster": "Aucun booster",
+  "Each attempt:": "Chaque tentative :",
+  "Karma": "Karma",
+  "Karma is almost full: even a failed attempt levels the gem up now.": "Le karma est presque plein : même une tentative ratée fait monter la gemme de niveau maintenant.",
+  "The gem data could not be loaded.": "Impossible de charger les données des gemmes.",
+  "The gem data could not be loaded. Reload the page to try again.": "Impossible de charger les données des gemmes. Rechargez la page pour réessayer."
 }

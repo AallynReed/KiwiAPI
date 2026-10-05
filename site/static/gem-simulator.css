@@ -289,6 +289,7 @@
   accent-color: var(--accent-blue, #58a6ff);
 }
 .gem-sim .creator-generate-btn { flex: 1 1 auto; width: auto; }
+.gem-sim .creator-toggles { display: flex; flex-direction: column; gap: 6px; }
 .gem-sim .augment-field.disabled { opacity: 0.45; }
 .gem-sim .augment-field.disabled .slider-input { pointer-events: none; }
 
@@ -370,6 +371,7 @@
 }
 .gem-sim .stat-label { font-weight: 700; margin: 0; }
 .gem-sim .stat-label span { color: var(--text-mute, #9aa4b2); font-size: 0.9em; font-weight: 400; }
+.gem-sim .stat-label .stat-retired { margin-left: 6px; color: var(--accent-orange, #f0a35e); font-size: 0.78em; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .gem-sim .stat-augment-pct { color: var(--accent-blue, #58a6ff); font-weight: 700; font-size: 0.9em; white-space: nowrap; }
 .gem-sim .container-chip-row { display: flex; gap: 8px; }
 .gem-sim .container-chip-vert { display: flex; flex-direction: column; align-items: center; flex: 1; }

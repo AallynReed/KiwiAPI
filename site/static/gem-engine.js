@@ -80,8 +80,10 @@
     const STAT_KEY = {
         1: "PhysicalDamage|false", 2: "SpellDamage|false", 3: "CriticalHitDamage|false",
         4: "CriticalHitChance|false", 5: "MaxHealth|false", 6: "MaxHealth|true", 7: "Light|false",
-        10: "HealthRegen_controller|false"   // no longer rolls (pool weight 0); older gems keep it
+        10: "HealthRegen_controller|false"
     };
+    // Out of the game's roll pool (weight 0): new gems never get them, older gems keep them.
+    const RETIRED_STATS = [10];
     const FOCUS = { 1: "item/gem/booster/augment1", 2: "item/gem/booster/augment2", 3: "item/gem/booster/augment3" };
 
     function setData(data) {
@@ -355,7 +357,13 @@
         const pool = (restriction === null || restriction === undefined)
             ? choice([PHYSICAL_GEM_STAT_POOL, MAGIC_GEM_STAT_POOL])
             : (restriction === Restriction.FIERCE ? PHYSICAL_GEM_STAT_POOL : MAGIC_GEM_STAT_POOL);
-        const statTypes = weightedSample(pool[element], statWeights(tier, type, element), 3);
+        const choices = pool[element].slice();
+        const weights = statWeights(tier, type, element);
+        if (data.retired_stats) {
+            // Their old odds are gone from the files; roll them like Critical Hit.
+            for (const st of RETIRED_STATS) { choices.push(st); weights[st] = weights[Stat.CRITICAL_HIT] || 0; }
+        }
+        const statTypes = weightedSample(choices, weights, 3);
         stats = statTypes.map(makeStat);
         if (element === Element.COSMIC) {
             const index = randint(0, 2);
@@ -487,6 +495,7 @@
 
     window.GemEngine = {
         getLookups,
+        RETIRED_STATS,
         createGem(data) {
             const gem = create(data || {});
             return ok(serializeGem(gem));

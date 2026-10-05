@@ -669,6 +669,7 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-tbl td.prlvl { color: var(--text-soft); }
 .gg-tbl td .mn { color: var(--text-soft); }
 .gg-tbl td .mx { color: var(--gem); margin-left: .55rem; }
+.gg-tbl th .gg-retired { margin-left: .3rem; color: var(--accent-orange); font-family: inherit; text-transform: uppercase; }
 .gg-tbl tbody tr.ms { background: color-mix(in oklab, var(--gem) 9%, transparent); }
 .gg-tbl tbody tr.ms th { color: var(--gem); }
 .gg-tbl tbody tr:hover { background: color-mix(in oklab, var(--gem) 6%, var(--bg-card-hi)); }

@@ -80,6 +80,9 @@
   // longer rolls, but older gems still have it.
   const SELECTABLE_STATS = [1, 2, 3, 4, 5, 6, 7, 10];
   const statOptions = () => lookups.stat_types.filter((s) => SELECTABLE_STATS.includes(s.id));
+  // Retired stats stay evaluable (older gems carry them) but are labelled as such.
+  const isRetiredStat = (id) => !!(lookups.stat_types.find((x) => x.id === Number(id)) || {}).retired;
+  const statLabel = (id, name) => t(name) + (isRetiredStat(id) ? " · " + t("Retired") : "");
 
   // ── API ──────────────────────────────────────────────────────────────────
   async function apiGet(url) {
@@ -203,7 +206,7 @@
 
       const typeSel = h("select", { class: "ge-select", onChange: (e) => { s.type = Number(e.target.value); scheduleRanges(); renderForm(); } });
       opts.forEach((o) => {
-        const opt = h("option", { value: o.id }, t(o.name));
+        const opt = h("option", { value: o.id }, statLabel(o.id, o.name));
         if (Number(o.id) === Number(s.type)) opt.selected = true;
         typeSel.appendChild(opt);
       });
@@ -469,7 +472,7 @@
         h("span", {}, t("Containers")), h("span", {}, t("Quality"))));
     r.stats.forEach((s) => {
       table.appendChild(h("div", { class: "ge-stat-tr" + (s.is_within_range ? "" : " invalid") },
-        h("span", {}, t(s.display_name)),
+        h("span", {}, statLabel(s.type, s.display_name)),
         h("span", {}, fmtNum(s.entered_value)),
         h("span", {}, s.containers),
         h("span", {}, s.quality_percent.toFixed(2) + "%",

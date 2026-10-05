@@ -3067,7 +3067,7 @@
   "Delve, depth 160+": "Delve ความลึก 160+",
   "Delves are the shortcut to Mystic": "Delve คือทางลัดสู่ Mystic",
   "Delves parallel the same difficulties, and the deeper you go the higher they climb - <b>depth 160+</b> is the D15 equivalent and drops the same Mystic gem boxes. What it doesn't ask for is a D15 character:": "Delve มีระดับความยากคู่ขนานกัน ยิ่งลงลึกยิ่งยากขึ้น - <b>ความลึก 160+</b> เทียบเท่ากับ D15 และดรอปกล่องเจม Mystic แบบเดียวกัน สิ่งที่มันไม่เรียกร้องคือตัวละครระดับ D15:",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "แต่ละช่องคือค่าของสเตตัสเมื่อสุ่มได้ <b>ต่ำสุด</b> (ซ้าย) และ <b>สูงสุด</b> (ขวา) <b>PD/MD</b> = ดาเมจ Physical / Magic, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health แบบ % และแบบตัวเลข, <b>HR</b> = ฟื้นฟูพลังชีวิต (เฉพาะอัญมณีเก่า - อัญมณีใหม่สุ่มไม่ได้แล้ว), <b>LT</b> = Light แถวที่แรเงาคือเลเวลหมุดหมาย",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen, a retired stat - only older gems have it, <b>LT</b> = Light. Rows shaded are milestone levels.": "แต่ละช่องคือค่าของสเตตัสเมื่อสุ่มได้ <b>ต่ำสุด</b> (ซ้าย) และ <b>สูงสุด</b> (ขวา) <b>PD/MD</b> = ดาเมจ Physical / Magic, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health แบบ % และแบบตัวเลข, <b>HR</b> = ฟื้นฟูพลังชีวิต ค่าสถานะที่ถูกยกเลิกแล้ว - มีเฉพาะในอัญมณีเก่า, <b>LT</b> = Light แถวที่แรเงาคือเลเวลหมุดหมาย",
   "Each class has its own Class Gem, and only that class can equip it. Switch class and you swap to a different one.": "แต่ละคลาสมี Class Gem ของตัวเอง และมีเพียงคลาสนั้นที่ใส่ได้ เปลี่ยนคลาสก็เปลี่ยนไปใช้อีกเม็ดหนึ่ง",
   "Each container has its own random <b>base roll</b> (0–100%), fixed at creation - that's the RNG. Focus stacks on top (Rough +2.5%, Precise +5%, Superior +12.5% each). A stat's quality is the <b>average</b> of its containers, and a container can overflow <b>past 100%</b> to carry a low one - so 112.5% + 87.5% averages to a perfect 100% stat. The stat caps at 100%, so overflow beyond that adds no power; it just flattens out.": "แต่ละคอนเทนเนอร์มี <b>ค่าสุ่มพื้นฐาน</b> ของตัวเอง (0–100%) กำหนดตายตัวตอนสร้าง - นั่นคือ RNG โฟกัสจะซ้อนทับเข้าไป (Rough +2.5%, Precise +5%, Superior +12.5% ต่อชิ้น) คุณภาพของสเตตัสคือ<b>ค่าเฉลี่ย</b>ของคอนเทนเนอร์ทั้งหมด และคอนเทนเนอร์หนึ่งล้น <b>เกิน 100%</b> ได้เพื่อฉุดตัวที่ต่ำขึ้นมา - ดังนั้น 112.5% + 87.5% เฉลี่ยได้สเตตัสสมบูรณ์แบบ 100% สเตตัสตันที่ 100% ส่วนที่ล้นเกินนั้นจึงไม่เพิ่มพลังอะไร มันแค่ราบเรียบไป",
   "Each gem is <b>Water</b>, <b>Fire</b>, <b>Air</b> or <b>Cosmic</b>, and only slots into the matching gem socket. Cosmic is the odd one out - it always carries <b>Light</b>.": "เจมแต่ละเม็ดเป็นธาตุ <b>Water</b>, <b>Fire</b>, <b>Air</b> หรือ <b>Cosmic</b> และใส่ได้เฉพาะช่องเจมที่ตรงกัน Cosmic เป็นตัวแปลกแยก - มันมี <b>Light</b> ติดมาเสมอ",
@@ -3348,5 +3348,16 @@
   "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.": "บัฟ 4 ชั่วโมงจากบอส 5 ดาวใน Sundered Uplands เอาเครื่องหมายออกเพื่อจัดอันดับบิลด์โดยไม่มีบัฟนี้",
   "Lead vs #2": "นำอันดับ 2",
   "High precision decimals": "ทศนิยมความละเอียดสูง",
-  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "แสดงทศนิยมได้ถึง 8 ตำแหน่งในทุกตัวเลข แทนการปัดเป็น 1-2 ตำแหน่ง"
+  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "แสดงทศนิยมได้ถึง 8 ตำแหน่งในทุกตัวเลข แทนการปัดเป็น 1-2 ตำแหน่ง",
+  "Retired": "ยกเลิกแล้ว",
+  "Allow retired stats": "อนุญาตค่าสถานะที่ยกเลิกแล้ว",
+  "The game no longer rolls this stat on new gems.": "เกมไม่สุ่มค่าสถานะนี้ให้อัญมณีใหม่อีกแล้ว",
+  "Lets new gems roll Health Regen, a stat the game retired. Its old odds aren't in the game files, so it rolls as often as Critical Hit.": "ให้อัญมณีใหม่สุ่มได้ฟื้นฟูพลังชีวิต ซึ่งเป็นค่าสถานะที่เกมยกเลิกไปแล้ว ไฟล์เกมไม่มีโอกาสสุ่มเดิมแล้ว จึงออกบ่อยเท่ากับคริติคอล",
+  "Booster": "บูสเตอร์",
+  "No booster": "ไม่ใช้บูสเตอร์",
+  "Each attempt:": "ต่อการลองหนึ่งครั้ง:",
+  "Karma": "กรรม",
+  "Karma is almost full: even a failed attempt levels the gem up now.": "กรรมเกือบเต็มแล้ว: ตอนนี้แม้ลองไม่สำเร็จ อัญมณีก็จะเลเวลอัป",
+  "The gem data could not be loaded.": "โหลดข้อมูลอัญมณีไม่ได้",
+  "The gem data could not be loaded. Reload the page to try again.": "โหลดข้อมูลอัญมณีไม่ได้ รีโหลดหน้าเพื่อลองอีกครั้ง"
 }

@@ -70,11 +70,19 @@ class GemStatType(IntEnum):
     LIGHT = 7
     MOVEMENT_SPEED = 8
     JUMP = 9
-    HEALTH_REGEN = 10    # no longer rolls on new gems (pool weight 0); older gems keep it
+    HEALTH_REGEN = 10
 
     @property
     def display_name(self) -> str:
         return GEM_STAT_TYPE_NAMES[self.value]
+
+    @property
+    def retired(self) -> bool:
+        return self in RETIRED_GEM_STATS
+
+
+# Stats the game took out of the roll pool (weight 0): new gems never get them, older gems keep them.
+RETIRED_GEM_STATS = frozenset({GemStatType.HEALTH_REGEN})
 
 
 GEM_RESTRICTION_NAMES = {1: "Fierce", 2: "Arcane"}

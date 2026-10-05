@@ -19,6 +19,7 @@ class GenerateGemRequest(BaseModel):
     restriction: int | None = None   # Lesser only: 1 Fierce, 2 Arcane
     level: int = 1
     augmentation: float | None = None  # seed every container's base roll (0-1)
+    retired_stats: bool = False      # let retired stats (Health Regen) roll, as often as Critical Hit
 
 
 class GemActionResult(BaseModel):
@@ -70,6 +71,10 @@ class SetLevelRequest(BaseModel):
 class LookupItem(BaseModel):
     id: int
     name: str
+
+
+class StatTypeLookup(LookupItem):
+    retired: bool = False            # out of the roll pool; only older gems carry it
 
 
 class TierLookup(BaseModel):
@@ -129,7 +134,7 @@ class GemLookups(BaseModel):
     types: list[LookupItem]
     elements: list[LookupItem]
     restrictions: list[LookupItem]
-    stat_types: list[LookupItem]
+    stat_types: list[StatTypeLookup]
     augment_types: list[AugmentLookup]
     abilities: list[LookupItem]
     abilities_by_element: dict[str, list[int]]

@@ -3280,7 +3280,7 @@
   "So far: <b>{list}</b> — {n}% to go.": "현재까지: <b>{list}</b> — {n}% 남음.",
   "Every stat, every level - generated": "모든 스탯, 모든 레벨 - 자동 생성",
   "The exact numbers under the guide. Pick a tier, type and how many boosts a stat carries, and read off what that stat is worth at a min and a max roll, level by level. This is the same math the game runs.": "가이드 뒤의 정확한 수치. 등급, 종류, 그리고 스탯이 지닌 부스트 수를 고르면 최소·최대 굴림에서 그 스탯의 값을 레벨별로 확인할 수 있습니다. 게임과 똑같은 계산입니다.",
-  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen (older gems only - new gems can't roll it), <b>LT</b> = Light. Rows shaded are milestone levels.": "각 셀은 해당 스탯의 <b>최소</b> 굴림(왼쪽)과 <b>최대</b> 굴림(오른쪽) 값입니다. <b>PD/MD</b> = Physical / 마법 데미지, <b>CD</b> = 치명타 데미지, <b>CH</b> = 치명타, <b>MH% / MH</b> = 최대 체력 %와 고정값, <b>HR</b> = 체력 재생 (예전 보석만 - 새 보석에는 붙지 않음), <b>LT</b> = 빛. 음영 처리된 행은 마일스톤 레벨입니다.",
+  "Each cell is the stat's value at a <b>min</b> roll (left) and a <b>max</b> roll (right). <b>PD/MD</b> = Physical / Magic Damage, <b>CD</b> = Critical Damage, <b>CH</b> = Critical Hit, <b>MH% / MH</b> = Max Health % and flat, <b>HR</b> = Health Regen, a retired stat - only older gems have it, <b>LT</b> = Light. Rows shaded are milestone levels.": "각 셀은 해당 스탯의 <b>최소</b> 굴림(왼쪽)과 <b>최대</b> 굴림(오른쪽) 값입니다. <b>PD/MD</b> = Physical / 마법 데미지, <b>CD</b> = 치명타 데미지, <b>CH</b> = 치명타, <b>MH% / MH</b> = 최대 체력 %와 고정값, <b>HR</b> = 체력 재생, 폐지된 능력치 - 예전 보석에만 있음, <b>LT</b> = 빛. 음영 처리된 행은 마일스톤 레벨입니다.",
   "Stat tables": "스탯 표",
   "Boosts on this stat": "이 스탯의 부스트 수",
   "PR/lvl": "PR/레벨",
@@ -3516,5 +3516,16 @@
   "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.": "Sundered Uplands 5성 보스에게서 얻는 4시간 버프입니다. 해제하면 이 버프 없이 빌드 순위를 매깁니다.",
   "Lead vs #2": "2위와의 차이",
   "High precision decimals": "고정밀 소수점",
-  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "모든 숫자를 1~2자리로 반올림하지 않고 소수점 8자리까지 표시합니다."
+  "Shows up to 8 decimals on every number instead of rounding to 1-2.": "모든 숫자를 1~2자리로 반올림하지 않고 소수점 8자리까지 표시합니다.",
+  "Retired": "폐지됨",
+  "Allow retired stats": "폐지된 능력치 허용",
+  "The game no longer rolls this stat on new gems.": "이 능력치는 더 이상 새 보석에 붙지 않습니다.",
+  "Lets new gems roll Health Regen, a stat the game retired. Its old odds aren't in the game files, so it rolls as often as Critical Hit.": "새 보석에 게임에서 폐지된 체력 재생이 붙을 수 있게 합니다. 예전 확률은 게임 파일에 없어서 치명타와 같은 빈도로 나옵니다.",
+  "Booster": "부스터",
+  "No booster": "부스터 없음",
+  "Each attempt:": "시도당:",
+  "Karma": "카르마",
+  "Karma is almost full: even a failed attempt levels the gem up now.": "카르마가 거의 찼습니다. 이제 실패해도 보석 레벨이 오릅니다.",
+  "The gem data could not be loaded.": "보석 데이터를 불러오지 못했습니다.",
+  "The gem data could not be loaded. Reload the page to try again.": "보석 데이터를 불러오지 못했습니다. 페이지를 새로고침해 다시 시도하세요."
 }

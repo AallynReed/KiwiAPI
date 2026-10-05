@@ -106,7 +106,7 @@
     { key: "ch", label: "CH", cat: "crit", dec: 2 },
     { key: "mhp", label: "MH%", cat: "health", dec: 2 },
     { key: "mh", label: "MH", cat: "health", dec: 0 },
-    { key: "hr", label: "HR", cat: "health", dec: 0 },
+    { key: "hr", label: "HR", cat: "health", dec: 0, retired: true },
     { key: "lt", label: "LT", cat: "light", dec: 0 }
   ];
   // Health Regen no longer rolls on new gems (pool weight 0) but older gems keep it.
@@ -1126,7 +1126,9 @@
       table.style.setProperty("--gem", st.tier.color);
       var startLvl = Math.max(1, 5 * st.boosts), lv, i;
       var h = "<thead><tr><th>" + tt("Level") + "</th><th>" + tt("PR/lvl") + "</th>";
-      for (i = 0; i < STAT_COLS.length; i++) h += "<th>" + STAT_COLS[i].label + "</th>";
+      for (i = 0; i < STAT_COLS.length; i++) {
+        h += "<th>" + STAT_COLS[i].label + (STAT_COLS[i].retired ? ' <span class="gg-retired">' + tt("Retired") + "</span>" : "") + "</th>";
+      }
       h += "</tr></thead><tbody>";
       for (lv = startLvl; lv <= st.tier.max; lv++) {
         var milestone = (lv === 5 || lv === 10 || lv === 15 || (lv > 15 && lv % 5 === 0));

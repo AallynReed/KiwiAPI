@@ -48,7 +48,7 @@
   const ATTEMPT_MS = 900;
   let levelBusy = false;
   let lastAttempt = null; // { gemId, outcome, chance, level, guaranteed } - the latest level-up result shown
-  const creatorParams = { type: "", tier: "", element: "", restriction: "", level: 1, augmentNull: true, augment: 0 };
+  const creatorParams = { type: "", tier: "", element: "", restriction: "", level: 1, augmentNull: true, augment: 0, retired: false };
   let dragState = { pane: null, idx: -1, gem: null };
   // Keyboard "move" alternative to drag: Enter picks a source slot, Enter on a
   // second slot moves it there. { pane, idx } | null.
@@ -71,6 +71,7 @@
 
   const statName = (gem, i) => Object.keys(gem.stat_values[i])[0] || "Stat " + (i + 1);
   const statValue = (gem, i) => gem.stat_values[i][statName(gem, i)];
+  const isRetired = (stat) => ((window.GemEngine && window.GemEngine.RETIRED_STATS) || []).includes(stat.type);
   const formatStat = (v) => (Math.round(v * 100) / 100).toLocaleString();
   const barColor = (v) => (v < 0.33 ? "#d32f2f" : v < 0.66 ? "#fbc02d" : "#34d058");
   const pct = (x) => parseFloat((x * 100).toFixed(x < 0.1 ? 2 : 1)) + "%";
@@ -154,7 +155,8 @@
       h("hr", { class: "gem-tooltip-hr" }),
     ];
     gem.stats.forEach((stat, i) => {
-      rows.push(tipRow(t(statName(gem, i)) + " (" + ((stat.augmentation_progress || 0) * 100).toFixed(1) + "%)", statValue(gem, i).toFixed(2)));
+      const label = t(statName(gem, i)) + (isRetired(stat) ? " · " + t("Retired") : "");
+      rows.push(tipRow(label + " (" + ((stat.augmentation_progress || 0) * 100).toFixed(1) + "%)", statValue(gem, i).toFixed(2)));
     });
     elTooltip.innerHTML = "";
     rows.forEach((r) => elTooltip.appendChild(r));
@@ -331,13 +333,23 @@
     randCb.addEventListener("change", () => { creatorParams.augmentNull = randCb.checked; syncAug(); });
     const randToggle = h("label", { class: "augment-toggle-inline" }, randCb, h("span", null, t("Random augment")));
 
+    // Off by default, like the game: retired stats can only come from older gems.
+    const retiredCb = h("input", { type: "checkbox" });
+    retiredCb.checked = creatorParams.retired;
+    retiredCb.addEventListener("change", () => { creatorParams.retired = retiredCb.checked; });
+    const retiredToggle = h("label", {
+      class: "augment-toggle-inline",
+      title: t("Lets new gems roll Health Regen, a stat the game retired. Its old odds aren't in the game files, so it rolls as often as Critical Hit."),
+    }, retiredCb, h("span", null, t("Allow retired stats")));
+
     const genBtn = h("button", { class: "primary-btn creator-generate-btn" }, t("Generate random gem"));
     genBtn.addEventListener("click", generateGem);
 
     elForge.appendChild(h("div", { class: "gem-form-row" }, typeF.wrap, tierF.wrap));
     elForge.appendChild(h("div", { class: "gem-form-row" }, elemF.wrap, restF.wrap));
     elForge.appendChild(h("div", { class: "gem-form-row creator-advanced-row" }, lvlField, augField));
-    elForge.appendChild(h("div", { class: "creator-generate-row" }, randToggle, genBtn));
+    elForge.appendChild(h("div", { class: "creator-generate-row" },
+      h("div", { class: "creator-toggles" }, randToggle, retiredToggle), genBtn));
     syncAug();
   }
 
@@ -386,7 +398,8 @@
         "aria-label": `${t(statName(gem, i))} ${statValue(gem, i).toFixed(2)}`,
       },
         h("div", { class: "stat-vert-head" },
-          h("div", { class: "stat-label" }, h("b", null, statValue(gem, i).toFixed(2) + " "), h("span", null, t(statName(gem, i)))),
+          h("div", { class: "stat-label" }, h("b", null, statValue(gem, i).toFixed(2) + " "), h("span", null, t(statName(gem, i))),
+            isRetired(stat) ? h("span", { class: "stat-retired", title: t("The game no longer rolls this stat on new gems.") }, t("Retired")) : null),
           h("div", { class: "stat-augment-pct" }, ((stat.augmentation_progress || 0) * 100).toFixed(1) + "%")),
         chips);
       const pickStat = () => { selectedStatIdx = i; renderDetail(); };
@@ -592,6 +605,7 @@
     if (creatorParams.type === "1" && creatorParams.restriction) body.restriction = parseInt(creatorParams.restriction, 10);
     if (creatorParams.level) body.level = parseInt(creatorParams.level, 10);
     if (!creatorParams.augmentNull) body.augmentation = creatorParams.augment / 100;
+    if (creatorParams.retired) body.retired_stats = true;
 
     const resp = window.GemEngine.createGem(body);
     if (resp && resp.success) {
