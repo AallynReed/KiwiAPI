@@ -3615,5 +3615,19 @@
   "With pearls": "パール込み",
   "{n} stat sets": "{n} 種類のステータス構成",
   "Loading the game's gem data...": "ゲームのジェムデータを読み込み中...",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "レイディアント未満のジェムは下位ジェムしかなく、ゲームファイルにパワーランクがないため、その行は「-」と表示されます。"
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "レイディアント未満のジェムは下位ジェムしかなく、ゲームファイルにパワーランクがないため、その行は「-」と表示されます。",
+  "Max-out cost": "最大強化の費用",
+  "What it costs to max out": "最大まで強化する費用",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "目標のレアリティと強化する装備の量を選ぶと、必要な素材がすべて分かります。",
+  "Target rarity": "目標のレアリティ",
+  "Start from a {r} item": "{r}のアイテムから始める",
+  "{r} star level it starts at": "開始時の{r}の星の数",
+  "Pieces per class": "クラスごとの装備",
+  "Include Pearls of Wisdom": "Pearl of Wisdomを含める",
+  "Stat lines each item already has": "各アイテムにすでにあるステータス枠",
+  "{c} classes × {p} pieces = {n} items": "{c}クラス × {p}部位 = {n}個",
+  "Per item": "1個あたり",
+  "All {n} items": "全{n}個",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "各アイテムを+5にします。Pearl：ステータス枠ごとに2個、さらに足りない枠1つにつき1個。",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "各アイテムを{from} +5にし、{to}に上げてから、もう一度+5にします。Pearl：ステータス枠ごとに2個、さらに足りない枠1つにつき1個。"
 }

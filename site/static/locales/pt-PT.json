@@ -3615,5 +3615,19 @@
   "With pearls": "Com pérolas",
   "{n} stat sets": "{n} conjuntos de atributos",
   "Loading the game's gem data...": "A carregar os dados de gemas do jogo...",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "As gemas abaixo de Radiante só existem como gemas Menores, e os ficheiros do jogo não indicam a sua Classificação de Poder, por isso essas linhas mostram um traço."
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "As gemas abaixo de Radiante só existem como gemas Menores, e os ficheiros do jogo não indicam a sua Classificação de Poder, por isso essas linhas mostram um traço.",
+  "Max-out cost": "Custo para maximizar",
+  "What it costs to max out": "Quanto custa maximizar tudo",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "Escolhe a raridade que queres e quanto equipamento vais melhorar, e recebe a lista de compras completa.",
+  "Target rarity": "Raridade pretendida",
+  "Start from a {r} item": "Começar com um item {r}",
+  "{r} star level it starts at": "Nível de estrelas inicial em {r}",
+  "Pieces per class": "Peças por classe",
+  "Include Pearls of Wisdom": "Incluir Pearls of Wisdom",
+  "Stat lines each item already has": "Linhas de atributo que cada item já tem",
+  "{c} classes × {p} pieces = {n} items": "{c} classes × {p} peças = {n} itens",
+  "Per item": "Por item",
+  "All {n} items": "Todos os {n} itens",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Leva cada item a +5. Pearls: 2 em cada linha de atributo, mais 1 por cada linha que ainda falte a um item.",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Leva cada item a {from} +5, sobe-o para {to} e depois volta a levá-lo a +5. Pearls: 2 em cada linha de atributo, mais 1 por cada linha que ainda falte a um item."
 }

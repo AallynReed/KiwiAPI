@@ -3615,5 +3615,19 @@
   "With pearls": "含珍珠",
   "{n} stat sets": "{n} 组属性",
   "Loading the game's gem data...": "正在加载游戏的宝石数据……",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "光辉以下的宝石只有次级宝石，游戏文件也没有给出它们的战力等级，所以这些行显示为短横线。"
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "光辉以下的宝石只有次级宝石，游戏文件也没有给出它们的战力等级，所以这些行显示为短横线。",
+  "Max-out cost": "满级花费",
+  "What it costs to max out": "强化到满需要多少",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "选择目标稀有度和要强化的装备数量，即可得到完整的材料清单。",
+  "Target rarity": "目标稀有度",
+  "Start from a {r} item": "从{r}物品开始",
+  "{r} star level it starts at": "{r}的起始星级",
+  "Pieces per class": "每个职业的装备",
+  "Include Pearls of Wisdom": "计入 Pearl of Wisdom",
+  "Stat lines each item already has": "每件物品已有的词条数",
+  "{c} classes × {p} pieces = {n} items": "{c} 个职业 × {p} 件 = {n} 件物品",
+  "Per item": "每件",
+  "All {n} items": "全部 {n} 件",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "把每件物品强化到 +5。Pearl：每条词条 2 个，物品每缺一条词条再加 1 个。",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "把每件物品强化到 {from} +5，提升为 {to}，再强化到 +5。Pearl：每条词条 2 个，物品每缺一条词条再加 1 个。"
 }

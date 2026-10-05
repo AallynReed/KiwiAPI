@@ -3615,5 +3615,19 @@
   "With pearls": "С жемчужинами",
   "{n} stat sets": "Наборов характеристик: {n}",
   "Loading the game's gem data...": "Загружаем данные о самоцветах из игры...",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "Самоцветы ниже Сияющего бывают только Малыми, а их Ранг силы в файлах игры не указан, поэтому в этих строках стоит прочерк."
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "Самоцветы ниже Сияющего бывают только Малыми, а их Ранг силы в файлах игры не указан, поэтому в этих строках стоит прочерк.",
+  "Max-out cost": "Цена максимума",
+  "What it costs to max out": "Сколько стоит прокачать до максимума",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "Выберите нужную редкость и сколько снаряжения улучшаете - и получите полный список покупок.",
+  "Target rarity": "Нужная редкость",
+  "Start from a {r} item": "Начать с предмета {r}",
+  "{r} star level it starts at": "Сколько звёзд у {r} в начале",
+  "Pieces per class": "Предметов на класс",
+  "Include Pearls of Wisdom": "Учитывать Pearl of Wisdom",
+  "Stat lines each item already has": "Сколько строк характеристик уже есть у предмета",
+  "{c} classes × {p} pieces = {n} items": "{c} классов × {p} предмета = {n} предметов",
+  "Per item": "На предмет",
+  "All {n} items": "Все {n} предметов",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Доводит каждый предмет до +5. Pearl: по 2 на каждую строку характеристики и ещё по 1 на каждую недостающую строку.",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Доводит каждый предмет до {from} +5, повышает до {to}, а затем снова до +5. Pearl: по 2 на каждую строку характеристики и ещё по 1 на каждую недостающую строку."
 }

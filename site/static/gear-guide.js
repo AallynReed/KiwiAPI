@@ -25,6 +25,10 @@
 
   let data = null;
   const state = { rarity: "Crystal5", star: 5, pearls: [2, 2, 2], costRarity: "Crystal5", mode: "pve", query: "" };
+  // Max-out calculator. Hat, face and weapon belong to each class; every ring in the
+  // files is Common, so rings never go through these rarities.
+  const PIECES = [["weapon", tr("Weapon")], ["hat", tr("Hat")], ["face", tr("Face")]];
+  const maxOut = { rarity: "Mystic1", fromBelow: true, star: 0, classes: 18, pieces: { weapon: true, hat: true, face: true }, pearls: true, lines: 3 };
   const byKey = () => Object.fromEntries(data.rarities.map((r) => [r.key, r]));
 
   const lang = () => document.documentElement.lang || undefined;
@@ -192,6 +196,90 @@
     }
   }
 
+  // ── Max-out calculator ───────────────────────────────────────────────────
+  function maxOutBag() {
+    const f = data.forge;
+    const bag = new Map();
+    const add = (list, times) => (list || []).forEach((c) => {
+      const e = bag.get(c.item) || { name: c.name, count: 0 };
+      e.count += c.count * times;
+      bag.set(c.item, e);
+    });
+    const stars = (r, from) => { for (let lv = from + 1; lv <= f.max_star; lv++) add(r.improve_cost[String(lv)], 1); };
+    const target = byKey()[maxOut.rarity];
+    if (maxOut.rarity === f.raise_to && maxOut.fromBelow) {
+      stars(byKey()[f.raise_from], maxOut.star);
+      add(target.raise_cost, 1);
+      stars(target, 0);
+    } else {
+      stars(target, maxOut.star);
+    }
+    if (maxOut.pearls) {
+      const op = f.stations.flatMap((s) => s.operations).find((o) => o.key === "AddStatBonus");
+      const pearl = op && op.cost && op.cost[0];
+      if (pearl) add([pearl], (f.max_lines - maxOut.lines) + f.max_lines * f.max_boosts_per_line);
+    }
+    return bag;
+  }
+
+  function renderMaxOut() {
+    const f = data.forge;
+    const host = document.getElementById("gr-maxout");
+    host.textContent = "";
+    const raising = maxOut.rarity === f.raise_to;
+    const startName = rarityName(byKey()[raising && maxOut.fromBelow ? f.raise_from : maxOut.rarity]);
+    const toggle = (label, on, onFlip) => h("button", {
+      type: "button", class: "gr-chk" + (on ? " on" : ""), "aria-pressed": on ? "true" : "false", onClick: onFlip,
+    }, h("i", { class: on ? "fa-solid fa-square-check" : "fa-regular fa-square", "aria-hidden": "true" }), " " + label);
+
+    const classes = h("input", { class: "gr-input gr-num", id: "gr-mo-classes", type: "number", min: 1, max: 18, value: maxOut.classes });
+    classes.addEventListener("change", (e) => {
+      maxOut.classes = Math.min(18, Math.max(1, parseInt(e.target.value, 10) || 1));
+      renderMaxOut();
+    });
+
+    const controls = h("div", { class: "gr-calc-controls" },
+      h("label", { class: "gr-field", for: "gr-mo-rarity" },
+        h("span", { class: "gr-field-label" }, t("Target rarity")),
+        raritySelect("gr-mo-rarity", maxOut.rarity, (v) => { maxOut.rarity = v; renderMaxOut(); }, (x) => x.improve_cost)),
+      raising ? toggle(t("Start from a {r} item").replace("{r}", rarityName(byKey()[f.raise_from])), maxOut.fromBelow,
+        () => { maxOut.fromBelow = !maxOut.fromBelow; renderMaxOut(); }) : null,
+      segmented(t("{r} star level it starts at").replace("{r}", startName), [0, 1, 2, 3, 4], maxOut.star,
+        (v) => { maxOut.star = v; renderMaxOut(); }),
+      h("label", { class: "gr-field", for: "gr-mo-classes" }, h("span", { class: "gr-field-label" }, t("Classes")), classes),
+      h("div", { class: "gr-field", role: "group", "aria-label": t("Pieces per class") },
+        h("span", { class: "gr-field-label" }, t("Pieces per class")),
+        h("div", { class: "gr-chks" }, PIECES.map(([key, label]) => toggle(t(label), maxOut.pieces[key],
+          () => { maxOut.pieces[key] = !maxOut.pieces[key]; renderMaxOut(); })))),
+      toggle(t("Include Pearls of Wisdom"), maxOut.pearls, () => { maxOut.pearls = !maxOut.pearls; renderMaxOut(); }),
+      maxOut.pearls ? segmented(t("Stat lines each item already has"), [1, 2, 3], maxOut.lines,
+        (v) => { maxOut.lines = v; renderMaxOut(); }) : null);
+
+    const pieces = PIECES.filter(([key]) => maxOut.pieces[key]).length;
+    const items = pieces * maxOut.classes;
+    const bag = maxOutBag();
+    const rows = [...bag.values()].map((e) => h("tr", {},
+      h("th", { class: "l", scope: "row" }, e.name),
+      h("td", { class: "r" }, fmt(e.count, 0)),
+      h("td", { class: "r strong" }, fmt(e.count * items, 0))));
+    const result = h("div", { class: "gr-maxout-result" },
+      h("p", { class: "gr-count", role: "status" },
+        t("{c} classes × {p} pieces = {n} items").replace("{c}", maxOut.classes).replace("{p}", pieces).replace("{n}", fmt(items, 0))),
+      items ? h("div", { class: "gr-table-wrap" }, h("table", { class: "gr-table" },
+        h("thead", {}, h("tr", {},
+          h("th", { class: "l", scope: "col" }, t("Material")),
+          h("th", { class: "r", scope: "col" }, t("Per item")),
+          h("th", { class: "r", scope: "col" }, t("All {n} items").replace("{n}", fmt(items, 0))))),
+        h("tbody", {}, rows))) : null,
+      h("p", { class: "gr-fine" }, raising && maxOut.fromBelow
+        ? t("Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.")
+          .replace("{from}", rarityName(byKey()[f.raise_from])).replace("{to}", rarityName(byKey()[f.raise_to]))
+        : t("Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.")));
+
+    host.appendChild(controls);
+    host.appendChild(result);
+  }
+
   // ── Pearls and stations ──────────────────────────────────────────────────
   function renderPearls() {
     const f = data.forge;
@@ -290,6 +378,7 @@
     renderCalc();
     renderRarities();
     renderForge();
+    renderMaxOut();
     renderPearls();
     renderBannerControls();
     renderBanners();

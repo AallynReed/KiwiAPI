@@ -3615,5 +3615,19 @@
   "With pearls": "Avec perles",
   "{n} stat sets": "{n} jeux de stats",
   "Loading the game's gem data...": "Chargement des données de gemmes du jeu...",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "Les gemmes en dessous de Radiant n'existent qu'en version Mineure, et les fichiers du jeu ne donnent pas leur Rang de puissance : ces lignes affichent donc un tiret."
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "Les gemmes en dessous de Radiant n'existent qu'en version Mineure, et les fichiers du jeu ne donnent pas leur Rang de puissance : ces lignes affichent donc un tiret.",
+  "Max-out cost": "Coût pour tout maximiser",
+  "What it costs to max out": "Ce que coûte un équipement au maximum",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "Choisissez la rareté visée et la quantité d'équipement à améliorer, et obtenez la liste de courses complète.",
+  "Target rarity": "Rareté visée",
+  "Start from a {r} item": "Partir d'un objet {r}",
+  "{r} star level it starts at": "Niveau d'étoiles de départ en {r}",
+  "Pieces per class": "Pièces par classe",
+  "Include Pearls of Wisdom": "Inclure les Pearls of Wisdom",
+  "Stat lines each item already has": "Lignes de stats déjà présentes sur chaque objet",
+  "{c} classes × {p} pieces = {n} items": "{c} classes × {p} pièces = {n} objets",
+  "Per item": "Par objet",
+  "All {n} items": "Les {n} objets",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Amène chaque objet à +5. Pearls : 2 sur chaque ligne de stats, plus 1 par ligne manquante sur un objet.",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Amène chaque objet à {from} +5, le fait passer en {to}, puis de nouveau à +5. Pearls : 2 sur chaque ligne de stats, plus 1 par ligne manquante sur un objet."
 }

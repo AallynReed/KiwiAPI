@@ -89,6 +89,17 @@
 .gr-raise p { color: var(--text-mute); line-height: 1.6; margin: 0 0 .4rem; }
 .gr-cost-line strong { color: var(--text); }
 
+/* ── Max-out calculator ───────────────────────────────────────────────────── */
+.gr-maxout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 1.5rem 2.5rem; align-items: start; }
+.gr-maxout-result .gr-table-wrap { margin-top: .4rem; }
+.gr-num { min-width: 0; width: 7rem; }
+.gr-chks { display: flex; flex-wrap: wrap; gap: .4rem .8rem; }
+.gr-chk { display: inline-flex; align-items: center; gap: .45rem; width: fit-content; padding: 6px 2px; font: inherit; color: var(--text-mute); background: none; border: 0; cursor: pointer; }
+.gr-chk.on { color: var(--text); }
+.gr-chk.on i { color: var(--accent); }
+.gr-chk:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (max-width: 760px) { .gr-maxout { grid-template-columns: 1fr; } }
+
 /* ── Pearls and stations ──────────────────────────────────────────────────── */
 .gr-rules { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 0 2.5rem; }
 .gr-rules li { display: flex; gap: .9rem; padding: 1rem 0; border-top: 1px solid var(--bg-line); }

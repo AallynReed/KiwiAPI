@@ -3615,5 +3615,19 @@
   "With pearls": "진주 포함",
   "{n} stat sets": "스탯 구성 {n}종",
   "Loading the game's gem data...": "게임의 보석 데이터를 불러오는 중...",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "레이디언트 아래 보석은 하급 보석만 있고, 게임 파일에 파워 랭크가 없어서 그 행은 대시로 표시됩니다."
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "레이디언트 아래 보석은 하급 보석만 있고, 게임 파일에 파워 랭크가 없어서 그 행은 대시로 표시됩니다.",
+  "Max-out cost": "최대 강화 비용",
+  "What it costs to max out": "최대까지 강화하는 비용",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "목표 희귀도와 강화할 장비 수를 고르면 필요한 재료 전체 목록이 나옵니다.",
+  "Target rarity": "목표 희귀도",
+  "Start from a {r} item": "{r} 아이템에서 시작",
+  "{r} star level it starts at": "시작 시 {r} 별 단계",
+  "Pieces per class": "클래스별 장비",
+  "Include Pearls of Wisdom": "Pearl of Wisdom 포함",
+  "Stat lines each item already has": "아이템마다 이미 있는 능력치 줄",
+  "{c} classes × {p} pieces = {n} items": "클래스 {c}개 × 장비 {p}개 = 아이템 {n}개",
+  "Per item": "아이템당",
+  "All {n} items": "아이템 {n}개 전체",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "각 아이템을 +5로 올립니다. Pearl: 능력치 줄마다 2개, 그리고 아이템에 없는 줄마다 1개씩 추가.",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "각 아이템을 {from} +5로 올리고 {to}로 승급한 다음 다시 +5로 올립니다. Pearl: 능력치 줄마다 2개, 그리고 아이템에 없는 줄마다 1개씩 추가."
 }

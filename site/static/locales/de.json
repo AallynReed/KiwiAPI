@@ -3615,5 +3615,19 @@
   "With pearls": "Mit Perlen",
   "{n} stat sets": "{n} Wertesätze",
   "Loading the game's gem data...": "Die Edelsteindaten des Spiels werden geladen...",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "Edelsteine unter Strahlend gibt es nur als geringe Edelsteine, und die Spieldateien nennen ihren Machtrang nicht - dort steht deshalb ein Strich."
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "Edelsteine unter Strahlend gibt es nur als geringe Edelsteine, und die Spieldateien nennen ihren Machtrang nicht - dort steht deshalb ein Strich.",
+  "Max-out cost": "Kosten bis zum Maximum",
+  "What it costs to max out": "Was es kostet, alles zu maximieren",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "Wähle die Seltenheit, die du anpeilst, und wie viel Ausrüstung du aufwertest, und du bekommst die komplette Einkaufsliste.",
+  "Target rarity": "Ziel-Seltenheit",
+  "Start from a {r} item": "Mit einem {r}-Gegenstand beginnen",
+  "{r} star level it starts at": "Sternstufe der {r}-Gegenstände zu Beginn",
+  "Pieces per class": "Teile pro Klasse",
+  "Include Pearls of Wisdom": "Pearls of Wisdom einrechnen",
+  "Stat lines each item already has": "Wertezeilen, die jeder Gegenstand schon hat",
+  "{c} classes × {p} pieces = {n} items": "{c} Klassen × {p} Teile = {n} Gegenstände",
+  "Per item": "Pro Gegenstand",
+  "All {n} items": "Alle {n} Gegenstände",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Bringt jeden Gegenstand auf +5. Pearls: 2 auf jede Wertezeile, plus 1 für jede Zeile, die einem Gegenstand noch fehlt.",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Bringt jeden Gegenstand auf {from} +5, hebt ihn auf {to} an und bringt ihn dann wieder auf +5. Pearls: 2 auf jede Wertezeile, plus 1 für jede Zeile, die einem Gegenstand noch fehlt."
 }

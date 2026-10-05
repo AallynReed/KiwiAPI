@@ -3452,5 +3452,19 @@
   "With pearls": "รวมเพิร์ล",
   "{n} stat sets": "ชุดสเตตัส {n} ชุด",
   "Loading the game's gem data...": "กำลังโหลดข้อมูลอัญมณีของเกม...",
-  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "อัญมณีที่ต่ำกว่า Radiant มีแค่แบบ Lesser และไฟล์เกมไม่ได้ระบุ Power Rank ของมัน แถวเหล่านั้นจึงแสดงเป็นขีดแทน"
+  "Gems below Radiant only come as Lesser gems, and the game files don't give their Power Rank, so those rows show a dash instead.": "อัญมณีที่ต่ำกว่า Radiant มีแค่แบบ Lesser และไฟล์เกมไม่ได้ระบุ Power Rank ของมัน แถวเหล่านั้นจึงแสดงเป็นขีดแทน",
+  "Max-out cost": "ค่าตีบวกเต็ม",
+  "What it costs to max out": "ตีบวกจนเต็มต้องใช้เท่าไร",
+  "Pick the rarity you're aiming for and how much gear you're upgrading, and get the whole shopping list.": "เลือกความหายากที่ต้องการและจำนวนอุปกรณ์ที่จะตีบวก แล้วรับรายการวัตถุดิบทั้งหมด",
+  "Target rarity": "ความหายากเป้าหมาย",
+  "Start from a {r} item": "เริ่มจากไอเทม {r}",
+  "{r} star level it starts at": "ระดับดาวเริ่มต้นของ {r}",
+  "Pieces per class": "ชิ้นต่อคลาส",
+  "Include Pearls of Wisdom": "รวม Pearl of Wisdom",
+  "Stat lines each item already has": "จำนวนบรรทัดค่าสถานะที่ไอเทมมีอยู่แล้ว",
+  "{c} classes × {p} pieces = {n} items": "{c} คลาส × {p} ชิ้น = {n} ไอเทม",
+  "Per item": "ต่อไอเทม",
+  "All {n} items": "ทั้งหมด {n} ไอเทม",
+  "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "ตีบวกไอเทมแต่ละชิ้นเป็น +5 Pearl: บรรทัดค่าสถานะละ 2 อัน บวกอีก 1 อันต่อบรรทัดที่ไอเทมยังขาด",
+  "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "ตีบวกไอเทมแต่ละชิ้นเป็น {from} +5 อัปเป็น {to} แล้วตีบวกเป็น +5 อีกครั้ง Pearl: บรรทัดค่าสถานะละ 2 อัน บวกอีก 1 อันต่อบรรทัดที่ไอเทมยังขาด"
 }
