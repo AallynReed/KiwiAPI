@@ -372,17 +372,20 @@
           h("th", { class: "l", scope: "row" }, line),
           h("td", { class: "l" }, pool(w)), h("td", { class: "l" }, pool(f)), h("td", { class: "l" }, pool(hat))))))));
     });
-    // Ring line 1 is the one part the game files do state: the ring's kind.
+    // Ring line 1 is the one part the game files do state: the ring's kind. Crystal and
+    // Mystic rings get Light inserted as line 2, pushing the random line to 3.
     const kinds = ((data.slots.find((x) => x.key === "Ring") || {}).item_types || []).map((it) => t(it.name));
+    const box = h("span", {}, t("Set by the ring box you open"), kinds.length ? ": " + kinds.join(", ") : "");
+    const none = () => h("span", { class: "gr-no" }, "-");
+    const ringRows = [["1", box, box.cloneNode(true)], ["2", pool([LT]), pool(RING_ROLL)], ["3", pool(RING_ROLL), none()]];
     host.appendChild(h("h3", {}, t("Rings")));
     host.appendChild(h("div", { class: "gr-table-wrap" }, h("table", { class: "gr-table gr-roll-table" },
-      h("thead", {}, h("tr", {}, h("th", { class: "l", scope: "col" }, t("Line")), h("th", { class: "l", scope: "col" }, t("Can roll")))),
-      h("tbody", {},
-        h("tr", {}, h("th", { class: "l", scope: "row" }, "1"),
-          h("td", { class: "l" }, t("Set by the ring box you open"), kinds.length ? ": " + kinds.join(", ") : "")),
-        h("tr", {}, h("th", { class: "l", scope: "row" }, "2"), h("td", { class: "l" },
-          h("div", { class: "gr-ring-part" }, h("span", { class: "gr-ring-which" }, t("Crystal and Mystic rings")), pool([LT])),
-          h("div", { class: "gr-ring-part" }, h("span", { class: "gr-ring-which" }, t("Other rings")), pool(RING_ROLL))))))));
+      h("thead", {}, h("tr", {},
+        h("th", { class: "l", scope: "col" }, t("Line")),
+        h("th", { class: "l", scope: "col" }, t("Crystal and Mystic rings")),
+        h("th", { class: "l", scope: "col" }, t("Other rings")))),
+      h("tbody", {}, ringRows.map(([line, a, b]) => h("tr", {},
+        h("th", { class: "l", scope: "row" }, line), h("td", { class: "l" }, a), h("td", { class: "l" }, b)))))));
     host.appendChild(h("p", { class: "gr-fine" }, t("A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.")));
   }
 
