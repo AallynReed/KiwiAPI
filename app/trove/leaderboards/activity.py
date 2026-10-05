@@ -310,7 +310,9 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
     # record_active_window - so a rollup is an indexed COUNT(DISTINCT), not a
     # re-scan of days of entries). Monotonic: 7d ⊇ 24h ⊇ this window.
     from app.trove.leaderboards import pg_store as _pg
-    stamps_desc = await lb_service.list_timestamps(limit=500, include_archive=True)
+    # Floored at the stretched 7d rollup: an unbounded walk reaches the cold tier.
+    stamps_desc = await lb_service.list_timestamps(
+        limit=1000, since=anchor_late - _ACTIVE_RETENTION_SECONDS)
     early_24h = _pick_early_anchor(stamps_desc, anchor_late, _DAY)
     early_7d = _pick_early_anchor(stamps_desc, anchor_late, 7 * _DAY)
 

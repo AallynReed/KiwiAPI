@@ -255,7 +255,9 @@ async def estimate_class_activity(*, force: bool = False) -> dict:
     recompute the latest pair (cheap: one 18-board load each side)."""
     global _LAST_GOOD
     from app.trove.leaderboards import pg_store
-    stamps_desc = await lb_service.list_timestamps(limit=500, include_archive=True)
+    # Floored at the stretched 24h rollup: an unbounded walk reaches the cold tier.
+    stamps_desc = await lb_service.list_timestamps(
+        limit=500, since=int(time.time()) - _ACTIVE_RETENTION_SECONDS)
     if len(stamps_desc) < 2:
         return _LAST_GOOD or _empty()
     anchor_late, anchor_early = stamps_desc[0], stamps_desc[1]
@@ -379,7 +381,8 @@ async def class_activity_current() -> dict:
     if cached is not None:
         return cached
 
-    stamps = await lb_service.list_timestamps(limit=60, include_archive=True)
+    stamps = await lb_service.list_timestamps(
+        limit=500, since=int(time.time()) - _ACTIVE_RETENTION_SECONDS)
     if not stamps:
         return _LAST_GOOD_DONUT or _empty()
     anchor = stamps[0]
