@@ -1259,8 +1259,9 @@ async def get_class_activity_current(
     board (Paragon is excluded as ambiguous), plus each class's `share` of that
     total. The clean fields apply the established floors (Power Rank + Effort).
     `share` sums to 1 across classes but counts a multi-class player in each, so
-    it's share-of-players, not distinct players. (The time-series endpoint stays
-    activity-based - score rose between captures.)"""
+    it's share-of-players, not distinct players. `effort_added` covers the last 24
+    hours. (The time-series endpoint stays activity-based - score rose between
+    captures.)"""
     from app.admin import runtime_config
     payload = await leaderboards_class_activity.class_activity_current()
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -1270,17 +1271,19 @@ async def get_class_activity_current(
 
 @class_activity_router.get(
     "/series", response_model=ClassActivitySeriesResponse,
-    summary="Bucketed per-class active-player series for a period (1d … all)",
+    summary="Bucketed per-class daily active-player series for a period (7d … all)",
 )
 async def get_class_activity_series(
     response: Response,
-    period: str = Query(default="7d", description="1d / 7d / 1m / 3m / 6m / 1y / all"),
+    period: str = Query(default="7d", description="7d / 1m / 3m / 6m / 1y / all (anything else falls back to 7d)"),
     ctx: AccessContext = _ACTIVITY_PUBLIC,
 ) -> ClassActivitySeriesResponse:
-    """**Tokenless.** Downsampled per-class activity-level series for one period -
-    the data behind the Class Activity page's multi-line chart. `buckets` is the
-    shared time axis; each class line's `values` align to it (null where that
-    class had no measurable window in a bucket - e.g. across the weekly reset)."""
+    """**Tokenless.** Downsampled per-class daily-activity series for one period -
+    the data behind the Class Activity page's multi-line chart. Each value is the
+    average number of players active on the class in the 24h up to each capture in
+    the bucket. `buckets` is the shared time axis; each class line's `values` align
+    to it (null where that class had no measurable 24h in a bucket - e.g. the day
+    after the weekly reset)."""
     from app.admin import runtime_config
     payload = await leaderboards_class_activity.class_activity_series(period=period)
     ttl = int(await runtime_config.get_setting("cheaters_cache_ttl_seconds"))
@@ -1308,10 +1311,11 @@ async def backfill_class_activity_history(
     ),
     _auth=_LB_MASTER,
 ) -> dict:
-    """**Master only.** Seed the per-class activity history from the stored
-    Postgres captures so the Class Activity charts have history. Accepted **202**
-    immediately and run in the BACKGROUND (memory-safe streaming; only the 36
-    Effort/Paragon boards load per anchor). `reset=true` wipes first."""
+    """**Master only.** Rebuild the per-class activity history (incl. the 24h
+    counts the chart plots) from the stored Postgres captures. Accepted **202**
+    immediately and run in the BACKGROUND (memory-safe streaming; only the 18
+    Effort boards + the clean-view gate boards load per anchor). `reset=true`
+    wipes first."""
     background_tasks.add_task(
         leaderboards_class_activity.backfill_class_history_chunked,
         total_days=total_days, force=force, reset=reset,

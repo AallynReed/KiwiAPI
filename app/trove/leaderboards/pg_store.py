@@ -129,7 +129,8 @@ async def reset_all(*, drop_boards: bool = False) -> dict:
         async with con.transaction():
             await con.execute(
                 "TRUNCATE entry, player, activity_estimate, activity_active, "
-                "class_activity_estimate, player_rename, player_duplicate, "
+                "class_activity_estimate, class_activity_active, player_rename, "
+                "player_duplicate, "
                 "player_board_agg RESTART IDENTITY"
             )
             boards = 0
@@ -1028,29 +1029,94 @@ async def delete_all_estimates() -> int:
 async def upsert_class_estimates(rows: list[dict]) -> None:
     """Batch-upsert one window's per-class rows (≤ one per class). Each row:
     {class_index, window_end, window_start, duration_hours, estimate,
-    estimate_clean (int|None), computed_at}. ``estimate_clean`` is the
-    Power-Rank-filtered count (NULL when that view is unmeasurable)."""
+    estimate_clean (int|None), computed_at, estimate_24h?, estimate_24h_clean?}.
+    ``estimate_clean`` is the Power-Rank-filtered count (NULL when that view is
+    unmeasurable); the ``_24h`` pair is the class's 24h rollup at the window end."""
     if not rows:
         return
     async with acquire() as con:
         await con.executemany(
             "INSERT INTO class_activity_estimate "
             "(class_index, window_end, window_start, duration_hours, estimate, "
-            " estimate_clean, computed_at) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7) "
+            " estimate_clean, computed_at, estimate_24h, estimate_24h_clean) "
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) "
             "ON CONFLICT (class_index, window_end) DO UPDATE SET "
             "window_start = EXCLUDED.window_start, duration_hours = EXCLUDED.duration_hours, "
             "estimate = EXCLUDED.estimate, estimate_clean = EXCLUDED.estimate_clean, "
-            "computed_at = EXCLUDED.computed_at",
+            "computed_at = EXCLUDED.computed_at, estimate_24h = EXCLUDED.estimate_24h, "
+            "estimate_24h_clean = EXCLUDED.estimate_24h_clean",
             [(r["class_index"], r["window_end"], r["window_start"],
               r["duration_hours"], r["estimate"], r.get("estimate_clean"),
-              r["computed_at"]) for r in rows],
+              r["computed_at"], r.get("estimate_24h"), r.get("estimate_24h_clean"))
+             for r in rows],
         )
+
+
+async def record_class_active_window(window_end: int, sets: dict) -> None:
+    """Materialize one window's per-class active players, ``{class_index: (names,
+    clean_names | None)}``. Idempotent: replaces any rows for ``window_end``."""
+    rows = sorted({
+        (window_end, i, n.lower(), clean is not None and n in clean)
+        for i, (names, clean) in sets.items() for n in names if n
+    })
+    async with acquire() as con:
+        async with con.transaction():
+            await con.execute("DELETE FROM class_activity_active WHERE window_end = $1",
+                              window_end)
+            if rows:
+                await con.executemany(
+                    "INSERT INTO class_activity_active "
+                    "(window_end, class_index, player_lower, clean) VALUES ($1, $2, $3, $4) "
+                    "ON CONFLICT (window_end, class_index, player_lower) "
+                    "DO UPDATE SET clean = class_activity_active.clean OR EXCLUDED.clean",
+                    rows,
+                )
+
+
+async def class_rollup_since(early: int, late: int) -> dict[int, dict]:
+    """Per class over the windows in ``(early, late]``: the distinct ``raw`` /
+    ``clean`` active players, plus how many of those windows were measurable
+    (``windows`` = stored rows, ``clean_windows`` = rows with a clean count)."""
+    async with acquire() as con:
+        sets = await con.fetch(
+            "SELECT class_index, COUNT(DISTINCT player_lower) AS raw, "
+            "       COUNT(DISTINCT player_lower) FILTER (WHERE clean) AS clean "
+            "FROM class_activity_active WHERE window_end > $1 AND window_end <= $2 "
+            "GROUP BY class_index",
+            early, late,
+        )
+        windows = await con.fetch(
+            "SELECT class_index, count(*) AS windows, count(estimate_clean) AS clean_windows "
+            "FROM class_activity_estimate WHERE window_end > $1 AND window_end <= $2 "
+            "GROUP BY class_index",
+            early, late,
+        )
+    out: dict[int, dict] = {
+        r["class_index"]: {"raw": 0, "clean": 0, "windows": r["windows"],
+                           "clean_windows": r["clean_windows"]}
+        for r in windows
+    }
+    for r in sets:
+        if r["class_index"] in out:
+            out[r["class_index"]].update(raw=r["raw"], clean=r["clean"])
+    return out
+
+
+async def prune_class_active_windows(cutoff: int) -> int:
+    async with acquire() as con:
+        res = await con.execute("DELETE FROM class_activity_active WHERE window_end < $1", cutoff)
+    return int(res.split()[-1]) if res.startswith("DELETE") else 0
+
+
+async def delete_all_class_active_windows() -> int:
+    async with acquire() as con:
+        res = await con.execute("DELETE FROM class_activity_active")
+    return int(res.split()[-1]) if res.startswith("DELETE") else 0
 
 
 async def get_class_estimates(window_start: int | None = None) -> list[dict]:
     cols = ("class_index, window_end, window_start, duration_hours, estimate, "
-            "estimate_clean, computed_at")
+            "estimate_clean, computed_at, estimate_24h, estimate_24h_clean")
     async with acquire() as con:
         if window_start is None:
             rows = await con.fetch(

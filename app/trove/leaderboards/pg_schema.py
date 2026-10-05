@@ -178,6 +178,21 @@ ALTER TABLE class_activity_estimate ADD COLUMN IF NOT EXISTS estimate_clean INTE
 -- Distinct players active in the 24h ending at window_end (the chart's value).
 -- NULL = unmeasurable there (a capture gap stretches the window past ~36h).
 ALTER TABLE activity_estimate ADD COLUMN IF NOT EXISTS estimate_24h INTEGER;
+-- Same per class (raw / clean). NULL also when a window in the span was
+-- unmeasurable for the class (e.g. it crossed the weekly Effort reset).
+ALTER TABLE class_activity_estimate ADD COLUMN IF NOT EXISTS estimate_24h INTEGER;
+ALTER TABLE class_activity_estimate ADD COLUMN IF NOT EXISTS estimate_24h_clean INTEGER;
+
+-- Per-window, per-class active players (``clean`` = cleared the established
+-- floors at the window end): the class 24h rollup source, like activity_active.
+-- Short rolling retention, fully derived from the captures.
+CREATE TABLE IF NOT EXISTS class_activity_active (
+    window_end   BIGINT  NOT NULL,
+    class_index  INTEGER NOT NULL,
+    player_lower TEXT    NOT NULL,
+    clean        BOOLEAN NOT NULL,
+    PRIMARY KEY (window_end, class_index, player_lower)
+);
 """
 
 

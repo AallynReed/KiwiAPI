@@ -948,10 +948,10 @@ class ClassActivityItem(BaseModel):
     # Rank board is absent in the snapshot).
     active_players_clean: int | None = None
     share_clean: float | None = None
-    # Effort ADDED to this class's leaderboard in the latest hour (this capture vs
-    # the previous) - Σ positive per-player score gains. RAW = all players; CLEAN =
-    # those clearing the established floors. ``null`` when unmeasurable (no previous
-    # capture, or the pair crosses the weekly reset).
+    # Effort ADDED to this class's leaderboard in the last 24 hours (this capture vs
+    # the newest one at least 24h earlier) - Σ positive per-player score gains. RAW =
+    # all players; CLEAN = those clearing the established floors. ``null`` when
+    # unmeasurable (under 24h of captures, a gap past 36h, or a weekly reset inside).
     effort_added: int | None = None
     effort_added_clean: int | None = None
 
@@ -976,8 +976,8 @@ class ClassActivityCurrentResponse(BaseModel):
     duration_hours: float | None
     total_active: int | None
     total_active_clean: int | None = None
-    # Total Effort added across all classes in the latest hour (raw / established);
-    # null when unmeasurable (no previous capture, or pair crosses a weekly reset).
+    # Total Effort added across all classes in the last 24 hours (raw / established);
+    # null when unmeasurable (see ClassActivityItem.effort_added).
     total_effort_added: int | None = None
     total_effort_added_clean: int | None = None
     power_rank_threshold: int = 0
@@ -992,17 +992,18 @@ class ClassActivitySeriesLine(BaseModel):
     class_index: int
     name: str
     icon: str | None            # self-hosted icon URL (/static/class-icons/<qualified_name>.png)
-    values: list[float | None]  # RAW avg active/hr per bucket, aligned to `buckets`; null = no data
-    # CLEAN (Power-Rank-filtered) avg active/hr per bucket, aligned to `buckets`;
-    # null where that view had no measurable window in the bucket.
+    values: list[float | None]  # RAW avg 24h active players per bucket, aligned to `buckets`; null = no data
+    # CLEAN (established-filtered) avg 24h active players per bucket, aligned to
+    # `buckets`; null where that view had no measurable 24h in the bucket.
     values_clean: list[float | None] = []
 
 
 class ClassActivitySeriesResponse(BaseModel):
     """Per-class bucketed series for the Class Activity chart. ``buckets`` is the
     shared x-axis (one timestamp per bucket); each line's ``values`` (raw) and
-    ``values_clean`` (the clean/established view) align to it, with ``null`` where
-    that class had no measurable window in the bucket. ``power_rank_threshold`` /
+    ``values_clean`` (the clean/established view) align to it - the average of
+    each capture's 24h active-player count in the bucket - with ``null`` where that
+    class had no measurable 24h in the bucket. ``power_rank_threshold`` /
     ``effort_threshold`` / ``xp_threshold`` are the current clean-view floors (for
     display; the XP floor reads the global XP board, 21005, 0 = off)."""
     period: str

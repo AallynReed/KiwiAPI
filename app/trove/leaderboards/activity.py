@@ -62,21 +62,6 @@ _ROLLUP_SLACK = 1.5
 # Covers the stretched 7d rollup (7d x slack); older windows are pruned.
 _ACTIVE_RETENTION_SECONDS = 11 * _DAY
 
-# Missed-capture detection, still used by class activity (its chart is a per-hour
-# rate, which a window spanning a missed capture would under-count). Player
-# activity no longer skips such windows: a union of active sets stays honest
-# however long a window is.
-#
-# The cadence is NOT assumed to be hourly. We derive the gap cutoff from the DATA
-# (the median spacing of the surrounding captures), so a 2-hourly bot, a
-# re-ingested archive at another interval, or jittery captures don't get chopped
-# up - only genuinely-missed captures (markedly longer than the median) are
-# dropped. ``_GAP_FLOOR_HOURS`` is the floor so tight hourly data keeps its old
-# behaviour; ``_GAP_FACTOR`` is how many median-intervals long a window must be
-# to count as a gap.
-_GAP_FLOOR_HOURS = 1.5
-_GAP_FACTOR = 1.9
-
 # When a backfill is windowed (``since_ts`` given), enumerate anchors only back to
 # ``lo - this`` rather than the whole history: enough margin for the warm-up day
 # before ``lo`` plus that day's first EARLIER anchor, while partition-pruning skips
@@ -93,26 +78,10 @@ def _median(values: list[float]) -> float | None:
     return vals[mid] if n % 2 else (vals[mid - 1] + vals[mid]) / 2.0
 
 
-def _gap_threshold_hours(intervals_hours: list[float]) -> float:
-    """Per-run gap cutoff (hours): a window longer than this is a missed capture.
-    Derived from the median capture spacing so it adapts to any cadence; floored
-    so jittery hourly data isn't chopped into pieces."""
-    med = _median(intervals_hours)
-    if med is None:
-        return _GAP_FLOOR_HOURS
-    return max(_GAP_FLOOR_HOURS, med * _GAP_FACTOR)
-
-
 def _intervals_hours(anchors: list[int]) -> list[float]:
     """Consecutive spacings (hours) of a set of capture anchors, any order."""
     a = sorted(anchors)
     return [(a[i] - a[i - 1]) / 3600.0 for i in range(1, len(a))]
-
-
-def _is_gap(duration_hours: float | None, threshold: float = _GAP_FLOOR_HOURS) -> bool:
-    """A window that spans a missed capture (longer than the cadence-derived
-    ``threshold``). Defaults to the floor when no cadence is known."""
-    return duration_hours is not None and duration_hours > threshold
 
 
 async def estimate_active_players(*, force: bool = False) -> dict:
@@ -755,19 +724,6 @@ async def estimate_active_players_history(*, days: int = 7) -> dict:
         ),
     }
 
-
-# Period -> (lookback_days | None for all-time, bucket_seconds | None for
-# dynamic). Used by class activity, whose chart still averages a per-hour rate
-# per bucket.
-_SERIES_PERIODS: dict[str, tuple[int | None, int | None]] = {
-    "1d": (1, 3600),            # 24 hourly points
-    "7d": (7, 3600),            # ~168 hourly points
-    "1m": (30, 86400),          # 30 daily points
-    "3m": (90, 86400),          # 90 daily points
-    "6m": (180, 2 * 86400),     # 90 two-daily points
-    "1y": (365, 7 * 86400),     # ~52 weekly points
-    "all": (None, None),        # dynamic bucket, ~120 points
-}
 
 # The Player Activity periods: (lookback_days, minimum bucket_seconds). The value
 # plotted is the 24h rollup at each capture, so a shorter range than a week has

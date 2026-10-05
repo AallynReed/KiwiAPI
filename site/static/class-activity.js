@@ -8,7 +8,7 @@
 
   const { esc, fetchJSON, segmentGaps } = window.BTTUtil;
 
-  const PERIODS = ['1d', '7d', '1m', '3m', '6m', '1y', 'all'];
+  const PERIODS = ['7d', '1m', '3m', '6m', '1y', 'all'];   // every point is a 24h count, so no 1d
 
   // Per-class line colors, indexed by class_index (the boards' class RELEASE
   // order, 0=Knight … 17=Solarion - matching app/trove/stats.py's
@@ -70,7 +70,7 @@
   function viewShare(c) {
     return state.view === 'clean' ? c.share_clean : c.share;
   }
-  // Per-class Effort ADDED this hour for the active view (null = unmeasurable).
+  // Per-class Effort ADDED in the last 24h for the active view (null = unmeasurable).
   function viewEffort(c) {
     return state.view === 'clean' ? c.effort_added_clean : c.effort_added;
   }
@@ -85,7 +85,6 @@
   function troveDate(unix) { return new Date((unix + TROVE_OFFSET_SEC) * 1000); }
   function fmtAxis(unix, period, spanSec) {
     const dte = troveDate(unix);
-    if (period === '1d') return dte.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hourCycle: 'h23' });
     if (period === '7d') return dte.toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' });
     // Month/day while the window spans ≲6 months (covers 1m/3m and a young "all");
     // month+full year once ticks would land in different months anyway.
@@ -95,7 +94,7 @@
   }
   function fmtFull(unix, period) {
     const dte = troveDate(unix);
-    if (period === '1d' || period === '7d')
+    if (period === '7d')
       return dte.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hourCycle: 'h23' }) + ' server';
     return dte.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
   }
@@ -158,7 +157,7 @@
 
     if (buckets.length < 2) {
       host.innerHTML = `<div class="cact-empty" data-i18n>${
-        t('Not enough history stored for this range yet - it fills in as hourly captures accumulate.')
+        t('Not enough history stored for this range yet - it fills in as captures accumulate.')
       }</div>`;
       if (tip) tip.hidden = true;
       rerunI18n();
@@ -177,7 +176,7 @@
     const xRange = Math.max(1, xMax - xMin);
 
     // The chart plots each class's SHARE of total activity per bucket (lines at an
-    // x sum to ~100%); the raw per-hour player count rides along in the tooltip.
+    // x sum to ~100%); the 24h player count rides along in the tooltip.
     // Denominator = every class measurable in that bucket (NOT just the visible
     // ones), so toggling a class in the legend never rescales the others - matching
     // the donut's share semantics.
@@ -267,9 +266,9 @@
     }
     svg.appendChild(xG);
 
-    // Daily server-reset markers (Trove midnight = 11:00 UTC) on the short ranges
-    // where they stay legible - one thin line per server day.
-    if (p.period === '1d' || p.period === '7d') {
+    // Daily server-reset markers (Trove midnight = 11:00 UTC) on 7d, where they
+    // stay legible - one thin line per server day.
+    if (p.period === '7d') {
       const dg = svgEl('g', {});
       for (const rt of dailyResetLines(xMin, xMax)) {
         const x = xToPx(rt);
@@ -279,7 +278,7 @@
       svg.appendChild(dg);
     }
     // Weekly reset markers (Monday) drawn on top as a stronger accent.
-    if (p.period === '1d' || p.period === '7d' || p.period === '1m') {
+    if (p.period === '7d' || p.period === '1m') {
       const rg = svgEl('g', {});
       for (const rt of weeklyResetLines(xMin, xMax)) {
         const x = xToPx(rt);
@@ -453,13 +452,13 @@
     if (sub && cur.window_end) {
       sub.textContent = t('Share of players on each class, latest snapshot ({when}).').replace('{when}', fmtFull(cur.window_end, '7d'));
     }
-    // Total Effort added across all classes in the latest hour (active view).
+    // Total Effort added across all classes in the last 24h (active view).
     const totalEl = document.getElementById('cact-share-total');
     if (totalEl) {
       const te = state.view === 'clean' ? cur.total_effort_added_clean : cur.total_effort_added;
       totalEl.hidden = (te == null);
       if (te != null) {
-        totalEl.textContent = t('Effort added this hour: +{n}').replace('{n}', intl(te));
+        totalEl.textContent = t('Effort added in the last 24 hours: +{n}').replace('{n}', intl(te));
       }
     }
 

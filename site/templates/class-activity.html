@@ -61,7 +61,6 @@
             <div class="cact-chart-head">
                 <div class="cact-chart-controls">
                     <div class="cact-periods" id="cact-periods" role="tablist" aria-label="Time range">
-                        <button type="button" data-period="1d"  id="cact-tab-1d"  role="tab" aria-controls="cact-chart" aria-selected="false">1D</button>
                         <button type="button" data-period="7d"  id="cact-tab-7d"  role="tab" aria-controls="cact-chart" class="active" aria-selected="true">7D</button>
                         <button type="button" data-period="1m"  id="cact-tab-1m"  role="tab" aria-controls="cact-chart" aria-selected="false">1M</button>
                         <button type="button" data-period="3m"  id="cact-tab-3m"  role="tab" aria-controls="cact-chart" aria-selected="false">3M</button>
@@ -107,7 +106,7 @@
             </div>
         </section>
 
-        <p class="cact-method" data-i18n>Activity is estimated from each class's leaderboard, so it reflects active, higher-ranked players rather than a full headcount. The chart tracks each class's share of activity over time; the donut shows the split right now. "Established" hides brand-new characters and throwaway alts - "All" counts everyone. A player who plays several classes counts toward each, so the shares add up to 100% but aren't unique players.</p>
+        <p class="cact-method" data-i18n>Activity is estimated from each class's leaderboard, so it reflects active, higher-ranked players rather than a full headcount. Each point on the chart counts the players active on a class in the 24 hours before it; the donut shows the split right now. "Established" hides brand-new characters and throwaway alts - "All" counts everyone. A player who plays several classes counts toward each, so the shares add up to 100% but aren't unique players.</p>
     </main>
 
     {% include "partials/footer.html" %}

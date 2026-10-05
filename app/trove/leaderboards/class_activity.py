@@ -1,24 +1,29 @@
 """Per-CLASS active-player estimate, mirroring ``activity.py`` but grouped by
 Trove class instead of unioned across all boards.
 
-Each class has two leaderboards - Effort (``4000+i``) and Paragon (``5000+i``) -
-so ``class_index = board_uuid % 1000`` (see ``stats.class_index_for_board``). A
-class is "active" in a window when a player's score rose (or first appeared) on
-EITHER its Effort or its Paragon board (deduped). Both board families reset
-weekly (Mon 11:00 UTC), so windows that cross the reset are simply unmeasurable
-for those boards (``activity._active_set`` returns ``None``) and contribute no
-row - the series shows a gap there rather than a false zero.
+Each class has an Effort leaderboard (``4000+i``), so ``class_index = board_uuid
+% 1000`` (see ``stats.class_index_for_board``). A class is "active" in a capture
+window when a player's score rose (or first appeared) on its Effort board. Effort
+boards reset weekly (Mon 11:00 UTC), so a window that crosses the reset is
+unmeasurable (``activity._active_set`` returns ``None``) and contributes no row.
 
-We reuse activity.py's primitives wholesale (the score-delta rule, the per-anchor
-map loader, the cadence-derived gap detection) and only change the grouping. The
-estimate is a LOWER BOUND on players-per-class (same caveats as player activity),
-and the "share" is share-of-class-activity: a player who plays N classes counts
-in each, so shares sum to 100% but are not distinct players.
+Like player activity, the chart value is DAILY: the distinct players active on a
+class in the 24 hours up to each capture (``estimate_24h``), the union of every
+capture window in that span - so it doesn't depend on how often captures land.
+A span holding an unmeasurable window has no 24h value (the line gaps).
+
+We reuse activity.py's primitives (the score-delta rule, the per-anchor map
+loader, the rollup slack) and only change the grouping. The estimate is a LOWER
+BOUND on players-per-class (same caveats as player activity), and the "share" is
+share-of-class-activity: a player who plays N classes counts in each, so shares
+sum to 100% but are not distinct players.
 """
 from __future__ import annotations
 
+import bisect
 import logging
 import time
+from collections import deque
 
 from app.trove import stats
 from app.trove.leaderboards import activity as _act
@@ -42,16 +47,39 @@ _LAST_GOOD: dict | None = None
 # (see class_activity_current); a transient empty capture still serves the last good.
 _LAST_GOOD_DONUT: dict | None = None
 
+# A window this short that crosses the weekly reset (the bot captures again just
+# after it) counts as measured with no Effort activity, rather than unmeasurable:
+# losing those minutes barely moves a 24h union, and the day after the reset keeps
+# its value. Also covers the old hourly captures' reset hour.
+_SHORT_RESET_WINDOW_SECONDS = 75 * 60
+
+# Retention for the per-class active sets: enough for the stretched 24h rollup.
+_ACTIVE_RETENTION_SECONDS = 3 * _act._DAY
+
+# Period -> (lookback_days | None for all-time, minimum bucket_seconds | None for
+# dynamic). The value plotted is each capture's 24h count, so there's no 1d range;
+# buckets also widen to the capture cadence so every bucket holds a capture.
+_SERIES_PERIODS: dict[str, tuple[int | None, int | None]] = {
+    "7d": (7, 6 * 3600),        # ~28 points
+    "1m": (30, 86400),          # 30 daily points
+    "3m": (90, 86400),          # 90 daily points
+    "6m": (180, 2 * 86400),     # 90 two-daily points
+    "1y": (365, 7 * 86400),     # ~52 weekly points
+    "all": (None, None),        # dynamic bucket, ~120 points
+}
+
 _METHODOLOGY = (
     "Per class, distinct top-N players whose score rose (or who first appear) on "
-    "its Effort board between two consecutive captures. (Paragon boards are "
+    "its Effort board, counted over the 24 hours up to each capture (the union of "
+    "every capture window in that span). (Paragon boards are "
     "excluded as ambiguous - counts are Effort-only.) The default 'clean' "
     "(established) view keeps only players who, snapshot at the window end, clear "
     "every configured floor - Power Rank (1000+i board), Effort (4000+i) and XP "
     "(board 21005) - filtering new characters and throwaway alts; the 'All' view "
     "counts everyone. "
     "Effort boards reset weekly (Mon 11:00 UTC); a window crossing the reset is "
-    "unmeasurable and contributes no point. 'Share' is share of class activity (a "
+    "unmeasurable, so the 24 hours after it have no point. 'Share' is share of "
+    "class activity (a "
     "player active on several classes counts in each), not distinct players. Lower "
     "bound: players outside a board's top-N aren't seen."
 )
@@ -67,9 +95,10 @@ _DONUT_METHODOLOGY = (
     "class's count divided by "
     "the total across classes (a player on several classes counts in each), so "
     "shares sum to 100% but aren't distinct players. Each class also carries the "
-    "Effort ADDED in the latest hour (this capture vs the previous) - the sum of "
-    "positive score gains over players on its Effort board, per view; skipped right "
-    "after a weekly reset. Lower bound: players outside a board's top-N aren't seen."
+    "Effort ADDED in the last 24 hours (this capture vs the newest one at least 24h "
+    "earlier) - the sum of positive score gains over players on its Effort board, "
+    "per view; skipped when a weekly reset falls in that span. Lower bound: players "
+    "outside a board's top-N aren't seen."
 )
 
 
@@ -110,7 +139,7 @@ async def _clean_thresholds() -> tuple[int, int, int]:
             await _xp_threshold())
 
 
-def _class_counts(
+def _class_active_sets(
     early_maps: dict[int, dict[str, float]],
     late_maps: dict[int, dict[str, float]],
     early_ts: int,
@@ -121,23 +150,30 @@ def _class_counts(
     effort_threshold: float = 0,
     xp_map: dict[str, float] | None = None,
     xp_threshold: float = 0,
-) -> dict[int, dict]:
-    """``{class_index: {"raw": int, "clean": int|None}}`` for one (early, late) pair.
+) -> dict[int, tuple[set[str], set[str] | None]]:
+    """``{class_index: (active, clean_active | None)}`` for one (early, late) pair.
 
-    ``clean`` gates the raw active set on three floors at the LATE anchor - Power
-    Rank (``1000+i`` from ``pr_maps``), Effort (``4000+i`` from ``late_maps``) and,
-    when ``xp_threshold > 0``, XP (the global board ``_XP_BOARD`` via ``xp_map``).
-    A floor of 0 is a no-op, a player missing from a board reads as 0 (filtered).
-    ``clean`` is ``None`` (unmeasurable, stored as NULL so the clean line gaps)
-    when no Power Rank snapshot is available (``pr_maps`` None, or that board absent
-    at the anchor).
+    ``clean_active`` gates the active set on three floors at the LATE anchor -
+    Power Rank (``1000+i`` from ``pr_maps``), Effort (``4000+i`` from
+    ``late_maps``) and, when ``xp_threshold > 0``, XP (the global board
+    ``_XP_BOARD`` via ``xp_map``). A floor of 0 is a no-op, a player missing from a
+    board reads as 0 (filtered). It is ``None`` (unmeasurable, stored as NULL so the
+    clean line gaps) when no Power Rank snapshot is available (``pr_maps`` None, or
+    that board absent at the anchor).
 
     A class is OMITTED (no key) when its Effort board isn't measurable for the window
     (reset crossed / no early snapshot) so the caller stores nothing and the series
-    gaps; a measurable-but-quiet class keeps ``{"raw": 0, "clean": 0|None}``."""
+    gaps; a measurable-but-quiet class keeps an empty set. A reset-crossing window
+    no longer than ``_SHORT_RESET_WINDOW_SECONDS`` is measurable and empty."""
+    short_reset = (late_ts - early_ts <= _SHORT_RESET_WINDOW_SECONDS
+                   and lb_service.reset_boundaries_for_kind(_KIND, early_ts, late_ts))
     by_class: dict[int, set[str]] = {}
     for uuid, late in late_maps.items():
         if not late:
+            continue
+        if short_reset:
+            if early_maps.get(uuid):
+                by_class.setdefault(stats.class_index_for_board(uuid), set())
             continue
         s = _act._active_set(late, early_maps.get(uuid, {}), _KIND, early_ts, late_ts)
         if s is None:
@@ -149,20 +185,63 @@ def _class_counts(
     # read 0 and fail the floor). A player merely missing FROM a captured board
     # reads as 0 and is filtered, same as the other floors.
     xp_on = xp_threshold > 0 and xp_map is not None
-    out: dict[int, dict] = {}
+    out: dict[int, tuple[set[str], set[str] | None]] = {}
     for i, players in by_class.items():
-        clean: int | None = None
+        clean: set[str] | None = None
         if pr_maps is not None:
             pr = pr_maps.get(stats.class_pr_board_uuid(i))
             if pr is not None:
                 effort = late_maps.get(stats.class_effort_board_uuid(i), {})
-                clean = sum(
-                    1 for p in players
+                clean = {
+                    p for p in players
                     if pr.get(p, 0.0) >= threshold
                     and effort.get(p, 0.0) >= effort_threshold
                     and (not xp_on or xp_map.get(p, 0.0) >= xp_threshold)
-                )
-        out[i] = {"raw": len(players), "clean": clean}
+                }
+        out[i] = (players, clean)
+    return out
+
+
+def _counts_of(sets: dict[int, tuple[set[str], set[str] | None]]) -> dict[int, dict]:
+    """``{class_index: {"raw": int, "clean": int|None}}`` - the set sizes."""
+    return {i: {"raw": len(s), "clean": len(c) if c is not None else None}
+            for i, (s, c) in sets.items()}
+
+
+def _class_counts(early_maps, late_maps, early_ts, late_ts, **gates) -> dict[int, dict]:
+    """``_counts_of(_class_active_sets(...))`` (same arguments)."""
+    return _counts_of(_class_active_sets(early_maps, late_maps, early_ts, late_ts, **gates))
+
+
+def _rows(early: int, late: int, counts: dict[int, dict], rollups: dict[int, tuple],
+          now_ts: int) -> list[dict]:
+    """One window's ``class_activity_estimate`` rows (measurable classes only)."""
+    return [
+        {"class_index": i, "window_end": late, "window_start": early,
+         "duration_hours": round((late - early) / 3600.0, 2), "estimate": c["raw"],
+         "estimate_clean": c["clean"], "computed_at": now_ts,
+         "estimate_24h": rollups.get(i, (None, None))[0],
+         "estimate_24h_clean": rollups.get(i, (None, None))[1]}
+        for i, c in counts.items()
+    ]
+
+
+async def _stored_rollups_24h(stamps: list[int], late: int) -> dict[int, tuple]:
+    """``{class_index: (raw_24h, clean_24h)}`` at ``late`` from the materialized
+    per-class sets. A class gets a value only when every window in the span was
+    measurable for it (and the clean view only when every one had a clean count);
+    nothing when a capture gap stretched the span past the rollup slack."""
+    from app.trove.leaderboards import pg_store
+    asc = sorted(stamps)
+    j = bisect.bisect_right(asc, late - _act._DAY) - 1
+    early = asc[j] if j >= 0 else None
+    if early is None or not _act._rollup_measurable(early, late, _act._DAY):
+        return {}
+    n = sum(1 for s in stamps if early < s <= late)
+    out: dict[int, tuple] = {}
+    for i, r in (await pg_store.class_rollup_since(early, late)).items():
+        if r["windows"] >= n:
+            out[i] = (r["raw"], r["clean"] if r["clean_windows"] >= n else None)
     return out
 
 
@@ -170,23 +249,19 @@ def _class_counts(
 
 
 async def estimate_class_activity(*, force: bool = False) -> dict:
-    """Compute + persist the latest capture pair's per-class rows (warmer entry).
-    Idempotent upsert; returns the /current-shaped payload. ``force`` is accepted
-    for symmetry with activity.py but we always recompute the latest pair (cheap:
-    one 36-board load each side)."""
+    """Compute + persist the latest capture pair's per-class rows (warmer entry),
+    with each class's 24h rollup. Idempotent upsert; returns the /current-shaped
+    payload. ``force`` is accepted for symmetry with activity.py but we always
+    recompute the latest pair (cheap: one 18-board load each side)."""
     global _LAST_GOOD
-    stamps = await lb_service.list_timestamps(limit=500, include_archive=True)
-    if len(stamps) < 2:
+    from app.trove.leaderboards import pg_store
+    stamps_desc = await lb_service.list_timestamps(limit=500, include_archive=True)
+    if len(stamps_desc) < 2:
         return _LAST_GOOD or _empty()
-    stamps_desc = stamps
     anchor_late, anchor_early = stamps_desc[0], stamps_desc[1]
     if anchor_late <= anchor_early:
         return _LAST_GOOD or _empty()
-
     duration_h = (anchor_late - anchor_early) / 3600.0
-    gap_threshold = _act._gap_threshold_hours(_act._intervals_hours(stamps_desc))
-    if _act._is_gap(duration_h, gap_threshold):
-        return _LAST_GOOD or _empty()  # missed capture - withhold
 
     pr_thr, effort_thr, xp_thr = await _clean_thresholds()
     board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
@@ -196,21 +271,24 @@ async def estimate_class_activity(*, force: bool = False) -> dict:
     # the clean view (one extra query; Effort scores come from late_maps above).
     gate_uuids = stats.class_pr_board_uuids() + ([_XP_BOARD] if xp_thr > 0 else [])
     pr_maps = await _act._load_anchor_maps(anchor_late, gate_uuids)
-    counts = _class_counts(early_maps, late_maps, anchor_early, anchor_late,
-                           pr_maps=pr_maps, threshold=pr_thr, effort_threshold=effort_thr,
-                           xp_map=pr_maps.get(_XP_BOARD), xp_threshold=xp_thr)
+    sets = _class_active_sets(early_maps, late_maps, anchor_early, anchor_late,
+                              pr_maps=pr_maps, threshold=pr_thr,
+                              effort_threshold=effort_thr,
+                              xp_map=pr_maps.get(_XP_BOARD), xp_threshold=xp_thr)
+    counts = _counts_of(sets)
 
     now_ts = int(time.time())
     if counts:
-        from app.trove.leaderboards import pg_store
-        rows = [
-            {"class_index": i, "window_end": anchor_late, "window_start": anchor_early,
-             "duration_hours": round(duration_h, 2), "estimate": c["raw"],
-             "estimate_clean": c["clean"], "computed_at": now_ts}
-            for i, c in counts.items()
-        ]
         try:
-            await pg_store.upsert_class_estimates(rows)
+            # The window's own row must exist before its 24h rollup can count it
+            # as measurable; the rollup then rewrites the same rows.
+            await pg_store.record_class_active_window(anchor_late, sets)
+            await pg_store.prune_class_active_windows(anchor_late - _ACTIVE_RETENTION_SECONDS)
+            await pg_store.upsert_class_estimates(
+                _rows(anchor_early, anchor_late, counts, {}, now_ts))
+            rollups = await _stored_rollups_24h(stamps_desc, anchor_late)
+            await pg_store.upsert_class_estimates(
+                _rows(anchor_early, anchor_late, counts, rollups, now_ts))
         except Exception:
             logger.exception("class activity: persist failed for window_end=%d", anchor_late)
 
@@ -258,9 +336,9 @@ def _effort_deltas(
     pr_threshold: float, effort_threshold: float,
     xp_map: dict[str, float] | None = None, xp_threshold: float = 0,
 ) -> dict[int, dict]:
-    """Per-class Effort ADDED over the latest capture pair: Σ max(0, late - early)
+    """Per-class Effort ADDED between two snapshots: Σ max(0, late - early)
     over players on the class's Effort board in BOTH snapshots. New entrants are
-    excluded - their hour's gain is unmeasurable on a weekly-accumulating board.
+    excluded - their gain is unmeasurable on a weekly-accumulating board.
     ``clean`` gates on the Power-Rank + Effort + XP floors (None if the PR board
     is absent)."""
     xp_on = xp_threshold > 0 and xp_map is not None
@@ -276,7 +354,7 @@ def _effort_deltas(
         for p, lv in late.items():
             ev = early.get(p)
             if ev is None:
-                continue                       # new entrant - hour gain unknown
+                continue                       # new entrant - gain unknown
             gain = lv - ev
             if gain <= 0:
                 continue
@@ -301,7 +379,7 @@ async def class_activity_current() -> dict:
     if cached is not None:
         return cached
 
-    stamps = await lb_service.list_timestamps(limit=2, include_archive=True)
+    stamps = await lb_service.list_timestamps(limit=60, include_archive=True)
     if not stamps:
         return _LAST_GOOD_DONUT or _empty()
     anchor = stamps[0]
@@ -315,11 +393,15 @@ async def class_activity_current() -> dict:
     if not counts:
         return _LAST_GOOD_DONUT or _empty()
 
-    # Effort added in the latest hour (this capture vs the previous), per view.
-    # Skip when the pair crosses a weekly reset (scores zeroed → not "added").
-    if (len(stamps) >= 2
-            and not lb_service.reset_boundaries_for_kind("weekly", stamps[1], anchor)):
-        early_maps = await _act._load_anchor_maps(stamps[1], effort_boards)
+    # Effort added in the last 24 hours (this capture vs the newest one at least
+    # 24h earlier), per view. Skip when a gap stretches that span past the rollup
+    # slack, or a weekly reset falls inside it (scores zeroed → not "added").
+    asc = sorted(stamps)
+    j = bisect.bisect_right(asc, anchor - _act._DAY) - 1
+    early = asc[j] if j >= 0 else None
+    if (early is not None and _act._rollup_measurable(early, anchor, _act._DAY)
+            and not lb_service.reset_boundaries_for_kind("weekly", early, anchor)):
+        early_maps = await _act._load_anchor_maps(early, effort_boards)
         for i, d in _effort_deltas(effort_maps, early_maps, pr_maps, pr_thr, effort_thr,
                                    xp_map, xp_thr).items():
             if i in counts:
@@ -340,7 +422,7 @@ def _build_current(window_start, window_end, duration_h, counts: dict[int, dict]
     raw_total = sum(c["raw"] for c in counts.values())
     clean_present = [c["clean"] for c in counts.values() if c["clean"] is not None]
     clean_total = sum(clean_present) if clean_present else None
-    # Effort added this hour (donut only; absent on the activity-warmer payload).
+    # Effort added in the last 24h (donut only; absent on the activity-warmer payload).
     eff_raw = [c.get("effort_raw") for c in counts.values() if c.get("effort_raw") is not None]
     eff_clean = [c.get("effort_clean") for c in counts.values() if c.get("effort_clean") is not None]
     total_effort_added = sum(eff_raw) if eff_raw else None
@@ -407,9 +489,12 @@ async def backfill_class_history(
     *, force: bool = False, since_ts: int | None = None, until_ts: int | None = None,
     window_days: int = 7,
 ) -> dict:
-    """Rebuild per-class estimates for every consecutive capture pair in the
-    window. Streaming, 1-deep sliding window (peak memory ~one capture's 36-board
-    entries). Mirrors ``activity.backfill_history`` but grouped per class."""
+    """Rebuild per-class estimates (incl. the 24h rollups the chart plots) for every
+    consecutive capture pair in the window. Streaming, 1-deep sliding window plus a
+    day of per-class active sets for the rolling 24h union. The day before the
+    window is replayed too, unstored, so its first points get a full 24h. Mirrors
+    ``activity.backfill_history`` but grouped per class."""
+    from app.trove.leaderboards import cache as lb_cache
     from app.trove.leaderboards import pg_store
 
     lo = since_ts if since_ts is not None else int(time.time()) - max(1, window_days) * 86400
@@ -419,26 +504,28 @@ async def backfill_class_history(
     anchor_floor = None if lo <= 0 else max(0, lo - _act._BACKFILL_ANCHOR_MARGIN)
     stamps = await lb_service.list_timestamps(limit=1_000_000, since=anchor_floor)
     if not stamps:
-        return {"computed": 0, "skipped": 0, "gap_skipped": 0, "failed": 0,
-                "total": 0, "note": "no anchors stored"}
+        return {"computed": 0, "skipped": 0, "failed": 0, "total": 0,
+                "note": "no anchors stored"}
     stamps_asc = sorted(stamps)
 
     pairs = [
         (stamps_asc[i - 1], stamps_asc[i])
         for i in range(1, len(stamps_asc))
-        if stamps_asc[i] >= lo and (hi is None or stamps_asc[i] <= hi)
+        if stamps_asc[i] >= lo - _act._DAY and (hi is None or stamps_asc[i] <= hi)
     ]
-    if not pairs:
-        return {"computed": 0, "skipped": 0, "gap_skipped": 0, "failed": 0,
-                "total": 0, "note": "no pairs in window"}
+    stored = [p for p in pairs if p[1] >= lo]
+    if not stored:
+        return {"computed": 0, "skipped": 0, "failed": 0, "total": 0,
+                "note": "no pairs in window"}
 
     existing: set[int] = set()
     if not force:
-        existing = {r["window_end"] for r in await pg_store.get_class_estimates(pairs[0][1])}
-    todo = [p for p in pairs if p[1] not in existing]
-    if not todo:
-        return {"computed": 0, "skipped": len(pairs), "gap_skipped": 0, "failed": 0,
-                "total": len(pairs), "note": "all pairs already stored - use force=True"}
+        existing = {r["window_end"] for r in await pg_store.get_class_estimates(stored[0][1])}
+    todo_stored = [p for p in stored if p[1] not in existing]
+    if not todo_stored:
+        return {"computed": 0, "skipped": len(stored), "failed": 0,
+                "total": len(stored), "note": "all pairs already stored - use force=True"}
+    todo = [p for p in pairs if p[1] < lo] + todo_stored
 
     board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
     pr_thr, effort_thr, xp_thr = await _clean_thresholds()
@@ -447,85 +534,119 @@ async def backfill_class_history(
     needed = sorted({a for pr in todo for a in pr})
     early_of = {late: early for early, late in todo}
 
-    intervals = _act._intervals_hours(stamps_asc)
-    gap_threshold = _act._gap_threshold_hours(intervals)
     span_days = round((stamps_asc[-1] - stamps_asc[0]) / 86400.0, 1)
     logger.info(
-        "class activity backfill: %d pairs over %d anchors, %d classes; gap>%.2fh; "
-        "spans %.1f days", len(todo), len(needed), stats.class_count(), gap_threshold, span_days,
+        "class activity backfill: %d pairs over %d anchors, %d classes; spans %.1f days",
+        len(todo), len(needed), stats.class_count(), span_days,
     )
 
     started = time.time()
-    computed = failed = gap_skipped = empty_skipped = 0
+    active_floor = int(time.time()) - _ACTIVE_RETENTION_SECONDS
+    computed = failed = empty_skipped = 0
     prev_anchor: int | None = None
     prev_maps: dict[int, dict[str, float]] | None = None
+    # Contiguous run of this replay's windows, oldest first: (early, late, sets).
+    chain: deque[tuple[int, int, dict]] = deque()
 
     for idx, anchor in enumerate(needed):
         cur_maps = await _act._load_anchor_maps(anchor, board_uuids)
         early = early_of.get(anchor)
         if early is not None:
-            if _act._is_gap((anchor - early) / 3600.0, gap_threshold):
-                gap_skipped += 1
-                try:
-                    await pg_store.delete_class_estimate(anchor)
-                except Exception:
-                    logger.exception("class backfill: purge gap row late=%d failed", anchor)
-            else:
-                try:
-                    early_maps = prev_maps if (early == prev_anchor and prev_maps is not None) \
-                        else await _act._load_anchor_maps(early, board_uuids)
-                    # Power Rank (+ XP, when that floor is on) snapshot at the
-                    # window END gates the clean view.
-                    pr_maps = await _act._load_anchor_maps(anchor, pr_board_uuids)
-                    counts = _class_counts(early_maps, cur_maps, early, anchor,
-                                           pr_maps=pr_maps, threshold=pr_thr,
-                                           effort_threshold=effort_thr,
-                                           xp_map=pr_maps.get(_XP_BOARD),
-                                           xp_threshold=xp_thr)
-                    now_ts = int(time.time())
-                    rows = [
-                        {"class_index": i, "window_end": anchor, "window_start": early,
-                         "duration_hours": round((anchor - early) / 3600.0, 2),
-                         "estimate": c["raw"], "estimate_clean": c["clean"],
-                         "computed_at": now_ts}
-                        for i, c in counts.items()
-                    ]
-                    if rows:
-                        await pg_store.upsert_class_estimates(rows)
+            try:
+                early_maps = prev_maps if (early == prev_anchor and prev_maps is not None) \
+                    else await _act._load_anchor_maps(early, board_uuids)
+                # Power Rank (+ XP, when that floor is on) snapshot at the
+                # window END gates the clean view.
+                pr_maps = await _act._load_anchor_maps(anchor, pr_board_uuids)
+                sets = _class_active_sets(early_maps, cur_maps, early, anchor,
+                                          pr_maps=pr_maps, threshold=pr_thr,
+                                          effort_threshold=effort_thr,
+                                          xp_map=pr_maps.get(_XP_BOARD),
+                                          xp_threshold=xp_thr)
+                if anchor >= active_floor:
+                    await pg_store.record_class_active_window(anchor, sets)
+                if chain and chain[-1][1] != early:
+                    chain.clear()
+                chain.append((early, anchor, sets))
+                if anchor >= lo:
+                    counts = _counts_of(sets)
+                    if counts:
+                        # Row first: the table fallback counts it as measurable.
+                        await pg_store.upsert_class_estimates(
+                            _rows(early, anchor, counts, {}, int(time.time())))
+                        rollups = await _replay_rollups_24h(
+                            chain, stamps_asc, anchor, active_floor)
+                        if rollups:
+                            await pg_store.upsert_class_estimates(
+                                _rows(early, anchor, counts, rollups, int(time.time())))
                         computed += 1
                     else:
                         # reset-crossing window: purge any stale rows, store nothing
                         await pg_store.delete_class_estimate(anchor)
                         empty_skipped += 1
-                except Exception:
-                    failed += 1
-                    logger.exception("class backfill: pair late=%d failed", anchor)
+            except Exception:
+                failed += 1
+                chain.clear()
+                logger.exception("class backfill: pair late=%d failed", anchor)
         prev_anchor = anchor
         prev_maps = cur_maps
         if (idx + 1) % 20 == 0:
             logger.info("class activity backfill: %d/%d anchors, %d computed (%.1fs)",
                         idx + 1, len(needed), computed, time.time() - started)
 
+    if computed:
+        await lb_cache.invalidate_all_activity()   # sweeps the class series cache too
+
     summary = {
         "computed": computed,
-        "skipped": len(pairs) - len(todo),
-        "gap_skipped": gap_skipped,
+        "skipped": len(stored) - len(todo_stored),
         "empty_skipped": empty_skipped,
         "failed": failed,
-        "total": len(pairs),
+        "total": len(stored),
         "anchors": len(stamps_asc),
         "span_days": span_days,
-        "gap_threshold_hours": round(gap_threshold, 2),
         "elapsed_seconds": round(time.time() - started, 2),
     }
     logger.info("class activity backfill done: %s", summary)
     return summary
 
 
+async def _replay_rollups_24h(
+    chain: deque, stamps_asc: list[int], anchor: int, active_floor: int,
+) -> dict[int, tuple]:
+    """Per-class 24h rollups at ``anchor`` during a replay: unions of the in-memory
+    ``chain`` when it reaches back to the rollup's start (a class only where every
+    window in it was measurable for that class), else the materialized sets when
+    that span is still retained, else nothing."""
+    j = bisect.bisect_right(stamps_asc, anchor - _act._DAY) - 1
+    early = stamps_asc[j] if j >= 0 else None
+    if early is None:
+        return {}
+    while chain and chain[0][1] <= early:
+        chain.popleft()
+    if not _act._rollup_measurable(early, anchor, _act._DAY):
+        return {}
+    if not (chain and chain[0][0] <= early):
+        if early >= active_floor:
+            return await _stored_rollups_24h(stamps_asc, anchor)
+        return {}
+    out: dict[int, tuple] = {}
+    for i in chain[-1][2]:
+        if not all(i in w[2] for w in chain):
+            continue
+        raw = len(set().union(*(w[2][i][0] for w in chain)))
+        cleans = [w[2][i][1] for w in chain]
+        clean = (len(set().union(*cleans))
+                 if all(c is not None for c in cleans) else None)
+        out[i] = (raw, clean)
+    return out
+
+
 async def reset_class_estimates() -> int:
     from app.trove.leaderboards import cache as lb_cache
     from app.trove.leaderboards import pg_store
     deleted = await pg_store.delete_all_class_estimates()
+    await pg_store.delete_all_class_active_windows()
     reset_caches()
     await lb_cache.invalidate_all_activity()  # sweeps activity_class_series:* too
     logger.warning("class activity: RESET cleared %d stored estimates", deleted)
@@ -583,20 +704,21 @@ def _peak_preserve(avgs: list[float | None],
 
 async def class_activity_series(period: str = "7d") -> dict:
     """Per-class bucketed series for the Class Activity page. Shared x-axis
-    (``buckets``) + per-class ``values`` (avg active/hr in each bucket, null when
-    a class had no data in that bucket), so the page draws one aligned line per
-    class. Read-through Redis cache (short TTL)."""
+    (``buckets``) + per-class ``values`` (the average 24h active-player count of
+    the captures in each bucket, null when a class had no measurable 24h there),
+    so the page draws one aligned line per class. Unknown periods (incl. the
+    removed ``1d``) fall back to ``7d``. Read-through Redis cache (short TTL)."""
     from app.trove.leaderboards import cache as lb_cache
     from app.trove.leaderboards import pg_store
 
     period = (period or "7d").lower()
-    if period not in _act._SERIES_PERIODS:
+    if period not in _SERIES_PERIODS:
         period = "7d"
     cached = await lb_cache.get_class_activity_series(period)
     if cached is not None:
         return cached
 
-    days, bucket = _act._SERIES_PERIODS[period]
+    days, bucket = _SERIES_PERIODS[period]
     now_ts = int(time.time())
     if days is not None:
         window_start = now_ts - days * 86400
@@ -604,26 +726,23 @@ async def class_activity_series(period: str = "7d") -> dict:
     else:
         rows = await pg_store.get_class_estimates(None)
         window_start = rows[0]["window_end"] if rows else now_ts
+    rows = [r for r in rows if r.get("estimate_24h") is not None]
     if bucket is None:
         span = max(3600, now_ts - window_start)
         bucket = max(3600, (int(span / 120) // 3600) * 3600)
-
-    gap_threshold = _act._gap_threshold_hours(
-        sorted({r["duration_hours"] for r in rows})
-    )
+    cadence_h = _act._median(list({r["window_end"]: r["duration_hours"] for r in rows}.values()))
+    if cadence_h:
+        bucket = max(bucket, round(cadence_h) * 3600)
 
     # bucket -> {t_sum, t_n, classes: {i: {raw_sum, raw_n, raw_max, clean_sum,
-    # clean_n, clean_max}}}. Raw + clean (Power-Rank-filtered) per-hour rates are
+    # clean_n, clean_max}}}. Raw + clean (Power-Rank-filtered) 24h counts are
     # averaged independently; clean_n only counts rows that HAD a clean value (NULL
     # = unmeasurable, so the clean line gaps there even when the raw line has a
-    # point). ``raw_max``/``clean_max`` keep each bucket's busiest captured hour so
-    # the wide-timeframe line can spike to the true peak instead of the mean.
+    # point). ``raw_max``/``clean_max`` keep each bucket's busiest capture so the
+    # wide-timeframe line can spike to the true peak instead of the mean.
     agg: dict[int, dict] = {}
     for r in rows:
-        dur = r["duration_hours"] or 0.0
-        if _act._is_gap(dur, gap_threshold):
-            continue
-        raw_ph = (r["estimate"] / dur) if dur > 0 else 0.0
+        raw_v = float(r["estimate_24h"])
         b = (r["window_end"] // bucket) * bucket
         bd = agg.get(b)
         if bd is None:
@@ -636,17 +755,17 @@ async def class_activity_series(period: str = "7d") -> dict:
                 "raw_sum": 0.0, "raw_n": 0, "raw_max": 0.0,
                 "clean_sum": 0.0, "clean_n": 0, "clean_max": 0.0,
             }
-        c["raw_sum"] += raw_ph
+        c["raw_sum"] += raw_v
         c["raw_n"] += 1
-        if raw_ph > c["raw_max"]:
-            c["raw_max"] = raw_ph
-        cl = r["estimate_clean"]
+        if raw_v > c["raw_max"]:
+            c["raw_max"] = raw_v
+        cl = r.get("estimate_24h_clean")
         if cl is not None:
-            clean_ph = (cl / dur) if dur > 0 else 0.0
-            c["clean_sum"] += clean_ph
+            clean_v = float(cl)
+            c["clean_sum"] += clean_v
             c["clean_n"] += 1
-            if clean_ph > c["clean_max"]:
-                c["clean_max"] = clean_ph
+            if clean_v > c["clean_max"]:
+                c["clean_max"] = clean_v
 
     sorted_b = sorted(agg)
     buckets = [round(agg[b]["t_sum"] / agg[b]["t_n"]) for b in sorted_b]
