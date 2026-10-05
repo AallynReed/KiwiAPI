@@ -47,11 +47,11 @@ _LAST_GOOD: dict | None = None
 # (see class_activity_current); a transient empty capture still serves the last good.
 _LAST_GOOD_DONUT: dict | None = None
 
-# A window this short that crosses the weekly reset (the bot captures again just
-# after it) counts as measured with no Effort activity, rather than unmeasurable:
-# losing those minutes barely moves a 24h union, and the day after the reset keeps
-# its value. Also covers the old hourly captures' reset hour.
-_SHORT_RESET_WINDOW_SECONDS = 75 * 60
+# A window this short that crosses the weekly reset (the bot captures again at
+# it) counts as measured with no Effort activity, rather than unmeasurable: losing
+# that stretch barely moves a 24h union, and the day after the reset keeps its
+# value. Also covers the old hourly captures' reset hour and a late catch-up.
+_SHORT_RESET_WINDOW_SECONDS = 2 * 3600
 
 # Retention for the per-class active sets: enough for the stretched 24h rollup.
 _ACTIVE_RETENTION_SECONDS = 3 * _act._DAY
