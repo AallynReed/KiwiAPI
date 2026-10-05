@@ -3630,5 +3630,15 @@
   "All {n} items": "Alle {n} Gegenstände",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Bringt jeden Gegenstand auf +5. Pearls: 2 auf jede Wertezeile, plus 1 für jede Zeile, die einem Gegenstand noch fehlt.",
   "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Bringt jeden Gegenstand auf {from} +5, hebt ihn auf {to} an und bringt ihn dann wieder auf +5. Pearls: 2 auf jede Wertezeile, plus 1 für jede Zeile, die einem Gegenstand noch fehlt.",
-  "Legacy": "Veraltet"
+  "Legacy": "Veraltet",
+  "Stat rolls": "Werte-Würfe",
+  "Which stats each line of a piece of gear can roll. Trove's servers pick these, so the game files don't list them: this table comes from player reports.": "Welche Werte jede Zeile eines Ausrüstungsteils würfeln kann. Die Server von Trove legen sie fest, die Spieldateien enthalten sie also nicht: Diese Tabelle stammt aus Spielerberichten.",
+  "Crystal gear": "Kristall-Ausrüstung",
+  "Gear below Crystal": "Ausrüstung unter Kristall",
+  "Line": "Zeile",
+  "Weapons": "Waffen",
+  "Faces": "Gesichter",
+  "Hats": "Hüte",
+  "Set by the ring box you open": "Hängt von der geöffneten Ringbox ab",
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "Ein Wert kommt auf demselben Gegenstand nie doppelt vor. Festes Maximales Leben und Maximales Leben % zählen als verschiedene Werte."
 }

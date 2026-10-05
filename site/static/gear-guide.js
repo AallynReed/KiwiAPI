@@ -25,6 +25,27 @@
   // Stations still in the files but no longer used in game (not marked in the files).
   const LEGACY_STATIONS = new Set(["placeable/crafting/forge_vfx_interactive"]);
 
+  // Which stats each gear line can roll - from player reports, because the server
+  // picks them and the client files hold no pools (searched exhaustively 2026-10-05).
+  const PD = tr("Physical Damage"), MD = tr("Magic Damage"), MH = tr("Maximum Health"), MHP = tr("Maximum Health %");
+  const AS = tr("Attack Speed"), CD = tr("Critical Damage"), CH = tr("Critical Hit"), ER = tr("Energy Regen");
+  const HR = tr("Health Regen"), MS = tr("Movement Speed"), MF = tr("Magic Find"), JU = tr("Jump");
+  const ST = tr("Stability"), LT = tr("Light"), LM = tr("Lasermancy");
+  const ROLLS = [
+    { title: tr("Crystal gear"), rows: [
+      ["1", [MD, PD], [MH], [MH]],
+      ["2", [LT], [LT], [LT]],
+      ["3 / 5", [AS, CD, ER, MS, MH], [AS, CD, HR, MS], [AS, CD, HR, MS]],
+      ["4", [CH, MF, JU, ST, HR], [JU, MD, MF, MHP, PD, ST], [JU, LM, MF, MHP, ST]],
+    ] },
+    { title: tr("Gear below Crystal"), rows: [
+      ["1", [MD, PD], [MH], [MH]],
+      ["2 / 4", [AS, MS, ER, MH, CD], [AS, HR, MS, CD], [AS, HR, MS, CD]],
+      ["3", [CH, ST, HR, JU], [MD, ST, JU, MHP, PD], [LM, MF, JU, MHP, ST]],
+    ] },
+  ];
+  const RING_ROLL = [HR, ER, ST, CH, JU, MF];
+
   let data = null;
   const state = { rarity: "Crystal5", star: 5, pearls: [2, 2, 2], costRarity: "Crystal5", mode: "pve", query: "" };
   // Max-out calculator. Hat, face and weapon belong to each class; every ring in the
@@ -334,6 +355,35 @@
       body));
   }
 
+  // ── Stat rolls ───────────────────────────────────────────────────────────
+  function renderRolls() {
+    const host = document.getElementById("gr-rolls");
+    host.textContent = "";
+    const pool = (stats) => h("ul", { class: "gr-pool" }, stats.map((n) => h("li", {}, t(n))));
+    ROLLS.forEach((group) => {
+      host.appendChild(h("h3", {}, t(group.title)));
+      host.appendChild(h("div", { class: "gr-table-wrap" }, h("table", { class: "gr-table gr-roll-table" },
+        h("thead", {}, h("tr", {},
+          h("th", { class: "l", scope: "col" }, t("Line")),
+          h("th", { class: "l", scope: "col" }, t("Weapons")),
+          h("th", { class: "l", scope: "col" }, t("Faces")),
+          h("th", { class: "l", scope: "col" }, t("Hats")))),
+        h("tbody", {}, group.rows.map(([line, w, f, hat]) => h("tr", {},
+          h("th", { class: "l", scope: "row" }, line),
+          h("td", { class: "l" }, pool(w)), h("td", { class: "l" }, pool(f)), h("td", { class: "l" }, pool(hat))))))));
+    });
+    // Ring line 1 is the one part the game files do state: the ring's kind.
+    const kinds = ((data.slots.find((x) => x.key === "Ring") || {}).item_types || []).map((it) => t(it.name));
+    host.appendChild(h("h3", {}, t("Rings")));
+    host.appendChild(h("div", { class: "gr-table-wrap" }, h("table", { class: "gr-table gr-roll-table" },
+      h("thead", {}, h("tr", {}, h("th", { class: "l", scope: "col" }, t("Line")), h("th", { class: "l", scope: "col" }, t("Can roll")))),
+      h("tbody", {},
+        h("tr", {}, h("th", { class: "l", scope: "row" }, "1"),
+          h("td", { class: "l" }, t("Set by the ring box you open"), kinds.length ? ": " + kinds.join(", ") : "")),
+        h("tr", {}, h("th", { class: "l", scope: "row" }, "2"), h("td", { class: "l" }, pool(RING_ROLL)))))));
+    host.appendChild(h("p", { class: "gr-fine" }, t("A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.")));
+  }
+
   // ── Banners and torches ──────────────────────────────────────────────────
   const statText = (s) => "+" + fmt(s.value) + (s.percent ? "%" : "");
 
@@ -397,6 +447,7 @@
     renderForge();
     renderMaxOut();
     renderPearls();
+    renderRolls();
     renderBannerControls();
     renderBanners();
   }

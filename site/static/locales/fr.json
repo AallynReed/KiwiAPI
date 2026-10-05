@@ -3630,5 +3630,15 @@
   "All {n} items": "Les {n} objets",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Amène chaque objet à +5. Pearls : 2 sur chaque ligne de stats, plus 1 par ligne manquante sur un objet.",
   "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Amène chaque objet à {from} +5, le fait passer en {to}, puis de nouveau à +5. Pearls : 2 sur chaque ligne de stats, plus 1 par ligne manquante sur un objet.",
-  "Legacy": "Obsolète"
+  "Legacy": "Obsolète",
+  "Stat rolls": "Tirages de stats",
+  "Which stats each line of a piece of gear can roll. Trove's servers pick these, so the game files don't list them: this table comes from player reports.": "Les stats que chaque ligne d'une pièce d'équipement peut obtenir. Ce sont les serveurs de Trove qui les choisissent, les fichiers du jeu ne les contiennent donc pas : ce tableau vient de signalements de joueurs.",
+  "Crystal gear": "Équipement Cristal",
+  "Gear below Crystal": "Équipement en dessous de Cristal",
+  "Line": "Ligne",
+  "Weapons": "Armes",
+  "Faces": "Visages",
+  "Hats": "Chapeaux",
+  "Set by the ring box you open": "Dépend de la boîte à anneau que vous ouvrez",
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "Une stat n'apparaît jamais deux fois sur le même objet. La Santé maximale fixe et la Santé maximale % comptent comme des stats différentes."
 }

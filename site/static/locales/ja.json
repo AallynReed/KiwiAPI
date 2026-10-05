@@ -3630,5 +3630,15 @@
   "All {n} items": "全{n}個",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "各アイテムを+5にします。Pearl：ステータス枠ごとに2個、さらに足りない枠1つにつき1個。",
   "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "各アイテムを{from} +5にし、{to}に上げてから、もう一度+5にします。Pearl：ステータス枠ごとに2個、さらに足りない枠1つにつき1個。",
-  "Legacy": "旧仕様"
+  "Legacy": "旧仕様",
+  "Stat rolls": "ステータスの抽選",
+  "Which stats each line of a piece of gear can roll. Trove's servers pick these, so the game files don't list them: this table comes from player reports.": "装備の各ステータス枠に付く可能性のあるステータス。これはTroveのサーバーが決めるため、ゲームファイルには載っていません。この表はプレイヤーの報告をもとにしています。",
+  "Crystal gear": "クリスタル装備",
+  "Gear below Crystal": "クリスタル未満の装備",
+  "Line": "枠",
+  "Weapons": "武器",
+  "Faces": "顔",
+  "Hats": "帽子",
+  "Set by the ring box you open": "開けた指輪ボックスで決まります",
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "同じアイテムに同じステータスが2回付くことはありません。固定の最大体力と最大体力%は別のステータスとして扱われます。"
 }

@@ -3630,5 +3630,15 @@
   "All {n} items": "아이템 {n}개 전체",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "각 아이템을 +5로 올립니다. Pearl: 능력치 줄마다 2개, 그리고 아이템에 없는 줄마다 1개씩 추가.",
   "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "각 아이템을 {from} +5로 올리고 {to}로 승급한 다음 다시 +5로 올립니다. Pearl: 능력치 줄마다 2개, 그리고 아이템에 없는 줄마다 1개씩 추가.",
-  "Legacy": "레거시"
+  "Legacy": "레거시",
+  "Stat rolls": "능력치 굴림",
+  "Which stats each line of a piece of gear can roll. Trove's servers pick these, so the game files don't list them: this table comes from player reports.": "장비의 각 능력치 줄에 붙을 수 있는 능력치입니다. Trove 서버가 정하기 때문에 게임 파일에는 없습니다. 이 표는 플레이어 제보를 바탕으로 합니다.",
+  "Crystal gear": "크리스탈 장비",
+  "Gear below Crystal": "크리스탈 미만 장비",
+  "Line": "줄",
+  "Weapons": "무기",
+  "Faces": "얼굴",
+  "Hats": "모자",
+  "Set by the ring box you open": "여는 반지 상자에 따라 정해짐",
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "같은 아이템에 같은 능력치가 두 번 붙지 않습니다. 고정 최대 체력과 최대 체력 %는 서로 다른 능력치로 칩니다."
 }

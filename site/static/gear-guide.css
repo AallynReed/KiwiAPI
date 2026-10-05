@@ -107,6 +107,14 @@
 .gr-rules strong { display: block; margin-bottom: .25rem; }
 .gr-rules p { margin: 0; color: var(--text-mute); line-height: 1.55; }
 
+/* ── Stat rolls ───────────────────────────────────────────────────────────── */
+.gr-rolls h3 { margin-top: 1.6rem; }
+.gr-rolls h3:first-child { margin-top: 0; }
+.gr-pool { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .15rem; }
+.gr-pool li { color: var(--text); }
+.gr-roll-table td { min-width: 10rem; }
+.gr-roll-table tbody th { white-space: nowrap; }
+
 /* ── Banners ──────────────────────────────────────────────────────────────── */
 .gr-banner-controls { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin-bottom: 1rem; }
 .gr-banner-controls .gr-input { flex: 1 1 16rem; max-width: 26rem; }

@@ -3467,5 +3467,15 @@
   "All {n} items": "ทั้งหมด {n} ไอเทม",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "ตีบวกไอเทมแต่ละชิ้นเป็น +5 Pearl: บรรทัดค่าสถานะละ 2 อัน บวกอีก 1 อันต่อบรรทัดที่ไอเทมยังขาด",
   "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "ตีบวกไอเทมแต่ละชิ้นเป็น {from} +5 อัปเป็น {to} แล้วตีบวกเป็น +5 อีกครั้ง Pearl: บรรทัดค่าสถานะละ 2 อัน บวกอีก 1 อันต่อบรรทัดที่ไอเทมยังขาด",
-  "Legacy": "เลิกใช้แล้ว"
+  "Legacy": "เลิกใช้แล้ว",
+  "Stat rolls": "การสุ่มค่าสถานะ",
+  "Which stats each line of a piece of gear can roll. Trove's servers pick these, so the game files don't list them: this table comes from player reports.": "ค่าสถานะที่แต่ละบรรทัดของอุปกรณ์สุ่มได้ เซิร์ฟเวอร์ของ Trove เป็นผู้เลือก ไฟล์เกมจึงไม่มีข้อมูลนี้ ตารางนี้มาจากรายงานของผู้เล่น",
+  "Crystal gear": "อุปกรณ์ Crystal",
+  "Gear below Crystal": "อุปกรณ์ที่ต่ำกว่า Crystal",
+  "Line": "บรรทัด",
+  "Weapons": "อาวุธ",
+  "Faces": "ใบหน้า",
+  "Hats": "หมวก",
+  "Set by the ring box you open": "ขึ้นกับกล่องแหวนที่เปิด",
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "ค่าสถานะเดียวกันจะไม่ขึ้นซ้ำบนไอเทมชิ้นเดียว พลังชีวิตสูงสุดแบบตัวเลขและพลังชีวิตสูงสุด % นับเป็นคนละค่าสถานะ"
 }

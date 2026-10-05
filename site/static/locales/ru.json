@@ -3630,5 +3630,15 @@
   "All {n} items": "Все {n} предметов",
   "Takes each item to +5. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Доводит каждый предмет до +5. Pearl: по 2 на каждую строку характеристики и ещё по 1 на каждую недостающую строку.",
   "Takes each item to {from} +5, raises it to {to}, then takes it to +5 again. Pearls: 2 on every stat line, plus 1 for each line an item is still missing.": "Доводит каждый предмет до {from} +5, повышает до {to}, а затем снова до +5. Pearl: по 2 на каждую строку характеристики и ещё по 1 на каждую недостающую строку.",
-  "Legacy": "Устаревшее"
+  "Legacy": "Устаревшее",
+  "Stat rolls": "Выпадение характеристик",
+  "Which stats each line of a piece of gear can roll. Trove's servers pick these, so the game files don't list them: this table comes from player reports.": "Какие характеристики может получить каждая строка предмета снаряжения. Их выбирают серверы Trove, поэтому в файлах игры их нет: эта таблица составлена по сообщениям игроков.",
+  "Crystal gear": "Кристальное снаряжение",
+  "Gear below Crystal": "Снаряжение ниже Кристального",
+  "Line": "Строка",
+  "Weapons": "Оружие",
+  "Faces": "Лица",
+  "Hats": "Шляпы",
+  "Set by the ring box you open": "Зависит от открытой шкатулки с кольцом",
+  "A stat never appears twice on the same item. Flat Maximum Health and Maximum Health % count as different stats.": "Одна характеристика никогда не встречается на предмете дважды. Максимальное здоровье и Максимальное здоровье % считаются разными характеристиками."
 }
