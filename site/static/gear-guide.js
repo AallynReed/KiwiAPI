@@ -26,12 +26,19 @@
   const RETIRED_ITEMS = new Set(["item/crafting/tome_notrade"]);
 
   let data = null;
-  const state = { rarity: "Crystal5", star: 5, boosts: 6, costRarity: "Crystal5", mode: "pve", query: "" };
+  const state = { rarity: "Crystal5", star: 5, pearls: [2, 2, 2], costRarity: "Crystal5", mode: "pve", query: "" };
   const byKey = () => Object.fromEntries(data.rarities.map((r) => [r.key, r]));
 
   const lang = () => document.documentElement.lang || undefined;
   const fmt = (n, digits) => Number(n).toLocaleString(lang(), { maximumFractionDigits: digits == null ? 2 : digits });
   const rarityName = (r) => (r.level ? t(r.family) + " " + r.level : t(r.family));
+  // The game's rarity list interleaves Radiant and Stellar (Radiant 1, Stellar 1,
+  // Radiant 2...); show each family together, in order of its first appearance.
+  function ordered() {
+    const first = {};
+    data.rarities.forEach((r, i) => { if (!(r.family in first)) first[r.family] = i; });
+    return data.rarities.slice().sort((a, b) => (first[a.family] - first[b.family]) || ((a.level || 0) - (b.level || 0)));
+  }
 
   // The game's own formula (gear.py power_rank): pearl boosts scale the base, then
   // each star adds 6% (at least 1), rounded half up.
@@ -55,7 +62,7 @@
 
   function raritySelect(id, current, onPick, filter) {
     const sel = h("select", { class: "gr-select", id: id, onChange: (e) => onPick(e.target.value) });
-    data.rarities.filter(filter || (() => true)).forEach((r) => {
+    ordered().filter(filter || (() => true)).forEach((r) => {
       const opt = h("option", { value: r.key }, rarityName(r));
       if (r.key === current) opt.selected = true;
       sel.appendChild(opt);
@@ -69,9 +76,10 @@
     host.textContent = "";
     const r = byKey()[state.rarity];
     const base = r.power_rank;
-    const withPearls = powerRank(base, 0, state.boosts);
-    const total = powerRank(base, state.star, state.boosts);
-    const maxBoosts = data.forge.max_lines * data.forge.max_boosts_per_line;
+    const pearls = state.pearls.reduce((a, b) => a + b, 0);
+    const withPearls = powerRank(base, 0, pearls);
+    const total = powerRank(base, state.star, pearls);
+    const perLine = Array.from({ length: data.forge.max_boosts_per_line + 1 }, (_, i) => i);
 
     const controls = h("div", { class: "gr-calc-controls" },
       h("label", { class: "gr-field", for: "gr-calc-rarity" },
@@ -79,24 +87,25 @@
         raritySelect("gr-calc-rarity", state.rarity, (v) => { state.rarity = v; renderCalc(); },
           (x) => x.power_rank)),
       segmented(t("Star level"), [0, 1, 2, 3, 4, 5], state.star, (v) => { state.star = v; renderCalc(); }),
-      segmented(t("Pearl boosts"), Array.from({ length: maxBoosts + 1 }, (_, i) => i), state.boosts,
-        (v) => { state.boosts = v; renderCalc(); }));
+      h("div", { class: "gr-pearl-lines" }, state.pearls.map((n, i) =>
+        segmented(t("Pearls on stat {n}").replace("{n}", i + 1), perLine, n,
+          (v) => { state.pearls[i] = v; renderCalc(); }))));
 
     const result = h("div", { class: "gr-calc-result", "aria-live": "polite" },
       h("span", { class: "gr-calc-label" }, t("Power Rank")),
       h("strong", { class: "gr-calc-total" }, fmt(total, 0)),
       h("dl", { class: "gr-calc-steps" },
         h("div", {}, h("dt", {}, t("Base")), h("dd", {}, fmt(base, 0))),
-        h("div", {}, h("dt", {}, t("With pearl boosts")), h("dd", {}, fmt(withPearls, 0))),
+        h("div", {}, h("dt", {}, t("With pearls")), h("dd", {}, fmt(withPearls, 0))),
         h("div", {}, h("dt", {}, t("At this star level")), h("dd", {}, fmt(total, 0)))));
 
     host.appendChild(controls);
     host.appendChild(result);
     host.appendChild(h("p", { class: "gr-fine" },
-      t("Each pearl boost adds {p}% to the base, then each star adds {s}% (never less than 1). An item can hold {n} boosts: two on each of its three stat lines.")
+      t("Every stat line takes up to {n} pearls. Each pearl adds {p}% to the base, then each star adds {s}% (never less than 1).")
+        .replace("{n}", data.forge.max_boosts_per_line)
         .replace("{p}", fmt(data.power_rank.per_stat_boost * 100))
-        .replace("{s}", fmt(data.power_rank.per_star * 100))
-        .replace("{n}", maxBoosts)));
+        .replace("{s}", fmt(data.power_rank.per_star * 100))));
   }
 
   // ── Rarities ─────────────────────────────────────────────────────────────
@@ -113,12 +122,12 @@
         h("th", { class: "r", scope: "col" }, t("Level")),
         h("th", { class: "r", scope: "col" }, t("Power Rank")),
         h("th", { class: "r", scope: "col" }, "+5"),
-        h("th", { class: "r", scope: "col" }, t("+5, every pearl boost")),
+        h("th", { class: "r", scope: "col" }, t("+5, 2 pearls on every stat")),
         h("th", { class: "c", scope: "col" }, t("Weapon aura")),
         h("th", { class: "c", scope: "col" }, t("Hat aura")))));
     const body = h("tbody", {});
     let family = null;
-    data.rarities.forEach((r) => {
+    ordered().forEach((r) => {
       if (!r.power_rank) return;
       if (r.family !== family && r.level) {
         family = r.family;

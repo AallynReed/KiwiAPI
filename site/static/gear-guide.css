@@ -44,6 +44,7 @@
 .gr-calc { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.5rem 2.5rem; align-items: start; }
 .gr-calc-controls { display: flex; flex-direction: column; gap: 1.2rem; }
 .gr-calc-result { border-left: 1px solid var(--bg-line); padding-left: 2rem; }
+.gr-pearl-lines { display: flex; flex-wrap: wrap; gap: 1rem 1.6rem; }
 .gr-calc-label { display: block; font-size: .85rem; font-weight: 600; color: var(--text-mute); }
 .gr-calc-total { display: block; font-size: clamp(2.6rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--text); margin: .2rem 0 1rem; }
 .gr-calc-steps { display: grid; gap: .45rem; margin: 0; }
