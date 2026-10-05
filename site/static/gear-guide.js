@@ -13,8 +13,6 @@
   const DATA_STRINGS = [
     tr("Common"), tr("Uncommon"), tr("Rare"), tr("Epic"), tr("Legendary"), tr("Relic"),
     tr("Resplendent"), tr("Shadow"), tr("Radiant"), tr("Stellar"), tr("Crystal"), tr("Mystic"),
-    tr("Weapon"), tr("Hat"), tr("Face"), tr("Ring"), tr("Banner"),
-    tr("Gun"), tr("Bow"), tr("Staff"), tr("Spear"), tr("Fist"), tr("Melee"),
     tr("Cooldown Speed"), tr("Experience Gain"), tr("Flask Capacity"), tr("Incoming Damage"),
     tr("Lasermancy"), tr("Stability"), tr("Superstition"),
     tr("Improve Gear"), tr("Increase Rarity Level"), tr("Add a New Stat or Bonus Stat"),
@@ -232,39 +230,6 @@
       body));
   }
 
-  // ── Slots ────────────────────────────────────────────────────────────────
-  function renderSlots() {
-    const host = document.getElementById("gr-slots");
-    host.textContent = "";
-    const list = h("dl", { class: "gr-slot-list" });
-    const single = [];
-    data.slots.forEach((s) => {
-      if (s.item_types.length < 2) { single.push(t(s.name)); return; }
-      list.appendChild(h("div", {}, h("dt", {}, t(s.name)),
-        h("dd", {}, s.item_types.map((it) => t(it.name)).join(", "))));
-    });
-    if (single.length) {
-      list.appendChild(h("div", {}, h("dt", {}, single.join(", ")), h("dd", {}, t("One kind each"))));
-    }
-    host.appendChild(list);
-
-    const named = document.getElementById("gr-named");
-    named.textContent = "";
-    if (!data.named_items.length) return;
-    named.appendChild(h("h3", {}, t("Items with set stat lines")));
-    named.appendChild(h("table", { class: "gr-table" },
-      h("thead", {}, h("tr", {},
-        h("th", { class: "l", scope: "col" }, t("Item")),
-        h("th", { class: "l", scope: "col" }, t("Slot")),
-        h("th", { class: "l", scope: "col" }, t("Rarity")),
-        h("th", { class: "l", scope: "col" }, t("Always rolls")))),
-      h("tbody", {}, data.named_items.map((n) => h("tr", {},
-        h("th", { class: "l", scope: "row" }, n.name),
-        h("td", { class: "l" }, t(n.item_type)),
-        h("td", { class: "l" }, rarityName(byKey()[n.rarity] || { family: n.rarity })),
-        h("td", { class: "l" }, n.stats.map((x) => t(x.replace(/ %$/, "")) + (/ %$/.test(x) ? " %" : "")).join(", ")))))));
-  }
-
   // ── Banners and torches ──────────────────────────────────────────────────
   const statText = (s) => "+" + fmt(s.value) + (s.percent ? "%" : "");
 
@@ -326,7 +291,6 @@
     renderRarities();
     renderForge();
     renderPearls();
-    renderSlots();
     renderBannerControls();
     renderBanners();
   }
