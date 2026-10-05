@@ -53,6 +53,7 @@ SITE_FEATURE_FLAGS = {
     "allies_enabled": feature_flags.ALLIES_FLAG,
     "gem_tools_enabled": feature_flags.GEM_TOOLS_FLAG,
     "fishing_guide_enabled": feature_flags.FISHING_GUIDE_FLAG,
+    "gear_guide_enabled": feature_flags.GEAR_GUIDE_FLAG,
     "loot_collector_guide_enabled": feature_flags.LOOT_COLLECTOR_GUIDE_FLAG,
     "dressing_room_enabled": feature_flags.DRESSING_ROOM_FLAG,
     "dressing_room_page_enabled": feature_flags.DRESSING_ROOM_PAGE_FLAG,
@@ -218,6 +219,9 @@ def feature_blocks(p: str, f: dict) -> bool:
     # is the shared codex render endpoint, so only the page route is blocked.
     if not f["fishing_guide_enabled"] and p == "/fishing-guide":
         return True
+    # Client-rendered from the public /gamedata/gear.json, so only the route is blocked.
+    if not f["gear_guide_enabled"] and p == "/gear-guide":
+        return True
     # A written page with no reads at all, so only the route is blocked.
     if not f["loot_collector_guide_enabled"] and p == "/loot-collector-guide":
         return True
@@ -277,6 +281,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/allies", "allies_enabled"),
     ("/gem-tools", "gem_tools_enabled"),
     ("/fishing-guide", "fishing_guide_enabled"),
+    ("/gear-guide", "gear_guide_enabled"),
     ("/loot-collector-guide", "loot_collector_guide_enabled"),
     ("/dressing-room", "dressing_room_page_enabled"),
     ("/sound-studio", "sound_studio_enabled"),

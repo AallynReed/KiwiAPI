@@ -1,0 +1,128 @@
+/* =========================================================================
+   /gear-guide - shared tokens only (style.css / voxel.css), so it follows
+   both looks. Lists and ruled tables, no cards-for-everything.
+   ========================================================================= */
+
+.gr-main { width: min(1180px, calc(100% - 32px)); margin-inline: auto; padding-bottom: 5rem; }
+
+.gr-hero { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(1.5rem, 3vw, 2.5rem); max-width: 70ch; }
+.gr-title { font-size: clamp(2.3rem, 4.5vw + 1rem, 3.8rem); line-height: 1.04; text-wrap: balance; margin-bottom: 1rem; }
+.gr-lead { color: var(--text-mute); font-size: var(--type-lead, 1.15rem); line-height: 1.55; text-wrap: pretty; }
+.gr-toc { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; margin-top: 1.6rem; font-size: .95rem; }
+.gr-toc a { color: var(--text-mute); border-bottom: 1px solid var(--bg-line); padding-bottom: 2px; }
+.gr-toc a:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+.gr-status { color: var(--text-mute); padding: 1rem 0; }
+
+.gr-section { padding: clamp(2.5rem, 6vw, 4.5rem) 0; border-top: 1px solid var(--bg-line); scroll-margin-top: calc(var(--nav-h, 72px) + 16px); }
+.gr-sec-head { max-width: 68ch; margin-bottom: 1.8rem; }
+.gr-sec-head h2 { font-size: clamp(1.6rem, 2.6vw + .6rem, 2.4rem); margin-bottom: .6rem; text-wrap: balance; }
+.gr-sec-head p { color: var(--text-mute); line-height: 1.6; text-wrap: pretty; }
+.gr-section h3 { font-size: 1.1rem; margin: 0 0 .8rem; }
+
+/* ── Controls ─────────────────────────────────────────────────────────────── */
+.gr-field { display: flex; flex-direction: column; gap: .4rem; }
+.gr-field.gr-inline { flex-direction: row; align-items: center; gap: .7rem; }
+.gr-field-label { font-size: .82rem; font-weight: 600; color: var(--text-mute); }
+.gr-select, .gr-input {
+  background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: var(--radius-sm, 8px);
+  color: var(--text); padding: 9px 11px; font: inherit; font-size: .95rem; min-width: 12rem;
+}
+.gr-select:focus-visible, .gr-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.gr-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.gr-seg button {
+  min-width: 2.6rem; padding: 8px 12px; font: inherit; font-weight: 600; font-variant-numeric: tabular-nums;
+  color: var(--text-mute); background: var(--bg-deep); border: 1px solid var(--bg-line);
+  border-radius: var(--radius-sm, 8px); cursor: pointer;
+}
+.gr-seg button:hover { color: var(--text); border-color: var(--text-soft); }
+.gr-seg button.on { color: var(--bg-base); background: var(--accent); border-color: var(--accent); }
+.gr-seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Power Rank calculator ────────────────────────────────────────────────── */
+.gr-calc { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.5rem 2.5rem; align-items: start; }
+.gr-calc-controls { display: flex; flex-direction: column; gap: 1.2rem; }
+.gr-calc-result { border-left: 1px solid var(--bg-line); padding-left: 2rem; }
+.gr-calc-label { display: block; font-size: .85rem; font-weight: 600; color: var(--text-mute); }
+.gr-calc-total { display: block; font-size: clamp(2.6rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--text); margin: .2rem 0 1rem; }
+.gr-calc-steps { display: grid; gap: .45rem; margin: 0; }
+.gr-calc-steps div { display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid var(--bg-line); padding-top: .45rem; }
+.gr-calc-steps dt { color: var(--text-mute); }
+.gr-calc-steps dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.gr-fine { grid-column: 1 / -1; color: var(--text-mute); font-size: .9rem; line-height: 1.55; margin: 0; max-width: 75ch; }
+@media (max-width: 760px) {
+  .gr-calc { grid-template-columns: 1fr; }
+  .gr-calc-result { border-left: 0; border-top: 1px solid var(--bg-line); padding: 1.2rem 0 0; }
+}
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+.gr-table-wrap { overflow-x: auto; border: 1px solid var(--bg-line); border-radius: var(--radius-sm, 8px); margin-top: 1rem; }
+.gr-table { width: 100%; border-collapse: collapse; font-size: .92rem; font-variant-numeric: tabular-nums; }
+.gr-table th, .gr-table td { padding: .6rem .9rem; border-bottom: 1px solid var(--bg-line); vertical-align: top; }
+.gr-table tbody tr:last-child > * { border-bottom: 0; }
+.gr-table thead th { background: var(--bg-card-hi); color: var(--text-mute); font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.gr-table tbody th { font-weight: 600; color: var(--text); }
+.gr-table td { color: var(--text-mute); }
+.gr-table .l { text-align: left; }
+.gr-table .r { text-align: right; white-space: nowrap; }
+.gr-table .c { text-align: center; }
+.gr-table td.strong { color: var(--text); font-weight: 700; }
+.gr-table tr.gr-family th { background: var(--bg-deep); color: var(--text); font-size: .85rem; letter-spacing: .02em; padding-top: .8rem; }
+.gr-table tr.gr-unreleased td, .gr-table tr.gr-unreleased th { color: var(--text-soft); }
+.gr-rname { white-space: nowrap; }
+.gr-tag { margin-left: .6rem; font-size: .75rem; font-weight: 600; color: var(--accent-orange); white-space: nowrap; }
+.gr-yes { color: var(--accent-green); }
+.gr-no { color: var(--text-soft); }
+
+/* ── Forging ──────────────────────────────────────────────────────────────── */
+.gr-star-bar { list-style: none; margin: 0 0 2.2rem; padding: 0; display: grid; gap: .4rem; max-width: 640px; }
+.gr-star-bar li { display: grid; grid-template-columns: 2.5rem 1fr 3rem; align-items: center; gap: .8rem; }
+.gr-star-lv { font-weight: 700; font-variant-numeric: tabular-nums; }
+.gr-star-track { height: 10px; background: var(--bg-deep); border: 1px solid var(--bg-line); border-radius: 3px; overflow: hidden; }
+.gr-star-fill { display: block; height: 100%; background: var(--accent); }
+.gr-star-pct { text-align: right; color: var(--text-mute); font-variant-numeric: tabular-nums; }
+.gr-costs-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem 1.5rem; }
+.gr-costs-head h3 { margin: 0; }
+.gr-raise { margin-top: 2.2rem; max-width: 75ch; }
+.gr-raise p { color: var(--text-mute); line-height: 1.6; margin: 0 0 .4rem; }
+.gr-cost-line strong { color: var(--text); }
+
+/* ── Pearls and stations ──────────────────────────────────────────────────── */
+.gr-rules { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 0 2.5rem; }
+.gr-rules li { display: flex; gap: .9rem; padding: 1rem 0; border-top: 1px solid var(--bg-line); }
+.gr-rules i { color: var(--accent); margin-top: .2rem; width: 1.1rem; text-align: center; }
+.gr-rules strong { display: block; margin-bottom: .25rem; }
+.gr-rules p { margin: 0; color: var(--text-mute); line-height: 1.55; }
+
+/* ── Slots ────────────────────────────────────────────────────────────────── */
+.gr-slot-list { display: grid; gap: 0; margin: 0 0 2rem; max-width: 820px; }
+.gr-slot-list div { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; padding: .7rem 0; border-top: 1px solid var(--bg-line); }
+.gr-slot-list dt { font-weight: 700; }
+.gr-slot-list dd { margin: 0; color: var(--text-mute); }
+#gr-named h3 { margin-top: 1rem; }
+
+/* ── Banners ──────────────────────────────────────────────────────────────── */
+.gr-banner-controls { display: flex; flex-wrap: wrap; gap: .8rem 1.2rem; align-items: center; margin-bottom: 1rem; }
+.gr-banner-controls .gr-input { flex: 1 1 16rem; max-width: 26rem; }
+.gr-count { color: var(--text-mute); font-size: .9rem; margin: 0 0 .5rem; }
+.gr-banner { padding: 1.2rem 0; border-top: 1px solid var(--bg-line); }
+.gr-banner h3 { font-size: 1rem; margin: 0 0 .5rem; line-height: 1.45; }
+.gr-more { margin: 0 0 .6rem; color: var(--text-mute); font-size: .9rem; }
+.gr-more summary { cursor: pointer; color: var(--accent); width: fit-content; }
+.gr-more p { margin: .4rem 0 0; line-height: 1.55; }
+.gr-stat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .3rem 1.6rem; }
+.gr-stat-list li { display: flex; gap: .5rem; color: var(--text-mute); }
+.gr-stat-list strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.gr-tier-table { font-size: .88rem; }
+.gr-banner .gr-table-wrap { margin-top: .4rem; }
+
+/* ── Note ─────────────────────────────────────────────────────────────────── */
+.gr-note { display: flex; gap: .8rem; align-items: flex-start; margin-top: 1rem; padding: 1rem 1.2rem; border: 1px solid var(--bg-line); border-left: 3px solid var(--accent); border-radius: var(--radius-sm, 8px); background: var(--bg-card); color: var(--text-mute); max-width: 80ch; }
+.gr-note i { color: var(--accent); margin-top: .2rem; }
+.gr-note p { margin: 0; line-height: 1.55; }
+
+@media (max-width: 640px) {
+  .gr-slot-list div { grid-template-columns: 1fr; gap: .2rem; }
+  .gr-field.gr-inline { flex-direction: column; align-items: stretch; }
+}

@@ -430,7 +430,7 @@ REGISTRY: dict[str, TunableSetting] = {
         type="bool",
         category="features",
         description=(
-            "Master switch for the How Gems Work guide (/gems-guide). OFF hides the "
+            "Master switch for the Gems Guide (/gems-guide). OFF hides the "
             "page + navbar link. It's a fully client-rendered interactive explainer "
             "of the gem system (static /static/gems-guide.js, no proxy or /v1 API), "
             "so only the page route is hidden."
@@ -494,6 +494,18 @@ REGISTRY: dict[str, TunableSetting] = {
             "skill tree, daily quests, pools and every fish (static "
             "/static/fishing-guide.js); its only read is the shared "
             "/site/codexes/render thumbnail endpoint, so only the page route is hidden."
+        ),
+    ),
+    "feature_gear_guide_enabled": _t(
+        key="feature_gear_guide_enabled",
+        default=True,
+        type="bool",
+        category="features",
+        description=(
+            "Master switch for the Gear guide (/gear-guide). OFF hides the page and "
+            "its row on the Guides hub. Client-rendered from the public "
+            "/gamedata/gear.json (rebuilt after each patch by the gear decoder), so "
+            "only the page route is hidden."
         ),
     ),
     "feature_loot_collector_guide_enabled": _t(

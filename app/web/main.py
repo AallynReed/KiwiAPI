@@ -92,7 +92,7 @@ async def health() -> dict[str, str]:
 
 # Decoded game data a page fetches in the browser: the post-patch rebuild when
 # there is one (app/trove/decode), else the repo copy.
-_PUBLIC_GAMEDATA = frozenset({"pvp.json", "gem_upgrades.json"})
+_PUBLIC_GAMEDATA = frozenset({"pvp.json", "gem_upgrades.json", "gear.json"})
 
 
 @app.get("/gamedata/{name}", include_in_schema=False)

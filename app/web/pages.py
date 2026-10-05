@@ -406,7 +406,7 @@ async def mod_stats_page(request: Request) -> HTMLResponse:
 
 @router.get("/gems-guide", response_class=HTMLResponse)
 async def gems_guide_page(request: Request) -> HTMLResponse:
-    """How Gems Work - an interactive, animated explainer of Trove's gem system
+    """The Gems Guide - an interactive, animated explainer of Trove's gem system
     (tiers, elements incl. Cosmic/Light, Lesser vs Empowered, stat rolls,
     leveling/Power Rank and focusing). Fully client-rendered from the static
     ``/static/gems-guide.js`` - no proxy, no /v1 API."""
@@ -468,6 +468,14 @@ async def gem_tools(request: Request) -> HTMLResponse:
 async def gem_abilities_redirect() -> RedirectResponse:
     """The gems tab used to be its own page; keep the old link working."""
     return RedirectResponse("/abilities?tab=gems", status_code=308)
+
+
+@router.get("/gear-guide", response_class=HTMLResponse)
+async def gear_guide_page(request: Request) -> HTMLResponse:
+    """The gear guide - rarities and Power Rank, the forge, star levels, Pearls of
+    Wisdom, and every banner and torch. Rendered by ``/static/gear-guide.js`` from
+    the public ``/gamedata/gear.json``."""
+    return _TEMPLATES.TemplateResponse(request, "gear-guide.html", {})
 
 
 @router.get("/fishing-guide", response_class=HTMLResponse)

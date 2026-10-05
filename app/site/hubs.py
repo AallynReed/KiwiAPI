@@ -18,13 +18,22 @@ HUBS: dict[str, dict[str, Any]] = {
         "empty": "No guides are available right now.",
         "entries": (
             {
-                "name": "How Gems Work",
+                "name": "Gems Guide",
                 "path": "/gems-guide",
                 "flag": "gems_guide_enabled",
                 "icon": "fa-solid fa-gem",
                 "blurb": "Tiers, elements, lesser versus empowered, stat rolls, levelling "
                          "and focusing - the whole gem system, one step at a time.",
                 "kind": "Interactive",
+            },
+            {
+                "name": "Gear Guide",
+                "path": "/gear-guide",
+                "flag": "gear_guide_enabled",
+                "icon": "fa-solid fa-shield-halved",
+                "blurb": "Every gear rarity and its Power Rank, what the forge, stars "
+                         "and Pearls of Wisdom do, and every banner and torch with its stats.",
+                "kind": "Reference",
             },
             {
                 "name": "Fishing Guide",

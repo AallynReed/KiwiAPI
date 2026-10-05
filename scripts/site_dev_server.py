@@ -93,7 +93,7 @@ _PREVIEW_FLAGS = {
     "calendar_enabled", "streams_enabled", "btt_releases_enabled",
     "classes_enabled", "star_chart_enabled", "gem_simulator_enabled",
     "gem_evaluator_enabled", "gem_builds_enabled", "calculators_enabled",
-    "gems_guide_enabled", "abilities_enabled", "guides_enabled", "allies_enabled", "gem_tools_enabled", "fishing_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
+    "gems_guide_enabled", "abilities_enabled", "guides_enabled", "allies_enabled", "gem_tools_enabled", "fishing_guide_enabled", "gear_guide_enabled", "cheater_detection_enabled", "alt_clusters_enabled",
     "renames_enabled", "duplicates_enabled", "discord_oauth_enabled",
     "dressing_room_enabled", "dressing_room_page_enabled",
     "sound_studio_enabled", "mod_workshop_enabled", "community_sites_enabled",
@@ -1559,6 +1559,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "abilities.html", "text/html", ctx)
         if path == "/fishing-guide":
             return self._send_file(TEMPLATES / "fishing-guide.html", "text/html")
+        if path == "/gear-guide":
+            return self._send_file(TEMPLATES / "gear-guide.html", "text/html")
         if path == "/gem-simulator":
             return self._send_file(TEMPLATES / "gem-simulator.html", "text/html")
         if path == "/gem-evaluator":
@@ -1758,7 +1760,7 @@ class Handler(SimpleHTTPRequestHandler):
         # Static. Templates reference the minified bundles (built by deploy.sh),
         # which don't exist locally for brand-new pages. Fall back to the
         # unminified source so local preview works without running the minifier.
-        if path in ("/gamedata/pvp.json", "/gamedata/gem_upgrades.json"):
+        if path in ("/gamedata/pvp.json", "/gamedata/gem_upgrades.json", "/gamedata/gear.json"):
             return self._send_file(ROOT / "app" / "trove" / "gamedata" / path.rsplit("/", 1)[-1], "application/json")
 
         if path.startswith("/static/"):

@@ -658,6 +658,9 @@ body.gems-guide-page { overflow-x: clip; }
 .gg-seg-pick button { --tc: var(--accent-blue); cursor: pointer; font: inherit; font-size: .82rem; font-weight: 600; color: var(--text-mute); background: transparent; border: 0; border-radius: 999px; padding: 6px 14px; transition: background .18s var(--ease-out), color .18s var(--ease-out); }
 .gg-seg-pick button:hover { color: var(--text); }
 .gg-seg-pick button.active { background: var(--tc); color: var(--bg-base); }
+.gg-seg-pick button:disabled { opacity: .35; cursor: not-allowed; }
+.gg-tbl-controls .gg-seg-pick { border-radius: 18px; }   /* twelve tiers wrap onto two rows */
+.gg-tbl td.none { text-align: center; color: var(--text-soft); }
 
 .gg-tbl-wrap { overflow-x: auto; border: 1px solid var(--bg-line); border-radius: var(--radius); background: var(--bg-card); }
 .gg-tbl { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }

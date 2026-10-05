@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   /gems-guide - interactive "How Gems Work in Trove" explainer.
+   /gems-guide - the interactive Gems Guide.
    Vanilla JS, no deps, CSP-clean. All gem numbers mirror the server-side
    gem model (app/trove/gems/{constants,bases}.py) so the guide stays true
    to the actual game data. Client-only bar one optional read: this week's
@@ -34,6 +34,7 @@
      template then fill {placeholders}. Sections register a re-render via
      onLang() so a mid-page language switch updates them too. */
   function tt(s) { return (window.BTTi18n && window.BTTi18n.t) ? window.BTTi18n.t(s) : s; }
+  function tr(s) { return s; }   // marks a string handed to tt() later, for the i18n audit
   function ttf(s, map) { return tt(s).replace(/\{(\w+)\}/g, function (_, k) { return (map && map[k] != null) ? map[k] : "{" + k + "}"; }); }
   var RERENDER = [];
   function onLang(fn) { RERENDER.push(fn); }
@@ -97,61 +98,19 @@
     return Math.round((kind === "emp" ? 100 : 0) + PR_HI[kind][tier.id] * gemContainers(level) + 3 * totalLevelPR(tier, level));
   }
 
-  /* ── Per-stat value tables (mirrors Gem.stat_values) ─────────────────────
-     value = stat_base × (threshold × containers + Σincrements). A stat has
-     containers = 1 + boosts (0-3). Stat bases + thresholds from bases.py. */
+  /* ── Per-stat value tables, straight from the game's gem file ────────────
+     /gamedata/gem_upgrades.json (app/trove/decode/gem_upgrades.py) gives each gem
+     kind's roll [min, max] and per-step gain; value = roll x (1 + boosts) + step x
+     (stat steps up to that level). Light comes from the Cosmic gem of the tier. */
   var STAT_COLS = [
-    { key: "dmg", label: "PD/MD", cat: "dmg", dec: 0 },
-    { key: "cd", label: "CD", cat: "crit", dec: 2 },
-    { key: "ch", label: "CH", cat: "crit", dec: 2 },
-    { key: "mhp", label: "MH%", cat: "health", dec: 2 },
-    { key: "mh", label: "MH", cat: "health", dec: 0 },
-    { key: "hr", label: "HR", cat: "health", dec: 0, retired: true },
-    { key: "lt", label: "LT", cat: "light", dec: 0 }
+    { key: "dmg", label: "PD/MD", stat: "PhysicalDamage", pct: false, dec: 0 },
+    { key: "cd", label: "CD", stat: "CriticalHitDamage", pct: false, dec: 2 },
+    { key: "ch", label: "CH", stat: "CriticalHitChance", pct: false, dec: 2 },
+    { key: "mhp", label: "MH%", stat: "MaxHealth", pct: true, dec: 2 },
+    { key: "mh", label: "MH", stat: "MaxHealth", pct: false, dec: 0 },
+    { key: "hr", label: "HR", stat: "HealthRegen_controller", pct: false, dec: 0, retired: true },
+    { key: "lt", label: "LT", stat: "Light", pct: false, dec: 0, cosmic: true }
   ];
-  // Health Regen no longer rolls on new gems (pool weight 0) but older gems keep it.
-  // [min, max, step] straight from gem_upgrades.json - Mystic Empowered breaks the
-  // shared base/threshold pattern, so the rolls are listed rather than derived.
-  var HR_ROLL = {
-    lesser: { 1: [2975, 3955, 105], 2: [5250, 7000, 175], 3: [7000, 9000, 200], 4: [9100, 11700, 260] },
-    emp: { 1: [3955, 5250, 105], 2: [7000, 9310, 175], 3: [9000, 11000, 200], 4: [13000, 15000, 150] }
-  };
-  var STAT_BASE = {
-    1: { dmg: 14, cd: 0.2, ch: 0.02, mhp: 0.5, mh: 50, lt: 1 },
-    2: { dmg: 14, cd: 0.2, ch: 0.02, mhp: 0.5, mh: 50, lt: 1 },
-    3: { dmg: 16, cd: 3 / 14, ch: 0.3 / 14, mhp: 0.5, mh: 50, lt: 5 / 7 },
-    4: { dmg: 168 / 9, cd: 2.5 / 9, ch: 0.25 / 9, mhp: 5.25 / 9, mh: 525 / 9, lt: 5 / 9 }
-  };
-  var THRESH = {
-    lesser: {
-      1: { all: [85, 113] }, 2: { all: [150, 200] },
-      3: { dmg: [210, 280], crit: [560 / 3, 770 / 3], health: [245, 315], light: [280, 385] },
-      4: { dmg: [270, 360], crit: [187.2, 297], health: [315, 405], light: [495, 585] }
-    },
-    emp: {
-      1: { all: [113, 150] }, 2: { all: [200, 266] },
-      3: { dmg: [245, 350], crit: [700 / 3, 910 / 3], health: [315, 385], light: [350, 420] },
-      4: { dmg: [210, 300], crit: [252, 342], health: [405, 495], light: [495, 630] }
-    }
-  };
-  function statBase(tierId, kind, key) {
-    if (tierId === 4 && key === "dmg" && kind === "emp") return 28;   // Mystic Empowered damage
-    return STAT_BASE[tierId][key];
-  }
-  function statThresh(tierId, kind, cat) {
-    var row = THRESH[kind][tierId];
-    return row.all ? row.all : row[cat];
-  }
-  function prCum(tier, level) { var s = 0, l; for (l = 1; l <= level; l++) s += prInc(l, tier.pr); return s; }
-  function statValue(tier, kind, col, level, boosts) {
-    if (col.key === "hr") {
-      var r = HR_ROLL[kind][tier.id], steps = prCum(tier, level) / tier.pr;
-      return [r[0] * (1 + boosts) + r[2] * steps, r[1] * (1 + boosts) + r[2] * steps];
-    }
-    var base = statBase(tier.id, kind, col.key), th = statThresh(tier.id, kind, col.cat),
-        containers = 1 + boosts, cum = prCum(tier, level);
-    return [base * (th[0] * containers + cum), base * (th[1] * containers + cum)];
-  }
 
   /* ── real gem art (the same voxel renders the Gem Simulator uses) ───────
      A gem is a tier "socket" image with the element/type gem composited on
@@ -1092,57 +1051,106 @@
   (function () {
     var controls = $("#gg-tbl-controls"), table = $("#gg-stat-table");
     if (!controls || !table) return;
-    var st = { tier: TIERS[1], kind: "lesser", boosts: 0 };   // default Stellar Lesser (matches the reference sheet)
+    // Every gem tier the game files have. Empowered gems start at Radiant, and Power
+    // Rank per step is known only for the four tiers this guide is built around.
+    var LOW = [tr("Common"), tr("Uncommon"), tr("Rare"), tr("Epic"), tr("Legendary"), tr("Relic"), tr("Resplendent"), tr("Shadow")];
+    var TABLE_TIERS = LOW.map(function (name, i) { return { name: name, file: i + 1 }; })
+      .concat(TIERS.map(function (t, i) { return { name: t.name, file: 9 + i, pr: t.pr, color: t.color, emp: true }; }));
+    var data = null;
+    var st = { tier: TABLE_TIERS[9], kind: "lesser", boosts: 0 };   // default Stellar Lesser (matches the reference sheet)
+
+    function record(file, kind, color) {
+      var size = kind === "emp" ? "large" : "small", tier = kind === "emp" ? file + 100 : file, i, j;
+      for (i = 0; i < data.gems.length; i++) {
+        for (j = 0; j < data.gems[i].items.length; j++) {
+          var it = data.gems[i].items[j];
+          if (it.size === size && it.color === color && it.tier === tier) return data.gems[i];
+        }
+      }
+      return null;
+    }
+    function stepsUpTo(rec, level) {
+      return rec.levels.reduce(function (n, lv) { return lv.level <= level ? n + lv.stat_steps : n; }, 0);
+    }
+    function boostLevels(rec) {
+      return rec.levels.filter(function (lv) { return lv.boost; }).map(function (lv) { return lv.level; });
+    }
+    function cell(col, level) {
+      var rec = record(st.tier.file, st.kind, col.cosmic ? "opal" : "blue");
+      var r = rec && rec.stats.filter(function (x) { return x.stat === col.stat && x.percent === col.pct; })[0];
+      if (!r) return null;
+      var add = r.step * stepsUpTo(rec, level), c = 1 + st.boosts;
+      return [r.min * c + add, r.max * c + add];
+    }
 
     function activate(box, btn) {
       Array.prototype.forEach.call(box.children, function (c) { c.classList.remove("active"); c.setAttribute("aria-checked", "false"); });
       btn.classList.add("active"); btn.setAttribute("aria-checked", "true");
     }
-    function segGroup(label, items, isActive, pick, colorFn) {
+    function segGroup(label, items, isActive, pick, colorFn, isOff) {
       var seg = el("div", { class: "gg-seg-pick", role: "radiogroup", "aria-label": label });
       items.forEach(function (it) {
         var b = el("button", { type: "button", text: it.label, "aria-checked": isActive(it) ? "true" : "false" });
-        if (colorFn) b.style.setProperty("--tc", colorFn(it));
+        if (colorFn && colorFn(it)) b.style.setProperty("--tc", colorFn(it));
         if (isActive(it)) b.classList.add("active");
-        b.addEventListener("click", function () { activate(seg, b); pick(it); render(); });
+        if (isOff && isOff(it)) b.disabled = true;
+        b.addEventListener("click", function () { activate(seg, b); pick(it); buildControls(); render(); });
         seg.appendChild(b);
       });
       return el("div", { class: "gg-tbl-cgroup" }, [el("span", { class: "gg-tbl-clabel", text: label }), seg]);
     }
     function buildControls() {
+      if (!st.tier.emp) st.kind = "lesser";
+      var maxBoosts = boostLevels(record(st.tier.file, "lesser", "blue")).length;
+      if (st.boosts > maxBoosts) st.boosts = maxBoosts;
       controls.innerHTML = "";
       controls.appendChild(segGroup(tt("Tier"),
-        TIERS.map(function (t) { return { label: tt(t.name), t: t }; }),
-        function (it) { return it.t.id === st.tier.id; }, function (it) { st.tier = it.t; },
+        TABLE_TIERS.map(function (t) { return { label: tt(t.name), t: t }; }),
+        function (it) { return it.t === st.tier; }, function (it) { st.tier = it.t; },
         function (it) { return it.t.color; }));
       controls.appendChild(segGroup(tt("Type"),
         [{ label: tt("Lesser"), k: "lesser" }, { label: tt("Empowered"), k: "emp" }],
-        function (it) { return it.k === st.kind; }, function (it) { st.kind = it.k; }));
+        function (it) { return it.k === st.kind; }, function (it) { st.kind = it.k; }, null,
+        function (it) { return it.k === "emp" && !st.tier.emp; }));
       controls.appendChild(segGroup(tt("Boosts on this stat"),
         [0, 1, 2, 3].map(function (n) { return { label: String(n), b: n }; }),
-        function (it) { return it.b === st.boosts; }, function (it) { st.boosts = it.b; }));
+        function (it) { return it.b === st.boosts; }, function (it) { st.boosts = it.b; }, null,
+        function (it) { return it.b > maxBoosts; }));
     }
     function render() {
-      table.style.setProperty("--gem", st.tier.color);
-      var startLvl = Math.max(1, 5 * st.boosts), lv, i;
+      if (!data) return;
+      table.style.setProperty("--gem", st.tier.color || "var(--text)");
+      var rec = record(st.tier.file, st.kind, "blue");
+      var boosts = boostLevels(rec), startLvl = st.boosts ? boosts[st.boosts - 1] : 1, lv, i;
       var h = "<thead><tr><th>" + tt("Level") + "</th><th>" + tt("PR/lvl") + "</th>";
       for (i = 0; i < STAT_COLS.length; i++) {
         h += "<th>" + STAT_COLS[i].label + (STAT_COLS[i].retired ? ' <span class="gg-retired">' + tt("Retired") + "</span>" : "") + "</th>";
       }
       h += "</tr></thead><tbody>";
-      for (lv = startLvl; lv <= st.tier.max; lv++) {
-        var milestone = (lv === 5 || lv === 10 || lv === 15 || (lv > 15 && lv % 5 === 0));
-        h += "<tr" + (milestone ? ' class="ms"' : "") + '><th>' + lv + '</th><td class="prlvl">' + prInc(lv, st.tier.pr) + "</td>";
+      for (lv = startLvl; lv <= rec.max_level; lv++) {
+        var milestone = boosts.indexOf(lv) >= 0 || (lv > 15 && lv % 5 === 0);
+        var pr = st.tier.pr ? st.tier.pr * (stepsUpTo(rec, lv) - stepsUpTo(rec, lv - 1)) : "-";
+        h += "<tr" + (milestone ? ' class="ms"' : "") + '><th>' + lv + '</th><td class="prlvl">' + pr + "</td>";
         for (i = 0; i < STAT_COLS.length; i++) {
-          var c = STAT_COLS[i], v = statValue(st.tier, st.kind, c, lv, st.boosts);
-          h += '<td><span class="mn">' + v[0].toFixed(c.dec) + '</span><span class="mx">' + v[1].toFixed(c.dec) + "</span></td>";
+          var c = STAT_COLS[i], v = cell(c, lv);
+          h += v ? '<td><span class="mn">' + v[0].toFixed(c.dec) + '</span><span class="mx">' + v[1].toFixed(c.dec) + "</span></td>"
+            : '<td class="none">-</td>';
         }
         h += "</tr>";
       }
       table.innerHTML = h + "</tbody>";
     }
-    buildControls(); render();
-    onLang(function () { buildControls(); render(); });
+    table.innerHTML = "<tbody><tr><td>" + tt("Loading the game's gem data...") + "</td></tr></tbody>";
+    fetch("/gamedata/gem_upgrades.json", { credentials: "same-origin" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (d) {
+        data = d;
+        buildControls(); render();
+        onLang(function () { buildControls(); render(); });
+      })
+      .catch(function () {
+        table.innerHTML = "<tbody><tr><td>" + tt("The gem data could not be loaded. Reload the page to try again.") + "</td></tr></tbody>";
+      });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════

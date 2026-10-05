@@ -38,7 +38,7 @@ _PAGE_PATHS = frozenset({
     "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/changelog", "/mods", "/modpacks",
     "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
     "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
-    "/gems-guide", "/abilities", "/gem-abilities", "/guides", "/gem-tools", "/allies", "/fishing-guide",
+    "/gems-guide", "/abilities", "/gem-abilities", "/guides", "/gem-tools", "/allies", "/fishing-guide", "/gear-guide",
     "/loot-collector-guide", "/dressing-room", "/sound-studio", "/mod-workshop", "/tomes",
     "/blueprint-editor", "/unlock-debug", "/unlock_debug",
     "/search", "/zakros-ui-requests", "/zakros-ui-stats", "/community-sites",
