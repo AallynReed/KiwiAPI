@@ -229,6 +229,7 @@ def build_gem_stats() -> dict:
     """Max-roll Mystic gem stats for the build calculator: {type: {stat: [at level 35, per boost]}}."""
     out = {}
     names = {"Damage": GemStatType.PHYSICAL_DAMAGE, "Critical Damage": GemStatType.CRITICAL_DAMAGE,
+             "Critical Hit": GemStatType.CRITICAL_HIT,
              "Maximum Health": GemStatType.MAX_HEALTH, "Maximum Health %": GemStatType.MAX_HEALTH_BONUS,
              "Light": GemStatType.LIGHT}
     for gem_type in GemType:

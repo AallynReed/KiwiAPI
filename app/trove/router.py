@@ -97,6 +97,8 @@ from app.trove.gems.schemas import (
     GemLookups,
     GemStatRange,
     GenerateGemRequest,
+    HealthOptimizerRequest,
+    HealthOptimizerResponse,
     LevelPlan,
     LevelUpRequest,
     LevelUpResult,
@@ -1056,6 +1058,16 @@ async def calculate_builds(req: BuildConfigRequest, ctx: TokenContext = _GEM) ->
     except gem_builds.BuildError as e:
         raise _bad_request(str(e)) from e
     return BuildResponse(results=[BuildResult(**r) for r in results], count=len(results))
+
+
+@gems_router.post("/builds/health-optimizer", response_model=HealthOptimizerResponse)
+async def optimize_build_health(req: HealthOptimizerRequest, ctx: TokenContext = _GEM) -> HealthOptimizerResponse:
+    """Third-stat-line splits for the nine elemental gems that reach 100% Critical Hit,
+    ranked by max health."""
+    try:
+        return HealthOptimizerResponse(**gem_builds.optimize_health(req.model_dump()))
+    except gem_builds.BuildError as e:
+        raise _bad_request(str(e)) from e
 
 
 # --- Misc: modding software + time converter + news archive (scope: misc:read) --

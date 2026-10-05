@@ -70,7 +70,12 @@ from app.trove.codexes.types import ALL_TYPES as CODEX_TYPES
 from app.trove.gems import builds as gem_builds
 from app.trove.gems import evaluator as gem_evaluator
 from app.trove.gems.model import gem_lookups
-from app.trove.gems.schemas import BuildConfigRequest, EvaluateRequest, SimpleEvaluateRequest
+from app.trove.gems.schemas import (
+    BuildConfigRequest,
+    EvaluateRequest,
+    HealthOptimizerRequest,
+    SimpleEvaluateRequest,
+)
 from app.trove.leaderboards import activity as leaderboards_activity
 from app.trove.leaderboards import cache as leaderboards_cache
 from app.trove.leaderboards import class_activity as leaderboards_class_activity
@@ -404,6 +409,17 @@ async def site_gem_build_calculate(req: BuildConfigRequest) -> JSONResponse:
     except gem_builds.BuildError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     return JSONResponse(jsonable_encoder({"results": results, "count": len(results)}))
+
+
+@router.post("/site/gems/builds/health-optimizer", response_class=JSONResponse)
+async def site_gem_build_health(req: HealthOptimizerRequest) -> JSONResponse:
+    """Third-stat-line splits ranked by max health - same compute as
+    ``/v1/gems/builds/health-optimizer``."""
+    try:
+        out = gem_builds.optimize_health(req.model_dump())
+    except gem_builds.BuildError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return JSONResponse(jsonable_encoder(out))
 
 
 @router.get("/site/gems/parse-star-chart", response_class=JSONResponse)

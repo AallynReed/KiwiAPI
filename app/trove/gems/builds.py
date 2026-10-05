@@ -45,6 +45,16 @@ LILYPAD_MULTIPLIERS = {
 BOUNTY_HUNT_NODES = ("Bounty Hunt Boon", "Bounty Hunt")
 
 
+# Health Optimizer (from RenewedTroveTools): a damage build fills two of each
+# elemental gem's three stat lines, and this picks the third for all nine - enough
+# Critical Hit to reach the cap, then the split of Maximum Health and Maximum
+# Health % that gives the most health. Cosmic gems have no free line (Light is locked).
+HEALTH_LINES = ("Critical Hit", "Maximum Health", "Maximum Health %")
+HEALTH_GEAR_FLAGS = ("weapon_ch", "ring_ch", "hat_health", "face_health")
+CRIT_HIT_CAP = 100.0
+_HEALTH_KEYS = ("critical_hit", "maximum_health", "maximum_health_per")
+
+
 def _no_bounty_hunt() -> dict:
     return {"available": False, "name": None, "physical": 0.0, "magic": 0.0}
 
@@ -436,6 +446,57 @@ class GemOptimizerEngine:
             })
         return results
 
+    def optimize_health(self, config: dict) -> dict:
+        selected_class = self.classes.get(config.get("character", ""))
+        if selected_class is None:
+            raise BuildError(f"Unknown class '{config.get('character')}'.")
+        if not self.gem_stats:
+            raise BuildError("Gem data not loaded.")
+        sources = _load("builds/health_optimizer.json")
+
+        base = [_stat_value(selected_class["stats"], stat) + sum((sources.get(stat) or {}).values())
+                for stat in HEALTH_LINES]
+        for flag, line in (sources.get("gear_lines") or {}).items():
+            if config.get(flag):
+                base[HEALTH_LINES.index(line["stat"])] += line["value"]
+        if config.get("star_chart"):
+            chart = self.star_parser.parse_build_code(config["star_chart"])["stats"]
+            crit, health = _merged(chart, "Critical Hit"), _merged(chart, "Maximum Health")
+            base[0] += crit["flat"]
+            base[1] += health["flat"]
+            base[2] += health["pct"]
+
+        # Unboosted max-level lines (boosts go to the damage lines); x1.1 = Primordial dragons.
+        line_value = {t: [self.gem_stats[t][s][0] * 1.1 for s in HEALTH_LINES] for t in ("Empowered", "Lesser")}
+        precise = bool(config.get("high_precision"))
+
+        def rd(value: float) -> float:
+            return round(value, 8 if precise else 2)
+
+        ranked = []
+        for emp in itertools.combinations_with_replacement(range(3), 3):
+            for les in itertools.combinations_with_replacement(range(3), 6):
+                total = [base[i] + line_value["Empowered"][i] * emp.count(i) + line_value["Lesser"][i] * les.count(i)
+                         for i in range(3)]
+                if total[0] < CRIT_HIT_CAP - 1e-9:
+                    continue
+                ranked.append((total[1] * (1 + total[2] / 100), total, emp, les))
+        ranked.sort(key=lambda r: (-r[0], r[1][0]))
+
+        def counts(combo: tuple) -> dict:
+            return {key: combo.count(i) for i, key in enumerate(_HEALTH_KEYS)}
+
+        results = []
+        for i, (health, total, emp, les) in enumerate(ranked):
+            results.append({
+                "rank": i + 1,
+                "layout": "/".join(str(emp.count(j)) for j in range(3)) + " " + "/".join(str(les.count(j)) for j in range(3)),
+                "empowered": counts(emp), "lesser": counts(les),
+                **{key: rd(total[j]) for j, key in enumerate(_HEALTH_KEYS)},
+                "health": rd(health),
+            })
+        return {"base": {key: rd(base[j]) for j, key in enumerate(_HEALTH_KEYS)}, "results": results, "count": len(results)}
+
 
 class BuildError(ValueError):
     """Raised on invalid build config (mapped to 400 at the router)."""
@@ -449,6 +510,12 @@ def _engine() -> GemOptimizerEngine:
 def calculate_builds(config: dict) -> list[dict]:
     """Top-200 gem proc layouts for a build config, ranked by damage coefficient."""
     return _engine().calculate_builds(config)
+
+
+def optimize_health(config: dict) -> dict:
+    """Every way to fill the free third stat line of the nine elemental gems that
+    reaches the Critical Hit cap, ranked by resulting max health."""
+    return _engine().optimize_health(config)
 
 
 def parse_star_chart(code: str) -> dict:

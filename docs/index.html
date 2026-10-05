@@ -212,6 +212,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             <tr><td><code>GET /v1/gems/stat-range</code></td><td><code>gems:read</code></td><td>Plausible (min, max) value a stat can roll at</td></tr>
             <tr><td><code>GET /v1/gems/builds/options</code></td><td><code>gems:read</code></td><td>Valid build-config field values (classes, allies, foods, flags)</td></tr>
             <tr><td><code>POST /v1/gems/builds/calculate</code></td><td><code>gems:read</code></td><td>Top gem proc layouts for a build, ranked by damage coefficient</td></tr>
+            <tr><td><code>POST /v1/gems/builds/health-optimizer</code></td><td><code>gems:read</code></td><td>Third stat line for each elemental gem: reach 100% Critical Hit, then the most max health</td></tr>
             <tr><td><code>GET /v1/misc/news-history?limit=&offset=</code></td><td><code>misc:read</code></td><td>Full Trove news archive (never pruned), newest first, paginated</td></tr>
             <tr><td><code>GET /v1/btt/releases?channel=&limit=&offset=</code></td><td><code>btt:read</code></td><td>BetterTroveTools GitHub releases (newest first; filter by <code>release</code> / <code>beta</code> channel)</td></tr>
             <tr><td><code>GET /v1/btt/latest?channel=</code></td><td><code>btt:read</code></td><td>Latest BTT version per platform (windows/linux/android); each platform walks back to find an asset</td></tr>
@@ -256,7 +257,7 @@ curl https://api.aallyn.net/v1/&lt;endpoint&gt; \
             own, decoded from its files: <code>level-up</code> is an attempt that can fail, spends its
             materials either way and adds them to the gem's <code>spent</code> total. A failure fills the
             gem's <code>karma</code> bar (the game's pity meter, max 125), and the failure that fills it levels the gem up anyway.
-            <code>evaluate</code> and <code>builds/calculate</code>
+            <code>evaluate</code>, <code>builds/calculate</code> and <code>builds/health-optimizer</code>
             are pure calculators; the <code>lookups</code> and <code>builds/options</code> endpoints tell
             you every valid field value to send.</p>
           <p class="field-help">The <strong>mod</strong> tools are stateless too. <code>/mods/read</code>

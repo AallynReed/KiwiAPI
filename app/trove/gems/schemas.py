@@ -301,6 +301,42 @@ class BuildResponse(BaseModel):
     count: int
 
 
+class HealthOptimizerRequest(BaseModel):
+    character: str = "Bard"          # class display name
+    star_chart: str | None = None    # optional star-chart build code
+    weapon_ch: bool = False          # weapon carries a Critical Hit line
+    ring_ch: bool = False            # ring carries a Critical Hit line
+    hat_health: bool = False         # hat carries a Maximum Health % line
+    face_health: bool = False        # face carries a Maximum Health % line
+    high_precision: bool = False
+
+
+class HealthLineCounts(BaseModel):
+    critical_hit: int
+    maximum_health: int
+    maximum_health_per: int
+
+
+class HealthTotals(BaseModel):
+    critical_hit: float
+    maximum_health: float
+    maximum_health_per: float
+
+
+class HealthOptimizerResult(HealthTotals):
+    rank: int
+    layout: str                      # "E_ch/E_mh/E_mhp L_ch/L_mh/L_mhp", e.g. "0/0/3 3/3/0"
+    empowered: HealthLineCounts      # of the 3 Empowered gems, how many put their free line on each stat
+    lesser: HealthLineCounts         # same for the 6 Lesser gems
+    health: float                    # the ranking metric: max health
+
+
+class HealthOptimizerResponse(BaseModel):
+    base: HealthTotals               # every source except the gems' free lines
+    results: list[HealthOptimizerResult]
+    count: int
+
+
 class OptionEntry(BaseModel):
     key: str
     label: str

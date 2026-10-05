@@ -11,6 +11,7 @@
   const { h } = window.BTTDom;
 
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
+  const tr = (s) => s;   // marks a string handed to t() later, for the i18n audit
   const PER_PAGE = 25;
   const STORAGE_KEY = "troveapi.gemBuilds.v1";
 
@@ -38,6 +39,8 @@
     "Solarion": "solarion", "Tomb Raiser": "tombraiser", "Vanguardian": "crimefighter",
   };
   const classIcon = (name) => `/static/class-icons/${CLASS_TECH[name] || ""}.png`;
+  // Build goals come from the API; named here so the labels reach the locale files.
+  const BUILD_GOAL_LABEL = { Light: tr("Light"), Farm: tr("Farm"), Health: tr("Health") };
 
   // ── State ────────────────────────────────────────────────────────────────
   let options = null;
@@ -46,6 +49,7 @@
     food: "", ally: "boot_clown", ally_buff: true, critical_damage_count: 3, no_face: false,
     light: 0, subclass_active: false, litany: false, berserker_battler: false,
     bounty_hunt: true, star_chart: "", high_precision: false,
+    weapon_ch: false, ring_ch: false, hat_health: false, face_health: false,
   };
   let builds = [];
   let page = 0;
@@ -53,7 +57,12 @@
   let starChartInfo = null;   // {paths_count, stats} | {error:true} | null
   let advancedOpen = false;
 
-  let elConfig, elResults;
+  let health = null;          // /health-optimizer response
+  let hpPage = 0;
+  let hpCalculating = false;
+  const HP_PER_PAGE = 10;
+
+  let elConfig, elResults, elHealth;
   let scInput = null;   // the star-chart code field, kept in sync by the editor
 
   function saveConfig() {
@@ -125,31 +134,31 @@
   function renderConfig() {
     elConfig.textContent = "";
     const classEntries = options.character.map((c) => ({ value: c, label: c }));
-    const buildTypeEntries = options.build_type.map((b) => ({ value: b, label: b }));
-    const foodEntries = [{ value: "", label: "None" }].concat(options.food.map((f) => ({ value: f.key, label: f.label })));
-    const allyEntries = options.ally.map((a) => ({ value: a.key, label: a.label }));
+    const buildTypeEntries = options.build_type.map((b) => ({ value: b, label: BUILD_GOAL_LABEL[b] || b }));
+    const foodEntries = [{ value: "", label: tr("None") }].concat(options.food.map((f) => ({ value: f.key, label: f.label })));
+    const allyEntries = options.ally.map((a) => ({ value: a.key, label: a.key === "boot_clown" ? tr("No ally") : a.label }));
 
     // Character
     const charSection = h("div", { class: "gb-section" },
       h("h4", {}, h("i", { class: "fa-solid fa-user-astronaut" }), " " + t("Character")),
       h("div", { class: "gb-row-2" },
-        classSelectRow("Class", config.character, classEntries, (v) => { config.character = v; onConfigChange(); }),
-        classSelectRow("Subclass", config.subclass, classEntries, (v) => { config.subclass = v; onConfigChange(); })));
+        classSelectRow(tr("Class"), config.character, classEntries, (v) => { config.character = v; onConfigChange(); }),
+        classSelectRow(tr("Subclass"), config.subclass, classEntries, (v) => { config.subclass = v; onConfigChange(); })));
     elConfig.appendChild(charSection);
 
     // Gear / goal
     const gearSection = h("div", { class: "gb-section" },
       h("h4", {}, h("i", { class: "fa-solid fa-shield-halved" }), " " + t("Build & gear")),
       h("div", { class: "gb-row-2" },
-        selectRow("Build goal", config.build_type, buildTypeEntries, (v) => { config.build_type = v; onConfigChange(true); }),
-        selectRow("Food", config.food, foodEntries, (v) => { config.food = v; onConfigChange(); })),
-      selectRow("Ally", config.ally, allyEntries, (v) => { config.ally = v; onConfigChange(true); }));
+        selectRow(tr("Build goal"), config.build_type, buildTypeEntries, (v) => { config.build_type = v; onConfigChange(true); }),
+        selectRow(tr("Food"), config.food, foodEntries, (v) => { config.food = v; onConfigChange(); })),
+      selectRow(tr("Ally"), config.ally, allyEntries, (v) => { config.ally = v; onConfigChange(true); }));
 
     // Ally stats are the level-30 values; the Lilypad buff scales them further.
     if (config.ally !== "boot_clown") {
-      gearSection.appendChild(toggleRow("Blessing of the Lilypad", config.ally_buff,
+      gearSection.appendChild(toggleRow(tr("Blessing of the Lilypad"), config.ally_buff,
         (v) => { config.ally_buff = v; onConfigChange(); },
-        "The ally buff, on top of level 30: +15.5% to the ally's light and +31% to its damage bonus."));
+        tr("The ally buff, on top of level 30: +15.5% to the ally's light and +31% to its damage bonus.")));
     }
 
     // Farm-only light target
@@ -171,7 +180,7 @@
       gearSection.appendChild(h("label", { class: "gb-field" },
         h("span", { class: "gb-field-label" }, t("Gear crit-damage rolls"), " ", val),
         slider));
-      gearSection.appendChild(toggleRow("Face slot has no damage stat", config.no_face, (v) => { config.no_face = v; onConfigChange(); }, "Simulates a face slot with no damage stat."));
+      gearSection.appendChild(toggleRow(tr("Face slot has no damage stat"), config.no_face, (v) => { config.no_face = v; onConfigChange(); }, tr("Simulates a face slot with no damage stat.")));
     }
     elConfig.appendChild(gearSection);
 
@@ -200,9 +209,9 @@
     advSection.appendChild(advBtn);
     if (advancedOpen) {
       const grid = h("div", { class: "gb-toggle-grid" },
-        toggleRow("Berserker Battler", config.berserker_battler, (v) => { config.berserker_battler = v; onConfigChange(); }, "Treats Berserker Battler as active (adds its light)."),
-        toggleRow("Enlightened / Litany", config.litany, (v) => { config.litany = v; onConfigChange(); }, "Adds the light from the Enlightened (Litany) buff."),
-        toggleRow("Subclass active", config.subclass_active, (v) => { config.subclass_active = v; onConfigChange(); }, "Includes the passive stats from your chosen subclass."));
+        toggleRow(tr("Berserker Battler"), config.berserker_battler, (v) => { config.berserker_battler = v; onConfigChange(); }, tr("Treats Berserker Battler as active (adds its light).")),
+        toggleRow(tr("Enlightened / Litany"), config.litany, (v) => { config.litany = v; onConfigChange(); }, tr("Adds the light from the Enlightened (Litany) buff.")),
+        toggleRow(tr("Subclass active"), config.subclass_active, (v) => { config.subclass_active = v; onConfigChange(); }, tr("Includes the passive stats from your chosen subclass.")));
       advSection.appendChild(grid);
     }
     elConfig.appendChild(advSection);
@@ -322,9 +331,9 @@
     }
     const bh = bountyBuff();
     if (bh) {
-      const row = toggleRow("Bounty Hunt", !!config.bounty_hunt,
+      const row = toggleRow(tr("Bounty Hunt"), !!config.bounty_hunt,
         (v) => { config.bounty_hunt = v; onConfigChange(); },
-        "The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it.",
+        tr("The 4-hour buff from a Sundered Uplands 5-star boss. Untick it to rank your builds without it."),
         "gb-sc-buff");
       row.text.textContent = "";
       row.text.append(h("strong", {}, t("Bounty Hunt")),
@@ -339,6 +348,7 @@
     // debounce rapid config changes into one request
     if (calcTimer) clearTimeout(calcTimer);
     calcTimer = setTimeout(runCalculate, 120);
+    calculateHealth();
   }
   async function runCalculate() {
     calculating = true;
@@ -409,10 +419,10 @@
             helpIcon(buildHelp)),
           h("p", { class: "gb-top-reason" }, buildHeadline(top))),
         h("div", { class: "gb-top-stats" },
-          statBox("Coefficient", num(top.coefficient)),
-          statBox("Light", num(top.light)),
-          statBox("Crit dmg", dec(top.crit_dmg, 1) + "%"),
-          builds[1] ? statBox("Lead vs #2", "+" + dec(((top.coefficient - builds[1].coefficient) / builds[1].coefficient) * 100, 3) + "%") : null));
+          statBox(tr("Coefficient"), num(top.coefficient)),
+          statBox(tr("Light"), num(top.light)),
+          statBox(tr("Crit dmg"), dec(top.crit_dmg, 1) + "%"),
+          builds[1] ? statBox(tr("Lead vs #2"), "+" + dec(((top.coefficient - builds[1].coefficient) / builds[1].coefficient) * 100, 3) + "%") : null));
       elResults.appendChild(card);
     }
 
@@ -421,10 +431,10 @@
       h("div", { class: "gb-metrics" },
         h("span", { class: "gb-chip" }, h("i", { class: "fa-solid fa-list-ol" }), " " + t("Builds") + ": " + builds.length),
         builds.length ? h("span", { class: "gb-chip" }, h("i", { class: "fa-solid fa-trophy" }), " " + t("Best") + ": " + num(bestCoeff)) : null,
-        h("span", { class: "gb-chip" }, h("i", { class: "fa-solid fa-gem" }), " " + t(config.build_type))),
+        h("span", { class: "gb-chip" }, h("i", { class: "fa-solid fa-gem" }), " " + t(BUILD_GOAL_LABEL[config.build_type] || config.build_type))),
       h("div", { class: "gb-toolbar-right" },
-        toggleRow("High precision decimals", config.high_precision, (v) => { config.high_precision = v; onConfigChange(); },
-          "Shows up to 8 decimals on every number instead of rounding to 1-2.", "gb-toggle-inline"),
+        toggleRow(tr("High precision decimals"), config.high_precision, (v) => { config.high_precision = v; onConfigChange(); },
+          tr("Shows up to 8 decimals on every number instead of rounding to 1-2."), "gb-toggle-inline"),
         h("div", { class: "gb-state" + (calculating ? " busy" : "") },
           h("i", { class: "fa-solid " + (calculating ? "fa-spinner fa-spin" : "fa-circle-check") }),
           " " + (calculating ? t("Calculating...") : t("Ready")))));
@@ -491,6 +501,134 @@
     return t("Highest damage coefficient for your setup.");
   }
 
+  // ── Health optimizer ─────────────────────────────────────────────────────
+  // A damage build fills two stats on each gem; this spends the third on the
+  // nine Fire/Water/Air gems. Meaningless for a Health build, so it hides there.
+  const HP_STATS = [
+    { key: "critical_hit", label: "Critical Hit" },
+    { key: "maximum_health", label: "Maximum Health" },
+    { key: "maximum_health_per", label: tr("Maximum Health %") },
+  ];
+  const hpApplies = () => config.build_type !== "Health";
+
+  let hpTimer = null;
+  function calculateHealth() {
+    if (hpTimer) clearTimeout(hpTimer);
+    hpTimer = setTimeout(runHealth, 120);
+  }
+  async function runHealth() {
+    if (!elHealth) return;
+    if (!hpApplies()) { renderHealth(); return; }
+    hpCalculating = true;
+    renderHealth();
+    try {
+      health = await apiPost("/site/gems/builds/health-optimizer", {
+        character: config.character, star_chart: config.star_chart || null,
+        weapon_ch: config.weapon_ch, ring_ch: config.ring_ch,
+        hat_health: config.hat_health, face_health: config.face_health,
+        high_precision: config.high_precision,
+      });
+      hpPage = 0;
+    } catch (e) {
+      health = null;
+      toast(t("Could not optimize health") + ": " + e.message, true);
+    } finally {
+      hpCalculating = false;
+      renderHealth();
+    }
+  }
+
+  // "3 Empowered · 2 Lesser", skipping a gem type that carries none of it.
+  function hpGems(b, key) {
+    const parts = [];
+    if (b.empowered[key]) parts.push(b.empowered[key] + " " + t("Empowered"));
+    if (b.lesser[key]) parts.push(b.lesser[key] + " " + t("Lesser"));
+    return parts.join(" · ");
+  }
+
+  function renderHealth() {
+    if (!elHealth) return;
+    elHealth.hidden = !hpApplies();
+    if (elHealth.hidden) return;
+    elHealth.textContent = "";
+    const results = (health && health.results) || [];
+    const best = results[0];
+    const layoutHelp = t("How many gems put their spare stat on each one: Empowered, then Lesser - Critical Hit / Max Health / Max Health %.");
+
+    elHealth.appendChild(h("div", { class: "gb-hp-head" },
+      h("h2", { class: "gb-hp-title", id: "gb-hp-title" }, h("i", { class: "fa-solid fa-heart-pulse", "aria-hidden": "true" }), " " + t("Health optimizer")),
+      h("p", { class: "gb-hp-lead" }, t("Turn the spare stat on each gem into as much health as possible, without dropping below 100% critical hit."),
+        " ", helpIcon(t("Your damage build uses two of each gem's three stats. This picks the third on your Fire, Water and Air gems - Cosmic gems have no spare stat.")))));
+
+    const gear = (key, label) => toggleRow(label, !!config[key], (v) => { config[key] = v; saveConfig(); calculateHealth(); }, null, "gb-toggle-inline");
+    elHealth.appendChild(h("div", { class: "gb-hp-gear", role: "group", "aria-label": t("Your gear") },
+      h("span", { class: "gb-field-label" }, t("Your gear")),
+      h("div", { class: "gb-hp-gear-grid" },
+        gear("weapon_ch", tr("Critical Hit on weapon")),
+        gear("ring_ch", tr("Critical Hit on ring")),
+        gear("hat_health", tr("Max Health % on hat")),
+        gear("face_health", tr("Max Health % on face")))));
+
+    if (best) {
+      const rows = HP_STATS.map((s) => {
+        const gems = hpGems(best, s.key);
+        return gems ? h("li", {}, h("strong", {}, t(s.label)), h("span", {}, gems)) : null;
+      });
+      elHealth.appendChild(h("div", { class: "gb-top-card gb-hp-best" },
+        h("div", { class: "gb-top-copy" },
+          h("ul", { class: "gb-hp-split" }, rows),
+          health.base ? h("p", { class: "gb-top-reason" },
+            t("Before gems you have {n}% critical hit.").replace("{n}", num(health.base.critical_hit))) : null),
+        h("div", { class: "gb-top-stats" },
+          statBox(tr("Max health"), round(best.health)),
+          statBox(tr("Crit hit"), num(best.critical_hit) + "%"),
+          statBox(tr("Flat health"), round(best.maximum_health)),
+          statBox(tr("Health %"), num(best.maximum_health_per) + "%"))));
+    }
+
+    const wrap = h("div", { class: "gb-table-wrap" });
+    const table = h("table", { class: "gb-table" });
+    table.appendChild(h("thead", {}, h("tr", {},
+      h("th", { class: "c" }, "#"),
+      h("th", { class: "l" }, t("Spare stat"), " ", helpIcon(layoutHelp)),
+      h("th", { class: "r" }, t("Crit hit")),
+      h("th", { class: "r" }, t("Flat health")),
+      h("th", { class: "r" }, t("Health %")),
+      h("th", { class: "r sort" }, t("Max health")),
+      h("th", { class: "r" }, t("Diff")))));
+    const tbody = h("tbody", {});
+    if (hpCalculating && !results.length) {
+      tbody.appendChild(h("tr", {}, h("td", { class: "c muted", colspan: 7 }, h("i", { class: "fa-solid fa-spinner fa-spin" }), " " + t("Crunching the math..."))));
+    } else if (!results.length) {
+      tbody.appendChild(h("tr", {}, h("td", { class: "c muted", colspan: 7 }, t("No split reaches 100% critical hit."))));
+    } else {
+      const start = hpPage * HP_PER_PAGE;
+      results.slice(start, start + HP_PER_PAGE).forEach((b) => {
+        tbody.appendChild(h("tr", { class: b.rank === 1 ? "best" : "" },
+          h("td", { class: "c" }, b.rank),
+          h("td", { class: "l layout gb-hp-layout" }, b.layout),
+          h("td", { class: "r" }, num(b.critical_hit) + "%"),
+          h("td", { class: "r" }, round(b.maximum_health)),
+          h("td", { class: "r" }, num(b.maximum_health_per) + "%"),
+          h("td", { class: "r sort strong" }, round(b.health)),
+          h("td", { class: "r" }, b.rank === 1
+            ? h("span", { class: "gb-best-tag" }, t("Best"))
+            : h("span", { class: "gb-diff" }, "-" + dec(((best.health - b.health) / best.health) * 100, 3) + "%"))));
+      });
+    }
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    elHealth.appendChild(wrap);
+
+    const maxPages = Math.max(1, Math.ceil(results.length / HP_PER_PAGE));
+    elHealth.appendChild(h("div", { class: "gb-pagination" },
+      h("span", { class: "gb-page-note" }, t("Assumes every dragon, full mastery and a club.")),
+      h("div", { class: "gb-pager" },
+        h("button", { class: "gb-btn-icon", "aria-label": t("Previous page"), disabled: hpPage === 0, onClick: () => { hpPage = Math.max(0, hpPage - 1); renderHealth(); } }, h("i", { class: "fa-solid fa-chevron-left", "aria-hidden": "true" })),
+        h("span", { class: "gb-page-label" }, `${t("Page")} ${hpPage + 1} / ${maxPages}`),
+        h("button", { class: "gb-btn-icon", "aria-label": t("Next page"), disabled: hpPage >= maxPages - 1, onClick: () => { hpPage = Math.min(maxPages - 1, hpPage + 1); renderHealth(); } }, h("i", { class: "fa-solid fa-chevron-right", "aria-hidden": "true" })))));
+  }
+
   // ── Last updated ─────────────────────────────────────────────────────────
   // The template stamps the UTC instant; this rewrites it in whatever timezone
   // and locale the reader's browser is set to, so nobody has to convert from
@@ -513,6 +651,7 @@
     renderUpdated();
     elConfig = document.getElementById("gb-config");
     elResults = document.getElementById("gb-results");
+    elHealth = document.getElementById("gb-health");
     if (!elConfig) return;
 
     loadConfig();
@@ -533,8 +672,11 @@
 
     renderConfig();
     renderResults();
+    renderHealth();
     if (config.star_chart) fetchStarChart();
     calculate();
+    // Labels go through t() once, which can beat the locale file to the page.
+    document.addEventListener("btt-lang-changed", () => { renderConfig(); renderResults(); renderHealth(); });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

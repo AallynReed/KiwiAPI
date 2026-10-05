@@ -201,6 +201,24 @@
 .gb-btn-icon:hover:not(:disabled) { border-color: var(--accent-blue); color: var(--text); }
 .gb-btn-icon:disabled { opacity: .4; cursor: default; }
 
+/* ── Health optimizer ────────────────────────────────────────────────────── */
+.gb-results-col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.gb-hp-head { margin-bottom: 14px; }
+.gb-hp-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 1.15rem; font-weight: 700; margin: 0 0 6px; color: var(--text); }
+.gb-hp-title i { color: var(--accent-red); margin-right: 4px; }
+.gb-hp-lead { color: var(--text-mute); font-size: .9rem; margin: 0; line-height: 1.5; }
+.gb-hp-gear { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.gb-hp-gear-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; }
+@media (max-width: 520px) { .gb-hp-gear-grid { grid-template-columns: 1fr; } }
+.gb-hp-gear-grid .gb-toggle { margin-top: 4px; }
+.gb-hp-split { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.gb-hp-split li { display: flex; gap: 10px; flex-wrap: wrap; font-size: .95rem; }
+.gb-hp-split strong { color: var(--text); min-width: 150px; }
+.gb-hp-split span { color: var(--text-mute); font-variant-numeric: tabular-nums; }
+.gb-table td.gb-hp-layout { cursor: default; }
+.gb-table td.gb-hp-layout:hover { color: var(--text); }
+.gb-page-note { font-size: .8rem; color: var(--text-mute); }
+
 /* ── Toast (shared) ──────────────────────────────────────────────────────── */
 .gem-toast-host { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
 .gem-toast { background: var(--bg-card-hi); border: 1px solid color-mix(in oklab, var(--accent-blue) 45%, var(--bg-line)); border-radius: var(--radius-sm, 8px); padding: 10px 16px; color: var(--text); font-size: .88rem; box-shadow: var(--shadow-soft, 0 8px 24px rgba(0,0,0,.4)); transition: opacity .3s, transform .3s; }

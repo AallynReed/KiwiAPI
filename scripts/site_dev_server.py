@@ -4382,6 +4382,15 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json({"detail": str(e)}, 400)
             return self._send_json({"results": results, "count": len(results)})
 
+        if path == "/site/gems/builds/health-optimizer":
+            if not _GEMS_OK:
+                return self._send_json({"detail": "gem tools unavailable"}, 503)
+            try:
+                out = _gem_builds.optimize_health(body)
+            except _gem_builds.BuildError as e:
+                return self._send_json({"detail": str(e)}, 400)
+            return self._send_json(out)
+
         return self.send_error(404)
 
     def _send_file(self, p: Path, content_type: str | None, extra_ctx: dict | None = None):
