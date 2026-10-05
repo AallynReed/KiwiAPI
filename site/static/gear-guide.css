@@ -125,6 +125,7 @@
 /* ── Item icons (codex blueprint renders) ──────────────────────────────────── */
 .gr-ic { width: 28px; height: 28px; flex-shrink: 0; object-fit: contain; }
 .gr-named { display: inline-flex; align-items: center; gap: .55rem; }
+.gr-named .gr-tag, .gr-mat .gr-tag { margin-left: .1rem; }
 .gr-banner h3.gr-named { display: flex; }
 .gr-banner h3 .gr-ic { width: 36px; height: 36px; }
 .gr-mats { display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; }

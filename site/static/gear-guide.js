@@ -168,9 +168,8 @@
 
   // ── Forging ──────────────────────────────────────────────────────────────
   const costList = (list) => h("span", { class: "gr-mats" }, (list || []).map((c) =>
-    h("span", { class: "gr-mat" }, itemIcon(c.item), h("strong", {}, fmt(c.count, 0)), " " + c.name)));
-  const retiredTag = (list) => ((list || []).some((c) => RETIRED_ITEMS.has(c.item))
-    ? h("span", { class: "gr-tag" }, t("Retired")) : null);
+    h("span", { class: "gr-mat" }, itemIcon(c.item), h("strong", {}, fmt(c.count, 0)), " " + c.name,
+      RETIRED_ITEMS.has(c.item) ? h("span", { class: "gr-tag" }, t("Retired")) : null)));
 
   function renderForge() {
     const f = data.forge;
@@ -322,10 +321,10 @@
     f.stations.forEach((s) => s.operations.forEach((op, i) => {
       body.appendChild(h("tr", {},
         i === 0 ? h("th", { class: "l", scope: "rowgroup", rowspan: s.operations.length },
-          h("span", { class: "gr-named" }, itemIcon(s.prefab.replace(/_interactive$/, "")), s.name),
-          LEGACY_STATIONS.has(s.prefab) ? h("span", { class: "gr-tag" }, t("Legacy")) : null) : null,
+          h("span", { class: "gr-named" }, itemIcon(s.prefab.replace(/_interactive$/, "")), s.name,
+            LEGACY_STATIONS.has(s.prefab) ? h("span", { class: "gr-tag" }, t("Legacy")) : null)) : null,
         h("td", { class: "l" }, t(op.label)),
-        h("td", { class: "l" }, op.cost ? costList(op.cost) : t("Depends on the item's rarity (see above)"), retiredTag(op.cost))));
+        h("td", { class: "l" }, op.cost ? costList(op.cost) : t("Depends on the item's rarity (see above)"))));
     }));
     host.appendChild(h("table", { class: "gr-table" },
       h("thead", {}, h("tr", {},
