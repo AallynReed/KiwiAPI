@@ -382,6 +382,9 @@ class Settings(BaseSettings):
     # Trovesaurus and Steam ids are read from custom_art_remote.
     mod_stats_handle: str = "aallyn"
 
+    # The site account that still sees taken-down mods.
+    site_master_handle: str = "aallyn"
+
     # Where the BetterTroveTools showcase site (templates + static + assets) lives.
     # Bind-mounted into the api container from `./site` in the project root.
     site_root: str = "site"

@@ -194,6 +194,10 @@ def is_primary_owner(project: ModProject, actor: SiteUser | None) -> bool:
     return actor is not None and actor.id == project.owner_id
 
 
+def is_site_master(actor: SiteUser | None) -> bool:
+    return actor is not None and actor.username == settings.site_master_handle
+
+
 def _require_owner(project: ModProject, actor: SiteUser) -> None:
     """Edit-level gate: the primary owner or any collaborator. (Named *owner* for
     history; collaborators are co-owners with edit rights.)"""
@@ -624,10 +628,10 @@ def effective_visibility(project: ModProject) -> str:
 def can_view(project: ModProject, viewer: SiteUser | None) -> bool:
     """Visibility gate. Owners + collaborators always see their projects (incl.
     drafts and taken-down ones, flagged); everyone else is bound by visibility +
-    takedown."""
+    takedown. The site master sees taken-down mods too."""
     if can_edit(project, viewer):
         return True
-    if project.taken_down:
+    if project.taken_down and not is_site_master(viewer):
         return False
     return effective_visibility(project) in _REACHABLE
 
@@ -642,7 +646,9 @@ def source_visible(project: ModProject, viewer: SiteUser | None) -> bool:
         return False
     if can_edit(project, viewer):
         return True
-    if project.taken_down or project.source_visibility != "public":
+    if project.taken_down and not is_site_master(viewer):
+        return False
+    if project.source_visibility != "public":
         return False
     return effective_visibility(project) in _REACHABLE
 
@@ -712,7 +718,7 @@ async def project_detail(project: ModProject, viewer: SiteUser | None) -> dict:
         "website_url": project.website_url,
         "donation_urls": project.donation_urls,
         "taken_down": project.taken_down,
-        "takedown_reason": project.takedown_reason if is_owner else None,
+        "takedown_reason": project.takedown_reason if is_owner or is_site_master(viewer) else None,
         "is_owner": is_owner,
         "is_primary_owner": primary,
         "owner_avatar_url": await owner_avatar_url(project),
