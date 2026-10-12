@@ -11,7 +11,7 @@
                 "type": "Active",
                 "active": true,
                 "energy": 0,
-                "cooldown": 0,
+                "cooldown": 25.0,
                 "stages": [
                     {
                         "name": "Boomerang Bullet Bow",
@@ -2933,8 +2933,8 @@
                 "icon": "",
                 "type": "",
                 "active": true,
-                "energy": 0,
-                "cooldown": 0,
+                "energy": 0.0,
+                "cooldown": 4.0,
                 "stages": [
                     {
                         "name": "Clever Snare Effect Dot",

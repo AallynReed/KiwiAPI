@@ -72,7 +72,7 @@ def _component_labels(cid: int, n_sections: int) -> dict[int, dict[int, str]]:
         out[leaf] = dict(_IDENTITY)
     if cid in F.ACTIONS:
         energy, cooldown = F.ACTIONS[cid]
-        labels = out.setdefault(leaf, {})
+        labels = out.setdefault(F.ACTION_SECTION, {})
         if energy is not None:
             labels[energy] = "energy cost"
         if cooldown is not None:

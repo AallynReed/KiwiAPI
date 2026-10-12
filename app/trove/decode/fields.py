@@ -12,11 +12,14 @@ from app.trove.codexes.bonuses import STAT_KEYS
 IDENTITY = 49
 ID_NAME, ID_CATEGORY, ID_DESCRIPTION, ID_ICON = 1, 2, 5, 6
 
-# Ability action components -> (energy cost field, cooldown field), both on the leaf
-# section. Energy is what the class's CanUse compares with the entity's energy
+# Ability action components -> (energy cost field, cooldown field), both in section
+# ACTION_SECTION: the action class's own level. Section 0 is the empty base, and
+# subclasses (178, 380, 382, 1008, 1020) add a third section after it, so it is not
+# always the leaf. Energy is what the class's CanUse compares with the entity's energy
 # pool (component 1) or runs through the "useCost" modifier; cooldown is what its
 # GetCooldown returns (interface vtable slot 15, or the "cooldown" modifier).
 # None = the class has no such cost. An absent field is 0 (factories memset).
+ACTION_SECTION = 1
 ACTIONS: dict[int, tuple[int | None, int | None]] = {
     54: (5, 23),      # melee attack
     57: (11, 16),     # throw (Pretend Pirate 65 / Defused Dummy 45 energy)

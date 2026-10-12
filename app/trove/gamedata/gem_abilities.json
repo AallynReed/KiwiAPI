@@ -943,8 +943,8 @@
             {
                 "name": "Clever Snare",
                 "prefab": "abilities/dinotamer/ultimate/clever_snare",
-                "energy": 0,
-                "cooldown": 0
+                "energy": 0.0,
+                "cooldown": 4.0
             },
             {
                 "name": "Meat Summon",
@@ -4704,8 +4704,8 @@
             {
                 "name": "Clever Snare",
                 "prefab": "abilities/dinotamer/ultimate/clever_snare",
-                "energy": 0,
-                "cooldown": 0
+                "energy": 0.0,
+                "cooldown": 4.0
             },
             {
                 "name": "Meat Summon",
@@ -8261,8 +8261,8 @@
             {
                 "name": "Clever Snare",
                 "prefab": "abilities/dinotamer/ultimate/clever_snare",
-                "energy": 0,
-                "cooldown": 0
+                "energy": 0.0,
+                "cooldown": 4.0
             },
             {
                 "name": "Meat Summon",

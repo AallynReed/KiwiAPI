@@ -120,11 +120,12 @@ def action(pf: Prefab | None) -> dict | None:
         if spec is None:
             continue
         energy_i, cooldown_i = spec
+        section = obj[F.ACTION_SECTION] if len(obj) > F.ACTION_SECTION else {}
         out: dict[str, Any] = {"component": cid}
         if energy_i is not None:
-            out["energy"] = _num(obj.get(energy_i, 0))
+            out["energy"] = _num(section.get(energy_i, 0))
         if cooldown_i is not None:
-            out["cooldown"] = _num(obj.get(cooldown_i, 0))
+            out["cooldown"] = _num(section.get(cooldown_i, 0))
         return out
     return None
 
