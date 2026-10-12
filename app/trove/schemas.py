@@ -99,10 +99,10 @@ class Luxion(BaseModel):
 
 class LuxionAppearanceOut(BaseModel):
     started_at: int      # the sighting that opened the run, unix seconds
-    ends_at: int         # when Luxion was seen to leave, else the projected end
+    ends_at: int         # 7 days after the start day, or ended_at if closed early
     first_seen_at: datetime
     last_seen_at: datetime
-    ended_at: datetime | None = None   # set once the bot reported him absent
+    ended_at: datetime | None = None   # set only if the run was closed early
 
 
 class LuxionHistoryPage(BaseModel):
@@ -1509,8 +1509,8 @@ class CaptureInsertResponse(BaseModel):
 class LuxionInsertRequest(BaseModel):
     """What the bot just read off the welcome screen.
 
-    ``active`` false means it read the screen and Luxion was NOT on it - the one
-    signal that ends a run. Defaults to true so the body stays optional and an
+    ``active`` false closes a live run early; runs otherwise end after 7 days.
+    Defaults to true so the body stays optional and an
     older bot that posts ``{}`` still reports a sighting."""
     active: bool = True
 

@@ -390,10 +390,8 @@ async def insert_luxion(
     appearance starting now, anchored to the current trove-day (00:00 = 11:00 UTC),
     and derives the run's merchant windows from the 27h cycle grid.
 
-    Post ``{"active": false}`` when the welcome screen no longer carries Luxion.
-    That is what ENDS the run, and the only thing that does - a gap in sightings
-    never ends one, because silence means the scraper is down rather than that the
-    merchant left.
+    A run ends on its own at the daily reset ``LUXION_RUN_DAYS`` after its start
+    day. Post ``{"active": false}`` only to close one early.
 
     Idempotent within a live run: re-reporting a sighting just refreshes the
     timestamp (``refreshed=true``) and announces nothing, so one visit produces
@@ -430,7 +428,7 @@ async def list_luxion_history(
     items = []
     for d in docs:
         starts_at, ends_at = luxion_mod.run_bounds(
-            d.started_at, d.first_seen_at, d.last_seen_at, d.ended_at)
+            d.started_at, d.first_seen_at, d.ended_at)
         items.append(LuxionAppearanceOut(
             started_at=starts_at, ends_at=ends_at,
             first_seen_at=d.first_seen_at, last_seen_at=d.last_seen_at,

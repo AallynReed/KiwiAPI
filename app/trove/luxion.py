@@ -13,26 +13,16 @@ to be wrong: the run was assumed to open at the first 27h-grid slot at or after
 the start day's reset, which put ``starts_at`` up to 21 hours in the FUTURE while
 the game was already advertising him, so the dashboard read "Away" all day.
 
-- ``run_bounds(day, first_seen, last_seen, ended)`` -> the run: the sighting, to
-  the run's end.
-- The end is the bot reporting Luxion ABSENT from the welcome screen when it has
-  one; otherwise the daily reset ``LUXION_RUN_DAYS`` after the start day, stretched
-  if we are still seeing him past it. A run is a full trove week: the 2026-08 run
-  opened on the Monday reset and runs to the next one. The 2026-07 run died on the
-  07-27 reset - present at 10:40, gone at 11:40 - which is that same Monday
-  boundary reached early, because that run did not open until the Tuesday
-  afternoon (absent 07-21 14:40, present 15:06). The projection is what the bot
-  falls back on when it has gone quiet; an observed absence always wins.
+- ``run_bounds(day, first_seen, ended)`` -> the run: the sighting, to the run's end.
+- A run lasts ``LUXION_RUN_DAYS``: it ends on its own at the daily reset that many
+  days after the start day, with no need for the bot to report him gone. The
+  2026-08 run opened on the Monday reset and ran to the next one. A stored
+  ``ended_at`` still wins, which is how the 2026-07 run reads right: it opened on
+  the Tuesday afternoon and died on the Monday 07-27 reset.
 
-A run keeps its identity for as long as it is open, and that is deliberate: the
-SSE signature and the Discord announcer are both edge-triggered on ``starts_at``,
-so one run announces exactly ONCE. The hourly re-sightings collapse into it, and a
-run cannot be re-opened as a "new" appearance just because the projected end went
-by while the game was still advertising him. Only a real absence ends a run.
-
-Note what does NOT end one: a gap in sightings. The scraper has gone 58 hours
-silent in the middle of a live run, so silence means the bot is down, never that
-the merchant left.
+The SSE signature and the Discord announcer are both edge-triggered on
+``starts_at``, so one run announces exactly ONCE and the hourly re-sightings
+collapse into it.
 
 The 3-hour merchant windows are a separate, deterministic thing: the merchant is
 open for 3 hours then away for 24 - a 27-hour cycle ticking continuously since
@@ -60,12 +50,6 @@ from app.trove import server_time
 # docstring for the capture data behind this.
 LUXION_RUN_DAYS = 7
 _WINDOW = 3 * 3600          # 3-hour merchant window
-# How long a sighting keeps the run alive PAST its projected end. Only reached
-# when the projection was short and the game is still showing him, so it just has
-# to outlast the bot's hourly cadence (worst in-run gap while reporting normally:
-# 3.06h). Deliberately not days: past the projection a silent scraper means we no
-# longer know, and claiming he is here is worse than letting the run lapse.
-_SIGHTING_HOLD = 4 * 3600
 _CYCLE = 27 * 3600          # 3h open + 24h away; the opening shifts +3h each day
 
 # Origin of the never-resetting 27h cycle grid: trove 2025-10-10 00:00, i.e. that
@@ -100,7 +84,6 @@ def next_grid_slot(after: int) -> int:
 
 def run_bounds(day_anchor: int,
                first_seen: datetime | int | None = None,
-               last_seen: datetime | int | None = None,
                ended: datetime | int | None = None) -> tuple[int, int]:
     """``(run start, run end)`` for a run captured on ``day_anchor``.
 
@@ -110,38 +93,23 @@ def run_bounds(day_anchor: int,
     start-day anchors) we fall back to the day's reset, which is the earliest the
     run can have begun.
 
-    The end, in order of how much we trust it:
-
-    1. ``ended`` - the bot read the welcome screen and Luxion was not on it. That
-       is an observation, so it wins outright.
-    2. ``last_seen`` past the projected end - we are still SEEING him, so the run
-       is demonstrably longer than ``LUXION_RUN_DAYS``. Stretch to that sighting
-       plus ``_SIGHTING_HOLD`` rather than declaring him gone while the game says
-       otherwise; each hourly report slides it forward again.
-    3. the projection - ``LUXION_RUN_DAYS`` after the start day's reset. Used when
-       the bot has gone quiet, so a dead scraper still lets the run lapse."""
+    The end is the reset ``LUXION_RUN_DAYS`` after the start day, or ``ended``
+    when one is stored."""
     start = _ts(first_seen)
     over = _ts(ended)
-    if over is not None:
-        end = over
-    else:
-        end = day_anchor + LUXION_RUN_DAYS * 86400
-        seen = _ts(last_seen)
-        if seen is not None and seen + _SIGHTING_HOLD > end:
-            end = seen + _SIGHTING_HOLD
+    end = over if over is not None else day_anchor + LUXION_RUN_DAYS * 86400
     return (day_anchor if start is None else start), end
 
 
 def schedule_for(day_anchor: int,
                  first_seen: datetime | int | None = None,
-                 last_seen: datetime | int | None = None,
                  ended: datetime | int | None = None) -> list[dict]:
     """The 3-hour merchant windows inside the run that started on ``day_anchor``,
     soonest first. These are the global 27h-grid slots that fall within the run -
     CLIPPED to it, so a finished run stops advertising windows it never had.
     ``state`` carries the run-day label ("Day 1", "Day 2", …) so a consumer can
     show the rotation without recomputing it."""
-    start, end = run_bounds(day_anchor, first_seen, last_seen, ended)
+    start, end = run_bounds(day_anchor, first_seen, ended)
     out, opens, day = [], next_grid_slot(start), 1
     while opens < end:
         out.append({
@@ -187,9 +155,9 @@ def build_response(day_anchor: int, first_seen_at: datetime | None,
     open, else the run's end."""
     real = now or server_time.real_utc_now()
     now_ts = int(real.timestamp())
-    started_at, end = run_bounds(day_anchor, first_seen_at, last_seen_at, ended_at)
+    started_at, end = run_bounds(day_anchor, first_seen_at, ended_at)
     active = started_at <= now_ts < end
-    sched = schedule_for(day_anchor, first_seen_at, last_seen_at, ended_at)
+    sched = schedule_for(day_anchor, first_seen_at, ended_at)
 
     current = next(
         (w for w in sched if w["starts_at"] <= now_ts < w["ends_at"]), None
