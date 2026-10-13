@@ -1000,6 +1000,8 @@ async def lookup_mods(req: HashLookupRequest, ctx: AccessContext = _PUB) -> dict
     """Resolve mod + release metadata from one or more artifact content hashes
     (sha256 hex). ``results`` is keyed by hash; ``unknown`` lists the hashes with
     no public match. Useful for an app to identify installed .tmod files.
+    ``taken_down`` lists the hashes that belong to a mod a moderator took down, so an
+    app can uninstall them.
 
     Pass ``include_releases: true`` (or ``releases: "latest"``) to get the current
     build of each matched mod's every branch in the same response - that is everything

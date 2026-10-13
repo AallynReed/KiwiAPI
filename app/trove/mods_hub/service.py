@@ -43,6 +43,7 @@ from app.trove.mods_hub.models import (
     ModRelease,
     ModStar,
     RemixClaim,
+    TakenDownArtifact,
     Visibility,
 )
 from app.trove.render import bp_cache
@@ -912,10 +913,26 @@ async def update_project(
     return project
 
 
+async def _remember_takedown(project: ModProject) -> None:
+    """Record every release hash of a taken-down project in TakenDownArtifact, so
+    the lookup keeps naming its copies after the project itself is deleted."""
+    for release in await ModRelease.find(ModRelease.project_id == project.id).to_list():
+        for sha in {release.tmod_sha, *(release.prior_tmod_shas or [])} - {None, ""}:
+            await TakenDownArtifact.get_pymongo_collection().update_one(
+                {"sha256": sha},
+                {"$set": {"project_id": project.id, "title": project.title,
+                          "owner_handle": project.owner_handle},
+                 "$setOnInsert": {"created_at": utcnow()}},
+                upsert=True,
+            )
+
+
 async def _purge_project(project: ModProject) -> None:
     # Metadata + the git repo are removed; CAS blobs (images, compiled .tmod) are
     # content-addressed + shared, so they're left for a future GC pass rather than
     # risk deleting a blob another project still references.
+    if project.taken_down:
+        await _remember_takedown(project)
     await ModRelease.find(ModRelease.project_id == project.id).delete()
     await ContentReport.find(
         ContentReport.target_type == "mod", ContentReport.target_id == project.id
@@ -2902,6 +2919,7 @@ async def take_down(project_id: str, reason: str) -> ModProject:
     project.takedown_reason = reason.strip() or "Removed by a moderator."
     project.updated_at = utcnow()
     await project.save()
+    await _remember_takedown(project)
     # DSA Art. 17: resolve the reports and give the owner a statement of reasons.
     from app.trove import moderation
     await moderation.resolve_reports_for("mod", project.id)
@@ -2921,6 +2939,7 @@ async def restore(project_id: str) -> ModProject:
     project.takedown_reason = None
     project.updated_at = utcnow()
     await project.save()
+    await TakenDownArtifact.find(TakenDownArtifact.project_id == project.id).delete()
     return project
 
 
@@ -3547,7 +3566,9 @@ async def lookup_by_hashes(
     """Resolve mod metadata for one or more artifact content hashes (sha256 hex).
     Per known hash, returns the matching mod + the specific release (newest if the
     owner reused it); hashes with no public match are listed under ``unknown``.
-    Draft / taken-down mods never match.
+    Draft / taken-down mods never match. A hash of a taken-down mod's release is
+    also listed under ``taken_down``, so an app can remove the installed copy - even
+    after the project is deleted, from the TakenDownArtifact record.
 
     A build that was repacked to carry an attached config answers to BOTH hashes -
     the release's own and the modder's pre-injection upload - so a copy installed
@@ -3565,6 +3586,7 @@ async def lookup_by_hashes(
     uniq = [h for h in (x.strip().lower() for x in hashes if x and x.strip())
             if not (h in seen or seen.add(h))]
     results: dict[str, dict] = {}
+    taken_down: set[str] = set()
     if uniq:
         wanted = set(uniq)
         releases = await ModRelease.find(
@@ -3602,7 +3624,17 @@ async def lookup_by_hashes(
             }
             for key in keys:
                 results[key] = hit
-    return {"results": results, "unknown": [h for h in uniq if h not in results]}
+        taken_down = {
+            h for r in releases
+            if (proj := projects.get(r.project_id)) is not None and proj.taken_down
+            for h in (r.tmod_sha, *(r.prior_tmod_shas or []))
+            if h in wanted
+        }
+        taken_down |= {a.sha256 for a in await TakenDownArtifact.find(
+            In(TakenDownArtifact.sha256, list(wanted))).to_list()}
+        taken_down -= results.keys()
+    return {"results": results, "unknown": [h for h in uniq if h not in results],
+            "taken_down": [h for h in uniq if h in taken_down]}
 
 
 # --- Popularity (trailing-7-day downloads -> 0.0-1.0 score) ----------------

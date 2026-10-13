@@ -58,6 +58,7 @@ from app.trove.mods_hub.models import (
     ModStar,
     RemixClaim,
     StrayImportState,
+    TakenDownArtifact,
 )
 from app.trove.render.models import BlueprintCacheEntry
 from app.trove.store.models import StoreCategoryDoc, StoreProductDoc, StoreStateDoc
@@ -84,8 +85,9 @@ DOCUMENT_MODELS = [
     ModIssue, ModIssueEvent,             # mods hub: issues/requests + their timelines
     ModClaimRequest, StrayImportState,   # mods hub: stray (imported) mod claims + import job state
     RemixClaim,
+    TakenDownArtifact,                   # mods hub: hashes of taken-down mods, kept past deletion
 
-    ModCreatorLink,                      # mods hub: creator ↔ dev-portal account API access
+    ModCreatorLink,                     # mods hub: creator ↔ dev-portal account API access
     ModpackProject, ModpackStar,         # modpacks: user-curated bundles of mods (refs only) + likes
     BlueprintCacheEntry,                 # decoded .blueprint payloads (index; bodies live in the CAS)
     MarketInterestItem,                  # MarketListing + CodexEntry moved to Postgres (pg_store)

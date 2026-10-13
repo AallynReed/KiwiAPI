@@ -480,6 +480,24 @@ class ModStar(Document):
         ]
 
 
+class TakenDownArtifact(Document):
+    """A release artifact of a mod a moderator took down. Outlives the project, so
+    the lookup can still name copies of a mod that was deleted after its takedown."""
+
+    sha256: str
+    project_id: PydanticObjectId | None = None
+    title: str = ""
+    owner_handle: str = ""
+    created_at: datetime = Field(default_factory=utcnow)
+
+    class Settings:
+        name = "mod_taken_down_artifacts"
+        indexes = [
+            IndexModel([("sha256", ASCENDING)], unique=True),
+            IndexModel([("project_id", ASCENDING)]),
+        ]
+
+
 class ContentReport(Document):
     """A notice-and-action report against public user content - a mod, modpack, or
     creator profile - surfaced to masters for review/takedown (DSA Art. 16).
