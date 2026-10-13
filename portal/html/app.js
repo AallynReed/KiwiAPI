@@ -2862,7 +2862,6 @@ const CONFIG_CATEGORY_LABELS = {
   class_activity: "Class activity",
   trove_status: "Trove server status",
   community_feeds: "Community feeds",
-  btt_mod_browser: "BTT mod browser blocklist",
 };
 
 async function renderConfigTab() {
@@ -4515,6 +4514,28 @@ async function renderModsModeration() {
         up and this drops to zero by itself. Who may embed is <code>embed.allowed_origins</code>,
         both in Configuration.</p>
       <div id="embed-uploads" class="muted" style="font-size:.85rem">Loading…</div>
+    </div>
+    <div class="card">
+      <div class="row" style="align-items:center;margin-bottom:6px;gap:10px">
+        <h2 style="flex:1;margin:0">BTT mod blocklist</h2>
+        <button type="button" class="btn small" data-act="bttbl-refresh">Refresh</button>
+      </div>
+      <p class="hint" style="margin:0 0 10px">Mods BetterTroveTools hides from its external mod catalog tab: the list,
+        installs, update checks and links. Ids are the catalog's own, not Mods Hub ids; hashes are md5. Mods taken
+        down here are hidden by their hashes automatically.</p>
+      <form id="bttbl-form" class="row" style="gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px">
+        <select id="bttbl-kind" aria-label="Entry type" style="width:150px">
+          <option value="author">Author id</option>
+          <option value="mod">Mod id</option>
+          <option value="hash">File hash (md5)</option>
+        </select>
+        <textarea id="bttbl-values" rows="1" aria-label="Values" spellcheck="false"
+          placeholder="One or more, separated by commas or new lines"
+          style="flex:2 1 260px;font-family:var(--mono,monospace);font-size:.85rem"></textarea>
+        <input type="text" id="bttbl-note" aria-label="Note" placeholder="Note (optional)" maxlength="500" style="flex:1 1 160px">
+        <button type="submit" class="btn small">Add</button>
+      </form>
+      <div id="bttbl-list"><div class="loading">Loading…</div></div>
     </div>`;
 
   const listEl = document.getElementById("mods-reports");
@@ -4881,6 +4902,56 @@ async function renderModsModeration() {
   loadClaims();
   loadModpacks();
   loadEmbedUploads();
+  wireBttBlocklistCard();
+}
+
+function wireBttBlocklistCard() {
+  const listEl = document.getElementById("bttbl-list");
+  const KIND = { author: "Author", mod: "Mod", hash: "Hash" };
+
+  async function load() {
+    listEl.innerHTML = `<div class="loading">Loading…</div>`;
+    try {
+      const { items } = await API.call("/admin/btt/mod-blocklist");
+      if (!items.length) {
+        listEl.innerHTML = `<p class="muted" style="margin:0">Nothing blocked yet.</p>`;
+        return;
+      }
+      listEl.innerHTML = items.map((e) => `<div class="row" style="align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <span class="badge muted">${esc(KIND[e.kind] || e.kind)}</span>
+          <code>${esc(e.value)}</code>
+          <span class="muted" style="flex:1;min-width:0;font-size:.85rem">${esc(e.note)}</span>
+          <span class="muted" style="font-size:.8rem">${fmtDay(e.created_at)}</span>
+          <button class="btn small" data-bttbl-del="${esc(e.id)}" data-label="${esc(e.value)}">Remove</button>
+        </div>`).join("");
+      listEl.querySelectorAll("[data-bttbl-del]").forEach((b) => b.addEventListener("click", async () => {
+        if (!window.confirm(`Remove ${b.dataset.label} from the blocklist?`)) return;
+        try {
+          await API.call(`/admin/btt/mod-blocklist/${encodeURIComponent(b.dataset.bttblDel)}`, { method: "DELETE" });
+          toast("Removed", "ok");
+          load();
+        } catch (ex) { toast(ex.message, "err"); }
+      }));
+    } catch (ex) {
+      listEl.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`;
+    }
+  }
+
+  document.getElementById("bttbl-form").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const values = document.getElementById("bttbl-values");
+    const note = document.getElementById("bttbl-note");
+    try {
+      const { added } = await API.call("/admin/btt/mod-blocklist", { method: "POST", body: {
+        kind: document.getElementById("bttbl-kind").value, values: values.value, note: note.value } });
+      toast(added.length ? `Added ${added.length}` : "Already on the list", "ok");
+      values.value = "";
+      note.value = "";
+      load();
+    } catch (ex) { toast(ex.message, "err"); }
+  });
+  document.querySelector('[data-act="bttbl-refresh"]').addEventListener("click", load);
+  load();
 }
 
 async function renderIngest() {

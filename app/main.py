@@ -14,6 +14,7 @@ from app.auth.router import router as auth_router
 from app.auth.schemas import PublicConfig, ScopeInfo
 from app.auth.sessions import router as sessions_router
 from app.bot.router import router as discord_bot_router
+from app.btt_blocklist.admin import router as btt_blocklist_admin_router
 from app.core.bootstrap import bootstrap_admin
 from app.core.config import settings
 from app.core.database import close_db, init_db
@@ -400,6 +401,7 @@ app.include_router(giveaways_public_router, dependencies=_GIVEAWAYS_GATE)   # pu
 app.include_router(drops_admin_router, include_in_schema=False)
 app.include_router(drops_router, include_in_schema=False,
                    dependencies=[Depends(require_file_drops_enabled)])
+app.include_router(btt_blocklist_admin_router, include_in_schema=False)
 # Custom art requests for Zakros UI Chat + Nameplate: an open request form and the
 # master's review queue (released by app/custom_art/builder.py in its own container).
 app.include_router(custom_art_router, include_in_schema=False)

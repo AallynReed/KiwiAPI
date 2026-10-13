@@ -10,6 +10,7 @@ from app.admin.ingest_log import IngestLogEntry
 from app.admin.runtime_config import RuntimeConfig
 from app.auth.models import Session, User
 from app.bot.models import Club, GuildConfig, TrackedAnnouncement
+from app.btt_blocklist.models import BttModBlock
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.core.utils import utcnow
@@ -111,6 +112,7 @@ DOCUMENT_MODELS = [
     FileDrop, DropUpload,                # one-off PIN upload links + what arrived on them
     ArtRequest,                          # custom art requests for Zakros UI Chat + Nameplate
     ModStatsSnapshot,                    # daily mod counts across hub, Trovesaurus, Steam
+    BttModBlock,                         # BTT's external mod catalog blocklist
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).
