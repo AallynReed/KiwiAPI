@@ -162,8 +162,12 @@ async def lifespan(app: FastAPI):
     await seed_interest_items_if_empty()
     from app.supporters.service import seed_supporters_if_empty
     await seed_supporters_if_empty()
-    from app.trove.mods_hub.service import backfill_owner_handles
+    from app.trove.mods_hub.service import backfill_owner_handles, backfill_takedown_artifacts
     await backfill_owner_handles()   # resync mod owner_handle to the owner's current username
+    try:
+        await backfill_takedown_artifacts()  # md5s for BTT's mod blocklist
+    except Exception:
+        logger.exception("takedown artifact backfill failed")
     from app.trove.modpacks.service import backfill_modpack_handles
     await backfill_modpack_handles()  # same resync for modpacks
     usage_recorder.start()

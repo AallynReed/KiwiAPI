@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import io
 import logging
 import math
@@ -925,6 +926,36 @@ async def _remember_takedown(project: ModProject) -> None:
                  "$setOnInsert": {"created_at": utcnow()}},
                 upsert=True,
             )
+    await _fill_takedown_md5s()
+
+
+async def _fill_takedown_md5s() -> None:
+    """md5 is the hash the external mod catalog lists, so BTT can hide copies of a
+    taken-down mod there (/v1/btt/mod-blocklist). Never raises: a takedown and the
+    lookup's sha256 records must not depend on it."""
+    coll = TakenDownArtifact.get_pymongo_collection()
+    for row in await TakenDownArtifact.find({"md5": None}).to_list():
+        try:
+            data = await store.get_blob(row.sha256)
+            md5 = hashlib.md5(data, usedforsecurity=False).hexdigest() if data else ""
+            await coll.update_one({"_id": row.id}, {"$set": {"md5": md5}})
+        except Exception:
+            logger.warning("mods_hub: md5 of taken-down %s failed", row.sha256, exc_info=True)
+
+
+async def backfill_takedown_artifacts() -> None:
+    """Record mods taken down before TakenDownArtifact existed and fill missing
+    md5s. Safe every boot: does nothing once complete."""
+    recorded = set(await TakenDownArtifact.get_pymongo_collection().distinct("project_id"))
+    for project in await ModProject.find(ModProject.taken_down == True).to_list():  # noqa: E712
+        if project.id not in recorded:
+            await _remember_takedown(project)
+    await _fill_takedown_md5s()
+
+
+async def taken_down_md5s() -> list[str]:
+    return sorted(await TakenDownArtifact.get_pymongo_collection().distinct(
+        "md5", {"md5": {"$nin": [None, ""]}}))
 
 
 async def _purge_project(project: ModProject) -> None:

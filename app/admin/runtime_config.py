@@ -2320,6 +2320,39 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=1, max_value=50,
     ),
+
+    # ── BTT mod browser blocklist (served at /v1/btt/mod-blocklist) ──
+    "btt_blocked_mod_authors": _t(
+        key="btt_blocked_mod_authors",
+        default="289509",
+        type="str",
+        category="btt_mod_browser",
+        description=(
+            "Author ids whose mods BetterTroveTools hides from its external mod "
+            "catalog tab. Separate with commas or new lines."
+        ),
+    ),
+    "btt_blocked_mods": _t(
+        key="btt_blocked_mods",
+        default="11897, 11893",
+        type="str",
+        category="btt_mod_browser",
+        description=(
+            "Mod ids BetterTroveTools hides from its external mod catalog tab. "
+            "Separate with commas or new lines."
+        ),
+    ),
+    "btt_blocked_mod_hashes": _t(
+        key="btt_blocked_mod_hashes",
+        default="",
+        type="str",
+        category="btt_mod_browser",
+        description=(
+            "md5 file hashes. A mod with any matching file is hidden from "
+            "BetterTroveTools' external mod catalog tab. Mods taken down on the "
+            "Mods Hub are added automatically. Separate with commas or new lines."
+        ),
+    ),
 }
 
 

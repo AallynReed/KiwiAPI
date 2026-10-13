@@ -485,6 +485,7 @@ class TakenDownArtifact(Document):
     the lookup can still name copies of a mod that was deleted after its takedown."""
 
     sha256: str
+    md5: str | None = None                       # None = not computed yet, "" = blob gone
     project_id: PydanticObjectId | None = None
     title: str = ""
     owner_handle: str = ""

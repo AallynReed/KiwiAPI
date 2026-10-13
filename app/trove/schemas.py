@@ -323,6 +323,12 @@ class BttChangelogOut(BaseModel):
     fetched_at: datetime          # when the changelog was last (successfully) refreshed
 
 
+class BttModBlocklist(BaseModel):
+    authors: list[str]            # catalog author ids
+    mods: list[str]               # catalog mod ids
+    hashes: list[str]             # md5 file hashes, lowercased
+
+
 # --- Events (Trovesaurus calendar) -----------------------------------------
 
 

@@ -2862,6 +2862,7 @@ const CONFIG_CATEGORY_LABELS = {
   class_activity: "Class activity",
   trove_status: "Trove server status",
   community_feeds: "Community feeds",
+  btt_mod_browser: "BTT mod browser blocklist",
 };
 
 async function renderConfigTab() {

@@ -138,6 +138,7 @@ from app.trove.schemas import (
     BttChangelogOut,
     BttCommit,
     BttLatestPerPlatform,
+    BttModBlocklist,
     BttPlatformLatest,
     BttReleaseInfo,
     BttReleaseList,
@@ -2534,6 +2535,27 @@ async def get_btt_changelog(
                 for g in groups],
         rate_limited=doc.rate_limited,
         fetched_at=doc.fetched_at,
+    )
+
+
+def _blocklist_entries(raw: str) -> list[str]:
+    return list(dict.fromkeys(p.lower() for p in re.split(r"[\s,]+", raw or "") if p))
+
+
+@btt_router.get("/mod-blocklist", response_model=BttModBlocklist)
+async def get_btt_mod_blocklist(ctx: AccessContext = _BTT) -> BttModBlocklist:
+    """Mods BetterTroveTools hides from its external mod catalog tab. A mod is
+    hidden when its id, its author's id, or any of its files' md5 hashes is listed.
+    Ids are the catalog's own, not Mods Hub ids. ``hashes`` also carries every
+    release of a mod taken down on the Mods Hub. The rest is edited in the master
+    panel."""
+    from app.admin import runtime_config
+    from app.trove.mods_hub.service import taken_down_md5s
+    hashes = _blocklist_entries(await runtime_config.get_setting("btt_blocked_mod_hashes"))
+    return BttModBlocklist(
+        authors=_blocklist_entries(await runtime_config.get_setting("btt_blocked_mod_authors")),
+        mods=_blocklist_entries(await runtime_config.get_setting("btt_blocked_mods")),
+        hashes=list(dict.fromkeys(hashes + await taken_down_md5s())),
     )
 
 
