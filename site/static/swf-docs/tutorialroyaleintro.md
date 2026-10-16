@@ -6,19 +6,19 @@
 
 ## Main class: `TutorialRoyaleIntro`
 
-Simple two-button selection screen. Wires `buttonAdventure` and `buttonRoyale` (`BaseButton`) to click handlers and registers `ExternalInterface` callbacks for controller navigation. On console, auto-fires a `ROLL_OVER` on `buttonAdventure` to show the initial highlighted state. Frame scripts stop at frames 1 and 10.
+Simple two-button selection screen. Wires `buttonAdventure` and `buttonRoyale` (`BaseButton`) to click handlers and registers `ExternalInterface` callbacks for controller navigation. On console, auto-fires a `ROLL_OVER` on `buttonAdventure` to show the initial highlighted state. Frame scripts stop at frames 1 and 10. Each button is a whole card with its picture and text baked into the symbol; nothing in code sets their content.
 
 ### Public methods
 *(All private or internal; public surface is via ExternalInterface callbacks only.)*
 
 ### Key fields
-- `buttonAdventure : BaseButton` — left choice, fires `RequestAdventure` on click.
-- `buttonRoyale : BaseButton` — right choice, fires `RequestBomberRoyale` on click.
-- `currentSelection : int` — tracks which button (0=adventure, 1=royale) is highlighted for controller activation; default 0.
+- `buttonAdventure : BaseButton` — left choice (class `buttonAdventure`, symbol106), fires `RequestAdventure` on click. The card shows a map-and-sword picture, `$tutorial_popup_adventure_title` ("GO ADVENTURE") and `$tutorial_popup_adventure_text`.
+- `buttonRoyale : BaseButton` — right choice (class `buttonRoyale`, symbol114), fires `RequestBomberRoyale` on click. The card shows a three-bomb picture, a `$tutorial_popup_advanced` ("ADVANCED") ribbon, `$tutorial_popup_bomberroyale_title` ("BOMBER ROYALE") and `$tutorial_popup_bomberroyale_text`.
+- `currentSelection : int` — tracks which button (0=adventure, 1=royale) is highlighted for controller activation; default 0. Only `highlightSelection` changes it — mouse hover does not — so `activateSelection` fires the last controller highlight.
 
 ### Frame scripts / timeline
-- `frame1` — `stop()` (main displayed state).
-- `frame10` — `stop()` (alternate/outro state, purpose unclear without full timeline).
+- `frame1` — `stop()`; labelled `PC`. The root holds `backgroundFrame`, `buttonRoyale` and `buttonAdventure`.
+- `frame10` — `stop()`; labelled `Console`. Reshapes `backgroundFrame` and adds two unnamed console-only children (an empty text field, chid 118, and a panel sprite, chid 121).
 
 ### Runtime dependencies & integration
 - `ExternalInterface.addCallback("activateSelection", ...)` — called by game engine when the player presses the confirm button on console; triggers the currently highlighted choice.
@@ -32,10 +32,10 @@ Simple two-button selection screen. Wires `buttonAdventure` and `buttonRoyale` (
 ## Other game-specific classes
 
 ### `TutorialRoyaleIntro_fla.slotFrameLarge_25` — Embed symbol24
-Timeline symbol for a large item slot frame with 4 stopping frames (rarity tiers: common/uncommon/rare/epic or similar). Used in the intro's item display.
+Timeline symbol for a large item slot frame with 4 stopping frames labelled `circle`, `square`, `largeCircle` and `highlight`. It is the `slotFrame` child of `slot_large`, which is not placed anywhere on this screen.
 
 ### `TutorialRoyaleIntro_fla.slotFrame_14` / `equipped_16`
-Two additional `_fla` timeline symbols (not read in detail): `slotFrame_14` is likely a standard slot border, `equipped_16` a two-frame equipped-state indicator similar to counterparts in other SWFs.
+Two additional `_fla` timeline symbols: `slotFrame_14` (symbol48) is the `slotFrame` child of `_kiwi.Controls.Slot`, and `equipped_16` (symbol28, two frames) is the `equippedBorder` child of both slot symbols. No slot is placed on this screen, so all three are unused shared assets here.
 
 ### Asset wrappers (13 classes)
 `rarity_frame_common_png`, `rarity_frame_uncommon_png`, `rarity_frame_rare_png`, `rarity_frame_epic_png`, `rarity_frame_legendary_png`, `rarity_frame_shadow_png`, `rarity_frame_relic_png`, `rarity_frame_resplendent_png`, `rarity_frame_radiant1_png`, `rarity_frame_stellar`, `backgroundFrame`, `slot_large`, `btnGreen`, `btnGreen_small`, `btnGreenIcon_small` — bitmap/shape asset classes, no logic.

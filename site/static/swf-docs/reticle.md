@@ -1,7 +1,7 @@
 # reticle.swf
-> The player's reticle (crosshair) and nearby status-bar HUD shown in Trove during gameplay. It renders health and energy bars flanking the crosshair, a circular fuel/mount bar, and a hit-reaction animation. The SWF has no explicit document class; the components are independently embedded and driven by the game engine.
+> The player's reticle (crosshair) shown at the centre of the screen in Trove during gameplay. The file also carries library classes for health and energy bars, a circular fuel/mount bar and a hit-reaction clip, but none of them is ever placed and their sprites hold no art — the crosshair is the only thing this SWF draws. The SWF has no explicit document class.
 
-**Document/main class:** none — no top-level document class file is present; components self-register via `ExternalInterface` in their own `config()` lifecycle.
+**Document/main class:** none — the `SymbolClass` tag binds five names and none of them to character 0. The 32 × 32 stage (30 fps) has one frame, and its root timeline places exactly one instance: `crossHair`. The file has no `IggyFunctions` class.
 **SWF-specific classes:** 5
 
 ---
@@ -10,23 +10,23 @@
 
 ### `crosshair`
 `[Embed source="/_assets/assets.swf", symbol="symbol16"]`  
-Extends `MovieClip`. A pure visual asset wrapper for the crosshair graphic. No logic; no added fields or methods. Placed on the timeline as a visual symbol.
+Extends `MovieClip`. A pure visual asset wrapper for the crosshair graphic. No logic; no added fields or methods. Placed on the root timeline as `crossHair` at (16, 16), the centre of the stage. Its art is a 32 × 32 bitmap (thin white ring, transparent middle) painted as a bitmap fill over the full 32 × 32 rectangle, so its hit area is the whole square; the shape carrying it has no instance name.
 
 ### `hitReact`
 `[Embed source="/_assets/assets.swf", symbol="symbol7"]`  
-Extends `MovieClip`. A pure visual asset wrapper for the hit-reaction overlay animation (typically a red flash or directional indicator played when the player takes damage). No logic beyond the constructor.
+Extends `MovieClip`. Named as a hit-reaction overlay, but character 7 is an empty one-frame sprite: it draws nothing, and nothing places it. No logic beyond the constructor.
 
 ### `Health`
 `[Embed source="/_assets/assets.swf", symbol="symbol6"]`  
-Extends `com.kiwi.Templates.StatusBarVertical`. A vertical status bar pre-styled as the player health indicator. Inherits all bar-fill, resize, and event logic from the framework template; no overrides. The game engine drives it via the framework's data hooks.
+Extends `com.kiwi.Templates.StatusBarVertical`. A vertical status bar named as the player health indicator. Inherits all bar-fill, resize, and event logic from the framework template; no overrides. Its sprite holds only empty `_bar` sprites and the `_empty` / `_full` / `_half` / `_center` marker clips — no bar art — and it is never placed or constructed.
 
 ### `Energy`
 `[Embed source="/_assets/assets.swf", symbol="symbol13"]`  
-Extends `com.kiwi.Templates.StatusBarVertical`. Identical structure to `Health` but represents the player's energy/mana resource. Different embedded art symbol.
+Extends `com.kiwi.Templates.StatusBarVertical`. Identical structure to `Health` but named for the player's energy/mana resource. Different embedded symbol, likewise markers only and never placed.
 
 ### `FuelBar`
 `[Embed source="/_assets/assets.swf", symbol="symbol11"]`  
-Extends `com.kiwi.Core.KiwiComponent`. The most complex class in the SWF — a circular arc-fill bar indicating mount fuel or similar consumable resource.
+Extends `com.kiwi.Core.KiwiComponent`. The most complex class in the SWF — a circular arc-fill bar indicating mount fuel or similar consumable resource. Its `_statusBar` and `_statusIndicator` children are empty sprites, and nothing places or constructs a `FuelBar`, so its `config()` never runs and `FUEL_UPDATED` is never registered by this file.
 
 **Fields:**
 - `_currentFuel : Number` — current fuel value (updated via `FUEL_UPDATED` callback).
@@ -53,7 +53,7 @@ Draws a filled wedge shape into `_maskLayer.graphics` using quadratic Bézier cu
 
 ## Notable logic
 
-- **No document class** — the SWF relies on Flash IDE timeline placement of component instances; each component self-configures through the Kiwi framework's `config()` / `draw()` lifecycle.
+- **No document class** — the SWF relies on Flash IDE timeline placement, and the only placed instance is `crossHair`. The other four classes would self-configure through the Kiwi framework's `config()` / `draw()` lifecycle if instantiated, but nothing instantiates them.
 - **Fuel arc uses arc-bisection Bézier** — `DrawArc` approximates a true circular arc with quadratic Bézier curves split into ≤45° segments; it is called twice per frame to render left and right halves symmetrically from the 270° (top) starting angle.
 - **Full-fuel auto-hide** — when `ratio >= 1` the fade-out tween fires; when `ratio < 1` the tween is stopped and alpha is forced back to 1, so the bar auto-hides when the player's fuel is full and reappears immediately when it starts depleting.
 - **Color state machine** — `_colorSet` flag prevents redundant `ColorTransform` allocations: the green transform is applied once when fuel goes above zero; the red transform is applied whenever fuel reaches exactly zero.

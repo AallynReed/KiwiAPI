@@ -23,12 +23,15 @@ In Iggy (runtime) mode a set of `ExternalInterface.addCallback` hooks are regist
 - `inviteButton : BaseButton`, `closeButton : MovieClip`, `friendsTab / ignoredTab : MovieClip`, `backBanner : MovieClip`, `bgFrame : MovieClip`, `tabWindow : MovieClip`, `buttonLegend : MovieClip`.
 
 ### Frame scripts / timeline
-- Frame 1, 11, 21 — all `stop()`. Three visual states (PC friends, PC ignored, console variant implied by tab animation labels).
+- Frame 1, 11, 21 — all `stop()`, one per main-timeline frame label: `PC` (frame 1), `Console` (frame 11), `ConsoleLoc` (frame 21). Tab state is not a timeline frame; it lives in the tab clips' `selected`/`unselected` (`selectedConsole`/`unselectedConsole`) labels.
+- On the `PC` frame the window art occupies y 103–870 (768 px tall, full width) of the 390 × 968 stage.
 
 ### Runtime dependencies & integration
 **ExternalInterface callbacks registered (Iggy):**
-- `onInvite` → `ExternalInterface.call("OnInvite")`
+- `onInvite` → `ExternalInterface.call("OnInvite")` with no arguments. The same `onInvite(MouseEvent)` handler is the PC `inviteButton` click listener.
 - `switchTab` — toggles between Friends/Ignored tabs, calls `OnTabClick`
+
+Registered only when `IsConsole()`:
 - `openSocialMenu(showPvpInvite:Boolean)` — creates and positions a `ContextPopOut`
 - `closeSocialMenu` — removes all open `ContextPopOut`s
 - `previousContextList` — pops topmost context list, calls `OnCloseSocialMenu` when empty
@@ -37,7 +40,7 @@ In Iggy (runtime) mode a set of `ExternalInterface.addCallback` hooks are regist
 - `addItemToContextMenu(text:String)` — adds a `ContextListItem` to the topmost `ContextListView`
 
 **Iggy calls fired:**
-- `OnInvite`, `OnTabClick(tabIndex)`, `OnPlayerInteractOptionSelected(optionIndex, playerName)`, `OnCloseSocialMenu`
+- `OnInvite`, `OnTabClick(tabIndex)` (0 = Friends, 1 = Ignored; the engine answers by clearing the list and repopulating it with that tab's entries — the view itself never filters on `ignored`), `OnPlayerInteractOptionSelected(optionIndex, playerName)`, `OnCloseSocialMenu`. The last two, like `ContextPopOut`'s `OnSetUp*` calls, can only fire on console, since only the console-gated callbacks create a `ContextPopOut`.
 
 **translate keys:** `$FriendsList_WindowName`, `$FriendsList_FriendTab`, `$FriendsList_IgnoredTab`, `$Select_ButtonLegend`, `$ViewProfile_ButtonLegend_nx`, `$Remove_ButtonLegend`, `$Close_ButtonLegend`, `$LRToggle_ButtonLegend`
 
@@ -51,13 +54,13 @@ In Iggy (runtime) mode a set of `ExternalInterface.addCallback` hooks are regist
 Abstract sorted data store. Holds `itemData:Array` of `FriendListItemData` objects. `insertItemSorted()` maintains ordering: pending friend requests first, then online players, then offline — each group sorted case-insensitively by name (uses `natCaseCompare` on console). Fires `DataChangeEvent.DATA_CHANGE` / `PRE_DATA_CHANGE` on mutations.
 
 ### `FriendsExtendedDataSource` (extends `FriendViewDataSource`)
-Adds Iggy callbacks: `clear`, `addFriend`, `addIgnored`, `removeFriend`, `updateFriend`. Constructs `FriendListItemData` and delegates to `insertItemSorted` / `removeAtIndex`. `updateFriend` re-inserts if name or online status changed (to maintain sort order).
+Adds Iggy callbacks: `clear`, `addFriend`, `addIgnored`, `removeFriend`, `updateFriend`. Constructs `FriendListItemData` and delegates to `insertItemSorted` / `removeAtIndex`. `addFriend` / `updateFriend` take `(accountId, name, isOnline, world, rank, canJoinWorld, isRequest, canAccept, canInvite, teamPvpEnabled)`; `addIgnored` takes `(accountId, name)`. `updateFriend` adds the row if the account is unknown, otherwise overwrites the other fields and re-inserts only if name or online status changed (to maintain sort order). The engine sends status-only `updateFriend` calls with an **empty name**, which the `name.length > 0` guard ignores so the stored name is kept.
 
 ### `FriendListItemData`
-Plain value object: `accountId`, `name`, `isOnline`, `world`, `rank`, `canJoinWorld`, `isRequest`, `canAccept`, `canInvite`, `teamPvpEnabled`, `ignored`, `highlight`.
+Plain value object: `accountId`, `name`, `isOnline`, `world`, `rank`, `canJoinWorld`, `isRequest`, `canAccept`, `canInvite`, `teamPvpEnabled`, `ignored`, `highlight`. `rank` arrives as the whole formatted string (`$MasteryRankFormat`, English "Mastery Rank {0}"), not a number. `world` and `rank` can arrive as `$` translation keys, which Iggy resolves only once they are assigned to a TextField.
 
 ### `FriendView` (extends `_kiwi.Controls.ScrollableView`) — [Embed symbol165]
-Virtualised list renderer. Maintains a pool of 16 reusable `ListItemBase` instances. Subscribes to `DataChangeEvent` from its `FriendViewDataSource`. Visible range is computed from the scroll rect; items outside are returned to pool. On console, exposes Iggy callbacks: `moveHighlight`, `moveHighlightBegin`, `moveHighlightEnd`, `unHighlightCurrent`, `joinFriend`, `inviteFriend`, `inviteToPVP`, `showProfile`, `onSelect`. Each fires the corresponding `ExternalInterface.call`: `OnAcceptRequest`, `OnWhisper`, `OnJoinWorld`, `OnInviteToJoinMe`, `OnInviteToJoinPVP`, `OnShowProfile`.
+Virtualised list renderer. Maintains a pool of 16 reusable `ListItemBase` instances. Subscribes to `DataChangeEvent` from its `FriendViewDataSource`. Visible range is computed from the scroll rect; items outside are returned to pool. Exposes Iggy callbacks (registered on every platform, not only console): `moveHighlight`, `moveHighlightBegin`, `moveHighlightEnd`, `unHighlightCurrent`, `joinFriend`, `inviteFriend`, `inviteToPVP`, `showProfile`, `onSelect`. Each fires the corresponding `ExternalInterface.call`: `OnAcceptRequest`, `OnWhisper`, `OnJoinWorld`, `OnInviteToJoinMe`, `OnInviteToJoinPVP`, `OnShowProfile`. `inviteFriend` / `inviteToPVP` send the player name on console and the account ID on PC.
 
 ### `ListItemBase` (extends `_kiwi.Core.UIComponent`)
 Abstract base for list rows. Holds `dataIndex:int`, `identity:String` (account ID), and `alternateColor:Boolean`. `clone()` must be overridden.

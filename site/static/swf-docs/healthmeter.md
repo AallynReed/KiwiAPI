@@ -15,22 +15,22 @@
 
 ### Key fields
 
-- `maxHp : Number` — Stores the maximum health value set by `setMaxHealth`; used as the divisor in `setHealth` to compute the fill ratio.
-- `fillingMaskMC : MovieClip` — Timeline symbol that acts as a horizontal mask for the health bar graphic. Its `scaleX` is set to `currentHp / maxHp` (range 0–1) to represent the fill level.
-- `txtBossName : TextField` — Displays the Titan/boss name string received via `setTitanName`.
+- `maxHp : Number` — Stores the maximum health value set by `setMaxHealth`; used as the divisor in `setHealth` to compute the fill ratio. Values are raw health points; a titan's maximum runs into the billions.
+- `fillingMaskMC : MovieClip` — Despite the name, not the fill: a solid rectangle (chid 5) placed as a clipping layer (clip depth 15) over the red fill, which is an unnamed nine-slice bitmap clip (chid 8) at depth 5. Its `scaleX` is set to `currentHp / maxHp` (range 0–1) to represent the fill level.
+- `txtBossName : TextField` — Displays the Titan/boss name string received via `setTitanName` (Open Sans, placeholder text "Spike Walker").
 
 ### Runtime dependencies & integration
 
 - **`IggyFunctions.inIggy`** — Guard flag; callbacks are only registered when running inside the Iggy runtime.
 - **ExternalInterface callbacks registered:**
-  - `"setMaxHealth"` → `setHealth(Number)` — sets `maxHp`.
-  - `"setHealth"` → `setHealth(Number)` — sets `fillingMaskMC.scaleX = value / maxHp`.
+  - `"setMaxHealth"` → `setMaxHealth(Number)` — sets `maxHp`.
+  - `"setHealth"` → `setHealth(Number)` — sets `fillingMaskMC.scaleX = value / maxHp`. In a crowded fight the engine sends it several times a frame, mostly repeating the value already shown.
   - `"setTitanName"` → `setTitanName(String)` — sets `txtBossName.text`.
 - No events dispatched outward; no translate keys; no timers.
 
 ## Other game-specific classes
 
-None beyond `HealthMeter`.
+None beyond `HealthMeter`. The SWF is a single 425×48 frame at 24 fps: a frame bitmap clip at depth 1, `fillingMaskMC` at depth 3, the fill at depth 5 and `txtBossName` at depth 17.
 
 ## Notable logic
 

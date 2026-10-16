@@ -20,7 +20,7 @@
 ### Key fields
 - `worldsView : WorldsView` — the main scrollable list; backed by `dataSource`.
 - `dataSource : WorldsViewDataSource` — manages the sorted array of `{worldId, worldName, clubName}` records; handles add/remove/clear with `DataChangeEvent` notifications.
-- `closeButton : MovieClip` — window close button (not wired in AS; handled by framework or engine).
+- `closeButton : MovieClip` — a `_kiwi.Controls.WindowCloseButton` (chid 46), placed on the PC frame only; the control itself sends `POST_SOUND_EVENT("Play_ui_window_close")` and `OnRequestClose` on click.
 - `header : WindowHeaderSmall` — window title bar; title translate key `$LikedWorlds_WinTitle`; `allowFontResize = true`.
 - `consoleRemoveButton : MovieClip` — console-only "Remove" action button; shown/hidden based on selection state.
 - `consoleEnterButton : MovieClip` — console-only "Enter World" action button; hidden when list is empty.
@@ -31,8 +31,9 @@
 - `onEnterFrame()` — console initialisation gate; polls `onTargetFrame()`; once true, calls `setupTranslation()`, makes the window visible, and hides console buttons if list is empty.
 
 ### Frame scripts / timeline
-- `frame1` — `stop()` (PC layout).
-- `frame11` — `stop()` (console layout).
+- `frame1` — `stop()` (PC layout, labelled `PC`).
+- `frame11` — `stop()` (console layout, labelled `Console`): removes `closeButton` and two PC-only art pieces and places `consoleRemoveButton` and `consoleEnterButton`.
+- Stage 582×502 at 24 fps, 20 frames.
 
 ### Runtime dependencies & integration
 - **IggyFunctions.inIggy** — checked indirectly via `WorldsViewDataSource` (registers ExternalInterface callbacks there).
@@ -47,7 +48,7 @@
 ### `WorldsViewDataSource`
 Extends `_kiwi.Core.UIComponent`. Maintains `itemData:Array` of `{worldId, worldName, clubName}` objects. Registers ExternalInterface callbacks in Iggy: `clear`, `addItem`, `removeItem`.
 
-- `addItem(worldId, worldName, clubName)` — inserts sorted by world name using `natCaseCompare` (console) or `localeCompare` (PC), dispatching `DataChangeEvent(DATA_CHANGE, ADD, [], insertIndex)`.
+- `addItem(worldId, worldName, clubName)` — inserts sorted by world name using `natCaseCompare` (console) or `localeCompare` (PC), dispatching `DataChangeEvent(DATA_CHANGE, ADD, [], insertIndex)`. The engine sends the whole list as one `addItem` call per world.
 - `removeItem(worldId)` — finds by `worldId`; dispatches `PRE_DATA_CHANGE / REMOVE` before splicing.
 - `clear()` — splices all; dispatches `REMOVE_ALL`.
 - `getItemData(index) : Object`, `getItemDataCount() : int` — read accessors for the view.
@@ -65,7 +66,7 @@ Embed symbol90; extends `_kiwi.Controls.ScrollableView`. Implements a virtualise
 - `relayoutItems()` — positions items at `y = dataIndex * itemHeight`; alternates `alternateColor` on even indices.
 - `repopulateItems()` — pulls `WorldListItem` from pool, calls `setData(dataSource.getItemData(i))`, inserts sorted by `dataIndex`.
 - `selectIndex(index:int, isLocked:Boolean)` — console: scrolls to position, sets `isSelected` on the matching item, dispatches `"ShowRemoveOption"`.
-- `getWorldIdFromIndex(index:int) : String` — returns the `worldId` at a given data index.
+- `getWorldIdFromIndex(index:int) : String` — returns the `worldId` at a given data index. The engine refers to worlds only by their index in this sorted order (here and in `selectIndex`) and acts on the id this returns, so the data source's insertion order is part of the contract.
 - `returnItemToPool(i)` — removes from display, pushes to pool; dispatches `"HideButtons"` when items list empties.
 - Responds to `DataChangeEvent`: ADD → `onItemAdded`, CHANGE → `onItemUpdated`, REMOVE_ALL → `onCleared`; pre-event REMOVE → `onItemWillRemove` (clears visible items that include the removed index).
 
@@ -89,5 +90,5 @@ Embed symbol27; extends `_kiwi.Core.UIComponent`. One row in the list.
 - **Virtualised list**: `WorldsView` uses a 16-item pool and only creates/positions items in the visible scroll range plus one item of padding, keeping memory constant regardless of list length.
 - **Sorted insert**: new worlds are always inserted in alphabetical order (natural order on console, locale-uppercase on PC); the sort fires a `DataChangeEvent(ADD, index)` so the view knows exactly where to invalidate.
 - **Console selection model**: `selectIndex` scrolls the scrollbar to the proportional position of the selected index before relayouting, ensuring the selected row is visible. It then iterates displayed items to apply `isSelected`, and dispatches `ShowRemoveOption` if the world is not locked.
-- **ExternalInterface calls** (outgoing): `OnEnterWorld(worldId)`, `OnDeleteWorld(worldId)` from `WorldListItem`; `selectIndex` and `getWorldIdFromIndex` are incoming callbacks registered on `WorldsView`.
+- **ExternalInterface calls** (outgoing): `OnEnterWorld(worldId)`, `OnDeleteWorld(worldId)` from `WorldListItem`, plus `POST_SOUND_EVENT` / `OnRequestClose` from the window close button; `selectIndex` and `getWorldIdFromIndex` are incoming callbacks registered on `WorldsView`.
 - **DataChangeEvent chain**: `WorldsViewDataSource` dispatches standard FL DataChangeEvents; `WorldsView` listens and either partially or fully clears/repopulates the pool depending on change type.

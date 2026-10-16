@@ -9,7 +9,7 @@
 
 ## Main class: `CompanionForge`
 
-`CompanionForge` is the root UIComponent for the entire panel. It owns every sub-widget, wires all `ExternalInterface` callbacks the game engine calls, and forwards user actions back via `ExternalInterface.call`. It also handles console/NX-specific controller navigation across three selection zones (upgrade buttons, ingredient slots, skill list).
+`CompanionForge` is the root UIComponent for the entire panel. The client drives it as `CompanionForgeUI`, and not only for companions: the Module Forge and the Ring Polisher open this same screen. It owns every sub-widget, wires all `ExternalInterface` callbacks the game engine calls, and forwards user actions back via `ExternalInterface.call`. It also handles console/NX-specific controller navigation across three selection zones (upgrade buttons, ingredient slots, skill list).
 
 ### Key fields
 
@@ -18,17 +18,17 @@
 | `m_header` | `MovieClip` | Window header bar; title set via `setHeaderName()` |
 | `m_levelUpAnim` | `MovieClip` | Level-up celebration animation (hidden until triggered) |
 | `m_maxLevelAnim` | `MovieClip` | Max-level celebration animation (hidden until triggered) |
-| `m_upgradeBtn` | `LabelButton` | Primary upgrade button (always present; label `$Forge_Button_Upgrade`, sound `Play_ui_forge_use`) |
-| `m_upgradeBtn1/2/3` | `LabelButton` | Additional upgrade buttons for multi-choice forge mode (hidden by default) |
-| `currentItemTitle` | `TextField` | Displays item name; initially `"$Forge_Legend_Select"` |
-| `currentItemRarity` | `TextField` | Displays rarity text; rainbowified on rarity 8 |
+| `m_upgradeBtn` | `LabelButton` | Primary upgrade button (always present; label `$Forge_Button_Upgrade`, sound `Play_ui_forge_use`). The engine overwrites `label` by name — e.g. `$Forge_MissingItems` ("NOT ENOUGH") when ingredients are short |
+| `m_upgradeBtn1/2/3` | `LabelButton` | Additional upgrade buttons for multi-choice forge mode (hidden by default). The engine writes `label`, `visible` and `m_ResizeText` on them by name; on the Ring Polisher there is one per hidden effect, labelled with the effect's name |
+| `currentItemTitle` | `TextField` | Displays item name; initially `"$Forge_Legend_Select"`. Also written by name by the engine |
+| `currentItemRarity` | `TextField` | Displays rarity text; rainbowified on rarity 8. Written by name by the engine — on the Module Forge it carries `$Level_X` ("Level {0}", e.g. "Level 1") rather than a rarity |
 | `backBanner` | `MovieClip` | Full-height background banner; resizes to `stageHeight × 1.5` |
 | `m_buttonLegend` | `MovieClip` | Console button-legend overlay (shown/hidden on focus) |
-| `skillsView` | `SkillsView` | Scrollable `DynamicRowView` listing skill upgrades |
+| `skillsView` | `SkillsView` | Scrollable `DynamicRowView` listing skill upgrades; the engine sets `m_ForceFontSize` / `m_ForceAlignLeft` on it by name |
 | `frameCircle` | `MovieClip` | Circle frame around the item preview; contains a `rarity` sub-MovieClip driven by `gotoAndStop(rarityIndex)` |
 | `skillsHighlight` | `MovieClip` | Highlight overlay for the skill list (NX controller nav) |
-| `m_itemPreview` | `MovieClip` | Item art preview; mouse-over/out triggers `ShowTooltip`/`HideTooltip` calls |
-| `skillDataSource` | `SkillsRowExternalDataSource` | Data adapter wired to `skillsView` |
+| `m_itemPreview` | `MovieClip` | Item art preview; mouse-over/out triggers `ShowTooltip`/`HideTooltip` calls. The engine writes `imgWidth` / `imgHeight` on it; its object-preview target name is `Forge.LargeThumbnail` |
+| `skillDataSource` | `SkillsRowExternalDataSource` | Data adapter wired to `skillsView`; the engine writes into `skillDataSource.rowData` by that literal path |
 | `m_starList` | `Vector.<MovieClip>` | Dynamically grown list of `togglestar` instances showing star rating |
 | `m_ingredientList` | `Array` | Dynamically grown pool of `RequiredMaterial` instances |
 | `m_quickLinkList` | `Array` | Dynamically grown pool of `QuickLinkItem` instances (up to 8, two columns) |
@@ -37,8 +37,8 @@
 | `m_upgradeForge` | `Boolean` | True when multi-choice upgrade mode is active |
 | `m_upgradeButtonIndex` | `int` | Which of the multi-choice buttons is highlighted |
 | `m_numberOfUpgradeButtons` | `int` | Count of active upgrade buttons (2 or 3) |
-| `adjustHeightMultiplier` | `Number` | Used when vertically aligning the header title (default 0) |
-| `adjustHeightAdditive` | `Number` | Additive offset for header title alignment (default 21) |
+| `adjustHeightMultiplier` | `Number` | Used when vertically aligning the header title (default 0); the engine can set it by name |
+| `adjustHeightAdditive` | `Number` | Additive offset for header title alignment (default 21); the engine can set it by name |
 
 Layout constants: `QUICKLINK_LEFTX = 16.65`, `QUICKLINK_RIGHTX = 310`, `QUICKLINK_Y = 208.5`, `QUICKLINK_VERTICAL_PADDING = 3`, `SKILL_OFFSET = 76.2`, `SKILL_PADDING = 6`, `ITEM_OFFSET = 90.38`, `INGREDIENT_WIDTH = 60`, `SCROLL_BUFFER = 3`.
 
@@ -54,6 +54,8 @@ The main class timeline has three labelled stops registered in the constructor:
 
 A `FRAME_CONSTRUCTED` listener (`__setProp_handler`) applies `m_header` component-inspector properties conditionally for frames 1–20 and 21–30, covering two header-state ranges. The 3D projection is set once on `ADDED_TO_STAGE`: field-of-view 40.6°, projection centre `(195, 534)`.
 
+The stage is a tall canvas; the window art occupies only a 767 px band starting at y 149, full width, with transparent margins above and below.
+
 ### Runtime dependencies & integration
 
 **ExternalInterface callbacks registered (game engine → Flash):**
@@ -62,9 +64,9 @@ A `FRAME_CONSTRUCTED` listener (`__setProp_handler`) applies `m_header` componen
 |---|---|---|
 | `setHeaderName(name)` | `setHeaderName()` | Sets window title text, auto-resizes font |
 | `setItemName(name)` | `setItemName()` | Updates item name field, resets ingredient/skill selection indices |
-| `setStarCount(total, filled)` | `setStarCount()` | Creates/positions `togglestar` instances; `filled` controls how many show as lit |
+| `setStarCount(total, filled)` | `setStarCount()` | Creates/positions `togglestar` instances; `filled` controls how many show as lit. Not called by the Module Forge |
 | `setRarity(index)` | `setRarity()` | Drives `frameCircle.rarity.gotoAndStop(index)`; index 8 triggers rainbow text effect |
-| `setupSkillStats(numSkills, activeSkillIndex)` | `setupSkillStats()` | Clears and repopulates `skillsView` with a single section; auto-shows/hides scrollbar; scrolls to active skill |
+| `setupSkillStats(numSkills, activeSkillIndex)` | `setupSkillStats()` | Clears and repopulates `skillsView` with a single section; auto-shows/hides scrollbar; scrolls to active skill. Only the row count is pushed — each row's content is then pulled through `GetRowData` (see below) |
 | `clearIngredients()` | `clearIngredients()` | Hides all ingredient slots (pool preserved) |
 | `addIngredient(icon, owned, needed, name, desc)` | `addIngredient()` | Activates/creates a `RequiredMaterial` slot scaled to 0.7, triggers layout invalidation |
 | `clearQuickLinks()` | `clearQuickLinks()` | Hides all quick-link items, resets `IndexReference = -1` |
@@ -79,13 +81,18 @@ A `FRAME_CONSTRUCTED` listener (`__setProp_handler`) applies `m_header` componen
 
 | Call | Trigger |
 |---|---|
+| `GetRowData(section, row)` | `skillDataSource.getData` (from the `_kiwi` base class), once per skill row. The engine answers synchronously, during the call, by writing `skillDataSource.rowData` (`skillString`, `skillisActive`, `skillisOffered`, `tagLabel`, `playAnim`); it writes only the fields it has, which is why `getData` clears `rowData` after each row |
 | `UPGRADE_REQUEST` | Upgrade button clicked (any of the four buttons) |
 | `SetSelectedUpgrade(index)` | Mouse-over on one of the multi-choice upgrade buttons; also on controller navigation between them |
 | `OnDropOntoSlot(itemType, itemId, quantity)` | Item dragged and dropped onto `frameCircle` hit area |
-| `ShowTooltip(x, y)` | Mouse-over on `m_itemPreview` |
+| `ShowTooltip(x, y)` | Mouse-over on `m_itemPreview`. Coordinates only: the engine supplies the content (the item in the forge) |
 | `HideTooltip()` | Mouse-out on `m_itemPreview` |
 | `TOOLTIP.HIDE` | Controller navigation leaves ingredient or skill zone |
 | `QuickLinkClicked(index)` | User clicks a `QuickLinkItem` (delegated from that class) |
+
+**Data-source callbacks:** the `_kiwi.Controls.DynamicRowViewExternalDataSource` base also registers `updateCurrentView`, `setSectionData`, `setSectionDataEmpty` and `setDataDirty`.
+
+**Skill rows as the engine sends them:** every perk is sent, earned or not — `skillisActive` marks the earned ones and the next one carries `tagLabel` `$Forge_NEXT` ("NEXT"). On the Module Forge a Climbing Claw at level 1 sends nine perks with none active and the first tagged NEXT; maxed, nine of nine active. The engine formats `$Forge_NEXT`, `$Level_X`, `$Upgrade_PatronBonusLabel` and `$UpgradeLifespan` itself and hands the results over as text. On the Ring Polisher, row 0 is a "Hidden Effects:" header and each hidden effect is an indented row beneath it, all of them `skillisOffered` at once; the upgrade buttons map to the offered rows in order. Those row strings arrive as literal text, not `$` keys.
 
 **Drag-and-drop:** `SlotDragDropHelper.registerDropCallback(onDrop)` — accepts drops anywhere on the component; only forwards to engine if the drop point hits `frameCircle`.
 
@@ -130,7 +137,7 @@ A `FRAME_CONSTRUCTED` listener (`__setProp_handler`) applies `m_header` componen
 
 ### Asset wrapper classes (pure image embeds, no logic)
 
-9 rarity frame PNGs: `rarity_frame_common_png`, `rarity_frame_uncommon_png`, `rarity_frame_rare_png`, `rarity_frame_epic_png`, `rarity_frame_legendary_png`, `rarity_frame_relic_png`, `rarity_frame_resplendent_png`, `rarity_frame_shadow_png`, `rarity_frame_stellar_png`, `rarity_frame_mystic_png`, `rarity_frame_radiant1_png`.
+11 rarity frame PNGs: `rarity_frame_common_png`, `rarity_frame_uncommon_png`, `rarity_frame_rare_png`, `rarity_frame_epic_png`, `rarity_frame_legendary_png`, `rarity_frame_relic_png`, `rarity_frame_resplendent_png`, `rarity_frame_shadow_png`, `rarity_frame_stellar_png`, `rarity_frame_mystic_png`, `rarity_frame_radiant1_png`.
 
 ScrollBar UI skin classes (11): `ScrollArrowDown_disabledSkin`, `ScrollArrowDown_downSkin`, `ScrollArrowDown_overSkin`, `ScrollArrowDown_upSkin`, `ScrollArrowUp_disabledSkin`, `ScrollArrowUp_downSkin`, `ScrollArrowUp_overSkin`, `ScrollArrowUp_upSkin`, `ScrollThumb_downSkin`, `ScrollThumb_overSkin`, `ScrollThumb_upSkin`, `ScrollTrack_skin`, `focusRectSkin`.
 

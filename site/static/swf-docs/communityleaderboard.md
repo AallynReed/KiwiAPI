@@ -1,5 +1,5 @@
 # communityleaderboard.swf
-> The Community Leaderboard is a voting UI panel that lets players browse and vote for player-submitted items (e.g., contest entries) that are candidates for addition to the game. It shows up to five item tiles in a carousel, tracks per-player and global vote counts, and handles a currency-based vote-purchase flow.
+> The Community Leaderboard is a voting UI panel that lets players browse and vote for items — the Fluxion vote: its title field is authored as `$FluxionStore` ("Fluxion"), and `$FluxionStore_Description` describes it as an every-other-week vote on Luxion items deciding what shows up the following week. It shows up to five item tiles in a carousel, tracks per-player and global vote counts, and handles a currency-based vote-purchase flow.
 
 **Document/main class:** `CommunityLeaderboard` (extends `UIComponent`)
 **SWF-specific classes:** 10 (excluding shared framework)
@@ -18,7 +18,7 @@
 - `RefreshDisplay() : void` — re-maps the visible tiles to the current window position and re-draws selection state.
 - `SelectItemsToDisplay() : void` — copies data from `itemObjects` into the five `displayTiles` using modular arithmetic around `currentSelection`.
 - `ShiftDirection(right:Boolean) : void` — moves the carousel one step left or right. On PC it clamps `currentTile` to 0–4 and shifts the backing list when at an edge; on console it always re-centres on tile 2 and immediately shifts the backing list. After moving it calls `CanBuy` and `RequestWalletInfo` on the newly focused tile.
-- `SetMode(param1:Boolean) : void` — when `true`, re-centres selection on tile 2.
+- `SetMode(param1:Boolean) : void` — when `true`, re-centres selection on tile 2. It shifts `currentSelection` by `2 - currentTile`, the opposite of what keeps the highlighted entry under tile 2 (only `currentTile == 2` is unaffected), and does not re-map the tiles (`SelectItemsToDisplay` is not called).
 - `UpdateEntryCost(voteId, cost, userVotes, totalVotes, canBuy) : void` — finds the entry by `voteId` in both `itemObjects` and `displayTiles` and refreshes vote counts and the purchase button.
 
 ### Key fields
@@ -43,7 +43,7 @@
 
 ### Frame scripts / timeline
 
-No custom `addFrameScript` calls in the main class. Navigation buttons use `gotoAndStop("over")` / `gotoAndStop("up")` for hover states.
+No custom `addFrameScript` calls in the main class. Navigation buttons use `gotoAndStop("over")` / `gotoAndStop("up")` for hover states. Single frame on a 1200 × 800 stage; the wooden window frame occupies x 38–1137, y 16–747, with the title plaque above it.
 
 ### Runtime dependencies & integration
 
@@ -67,14 +67,14 @@ No custom `addFrameScript` calls in the main class. Navigation buttons use `goto
 - `CanBuy(voteId)` — queries whether the player can currently vote for the focused entry.
 - `RequestWalletInfo(voteId)` — requests currency balance update for the focused entry.
 - `PurchaseRequest(voteId)` — submits a vote purchase; only fires if `_hasPendingVote` is false.
-- `ReapplyVotes()` — connected to a (private) `ReApplyVotes` handler; re-applies pending votes.
+- `ReapplyVotes()` — sent only from the private `ReApplyVotes(MouseEvent)` handler, which nothing attaches as a listener, so the call is never made.
 - `SetFocused(bool)` — tells the engine whether focus is on the info panel or the tile selection.
 
 **Translate keys used:**
-- `$CL_StateChange` — label for the "time remaining" info box line.
-- `$CommunityLeaderboard_Voting` / `$CommunityLeaderboard_Displaying`
-- `$CommunityLeaderboard_VotingEnded` / `$CommunityLeaderboard_DisplayingEnded`
-- `$CommunityLeaderboard_PlayerVotes` / `$CommunityLeaderboard_GlobalVotes` (in `ItemView`)
+- `$CL_StateChange` ("Hours Remaining") — label for the "time remaining" info box line.
+- `$CommunityLeaderboard_Voting` / `$CommunityLeaderboard_Displaying` ("Voting" / "Buying")
+- `$CommunityLeaderboard_VotingEnded` / `$CommunityLeaderboard_DisplayingEnded` ("Voting ended" / "Buying ended")
+- `$CommunityLeaderboard_PlayerVotes` / `$CommunityLeaderboard_GlobalVotes` ("Your Vote Count:" / "Global Vote Count:", in `ItemView`)
 
 ---
 
@@ -103,7 +103,7 @@ Alternate label-button skin (used for page-navigation extremes). Same four-state
 
 ## Notable logic
 
-- **Carousel window arithmetic:** `SelectItemsToDisplay` maps `displayTiles[i]` to `itemObjects[(currentSelection + i) % itemObjects.length]`, creating a circular ring. Overflow wraps to 0; underflow wraps to `itemObjects.length - 1`.
+- **Carousel window arithmetic:** `SelectItemsToDisplay` maps `displayTiles[i]` to `itemObjects[(currentSelection + i) % itemObjects.length]`, creating a circular ring, so with fewer than five entries the tiles repeat items. Overflow wraps to 0; underflow wraps to `itemObjects.length - 1` (any negative value, not just −1, lands there).
 - **PC vs. console navigation difference:** On PC, `ShiftDirection` clamps `currentTile` within the visible 5-tile strip and only scrolls the item list when hitting an edge. On console (`IsConsole()`), `currentTile` is always forced to 2 (centre) and the list scrolls immediately on every press.
 - **Purchase guard:** `onPurchase` checks `_hasPendingVote` before emitting `PurchaseRequest`. The game sets `HasPendingVote(true)` immediately and clears it after the round-trip completes, preventing double-votes.
 - **Wallet display:** `SetWalletIcon(textureName, priceText)` populates the `walletImage` ObjectPreview and the price label; the wallet area is a child MC containing a `walletPriceDisplay_16` symbol.

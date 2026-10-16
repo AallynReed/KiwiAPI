@@ -17,7 +17,7 @@
 - `categoriesList : Listbox` — left-side navigation list; items are added with translated labels and int data values.
 - `contentPlaceholder : MovieClip` — removed at runtime; its `x`/`y` become `contentOrigin`.
 - `contentOrigin : Point` — position where all content panes are placed.
-- `currentContentPane : MovieClip` — the currently visible pane; previous pane is removed before the new one is added.
+- `currentContentPane : MovieClip` — the currently visible pane; previous pane is removed before the new one is added. Declared `private`, but the engine reads and writes through it by path (see below).
 - `displayedPanelCategory : int` — tracks which category is shown to avoid redundant swaps.
 - `acceptButton, cancelButton : MovieClip` — each wraps a `btn` child that fires `OnAccept` / `OnRequestClose`.
 - `btnLegend : MovieClip` — console button-legend strip; some children hidden per platform (NX hides `btnX`, non-NX console hides `btnY`, non-system-console hides `btnY2`).
@@ -25,6 +25,7 @@
 - `__lastFrameProp : int` — last frame at which `__setProp_handler` ran.
 
 ### Frame scripts / timeline
+Stage 804×610, 24 fps, 20 frames; root labels `PC` (frame 1) and `Console` (frame 11).
 - **frame 1** (`frame1`): `stop()`
 - **frame 11** (`frame11`): `stop()` — triggers deferred `cancelButton`/`acceptButton` component-inspector setup (props applied only when current frame is in range 11–20).
 
@@ -44,51 +45,53 @@
 - `OnRequestClose` — cancel button or callback.
 - `RequestSwitchCategory(id)` — when the player clicks a category in the list; the game responds with `switchCategory`.
 
+**Option values travel by field path, not by callback.** The panes only wire listeners and report `OnCategoryOptionChanged(categoryId)`; the engine itself reads and writes the controls of the open pane by name through `currentContentPane`, e.g. `currentContentPane.masterVolSlider.value`, `.mouseSensitivity.minimum`/`.maximum`/`.snapInterval`, `.invertMouseX.checked`, `.windowModeCombobox.selectedIndex`, `.selectedCulture`, `.gammaMin`, `.confirmPopup.visible`/`.secondsLeft`. The list of names lives in `Trove_x64.exe` (the run of strings from `SettingsUI` to `setSelectedCategoryIndex`), not in the SWF, so a renamed field silently stops being applied. A reported `OnCategoryOptionChanged` is what makes the game ask `$Settings_SavePrompt` ("Do you wish to save your changes to this page?") when the window is closed.
+
 **translate keys:** `$EscapeMenu_Settings`, `$Settings_Category_Language`, `$Settings_Category_Audio`, `$Settings_Category_Controls`, `$Settings_Category_Hotkeys`, `$Settings_Category_Video`, `$Settings_Category_Social`, `$Settings_Category_Payment`, `$Settings_Category_Misc`, `$Settings_Category_Audio_Video`, `$Settings_Category_Legal`, `$Settings_Category_Gameplay`, `$Accept`, `$Cancel`.
 
 ## Other game-specific classes
 
 ### Content pane classes (PC)
 
-- **`LanguagePane`** (embed `symbol239`, extends UIComponent) — single `KiwiComboBox` (`lanaguageSelect`). Callback `addLanguage(culture, label)` populates the combo. Property `selectedCulture : String` gets/sets by matching `.data`. Fires `OnCategoryOptionChanged(categoryId)` on change.
+- **`LanguagePane`** (embed `symbol240`, extends UIComponent) — single `KiwiComboBox` (`lanaguageSelect`). Callback `addLanguage(culture, label)` populates the combo (labels arrive as plain words, e.g. `English`). Property `selectedCulture : String` gets/sets by matching `.data`. Fires `OnCategoryOptionChanged(categoryId)` on change.
 
-- **`AudioPane`** (embed `symbol317`, extends UIComponent) — four `fl.controls.Slider` widgets (master, music, SFX, ambiance; range 0–10, live dragging) plus a `backgroundAudioCB` Checkbox (`$Settings_BackgroundAudio`). All fire `OnCategoryOptionChanged` on change.
+- **`AudioPane`** (embed `symbol318`, extends UIComponent) — four `fl.controls.Slider` widgets (master, music, SFX, ambiance; range 0–10, live dragging) plus a `backgroundAudioCB` Checkbox (`$Settings_BackgroundAudio`). All fire `OnCategoryOptionChanged` on change.
 
-- **`ControlsPane`** (embed `symbol279`, extends UIComponent) — mouse invert X/Y checkboxes, mouse sensitivity slider (0–10, snap 0.02), controller-support checkbox, swap-thumbsticks checkbox, camera stick invert X/Y, thumbstick sensitivity slider, `preferredPlatformUI` KiwiComboBox. Callbacks `addPlatformUI(id, label)` and `hidePlatformUI()`. Enabling/disabling controller support dynamically adds/removes the Controller entry from the combo box. Fires `OnCategoryOptionChanged`.
+- **`ControlsPane`** (embed `symbol280`, extends UIComponent) — mouse invert X/Y checkboxes, mouse sensitivity slider (0–10, snap 0.02 as authored; the engine overwrites the range at runtime and it arrives as 0–4), controller-support checkbox, swap-thumbsticks checkbox, camera stick invert X/Y, thumbstick sensitivity slider, `preferredPlatformUI` KiwiComboBox (labels arrive as keys such as `$Automatic` and `$Settings_Controller`; the selection is read through `selectedPlatformUI`). Callbacks `addPlatformUI(id, label)` and `hidePlatformUI()`. Enabling/disabling controller support dynamically adds/removes the Controller entry from the combo box. Fires `OnCategoryOptionChanged`.
 
-- **`VideoPane`** (embed `symbol208`, extends UIComponent) — the most complex PC pane. Quality preset buttons (Low/Medium/High/Ultra/Custom as toggle `LabelButton`s), window-mode combo (`Windowed`/`Fullscreen`/`Fullscreen Windowed`), render-device combo, display-modes combo (populated via `addDisplayMode(id,w,h,hz)` → `"WxH @HzHz"`). Advanced section (hidden unless Custom preset): draw distance, supersample, shader complexity, FOV (60–100), LOD distance (15–100), VFX LOD (0.05–1), vsync, post-FXAA, bloom, DOF, SSAO, lens distortion. Gamma and brightness sliders (0–2, displayed via `Lerp` into range 0.2–5). `TimedConfirmPopup` embedded (hidden by default; used for resolution-change confirmation). Callbacks: `addRenderDevice`, `clearDropDowns`, `addDisplayMode`, `forceUpdateSliderText`, `notifyQualityPresetLevel`. Fires `OnCategoryOptionChanged`, `OnVideoPresetClicked(presetId)`, `OnRenderDeviceChanged`.
+- **`VideoPane`** (embed `symbol209`, extends UIComponent) — the most complex PC pane. Quality preset buttons (Low/Medium/High/Ultra/Custom as toggle `LabelButton`s), window-mode combo (`$Settings_VidModeWindowed` = 0, `$Settings_VidModeFullscreen` = 1, `$Settings_VidModeWindowedFullscreen` = 2), render-device combo (device names arrive as plain words, e.g. `Direct3D 11`), display-modes combo (populated via `addDisplayMode(id,w,h,hz)` → `"WxH @HzHz"`). Advanced section (hidden unless Custom preset): draw distance, supersample, shader complexity, FOV (60–100), LOD distance (15–100), VFX LOD (0.05–1), vsync, post-FXAA, bloom, DOF, SSAO, lens distortion. Gamma and brightness sliders (0–2 with 1 as neutral, displayed by `formatBrightnessTextString` as two `Lerp`s meeting at 1, between `gammaMin`/`gammaMax` and `brightnessMin`/`brightnessMax`; those pane fields default to 0.2/5 and are written by the engine). `TimedConfirmPopup` embedded (hidden by default; used for resolution-change confirmation). Callbacks: `addRenderDevice`, `clearDropDowns`, `addDisplayMode`, `forceUpdateSliderText`, `notifyQualityPresetLevel`. Fires `OnCategoryOptionChanged`, `OnVideoPresetClicked(presetId)`, `OnRenderDeviceChanged`.
 
-- **`SocialPane`** (embed `symbol211`, extends UIComponent) — checkboxes: profanity filter, appear offline, auto-join global chat, auto-join trade chat, show player nameplates, show own nameplate, display club name. Tether section (invitation behavior combo + icon checkboxes for self/others) is created but immediately hidden via `disableTethering()`. `hideProfanityFilter()` shifts visible checkboxes up. Fires `OnCategoryOptionChanged`.
+- **`SocialPane`** (embed `symbol212`, extends UIComponent) — checkboxes: profanity filter, appear offline, auto-join global chat, auto-join trade chat, show player nameplates, show own nameplate, display club name. Tether section (invitation behavior combo + icon checkboxes for self/others) is created but immediately hidden via `disableTethering()`; the engine still writes `selectedTetherInvitationBehavior`, `tether_showIconSelf` and `tether_showIconOthers`. `hideProfanityFilter()` shifts visible checkboxes up. Fires `OnCategoryOptionChanged`.
 
-- **`MiscPane`** (embed `symbol237`, extends UIComponent) — combat text, intro movies, player location, multithreaded, cornerstone damageable, suppress broadcast chat spam, skip auction claim confirmation checkboxes; UI scale slider (1–2, snap 0.05); rarity combo (populated via `addRarity`); EULA button (`OnView3rdPartyLicenses`) and credits button (`OnCreditsButtonClicked`). Contains a `TimedConfirmPopup` (hidden). Fires `OnCategoryOptionChanged`.
+- **`MiscPane`** (embed `symbol238`, extends UIComponent) — combat text, intro movies, player location, multithreaded, cornerstone damageable, suppress broadcast chat spam, skip auction claim confirmation and keep map open while moving (`keepMapOpenCheckbox`, label `$Settings_KeepMapOpenWhileMoving` — "Keep Map Open While Moving", added in the October 2026 build) checkboxes; UI scale slider (1–2, snap 0.05); rarity combo (populated via `addRarity`); EULA button (`OnView3rdPartyLicenses`) and credits button (`OnCreditsButtonClicked`). Contains a `TimedConfirmPopup` (hidden) which, like `VideoPane`'s, the engine drives as `currentContentPane.confirmPopup`. Fires `OnCategoryOptionChanged`.
 
-- **`PaymentsPane`** (embed `symbol229`, extends UIComponent) — payment method combo (`methodsCB`), add/remove button (`OnAddRemovePaymentMethods`). Callbacks `addPaymentMethod(id, label, select)`, `clearPaymentMethods()`, `notifyLoggedIntoSteam(bool)` (hides art if on Steam). Fires `OnCategoryOptionChanged`.
+- **`PaymentsPane`** (embed `symbol230`, extends UIComponent) — payment method combo (`methodsCB`), add/remove button (`OnAddRemovePaymentMethods`). Callbacks `addPaymentMethod(id, label, select)`, `clearPaymentMethods()`, `notifyLoggedIntoSteam(bool)` (hides art if on Steam). Fires `OnCategoryOptionChanged`.
 
-- **`KeyBindings`** (embed `symbol262`, extends UIComponent) — `GroupedItemList` with `UIScrollBar`; each entry is a `KeyBindingItem`. Callbacks `addScope(id, name)`, `addKeyBinding(scopeId, actionId, name, keyStr, consoleStr)`, `hideCapturePrompt()`, `updateKeyBinding(actionId, keyStr, consoleStr)`. Clicking a binding button shows `captureWaitMC` and fires `OnTryUpdateHotkey(scopeId, actionId, inputType)` (0=keyboard, 1=console). "Restore Defaults" button fires `OnRestoreDefaults`.
+- **`KeyBindings`** (embed `symbol263`, extends UIComponent) — `GroupedItemList` with `UIScrollBar`; each entry is a `KeyBindingItem`. Callbacks `addScope(id, name)`, `addKeyBinding(scopeId, actionId, name, keyStr, consoleStr)`, `hideCapturePrompt()`, `updateKeyBinding(actionId, keyStr, consoleStr)`. Clicking a binding button shows `captureWaitMC` and fires `OnTryUpdateHotkey(scopeId, actionId, inputType)` (0=keyboard, 1=console). "Restore Defaults" button fires `OnRestoreDefaults`.
 
 ### Content pane classes (console / system-console)
 
-- **`ConsoleAudioVideoPane`** (embed `symbol312`, extends UIComponent) — music, SFX, ambiance sliders; brightness and gamma sliders (with formatted text display using `Lerp`); UI scale slider. Platform-specific: adds display-area item for Durango. Callbacks `forceUpdateSliderText`, `highlightSelection(idx)` (moves `optionHighlight.y`), `changeSettingValue(idx, delta)` (adjusts slider values by fixed increments), `restoreDefaults`. Fires `OnContentPaneLoaded(count)` on first `ENTER_FRAME`.
+- **`ConsoleAudioVideoPane`** (embed `symbol313`, extends UIComponent) — music, SFX, ambiance sliders; brightness and gamma sliders (with formatted text display using `Lerp`); UI scale slider. Platform-specific: adds display-area item for Durango. Callbacks `forceUpdateSliderText`, `highlightSelection(idx)` (moves `optionHighlight.y`), `changeSettingValue(idx, delta)` (adjusts slider values by fixed increments), `restoreDefaults`. Fires `OnContentPaneLoaded(count)` on first `ENTER_FRAME`.
 
-- **`ConsoleControlsPane`** (embed `symbol299`, extends UIComponent) — invert camera stick X/Y, thumbstick sensitivity slider, auto-aim checkbox. Two frame stops (frames 1, 11). Callbacks `highlightSelection`, `changeSettingValue`, `restoreDefaults`. Fires `OnContentPaneLoaded`.
+- **`ConsoleControlsPane`** (embed `symbol300`, extends UIComponent) — invert camera stick X/Y, thumbstick sensitivity slider, auto-aim checkbox. Two frame stops (frames 1, 11). Callbacks `highlightSelection`, `changeSettingValue`, `restoreDefaults`. Fires `OnContentPaneLoaded`.
 
-- **`ConsoleSocialPane`** (embed `symbol287`, extends UIComponent) — global chat, trade chat, profanity filter, appear offline, display club name checkboxes; four editable quick-chat TextFields (`customText0`–`3`); optional Switch Profile link (Durango only). Inline text editing: clicking a quick-chat field enters edit mode, Enter submits, cancel restores `previousText`. Callbacks `highlightSelection`, `changeSettingValue`, `restoreDefaults`, `setCustomText(idx, text)`, `onEditTextField`, `onSetTextCancel`. Fires `OnSetEditTextMode(bool)`, `OnCallSwitchProfile`, `OnContentPaneLoaded`.
+- **`ConsoleSocialPane`** (embed `symbol288`, extends UIComponent) — global chat, trade chat, profanity filter, appear offline, display club name checkboxes; four editable quick-chat TextFields (`customText0`–`3`); optional Switch Profile link (Durango only). Inline text editing: clicking a quick-chat field enters edit mode, Enter submits, cancel restores `previousText`. Callbacks `highlightSelection`, `changeSettingValue`, `restoreDefaults`, `setCustomText(idx, text)`, `onEditTextField`, `onSetTextCancel`. Fires `OnSetEditTextMode(bool)`, `OnCallSwitchProfile`, `OnContentPaneLoaded`.
 
-- **`ConsoleLegalPane`** (embed `symbol296`, extends UIComponent) — two selectable text items: view EULA and unlink account. `changeSettingValue(0, 0)` fires `OnViewEULA`. Fires `OnContentPaneLoaded`.
+- **`ConsoleLegalPane`** (embed `symbol297`, extends UIComponent) — two selectable text items: view EULA and unlink account. `changeSettingValue(0, 0)` fires `OnViewEULA`. Fires `OnContentPaneLoaded`.
 
-- **`ConsoleMiscPane`** (embed `symbol289`, extends UIComponent) — combat text, player location, vibration (NX uses key `$Settings_Vibration_NX`), cornerstone damageable checkboxes; rarity `ArrowSelect`. Callbacks `highlightSelection`, `changeSettingValue`, `restoreDefaults`, `addRarity`. Fires `OnContentPaneLoaded`.
+- **`ConsoleMiscPane`** (embed `symbol290`, extends UIComponent) — combat text, player location, vibration (NX uses key `$Settings_Vibration_NX`), cornerstone damageable checkboxes; rarity `ArrowSelect`. Callbacks `highlightSelection`, `changeSettingValue`, `restoreDefaults`, `addRarity`. Fires `OnContentPaneLoaded`.
 
-- **`PCControllerAudioPane`, `PCControllerControlsPane`, `PCControllerVideoPane`, `PCControllerLanguagePane`, `PCControllerMiscPane`, `PCControllerSocialPane`, `PCControllerPaymentsPane`** — controller-overlay variants of the PC panes, instantiated when `IsConsole() && !IsRunningSystemConsole()`. Not individually detailed here (files present, same pattern as PC panes).
+- **`PCControllerAudioPane`, `PCControllerControlsPane`, `PCControllerVideoPane`, `PCControllerLanguagePane`, `PCControllerMiscPane`, `PCControllerSocialPane`, `PCControllerPaymentsPane`** — controller-overlay variants of the PC panes, instantiated when `IsConsole() && !IsRunningSystemConsole()`. Not individually detailed here (files present, same pattern as PC panes). `PCControllerMiscPane` carries the same `keepMapOpenCheckbox` as item 7 of its controller list (UI scale, rarity and EULA moved to 8, 9 and 10); restoring defaults unchecks it.
 
 ### Helper / popup classes
 
-- **`TimedConfirmPopup`** (embed `symbol81`, extends UIComponent) — countdown popup with "Keep" and "Revert" buttons. `secondsLeft` setter formats `$Settings_RevertCountdownFormat` replacing `{time}`. "Revert" fires `OnRevertSettings`; "Keep" fires `OnKeepSettings`.
+- **`TimedConfirmPopup`** (embed `symbol82`, extends UIComponent) — countdown popup with "Keep" and "Revert" buttons. `secondsLeft` setter formats `$Settings_RevertCountdownFormat` replacing `{time}`. "Revert" fires `OnRevertSettings`; "Keep" fires `OnKeepSettings`.
 
-- **`ConfirmPopup`** (embed `symbol319`, dynamic MovieClip) — simpler popup with a single "OK" button (`$OK`).
+- **`ConfirmPopup`** (embed `symbol320`, dynamic MovieClip) — simpler popup with a single "OK" button (`$OK`).
 
-- **`InputCapturePrompt`** (embed `symbol261`, dynamic MovieClip) — pure visual overlay shown while waiting for a key press; no code.
+- **`InputCapturePrompt`** (embed `symbol262`, dynamic MovieClip) — pure visual overlay shown while waiting for a key press; no code.
 
-- **`KeyBindingItem`** (embed `symbol274`, dynamic MovieClip) — a row in the bindings list; has `bindingNameTextField` (action name), `bindingButton` (keyboard key, `btnGreenIcon_small`), `bindingButtonConsole` (console button, `btnGreenIcon_small`).
+- **`KeyBindingItem`** (embed `symbol275`, dynamic MovieClip) — a row in the bindings list; has `bindingNameTextField` (action name), `bindingButton` (keyboard key, `btnGreenIcon_small`), `bindingButtonConsole` (console button, `btnGreenIcon_small`).
 
 ### Button and skin asset wrappers
 

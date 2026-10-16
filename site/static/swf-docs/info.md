@@ -1,6 +1,6 @@
 # info.swf
 
-> The Trove in-game chat / info-message log that displays timed text messages (channel messages, system notifications) in a scrolling stack. Messages auto-expire after 8 seconds and fade out over 0.5 seconds before being reaped. Supports a reduced capacity mode for Nintendo Switch (NX).
+> The Trove info-message feed in the bottom-left corner of the screen that displays timed one-line notifications (item pickups, experience gains, system notifications) in a stack. Messages auto-expire after 8 seconds and fade out over 0.5 seconds before being reaped. Supports a reduced capacity mode for Nintendo Switch (NX).
 
 **Document/main class:** `Info` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 3
@@ -15,12 +15,12 @@
 
 | Field | Type | Role |
 |---|---|---|
-| `infoLog` | `InfoLog` | The scrolling message log component |
+| `infoLog` | `InfoLog` | The scrolling message log component; the only root child (chid 4), placed at (0, 214) on the 425×219 stage, so rows stacked at negative y grow up from the bottom-left corner |
 
 ### Runtime dependencies & integration
 
 **`ExternalInterface.addCallback`:**
-- `ADD_MESSAGE(channel, message, author, color)` → routes to `infoLog.onInfoMessageNX(...)` on NX, otherwise `infoLog.onInfoMessage(...)`.
+- `ADD_MESSAGE(channel, author, message, color)` → routes to `infoLog.onInfoMessageNX(0, channel, message, author, color)` on NX (`IsNX()`), otherwise `infoLog.onInfoMessage(...)` with the same arguments. This is the screen's whole engine surface: there are no outbound calls.
 
 ---
 
@@ -36,7 +36,7 @@ Extends `com.kiwi.Core.KiwiComponent`. Manages two arrays (`_renderers`, `_pendi
 - `MessageDuration = 8000` ms — time before a message begins fading.
 
 **Key methods:**
-- `onInfoMessage(index, channel, author, message, color)` — creates an `InfoItemRenderer`, sets its `expireTime` and `reapTime`, adds it to `container` and `_pendingRenderers`, enforces `MaxMessages` by trimming the oldest entry if over the limit, then calls `validateNow()`.
+- `onInfoMessage(index, channel, message, author, color)` — creates an `InfoItemRenderer`, sets its `expireTime` and `reapTime`, adds it to `container` and `_pendingRenderers`, enforces `MaxMessages` by trimming the oldest entry if over the limit, then calls `validateNow()`.
 - `onInfoMessageNX(...)` — identical but calls `renderer.ConfigNX()` first and enforces `MaxMessagesNX`.
 - `draw()` — flushes `_pendingRenderers` into `_renderers`, then lays out all renderers stacked upward (newest at bottom, oldest at top): iterates renderers in reverse, accumulating negative Y offsets so the list grows upward.
 - `onReaperTimerComplete(TimerEvent)` — fires every 100 ms; removes renderers whose `reapTime` has passed (calls `stopFadeOut()` and removes from `container`), and calls `startFadeOut()` on renderers past their `expireTime`.
@@ -62,7 +62,7 @@ Extends `com.kiwi.Templates.KiwiButton`, implements `com.kiwi.Interfaces.IListIt
 - `_fadeOut : IggyTween` — tween driving the alpha fade (uses `IggyTween` with `fl.transitions.easing.None.easeOut`).
 
 **Key methods:**
-- `setData(obj)` — sets `_color`, then sets `primaryText.text` via `formatMessage(channel, author, message)` (which currently just returns `message`, ignoring channel/author).
+- `setData(obj)` — sets `_color`, then sets `primaryText.text` via `formatMessage(channel, author, message)` (which currently just returns `message`, ignoring channel/author). `config()` applies `_color` as the text colour, so each line is painted in the colour the engine sent.
 - `ConfigNX()` — switches `primaryText.defaultTextFormat` to `s_formatNX`.
 - `height` (override) — returns `primaryText.textHeight` so the log layout uses actual rendered text height.
 - `startFadeOut()` — creates an `IggyTween` animating `alpha` from 1 → 0 over 0.5 s.
@@ -76,5 +76,5 @@ Extends `com.kiwi.Templates.KiwiButton`, implements `com.kiwi.Interfaces.IListIt
 
 - Messages are stacked upward: `draw()` iterates `_renderers` from last to first, subtracting each renderer's height from a running Y offset and assigning it as `renderer.y`. This means newer messages appear at the bottom.
 - The reaper loop runs every 100 ms (not frame-rate dependent), giving consistent message lifetime regardless of frame rate.
-- `formatMessage` is a static stub that ignores `channel` and `author`, displaying only the raw `message` string — channel/author formatting may be done server-side before the string is passed in.
+- `formatMessage` is a static stub that ignores `channel` and `author`, displaying only the raw `message` string. The engine sends `message` as the finished, localised line — a pickup, for example, is `$ItemPickupEvent` ("You got {0} {1} {2}") already filled in with the count and item name.
 - NX path enforces both a smaller display cap (5 vs 9) and a larger font size (20 vs 14).

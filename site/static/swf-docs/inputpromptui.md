@@ -1,5 +1,5 @@
 # inputpromptui.swf
-> A modal text-input dialog used whenever the game needs the player to type a short string — for example, naming a character or entering text in a form field. It supports both mouse/keyboard and controller inputs, and notifies the game engine via ExternalInterface callbacks.
+> A modal text-input dialog used whenever the game needs the player to type a short string — for example, the text of a sign. Its authored defaults (letters only, 19 characters, accept handler named `SetPlayerName`) are those of a player name; the engine sets the allowed characters and length per prompt. It supports both mouse/keyboard and controller inputs, and notifies the game engine via ExternalInterface callbacks.
 
 **Document/main class:** `InputPromptUI` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 4
@@ -26,8 +26,8 @@ None beyond the inherited UIComponent lifecycle.
 **ExternalInterface callbacks registered (game → Flash):**
 | Callback | Handler | Description |
 |---|---|---|
-| `ON_RESIZE` | `_onStageResize(w,h)` | Centers dialog on stage. |
-| `CLEAR_INPUT` | `onClearInput()` | Clears text field, disables OK button, restores focus. |
+| `ON_RESIZE` | `_onStageResize(w,h)` | Centers dialog on stage. `(w,h)` is the size of the box the engine draws this screen into, not the screen size; it starts at the authored 540 × 192. |
+| `CLEAR_INPUT` | `onClearInput()` | Clears text field, disables OK button, restores focus, and makes the field editable again after `ACCEPTED` locked it — what the game sends when it rejects a submitted answer. |
 | `SET_MESSAGE` | `onSetMessage(text)` | Sets prompt message; auto-resizes background and repositions buttons if text overflows. Calls `NOTIFY_RESIZED(w,h)` back. |
 | `SET_RESTRICTION` | `onSetAllowedCharacters(str)` | Sets `nameTextInput.restrict`. |
 | `SET_MAX_INPUT_SIZE` | `onSetMaxInputSize(n)` | Sets `nameTextInput.maxChars`. |
@@ -35,9 +35,9 @@ None beyond the inherited UIComponent lifecycle.
 | `ON_CONTROLLER_CANCEL` | `onControllerCancel()` | Cancels. |
 
 **ExternalInterface calls dispatched (Flash → game):**
-- `ACCEPTED(text)` — when the player confirms; also disables the text field to prevent re-editing.
+- `ACCEPTED(text)` — when the player confirms (sent from `SetPlayerName`); also disables the text field to prevent re-editing until `CLEAR_INPUT`.
 - `OnCancel()` — when the player cancels.
-- `NOTIFY_RESIZED(w, h)` — when the dialog height changes due to long message text.
+- `NOTIFY_RESIZED(w, h)` — when the dialog height changes due to long message text. The engine resizes the screen's box to the size reported.
 
 **Events listened:**
 - `Event.CHANGE` on `nameTextInput` — enables/disables OK button based on non-empty length.

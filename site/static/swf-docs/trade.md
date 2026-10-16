@@ -20,7 +20,7 @@
 
 ### Key fields
 
-- `playerListPanel : MovieClip` — panel shown while searching for a trade partner.
+- `playerListPanel : MovieClip` — panel shown while searching for a trade partner: a `PlayerListPanel` (Embed symbol169) holding the list of players waiting at the post and the Trade button.
 - `tradePanel : TradePanel` — the actual two-column item exchange panel.
 - `header : WindowHeader` — title bar; updated via `setTitlebar`.
 - `backBanner : MovieClip` — background banner; height scaled proportionally on resize.
@@ -37,7 +37,8 @@
 ### Runtime dependencies & integration
 
 - **Iggy callbacks registered:** `showPendingPlayers`, `initTradeSession`, `setTitlebar`, `GainedFocus`, `LostFocus`.
-- **ExternalInterface calls out:** `TRADE.CONFIGURED` (with `SLOTS_PER_ROW`), `TRADE.CLOSE_REQUEST`.
+- **ExternalInterface calls out:** `TRADE.CONFIGURED` (with `SLOTS_PER_ROW`; console only), `TRADE.CLOSE_REQUEST`.
+- **`PlayerListPanel` (the `playerListPanel` instance):** registers `addPendingPlayer(id, name)` and `removePendingPlayer(id)`, plus `moveHighlight` and `clickTrade` only when `IsConsole()`. Its Trade button sends `TRADE.SELECTED_PLAYER(id)` for the selected row; removing the selected row disables the button.
 - **translate keys:** `"$Deconstructor_Collect"` (used when `isDeconstruct` is true).
 - `IsConsole()`, `IsNX()`, `PositioningButtons()` called in focus/init paths.
 - `setupTranslation()` not called directly in `Trade` — delegated to `TradePanel`.
@@ -54,8 +55,8 @@ Created as a named instance (`tradePanel`) on the `Trade` stage. In its construc
 
 ### Public methods
 
-- `configCategories(p1Name, p2Name, p1Max, p2Max) : void` — sets category label and capacity for each `BagContainer`.
-- `addOfferedItem(category, icon, slotId, qty, color, showQty, quality) : void` — calls `offerCategories[cat].addObject(...)`. Enables `acceptButton` if local accept state is 0 and resets the accept-pending background.
+- `configCategories(p1Name, p2Name, p1Max, p2Max) : void` — sets category label and capacity for each `BagContainer`: `p1Name`/`p1Max` go to category 0 (the trade partner), `p2Name`/`p2Max` to category 1 (the local player). In a player trade each side's capacity is 16.
+- `addOfferedItem(category, icon, slotId, qty, color, showQty, quality) : void` — calls `offerCategories[cat].addObject(...)`. Enables `acceptButton` if local accept state is 0 and resets the accept-pending background. Only category 1's (the local player's) items are drag-enabled — dragging an offered item out is how it goes back to the bags. The tooltip strings passed are the literals `"name"` and `"description"`; the real item tooltip comes from the engine through the slot's pointer events.
 - `removeOfferedItem(category, slotId) : void` — calls `offerCategories[cat].removeBySlotId(slotId)`. Disables `acceptButton` if both categories are empty.
 - `updateOfferedItem(category, slotId, qty, color) : void` — delegates to `BagContainer.updateBySlotId`.
 - `slotIdFromIndex(index:int) : int` — negative indices address category 1 (high bit masked off); non-negative address category 0.
@@ -63,8 +64,8 @@ Created as a named instance (`tradePanel`) on the `Trade` stage. In its construc
 ### Private methods
 
 - `cancelAccept()` — resets accept backgrounds, sets label to `"$TradingPost_LockIn"`, re-enables button.
-- `indicateAccept(who, state)` — tracks `localPlayerAcceptState` and `otherPlayerAcceptState`. When local is one ahead of remote, disables button with `"$TradingPost_Waiting"` label. Otherwise enables with `"$TradingPost_LockIn"` (state 0) or `"$TradingPost_Accept"` (state 1+), and advances console `southButton` frame.
-- `onDrop(x, y, icon, qty, slotId)` — calls `TRADE.DROP_ONTO_WINDOW` and plays `Play_ui_window_drop_interactive` sound.
+- `indicateAccept(who, state)` — tracks `localPlayerAcceptState` (`who == 1`) and `otherPlayerAcceptState` (`who == 0`). When local is one ahead of remote, disables button with `"$TradingPost_Waiting"` label. Otherwise enables with `"$TradingPost_LockIn"` (state 0) or `"$TradingPost_Accept"` (state 1+), and advances console `southButton` frame.
+- `onDrop(x, y, icon, qty, slotId)` — calls `TRADE.DROP_ONTO_WINDOW` and plays `Play_ui_window_drop_interactive` sound. The drop point is not hit-tested: anything dropped anywhere on the window is forwarded.
 - `onAccept(e:MouseEvent)` — calls `TRADE.ACCEPT`.
 - `showControllerTooltip(index) / hideControllerTooltip(index)` — delegates to the appropriate `BagContainer` tooltip method; negative index targets category 1 using high-bit masking.
 - `activateSlot(index) / deactivateSlot(index)` — same sign-based routing to `BagContainer.activateSlot/deactivateSlot`.
@@ -72,7 +73,7 @@ Created as a named instance (`tradePanel`) on the `Trade` stage. In its construc
 
 ### Key fields
 
-- `offerCategories : Object (Array)` — two `BagContainer` instances indexed 0 (local) and 1 (remote).
+- `offerCategories : Object (Array)` — two `BagContainer` instances: index 0 is the trade partner (shown in the upper `offerContainer1`), index 1 is the local player (the lower `offerContainer2`, y 328).
 - `acceptButton : LabelButton` — lock-in/accept/collect/waiting button.
 - `offerContainer1 / offerContainer2 : MovieClip` — visual containers for each BagContainer.
 - `acceptBg1 / acceptBg2 : MovieClip` — semi-transparent "accepted" highlight; shown when `indicateAccept` fires.

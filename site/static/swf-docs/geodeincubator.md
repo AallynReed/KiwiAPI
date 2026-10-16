@@ -12,11 +12,12 @@
 
 ### Public / internal methods
 
-- `setIncubatorType(mode : int) : void` — switches between `MODE_EGG (0)` and `MODE_RELIQUARY (1)`, propagating `currentMode` to all three `IncubationSlot` instances and updating the window title with `$prefabs_placeable_crafting_incubator_item_name` or `$prefabs_placeable_crafting_reliquary_item_name`.
-- `updateSlot(slotIdx, eggTex, petTex, timeRemaining, maxTime, locked) : void` — calls `IncubationSlot.setTime`, sets textures and locked state. If a slot becomes empty (`timeRemaining <= 0` and `maxTime > 0`) and the current console selection is a `BaseButton`, it auto-moves selection to that slot.
-- `setRewardText(slotIdx, text) : void` — sets `IncubationSlot.text` (the top-label string).
-- `setInfluencer(slotIdx, buffed) : void` — shows/hides `buffedAnimation` on a slot and enables/disables `buffButton0`; toggles `slot` frame to `1` (active) or `2` (inactive).
-- `setInfluenceInfo(buffIdx, iconPath, count, name, description) : void` — updates the static `buffInfo` array and refreshes all three slots' buff-button icons, counts, and enabled states.
+- `setIncubatorType(mode : int) : void` — switches between `MODE_EGG (0)` and `MODE_RELIQUARY (1)`, propagating `currentMode` to all three `IncubationSlot` instances and updating the window title with `$prefabs_placeable_crafting_incubator_item_name` ("Egg Incubator") or `$prefabs_placeable_crafting_reliquary_item_name` ("Reliquary Revealer"). One screen serves both placeables; only the title and a few strings change.
+- `updateSlot(slotIdx, eggTex, petTex, timeRemaining, maxTime, locked) : void` — times are in seconds (`setTime` formats `timeRemaining * 1000` ms). The engine resends this several times a second with a whole number of seconds. Calls `IncubationSlot.setTime`, sets textures and locked state. If a slot becomes empty (`timeRemaining <= 0` and `maxTime > 0`) and the current console selection is a `BaseButton`, it auto-moves selection to that slot.
+- `setRewardText(slotIdx, text) : void` — sets `IncubationSlot.text` (the top-label string). The reward text is built from `$Incubator_GotReward` ("You got {0}
+{1}!"), so it spans two lines.
+- `setInfluencer(slotIdx, buffed) : void` — marks that one slot as influenced: shows/hides `buffedAnimation` on a slot and enables/disables `buffButton0`; toggles `slot` frame to `1` (active) or `2` (inactive).
+- `setInfluenceInfo(buffIdx, iconPath, count, name, description) : void` — describes one influence item for every slot at once (the first argument is the buff index, not a slot); updates the static `buffInfo` array and refreshes all three slots' buff-button icons, counts, and enabled states.
 - `activateSelection() : void` — console confirm: if selection is a `BaseButton`, fires `onBuffSelected`; otherwise enters the slot to trigger buff buttons, OK button, or `onSlotClicked`.
 - `cancel() : void` — console back: if in a buff-button, returns selection to the parent slot; otherwise calls `ExternalInterface.call("OnRequestClose")`.
 - `moveSelection(dx, dy) : void` — console D-pad: moves between slots (horizontal) or between buff buttons within a slot.
@@ -34,8 +35,8 @@
 
 ### Frame scripts / timeline
 
-- **Frame 1** (`frame1`): `stop()`.
-- **Frame 11** (`frame11`): `stop()`.
+- **Frame 1** (`frame1`): `stop()`; frame label `PC`. Places `slot0`–`slot2`, `winTitleTextField`, the header and an unnamed `WindowCloseButton`.
+- **Frame 11** (`frame11`): `stop()`; frame label `Console`. Replaces the close button with `buttonLegend` and re-places the frame art as `frameMC`.
 
 ### Runtime dependencies & integration
 
@@ -50,6 +51,7 @@
 - `ExternalInterface.addCallback("moveSelection", …)` — console D-pad.
 - `ExternalInterface.call("OnRequestClose")` — fired when cancel pressed at top level.
 - `ExternalInterface.call("OnDroppedIntoSlot", slotIdx, itemId, itemExtra)` — fired by drag-drop handler.
+- `IncubationSlot` also sends `OnSlotClicked(slotId)`, `OnBuffClicked(slotId, buffIdx)`, `OnResetSlot(slotId)` (the OK button) and `OnAnimationChanged(slotId, speed)`. The last drives the incubator model's spin in the world: 2 when a ready slot is clicked, ramped 2 → 100 over two seconds during the reveal, then back to 1.
 - `SlotDragDropHelper.registerDropCallback(onDrop)` — wires item drag from inventory into incubator slots.
 
 ---
@@ -80,7 +82,7 @@
 
 ## Notable logic
 
-- **Rotation speed constant**: `ROTATION_SPEED = Math.PI/24 ≈ 0.1309` rad/frame is reported to the engine immediately on init, letting the C++ renderer sync a spinning egg preview.
+- **Rotation speed constant**: `ROTATION_SPEED = Math.PI/24 ≈ 0.1309` rad/frame is reported to the engine immediately on init as the incubator model's spin rate.
 - **Reveal tween chain**: `IncubationSlot` executes a four-stage `IggyTween` sequence (egg brightness → speed acceleration → cross-fade → normalise) when `petTexture` is set while open animations are playing. Sound cues (`Play_ui_incubator_common` / `Play_ui_incubator_uncommon`) distinguish buffed vs unbuffed hatches.
 - **Buff info static cache**: `GeodeIncubator.buffInfo` is a static array shared across all slots so `IncubationSlot.onShowBuffTooltip` can look up names/descriptions without holding a reference to the parent.
 - **Progress bar**: `IncubationSlot.setTime` scales `progressBar.karmaMask.scaleX` proportionally to `timeRemaining / maxTime` (0 → 1).

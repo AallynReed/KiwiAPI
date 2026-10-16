@@ -29,7 +29,7 @@
 
 ### Public methods
 
-- `setSlotState(param1:int, param2:int) : void` — Configures a single slot at index `param1` within the current mode. Sets slot size (51 px square / 60 px circle), advances `equippedBorder` and `slotFrame` to `"square"` or `"circle"` labels, toggles `BG` and `goldFrame` visibility. `goldFrame` is hidden in discovery mode regardless of shape.
+- `setSlotState(param1:int, param2:int) : void` — Configures a single slot at index `param1` within the current mode. Sets the slot's `data` to its index (0–7), which is the value the slot's own `SLOT.*` calls hand the engine to name the quickslot. Sets slot size (51 px square / 60 px circle), advances `equippedBorder` and `slotFrame` to `"square"` or `"circle"` labels, toggles `BG` and `goldFrame` visibility. `goldFrame` is hidden in discovery mode regardless of shape.
 
 ### Private methods (ExternalInterface callbacks)
 
@@ -37,7 +37,7 @@
   - adventure / pvp: slots 0–5 square, slots 6–7 circle.
   - discovery: slots 0–4 square, slots 5–7 circle.
   - build: all 8 circle (no square slots); globe frame goes to stop 2.
-  Sets `globeFrame` stop for non-discovery modes.
+  Sets `globeFrame` stop for non-discovery modes (1 for adventure/pvp, 2 for build).
 - `toggleEquipQuickslot() : void` — Toggles visibility of the current mode's `selector` MovieClip.
 - `moveSelector(param1:int) : void` — Repositions `selector.x` to align with slot `param1`.
 - `confirmEquip(param1:int, param2:uint, param3:Number) : *` — Verifies a slot exists then calls `ExternalInterface.call("HOTBAR.DROP_ONTO_SLOT", ...)`.
@@ -46,8 +46,8 @@
 - `setBardSongValue(param1:Number) : *` — Sets `bardSongFilling.scaleX` to `clamp(|current / max|, 0, 1)`.
 - `setBardSongMax(param1:Number) : *` — Updates `bardSongMax`.
 - `setBardMelodyLevel(param1:int) : *` — Shows Melody1–Melody11 sub-clips on `bardSongOutline` using fall-through switch (cumulative visibility up to the given level).
-- `setBardQTE(param1:int) : *` — Shows one of four QTE sub-clips (`BasicAttack`, `Dodge`, `NimbleDance`, `SingingCrystal`) and calls `QTE.gotoAndPlay(0)` when a new positive QTE index is set.
-- `setFuelType(param1:int) : *` — Delegates to `fuel.fuelType`.
+- `setBardQTE(param1:int) : *` — Shows one of four QTE sub-clips by index (`0` `BasicAttack`, `1` `Dodge`, `2` `NimbleDance`, `3` `SingingCrystal`) and calls `QTE.gotoAndPlay(0)` when a new non-negative index is set. It makes `QTE` visible on its own, whatever `setBardSongState` last said.
+- `setFuelType(param1:int) : *` — Delegates to `fuel.fuelType`. In practice this is Solarion's radiance; no other fuel type has art.
 - `setFuel(param1:int) : *` — Delegates to `fuel.amount`.
 - `onDrop(x, y, ..., typeId, amount) : *` — Hit-tests all slots in current mode; on match calls `ExternalInterface.call("HOTBAR.DROP_ONTO_SLOT", slotIndex, typeId, amount)`.
 - `localTestEnterFrame(param1:Event) : void` — Local-only test animation: slowly drains then refills the discovery health globe, with accelerated drain spikes near 80% and 60%.
@@ -65,7 +65,7 @@
 - `bardMelodyLevelCurrent : int` — Current melody level (0–11).
 - `QTE : MovieClip` — Container for Quick-Time Event prompts (maps to `Hotbar_fla.QTE_61`); holds `BasicAttack`, `Dodge`, `NimbleDance`, `SingingCrystal` sub-clips.
 - `currentQTE : int` — Last QTE index set; deduplicates redundant updates (default -1 = none).
-- `messageQueue : MessageQueue` — The in-game notification queue component.
+- `messageQueue : MessageQueue` — The in-game notification queue component; `addMessage` strings carry the engine's own markup and are shown through `htmlText`.
 - `_xTranslate / _yTranslate : Number` — Pixel offsets (7, 4) for hotkey label repositioning.
 - `degen : Boolean` — Direction flag for local test health-drain animation.
 
@@ -93,11 +93,17 @@
 | `SET_FUEL_TYPE` | `setFuelType(int)` |
 | `SET_FUEL` | `setFuel(int)` |
 
+**Direct property writes (C++ → Flash):** the callbacks above do not carry quickslot contents or health/energy. The engine writes those straight onto the timeline objects by path, e.g. `adventure.slot_3.iconImage` and `adventure.health.globe.percent`, into whichever of the four mode clips it chooses, visible or not. On each `Globe` it writes `percent` and `amount` and nothing else; `amount` is written on PC too, even though `amountText` only exists on the console frames, and health reaches the millions at high Power Rank. A class with no energy gets no energy write at all for the whole session (not a zero). On each filled slot it writes `tooltipName` / `tooltipDescription`, which the slot's `TOOLTIP.SHOW` sends back; it also sets `selector.visible` itself. Slot and ability icons arrive through the `objectPreviewReady` handshake.
+
 **ExternalInterface calls (Flash → C++):**
 
 | Call | Triggered by |
 |---|---|
 | `HOTBAR.DROP_ONTO_SLOT(slotIndex, typeId, amount)` | Drag-drop hit (`onDrop`) or `confirmEquip` |
+
+The shared `slot` class adds `SLOT.ACTIVATE`, `SLOT.DRAG_START`, `SLOT.POINTER_ENTER` / `SLOT.POINTER_LEAVE` (each naming the slot by its `data` index) and `TOOLTIP.SHOW` / `TOOLTIP.HIDE`.
+
+**Placement:** the engine places the 785×108 box centred horizontally and flush with the bottom of the screen.
 
 **Events listened:**
 - `Event.ENTER_FRAME` on self — local test mode only.
@@ -118,7 +124,7 @@
 
 - `Fuel` (extends `UIComponent`, embed symbol143) — Container for the fuel gauge. Currently only handles `fuelType == 15` (Radiance type), delegating to a nested `radiance : MovieClip` sub-component. Hidden when fuel type is 0. Exposes `fuelType` and `amount` setters.
 
-- `Radiance` (extends `UIComponent`, embed symbol142) — Displays the Radiance resource bar. Contains a `bar` MovieClip (frame-stepped by integer amount) and seven directional arrow MovieClips (`arrow1`–`arrow7`). `UpdateArrows` animates pairs of arrows (arrow2/3 at threshold 10, arrow4/5 at 17, arrow6/7 at 24) by playing/stopping based on whether the value crosses those thresholds.
+- `Radiance` (extends `UIComponent`, embed symbol142) — Displays the Radiance resource bar. Contains a `bar` MovieClip (a 51-frame timeline, `gotoAndStop(amount)`) and seven directional arrow MovieClips (`arrow1`–`arrow7`). `UpdateArrows` animates pairs of arrows (arrow2/3 at threshold 10, arrow4/5 at 17, arrow6/7 at 24) by playing/stopping based on whether the value crosses those thresholds.
 
 - `slot` (extends `_kiwi.Controls.Slot`, embed symbol116) — Standard quickslot widget. Frame 1 stops; frame 11 (Console branch) stops and tells `quantityBadge` to play from `"Console"`.
 
@@ -150,15 +156,15 @@
 
 - `QTE_61` (embed symbol223) — QTE prompt container. Holds `BasicAttack`, `Dodge`, `NimbleDance`, `SingingCrystal` sub-clips. Plays a 48-frame animation when a QTE starts; frame 48 stops playback.
 
-- `slotFrame_11` (embed symbol82) — Visual frame around a slot; three-state timeline: frames 1/11/21 each stop (likely square, circle, and a third variant).
+- `slotFrame_11` (embed symbol82) — Visual frame around a slot; three-state timeline: frames 1/11/21 each stop, labelled `"circle"`, `"largeCircle"` and `"square"`.
 
 - `qualityPips_12` (embed symbol89) — Item quality pip display; stops on frame 1.
 
-- `equipped_14` (embed symbol97) — Two-frame clip (frames 1 and 2 both stop) representing equipped/unequipped border state.
+- `equipped_14` (embed symbol97) — The slot's `equippedBorder`: two-frame clip (frames 1 and 2 both stop) labelled `"square"` and `"circle"`, the border shape `setSlotState` selects for the slot.
 
 - `slotQuantity_22` (embed symbol113) — Quantity badge containing a `TextField`; two-frame PC/Console layout.
 
-- `globeFrame_42` (embed symbol75) — Globe decorative frame; two-frame stop (likely normal/build variants toggled by `Hotbar.setMode`).
+- `globeFrame_42` (embed symbol75) — Globe decorative frame; two-frame stop, unlabelled. `Hotbar.setMode` sends it to frame 1 in adventure/pvp and frame 2 in build, and leaves it alone in discovery.
 
 - `radiance_bar_3` (embed symbol134) — Radiance bar fill clip; stops on frame 1.
 
@@ -172,7 +178,7 @@
 
 ### Asset wrappers (bitmap/shape embeds — not individually detailed)
 
-9 classes: `rarity_frame_common_png`, `rarity_frame_uncommon_png`, `rarity_frame_rare_png`, `rarity_frame_epic_png`, `rarity_frame_legendary_png`, `rarity_frame_relic_png`, `rarity_frame_shadow_png`, `rarity_frame_resplendent_png`, `rarity_frame_radiant1_png` — all extend `BitmapData`, embedding `/_assets/*.png`. Also: `rarity_frame_stellar` (extends `BitmapData`, embeds `/_assets/10_rarity_frame_stellar.png`), `dummy` (extends `BitmapData`, embeds `/_assets/99_dummy.png`, 52×52). Radiance projectile symbols: `radiance_projectile_4`, `radiance_projectile_a`, `radiance_projectile_b`, `radiance_projectile_c`, `radiance_projectile_d` — all extend `MovieClip`, bare embed wrappers. Total asset-wrapper classes: 16.
+10 classes: `rarity_frame_common_png`, `rarity_frame_uncommon_png`, `rarity_frame_rare_png`, `rarity_frame_epic_png`, `rarity_frame_legendary_png`, `rarity_frame_relic_png`, `rarity_frame_shadow_png`, `rarity_frame_resplendent_png`, `rarity_frame_radiant1_png`, `rarity_frame_normal_over_png` — all extend `BitmapData`, embedding `/_assets/*.png`. Also: `rarity_frame_stellar` (extends `BitmapData`, embeds `/_assets/10_rarity_frame_stellar.png`), `dummy` (extends `BitmapData`, embeds `/_assets/99_dummy.png`, 52×52). Radiance projectile symbols: `radiance_projectile_4`, `radiance_projectile_a`, `radiance_projectile_b`, `radiance_projectile_c`, `radiance_projectile_d` — all extend `MovieClip`, bare embed wrappers. Total asset-wrapper classes: 17.
 
 ---
 

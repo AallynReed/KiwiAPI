@@ -15,10 +15,10 @@ Frame scripts stop at frames 1, 11, and 21. Frame 21 sets `buttonLegend` to `"Co
 
 ### Public methods
 
-- `addClaim(id, icon, quantity, name, description, source, target, expires, timeUntilExpiration) : void` — creates a `ClaimItemRow`, adds it to `itemView` (deferred via `ENTER_FRAME` on console until the row is on its target frame), calls `claimItem.init(...)`, stores it in `claimDictionary[id]`, enables `claimAll`, and clears `noClaimsText`.
+- `addClaim(id, icon, quantity, name, description, source, target, expires, timeUntilExpiration) : void` — the engine calls it once per pending reward when the window opens, and addresses each reward by `id` afterwards. Creates a `ClaimItemRow`, adds it to `itemView` (deferred via `ENTER_FRAME` on console until the row is on its target frame), calls `claimItem.init(...)`, stores it in `claimDictionary[id]`, enables `claimAll`, and clears `noClaimsText`.
 - `setClaimed(id, hours, minutes) : void` — looks up the row by id in `claimDictionary`, calls `row.setClaimed(hours, minutes)`, increments `numClaimed`, and disables `claimAll` when all items are claimed.
-- `onClaimAllClicked(e:MouseEvent) : void` — calls `ExternalInterface.call("OnClaimAll")`.
-- `selectClaimItem(id) : void` — triggers `onClaimClicked` or `onFindClicked` on the matching row depending on whether its claim background is visible.
+- `onClaimAllClicked(e:MouseEvent) : void` — calls `ExternalInterface.call("OnClaimAll")`, which the game resolves server-side against the player's whole pending list, not against the rows drawn so far.
+- `selectClaimItem(id) : void` — triggers `onClaimClicked` or `onFindClicked` on the matching row depending on whether its claim background is visible; `bg.visible` is the row's "still unclaimed" flag.
 - `sourceClaimItem(id) : void` — triggers `onSourceClicked` on the matching row.
 
 ### Key fields
@@ -29,6 +29,7 @@ Frame scripts stop at frames 1, 11, and 21. Frame 21 sets `buttonLegend` to `"Co
 - `noClaimsText : TextField` — shown when the claim list is empty; cleared as soon as any claim is added.
 - `goldFrame / frameBackground : MovieClip` — decorative frame elements whose height is dynamically adjusted by `updateButtonLegendBackground`.
 - `buttonLegend / buttonLegendBG : MovieClip` — console button legend and its background; resized based on visible legend entries.
+- Two root children have no instance name and no field: the content well behind the list (a `DefineShape`, chid 202, depth 59) and the window close button (a `_kiwi.Controls.WindowCloseButton`, chid 138, depth 126).
 - `claimDictionary : Dictionary` — maps claim `id:String` → `ClaimItemRow`.
 - `numClaimed : int` — count of items that have been claimed; used to disable `claimAll`.
 - `maxNumVisible : Number = 5` / `scrollRowBuffer : Number = 10` — layout constants.
@@ -41,13 +42,15 @@ Frame scripts stop at frames 1, 11, and 21. Frame 21 sets `buttonLegend` to `"Co
 | 10 | `stop()` |
 | 20 | `stop()`, `buttonLegend.gotoAndStop("ConsoleLoc")` |
 
+Frames 1, 11 and 21 carry the labels `PC`, `Console` and `ConsoleLoc`.
+
 ### Runtime dependencies & integration
 
 **ExternalInterface callbacks registered (inIggy):**
 `addClaim`, `setClaimed`, `selectClaimItem`, `sourceClaimItem`, `highlightClaim`, `unhighlightClaim`
 
 **ExternalInterface calls (outbound):**
-`OnClaimAll` (claim-all button)
+`OnClaimAll` (claim-all button); the unnamed window close button sends `POST_SOUND_EVENT("Play_ui_window_close")` and `OnRequestClose` itself.
 
 **Highlight/unhighlight:** `highlightClaim(id, direction)` scrolls the item into view (1.5× height buffer), applies `outlineDisplayObject` to `bg` and `bg_claimed`, sets both to frame `"on"`, and updates the button legend select string. `unhighlightClaim(id)` removes outlines and resets to `"off"`. Direction `1` = scrolling down, `-1` = scrolling up.
 
@@ -61,7 +64,7 @@ Frame scripts stop at frames 1, 11, and 21. Frame 21 sets `buttonLegend` to `"Co
 
 ## Other game-specific classes
 
-- `ClaimItemRow` — `UIComponent` (embedded symbol 123). One row in the claims list. Displays item slot (`Slot`), quantity, name (`itemNameText`), description (`itemDescText`), expiration countdown (`expirationText`), source-type buttons (`sourceButtons` MC with frames for leaderboards/battle/mastery/collections), a `claimButton` (`LabelButton`, label `$Claim`), and a `findButton` (`BaseButton`, initially hidden). `init()` populates all fields; `setClaimed(hours, minutes)` hides the claim button, shows the find button if a `targetId` exists, and updates `expirationText` with the cooldown via `TimeUtil.formatTime`. `setExpirationTime()` calls `TimeUtil.formatCountdown` and uses `$Claims_Expires` / `$Claims_Expired` translate keys with `{0}`/`{1}` placeholders. Calls `ExternalInterface.call("OnClaim", claimId)`, `OnShowSource(sourceId)`, `OnShowTarget(claimId)`. Two frame-stop states at frames 0 and 10 (console variant). Visibility is deferred by one ENTER_FRAME via `onRendered` to avoid a blank first frame.
+- `ClaimItemRow` — `UIComponent` (embedded symbol 123). One row in the claims list. Displays item slot (`Slot`), quantity, name (`itemNameText`), description (`itemDescText`), expiration countdown (`expirationText`), source-type buttons (`sourceButtons` MC with frames for leaderboards/battle/mastery/collections), a `claimButton` (`LabelButton`, label `$Claim`), and a `findButton` (`BaseButton`, initially hidden). `init()` populates all fields: the name goes to `itemNameText.text` and the description to `itemDescText.htmlText` exactly as sent. The engine sends some titles and descriptions as finished text and some as raw `$Key`s, and the stock row shows the latter untranslated. The row never sets its slot's `rarity`, so every icon keeps `Slot`'s unset default (-1); `setClaimed(hours, minutes)` hides the claim button, shows the find button if a `targetId` exists, and updates `expirationText` with the cooldown via `TimeUtil.formatTime`. `setExpirationTime()` calls `TimeUtil.formatCountdown` and uses `$Claims_Expires` / `$Claims_Expired` translate keys with `{0}`/`{1}` placeholders. Calls `ExternalInterface.call("OnClaim", claimId)`, `OnShowSource(sourceId)`, `OnShowTarget(claimId)`. Two frame-stop states at frames 0 and 10 (console variant). Visibility is deferred by one ENTER_FRAME via `onRendered` to avoid a blank first frame.
 
 ### Claims_fla/ timeline symbols (6 total)
 

@@ -22,6 +22,7 @@ Identical implementation to `rampagealert.swf`. See that file's documentation fo
 ### Frame scripts / timeline
 
 - No `addFrameScript` calls; animation end is detected via per-frame label polling.
+- Same timeline as `rampagealert.swf`: 119 frames at 24 fps, labels `Animation` (frame 1) and `AnimationComplete` (frame 119), no `stop()`, so it loops and reports once per lap. The text is authored in cyan (`#00FFFF`) instead of orange.
 
 ### Runtime dependencies & integration
 
@@ -39,3 +40,4 @@ None beyond `RampageAlert`.
 ## Notable logic
 
 - This SWF shares its document-class source with `rampagealert.swf` verbatim. Any behavioral difference between the two alerts is purely visual (timeline keyframes and embedded graphic symbols).
+- **Authored vs. assigned description:** this file's text fields were authored with keys rather than English — `$Challenges_RampageAlertTitle` and `$Challenges_RampageAlertDescription02` (English "GIGASTORMER ATTACK", in `challenges.binfab`). The shared constructor overwrites the description with `$Challenges_RampageAlertDescription` ("AMPERIUM ATTACK"), so in game this variant reads AMPERIUM ATTACK in cyan and the `…Description02` key is never shown.

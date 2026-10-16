@@ -8,7 +8,7 @@
 
 `Gems` is the root UIComponent for the entire forge screen. The constructor initialises all gem slots (`gemSlot0`–`gemSlot11` plus `upgradeSlot`), wires tab-click listeners, sets up the ingredient list, insurance items, karma meter, and preview MovieClips. On console (`IsConsole()`), a full `DirectionalMapping` grid is built so the d-pad can traverse all interactive elements. In `configUI()`, Iggy is detected and a large set of `ExternalInterface` callbacks are registered; drag-drop is also registered via `SlotDragDropHelper`.
 
-Three frame stops are defined: frame 1 (default), frame 11, and frame 21. These likely correspond to PC, console, and a second console variant, though their exact purpose is not spelled out in visible frame-script bodies.
+Three frame stops are defined: frame 1 (label `PC`), frame 11 (label `Console`) and frame 21 (label `ConsoleLoc`); the two console frames re-place `boosterCTA`.
 
 ### Public methods
 - `tweenIn(idx : int) : void` — starts the stat-increase tween animation for the stat at position `idx`. Reads current vs. old stat value from `oldStatDict`; if there is a positive delta it creates `IggyTween` objects for alpha and scale, chained so `tweenOut` is called on completion.
@@ -16,13 +16,14 @@ Three frame stops are defined: frame 1 (default), frame 11, and frame 21. These 
 - `tweenComplete() : void` — clears all animated stat text fields and calls `onResultAnimFinished()`.
 
 ### Key fields
-- `gemSlot0`–`gemSlot11 : Slot` — the 12 gem equipment slots; every third slot (index 2, 5, 8, 11) is sized `slotSize_large` (77 px); the rest are `slotSize_small` (55 px). Each slot's `slotColor` child is set to one of `["blue","yellow","red","opal"]` based on `floor(slotIndex / 3)`.
-- `upgradeSlot : Slot` — the XL forge slot (100 px) where gems are placed for upgrading.
-- `fuseButton : LabelButton` — the Fuse/Upgrade button; disabled during result animation timer.
+- `gemSlot0`–`gemSlot11 : Slot` — the 12 gem equipment slots; every third slot (index 2, 5, 8, 11) is sized `slotSize_large` (77 px); the rest are `slotSize_small` (55 px). Each slot's `slotColor` child is set to one of `["blue","yellow","red","opal"]` based on `floor(slotIndex / 3)`. Slot `data` is the index 0–11. No callback carries a gem: the engine fills these slots (and `upgradeSlot`) by writing into the timeline instances by name, so the instance names are part of the contract.
+- `upgradeSlot : Slot` — the XL forge slot (100 px) where gems are placed for upgrading; `data` = 12. The engine writes the forge gem's name key into its `objectName` (e.g. `$prefabs_item_gem_large_blue_…_name`); `setFuseState` sets its rarity and quality.
+- `fuseButton : LabelButton` — the Fuse/Upgrade button; disabled during result animation timer. The engine looks it up by its instance name.
+- `powerRankHeader : MovieClip` — holds `powerRankValue`, the gem power-rank figure, which the engine writes into directly by the path `powerRankHeader.powerRankValue`; the stock code never sets it.
 - `stats : MovieClip` — container for `statName0`–`statName2`, `statValue0`–`statValue2`, `gemLevel`, `powerRank`, `success` description, and `animation` sub-clip with four animated stat rows.
 - `karmaMeter : MovieClip` — has a `karmaMask` child whose `scaleX` represents the fill level (0–1).
-- `insuranceContainer : MovieClip` — holds `insuranceItem0`–`insuranceItem3`; each has a `slot`, `count`, and `buyButton`.
-- `gemPreviews : MovieClip` — holds `preview0`–`preview2` showing upgrade outcome previews.
+- `insuranceContainer : MovieClip` — holds `insuranceItem0`–`insuranceItem3`; each has a `slot`, `count`, and `buyButton`. The slots' `data` is 100–103, the value `OnBuyInsuranceItem`/`OnInsuranceItemSelected` send.
+- `gemPreviews : MovieClip` — holds `preview0`–`preview2` showing upgrade outcome previews. The engine addresses `gemPreviews.preview0.gemImage` by path; the stock code never sets a preview's `gemImage`.
 - `boosterCTA : TextField` — call-to-action text shown when no insurance is selected.
 - `ingredientList : Array` — list of ingredient objects (`{slotTextureName, name, description, numHave, numNeed, txtColor}`).
 - `insuranceList : Array` — tooltip data for insurance items.
@@ -37,9 +38,9 @@ Three frame stops are defined: frame 1 (default), frame 11, and frame 21. These 
 - `tweenScale : Number` — 1.0 when all stats change (great success), 1.5 when only one stat changes (regular success).
 
 ### Frame scripts / timeline
-- **frame 1** (`frame1`): `stop()`
-- **frame 11** (`frame11`): `stop()`
-- **frame 21** (`frame21`): `stop()`
+- **frame 1** (`frame1`, label `PC`): `stop()`
+- **frame 11** (`frame11`, label `Console`): `stop()`
+- **frame 21** (`frame21`, label `ConsoleLoc`): `stop()`
 
 ### Runtime dependencies & integration
 
@@ -47,9 +48,9 @@ Three frame stops are defined: frame 1 (default), frame 11, and frame 21. These 
 | Callback | Description |
 |---|---|
 | `setPatronStatus(bool)` | Stores patron status flag. |
-| `previewUpgrade(...)` | Stub — body empty. |
+| `previewUpgrade(...)` | Stub — declared with ten parameters, body empty. |
 | `addStat(name, value, doAnim, singleStatChanged)` | Appends a stat to `statList`; updates the static display; if `doAnim` and the result timer is running after a success, triggers tween animation. |
-| `addIngredient(texName, name, desc, numHave, numNeed)` | Adds an ingredient row to the required-items panel; colours the count red if `numHave < numNeed`; re-evaluates fuse button state. |
+| `addIngredient(texName, name, desc, numHave, numNeed)` | Adds an ingredient row to the required-items panel; colours the count red if `numHave < numNeed`; re-evaluates fuse button state. `name` arrives as a translation key. |
 | `resetIngredients()` | Clears ingredient display. |
 | `clearForge()` | Resets forge to empty state (karma to 0, stats hidden, upgrade slot cleared). |
 | `selectInsurance(idx, ...modifiers)` | Selects an insurance item; shows/hides gem previews; sets modifier frame stops on preview clips. |
@@ -62,15 +63,15 @@ Three frame stops are defined: frame 1 (default), frame 11, and frame 21. These 
 | `activateSlot()` | Activates the focused slot or calls `OnInsuranceItemSelected`. |
 | `purchaseInsurance(idx)` | Triggers buy flow for an insurance item. |
 | `moveGemToSlot(texName, itemId, qty, slotIdx)` | Calls `OnDropOntoSlot` for a programmatic gem move. |
-| `setFuseState(enabled, label, desc, level, powerRank, rarity, quality, showInstr, instrKey, upgradeResult, canUpgrade, selectedInsuranceLvl)` | Master state-setter called after the server confirms the state; updates fuse button, stats, previews, insurance slot visual states, and triggers upgrade result animation. |
+| `setFuseState(enabled, label, desc, level, powerRank, rarity, quality, showInstr, instrKey, upgradeResult, canUpgrade, selectedInsuranceLvl)` | Master state-setter called after the server confirms the state; updates fuse button, stats, previews, insurance slot visual states, and triggers upgrade result animation. It is also the engine's answer when a gem is put in the forge (clicking a socket sends `SLOT.ACTIVATE` with its `data`), followed by one `addStat` per stat; nothing in it says which socket the gem came from. |
 
 **ExternalInterface calls dispatched (Flash → game):**
 - `OnUpgradeRequest` — when Fuse is clicked.
 - `CheckUpgradeAvailability` — after result animation completes.
 - `OnDropOntoSlot(texName, itemId, qty, slotData)` — on drag-drop or `moveGemToSlot`.
-- `OnTransferSlot(slotData)` — on right-click of a slot.
+- `OnTransferSlot(slotData)` — on right-click of a slot; on the forge (`12`) it takes the gem back out of the forge.
 - `OnShowTab(tabId)` — tab navigation (0=Character, 2=Rewards, 3=PVP).
-- `POST_SOUND_EVENT(eventName)` / `POST_RTPC_SOUND_EVENT(event, rtpc, level)` — upgrade result sound events: `Play_ui_gem_break`, `Play_ui_gem_double_win`, `Play_ui_gem_success`, `Play_ui_gem_fail`, `Play_ui_gem_restore`.
+- `POST_SOUND_EVENT(eventName)` / `POST_RTPC_SOUND_EVENT(event, rtpc, level)` — upgrade result sound events: `Play_ui_gem_break`, `Play_ui_gem_double_win`, `Play_ui_gem_success`, `Play_ui_gem_fail`, `Play_ui_gem_restore`. Success and double success go through `POST_RTPC_SOUND_EVENT` with RTPC `ui_gem_upgrade_level` set to `(level - 1) % 5 + 1`.
 - `UIComponent.OnShowTooltip(x, y, title, desc)` / `UIComponent.OnHideTooltip()` — ingredient, insurance, and preview tooltips.
 - `OnBuyInsuranceItem(slotData)` / `OnInsuranceItemSelected(slotData)` — insurance interactions.
 
@@ -83,12 +84,12 @@ Three frame stops are defined: frame 1 (default), frame 11, and frame 21. These 
 ## Other game-specific classes
 
 ### Top-level slot/UI wrappers (asset-backed MovieClips)
-- `slot` — extends `_kiwi.Controls.Slot`; embed symbol128. Standard small gem slot.
-- `slot_large` — (inferred from name, same pattern) large gem slot.
-- `slot_xlarge` — XL upgrade slot.
+- `slot` — extends `_kiwi.Controls.Slot`; embed symbol128. Standard small gem slot (`gemSlot0`, `1`, `3`, `4`, `6`, `7`, `9`, `10`).
+- `slot_large` — extends `_kiwi.Controls.Slot`; embed symbol143. Large gem slot (`gemSlot2`, `5`, `8`, `11`).
+- `slot_xlarge` — extends `_kiwi.Controls.Slot`; embed symbol113. XL upgrade slot (`upgradeSlot`).
 - `SlotBackground`, `SlotBackgroundLocked`, `SlotFrameNormal`, `SlotFrameMedium`, `SlotFrameHigh` — slot frame and background visual variants.
 - `Equipped` — embed symbol64; plain MovieClip for the equipped indicator overlay.
-- `meter_karma` — karma bar clip.
+- `meter_karma` — extends `UIComponent`; embed symbol83. The `karmaMeter` clip (holds `karmaMask`).
 - `art`, `image` — generic art/image wrapper clips.
 - `btnGreen`, `btnGreen_small`, `btnGreenIcon_small` — extends `_kiwi.Controls.LabelButton`; button skin variants.
 - `dummy` — empty stub MovieClip.
@@ -100,7 +101,7 @@ Three frame stops are defined: frame 1 (default), frame 11, and frame 21. These 
 ### Gems_fla timeline symbols (23 classes)
 All in package `Gems_fla`; embedded from `/_assets/assets.swf`. Key ones:
 
-- `tabHeader_mastery_1`, `tabHeader_pvp_3`, `tabHeader_char_2`, `tabHeader_gems_4` — tab header MovieClips with 3-frame stops (normal / hover / active states).
+- `tabHeader_mastery_1`, `tabHeader_pvp_3`, `tabHeader_char_2`, `tabHeader_gems_4` — tab header MovieClips with three frames labelled `inactive`, `active` and `disabled`.
 - `insurance_5`, `insurance_slot_6` — insurance section clips.
 - `gem_impact_gr_13`, `gem_impact_14` — impact effect clips.
 - `modifier_15` — modifier indicator clip.

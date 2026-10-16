@@ -1,6 +1,6 @@
 # speechbubble.swf
 
-> Displays a floating speech-bubble overlay anchored to the bottom-center of the screen, used in Trove for NPC or contextual dialogue. The bubble fades in and out on demand with a short alpha tween and redraws itself procedurally to fit the current text.
+> Displays a floating speech bubble for NPC or contextual dialogue. Trove draws this 600 × 480 surface in the world at the speaker, aiming the bottom centre of the surface at whoever is speaking, which is why the bubble is anchored to the bottom-centre of the stage. The bubble fades in and out on demand with a short alpha tween and redraws itself procedurally to fit the current text.
 
 **Document/main class:** `SpeechBubble` (extends `MovieClip`)
 **SWF-specific classes:** 2
@@ -9,12 +9,12 @@
 
 ## Main class: `SpeechBubble`
 
-Owns the two `IggyTween` instances that handle fade-in and fade-out, and exposes `setText` and `show` as ExternalInterface callbacks for the game engine. In non-Iggy (preview) mode it self-populates with test text. After every text change or tween completion, it requests a redraw via `ExternalInterface.call("RequestRedraw")` / `ExternalInterface.call("TweenComplete")` using a deferred `Event.RENDER` listener so the engine can composite the frame.
+Owns the two `IggyTween` instances that handle fade-in and fade-out, and exposes `setText` and `show` as ExternalInterface callbacks for the game engine. Because it extends `MovieClip` rather than `UIComponent`, the screen registers none of the `UIComponent.*` callbacks — `setText` and `show` are the whole inbound list. In non-Iggy (preview) mode it self-populates with test text. After every text change or tween completion, it requests a redraw via `ExternalInterface.call("RequestRedraw")` / `ExternalInterface.call("TweenComplete")` using a deferred `Event.RENDER` listener so the engine can composite the frame.
 
 ### Public methods
 
 - `setText(param1:String, param2:uint) : void` — sets `bubble.text` and `bubble.textColor`, then calls `recenterBubble()` and schedules a `RequestRedraw` on the next render event.
-- `show(param1:Boolean) : void` — starts the appropriate fade tween (in or out). Guards against re-triggering an already-playing tween or a no-op alpha state.
+- `show(param1:Boolean) : void` — starts the appropriate fade tween (in or out). Guards against re-triggering an already-playing tween or a no-op alpha state; the engine calls `show` repeatedly with the same value.
 
 ### Key fields
 
@@ -55,6 +55,7 @@ When `text` is set, `recalculateSize()` expands the text field to fit content (r
 
 ## Notable logic
 
-- The bubble shape is entirely procedural — no bitmaps. Rounded corners are drawn with `curveTo`, the stem is a triangle protruding from the bottom edge, offset to appear center-left of the bubble bottom.
+- The bubble shape is entirely procedural — no bitmaps.
+- The file's `DefineFont3` "Open Sans Semibold" has an empty glyph table (a font reference; the game supplies the glyphs), and its `ImportAssets2` from `SharedLibraryController` imports no assets. The 24 `btn_console_*` icons placed by class name inside the `Bubble` sprite therefore resolve to nothing — dead placements beside `bubbleContainer` and `textField`. Rounded corners are drawn with `curveTo`, the stem is a triangle protruding from the bottom edge, offset to appear center-left of the bubble bottom.
 - Text alignment is dynamic: single-line text is centered; multi-line wraps left-aligned.
 - `bubbleContainer.numChildren == 0` guard ensures `bubbleShape` is only added once; subsequent `drawBubble` calls just clear and re-draw the same `Shape`.

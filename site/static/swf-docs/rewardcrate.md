@@ -1,6 +1,6 @@
 # rewardcrate.swf
 
-Reward Crate (lockbox) opening window that appears when a player opens a loot crate or lockbox in Trove. It shows the item being opened, a scrollable list of possible reward items, an optional augment slot, a karma progress meter, and buttons to open, claim, or apply an augment. The window supports both PC (mouse-driven) and console (gamepad focus/activate) input paths.
+> Reward Crate (lockbox) opening window that appears when a player opens a loot crate or lockbox in Trove. It shows the item being opened, a scrollable list of possible reward items, an optional augment slot, a karma progress meter, and buttons to open, claim, or apply an augment. The window supports both PC (mouse-driven) and console (gamepad focus/activate) input paths.
 
 **Document/main class:** `RewardCrate` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 17 (excluding asset wrappers and `org.flintparticles` library)

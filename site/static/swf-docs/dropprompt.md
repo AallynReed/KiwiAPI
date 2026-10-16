@@ -1,5 +1,5 @@
 # dropprompt.swf
-> A modal quantity-picker dialog that appears when a player chooses to drop (discard) an item from their inventory. It displays a prompt message, a numeric text input, +/− step buttons, Min/Max buttons, and Confirm/Cancel buttons. Full console support is included with D-Pad, LT/RT, and on-screen keyboard hints.
+> A modal quantity-picker dialog that the game opens for every "how many" question about a stack: dropping an item on the ground, moving it between bags, or composting it at the deconstructor. It displays a prompt message, a numeric text input, +/− step buttons, Min/Max buttons, and Confirm/Cancel buttons. Full console support is included with D-Pad, LT/RT, and on-screen keyboard hints.
 
 **Document/main class:** `DropPrompt` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 10
@@ -16,14 +16,14 @@ The `setMax()` method is the main layout driver: it dynamically repositions all 
 
 - `get quantity() : Number` — reads and parses `quantityTextInput.text`; returns 0 on NaN.
 - `set quantity(value:Number) : *` — clamps `value` to `[0, maxQuantity]`, updates the text input, and toggles `dropButton.enabled` (`> 0`), `incrementButton.enabled` (`< max`), and `decrementButton.enabled` (`> 0`).
-- `set message(text:String) : void` — sets `promptMessage.text`.
-- `set acceptButtonLabel(text:String) : void` — overrides `dropButton.label`.
-- `setMax(max:Number) : void` — stores `maxQuantity`, resets `quantity` to 1, dynamically resizes `quantityTextInput.bg` to fit the digit count (12 px per char), and repositions all controls horizontally centered in `bg`. On console, also layouts D-Pad vertically centered on the input and stacks increment/decrement above/below it.
+- `set message(text:String) : void` — sets `promptMessage.text`. Written by the engine as a property assignment (not a callback) with the question: `$DropPrompt_DropQuestion` ("How many would you like to drop?"), `$DropPrompt_MoveQuestion` ("…to move?") or `$Deconstructor_CompostDropPrompt` ("…to compost?"). It can arrive either as the raw key or as already-translated text.
+- `set acceptButtonLabel(text:String) : void` — overrides `dropButton.label`. Also an engine property assignment, and the only thing that tells a drop from a move: `$DropPrompt_Confirm` ("DROP") or `$DropPrompt_MoveConfirm` ("MOVE"), again as a raw key or translated text.
+- `setMax(max:Number) : void` — the stack size; the first call the engine makes when the prompt opens. Stores `maxQuantity`, resets `quantity` to 1, dynamically resizes `quantityTextInput.bg` to fit the digit count (12 px per char), and repositions all controls horizontally centered in `bg`. On console, also layouts D-Pad vertically centered on the input and stacks increment/decrement above/below it.
 - `setQuantity(value:Number) : void` — clamps and applies `value`, then focuses `quantityTextInput.textField` and selects all text.
 
 ### Key fields
 
-- `quantityTextInput : TextInput` — editable numeric field; `restrict="0-9"`, `maxChars=4` (grows to match `setMax` digit count).
+- `quantityTextInput : TextInput` — editable numeric field; `restrict="0-9"`, `maxChars=4` at authoring time (`setMax` then sets it to the max's digit count).
 - `dropButton : LabelButton` — confirm button; default label key `"$DropPrompt_Confirm"`.
 - `cancelButton : LabelButton` — cancel button; default label key `"$DropPrompt_Cancel"`.
 - `incrementButton : BaseButton` — steps quantity up by 1.
@@ -43,12 +43,12 @@ The `setMax()` method is the main layout driver: it dynamically repositions all 
 
 ### Frame scripts / timeline
 
-- **Frame 0** (`frame1`): `stop()` — default (PC/generic) layout frame.
-- **Frame 10** (`frame11`): `stop()` — console layout frame (controls repositioned by `setMax` at runtime regardless of frame).
+- **Frame 1** (`frame1`, label `PC`): `stop()` — default layout; places `bg`, the buttons, `quantityTextInput` and `promptMessage`.
+- **Frame 11** (`frame11`, label `Console`): `stop()` — adds the console hint icons (`button_console_lt/rt/south/east/keyboard`, `dpad_console`) and `txtKeyboardButton`, and re-places `promptMessage`; these children exist only on this frame (controls repositioned by `setMax` at runtime regardless of frame).
 
 ### Runtime dependencies & integration
 
-- `ExternalInterface.addCallback` registrations: `"setMax"`, `"setQuantity"`, `"onIncrement"`, `"onDecrement"`, `"onMinQuantityClicked"`, `"onMaxQuantityClicked"`, `"onDrop"`, `"onCancel"` — game engine can drive all interactions directly without mouse events.
+- `ExternalInterface.addCallback` registrations: `"setMax"`, `"setQuantity"`, `"onIncrement"`, `"onDecrement"`, `"onMinQuantityClicked"`, `"onMaxQuantityClicked"`, `"onDrop"`, `"onCancel"` — the six `on…` names are the controller bindings: the engine calls them when the matching pad button is pressed, reaching the same handlers as the mouse.
 - `ExternalInterface.call` outbound:
   - `"DropConfirm"(quantity)` — fired on drop button click or Enter key, only when quantity is valid and `<= maxQuantity`.
   - `"Cancel"()` — fired on cancel button click.

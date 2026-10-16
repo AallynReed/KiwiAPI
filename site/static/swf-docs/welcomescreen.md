@@ -8,12 +8,12 @@
 
 ## Main class: `WelcomeScreen`
 
-`WelcomeScreen` is the root component. On construction it registers frame scripts (frames 1 and 11, both `stop()`), hides `dailyBonusWindow` and `lightbox`, enables font-resize on the header, wires click listeners for the daily-bonus toggle (panel + close button + lightbox), adds a `MOUSE_LEAVE` listener to hide popups, registers five `ExternalInterface` callbacks (in Iggy), and configures the header title `$Welcome_WindowName`.
+`WelcomeScreen` is the root component. On construction it registers frame scripts (frames 1 and 11, both `stop()`), hides `dailyBonusWindow` and `lightbox`, enables font-resize on the header, wires click listeners for the daily-bonus toggle (panel + close button + lightbox), adds a `MOUSE_LEAVE` listener to hide popups, registers nine `ExternalInterface` callbacks (in Iggy), and configures the header title `$Welcome_WindowName` (English "WELCOME").
 
 ### Public methods
 
-- `addFeaturedItem(idx, imagePath, title, subtitle, description, btnLabel, currencyCode, normalPrice, discountPrice) : void` — delegates to `featuredPanel.addFeaturedItem(…)`.
-- `addEventItem(idx, imagePath, name, dateStr, description, …) : void` — populates the `eventPanel` MovieClip's `nameText`, `descriptionText`, `dateText` fields with layout adjustments; sets `eventPanel.art` ObjectPreview texture.
+- `addFeaturedItem(type, imagePath, title, subtitle, description, btnLabel, currencyCode, normalPrice, discountPrice) : void` — delegates to `featuredPanel.addFeaturedItem(…)`. The first argument is the offer type (see `WelcomeFeaturedPanel`), not an index.
+- `addEventItem(…) : void` — takes the same nine arguments as `addFeaturedItem`; here the fourth is the event's date text. Only `imagePath`, `name`, `dateStr` and `description` are read: the first argument and the last four (button label, currency, prices) are ignored, so the event panel has no button. Populates the `eventPanel` MovieClip's `nameText`, `descriptionText`, `dateText` fields with layout adjustments; sets `eventPanel.art` ObjectPreview texture.
 - `populateDailyBonus(todayIdx : int) : void` — stores `today`, calls `dailyBonusPanel.populateDailyBonus(today)` and `dailyBonusWindow.populateDailyBonus(today)`.
 - `setMOTD(text : String) : void` — sets `MotD.text`; expands `lightbox.height` by `MotD.height` (645 console / 592 PC base + height).
 - `highlightPanel(panelIdx : int) : void` — shows/hides `featuredPanel.selected` and `dailyBonusPanel.selected`; dispatches synthetic ROLL_OVER/ROLL_OUT events to drive popup visibility on each panel.
@@ -28,14 +28,15 @@
 - `lightbox : MovieClip` — semi-transparent overlay shown when `dailyBonusWindow` is open.
 - `eventPanel : MovieClip` (instance of `EventPanel_2`) — single-event highlight area with name, date, description text fields and an `ObjectPreview` art slot.
 - `header : WindowHeaderSmall` — window header; title `$Welcome_WindowName`; `allowFontResize = true`.
+- An unnamed `WindowCloseButton` (symbol111) at (888, 6) closes the screen through its own `OnRequestClose` call; the Console frame removes it.
 - `MotD : WelcomeMotD` — message-of-the-day band at the bottom.
 - `today : int` — index of today's day (0 = Monday … 6 = Sunday).
 - `static DAYS_S : Array` — `["MON","TUE","WED","THU","FRI","SAT","SUN"]` — shared with `WelcomeDailyBonusPanel`.
 
 ### Frame scripts / timeline
 
-- **Frame 1** (`frame1`): `stop()`.
-- **Frame 11** (`frame11`): `stop()`.
+- **Frame 1** (`frame1`, label `"PC"`): `stop()`.
+- **Frame 11** (`frame11`, label `"Console"`): `stop()`.
 
 ### Runtime dependencies & integration
 
@@ -49,13 +50,15 @@
 - `ExternalInterface.addCallback("onActionClicked", featuredPanel.onActionClicked)`.
 - `ExternalInterface.addCallback("onDailyBonusClicked", onDailyBonusClicked)`.
 - Translate key: `$Welcome_WindowName` (header).
+- Offer and event text arrives as translation keys rather than words: `addFeaturedItem` and `addEventItem` pass `$…` keys in their title, subtitle/date and description (Luxion's offer title is `$Welcome_luxion_lands_name`, "Trials of Luxion!"). The screen assigns them to TextFields untranslated and the game resolves `$`-prefixed text; the daily-bonus window's `$Monday` … `$Sunday` day labels rely on the same thing.
+- The engine sends the whole offer list again each time the screen is opened.
 
 ---
 
 ## Other game-specific classes
 
 ### `WelcomeFeaturedPanel` (extends `UIComponent`, embeds `assets.swf#symbol182`)
-Rotating featured-content panel displaying one item at a time from `featuredItems : Vector.<Object>`. Supports 7 panel types: `panelNewPlayer`, `panelPack`, `panelRadiant`, `panelChaos`, `panelDragon`, `panelGenericA`, `panelGenericB` (constants `FEATURE_NORMAL…FEATURE_BOMBER`).
+Rotating featured-content panel displaying one item at a time from `featuredItems : Vector.<Object>`. Supports 7 panel types: `panelNewPlayer`, `panelPack`, `panelRadiant`, `panelChaos`, `panelDragon`, `panelGenericA`, `panelGenericB` (constants `FEATURE_NORMAL…FEATURE_BOMBER`). The offer type indexes `PANEL_TYPES` directly: `0` NORMAL → `panelNewPlayer`, `1` PACK → `panelPack`, `2` EVENT → `panelRadiant`, `3` CHAOS → `panelChaos`, `4` DRAGON → `panelDragon`, `5` BOMBER → `panelGenericA`; `panelGenericB` has no constant.
 
 - `addFeaturedItem(…)` — pushes an object to `featuredItems`; if it's the first item, calls `showFeaturedItem()` immediately.
 - `showFeaturedItem()` — fades in the correct panel type, sets `nameText`, `descriptionText`, `ObjectPreview art.textureName`; populates `featurePopup` with the action button label, description CTA text, and background/price display; calls `ExternalInterface.call("OnResetYaw", isDragon)`.
@@ -72,7 +75,7 @@ Rotating featured-content panel displaying one item at a time from `featuredItem
 Compact strip showing today's bonus icon with a hover "learn more" popup.
 
 - Seven `bonus_MON … bonus_SUN` MovieClip children; only today's is visible.
-- `tomorrowBonus` child contains matching `bonus_*` children for tomorrow's preview; `dayLabel` set to `$Welcome_DailyBonus_Tomorrow`.
+- `tomorrowBonus` child contains matching `bonus_*` children for tomorrow's preview; `dayLabel` set to `$Welcome_DailyBonus_Tomorrow` ("Tomorrow:").
 - `populateDailyBonus(todayIdx)` — shows correct day icon, hides others, also shows tomorrow's in `tomorrowBonus`; calls `KiwiTextUtil.resizeFont(dailyName, 20)` on each.
 - `onShowHidePopup(e)` — `IggyTween` fades `learnMorePopup.alpha` on ROLL_OVER/ROLL_OUT.
 - `selected : MovieClip` — selection highlight; driven from `WelcomeScreen.highlightPanel`.
@@ -81,12 +84,12 @@ Compact strip showing today's bonus icon with a hover "learn more" popup.
 Full weekly-bonus detail popup (toggled by clicking the daily bonus panel).
 
 - `static DAYS_L : Array` — `["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]`.
-- `static BONUSES : Array` — `["shadow","gathering","gem","adventure","dragon","xp","loot"]`.
-- Day-label TextFields on each day MovieClip are set to `$Monday` … `$Sunday` in constructor.
-- `populateDailyBonus(dayIdx)` — fills four `dailyBonusDetails*` and `dailyBonusDetailsPatron*` TextFields using translate keys of the form `$Welcome_daily_bonus_details_<bonus>_1..4` and `…_patron`; repositions bullet points dynamically based on `textHeight`; hides bullet 4 if text is empty; shows the matching `bonus_*` icon.
+- `static BONUSES : Array` — `["shadow","gathering","gem","adventure","dragon","xp","loot"]`, indexed by day (0 = Monday). The keys are not the display names: Monday's `shadow` bonus is "Delve Day" in English (`$Welcome_DailyBonus_ShadowDay`).
+- Day-label TextFields on each day MovieClip are set to `$Monday` … `$Sunday` in constructor (keys in `time.binfab`).
+- `populateDailyBonus(dayIdx)` — fills four `dailyBonusDetails*` and `dailyBonusDetailsPatron*` TextFields using translate keys of the form `$Welcome_daily_bonus_details_<bonus>_1..4` and `…_patron`; repositions bullet points dynamically based on `textHeight`; hides bullet 4 if text is empty (in English only `gathering`, Tuesday, has a fourth line); shows the matching `bonus_*` icon.
 - `highlightDay(dayIdx)` — marks the clicked day tab "over" / "up" then repopulates.
 - `closeButton : WindowCloseButton` — wired by parent to `onDailyBonusClicked`.
-- `dailyheader : WindowHeaderSmall` — title `$Welcome_daily_bonus_header`.
+- `dailyheader : WindowHeaderSmall` — title `$Welcome_daily_bonus_header` (English "DAILY BONUS").
 
 ### `WelcomeMotD` (extends `UIComponent`, embeds `assets.swf#symbol206`)
 Message of the Day band positioned below the main panels.

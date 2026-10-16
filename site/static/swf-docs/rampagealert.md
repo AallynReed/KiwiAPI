@@ -1,13 +1,13 @@
 # rampagealert.swf
 
-> Displays a full-screen animated alert when a Rampage challenge begins in Trove. The SWF plays a timeline animation, shows localized warning and description text, and signals the game engine when the animation finishes so the overlay can be dismissed.
+> Displays a full-width animated alert strip (1920 × 160) when a Rampage challenge begins in Trove. The SWF plays a timeline animation, shows localized warning and description text, and signals the game engine when the animation finishes so the overlay can be dismissed.
 
 **Document/main class:** `RampageAlert` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 1
 
 ## Main class: `RampageAlert`
 
-`RampageAlert` is the document class and the only game-specific class in this SWF. All initialization happens in the constructor: localized strings are written to nested TextFields immediately, and an `ENTER_FRAME` listener is added to poll for the animation's end label. The class does not register any inbound ExternalInterface callbacks — the game simply instantiates the SWF and waits for the outbound `AnimationComplete` call.
+`RampageAlert` is the document class and the only game-specific class in this SWF. All initialization happens in the constructor: localized strings are written to nested TextFields immediately, and an `ENTER_FRAME` listener is added to poll for the animation's end label. The class does not register any inbound ExternalInterface callbacks — the game simply instantiates the SWF and waits for the outbound `AnimationComplete` call, which is what closes the window; nothing else takes it away.
 
 ### Public methods
 
@@ -22,6 +22,8 @@
 ### Frame scripts / timeline
 
 - No `addFrameScript` calls; the end-of-animation signal is detected via an `ENTER_FRAME` label poll rather than a frame script.
+- 119 frames at 24 fps with two labels: `Animation` (frame 1) and `AnimationComplete` (frame 119). Nothing calls `stop()`, so the timeline loops.
+- Frame 1 places the full-width band, the two hazard-stripe rails (a 1752 × 16 bitmap), `descriptionContainer` and `warningContainer`. The text fields are authored in orange (`#FF5B00`) with the resolved English ("WARNING" at 83 pt, "AMPERIUM ATTACK" at 26 pt) and use an embedded `DefineFont3` "Open Sans Semibold", which is most of the file's size.
 
 ### Runtime dependencies & integration
 
@@ -39,5 +41,5 @@ None beyond `RampageAlert`.
 
 ## Notable logic
 
-- The `ENTER_FRAME` polling approach means `AnimationComplete` will be called on every frame after the label is reached if the timeline stops on that frame. The game engine is expected to unload or hide the SWF promptly after receiving the callback to prevent repeated calls.
+- Because nothing stops the timeline, `currentLabel` equals `"AnimationComplete"` only on frame 119, so the `ENTER_FRAME` poll fires `AnimationComplete` once per 119-frame lap. In game the call closes the window.
 - Localization strings are applied in the constructor, before the UIComponent lifecycle calls `configUI`, so the text is set as early as possible.

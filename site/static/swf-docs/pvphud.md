@@ -1,5 +1,5 @@
 # pvphud.swf
-> The heads-up display overlay shown during PvP matches in Trove. It displays a countdown timer, team scores, a personal score panel, kill-counter icons, a broadcast message area, and a scrolling message queue for kill-feed or event notifications.
+> The heads-up display overlay shown during PvP matches in Trove. It displays a countdown timer, team scores, a personal score panel, an engine-written counter with its person and red-cross icons, a broadcast message area, and a scrolling message queue for kill-feed or event notifications.
 
 **Document/main class:** `PVPHUD` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 5 (excluding framework; 2 are `PVPHUD_fla` timeline symbols)
@@ -20,22 +20,22 @@ The class manages two score display modes — `SCORE_INTEGER` (0) and `SCORE_TIM
 - `updateCountdown(seconds:int) : void` — displays the countdown integer in `broadcastText`, then launches three `IggyTween`s on `broadcastContainer` (scaleX, scaleY grow from `2+(10−n)/2`→1; alpha fade 1→0 over 1 s); also calls `messageQueue.reset()`. Scale start size varies with remaining time, making later countdown ticks appear larger.
 - `prepareForBattle() : void` — clears the timer text and calls `setMessage(IggyFunctions.translate("$PVP_Prepare"))`.
 - `beginMatch() : void` — calls `setMessage(IggyFunctions.translate("$PVP_Begin"))`, fades `broadcastContainer` alpha to 0 over 2 s via `IggyTween`, resets message queue.
-- `updateTeamScore(teamIdx:int, color:uint, score:int, maxScore:int) : void` — looks up the child `PVPScore` named `"team" + teamIdx` inside `scoreContainer`; calls `init(maxScore, color)` then `updateScore(score)`.
+- `updateTeamScore(teamIdx:int, color:uint, score:int, maxScore:int) : void` — looks up the child `PVPScore` named `"team" + teamIdx` inside `scoreContainer` (only `team1` and `team2` exist); calls `init(maxScore, color)` then `updateScore(score)`. `init` never reads `maxScore` and applies the colour only on its first call.
 - `updatePersonalScore(current:Number, max:Number) : void` — if `max == 0` shows `int(current)`, otherwise shows `"int(current)/int(max)"` in `personalScoreContainer.score`.
 - `setPersonalScoreType(type:int) : void` — stores `scoreType`; no visual change beyond caching.
-- `setPersonalScoreIcon(icon:int) : void` — sends `personalScoreContainer.icon` to frame `icon + 2` (1-indexed offset).
-- `updateTick(timeStr:String, msRemaining:uint, showScore:Boolean) : void` — makes `scoreContainer` visible when `showScore` is true; updates `timeRemaining.textField.text`; applies pulsing scale tweens when `msRemaining < 10 000` (under 10 s) or color changes for < 30 s (0xCC_CC_33 yellowish) and < 60 s (0xFF_A5_00 orange-ish).
+- `setPersonalScoreIcon(icon:int) : void` — sends `personalScoreContainer.icon` to frame `icon + 2`. The icon clip (chid 17) is blank on frame 1 (the `reset()` state), a gold coin on frame 2 and a red ring on frame 3, so `0` = coin and `1` = ring.
+- `updateTick(timeStr:String, msRemaining:uint, counting:Boolean) : void` — always makes `scoreContainer` visible and writes `timeStr` to `timeRemaining.textField`. Only when the third argument is true and the text has changed with time left: a 1.5→1 scale pulse under 10 s, red `0xCC0033` under 30 s, yellow `0xFFCC00` under 60 s; an unchanged string (or zero time) resets `timeRemaining.alpha` to 1 instead.
 
 ### Key fields
 
 - `SCORE_INTEGER : int = 0` / `SCORE_TIME : int = 1` — score-mode constants.
 - `timeRemaining : MovieClip` — timer display; child `textField` receives the formatted time string.
-- `scoreContainer : MovieClip` — holds two `PVPScore` children named `"team0"` and `"team1"`.
+- `scoreContainer : MovieClip` — holds two `PVPScore` children named `"team1"` and `"team2"`.
 - `broadcastContainer : MovieClip` — center-screen message area; child `broadcastText` (`TextField`) shows countdown/phase messages.
-- `personalScoreContainer : MovieClip` — holds `icon` (MovieClip, multi-frame) and `score` (TextField).
-- `teammateDeadIcon : MovieClip` — icon indicating a dead teammate; shown/hidden by game calls (reset hides it).
-- `killCounterIcon : MovieClip` — icon for kill counter; shown/hidden by game (reset hides it).
-- `counterText : TextField` — numeric text for the kill counter.
+- `personalScoreContainer : MovieClip` — holds `icon` (MovieClip, multi-frame) and `score` (TextField); its own frames are labelled `coin` and `rings`, and it stays on `coin`.
+- `teammateDeadIcon : MovieClip` — a red-cross bitmap (chid 27); shown/hidden by the engine, which sets it by name (reset hides it).
+- `killCounterIcon : MovieClip` — a person-figure bitmap (chid 24) beside `counterText`; shown/hidden by the engine, which sets it by name (reset hides it).
+- `counterText : TextField` — numeric count text written by the engine by name; the SWF only clears it in `reset()`.
 - `messageQueue : MessageQueue` — framework scrolling message queue for kill-feed entries.
 - `dropShadowFilter : DropShadowFilter` — shared drop-shadow (offset 2, 45°, low quality) applied to `timeRemaining`.
 
@@ -83,6 +83,6 @@ The class manages two score display modes — `SCORE_INTEGER` (0) and `SCORE_TIM
 ## Notable logic
 
 - **Countdown scale sizing** — `updateCountdown` derives the tween start scale as `2 + (10 − n) / 2`, so the number "10" appears at scale 2 and the number "1" appears at scale 6.5, creating an urgency ramp.
-- **Timer color escalation** — `updateTick` applies three discrete color thresholds: white (> 60 s), 0xFF_A5_00 orange (< 60 s), 0xCC_CC_33 yellow (< 30 s), then scale pulse (< 10 s).
-- **Score color packing** — team color is passed as a packed uint shifted right 8 bits before being applied to `GlowFilter.color` and `textField.textColor`, stripping the alpha byte.
+- **Timer color escalation** — `updateTick` applies three discrete thresholds: white (> 60 s, set by `reset()`), `0xFFCC00` yellow (< 60 s), `0xCC0033` red (< 30 s), then a scale pulse on every change under 10 s (the red stays).
+- **Score color packing** — team color arrives as RGBA in one uint and is shifted right 8 bits before being applied to `GlowFilter.color` and `textField.textColor`, stripping the low alpha byte.
 - **Queue bypass** — `addImmediateMessage` clears the queue and writes directly to the textfield, useful for critical single-line notifications that should not be delayed by queued messages.

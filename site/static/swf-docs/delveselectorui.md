@@ -13,8 +13,8 @@
 ### Public methods / accessors
 
 - `get quantity() : Number` — Returns the current numeric value of `quantityTextInput.text`; returns 0 if non-numeric.
-- `set quantity(value:Number) : void` — Clamps `value` to `[minQuantity, maxQuantity]`, writes it to `quantityTextInput.text`, and enables/disables increment and decrement buttons at the boundaries. No-op when `isReady == true`.
-- `setDelveLimits(max:int, min:int) : void` — Sets `maxQuantity` and `minQuantity`; resets quantity to 1; dynamically resizes `quantityTextInput.bg` width based on digit count; repositions all picker controls (and console LT/RT/dpad/keyboard buttons) to be horizontally centred within `bg`.
+- `set quantity(value:Number) : void` — Clamps `value` to `[minQuantity, maxQuantity]`, writes it to `quantityTextInput.text`, and enables/disables increment and decrement buttons at the boundaries. No-op when `isReady == true`. The engine also reads and writes `quantity` directly as a property.
+- `setDelveLimits(max:int, min:int) : void` — Argument order is max first. The engine sends a real floor here (in game the minimum came back as 23, not 1), and this call is the only source of either bound. Sets `maxQuantity` and `minQuantity`; resets quantity to 1; dynamically resizes `quantityTextInput.bg` width based on digit count; repositions all picker controls (and console LT/RT/dpad/keyboard buttons) to be horizontally centred within `bg`.
 
 ### Key fields
 
@@ -24,10 +24,10 @@
 - `readyRushButton : LabelButton` — Dual-state button; label is `$DialADepth_Ready` before ready, `$DialADepth_Rush` after `setReady(true)`.
 - `closeButton : BtnGreen` — Console-only close/cancel button (visible from frame 11); label `$DialADepth_Close`.
 - `closeButtonTopRight : WindowCloseButton` — PC close button (top-right X).
-- `currentDepthInfo : TextField` — Displays current delve depth info string set by `setDelveData`.
-- `currentQueuedInfo : TextField` — Displays queued-player info string set by `setQueuedPlayers`.
-- `ownerName : TextField` — Owner name display field.
-- `header : MovieClip` — Title bar; text set to `$DialADepth_Selector` on init.
+- `currentDepthInfo : TextField` — Displays current delve depth info string set by `setDelveData`. The engine sends a rendered sentence, not a number — `$DialADepth_CurrentDepthInfo` ("Current Depth: {0}") filled in, e.g. "Current Depth: 204".
+- `currentQueuedInfo : TextField` — Displays queued-player info string set by `setQueuedPlayers`, likewise a sentence rendered from `$DialADepth_CurrentQueuedInfo` ("Players Queued: {0}").
+- `ownerName : TextField` — Owner name display field. Nothing writes it: no callback and no frame script touches it.
+- `header : MovieClip` — Title bar; text set to `$DialADepth_Selector` ("DEPTH-STEPPER") on init.
 - `dialADepthInstructions : TextField` — Instruction text set to `$DialADepth_Instructions`.
 - `isReady : Boolean` — Tracks ready state; disables all picker controls when true.
 - `maxQuantity / minQuantity : Number` — Server-provided depth bounds; default 1/1.

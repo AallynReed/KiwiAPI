@@ -11,20 +11,20 @@
 ### Public methods
 - `clear() : void` — resets display name, hides compare panel, shrinks height to name field height, clears the `StackList`, starts a fresh pending row.
 - `newRow() : void` — commits the current `pendingRow` into `rows` StackList and starts a new `AlignmentCellsRow`.
-- `setRowCell(align:uint, text:String, color:uint, size:Number, font:String) : void` — creates a `TextField` with the given format and places it in the pending row at the specified alignment cell. Enables word-wrap if text exceeds panel width. On console, font size is bumped by 2.
-- `addStat(label:String, value:String, color:uint, bonusLevel:int) : *` — wraps a `StatRow` (label+value) in the pending row's left cell and auto-advances to a new row.
+- `setRowCell(align:uint, text:String, color:uint, size:Number, font:String) : void` — creates a `TextField` with the given format and places it in the pending row at the specified alignment cell; `text` is applied as `htmlText`. Enables word-wrap if text exceeds panel width. Font size is the sent `size` + 3 (+2 more on console). The engine sends every non-stat line through here: flavour text, requirements, and a caught fish's weight (`$FishWeightFormat`, "Weight: {0:f2} lb").
+- `addStat(label:String, value:String, color:uint, bonusLevel:int) : *` — wraps a `StatRow` (label+value) in the pending row's left cell and auto-advances to a new row. `bonusLevel` (the stat's boost-arrow count) has no effect here: this SWF's `StatRow` symbol (chid 8) carries only `nameTextField`, `valueTextField` and `bonusTextField`, no `bonusLevelClip`.
 - `addLineBreak() : void` — inserts a centered decorative horizontal line shape as a row.
 - `clearStats() : void` — delegates to `comparePanel.clear()` and invalidates.
 - `setSidePanelEdge(edge:int) : void` — positions `comparePanel` to the left (`EDGE_LEFT`), right (`EDGE_RIGHT`), or below (`EDGE_BOTTOM`) the primary panel, or hides it (`EDGE_HIDE`).
 - `getPrimaryPanelWidth() : int` — returns `background.width`; called by the host to size the compare panel offset.
 
 ### Key fields
-- `background : MovieClip` — the panel backdrop; its width and height are resized dynamically.
-- `nameTextField : TextField` — displays the item/object name; supports multiline wrap for long names.
+- `background : MovieClip` — the panel backdrop (chid 10, a nine-slice box); its width and height are resized dynamically.
+- `nameTextField : TextField` — displays the item/object name (chid 13, placeholder "World Object"); supports multiline wrap for long names.
 - `rows : StackList` — vertical container for all `AlignmentCellsRow` children.
 - `pendingRow : AlignmentCellsRow` — the row currently being built before being committed to `rows`.
-- `qualityMeter : QualityMeter` — star/quality indicator; positioned at x=360 and shown only when `quality >= 0`.
-- `headerBar : MovieClip` — optional colored header bar; when present, controls header height layout.
+- `qualityMeter : QualityMeter` — declared but never placed on this SWF's timeline, so the `quality` setter does nothing here and world tooltips show no quality meter.
+- `headerBar : MovieClip` — declared but never placed on this SWF's timeline; every header-bar branch is skipped, so the name sits directly on `background` with `rows` 3 px below it.
 - `comparePanel : ComparePanel` — side panel for gear comparison stats; created in constructor.
 - `_color : uint` — name text color (default white `0xFFFFFFFF`).
 - `_rainbow : Boolean` — when true, applies per-character rainbow coloring to the name.
@@ -32,23 +32,24 @@
 - `firstStatRow : int` — y-position of the first stat row, used to align the compare panel vertically.
 
 ### Frame scripts / timeline
-None — `Tooltip` is a pure ActionScript component with no frame scripts.
+None — `Tooltip` is a pure ActionScript component with no frame scripts. The root timeline places only `background`, `nameTextField` and `rows` (chid 11).
 
 ### Runtime dependencies & integration
-- `IggyFunctions.inIggy` — gates all `ExternalInterface` callbacks; in preview mode populates sample data instead.
-- `ExternalInterface.addCallback(...)` — game registers: `NEW_ROW`, `SET_ROW_CELL`, `LINE_BREAK`, `ADD_STAT`, `CLEAR_STATS`, `SET_SIDEPANEL_EDGE`, `CLEAR`, `REDRAW`, `getPrimaryPanelWidth`.
-- `ExternalInterface.call("NOTIFY_RESIZED", width, height)` — notifies host after every layout recalculation.
+- `IggyFunctions.inIggy` — gates the callbacks `Tooltip.configUI()` registers; in preview mode populates sample data instead.
+- `ExternalInterface.addCallback(...)` — game registers: `NEW_ROW`, `SET_ROW_CELL`, `LINE_BREAK`, `ADD_STAT`, `CLEAR_STATS`, `SET_SIDEPANEL_EDGE`, `CLEAR`, `REDRAW`, `getPrimaryPanelWidth`. `COMPARISON.ADD_STAT` is registered separately, from `ComparePanel`'s constructor and outside the `inIggy` gate.
+- Property writes — the engine assigns `displayName`, `minWidth`, `color`, `rainbow`, `shadow` and `quality` directly; nothing in the SWF sets them apart from the constructor and `clear()` resets. `minWidth` arrives as 450, and colours arrive as `0xAARRGGBB` with the alpha byte set.
+- `ExternalInterface.call("NOTIFY_RESIZED", width, height)` — notifies host after every layout recalculation. The host scales the tooltip to a fixed on-screen width from the reported width, so a wider report draws everything smaller; with the 450 px floor almost every world tooltip reports exactly 450 and renders at one size.
 - `ExternalInterface.call("RequestRedraw")` — signals host that a visual redraw is needed after draw().
 - `IsConsole()` — bumps font sizes by 2 in `setRowCell`.
 - `fl.motion.Color` — used to build the rainbow color array (six Color transforms: red, orange, yellow, green, cyan, purple).
-- `flash.filters.DropShadowFilter` / `GlowFilter` — applied to `nameTextField` for legendary/shadow items.
+- `flash.filters.DropShadowFilter` / `GlowFilter` — blue inner drop shadow plus purple glow, applied to `nameTextField` when `shadow` is set (shadow-tier names); `rainbow` takes precedence when both are set.
 
 ---
 
 ## Other game-specific classes
 
 - `ComparePanel` (extends `_kiwi.Core.UIComponent`) — Embed `symbol12`; side panel that lists comparison `StatRow` entries via `COMPARISON.ADD_STAT` callback. Expands width to fit the widest stat row. Calls `ExternalInterface.call("RequestRedraw")` after each data invalidation. Exposes `ChildCount` and `StatListPosition` getters used by `Tooltip` for vertical alignment.
-- `QualityMeter` (extends `_kiwi.Core.UIComponent`) — displays item quality as a frame-based clip. Clamps quality to 0–5 and calls `gotoAndStop("lvl" + quality)` on draw, matching frame labels `lvl0`–`lvl5`.
+- `QualityMeter` (extends `_kiwi.Core.UIComponent`) — displays item quality as a frame-based clip. Clamps quality to 0–5 and calls `gotoAndStop("lvl" + quality)` on draw. Compiled in but unused here: `SymbolClass` binds no symbol to it (only `Tooltip`, `ComparePanel` → 12, `StackList` → 11, `StatRow` → 8) and no instance is placed.
 
 ---
 

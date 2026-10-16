@@ -13,14 +13,14 @@
 - `SearchBox.searchText` CHANGE (PC) or KEY_DOWN/Enter (console) → `sortList()`
 - `PrefixCheckBox`, `SuffixCheckBox`, `FavCheckBox` checkbox CLICK → `sortList()`
 - `ShowPlayerNames`, `ShowNameAndPowerRank`, `DisplayClubNames` checkbox CHANGE → respective `OnShow*` callbacks
-- `m_nameColorComboBox` CHANGE → `OnSelectNameColor`, updates `titleView` colour
+- `m_nameColorComboBox` CHANGE → `OnSelectNameColor`, then reads `PlayerNamePreview.textColor` straight away to update `titleView`; this works because the engine answers synchronously with `SelectNameColor` from inside the `OnSelectNameColor` call
 - Mouse wheel on the panel → forwarded to `titleView.MouseWheel()`
 - All `Highlighted` child clips are initially hidden
 
 `sortList()` calls `titleView.Sort(trimmedSearch, prefix, suffix, fav)` which re-renders the tile grid.
 
 ### Public methods
-- `addTitle(id, localizedName, tags, location, isFav, isNew, description, isEquipped) : void` — delegates to `titleView.AddTitle()`, updates `titleCount` with translated `$Titles_Count` string and 12pt format.
+- `addTitle(id, localizedName, tags, location, isFav, isNew, description, isEquipped) : void` — delegates to `titleView.AddTitle()`, updates `titleCount` with translated `$Titles_Count` string and 12pt format. The engine sends the whole owned list as one burst of calls; `localizedName` is a translation key (translated in `Title.SetupTitle`), while `description` is stored as sent and never displayed by this SWF.
 - `updateTitle(id, isFav, isNew, isEquipped) : void` — delegates to `titleView.UpdateTitle()`.
 - `updatePlayerName(name, prefix, suffix) : void` — assembles `PlayerNamePreview` text as `"<prefix> <name><suffix>"` with smart spacing/punctuation handling.
 - `removeTitle(id) : void` — delegates to `titleView.RemoveTitle()`, updates count.
@@ -31,8 +31,8 @@
 - `ClearEquipedTitles() : void` — delegates to `titleView.ClearEquipedTitles()`.
 - `HandleDirectionInput(dir:int) : *` — moves `m_nameColorComboBox.selectedIndex` when the ComboBox is open (used by console D-pad).
 - `addNameColor(label:String, data:int) : void` — adds an item to `m_nameColorComboBox`.
-- `selectNameColor(colorId:int, colorValue:uint) : *` — finds matching combo item, sets `PlayerNamePreview.textColor`, and propagates to `titleView.SetColor` + `UpdateEquiped`.
-- `SetSettings(showNamePowerRank:Boolean, showPlayerNames:Boolean, displayClubNames:Boolean) : void` — sets initial checkbox states.
+- `selectNameColor(colorId:int, colorValue:uint) : *` — finds matching combo item, sets `PlayerNamePreview.textColor`, and propagates to `titleView.SetColor` + `UpdateEquiped`. This is the only place a colour value arrives, and only for the entry being selected; `AddNameColor` carries just a label and an id.
+- `SetSettings(showNamePowerRank:Boolean, showPlayerNames:Boolean, displayClubNames:Boolean) : void` — sets initial checkbox states: the first argument fills `ShowNameAndPowerRank`, the second `ShowPlayerNames`, the third `DisplayClubNames`.
 - `onMouseWheel(event:MouseEvent) : void` — forwards to `titleView.MouseWheel`.
 
 ### Key fields
@@ -52,7 +52,7 @@
 - `HighlightedMovieClip : MovieClip` — the currently visible highlight clip.
 
 ### Frame scripts / timeline
-- Frame 1, 11 — both `stop()`. Two visual states (PC layout vs. console layout implied).
+- Frame 1, 11 — both `stop()`. Labelled `PC` and `Console`; the stage is 675×600.
 
 ### Runtime dependencies & integration
 **ExternalInterface callbacks registered (Iggy):**
@@ -61,11 +61,11 @@
 **ExternalInterface calls fired:**
 - `ActivateSearchInput` — console, when search box is selected via D-pad
 - `OnSelectNameColor(data:int)` — when colour combo changes
-- `OnShowNamePowerRank` — when `ShowPlayerNames` checkbox changes (note: the event handlers appear inverted by name but the callbacks are wired to the correct checkboxes)
-- `OnShowPlayerNames` — when `ShowNameAndPowerRank` checkbox changes
+- `OnShowNamePowerRank` — when the `ShowPlayerNames` checkbox changes
+- `OnShowPlayerNames` — when the `ShowNameAndPowerRank` checkbox changes. The two outbound calls are crossed relative to the boxes' names, while `SetSettings` fills the boxes uncrossed.
 - `OnShowClubNames` — when `DisplayClubNames` checkbox changes
 
-**translate keys:** `$Titles_PrefixOnly`, `$Titles_SuffixOnly`, `$Titles_FavoriteOnly`, `$Settings_ShowPlayerNames`, `$Settings_ShowOwnNameplate`, `$Settings_DisplayClubName`, `$Titles_Count`
+**translate keys:** `$Titles_PrefixOnly`, `$Titles_SuffixOnly`, `$Titles_FavoriteOnly` (in `titles.binfab`), `$Settings_ShowPlayerNames`, `$Settings_ShowOwnNameplate`, `$Settings_DisplayClubName`, `$Titles_Count` (in `ui.binfab`). `$Settings_ShowOwnNameplate` is the `ShowNameAndPowerRank` box ("Show Name And Power Rank Above My Head"), and all three setting labels end in "(requires world change)".
 
 ---
 
@@ -85,7 +85,7 @@ A single title tile. Stores: `_titleId`, `_localizedTitle`, `_tags:Vector.<Strin
 
 `SetupTitle` populates all fields, translates title via `IggyFunctions.translate(localizedTitle)`, sets location string from `$Titles_Prefix/Suffix/Both` keys, and calls `SetColorData` (brightens equipped indicator by 1.5× per channel).
 
-Events fired: `OnSelect(titleId)`, `POST_SOUND_EVENT("Play_ui_button_select")`, `OnFavorited(titleId)`, `OnSeen(titleId)` (on roll-over), `ShowInfo(x, y, titleId)` / `HideInfo` (on info button hover or console toggle).
+Events fired: `OnSelect(titleId)`, `POST_SOUND_EVENT("Play_ui_button_select")`, `OnFavorited(titleId)`, `OnSeen(titleId)` (on roll-over), `ShowInfo(x, y, titleId)` / `HideInfo` (on info button hover or console toggle) — `x, y` is the stage point level with the tile's bottom edge and half a tile width left of it, and the engine draws its own info panel growing right and down from it. `OnSelect` is the only equip request a tile can make; there is no separate unequip call, and `ClearSelectedTitles` only arrives inbound from the engine.
 
 `MatchesState(search, prefix, suffix, fav)` — filters by location type and favourite state first, then checks `_localizedTitle.toLowerCase().indexOf(search)`, full tag match, comma-split tags, space-split tags.
 

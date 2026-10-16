@@ -28,7 +28,7 @@ Owns a `WindowHeaderSmall` (title `$Minigame_Header`), a header `MovieClip` with
 
 ### Runtime dependencies & integration
 
-- `ExternalInterface` callbacks: `setScoreType`, `setSortType`, `setVictory`.
+- `ExternalInterface` callbacks: `setScoreType`, `setSortType`, `setVictory` (plus `addPlayer` / `removePlayer` / `setPlayerScore` from `ScoreList` and `setReward` / `setVictoryReward` from `Rewards`).
 - `IggyFunctions.inIggy` gate.
 - `setupTranslation()` called from constructor.
 - Translate keys: `$Minigame_Header`, `$MINIGAME_TIME`, `$MINIGAME_SCORE`.
@@ -57,7 +57,7 @@ Maintains an internal `scoreData:Array` of `ScoreData` objects and keeps a match
 
 ### `ScoreListing` (extends `MovieClip`) — Embed symbol36
 
-Row display object: `txt_rank`, `txt_name`, `txt_score` TextFields; `levelIcon:MovieClip` (driven by `gotoAndStop(level + 1)`); `friendIcon:MovieClip`. Frame scripts at frames 2 and 3 (`stop()`).
+Row display object: `txt_rank`, `txt_name`, `txt_score` TextFields; `levelIcon:MovieClip` (driven by `gotoAndStop(level + 1)`; chid 25 is blank on frame 1, then labelled `bronze`, `silver`, `gold`, `platinum`, so level 0 shows no badge); `friendIcon:MovieClip`. Frame scripts at frames 2 and 3 (`stop()`).
 
 ### `ScoreData`
 
@@ -65,12 +65,12 @@ Plain value object: `name:String`, `score:Number`, `level:int`, `scoreUpdatedTim
 
 ### `Rewards` (extends `_kiwi.Core.UIComponent`) — Embed symbol151
 
-Manages two child panels: `rewardsAvailable` (4 `RewardInfo` slots shown pre-victory) and `rewardsEarned` (EOM panel shown post-victory). On console, fires `ExternalInterface.call("OnConfigured")` after first `ENTER_FRAME`.
+Manages two child panels: `rewardsAvailable` (4 `RewardInfo` slots shown pre-victory) and `rewardsEarned` (EOM panel shown post-victory). Registers its own callbacks, `setReward` and `setVictoryReward`. On console, fires `ExternalInterface.call("OnConfigured")` after first `ENTER_FRAME`; on PC it is never sent.
 
 **Key methods:**
-- `setReward(slot, scoreThreshold, qty, ghosted, iconImage)` — populates one `RewardInfo` slot (1–4); sets `artClip.iconImage`, `txt_level`, `txt_score`, `txt_quantity`, ghosting, and check-mark visibility.
+- `setReward(slot, scoreThreshold, qty, ghosted, iconImage)` — populates one `RewardInfo` slot (1–4); sets `artClip.iconImage`, `txt_level`, `txt_score` (the threshold arrives as a string), `txt_quantity` (blank unless `qty > 1`), and sends `levelIcon` to frame `slot + 1` (slot 1 bronze … slot 4 platinum). The `ghosted` flag both ghosts the art and shows the `check` tick.
 - `setVictoryReward(slot, qty, ghosted, iconImage)` — populates the corresponding earned slot in `rewardsEarned.rewards`.
-- `setVictory(level, bestRewardLevel)` — switches visibility to `rewardsEarned`, fills `txt_level` / `txt_nextLevel` texts, sets `levelIcon` frame, wires `btnExit` click to `ExternalInterface.call("OnRequestClose")`.
+- `setVictory(level, bestRewardLevel)` — switches visibility to `rewardsEarned`, fills `txt_level` / `txt_nextLevel` texts, sets `levelIcon` frame, wires `btnExit` click to `ExternalInterface.call("OnRequestClose")` (the button is hidden on console). Level 0 shows `$Minigame_No_Level_Earned`; the next-level line quotes the `txt_score` threshold of reward slot `max(level, bestRewardLevel) + 1`.
 
 **Translate keys:** `$Minigame_Level` (replace `{0}`), `$Minigame_Level_Earned` (replace `{0}`), `$Minigame_No_Level_Earned`, `$Minigame_Level_Next` (replace `{0}`).
 
@@ -105,4 +105,5 @@ Single reward display row: `artClip:ArtClip`, `txt_score:TextField`, `txt_level:
 
 - Score sort uses a stable-by-time comparator: if two players share the same score, the one whose score was set earlier wins in descending sort (i.e. first to achieve the score ranks higher).
 - `KiwiTextUtil.resizeFont` and `KiwiTextUtil.alignTextFieldVertically` are called on the EOM panel's `txt_level` field to fit long localised strings.
+- Every reward `ArtClip` is given `data = 1`, so hovering any reward sends `SLOT.POINTER_ENTER(1, x, y)` and leaving it `SLOT.POINTER_LEAVE(1)`, whichever slot it is.
 - The `Rewards` component references child objects by name string (`"reward1"` … `"reward4"`, `"artClip1"` … `"artClip4"`, `"check1"` … `"check4"`, `"txt_quantity1"` … `"txt_quantity4"`) via `getChildByName`, so the FLA timeline naming is load-bearing.

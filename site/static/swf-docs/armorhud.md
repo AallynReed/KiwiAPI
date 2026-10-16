@@ -1,5 +1,5 @@
 # armorhud.swf
-> A compact HUD element that displays the player's current armor value as a hexagonal fill gauge with a numeric readout. Appears in adventure, PvP, build, and discovery modes; the frame graphic changes between adventure/PvP and build/discovery variants.
+> A compact HUD element that shows the player's Battle Block (called armor internally) as a hexagonal fill gauge with a numeric readout. Appears in adventure, PvP, build, and discovery modes; the frame graphic switches between an adventure/PvP and a build/discovery variant.
 
 **Document/main class:** `ArmorHudUI` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 2
@@ -10,9 +10,11 @@
 
 `configUI()` registers five Iggy callbacks. When not in Iggy (authoring preview) it defaults to `MODE_ADVENTURE` mode.
 
+The "armor" this widget shows is what the game calls Battle Block: the language files name it so (`$StoreProduct_armor_name` is "Battle Block", `$Armor_Depleted` is "Battle Block DEPLETED! I hope you have some flasks…").
+
 ### Public methods
-- `setCurrentArmor(value:Number) : void` — stores `currentArmor` if ≥ 0.
-- `setMaxArmor(value:Number) : void` — stores `maxArmor` if ≥ 0.
+- `setCurrentArmor(value:Number) : void` — stores `currentArmor` if ≥ 0. Draws nothing; the engine sends the values and calls `onUpdateUI(true)` separately to redraw.
+- `setMaxArmor(value:Number) : void` — stores `maxArmor` if ≥ 0. Draws nothing, like `setCurrentArmor`.
 - `updateUI() : void` — computes fill ratio `currentArmor / maxArmor`; moves `fillMask_mc.y` by `(1 - ratio) * armorFullHeight` (65 px full range) to clip `fill_mc` from the top; sets `armorText.text` to a digit-delimited number via `KiwiTextUtil.addDigitDelimiters`.
 - `onUpdateUI(redraw:Boolean) : void` — calls `updateUI()` if `redraw` is true; otherwise no-op.
 - `setVisibility(visible:Boolean) : void` — sets `this.visible`.
@@ -44,6 +46,8 @@
 **No ExternalInterface calls are made outward** — this widget is display-only; it only receives data from the game engine.
 
 **`KiwiTextUtil.addDigitDelimiters`** — formats the armor number with thousands separators for display.
+
+**Placement:** the engine places this 65×76 box itself, next to the hotbar's; no layout file in the install mentions `armorhud`, so the position is decided inside the client. At 2560×1369 its origin lands at (879, 1229), 8 px left of and 32 px above the hotbar's box at (887, 1261).
 
 ---
 

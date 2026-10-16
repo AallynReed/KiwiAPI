@@ -12,7 +12,7 @@ Root window component. Manages 12 gem inventory slots (`gemSlot0`–`gemSlot11`)
 
 ### Public methods
 
-- `previewUpgrade(gemName:String, level:int, powerRank:int, quality:int, rarity:int, isRepair:Boolean, canAugment:Boolean, needsRepair:Boolean) : void` — updates the upgrade slot's rarity/quality, clears and re-enables stat rows, updates `txtChooseStat` visibility, and sets `augmentButton.label` to one of `$RepairLabel`, `$GemForge_RerollStat`, `$GemForge_MoveStat`, or `$GemForge_AugmentStat` depending on mode. Drives booster slot frames (frame 1=repair mode, frame 2=augment mode).
+- `previewUpgrade(gemName:String, level:int, powerRank:int, quality:int, rarity:int, isRepair:Boolean, canAugment:Boolean, needsRepair:Boolean) : void` — updates the upgrade slot's rarity/quality, clears and re-enables stat rows, updates `txtChooseStat` visibility, and sets `augmentButton.label` to one of `$RepairLabel`, `$GemForge_RerollStat`, `$GemForge_MoveStat`, or `$GemForge_AugmentStat` depending on mode. Drives booster slot frames (frame 1=repair mode, frame 2=augment mode). The power rank is stored in `powerRankStat` and never displayed (`power_rank_49.powerRankValue` is never written), and the `$Level_X` / `$NoRarityPowerRank` strings it translates into locals are discarded, so the panel shows neither.
 - `addStat(name:String, value:String, roll:String, boost:int) : void` — appends a stat entry to `statList`, then refreshes all visible `GemStatRow` instances (text fields, boost pip visibility, roll-details HTML text). In REROLL_SLOT mode colours stats cyan (`0xC2FFFF`); otherwise green name / teal value.
 - `addIngredient(icon:String, name:String, description:String, numHave:Number, numNeed:Number) : *` — appends to `ingredientList`, shows `requiredItems.requiredLabel`, and updates `reqText0`/`reqText1` with HTML colour-coded have/need counts (red `#FF3333` if insufficient, white if sufficient). Sets `haveIngredients` flag; enables `augmentButton` if `canAugment && haveIngredients`.
 - `resetIngredients() : void` — clears `ingredientList` and hides all `reqImage`/`reqText` children.
@@ -27,10 +27,10 @@ Root window component. Manages 12 gem inventory slots (`gemSlot0`–`gemSlot11`)
 
 ### Key fields
 
-- `gemSlot0`–`gemSlot11 : Slot` — 12 gem inventory slots (data values 0–11). Slots at index % 3 == 2 are large (77px); others are small (55px). Colour frames cycle blue/yellow/red/opal.
+- `gemSlot0`–`gemSlot11 : Slot` — 12 gem inventory slots (data values 0–11). Slots at index % 3 == 2 are large (77px); others are small (55px). Colour frames cycle blue/yellow/red/opal. The engine fills them by writing `iconImage`, `rarity` and `quantity` directly on each named `gemSlotN`.
 - `upgradeSlot : Slot` — the central target gem slot (data=12, xlarge 100px, disabled by default).
 - `stats : MovieClip` — container for `row0`/`row1`/`row2` (`GemStatRow` instances, rowIndex 200–202).
-- `insuranceContainer : MovieClip` — container for `insuranceItem0`–`insuranceItem4` (each has a `.slot` `SlotBasic`; data values 100–104).
+- `insuranceContainer : MovieClip` — container for `insuranceItem0`–`insuranceItem4` (each has a `.slot` `SlotBasic`; data values 100–104). Boosters 0–2 are the `$GemForge_AugmentStat` ("Improve Stat") items, 3 is `$GemForge_RerollStat` ("Reroll Stat") and 4 is `$GemForge_MoveStat` ("Move Boost").
 - `requiredItems : MovieClip` — ingredient display panel with `reqImage0`/`reqImage1`, `reqText0`/`reqText1`, `requiredLabel`, `instructions`.
 - `augmentButton : LabelButton` — active button (either `pcAugmentButton` or `consoleAugmentButton` depending on platform).
 - `pcAugmentButton / consoleAugmentButton : LabelButton` — platform-specific variants; only one is visible at runtime.
@@ -52,9 +52,9 @@ Root window component. Manages 12 gem inventory slots (`gemSlot0`–`gemSlot11`)
 ### Runtime dependencies & integration
 
 - `ExternalInterface.addCallback` registrations: `previewUpgrade`, `addStat`, `addIngredient`, `resetIngredients`, `clearForge`, `selectAugment`, `setAugmentInfo`, `getCurrentSlotId`, `fuseGems`, `moveSelection`, `highlightSlot`, `activateSlot`, `moveGemToSlot`, `LoseFocus`, `GainFocus`.
-- Outbound `ExternalInterface.call`: `OnUpgradeRequest()`, `OnSelectStat(statIndex)`, `OnDropOntoSlot(itemId, qty, type, slotData)`, `OnUpgradeSelected(boosterIndex)`, `UIComponent.OnShowTooltip(x, y, name, desc)`, `UIComponent.OnHideTooltip()`.
+- Outbound `ExternalInterface.call`: `OnUpgradeRequest()`, `OnSelectStat(statIndex)` (the row, 0–2, or -1 from `clearForge` / `resetIngredients`; the engine answers a selection by re-sending the whole gem — `previewUpgrade`, which clears every row, then the stats — and `previewUpgrade` re-marks the selected row), `OnDropOntoSlot(itemId, qty, type, slotData)`, `OnUpgradeSelected(boosterIndex)`, `UIComponent.OnShowTooltip(x, y, name, desc)`, `UIComponent.OnHideTooltip()`.
 - `SlotDragDropHelper.registerDropCallback` — receives drag-drop events from the shared drag system; `onDrop` hit-tests against all gem slots and the upgrade slot.
-- `IggyFunctions.translate` — `$GemInstructions_empty`, `$Forge_Gems`, `$Level_X`, `$NoRarityPowerRank`, `$GemPreviewName{n}`, `$GemPreviewState{n}`.
+- `IggyFunctions.translate` — `$GemInstructions_empty`, `$Forge_Gems`, `$Level_X`, `$NoRarityPowerRank`, `$GemPreviewName{n}`, `$GemPreviewState{n}`. The last two are the preview-icon tooltips (`onPreviewRollOver`): names 0–3 read Cracked, Level Up, Double Level Up and Tier Up.
 - `DirectionalMapping` — console D-pad navigation graph; manually defined adjacency between all 13 gem slots, 3 stat rows, and 5 booster items.
 - `GlowFilter` — applied to booster/insurance items on console highlight (color `0xCCCC00`, blurX/Y=2, strength=100).
 - `PositioningButtons` — NX-specific helper to reposition `buttonLegend` relative to `backBanner`.
@@ -67,7 +67,7 @@ Root window component. Manages 12 gem inventory slots (`gemSlot0`–`gemSlot11`)
 - `GemForge_fla` timeline clips:
   - `stats_45` (symbol163) — `row0`/`row1`/`row2` GemStatRow container.
   - `insurance_8` (symbol153) — `insuranceItem0`–`insuranceItem4` container; frame 11 sends items 0–3 to "Console" frame.
-  - `required_items_16` (symbol161) — ingredient panel with `requiredLabel`, `reqText0/1`, `reqImage0/1/2`, `instructions`. Two frames.
+  - `required_items_16` (symbol161) — ingredient panel with `requiredLabel`, `reqText0/1`, `reqImage0/1/2`, `instructions`. Two frames. Only `reqImage0`/`reqImage1` are ever set up or filled; `reqImage2` is unused.
   - `power_rank_49` (symbol168) — `powerRankValue:TextField`. Two frames.
   - `color_frame_large_20` (symbol98) — 4-frame gem colour state indicator (blue/yellow/red/opal).
   - `triggerLegend_54` (symbol173) — `textField:TextField`, two frames (PC/console).
@@ -82,8 +82,8 @@ Root window component. Manages 12 gem inventory slots (`gemSlot0`–`gemSlot11`)
 
 ## Notable logic
 
-- **Slot size and colour assignment:** gem slots are sized small (55px) or large (77px) based on `index % 3 == 2`. Colour (`slotColor` child MovieClip label) cycles in groups of 3: 0–2 = blue, 3–5 = yellow, 6–8 = red, 9–11 = opal.
+- **Slot size and colour assignment:** gem slots are sized small (55px) or large (77px) based on `index % 3 == 2`, so the large gem is the last of each set. Colour (`slotColor` child MovieClip label) cycles in groups of 3: 0–2 = blue (`$GemElementBlue`, Water), 3–5 = yellow (`$GemElementYellow`, Air), 6–8 = red (`$GemElementRed`, Fire), 9–11 = opal (`$GemElementOpal`, Cosmic).
 - **Ingredient colour coding:** `addIngredient` renders `numHave/numNeed` in HTML; insufficient quantities appear in red (`#FF3333`), sufficient in white. The augment button is only enabled when all ingredients are sufficient AND `canAugment` is true.
 - **Augment mode button labels:** `selectAugment` and `previewUpgrade` cooperate to set the correct label. Repair takes priority; then REROLL_SLOT (index 3) = reroll; MOVE_SLOT (index 4) = move; otherwise = augment.
 - **Console D-pad graph:** the adjacency graph is fully hardcoded in the constructor. Navigation skips invisible nodes recursively. `highlightSelection` shows a slot tooltip at `root.width + 10` for gem slots, toggles `GemStatRow.toggleHighlight`, or applies a `GlowFilter` for booster items.
-- **Drag-drop integration:** `onDrop` uses `hitTestPoint` against slots 0–8 and the upgrade slot (notably slots 9–11 are not in the drag-drop hit-test list, likely intentional design).
+- **Drag-drop integration:** `onDrop` uses `hitTestPoint` against slots 0–8 and the upgrade slot. Slots 9–11, the whole Cosmic set, are not in the list, so a gem dropped on one of them sends no `OnDropOntoSlot`.

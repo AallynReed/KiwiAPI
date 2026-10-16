@@ -3,22 +3,22 @@
 > The interactive world map ("Atlas") that allows players to navigate between Trove's biomes and portals. It is a zoomable, draggable map of node icons connected by path lines, and it appears when the player opens the world-selection interface.
 
 **Document/main class:** `Atlas` (extends `_kiwi.Core.UIComponent`)
-**SWF-specific classes:** 20 (Atlas, MapNode, MapNodeHub, NodePath, biomeRisingTides, plus 15 Atlas_fla timeline symbols)
+**SWF-specific classes:** 24 (Atlas, MapNode, MapNodeHub, NodePath, biomeRisingTides, plus 19 Atlas_fla timeline symbols)
 
 ---
 
 ## Main class: `Atlas`
 
-`Atlas` is the root UIComponent that owns the entire world map. On construction it hides all biome art clips, sets up path connectors between map nodes via `setupNodes()`, selects the hub node as the default, and scales the map stage to platform-appropriate defaults. `configUI()` then registers `ExternalInterface` callbacks so the game engine can drive the UI, and starts an `ENTER_FRAME` listener to reveal biome art clips one per frame as a staggered animate-in sequence.
+`Atlas` is the root UIComponent that owns the entire world map. On construction it hides all biome art clips and `mapStage.map.tutorialArrow`, sets up path connectors between map nodes via `setupNodes()`, selects the hub node as the default, and scales the map stage to platform-appropriate defaults. `configUI()` then registers `ExternalInterface` callbacks so the game engine can drive the UI, and starts an `ENTER_FRAME` listener to reveal biome art clips one per frame as a staggered animate-in sequence.
 
-The map content lives inside `mapStage` (a `MovieClip`), which contains a nested `map` clip holding all named node and biome clips, a `paths` clip for the connector lines, a `gridLines` clip, and a `consoleCursor` clip. The overall component can be panned by dragging and zoomed by mouse wheel; on console/NX the cursor is a logical sprite that snaps to nodes.
+The map content lives inside `mapStage` (a `MovieClip`), which contains a nested `map` clip holding the 20 named biome art clips, the 23 node markers, a `paths` clip for the connector lines, `tutorialArrow`, a `gridLines` clip, and a `consoleCursor` clip. `map` is placed inside `mapStage` at about 0.27 scale, so node positions, `GRID_SIZE` and `SNAP_RADIUS` are in `map` units. The overall component can be panned by dragging and zoomed by mouse wheel; on console/NX the cursor is a logical sprite that snaps to nodes.
 
 ### Public methods
 
 - `showNextBiome(e:Event) : void` — `ENTER_FRAME` handler; pops one name off the `animateIn` queue each frame, makes that biome clip visible, and removes itself when the queue is empty.
-- `setNodeState(nodeId:String, unlocked:Boolean) : void` — drives a named node (and its associated biome art clips and path connector) to the `"locked"` frame label when `unlocked` is `false`. No-op if the node clip is not found.
-- `setUberTwelveIcons(textureName:String, slot:int) : void` — injects an `ObjectPreview` icon (150×150) into one of three icon slots (`firstIcon`, `secondIcon`, `thirdIcon`) on the `biomeRisingTides` clip at node `rt1`. Used to display the Uber-12 / Rising Tides rotating biome icons.
-- `setSelected(nodeId:String) : void` — public entry point (called via `ExternalInterface`) that looks up the named node clip and delegates to `selectNode()`.
+- `setNodeState(nodeId:String, unlocked:Boolean) : void` — drives a named node (and its associated biome art clips and path connector) to the `"locked"` frame label when `unlocked` is `false`. Passing `true` changes nothing; the class has no unlock path. No-op if the node clip is not found.
+- `setUberTwelveIcons(textureName:String, slot:int) : void` — injects an `ObjectPreview` icon (150×150) into one of three icon slots (`firstIcon`, `secondIcon`, `thirdIcon`) on the `biomeRisingTides` art clip of node `rt1`. Used to display the Uber-12 / Rising Tides rotating biome icons.
+- `setSelected(nodeId:String) : void` — public entry point (called via `ExternalInterface`) that looks up the named node clip and delegates to `selectNode()`. The engine calls it when the Atlas opens, naming the node of the world the player is in.
 - `centerOnCurrentNode() : void` — tweens `mapStage` so the currently selected node is centred on screen, with a slight NX-specific offset (−100 x, −160 y). Uses `IggyTween` with `None.easeIn` over 0.1 s.
 
 ### Private / internal methods
@@ -28,11 +28,11 @@ The map content lives inside `mapStage` (a `MovieClip`), which contains a nested
 - `moveMap(dx:Number, dy:Number) : void` — called from `ExternalInterface` on console sticks; moves `consoleCursor` and scrolls `mapStage`. When the cursor enters a snap radius of a nearby node (and is moving toward it), snaps to that node, calls `selectNode` + `centerOnCurrentNode`, and starts `pauseMovement` timer (200 ms) to throttle further snapping.
 - `moveHighlight(dx:int, dy:int) : void` — D-pad navigation; steps from the current node's grid position in the given direction up to 3 grid cells, snapping to the nearest found node and centering. Falls back to a pixel-distance walk if grid lookup fails.
 - `setupNodes() : void` — iterates every path array, looks up each named clip in `mapStage.map`, stores it in `allNodes` keyed by grid point string, zeroes hover alpha, disables `mouseChildren`, and creates a `NodePath` connector stretched and rotated between consecutive nodes.
-- `drawGrid() : void` — draws a 19×19 semi-transparent grid (265 px cell) on `mapStage.map.gridLines` for development reference. Visibility is controlled by `showGrid`.
+- `drawGrid() : void` — draws a 19×19 semi-transparent grid (265-unit cell) on `mapStage.map.gridLines` for development reference, with visibility from `showGrid`. Nothing in the class calls it, so `gridLines` (an empty sprite on the timeline) stays blank.
 - `findNearestNode(pt:Point, maxDist:Number) : MovieClip` — searches a 3×3 grid neighbourhood around `pt`, returns the closest node within `maxDist` squared distance.
 - `snapToNearestNode(pt:Point, maxDist:Number) : Boolean` — thin wrapper around `findNearestNode`; selects the node and returns `true` if found and different from current.
 - `onMouseMoveEvent(e:MouseEvent) : void` — shows/hides `hover` sub-clip alpha on whichever node clip the mouse is over.
-- `onMouseEvent(e:Event) : void` — `MOUSE_DOWN` starts `mapStage.startDrag()` and, if the target is a `MapNode` or `MapNodeHub`, selects it. `MOUSE_UP` / `MOUSE_LEAVE` stops drag.
+- `onMouseEvent(e:Event) : void` — `MOUSE_DOWN` starts `mapStage.startDrag()` and, if the target is a `MapNode` or `MapNodeHub`, selects it. Every other event routed here (`MOUSE_UP`, `MOUSE_LEAVE`, `CLICK`) stops the drag.
 - `onMouseWheel(e:MouseEvent) : void` — delegates to `scaleMap(±1)`.
 - `onStageResized(w:Number, h:Number, dpiScale:Number) : void` — scales the component, repositions and resizes the `background` clip to fill the viewport, notifies the engine via `ExternalInterface.call("NOTIFY_RESIZED", w, h)`.
 
@@ -48,11 +48,11 @@ The map content lives inside `mapStage` (a `MovieClip`), which contains a nested
 | `nodeSelectedLabel` | `String` | Frame label to use for selection: `"selected"` (PC/NX) or `"consoleSelected"` (console). |
 | `allPaths` | `Array` | Nine path arrays (`path0`–`path8`) each listing ordered node IDs that form a chain. |
 | `animateIn` | `Array` | Queue of biome/art clip names to reveal one-per-frame on startup. |
-| `nodeArt` | `Object` | Map from node ID to array of associated biome art clip names shown/locked alongside the node. |
-| `biomeRisingTides` | `MovieClip` | Direct timeline reference to the Rising Tides biome clip (also accessible via `mapStage.map`). |
+| `nodeArt` | `Object` | Map from node ID to array of associated biome art clip names locked alongside the node. Covers 18 nodes; `biomeStarter` and `biomeShadowTower` have no entry. |
+| `biomeRisingTides` | `MovieClip` | Declared but never assigned: the root timeline places only `background` and `mapStage`, and the code reaches the clip as `mapStage.map.biomeRisingTides`. |
 | `firstRisingTidesIcon` / `secondRisingTidesIcon` / `thirdRisingTidesIcon` | `ObjectPreview` | 150×150 `_kiwi.Core.ObjectPreview` instances injected into the Rising Tides clip's icon slots. |
 | `pauseMovement` | `Timer` | Single-shot 200 ms timer; prevents consecutive node snapping immediately after a snap. |
-| `showGrid` | `Boolean` | Dev toggle; controls `gridLines` visibility. |
+| `showGrid` | `Boolean` | Dev toggle for `gridLines` visibility; read only by the uncalled `drawGrid()`. |
 | `locationChanged` | `Boolean` | Set on `MOUSE_DOWN` drag start; used by `scaleMap` to rebase the map offset. |
 | `lastHovered` | `MovieClip` | Tracks the last hovered node so its hover alpha can be zeroed when the mouse leaves. |
 
@@ -67,8 +67,8 @@ The map content lives inside `mapStage` (a `MovieClip`), which contains a nested
 | `SCALE_DELTA` | 0.05 | Zoom step per wheel tick or `scaleMap` call. |
 | `CURSOR_CONSOLE_SCALE` | 2.8 | Scale factor used to keep the console cursor a constant visual size as the map zooms. |
 | `CURSOR_CONSOLE_SPEED_SCALE` | 2 | Multiplier applied to analog stick input before moving the cursor. |
-| `GRID_SIZE` | 265 | Pixel spacing between map grid cells; used for node bucketing and grid drawing. |
-| `SNAP_RADIUS` | 10000 | Squared distance threshold for console cursor snap-to-node. |
+| `GRID_SIZE` | 265 | Spacing between map grid cells, in `map` units; used for node bucketing and grid drawing. |
+| `SNAP_RADIUS` | 10000 | Squared distance threshold (100 `map` units) for console cursor snap-to-node. |
 | `POST_SNAP_TIMEOUT` | 0.2 s | Dwell time after a snap before further snapping is allowed. |
 
 ### Map path topology
@@ -102,8 +102,10 @@ Each consecutive pair within a path gets a dynamically created `NodePath` connec
   - `setUberTwelveIcons(textureName, slot)` — Rising Tides icon injection
 
 - **`ExternalInterface` calls (Flash → engine):**
-  - `SelectNode(nodeName)` — fired whenever a node becomes selected
+  - `SelectNode(nodeName)` — fired whenever a node becomes selected (including the constructor's default `hub`); the engine answers by filling the world panel (`atlasinfobox.swf`) for that node
   - `NOTIFY_RESIZED(w, h)` — fired after stage resize
+
+- **Property written by the engine:** `visible` on `mapStage.map.tutorialArrow` (an animated `AtlasDownArrowImage` arrow), reached by that path string; the constructor hides it first, so the `mapStage` → `map` → `tutorialArrow` chain is part of the engine contract.
 
 - **`IggyTween`** — used for smooth `mapStage.x/y` pan animations (0.1 s, `None.easeIn`) triggered by `centerOnCurrentNode`, `scaleMap` (NX only), and constructor (NX only).
 
@@ -121,12 +123,12 @@ Each consecutive pair within a path gets a dynamically created `NodePath` connec
 
 ## Other game-specific classes
 
-- `MapNode` — Embeds `assets.swf` symbol28; a generic world map node MovieClip with a `hover` sub-clip and 5 frame-stop labels (frames 1, 11, 21, 31, 41) corresponding to states: unselected, selected, consoleSelected, lockedSelected, locked.
-- `MapNodeHub` — Embeds `assets.swf` symbol11; the hub (Trove HQ) node variant with 3 frame-stop labels (frames 1, 11, 21).
-- `NodePath` — Embeds `assets.swf` symbol3; the connector line between nodes. Loops frames 1–19 and stops on frame 21 (`"locked"` state). Dynamically instantiated by `setupNodes()`, sized and rotated to span between consecutive nodes.
-- `biomeRisingTides` — Embeds `assets.swf` symbol34; the Rising Tides biome art clip. Has three named child slots (`firstIcon`, `secondIcon`, `thirdIcon`) for `ObjectPreview` icons. Three looping animation sections end with `gotoAndPlay("unselected")`, `gotoAndPlay("selected")`, `gotoAndPlay("locked")` at frames 901, 912, 924 respectively.
+- `MapNode` — Embeds `assets.swf` symbol28; a generic world map node MovieClip with a `hover` sub-clip and 5 frame-stop labels: `unselected` (1), `selected` (11), `locked` (21), `lockedSelected` (31), `consoleSelected` (41). Used for 21 of the 23 node markers.
+- `MapNodeHub` — Embeds `assets.swf` symbol11; the node variant placed for `hub` and `geode`, with 3 frame-stop labels: `unselected` (1), `selected` (11), `locked` (21). It has no `lockedSelected` or `consoleSelected` label.
+- `NodePath` — Embeds `assets.swf` symbol3; the connector line between nodes. Labels `unlocked` (1) and `locked` (21); loops frames 1–20 and stops on frame 21. Dynamically instantiated by `setupNodes()`, sized and rotated to span between consecutive nodes.
+- `biomeRisingTides` — Embeds `assets.swf` symbol34; the Rising Tides biome art clip. Has three named child slots (`firstIcon`, `secondIcon`, `thirdIcon`) for `ObjectPreview` icons. Three looping sections — `unselected` (frames 1–901, a 900-frame animation), `selected` (902–912) and `locked` (913–924) — each end on an `...End` label whose frame script (901, 912, 924) calls `gotoAndPlay` back to the section's own label.
 
-**Atlas_fla timeline symbols (15 classes):** `biomeShadowTower_6`, `biomeEverdark_8`, `biomeForbiddenSpires_10`, `biomegiantlands_12`, `biomeIgneous_01_17`, `biomeSkyRealm_01_19`, `biomeSkylands_01_21`, `biomeDrowned_01_23`, `biomeDragonfire_25`, `biomeJurassic_27`, `biomeNeonCity_29`, `biomeStarter_31`, `biomeCandoria_33`, `biomePermafrost_37`, `biomeFaeForest_39`, `biomeDesertFrontier_35`, `biomeCursedVale_41`, `PrimeWorld_43`, `biomeGeode_02_4`. All follow the same pattern: embed an `assets.swf` symbol and register 3 frame-stop scripts (frames 1, 11, 21) for the unselected / selected / locked states. They are the visual art clips for each biome tile on the map.
+**Atlas_fla timeline symbols (19 classes):** `biomeShadowTower_6`, `biomeEverdark_8`, `biomeForbiddenSpires_10`, `biomegiantlands_12`, `biomeIgneous_01_17`, `biomeSkyRealm_01_19`, `biomeSkylands_01_21`, `biomeDrowned_01_23`, `biomeDragonfire_25`, `biomeJurassic_27`, `biomeNeonCity_29`, `biomeStarter_31`, `biomeCandoria_33`, `biomePermafrost_37`, `biomeFaeForest_39`, `biomeDesertFrontier_35`, `biomeCursedVale_41`, `PrimeWorld_43`, `biomeGeode_02_4`. All follow the same pattern: embed an `assets.swf` symbol and register 3 frame-stop scripts (frames 1, 11, 21) for the `unselected` / `selected` / `locked` labels. They are the visual art clips for each biome tile on the map, placed in `map` under their own instance names (e.g. `biomeGeode02`, `biomeSkylands1`, `primeWorld`). In all 20 biome clips (these plus `biomeRisingTides`) the `selected` frame applies a slight brightening colour transform and the `locked` frame draws the art at 50% alpha. The class only ever sends them to `locked` (via `setNodeState`); selection changes the node marker, never the art. `biomeStarter` draws the islands under `hub`, `tutorial01`, `a0` and `geode`, and `biomeShadowTower` the tower under `stlobby`; neither is in `nodeArt`, so neither is ever locked.
 
 ---
 
@@ -142,4 +144,4 @@ Each consecutive pair within a path gets a dynamically created `NodePath` connec
 
 - **Zoom + pan coupling:** When the user has dragged the map away from its origin (`locationChanged = true`) and then zooms, `scaleMap` adjusts both `mapStage.map.x/y` (inner content) and `mapStage.x/y` (outer container) to keep the view centred on the zoom origin rather than the stage origin.
 
-- **Rising Tides icons:** `setUberTwelveIcons` accepts a texture name and a slot index (0–2) and places an `ObjectPreview` (which resolves a named game texture at runtime) into the corresponding icon child of the `biomeRisingTides` clip, allowing the rotating Uber-12 biome to display its current world's icon dynamically.
+- **Rising Tides icons:** `setUberTwelveIcons` accepts a texture name and a slot index (0–2) and places an `ObjectPreview` (which resolves a named game texture at runtime) into the corresponding icon child of the `biomeRisingTides` clip. The engine uses the three slots for the icons of the biomes in the rotation currently running. The clip is looked up as `mapStage.map[nodeArt["rt1"]]`, where the value is the one-element array `["biomeRisingTides"]`; AS3 coerces it to the string `"biomeRisingTides"`, so the lookup resolves.

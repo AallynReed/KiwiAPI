@@ -8,7 +8,7 @@
 
 ## Main class: `Credits`
 
-`Credits` is the root UIComponent for the credits screen. Its constructor wires up the close button and, when running inside the Iggy runtime, registers an `OnRequestClose` ExternalInterface callback. On non-console platforms the `iconClose` (Xbox B-button glyph) is hidden. Data arrives via the `text` setter — once set it triggers a full redraw and starts the scroll animation.
+`Credits` is the root UIComponent for the credits screen. Its constructor wires up the close button and, when running inside the Iggy runtime, registers an `OnRequestClose` ExternalInterface callback. On non-console platforms the `iconClose` (Xbox B-button glyph) is hidden. Data arrives via the `text` setter — once set it triggers a full redraw and starts the scroll animation. The engine writes `text` as a property (it is in no `addCallback` list), passing the whole of `Credits.txt`: the file named by `$Credits_Filename` ("Credits.txt"), which sits in the game's install root rather than under `ui/`. The string keeps the file's byte-order mark as a leading U+FEFF.
 
 ### Key fields
 
@@ -52,4 +52,4 @@
 - **Scroll reset:** `resetCreditsRoll()` positions `textfield.y` below the bottom of the `bounds` clip, so text starts off-screen and scrolls up into view.
 - **Finish detection:** `creditsFinished()` checks whether `bounds.y > mainContent.textfield.y + mainContent.textfield.height` — i.e., the bottom edge of the text has scrolled above the top of the visible area — then fires `OnCreditsRollFinished` and removes the enter-frame listener.
 - **Disabled close during scroll:** The close button starts disabled (`closeButton.enabled = false`) in the constructor and is only re-enabled once `text` is set (i.e., real content has arrived from the engine).
-- **HTML content:** Credits text is set via `htmlText`, allowing the game engine to pass rich-text HTML (bold names, font tags, etc.) as the credits payload.
+- **HTML content:** Credits text is set via `htmlText`, allowing the game engine to pass rich-text HTML as the credits payload. `Credits.txt` uses exactly two tags: `<font size="…">` for headings (sizes 22, 20 and 18) and `<img src="…" width="…" height="…">`, whose `src` is the class name of one of the embedded bitmaps — that is how the photographs and logos appear in the roll. Seven are referenced; `bsgstudio` is embedded but unused by the current file.

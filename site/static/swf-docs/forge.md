@@ -11,10 +11,10 @@ Large, stateful crafting UI. On PC, `ConstructForgeMenu()` is called immediately
 ### Public methods
 
 - `setStationType(type:int) : void` — sets `stationType`, calls `applyStationType()` on PC; on console deferred to post-configure.
-- `setForgeType(index:int) : void` — cycles within `forgeOptions` array; calls `ExternalInterface.call("OnSelectUpgradeType", upgradeTypeCode)`.
-- `addIngredient(texName, name, desc, numHave, numNeed) : void` — adds ingredient data to `ingredientList`, updates `requiredItems.ingredient_N` display (count text coloured red if insufficient), repositions slots to centre 1–3 ingredients, fires `ExternalInterface.call("OnConfigured", ...)`.
-- `reset() : void` — clears `ingredientList`, disables `btn_upgrade`, hides all ingredient slots, clears before/after text.
-- `setEquipmentImage(slotId, iconImage, starLevel, itemName, rarity) : void` — assigns an icon to one of the four equipment preview slots (hat/weapon/face/ring), increments `slotsEquipped`.
+- `setForgeType(index:int) : void` — cycles within `forgeOptions` array; calls `ExternalInterface.call("OnSelectUpgradeType", upgradeTypeCode)`. The code is `2` for `"tome"`, `6` for `"particle"`, and `currentUpgradeType` for `"pearl"`, i.e. whichever of `0` (add stat) or `5` (boost stat) the engine last offered through `addUpgrade`; `"standard"` and `"chaos"` send nothing.
+- `addIngredient(texName, name, desc, numHave, numNeed) : void` — adds ingredient data to `ingredientList`, updates `requiredItems.ingredient_N` display (count text coloured red if insufficient), repositions slots to centre 1–3 ingredients, fires `ExternalInterface.call("OnConfigured", numIngredients, 4, 2)`.
+- `reset() : void` — registered as `RESET_INGREDIENTS`; clears `ingredientList`, disables `btn_upgrade`, hides all ingredient slots, clears before/after text, and fires `OnConfigured(0, 4, 2)`.
+- `setEquipmentImage(slotId, iconImage, starLevel, itemName, rarity) : void` — assigns an icon to one of the four equipment preview slots by the engine's slot id (`0` weapon, `4` hat, `5` face, `6` ring), increments `slotsEquipped`. The engine writes all four slots, the ring included at the chaos forge, and does not re-send them after a forge, so the row keeps showing the pre-forge item until the window is reopened.
 - `transferFromEquipment(x, y) : void` — hit-tests equipment previews at a coordinate and triggers an internal drop if found.
 - `onPrevUpgradeType / onNextUpgradeType(event) : void` — cycles `currentForgeType` within `forgeOptions` with wrap-around.
 - `getItemContainingPoint(point) : MovieClip` — returns `currentForge` if it hit-tests the given point; used for drag-drop targeting.
@@ -22,12 +22,12 @@ Large, stateful crafting UI. On PC, `ConstructForgeMenu()` is called immediately
 ### Key fields
 
 - `forgeType : String` — current forge mode string: `"standard"`, `"chaos"`, `"pearl"`, `"tome"`, `"particle"`.
-- `stationType : int` — index into `stationTypes` / `stationNames` arrays (0=standard, 1=chaos, 3=pearl/enchanted).
-- `forgeOptions : Array` — sub-modes available for this station type, e.g. `["pearl","tome","particle"]`.
+- `stationType : int` — index into `stationTypes` / `stationNames` / `allForgeOptions` (0=standard, 1=chaos, 3=pearl/enchanted; index 2 has options but a `null` type and name).
+- `forgeOptions : Array` — sub-modes available for this station type, e.g. `["pearl","tome","particle"]`, copied from `allForgeOptions = [["standard"],["chaos"],["pearl","tome"],["pearl","tome","particle"]]`.
 - `stationTypes : Array` — `["standard","chaos",null,"pearl"]`.
-- `stationNames : Array` — `["$Forge_Header_Forge","$Forge_Header_ChaosForge",null,"$Forge_Header_EnchantedForge"]`.
+- `stationNames : Array` — `["$Forge_Header_Forge","$Forge_Header_ChaosForge",null,"$Forge_Header_EnchantedForge"]` (English "FORGE", "CHAOS FORGE", "ENCHANTED FORGE").
 - `btn_upgrade : LabelButton` — craft button; label set by `SET_BUTTON_TEXT` callback; click fires `UPGRADE_REQUEST`.
-- `lockButton : LabelButton` — lock/unlock button; shown via `SHOW_LOCK_BUTTON`; click fires `LOCK_REQUEST`.
+- `lockButton : LabelButton` — declared, but no frame of the SWF places it, and `onLockClick` (which would send `LOCK_REQUEST`) is never attached to anything. `SHOW_LOCK_BUTTON` sets `lockButton.visible`; `ENABLE_LOCK_BUTTON(Boolean)` ignores its argument and only invalidates.
 - `currentForge : MovieClip` (symbol `currentForge_7`) — centre slot containing `artClip:image`, `forgeBG`, `forgeTypeIcon`, `btn_prev`, `btn_next`.
 - `requiredItems : MovieClip` (symbol `requiredItems_16`) — holds up to 3 `ingredient_N` sub-clips and a `starLevel` clip.
 - `statComparisonLeft / statComparisonRight : StackList` — before/after stat columns populated by `ADD_STAT_COMPARE`.
@@ -36,24 +36,29 @@ Large, stateful crafting UI. On PC, `ConstructForgeMenu()` is called immediately
 - `selections : Array` — ordered list of focusable elements for console navigation (forgeBG, 3 ingredient slots, btn_upgrade, 4 equipment slots).
 - `timer : Timer` — 500ms delay before showing ingredient tooltip on console hover.
 - `equipmentTypes : Array` — `["item_hat","item_weapon","item_face","item_ring"]`.
-- `numChaosSlots : int` — number of stats to keep on right side in chaos forge preview (default 2).
-- `MAX_NUM_STATS : int` — configurable cap on stat rows (default 4, set via `setMaxStats`).
+- `numChaosSlots : int` — number of leading stats the chaos forge keeps (default 2, set via `setNumChaosSlots`); the stats after them are the ones it rerolls. It is the kept count, not the rerolled count.
+- `MAX_NUM_STATS : int` — stat count at which the enchanted forge preview switches from adding a stat to boosting one (default 4, set via `setMaxStats`).
 
 ### Frame scripts / timeline
 
-- **frame 1** (`stop()`) — PC layout.
-- **frame 11** (`stop()`) — Console; sends `BG`, `header`, `requiredItems`, `btn_upgrade`, `currentForge` to `"Console"` label.
-- **frame 21** (`stop()`) — Console + localisation; same children directed to `"Console"`.
+- **frame 1** (`stop()`, label `"PC"`) — PC layout.
+- **frame 11** (`stop()`, label `"Console"`) — Console; sends `BG`, `header`, `requiredItems`, `btn_upgrade`, `currentForge` to `"Console"` label. `buttonLegend` is placed only from this frame on.
+- **frame 21** (`stop()`, label `"ConsoleLoc"`) — Console + localisation; same children directed to `"Console"`.
 
 ### Runtime dependencies & integration
 
-**ExternalInterface callbacks registered:** `SET_BUTTON_TEXT`, `addUpgrade`, `clearUpgrades`, `ADD_STAT_COMPARE`, `RESET_STAT_COMPARE`, `ADD_AURA_COMPARE`, `setSelected`, `setNumChaosSlots`, `setMaxStats`, `addIngredient`, `RESET_INGREDIENTS`, `setForgedItem`, `SHOW_LOCK_BUTTON`, `ENABLE_LOCK_BUTTON`, `setEquipmentImage`, `SET_STATION_TYPE`, `transferFromEquipment`, `onPrevUpgradeType`, `onNextUpgradeType`, `highlightSelection`, `unhighlightSelection`, `activateSelection`.
+**ExternalInterface callbacks registered:** `SET_BUTTON_TEXT`, `addUpgrade`, `clearUpgrades`, `ADD_STAT_COMPARE`, `RESET_STAT_COMPARE`, `ADD_AURA_COMPARE`, `setSelected`, `setNumChaosSlots`, `setMaxStats`, `addIngredient`, `RESET_INGREDIENTS`, `setForgedItem`, `SHOW_LOCK_BUTTON`, `ENABLE_LOCK_BUTTON`, `setEquipmentImage`, `SET_STATION_TYPE`, `transferFromEquipment`, `onPrevUpgradeType`, `onNextUpgradeType`, `highlightSelection`, `unhighlightSelection`, `activateSelection`. `objectPreviewReady`, `DRAGHOST.DROP` and `UIComponent.onStageResized` are registered by the shared `ObjectPreview`, `SlotDragDropHelper` and `UIComponent` classes.
 
-**ExternalInterface calls out:** `OnConfigured(numIngredients, slotsPerRow, numRows)`, `OnSelectUpgradeType(typeCode)`, `OnSetForgeFromEquipped(slotId)`, `OnDropIntoWindow(texName, rarity, qty)`, `UIComponent.OnShowTooltip(x, y, name, desc)`, `UIComponent.OnHideTooltip()`, `UPGRADE_REQUEST`, `LOCK_REQUEST`, `FORGE.REQUEST_CLOSE`, `POST_SOUND_EVENT("Play_ui_forge_use")`, `POST_SOUND_EVENT("Play_ui_window_drop_interactive")`, `POST_SOUND_EVENT("Play_ui_window_click_item")`.
+- `addUpgrade(code)` — the engine lists the upgrades on offer: `0` add stat, `1` standard upgrade, `2` reduce minimum level, `3` increase rarity, `4` pick new stats, `5` boost stat, `6` new particles. `clearUpgrades()` resets every flag except the particle one (`6`).
+- `setSelected(unused, subHeaderText, upgradeEnabled)` — the first argument is read by nothing; the second fills `subHeader.txt_label`, the third enables `btn_upgrade` and drives the preview text.
+- `setForgedItem(icon, name, rarity, titleColor, quality, minLevel)` — the item now in the centre slot; `quality` selects `requiredItems.starLevel` frame `quality + 1`, `minLevel` feeds the tome preview.
+- `ADD_STAT_COMPARE(isLeft, name, value, valueColor)` — the fourth argument is a colour applied to the row's value text. No pearl/bonus level is sent to this screen (the tooltip's `ADD_STAT` receives one), so `StatRow`'s bonus fields are never set here.
+
+**ExternalInterface calls out:** `OnConfigured(numIngredients, slotsPerRow, numRows)`, `OnSelectUpgradeType(typeCode)`, `OnSetForgeFromEquipped(slotId)`, `OnDropIntoWindow(texName, rarity, qty)`, `UIComponent.OnShowTooltip(x, y, name, desc)`, `UIComponent.OnHideTooltip()`, `UPGRADE_REQUEST`, `FORGE.REQUEST_CLOSE`, `POST_SOUND_EVENT("Play_ui_forge_use")`, `POST_SOUND_EVENT("Play_ui_window_drop_interactive")`, `POST_SOUND_EVENT("Play_ui_window_click_item")`. `LOCK_REQUEST` (`onLockClick`) and `APPEARANCE_REQUEST` (`onAppearanceClick`) have handlers that are never attached to any control, so neither is ever sent.
 
 **Drag-drop:** `SlotDragDropHelper.registerDropCallback(onItemDropped)` — receives external drag drops; equipment preview items use native `startDrag`/`stopDrag` with `MouseEvent.MOUSE_UP` completion.
 
-**Visual effects:** `DropShadowFilter` + `GlowFilter` applied to `currentForgeTitle` for rarity ≥ 7 (shadow=4 relic/radiant). `GlowFilter` (yellow) applied to highlighted selection.
+**Visual effects:** `DropShadowFilter` + `GlowFilter` applied to `currentForgeTitle` when `setForgedItem`'s rarity is ≥ 7 (`Rarity_Shadow1` in `_kiwi.Controls.Slot`'s rank table, so Shadow and every tier above it). `GlowFilter` (yellow) applied to highlighted selection.
 
 **Translate keys:** `$Forge_Header_Forge`, `$Forge_Header_ChaosForge`, `$Forge_Header_EnchantedForge`, `$Forge_Button_Upgrade`, `$Forge_Add_Stat`, `$Forge_Boost_Stat`, `$Forge_Cannot_Boost_Stats`, `$Forge_Required_Level`, `$Forge_Required_Level_Max`, `$Forge_Cannot_Add_Particles`, `$Forge_Cannot_Chaos`, `$Forge_Legend_Set`.
 
@@ -80,12 +85,14 @@ Timeline symbol classes for background panels, decorative arrows, forge-type ico
 - `image` (extends `_kiwi.Controls.ArtClip`) — Embed symbol78; the item-art display in the centre forge slot (`currentForge.artClip`).
 - `btnGreen` (extends `LabelButton`) — Embed symbol76; green action button with four-state frame stops.
 - `rarity_frame_*` (×12 PNG/asset wrappers) — rarity border graphics for ingredient slots.
-- `dummy` — not present in this SWF (contrast with minigamescorecard).
+- `dummy` — 48×48 placeholder `BitmapData` embed (`25_dummy.png`).
 
 ## Notable logic
 
 - **Stat comparison columns:** `ADD_STAT_COMPARE(isLeft, statName, statValue, color)` adds a `StatRow` to either `statComparisonLeft` (current stats) or `statComparisonRight` (projected stats). For chaos forge, the right column is computed in `setChaosForgeRightStatRows`: keeps `numChaosSlots` existing stats and pads the rest with `"???"` rows to show randomisation.
-- **Aura/particle preview:** `ADD_AURA_COMPARE(oldAura, newAura)` stores strings in `beforeTxt`/`afterTxt` using HTML `<font size=18>`.
+- **Enchanted (pearl) preview:** while the left column holds fewer than `MAX_NUM_STATS` rows the after text is `$Forge_Add_Stat` ("Adds a new, random stat bonus!"), otherwise `$Forge_Boost_Stat` ("Boosts a random stat."); with the upgrade disabled but every ingredient present it is `$Forge_Cannot_Boost_Stats` ("This item's stats are already fully upgraded."). The game picks the stat; nothing on this screen chooses one.
+- **Chaos preview:** with the upgrade disabled the after text is `$Forge_Cannot_Chaos` ("Only items with 3 or more stats can be modified at the Chaos Forge.").
+- **Aura/particle preview:** `ADD_AURA_COMPARE(oldAura, newAura)` stores strings in `beforeTxt`/`afterTxt` using HTML `<font size=18>` and hides the left stat column; an empty `oldAura` shows `$Forge_Cannot_Add_Particles` instead.
 - **Tome preview:** shows current required level vs. reduced level in `beforeTxt`/`afterTxt` as HTML `<font size=14>`.
 - **Ingredient display:** amounts > 5 digits shown as `"*"` to avoid overflow. Insufficient amounts shown in `#FF3333` red.
 - **Console tooltip timer:** a 500ms `Timer` fires `showTooltip` after highlighting an ingredient slot; unhighlighting cancels the timer and calls `UIComponent.OnHideTooltip`.

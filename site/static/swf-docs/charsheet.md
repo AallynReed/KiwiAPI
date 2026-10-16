@@ -20,8 +20,8 @@ On console, an `ENTER_FRAME` listener delays full initialisation until `onTarget
 - `setName(name:String) : void` — Sets `header.title`.
 - `addStat(id:int, label:String, value:String, desc:String, dimmed:Boolean = false) : *` — Creates a `StatRow` and appends it to `statList1` or `statList2` (overflows after 20 rows); tracks it in `rows` Dictionary by id.
 - `updateStat(id:int, value:String, desc:String, dimmed:Boolean = false) : *` — Looks up the `StatRow` in `rows` and updates value/description; sets color to `RED` if `dimmed`, else `WHITE`.
-- `setClassInfo(className:String, classLevel:Number, ..., isTrial:Boolean, shieldFrame:int, wingsFrame:int) : void` — Formats `$CharSheet_LevelClass` string, appends `$ClassNameTrialSuffix` if trial, updates power-rank icon frames.
-- `setAbility(slot:uint, iconImage:String, displayName:String, description:String, keybind:String, isActive:Boolean) : void` — Populates one of the five `ArtClip` ability icons; slot 4 (sub-class) also hides `noSubClassAnim`.
+- `setClassInfo(className:String, classLevel:Number, paragon:Number, totalLevel:Number, isTrial:Boolean, shieldFrame:int, wingsFrame:int) : void` — Formats `$CharSheet_LevelClass` string from the class level, appends `$ClassNameTrialSuffix` if trial, writes `totalLevel` to `totalLevelTextField`, updates power-rank icon frames. The third argument is the class's Paragon total, which the stock screen does not display.
+- `setAbility(slot:uint, iconImage:String, displayName:String, description:String, type:String, isActive:Boolean) : void` — Populates one of the five `ArtClip` ability icons; slot 4 (sub-class) also hides `noSubClassAnim`. `displayName` is the ability's own name; `type` is a label for the slot (`SubClass` on the sub-class slot, whatever the character), unused by the stock screen. `isActive` picks frame 2 of `abilityFrameN`.
 - `lockSubClassAbility() : void` — Hides `noSubClassAnim` and disables `abilityFrame5`.
 - `resetSubClassAbility() : void` — Shows `noSubClassAnim` and re-enables `abilityFrame5`.
 - `addNameColor(label:String, id:int) : void` — Adds an item to `m_nameColorComboBox`.
@@ -29,12 +29,12 @@ On console, an `ENTER_FRAME` listener delays full initialisation until `onTarget
 - `HandleDirectionInput(dir:int) : *` — Console directional navigation for the name-color combo box.
 - `setMetaRewardSection(trackId:int, sectionId:int, label:String, desc:String, expandable:Boolean, collapsed:Boolean) : void` — Calls `masteryRewards.rewardsView.addSection(...)` and invalidates DATA.
 - `ChangeMetaTrack(dir:int) : *` — Switches between Trove and Geode mastery tracks; handles both section-selected and top-level highlight states.
-- `setSelectedTrack(track:int) : void` — Syncs `m_TroveMasteryBtn`/`m_GeodeMasteryBtn` checked state and mastery icon frame ("trove"/"geode").
+- `setSelectedTrack(track:int) : void` — Syncs `m_TroveMasteryBtn`/`m_GeodeMasteryBtn` checked state and mastery icon frame ("trove"/"geode"). The engine owns the selection: the buttons send `OnMasteryButton(0|1)` and the engine switches the track it reports.
 - `clearMastery() : void` — Clears `masteryRewards.rewardsView` and unhighlights both mastery buttons.
 - `setupMetaRewards(section:int, row:int) : void` — Marks reward view dirty, calls `masteryRewards.setupMetaRewards`, then calls `ExternalInterface.call("ShowMasteryTooltip", ...)`.
 - `setupPvPRewards(count:int, level:int) : void` — Calls `pvpRewards.setupRewards(count)` and sets `rewardLevel`.
 - `unlockReward(index:int) : void` — Finds the `RewardTile` at `index` in the visible rewards panel and calls `setLocked(false)`.
-- `setMetaLevel(isPvP:Boolean, level:Number, xpPercent:Number) : void` — Updates `levelTextField` using `$CharSheet_BattleHeader` or `$CharSheet_MasteryHeader`, resizes font, sets `xpBar.width`.
+- `setMetaLevel(isPvP:Boolean, level:Number, xpPercent:Number) : void` — Updates `levelTextField` using `$CharSheet_BattleHeader` or `$CharSheet_MasteryHeader`, resizes font, sets `xpBar.width`. `xpPercent` is a 0–1 fraction toward the next rank. For mastery the engine reports only the currently selected track (Trove or Geode), and re-sends the current rank on refreshes.
 - `enableTab(tabId:int, visible:Boolean) : void` — Shows/hides a tab and invalidates STATE so tab Y positions restack.
 - `onSlotEnter(slotIndex:int) : void` — Console hover highlight: shows tooltip for gear slot or applies glow/label-button/ArtClip highlight for informational items.
 - `onSlotLeave(slotIndex:int) : void` — Reverses `onSlotEnter` highlight.
@@ -45,11 +45,12 @@ On console, an `ENTER_FRAME` listener delays full initialisation until `onTarget
 ### Key fields
 
 - `rows : Dictionary` — Maps stat id (int) → `StatRow` instance for `updateStat` lookups.
-- `gearSlotArray : Array` — Ordered list of all 18 gear `Slot` instances used for console navigation.
+- `gearSlotArray : Array` — Ordered list of all 18 gear `Slot` instances used for console navigation. No callback carries gear: the engine fills these slots by writing into the timeline instances by name (`gearHat`, `gearWeapon`, `skin`, …), so the instance names are part of the contract.
+- `powerRankTextField`, `m_totalMastery : TextField` — Written by the engine directly, not through a callback: the power-rank figure, and the total mastery rank shown on the Rewards tab (the engine also rewrites its formatting). The stock code only positions, shows and hides them.
 - `informationalSelections : Array` — Secondary navigation targets (patronBadge, powerRankIcon, totalLevelTextField, stat/effects buttons, ability icons, editNameColor).
 - `tabs : Array`, `tabOrigin : Array` — Tab MovieClips and their original Y positions; recompacted when tabs are hidden.
 - `masteryRewards : MetaRewards`, `pvpRewards : PvPRewards` — Sub-component MovieClips embedded from `_assets/assets.swf`.
-- `masteryDataSource : MetaRewardRowExternalDataSource`, `pvpDataSource : PvPRewardRowExternalDataSource` — Pull data via Iggy external calls (`GetMetaRowData`/`GetPvPRowData`).
+- `masteryDataSource : MetaRewardRowExternalDataSource`, `pvpDataSource : PvPRewardRowExternalDataSource` — Pull data via Iggy external calls (`GetMetaRowData`/`GetPvPRowData`). The engine answers inside the call by writing the row's fields into the source's shared public `rowData`, which `getData` copies into the view and then clears, one row at a time.
 - `patronStatus : Boolean`, `patronOnTitle/Content : String` — Patron badge display and tooltip strings (translated from `$CharSheet_PatronActive`, `$CharSheet_PatronBonuses`).
 - `level, xpPercent, metaLevel, battleLevel : Number` — Track current level display state.
 - `m_currentTrack, m_highlightedTrack : int` — Active and console-highlighted mastery track (0 = Trove, 1 = Geode).
@@ -57,9 +58,9 @@ On console, an `ENTER_FRAME` listener delays full initialisation until `onTarget
 
 ### Frame scripts / timeline
 
-- **frame 1** (`frame1`) — `stop()`. Default stopped state.
-- **frame 11** (`frame11`) — `stop()`. Second stopped state (console variant).
-- **frame 21** (`frame21`) — `stop()`; calls `patronStatsBubble.gotoAndStop("ConsoleLoc")`. Console localised patron bubble.
+- **frame 1** (`frame1`, label `PC`) — `stop()`. Default stopped state.
+- **frame 11** (`frame11`, label `Console`) — `stop()`. Second stopped state (console variant).
+- **frame 21** (`frame21`, label `ConsoleLoc`) — `stop()`; calls `patronStatsBubble.gotoAndStop("ConsoleLoc")`. Console localised patron bubble.
 
 ### Runtime dependencies & integration
 
@@ -67,11 +68,11 @@ On console, an `ENTER_FRAME` listener delays full initialisation until `onTarget
 `addNameColor`, `selectNameColor`, `MoveDropdown`, `addStat`, `updateStat`, `setName`, `setClassInfo`, `setAbility`, `lockSubClassAbility`, `resetSubClassAbility`, `setTitle`, `setPatronStatus`, `showTab`, `enableTab`, `setupPvPRewards`, `setupMetaRewards`, `setMetaRewardSection`, `unlockReward`, `setMetaLevel`, `clearMastery`, `setSelectedTrack`, `ChangeMetaTrack`, `masteryRewards.CancelPressed`, `masteryRewards.ConfirmPressed`, `onSlotEnter`, `onSlotLeave`, `onSelectionActivated`, `onStatsClick`, `onEffectsClick`, `scrollBarTranslate`, `showBoosterLegend`, `UIComponent.onStageResized`
 
 **ExternalInterface calls (Flash → engine):**
-`OnMasteryButton`, `showSubClassSelector`, `OpenTitlesSelector`, `OnSelectNameColor`, `OnShowTab`, `POST_SOUND_EVENT`, `ShowMasteryTooltip`, `ShowPowerRankTooltip`, `ShowPowerRankBreakdown`, `HideTooltip`, `OpenEffectsViewer`, `CloseWindow`, `CheckEmotesCount`, `OnDropIntoWindow`, `SLOT.ACTIVATE`, `OnShowStats`, `showColorNameComboBox`, `SetMenuInformation` (console init), `PositioningButtons` (NX only)
+`OnMasteryButton` (0 = Trove, 1 = Geode), `showSubClassSelector`, `OpenTitlesSelector`, `OnSelectNameColor`, `OnShowTab` (0 = Character, 1 = Gems, 2 = Rewards, 3 = PvP), `POST_SOUND_EVENT`, `ShowMasteryTooltip`, `ShowPowerRankTooltip`, `ShowPowerRankBreakdown`, `HideTooltip`, `OpenEffectsViewer`, `CloseWindow`, `CheckEmotesCount`, `OnDropIntoWindow`, `SLOT.ACTIVATE`, `OnShowStats`, `showColorNameComboBox`, `SetMenuInformation` (console init), `PositioningButtons` (NX only)
 
 **Translate keys:** `$CharSheet_PatronActive`, `$CharSheet_PatronBonuses`, `$CharSheet_LevelClass`, `$ClassNameTrialSuffix`, `$CharSheet_BattleHeader`, `$CharSheet_MasteryHeader`, `$CharSheet_Stats`, `$CharSheet_Effects`, `$CharSheet_Trove`, `$CharSheet_Geode`
 
-**Drag-and-drop:** `SlotDragDropHelper.registerDropCallback(onDrop)` — hit-tests dropped items against a subset of gear slots and calls `OnDropIntoWindow`.
+**Drag-and-drop:** `SlotDragDropHelper.registerDropCallback(onDrop)` — hit-tests dropped items against a subset of gear slots (`gearCart`, `gearFace`, `gearHat`, `gearMount`, `gearPet`, `gearRing`, `gearWeapon`, `gearEdible`, `appearanceWeapon`, `appearanceHat`, `appearanceFace`, `skin`, `gearPVPBanner`, in that order) and calls `OnDropIntoWindow(sourceEntityId, sourceComponent, sourceSlotId, slotName, extra)`, reporting the target by its instance name. The three `appearance*` slots are declared but not placed on the live timeline.
 
 **Locale branching:** `buttonLegend` frame names get "Loc" suffix for non-EN/non-ZH locales. `setButtonLegendFrameByTabId` uses a 150 ms `Timer` to trigger NX button repositioning after frame change.
 

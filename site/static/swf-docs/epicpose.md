@@ -21,12 +21,12 @@ Data flows entirely through `ExternalInterface`: the game engine populates the c
 - `onScreenshotConsole() : void` — Console-callable wrapper; delegates to `onScreenshot(null)`.
 - `onRotateLeftPress(param1:MouseEvent) : void` — Calls `OnRotateStart(true)` in the engine.
 - `onRotateRightPress(param1:MouseEvent) : void` — Calls `OnRotateStart(false)` in the engine.
-- `onRotateRelease(param1:MouseEvent) : void` — Calls `OnRotateStop` in the engine.
-- `addCameraAngle(param1:String) : void` — Pushes a new label onto `cameraAngleSelect.choices`.
+- `onRotateRelease(param1:MouseEvent) : void` — Calls `OnRotateStop` in the engine. It listens for `MOUSE_UP` on the two rotate buttons only, so releasing the mouse anywhere else sends no stop and the character keeps turning.
+- `addCameraAngle(param1:String) : void` — Pushes a new label onto `cameraAngleSelect.choices`. The engine sends the angles one call at a time, already translated; it sends four.
 - `clearCameraAngles() : void` — Clears all choices from the `ArrowSelect`.
-- `selectCameraAngle(param1:uint) : void` — Sets `cameraAngleSelect.selectedIndex`.
+- `selectCameraAngle(param1:uint) : void` — Sets `cameraAngleSelect.selectedIndex`. When the index actually changes, `ArrowSelect` dispatches `CHANGE` from its next `draw()`, so an engine-driven selection is echoed back as `OnCameraChange`; the same index sends nothing.
 - `onCameraChange(param1:Event) : void` — Plays click sound and calls `OnCameraChange(selectedIndex)` in the engine.
-- `setHideUILabel(param1:String) : void` — On Durango sets `screenshotButton.label`; on Orbis sets `hideUIButton.label`.
+- `setHideUILabel(param1:String) : void` — On Durango sets `screenshotButton.label`; on Orbis sets `hideUIButton.label`. It only ever labels a console button, and the file has no outbound hide-UI call.
 
 ### Key fields
 
@@ -46,9 +46,9 @@ Data flows entirely through `ExternalInterface`: the game engine populates the c
 
 The SWF has three layout states encoded as timeline frames:
 
-- **Frame 1 (`frame1`)** — Default / PC layout. Calls `stop()`.
-- **Frame 11 (`frame11`)** — Console layout (Durango). Calls `stop()`, then sends `cameraAngleSelect` to its `"Console"` label.
-- **Frame 21 (`frame21`)** — Console layout (Orbis). Calls `stop()`, then sends `cameraAngleSelect` to its `"Console"` label.
+- **Frame 1 (`frame1`, label `PC`)** — Default / PC layout. Calls `stop()`.
+- **Frame 11 (`frame11`, label `Durango`)** — Console layout (Durango). Calls `stop()`, then sends `cameraAngleSelect` to its `"Console"` label. Removes the rotate buttons and `closeButton`, and adds button-hint icons and a `rotateText` caption.
+- **Frame 21 (`frame21`, label `Orbis`)** — Console layout (Orbis). Calls `stop()`, then sends `cameraAngleSelect` to its `"Console"` label.
 
 A `FRAME_CONSTRUCTED` handler (`__setProp_handler`) re-applies component inspector properties for `hideUIButton` (frames 1–20 and 21–30) and `rotateLeftButton`/`rotateRightButton` (frames 1–10) each time the frame changes.
 
@@ -56,7 +56,7 @@ A `FRAME_CONSTRUCTED` handler (`__setProp_handler`) re-applies component inspect
 
 - **Iggy / ExternalInterface callbacks registered:** `addCameraAngle`, `clearCameraAngles`, `selectCameraAngle`, `onScreenshotConsole`, `setHideUILabel`.
 - **ExternalInterface calls out:** `POST_SOUND_EVENT("Play_ui_window_click_item")`, `OnScreenshot`, `OnRotateStart(bool)`, `OnRotateStop`, `OnCameraChange(uint)`.
-- **Translation keys:** `$EpicPose_Header`, `$EpicPose_Screenshot`, `$EpicPose_HideUI`.
+- **Translation keys:** `$EpicPose_Header`, `$EpicPose_Screenshot`, `$EpicPose_HideUI`; timeline captions also carry `$EpicPose_Rotate` ("Rotate") and, on the console frames, `$Close`.
 - **Platform checks:** `IsConsole()`, `_platform == PLATFORM_DURANGO`, `_platform == PLATFORM_ORBIS` (inherited constants from UIComponent).
 - **Kiwi controls used:** `WindowHeader` (`__id0_`), `LabelButton` (`screenshotButton`), `ArrowSelect` (`cameraAngleSelect`).
 

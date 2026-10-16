@@ -12,7 +12,7 @@
 
 ### Public methods
 
-- `set canOpen(value:Boolean) : void` — stores flag and invalidates `STATE`, which re-evaluates `btn_unlock_free.enabled` in `draw()`.
+- `set canOpen(value:Boolean) : void` — stores flag and invalidates `STATE`, which re-evaluates `btn_unlock_free.enabled` in `draw()`. Nothing in the SWF calls it; the engine assigns it as a property.
 - `clearResults() : void` — hides `resultDisplay`, blanks result text and sets slot data to -1 with the "brown" frame.
 
 ### Key fields
@@ -20,13 +20,13 @@
 - `btn_unlock_key : MovieClip` — golden key unlock button; click calls `OnUpgradeKey` (sound: `Play_ui_window_click_button`).
 - `btn_unlock_free : MovieClip` — free (or Flux) unlock button; click calls `OnUpgradeFree`; enabled only when `canOpen && !waitOnTimer`.
 - `winHeader : WindowHeaderSmall` — title bar; `allowFontResize = true`; title key `"$Lockbox_Header"`.
-- `m_boxName : TextField` — box name label; highlighted via `HighlightUtil.highlightMovieClip`.
+- `m_boxName : TextField` — box name label; highlighted via `HighlightUtil.highlightMovieClip`. The SWF never sets its text: the engine writes the box name into it directly.
 - `slot_currentItem : Slot` — displays the box being opened; quantity badge shows `itemsAvailable`; activates slot 1 on update.
 - `resultDisplay : MovieClip` — contains `slot_resultItem` (Slot) and `txt_resultDetails` (TextField); shown after unlock resolves.
 - `frame : MovieClip` — decorative frame; plays "shine" animation on a 10 s timer.
 - `karmaMeter : MovieClip` — contains `karmaMask`; masked by itself; visible only when max karma > 0. Tooltip keys: `"$LockboxTooltip_KarmaDesc"` / `"$GemTooltip_Karma_Bar_Title"`.
 - `progressBar : ExplodingProgressBar` — particle explosion overlay on the karma bar; positioned at `(72, 540)`.
-- `m_autoOpenCheckBox : Checkbox` — label `"$Lootbox_AutoOpen"`; label cleared to `""` on console.
+- `m_autoOpenCheckBox : Checkbox` — label `"$Lootbox_AutoOpen"` ("Auto Open Until Rare"); label cleared to `""` on console. The SWF has no handler for it: the engine reads `checked` when the SWF sends `RequestApplyUnlockOptions` (see Notable logic).
 - `buttonLegend : MovieClip` — console button hint; navigated to `"KeyOpen"` frame via `gotoKeyOpenButtonLegend`.
 - `shineTimer : Timer` — 10 000 ms, 1 repeat; triggers frame "shine" animation loop.
 - `rewardTimer : Timer` — 400 ms (Uncommon) or 1000 ms (Rare) one-shot; delays re-enabling unlock buttons after a reward animation.
@@ -38,14 +38,15 @@
 
 - **Frame 0 (`frame1`)** — `stop()`. PC layout.
 - **Frame 10 (`frame11`)** — `stop()`. Console layout (child clips expected to handle console display internally).
+- Stage 500×587 at 60 fps, 20 frames.
 
 ### Private methods of note
 
 - `onGoldenKeyUnlock(e:MouseEvent)` — disables both buttons, updates quantity badge, fires `POST_SOUND_EVENT("Play_ui_window_click_button")` and `OnUpgradeKey`.
 - `onFreeUnlock(e:MouseEvent)` — same flow, fires `OnUpgradeFree`.
-- `showResultItem(icon, name, rarity, qty, showQty, rarityId, color, quality)` — configures `resultDisplay.slot_resultItem` (size 70, rarity, quantity, quality); translates rarity string to a `$LockBox_*` key; formats `txt_resultDetails` as HTML with colored item name; for rarity ID 6 (presumably Stellar/Rainbow) calls `rainbowify()`; sets result Y based on text height; fires per-rarity sound event; starts `rewardTimer` for Uncommon/Rare.
-- `setLockBoxItem(icon, count)` — sets `slot_currentItem.iconImage`, shows/hides quantity badge, sets size to 55, calls `ExternalInterface.call("SLOT.ACTIVATE", 1)`.
-- `setLockBoxKarma(current, max)` — shows/hides meter and repositions `resultDisplay.y` (504 if meter shown, 522 if not); at `current == max-1` calls `progressBar.initParticles("KarmaParticle", 3)`; at rollover (current==0, meter shrinking) calls `progressBar.start()`; sets `karmaMask.scaleX = current/max`.
+- `showResultItem(icon, name, band, qty, showQty, rarityId, color, quality)` — configures `resultDisplay.slot_resultItem` (size 70, quantity, quality, and `rarityId` as the slot rarity unless `showQty` is true, which forces 0); does nothing when `qty` is 0. `band` is `"Common"`, `"Uncommon"` or `"Rare"`: the box's own tier for this pull, which drives the karma bar, the sound and the timer, and is not the item's rarity (that is `rarityId`, with `color` the item's name colour). The band picks a prefix key that is prepended to `$LockBox_Got`; formats `txt_resultDetails` as HTML with colored item name; for `rarityId` 6 (`Rarity_Resplendent` in this SWF's `Slot` table) calls `rainbowify()`; sets result Y based on text height; fires per-band sound event; starts `rewardTimer` for Uncommon/Rare.
+- `setLockBoxItem(icon, count)` — sets `slot_currentItem.iconImage`, shows/hides quantity badge, sets size to 55, calls `ExternalInterface.call("SLOT.ACTIVATE", 1)`. The engine re-sends it as boxes are used, so `count` tracks the remaining stock; a different `icon` also clears the previous result.
+- `setLockBoxKarma(current, max)` — `max` is the number of boxes after which a rare result is guaranteed (the loot-probability text gives 70, or 35 with Patron); shows/hides meter and repositions `resultDisplay.y` (504 if meter shown, 522 if not); at `current == max-1` calls `progressBar.initParticles("KarmaParticle", 3)`; at rollover (current==0, meter shrinking) calls `progressBar.start()`; sets `karmaMask.scaleX = current/max`.
 - `recheckUnlockOptions()` — calls `RequestApplyUnlockOptions` to let the game re-evaluate which buttons should be enabled.
 - `shine(e:TimerEvent)` — plays "shine" on `frame` MovieClip, resets and restarts timer.
 - `gotoKeyOpenButtonLegend()` — navigates `buttonLegend` to "KeyOpen" stop frame.
@@ -54,9 +55,9 @@
 ### Runtime dependencies & integration
 
 - **Iggy callbacks registered:** `setLockBoxItem`, `showResultItem`, `setLockBoxKarma`, `onGoldenKeyUnlock`, `onFreeUnlock`, `gotoKeyOpenButtonLegend`.
-- **ExternalInterface calls out:** `POST_SOUND_EVENT` (with event names `Play_ui_window_click_button`, `Play_ui_lockbox_common`, `Play_ui_lockbox_uncommon`, `Play_ui_lockbox_rare`), `OnUpgradeKey`, `OnUpgradeFree`, `RequestApplyUnlockOptions`, `SLOT.ACTIVATE`.
+- **ExternalInterface calls out:** `POST_SOUND_EVENT` (with event names `Play_ui_window_click_button`, `Play_ui_lockbox_common`, `Play_ui_lockbox_uncommon`, `Play_ui_lockbox_rare`), `OnUpgradeKey`, `OnUpgradeFree`, `RequestApplyUnlockOptions`, `SLOT.ACTIVATE`. The engine queues every `OnUpgradeFree` it receives and nothing the SWF can send recalls a queued open.
 - **IggyTween:** not used directly in LockBox; `ExplodingProgressBar` uses the flint particle library instead.
-- **translate keys:** `"$Lockbox_Header"` (winHeader title), `"$Lootbox_AutoOpen"` (checkbox), `"$Lockbox_OpenButton"` (free button label), `"$LockBox_Common"`, `"$LockBox_Uncommon"`, `"$LockBox_Rare"`, `"$LockBox_Got"`, `"$LockboxTooltip_KarmaDesc"`, `"$GemTooltip_Karma_Bar_Title"`.
+- **translate keys:** `"$Lockbox_Header"` (winHeader title), `"$Lootbox_AutoOpen"` (checkbox), `"$Lockbox_OpenButton"` (free button label), `"$LockBox_Common"`, `"$LockBox_Uncommon"`, `"$LockBox_Rare"`, `"$LockBox_Got"`, `"$LockboxTooltip_KarmaDesc"`, `"$GemTooltip_Karma_Bar_Title"`. The four result keys are written `$LockBox_` in the code; the shipped language files contain no `$LockBox_` key and spell them `$Lockbox_Common` ("Nice! "), `$Lockbox_Uncommon` ("Sweet! "), `$Lockbox_Rare` ("Lucky! ") and `$Lockbox_Got` ("You got").
 - **org.flintparticles** library used by `ExplodingProgressBar` for karma-bar explosion effect.
 - `IsConsole()` checked to clear auto-open label text.
 
@@ -91,4 +92,5 @@
 - **Karma rollover detection:** `setLockBoxKarma` checks whether the meter is shrinking (`current == 0 && scaleX > 0 && scaleX < 1`) to fire the particle explosion; this handles the karma bar resetting at the start of a new karma tier.
 - **Reward timer gating:** `waitOnTimer` prevents the unlock buttons from being prematurely re-enabled during a rarity animation (400 ms for Uncommon, 1 000 ms for Rare). `recheckUnlockOptions` is called both from `Common` rarity handling (immediate) and from the timer callback.
 - **Two-step unlock button label:** `btn_unlock_free` label is `"$Lockbox_OpenButton"` (free unlock); `btn_unlock_key` has no label — it is icon-only (key image embedded in the MovieClip skin).
-- **Rainbow rarity (ID 6):** Stellar or equivalent rarity applies alternating TextFormat color segments in a 6-step rainbow cycle to the item name portion of `txt_resultDetails`.
+- **Rainbow rarity (ID 6):** `Rarity_Resplendent` (6 in this SWF's `_kiwi.Controls.Slot` table, which runs Common 0 … Resplendent 6, Shadow1–5 7–11, Radiant/Stellar interleaved 12–21, Crystal1–5 22–26) applies alternating TextFormat color segments in a 6-step rainbow cycle to the item name portion of `txt_resultDetails`.
+- **Auto Open Until Rare is the engine's loop:** a press sends `OnUpgradeFree`; the engine answers with `showResultItem`; the SWF then sends `RequestApplyUnlockOptions` (at once for a Common pull, after the 400 ms / 1000 ms reward timer for Uncommon / Rare); the engine reads `m_autoOpenCheckBox.checked` and, if set, calls `onFreeUnlock` again. The reward timers are therefore what paces auto-opening.

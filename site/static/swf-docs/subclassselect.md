@@ -15,7 +15,7 @@ Contains a `ScrollableTileView` (`itemView`) for the grid of `SubClassRow` objec
 - `setAbility(iconImage, displayName, description) : void` — updates the most recently added row's `icon.art` (`ArtClip`) and `abilityDescriptionText`.
 - `setStat(statText) : void` — sets `nextTierText` on the most recently added row.
 - `sortSubClasses() : void` — sorts `itemView` by: active first, then level descending, then powerRank descending, then index descending.
-- `highlightSlot(index, direction) : void` — sets `rowHighlight.alpha = 1` and auto-scrolls into view if the row is near the edge of the viewport.
+- `highlightSlot(index, direction) : void` — sets `rowHighlight.alpha = 1` and auto-scrolls into view if the row is near the edge of the viewport. `index` (here and in `unhighlightSlot` / `activateSlot`) is the row's position in the list as currently ordered, i.e. after `sortSubClasses`, read through `itemView.getItem(index)`; it is not the subclass index. `OnSelect` sends the subclass index that `addSubClass` was given.
 - `unhighlightSlot(index) : void` — sets `rowHighlight.alpha = 0`.
 
 ### Key fields
@@ -25,11 +25,11 @@ Contains a `ScrollableTileView` (`itemView`) for the grid of `SubClassRow` objec
 
 ### Frame scripts / timeline
 
-- **frame 1 / 11 / 21** — `stop()` for PC, Console, and ConsoleLoc layouts.
+- **frame 1 / 11 / 21** — `stop()` for PC, Console, and ConsoleLoc layouts. Stage 680×712 at 24 fps, 30 frames.
 
 ### Runtime dependencies & integration
 
-- `ExternalInterface` callbacks: `clear`, `addSubClass`, `setAbility`, `setStat`, `sortSubClasses`, `highlightSlot`, `unhighlightSlot`, `activateSlot`.
+- `ExternalInterface` callbacks: `clear`, `addSubClass`, `setAbility`, `setStat`, `sortSubClasses`, `highlightSlot`, `unhighlightSlot`, `activateSlot`, plus `objectPreviewReady` registered by the `ObjectPreview` inside each row's ability `ArtClip`.
 - `ExternalInterface.call("OnSelect", index)` — fired when action button clicked or `activateSlot` is invoked.
 - `setupTranslation()` called in `configUI`.
 - `IsConsole()` — skips `verticalStep = 10` on console (native scroll).
@@ -45,7 +45,7 @@ Single row in the grid representing one subclass option.
 **`init(index, name, active, unlocked, isCurrentClass, level, powerRank) : void`** — initialises all display fields, sets `actionButton` label and enabled state:
 - Active → label `$ClassChanger_Active`, disabled, frame `"selected"`.
 - Locked (not unlocked) → label `$ClassChanger_Locked`, disabled, frame `"locked"`.
-- Is current PC class but not the active subclass → label `$ClassChanger_MyClass`, disabled, frame `"locked"`.
+- Is current PC class but not the active subclass → label `$ClassChanger_MyClass` ("INELIGIBLE"), disabled, frame `"locked"`. The class being played arrives unlocked with this flag set, and with the character's own power rank rather than a subclass reading, so its power rank is far above every other row's.
 - Otherwise → label `$ClassChanger_Switch`, enabled.
 
 **Fields:** `classNameText`, `levelText`, `powerRankText`, `abilityDescriptionText`, `nextTierText` (TextFields); `actionButton:LabelButton`; `icon:MovieClip` (contains an `ArtClip` named `art`); `rowHighlight:MovieClip`.

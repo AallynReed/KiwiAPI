@@ -27,16 +27,18 @@
 
 - `learnButton : LabelButton` — "Learn" action button; default label key `"$RecipeConsume_Learn"`; click calls `ExternalInterface.call("onLearn")`.
 - `cancelButton : LabelButton` — "Keep" / cancel button; default label key `"$RecipeConsume_Keep"`; click calls `ExternalInterface.call("onCancel")`.
-- `requiresPrefixTextField : TextField` — static label prefix for the requirements line (e.g. "Requires:"); hidden until `setRequirement()` is called.
+- `requiresPrefixTextField : TextField` — static label prefix for the requirements line (`$RecipeConsume_Requires`, "Requires:"); hidden until `setRequirement()` is called.
 - `requiresTextField : TextField` — dynamic requirement text; hidden until `setRequirement()` is called.
 - `stacklist : StackList` — vertical list container that holds `RecipeRow` children; grows downward as rows are added.
 - `background : MovieClip` — background panel; its `height` is updated to match the computed dialog height after each recipe addition.
-- `titleHeader : TextField` — dialog title; set externally via `setHeader()`.
+- `titleHeader : TextField` — dialog title; static default `$RecipeConsume_Header` ("Add to your collection?"), replaced via `setHeader()`.
 - `learnControl : MovieClip` — console controller-button hint for the learn action; repositioned alongside `learnButton`.
 - `cancelControl : MovieClip` — console controller-button hint for the cancel action; repositioned alongside `cancelButton`.
 - `responseMargin : uint` — vertical gap between the stack list and the button row, computed from the initial layout in `setup()`.
 
 ### Frame scripts / timeline
+
+Stage 508×600, 24 fps, 20 frames; root labels `PC` (frame 1) and `Console` (frame 11).
 
 - **frame 1** (`frame1`) — `stop()`. PC layout frame; `setup()` is called directly from the constructor.
 - **frame 11** (`frame11`) — `stop()`. Console layout frame; `setup()` is deferred until this frame is reached via the `ENTER_FRAME` listener.
@@ -57,6 +59,7 @@
   - `"onCancel"` — emitted when the player clicks the cancel/keep button.
   - `"NOTIFY_RESIZED"(width, height)` — emitted after each `addRecipe()` call so the engine can resize the containing window.
   - `"onSetupFinished"` — emitted (console only) when `setup()` completes, signalling the engine that the UI is ready for callbacks.
+- **Client side:** the game drives this SWF from a screen class it names `CollectionConsumePrompt` (its string table pairs that name with `RecipeConsumePrompt.swf`, `onLearn`, `onSetupFinished`, `clearRecipes`, `setRequirement`, `addRecipe` and `canLearn`). Unlike `messagedialog.swf` there is no inbound "setup complete" call, so nothing marks the end of the engine's `setHeader`/`addRecipe`/`canLearn` burst.
 - **`setupTranslation()`** — inherited; applies localisation to static text.
 - **`IsConsole()`** — global function; controls constructor branching (deferred vs immediate setup, visibility of `learnControl` / `cancelControl`).
 - **`onTargetFrame()`** — inherited from `UIComponent`; gating check in the console ENTER_FRAME loop.

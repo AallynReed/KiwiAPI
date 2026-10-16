@@ -1,5 +1,5 @@
 # friendpicker.swf
-> A modal dialog that displays the player's friends list with search filtering, allowing the player to select a friend or manage social actions. Appears when the game needs the player to pick a friend (e.g. for a co-op invite or party action).
+> A modal dialog that displays the player's friends list with search filtering, allowing the player to select a friend or manage social actions. Its header is hard-wired to `$FriendPicker_Header` ("HEART-A-PHONE"): it is the picker for a Heart-a-Phone's recipient.
 
 **Document/main class:** `FriendPicker` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 8 (excluding framework/asset wrappers)
@@ -20,7 +20,7 @@ Hosts a `FriendView` scrollable list backed by a `FriendsFilteredDataSource`, a 
 - `__id0_ : WindowHeader` — titled `$FriendPicker_Header`; set disabled (decorative).
 
 ### Frame scripts / timeline
-- `frame1` / `frame11` / `frame21` — each calls `stop()`. The SWF has at least 3 labelled states (likely open, picker-mode, standard-list-mode).
+- `frame1` / `frame11` / `frame21` — each calls `stop()`, one per frame label: `PC` (frame 1), `Console` (frame 11: removes `closeButton`, swaps in a console `searchInput` and adds `buttonLegendClose`) and `ConsoleLoc` (frame 21: another `searchInput` variant and `buttonLegendLoc`).
 
 ### Runtime dependencies & integration
 - `IggyFunctions.inIggy` — branch for live vs. preview mode.
@@ -33,19 +33,19 @@ Hosts a `FriendView` scrollable list backed by a `FriendsFilteredDataSource`, a 
 ## Other game-specific classes
 
 ### `FriendsFilteredDataSource` (extends `FriendViewDataSource`)
-Adds real-time name filtering on top of the sorted base data source. Maintains a parallel `excludedData` array of items that don't match the current filter. When `filterString` changes, items are moved between `itemData` and `excludedData` in-place, dispatching `DataChangeEvent`s so the view refreshes. `addFriend(accountId, name, isOnline, action)` is exposed via `ExternalInterface`. The `action` field is a label string shown on the select button in picker mode.
+Adds real-time name filtering on top of the sorted base data source. Maintains a parallel `excludedData` array of items that don't match the current filter. When `filterString` changes, items are moved between `itemData` and `excludedData` in-place, dispatching `DataChangeEvent`s so the view refreshes. `addFriend(accountId, name, isOnline, action)` and `clear` are exposed via `ExternalInterface`. The `action` field is the label shown on that row's select button, chosen per friend by the engine; it arrives as a `$` translation key, which Iggy resolves only once it reaches the button's TextField.
 
 ### `FriendViewDataSource` (extends `_kiwi.Core.UIComponent`)
 Base data source for the friend list. Holds `itemData:Array` of friend objects and fires `DataChangeEvent` on add/remove/clear. Inserts items sorted: friend-requests first (by name), then online friends (by name), then offline friends (by name). Uses `natCaseCompare` on console for locale-aware sorting; `localeCompare` on PC.
 
 ### `FriendView` (extends `_kiwi.Controls.ScrollableView`) — Embed symbol84
-Virtualized list renderer with a 16-item pool. Uses `FriendViewDataSource` for data. Supports both `FriendListItem` rows (full social panel) and `PickerListItem` rows (select-only). On console, exposes `ExternalInterface` callbacks: `moveHighlight(delta)`, `moveHighlightBegin`, `moveHighlightEnd`, `unHighlightCurrent`, `joinFriend`, `inviteFriend`, `showProfile`, `onSelect`. Scroll-wrapping and highlight-on-refresh are configurable. Frame scripts: `frame1`, `frame11`.
+Virtualized list renderer with a 16-item pool. Uses `FriendViewDataSource` for data. Supports both `FriendListItem` rows (full social panel) and `PickerListItem` rows (select-only). Exposes `ExternalInterface` callbacks (registered on every platform, not only console): `moveHighlight(delta)`, `moveHighlightBegin`, `moveHighlightEnd`, `unHighlightCurrent`, `joinFriend`, `inviteFriend`, `showProfile`, `onSelect`. Its `OnAcceptRequest`, `OnWhisper`, `OnJoinWorld`, `OnInviteToJoinMe` and `OnShowProfile` calls only go out through a `FriendListItem`; this screen's rows are `PickerListItem`s, so `joinFriend`, `inviteFriend` and `showProfile` do nothing here and those five calls never fire. Scroll-wrapping and highlight-on-refresh are configurable. Frame scripts: `frame1`, `frame11`.
 
 ### `FriendListItem` (extends `ListItemBase`)
 Full-featured friend row. Fields: `playerNameTextField`, `worldTextField`, `rankTextField`, `joinButton`, `inviteToJoinMeButton`, `whisperButton`, `acceptButton`, `removeButton`, `optionsButton`, `mc_status`, `mc_row_bg`. Tracks `playerName`, `online`, `isRequest`, `canAccept`, `world`, `rank`, `canJoinWorld`, `canInvite`, `ignored`, `highlight` as invalidating properties. On draw: shows/hides buttons based on state, displays `$FriendRequest_WaitOnAccept` or `$FriendRequest_WaitOnOther` for pending requests, plays `mc_status` to "online"/"offline" label. Console uses frame labels `OverConsole`/`UpConsole` and hides most buttons, showing only `optionsButton` (labelled `$ContextPopout_Header_SocialMenu`) when highlighted. Button clicks call: `OnAcceptRequest(id)`, `OnRemove(id, isRequest)`, `OnWhisper(name)`, `OnJoinWorld(id)`, `OnInviteToJoinMe(id)`.
 
 ### `PickerListItem` (extends `ListItemBase`) — Embed symbol22
-Simplified friend row used in picker mode. Shows `playerNameTextField`, `selectButton` (labelled `$FriendPicker_Send`), `mc_status`, and `itemHighlight`. On console, `selectButton` and `itemHighlight` are only visible when `highlight` is true. Click on `selectButton` fires `ExternalInterface.call("OnSelect", identity)`.
+Simplified friend row used in picker mode. Shows `playerNameTextField`, `selectButton` (authored label `$FriendPicker_Send`, overwritten per row by the `action` string), `mc_status`, and `itemHighlight`. On console, `selectButton` and `itemHighlight` are only visible when `highlight` is true. Click on `selectButton` fires `ExternalInterface.call("OnSelect", identity)` with the account id string; the engine does not check that id against the friends list.
 
 ### `FriendListItemData`
 Plain data value object: `accountId`, `name`, `isOnline`, `world`, `rank`, `canJoinWorld`, `isRequest`, `canAccept`, `canInvite`, `ignored`, `highlight`.

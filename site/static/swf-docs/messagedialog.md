@@ -28,15 +28,15 @@ Layout is done in `draw()`: `KiwiTextUtil.colorize` applies rich-text color mark
 - `BUTTON_LABEL_MARGIN : Number = 12` — label inner margin.
 
 ### Frame scripts / timeline
-None on `MessageDialog`. Button states are managed by `BtnGreen`'s own four-frame timeline (frames 10, 20, 30, 40 — up/over/down/disabled states).
+Stage 531×156, 24 fps, a single frame. None on `MessageDialog`. Button states are managed by `BtnGreen`'s own four-frame timeline (frames 10, 20, 30, 40 — up/over/down/disabled states).
 
 ### Runtime dependencies & integration
 - `IggyFunctions.inIggy` — gates `ExternalInterface` callbacks; in preview mode, a sample message and three buttons are injected directly.
-- `ExternalInterface.addCallback("SET_MESSAGE", setMessage)` — receives `(messageText:String, disclaimerText:String)`.
+- `ExternalInterface.addCallback("SET_MESSAGE", setMessage)` — receives `(messageText:String, disclaimerText:String)`. A dialog with nothing to substitute arrives as its bare translation key (e.g. `$TeleportToLair`, `$FriendsList_Remove`), which Iggy resolves only when it is written into `messageTextField`; dialogs built from a pattern with `{0}` slots arrive as finished text.
 - `ExternalInterface.addCallback("ADD_RESPONSE", addResponse)` — receives `(label:String, enabled:Boolean)`.
 - `ExternalInterface.addCallback("SETUP_COMPLETE", setupComplete)` — signals that all responses have been added.
 - `ExternalInterface.call("MESSAGEDIALOG.RESPONSE", index)` — fired on button click; sends the zero-based response index back to the game.
-- `ExternalInterface.call("NOTIFY_RESIZED", width, height)` — called after background resize in `resizeBG`.
+- `ExternalInterface.call("NOTIFY_RESIZED", width, height)` — called after background resize in `resizeBG`. The engine sizes and centres the dialog window from this report alone, and moves it on its own tick rather than during the call; the 100 ms reveal after `SETUP_COMPLETE` keeps the box hidden while that happens.
 - `_kiwi.Util.KiwiTextUtil.colorize(tf, text)` — parses color markup in message text.
 - `IsConsole()` — controls extra button spacing and gamepad-glyph placement (`btn_north`, `btn_south`, `btn_east`).
 - `flash.utils.Timer(100, 1)` + `TimerEvent.TIMER_COMPLETE` — deferred reveal after setup.
@@ -51,6 +51,7 @@ None on `MessageDialog`. Button states are managed by `BtnGreen`'s own four-fram
 ---
 
 ## Notable logic
+- The screen is built anew for every dialog: nothing ever clears `buttonHolder`, and responses never carry over from one dialog to the next.
 - `addResponse` reuses the pre-authored `buttonHolder.response_0` for the first button and creates new `BtnGreen` instances for subsequent ones, each named `response_N` with `data = N` for click identification.
 - Button auto-sizing: if `textField.textWidth + BUTTON_MARGIN * 2` exceeds the current button width, `setActualSize` widens the button to fit the label.
 - On console with three responses: north/south/east gamepad glyphs are placed to the left of buttons 0/1/2 respectively; with two responses: south/east are used instead.

@@ -1,5 +1,5 @@
 # progressioninfo.swf
-> The progression/crafting info panel shown when the player selects an upgrade node, a craftable item, or a progression choice. Displays a title, description, ingredient costs, rewards, an action button, and optionally an upgrade tree list. Used in multiple contexts: class gem unlocking, dragon upgrades, mastery progression, and club/cornerstone upgrades.
+> The progression/crafting info panel shown when the player selects an upgrade node, a craftable item, or a progression choice. Displays a title, description, ingredient costs, rewards and an action button; it is the side panel beside `progression.swf`'s node map (Star Chart, gear crafting, rune crafting, fishing), and the one that sends that map's unlock/upgrade requests. An upgrade-tree list class is compiled in but never used. Used in multiple contexts: class gem unlocking, dragon upgrades, mastery progression, and club/cornerstone upgrades.
 
 **Document/main class:** `ProgressionInfo` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 13
@@ -18,7 +18,8 @@ The class tracks a `m_currentMode` (int 0–6) and a `m_currentFocus` chain for 
 - `setTitleAndDescription(title, desc) : *` — calls both of the above.
 - `addIngredient(iconName, owned, needed, tooltipTitle, tooltipDesc) : *` — retrieves or creates a `RequiredMaterial` from the pool, calls `Setup()` on it, increments `m_numIngredientDisplay`, invalidates STATE.
 - `clearIngredients() : *` — removes all `RequiredMaterial` children, clears the list, resets counter.
-- `addReward(icon, name, ?, label) : *` — creates a `RewardSlot`, calls `init()`, adds it to the `StackList` inside `m_rewards.rewardList`.
+- `addReward(icon, name, ?, label) : *` — creates a `RewardSlot`, calls `init(icon, name, label)`, adds it to the `StackList` inside `m_rewards.rewardList`. The third argument is never read.
+- `setDetails(text:String) : *` — writes `m_rewards.details` at size 16 and auto-resizes it. For a selected Star Chart node this is where the engine states what the star grants.
 - `clearRewards() : *` — clears the `StackList` in `m_rewards.rewardList`.
 - `clearIngredientsAndRewards() : *` — calls both clears.
 - `updateIngredientDisplay() : *` — lays out visible `RequiredMaterial` clips horizontally, spaced 60 px apart, centred around the action button. On NX alternates y by ±10 px per slot.
@@ -45,7 +46,7 @@ The class tracks a `m_currentMode` (int 0–6) and a `m_currentFocus` chain for 
 - `opX / opY : Number` — `ObjectPreview` base dimensions (741, 2048) for resize scaling.
 
 ### Frame scripts / timeline
-- Frame 1, 11, 21 — all `stop()`. Frames represent different visual states of the panel (e.g., different upgrade modes or visibility states).
+- Frame 1, 11, 21 — all `stop()`. Labelled `PC`, `Console` and `ConsoleLoc`; the root places `Banner` and `m_ui`. Stage 391×850 at 30 fps, 30 frames.
 
 ### Runtime dependencies & integration
 **Mode constants and action button labels:**
@@ -54,9 +55,11 @@ The class tracks a `m_currentMode` (int 0–6) and a `m_currentFocus` chain for 
 | UnlockMode | 0 | `$ModuleLoadout_UnlockBtn` |
 | ChooseMode | 1 | `$Select_ButtonLegend` |
 | UpgradeMode | 2 | `$Clubs_Upgrade` |
-| DowngradeMode | 3 | `$Progression_DowngradeBtn` |
+| DowngradeMode | 3 | `$Progression_DowngradeBtn` (defined in no shipped language file) |
 | Refund | 4 | `$Progression_Refund` |
 | Reset / Mode_None | 5 / 6 | `$Progression_Reset` |
+
+`SetCurrentMode(mode)` also clears the ingredient row. ChooseMode (1) and Mode_None (6) send nothing when the button is pressed.
 
 **ExternalInterface callbacks registered (Iggy):**
 `setTitle`, `addReward`, `setDetails`, `setDescription`, `setTitleAndDescription`, `clearIngredients`, `clearRewards`, `clearIngredientsAndRewards`, `addIngredient`, `UIComponent.onStageResized`, `SetCurrentMode`, `GainedFocus`, `ResetFocus`, `LostFocus`, `moveSelection`, `requestAction`, `SetBackground`
@@ -82,7 +85,7 @@ Single ingredient slot showing an icon and `owned/needed` text. `Setup(iconName,
 Displays a single reward: icon (`ObjectPreview` 45×45 inside `art`), `_name:TextField`, `_amount:TextField`. `init(iconName, name, amount)` sets all three; hides `art` if iconName is empty. Uses `KiwiTextUtil.resizeFont` with max size 14, min 2 lines.
 
 ### `ProgressionUpgradeView` (extends `_kiwi.Controls.DynamicRowView`) — [Embed symbol42]
-A scrollable row list for choose-mode upgrade trees. Tracks `m_selectedRow:ProgressionUpgradeRow`. On row becoming visible, adds a click listener. Click fires `ExternalInterface.call("OnChoiceSelected", upgradeTree, upgradeNode)` and toggles highlight visibility.
+A scrollable row list for choose-mode upgrade trees. Like `ProgressionUpgradeRow`, `ProgressionUpgradeSection` and `QuickLinkItem`, it is bound to a symbol that is never placed and is never constructed in code, so none of these four classes runs and their outbound calls (`OnChoiceSelected`, `ShowTooltip`/`HideTooltip`, `QuickLinkClicked`) are never made. Tracks `m_selectedRow:ProgressionUpgradeRow`. On row becoming visible, adds a click listener. Click fires `ExternalInterface.call("OnChoiceSelected", upgradeTree, upgradeNode)` and toggles highlight visibility.
 
 ### `ProgressionUpgradeRow` (extends `_kiwi.Controls.DynamicRowViewRow`) — [Embed symbol53]
 A single choice row. Fields: `m_upgradeTree:String`, `m_upgradeNode:String`, `m_title:TextField`, `m_description:TextField`, `m_activeIndicator:MovieClip`, `m_inactiveIndicator:MovieClip`, `highlight:MovieClip`. `purchasable` setter applies a 0.5× grey `ColorTransform` when false. Mouse-over/out fire `ShowTooltip(tree, node, x, y)` / `HideTooltip`.

@@ -1,12 +1,12 @@
 # Trove UI — Shared Library Reference
 
-This is the **single, global reference** for the shared framework code embedded in Trove's Flash UI. The exact same library classes are compiled into **all 108 `ui/*.swf` files**; the per-SWF docs in this folder deliberately **omit** them (documenting each ~214-class framework 108 times would be useless noise) and point here instead.
+This is the **single, global reference** for the shared framework code embedded in Trove's Flash UI. The same library classes are compiled into **the 108 `ui/*.swf` files**, each SWF carrying the subset it uses; the per-SWF docs in this folder deliberately **omit** them (documenting each ~214-class framework 108 times would be useless noise) and point here instead.
 
 Everything below was reverse-engineered from the decompiled ActionScript 3 (JPEXS ffdec). Where a class appears in several SWFs, the canonical (largest) copy was read.
 
 ## Architecture at a glance
 
-Trove's UI is authored in Flash/ActionScript 3 and runs inside **Iggy**, Trion's embedded Flash runtime baked into the C++ game client (a Scaleform-style player). The layers, from the engine outward:
+Trove's UI is authored in Flash/ActionScript 3 and runs inside **Iggy**, RAD Game Tools' commercial Flash runtime embedded in the C++ game client (`iggy_w64.dll`). It runs AS3 bytecode but is not the Flash Player. The layers, from the engine outward:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -57,7 +57,7 @@ Key facts that explain almost every UI file:
 
 ## Iggy runtime bridge (top-level classes)
 
-Iggy is Trove's embedded Scaleform-derived Flash runtime running inside the C++ game client. The two top-level classes `IggyFunctions` and `IggyTween` form the entire bridge layer between AS3 SWF logic and the host engine. They live at the root package (no namespace) and are compiled into every one of the 108 SWFs as shared stubs — the real implementations are resolved by the Iggy runtime at load time; in standalone Flash Player the stubs either fall through to plain Flash equivalents or do nothing.
+Iggy is the RAD Game Tools Flash runtime running inside the C++ game client. The two top-level classes `IggyFunctions` and `IggyTween` form the entire bridge layer between AS3 SWF logic and the host engine. They live at the root package (no namespace). `IggyFunctions` is compiled into 99 of the 108 SWFs (all but the four console button-glyph libraries and controllernotification, notifications, playerhealth, pvpplayercounterui and reticle) as a set of stubs: Iggy binds its native implementations onto the class by name and signature, so in game the stub bodies are replaced, while in the standalone Flash Player they either fall through to plain Flash equivalents or do nothing. `IggyTween` is a complete AS3 implementation rather than a stub, and is compiled into 44 SWFs.
 
 ---
 
@@ -71,7 +71,7 @@ A pure-static utility class. Every method is `public static`; the class itself i
 
 | Name | Type | Default | Purpose |
 |---|---|---|---|
-| `inIggy` | `*` (untyped) | `false` | Runtime flag set to `true` by the Iggy host when the SWF is running inside the game client. SWF code reads this to branch between in-game and standalone behaviour. |
+| `inIggy` | `*` (untyped) | `false` | Runtime flag that reads `true` inside the game client and `false` in the standalone player. SWF code reads this to branch between in-game and standalone behaviour; `UIComponent`, `ObjectPreview` and `DynamicRowViewExternalDataSource` gate their `ExternalInterface` callback registrations on it, and the data source also its outbound calls. |
 | `HITTEST_NO_MOUSE` | `int` (const) | `1` | Bit flag for `setHittestProperties`: disable mouse interaction on an object. |
 | `HITTEST_NO_GET_OBJECTS_UNDER_POINT` | `int` (const) | `2` | Bit flag: exclude from Flash's own `getObjectsUnderPoint` hit-test. |
 | `HITTEST_NO_IGGY_GET_OBJECTS_UNDER_POINT` | `int` (const) | `4` | Bit flag: exclude from Iggy's extended hit-test (`iggyGetObjectsUnderPoint`). |
@@ -81,12 +81,17 @@ A pure-static utility class. Every method is `public static`; the class itself i
 ```
 translate(key:String) : *
 ```
-Looks up a localisation key in the Iggy string table and returns the translated string. In the standalone stub the method returns `key` unchanged (identity function). Every human-visible string in the UI is passed through `translate` — including numeric format tokens such as `$DigitGroupDelimiter`, time-unit labels such as `$TimeUnit_Hours`, and compound format templates such as `$Time_Localized2`. SWF code never hard-codes locale-sensitive text directly.
+Looks up a localisation key in the client's language files (`languages/<lang>/*.binfab`) and returns the text for the client's language: in game with English selected, `translate("$Claims")` returns `CLAIMS`. A key with no entry comes back unchanged. In the standalone stub the method returns `key` unchanged (identity function), and the stub is also what runs before Iggy has bound its natives onto the class: a class's static initialiser can run that early, and a lookup made there gets the key back. Every human-visible string in the UI is passed through `translate` — including numeric format tokens such as `$DigitGroupDelimiter`, time-unit labels such as `$TimeUnit_Hours`, and compound format templates such as `$Time_Localized2`. SWF code never hard-codes locale-sensitive text directly.
 
 ```
 setTextureForBitmap(bmp:Bitmap, name:Object, w:int = -1, h:int = -1) : *
 ```
-Asks the Iggy host to swap the bitmap data of `bmp` for the named engine texture `name` (must be a `String` or `null`; throws `TypeError` otherwise). Optional `w`/`h` override the texture dimensions. The stub body is empty — the real binding is injected by the host.
+Asks the Iggy host to swap the bitmap data of `bmp` for the named engine texture `name` (must be a `String` or `null`; throws `TypeError` otherwise); `null` clears the binding. In game `name` is one of two things:
+
+- a texture path such as `ui/meta_icons/meta_cubit.dds`, which binds immediately but only if the client already has that texture loaded; a path that exists in the client files but is not resident does not resolve;
+- an engine render-target name (an item icon, see [`ObjectPreview`](#objectpreview)), which can only be bound after the engine has answered `UIComponent.CheckTextureExists` with `objectPreviewReady`. Binding one before that throws `ArgumentError`.
+
+The bitmap takes the texture's own size: for a texture path the `w`/`h` arguments do not scale anything (a 24×24 icon bound with `48, 48` comes out 24×24), so callers set `bmp.width`/`bmp.height` afterwards, as `ObjectPreview` does. The stub body only performs the type check — the real binding is injected by the host. The only stock callers are `ObjectPreview` and draghost.swf's `DragHost`, which binds whatever name the engine passes to its `DRAGHOST.SETTEXTURENAME` callback.
 
 ```
 iggyGetObjectsUnderPoint(container:DisplayObjectContainer, pt:Point) : Array
@@ -120,28 +125,19 @@ Retrieves the Z-depth previously set with `setDepth`. Returns `0` if no depth ha
 
 #### How SWFs use `IggyFunctions`
 
-All human-readable and localised text goes through `translate`:
+All human-readable and localised text goes through `translate` (called in 65 SWFs, 44 of them from the screen's own scripts as well as through the framework):
 
 ```as3
-// KiwiTextUtil.addDigitDelimiters — real call pattern
-var sep:String = IggyFunctions.translate("$DigitGroupDelimiter");
+// KiwiTextUtil.addDigitDelimiters
+var delimiter:String = IggyFunctions.translate("$DigitGroupDelimiter");
 
-// TimeUtil.localizeTime — real call pattern
-var template:String = IggyFunctions.translate("$Time_Localized2");
-var unitLabel:String = IggyFunctions.translate("$TimeUnit_Hours");
+// TimeUtil.localizeTime — the template key is built from the unit count
+var template:String = IggyFunctions.translate("$Time_Localized" + units);
 ```
 
-Depth control is used by layered UI components that need to place elements above or below Flash's normal stacking order without re-parenting:
+Inside the framework, `ArrowSelect` translates `$None` and `InlineTooltip` translates `$NoRarityPowerRank`. `setTextureForBitmap` is called only by `ObjectPreview` and `DragHost`, and `inIggy` gates engine-only code throughout.
 
-```as3
-IggyFunctions.setDepth(tooltipClip, 100);
-```
-
-Hit-test flags are applied to overlay clips that should pass mouse events through to elements underneath:
-
-```as3
-IggyFunctions.setHittestProperties(glassPane, IggyFunctions.HITTEST_NO_MOUSE);
-```
+No stock script calls `setDepth`, `getDepth`, `setHittestProperties`, `getHittestProperties`, `iggyGetObjectsUnderPoint` or `setObjectAntialiasingEnable`; they exist only as part of the bridge class.
 
 ---
 
@@ -263,30 +259,24 @@ When `manageCollisions = true`, `IggyTween` maintains a static `Dictionary` keye
 
 #### Usage example (from real call patterns in the codebase)
 
-```as3
-// Fade in a clip over 0.3 seconds using a custom easing function
-var tween:IggyTween = new IggyTween(
-    myClip,          // target
-    "alpha",         // property
-    fl_EaseOut,      // easing function reference
-    0,               // begin
-    1,               // finish
-    0.3,             // duration (seconds)
-    true,            // useSeconds
-    false,           // useWeakRef
-    true             // manageCollisions — cancels any prior alpha tween on myClip
-);
-tween.motionFinishCallback = onFadeInComplete;
+Easing functions come from `fl.transitions.easing` (`None`, `Regular`, `Strong`, `Exponential`).
 
-// Chain: once done, slide to a new position
-tween.motionFinishCallback = function():void {
-    new IggyTween(myClip, "x", null, myClip.x, 400, 15); // 15-frame linear slide
-};
+```as3
+// _kiwi.Controls.Slot.startCooldown — seconds-based linear sweep of a setter property,
+// with a finish callback
+this._anim = new IggyTween(this,"radialAnimation",None.easeNone,degrees,0,remainingDuration / timeScale,true);
+this._anim.motionFinishCallback = this.stopCooldown;
+
+// gems.swf — fade in, seconds-based, manageCollisions on
+new IggyTween(clip,"alpha",Strong.easeIn,0,1,this.TWEEN_IN_ALPHA_TIME,true,false,true);
+
+// controllernotification.swf — frame-based (10 frames)
+new IggyTween(_notification,"stepIn",None.easeIn,0,1,10);
 ```
 
 ## _kiwi base layer — Core, Managers, Constraints, Constants, Interfaces
 
-Every Trove UI screen is built on the `_kiwi` package. It provides the component lifecycle (invalidation/validation/draw), sizing and positioning contracts, constraint-based layout, gamepad/keyboard focus management, ExternalInterface plumbing to the game engine, and a small set of shared constants and interface contracts. The classes in this layer are identical across all 108 SWFs; they are shared by embedding the same compiled bytecode in each file.
+Every Trove UI screen is built on the `_kiwi` package. It provides the component lifecycle (invalidation/validation/draw), sizing and positioning contracts, constraint-based layout, gamepad/keyboard focus management, ExternalInterface plumbing to the game engine, and a small set of shared constants and interface contracts. The classes in this layer are shared by compiling the same sources into each SWF, but the copies are not all from one revision: `UIComponent`, for instance, exists in several builds across the SWFs. The descriptions follow the most complete copy and note where builds differ.
 
 ### Class summary
 
@@ -328,6 +318,8 @@ public static const LOCALE_FR:String = "fr";
 ```
 
 `IsConsole() : Boolean` returns `true` when `_platform` is Orbis or Durango.
+
+Later builds of the class (navigationmenu's among them) also ask `GetRunningSystem`, `IsNX` and `IsFullKey` in the same place, add `PLATFORM_NX = "nx"`, `IsRunningSystemConsole()` and `IsNX()`, and in the console frame choice below try `nx_pro` (full key) or `nx_jd` after `Console`. Which of these calls a screen makes depends on the build it was compiled with.
 
 #### Frame branching (target-frame system)
 
@@ -379,7 +371,7 @@ protected function validate():void     // clears _invalid and _invalidTypes
 ```actionscript
 protected function setState(param1:String):void
 ```
-Sets `_state` and schedules a frame jump to the matching timeline label (only if that label exists in `_labels`).
+Sets `_state` and schedules a frame jump to the matching timeline label (only if that label exists in `_labels`): it stores the label in `_newFrame` and invalidates `STATE`, and the `gotoAndStop` happens in the next `draw()`. Code that reads `currentFrame` or measures the clip straight after a state change (for example in the same mouse handler) still sees the old frame.
 
 ```actionscript
 public function isInvalid(param1:String, ...rest):Boolean
@@ -679,6 +671,8 @@ constraints.addElement("closeBtn", closeButton, Constraints.RIGHT | Constraints.
 
 `ObjectPreview` renders a single game texture (item icon, equipment image, etc.) into the Flash UI as a `Bitmap`. The texture is fetched from the game engine via `IggyFunctions` (a thin ExternalInterface bridge); the class registers a static `"objectPreviewReady"` callback so the engine can notify any waiting instances when a texture becomes available.
 
+Item icons are not textures but engine render targets: the engine sets a slot's `iconImage` (and so this preview's `textureName`) to a target name such as `Gems.gemSlot0`, then paints the item into that target on its own schedule. The `CheckTextureExists` → `objectPreviewReady` handshake below is what makes such a name bindable; `objectPreviewReady` is registered only here and appears in no screen's own callback list, so every screen that shows item icons receives it through this class.
+
 #### Construction
 
 ```actionscript
@@ -693,16 +687,20 @@ public function set textureName(param1:String):void
 public function get textureName():String
 ```
 Setting `textureName` to a non-empty string:
-1. Adds `this` to a static `listeners:Array`.
+1. Adds `this` to a static `listeners:Array` (a flat array, scanned linearly for duplicates on every add).
 2. Calls `ExternalInterface.call("UIComponent.CheckTextureExists", textureName)`.
-3. When the engine has the texture ready it calls back into `objectPreviewReady(textureName)`, which finds all matching listeners and calls `replaceTexture()`.
+3. When the engine has the texture ready it calls back into `objectPreviewReady(textureName)`, which finds all matching listeners, takes each off the list and calls `replaceTexture()`.
+
+`replaceTexture()` clears the bitmap (`setTextureForBitmap(image, null)`), resets its scale to 1, binds the name with `setTextureForBitmap(image, textureName, imageWidth, imageHeight)`, then either adopts the bitmap's natural size (dimension `-1`) or sets `image.width`/`image.height` to the requested size — the bind itself does not scale. It then marks the preview loaded and calls `loadedCallback`. An `ArgumentError` from the bind is caught and traced.
+
+The engine answers only for a texture or target that exists: a render target it has not painted yet gets no `objectPreviewReady`, and an unloaded texture path is not loaded by asking. Nothing retries, and setting `textureName` to the name it already holds is ignored, so a re-request needs the name cleared first. Once bound, the bitmap follows the render target: when the engine repaints the target the preview shows it without another bind.
 
 Setting `textureName` to `null` or `""` clears the bitmap via `IggyFunctions.setTextureForBitmap(image, null)` and removes the listener.
 
 ```actionscript
 public function resize(newWidth:Number, newHeight:Number):void
 ```
-Updates the target dimensions and re-requests the texture if already loaded.
+Stores the new dimensions. If a texture is already bound it also sets the bitmap's `width`/`height` directly and sends `UIComponent.CheckTextureExists` again — one engine call per resize, even when the size has not changed. The preview left the listener list when it bound, so that reply does not rebind it.
 
 #### Lifecycle
 
@@ -713,7 +711,7 @@ Updates the target dimensions and re-requests the texture if already loaded.
 | `textureName` | `String` | get/set; triggers async texture load |
 | `imageWidth` / `imageHeight` | `int` (get) | Current bitmap pixel dimensions |
 | `loadedCallback` | `Function` | Optional; called with `this` when the texture finishes loading |
-| `selected` / `highlighted` | `MovieClip` | Timeline clips for selection/highlight overlays |
+| `selected` / `highlighted` | `MovieClip` | Timeline clips for selection/highlight overlays (charcustomize's copy only) |
 | `getBitmapBounds():Rectangle` | method | Returns bitmap bounds in its own coordinate space |
 
 #### Static callback
@@ -721,7 +719,7 @@ Updates the target dimensions and re-requests the texture if already loaded.
 ```actionscript
 public static function objectPreviewReady(textureName:String):void
 ```
-Called by the engine. Iterates `listeners` in reverse, finds all `ObjectPreview` instances whose `textureName` matches, and calls `replaceTexture()` on each. This is registered as an ExternalInterface callback in the constructor (only once per instance in Iggy mode).
+Called by the engine. Iterates `listeners` in reverse, finds all `ObjectPreview` instances whose `textureName` matches, removes each from the list and calls `replaceTexture()` on it. Every instance's constructor re-registers this same static function as the `objectPreviewReady` ExternalInterface callback (in Iggy mode), so the engine is handed the binding once per preview built.
 
 ---
 
@@ -744,9 +742,9 @@ public static function startDrag(
 
 Call `startDrag` on `MOUSE_DOWN` inside a slot component. The helper:
 1. Subscribes to `MOUSE_MOVE`, `MOUSE_UP`, and `ROLL_OUT` (all capture-phase) on `source`.
-2. On `MOUSE_MOVE`, computes the distance moved from `(startX, startY)`. If it exceeds the `DragStartDelta` threshold (15 pixels), calls `internalStartDrag`.
+2. On `MOUSE_MOVE`, computes the distance moved from `(startX, startY)`. If it reaches the `DragStartDelta` threshold (15 pixels), calls `internalStartDrag`.
 3. On `ROLL_OUT` (the mouse leaving the slot before 15px), immediately calls `internalStartDrag` without waiting for the distance check.
-4. `internalStartDrag` fires `ExternalInterface.call("SLOT.DRAG_START", slotId, stageX, stageY, textureName)` to hand off drag handling to the game engine, then calls `stopWatchingMouse`.
+4. `internalStartDrag` fires `ExternalInterface.call("SLOT.DRAG_START", slotId, stageX, stageY, textureName)` to hand off drag handling to the game engine, then calls `stopWatchingMouse`. From `Slot`, `slotId` is `Number(data)` and `textureName` is the slot's `iconImage`.
 5. `MOUSE_UP` without a drag cancels the watch via `stopWatchingMouse`.
 
 ```actionscript
@@ -896,7 +894,7 @@ Handles all string and `TextField` manipulation that recurs across the UI. Relie
 ```
 addDigitDelimiters(n:int) : String
 ```
-Converts an integer to a string and inserts the locale digit-group delimiter (fetched via `IggyFunctions.translate("$DigitGroupDelimiter")`) every three digits from the right. Example: `1234567` → `"1,234,567"` (comma or locale equivalent). Used everywhere a raw count is displayed.
+Converts an integer to a string and inserts the locale digit-group delimiter (fetched via `IggyFunctions.translate("$DigitGroupDelimiter")`, `,` in English) every three digits from the right. Example: `1234567` → `"1,234,567"` (comma or locale equivalent). Used everywhere a raw count is displayed.
 
 ```
 removeDigitDelimiters(s:String) : int
@@ -1038,7 +1036,9 @@ The primary display method. Produces a fully localised string such as `"3 hours 
 - `units`: how many time units to include. `1` = most significant unit only; `2` = two units (the default).
 - `short`: `true` for abbreviated unit labels (`_short` suffix on translation keys).
 
-Internally calls `getTimeUnits` to compute a `Vector.<FormatCountdownResult>`, then fetches a localisation template key of the form `$Time_Localized{units}` (or `$Time_Localized{units}_short`) and substitutes `{0}` / `{1}` / ... with the computed values and translated unit names. This means the grammar, word order, and spacing of the result is fully controlled by the game's string table.
+Internally calls `getTimeUnits` to compute a `Vector.<FormatCountdownResult>`, then fetches a localisation template key of the form `$Time_Localized{units}` (or `$Time_Localized{units}_short`), with `units` first capped at the number of units actually found, and substitutes `{0}` / `{1}` / ... with the computed values and translated unit names. This means the grammar, word order, and spacing of the result is fully controlled by the game's string table.
+
+The language files ship only `$Time_Localized1` and `$Time_Localized2` and their `_short` forms (no language has a `$Time_Localized3`), so two units is the most this can render. In English the templates are `{0} {1}`, `{0} {1} {2} {3}`, `{0}{1}` and `{0}{1} {2}{3}`, and the hour labels are `hours` / `hour` (`_single`) / `h` (`_short`).
 
 ```
 formatCountdown(ms:Number) : FormatCountdownResult
@@ -1287,7 +1287,9 @@ setFocus()                       : void
 
 **Extends:** `UIComponent`
 
-Two-state toggle with an associated text label. Embeds symbol 170. Timeline frames: `checked`, `unchecked`, `checked disabled`, `unchecked disabled` — plus optional `checkedConsole` variants. Clicking the component calls `toggleSelected`, which flips `checked` and dispatches `Event.CHANGE`. The `textField` child is constrained to all edges.
+Two-state toggle with an associated text label. Embeds symbol 170. Timeline frames: `checked`, `unchecked`, `checked disabled`, `unchecked disabled` — plus optional `checkedConsole` variants. Clicking the component calls `toggleSelected`, which (when `enabled`) flips `checked` and dispatches `Event.CHANGE`. The `textField` child is constrained to all edges.
+
+The toggle's `CLICK` listener is added in `configUI()`, at the checkbox's first validation, so a `CLICK` listener its owner added earlier runs first and reads `checked` as it was before the click. In activitytrackerui's `ActivityHeader` the header's listener is the earlier one, so the `!showBtn.checked` it sends is the new state.
 
 **Important public members:**
 
@@ -1314,14 +1316,14 @@ cb.addEventListener(Event.CHANGE, onChanged);
 
 **Extends:** `fl.controls.ComboBox`
 
-A styled wrapper around the standard FL `ComboBox`. Applies Open Sans 12 pt white to the main text field, dropdown list renderer, and component style on construction. The `open()` override compensates for scroll position when the control is hosted inside a `DynamicRowView` by walking up the display hierarchy and subtracting each `DynamicRowView`'s viewport scroll.
+A styled wrapper around the standard FL `ComboBox`. Applies Open Sans 12 pt white to the main text field, dropdown list renderer, and component style on construction. The face needs no embedded font in game: the client ships Open Sans in `ui/fonts/`, and a SWF that embeds no font still renders a `"Open Sans"` `TextFormat`. The `open()` override compensates for scroll position when the control is hosted inside a `DynamicRowView` by walking up the display hierarchy and subtracting each `DynamicRowView`'s viewport scroll.
 
 **Important public members (additions over `ComboBox`):**
 
 ```as3
 var isDynamicRowViewChild : Boolean            // enables scroll compensation in open()
 setFontSize(size:int)     : void               // updates all three text style targets
-setScrollSize(n:Number)   : void               // sets vertical page and line scroll; normalises mouse-wheel delta
+setScrollSize(n:Number)   : void               // sets vertical page and line scroll; reduces dropdown wheel delta to its sign
 ```
 
 Standard `ComboBox` population applies: call `addItem({label:"...", data:...})` and listen for `Event.CHANGE`.
@@ -1378,7 +1380,7 @@ Timeline has two frames (0 and 10, both stopped) that can carry visual state cha
 
 **Extends:** `UIComponent`
 
-A container that hosts an `ObjectPreview` bitmap cell and wires it to Trove's C++ tooltip system via `ExternalInterface`. On roll-over it calls `SLOT.POINTER_ENTER` and optionally `TOOLTIP.SHOW`; on roll-out it calls `SLOT.POINTER_LEAVE` and `TOOLTIP.HIDE`. The `image:ObjectPreview` child is sized by `imageWidth`/`imageHeight` (default 51 × 51 px). Setting `iconImage` to an empty string hides the image child.
+A container that hosts an `ObjectPreview` bitmap cell and wires it to Trove's C++ tooltip system via `ExternalInterface`. On roll-over it calls `SLOT.POINTER_ENTER(data, x, y)` from its centre — the engine's item tooltip for `data`, as on `Slot` — and `TOOLTIP.SHOW` with `displayName`/`description` only when one of them is non-empty; on roll-out it calls `SLOT.POINTER_LEAVE` and, under the same condition, `TOOLTIP.HIDE`. The `image:ObjectPreview` child is sized by `imageWidth`/`imageHeight` (default 51 × 51 px). Setting `iconImage` to an empty string hides the image child.
 
 **Important public members:**
 
@@ -1513,14 +1515,17 @@ This group contains the data-driven container and list widgets of the kiwi toolk
 
 The primary inventory-slot widget used across hotbar, inventory, trade, and equipment screens. Embedded from `symbol37` in `assets.swf`.
 
-**Rarity constants** (public `const`, all `uint`): `Rarity_Unset=-1`, `Rarity_Common=0` … up through `Rarity_Mystic5=31`. Each tier maps to a named `BitmapData` asset (`rarity_frame_<tier>[_large]_png`) loaded via `getDefinitionByName` at draw time; there are separate normal and `_over` (selected) variants.
+**Rarity constants** (public `const`): `Rarity_Unset = -1` is typed `int`; every other constant, and the `rarity` getter/setter, is `uint`, while the backing field `_rarity` is an `int` that starts at `-1`. The ranks are Common 0, Uncommon 1, Rare 2, Epic 3, Legendary 4, Relic 5, Resplendent 6, Shadow 1–5 = 7–11, then Radiant and Stellar **interleaved** (Radiant 1–5 = 12, 14, 16, 18, 20; Stellar 1–5 = 13, 15, 17, 19, 21), Crystal 1–5 = 22–26 and Mystic 1–5 = 27–31. Each tier maps to a named `BitmapData` asset (`rarity_frame_<tier>[_large]_png`) loaded via `getDefinitionByName` at draw time; there are separate normal and `_over` (selected) variants.
+
+**How the engine drives it:** the engine writes a slot's properties (`iconImage`, `rarity`, `quantity`, `showQuantity`, `locked` …) from outside rather than through a callback. `iconImage` receives a render-target name (see [`ObjectPreview`](#objectpreview)) whether or not anything is in the slot, and `rarity` is not an emptiness signal: on the character sheet the engine never writes a rarity for equipped emblems and gems, so those filled slots stay at `Rarity_Unset`. `data` is typed `Object` because `null` means the slot stands for nothing — the engine writes `null` there, and `clear()` does the same.
 
 **Key properties:**
 
 | Property | Type | Notes |
 |---|---|---|
-| `data` | `Object` | Opaque payload; passed to all `ExternalInterface` calls and to `SlotDragDropHelper.startDrag` |
-| `iconImage` | `String` | Texture name fed to the embedded `ObjectPreview`; setting `""` automatically sets `styleHidden=true` |
+| `data` | `Object` | The slot's id as the engine knows it, `null` for none; passed to every `SLOT.*` call, and `Number(data)` is the slot id handed to `SlotDragDropHelper.startDrag` |
+| `iconImage` | `String` | Texture or render-target name fed to the embedded `ObjectPreview`; setting `""` automatically sets `styleHidden=true`. Ignored when equal to the current name |
+| `forceIconImage` | `String` (set) | Writes the name without the equality check, but `ObjectPreview.textureName` still ignores an unchanged name, so only a different name rebinds |
 | `rarity` | `uint` | Triggers `STYLES` invalidation; drives rarity-frame bitmap selection |
 | `quality` | `int` | Controls `qualityStars` MC frame (1-indexed) |
 | `quantity` / `showQuantity` / `showQuantityWithX` | `Number`/`Boolean` | Badge text on `quantityBadge`; badge resizes its background to fit |
@@ -1531,7 +1536,10 @@ The primary inventory-slot widget used across hotbar, inventory, trade, and equi
 | `hotkey` | `String` | Shows in `hotkeyTextField`; on console renders as HTML |
 | `percent` | `Number` | `[0,1]` fill for `bar.fill` MC; `<0` hides the bar |
 | `dragEnabled` | `Boolean` | Gates `SlotDragDropHelper.startDrag` call on mouse-down |
-| `clickFeedback` | `Boolean` | Adds/removes `MOUSE_DOWN`/`CLICK` listeners dynamically |
+| `clickFeedback` | `Boolean` | Default `true`; adds/removes the `MOUSE_DOWN`/`CLICK` listeners, so `false` stops the slot selecting, dragging and activating (hover and tooltips still work) |
+| `hasRollOver` | `Boolean` | When set (and not `equipped`), roll-over/roll-out walk `slotFrame` to `"highlight"`/`"circle"` |
+| `tooltipName` / `tooltipDescription` | `String` | Text for the plain `TOOLTIP.SHOW` tooltip; both empty means none is sent |
+| `TooltipOffsetProvider` | `Function` (set) | Returns a `Point` added to the `SLOT.POINTER_ENTER` position; without one the nearest ancestor `ScrollableView`'s `ScrollViewOffset()` is used |
 
 **Important methods:**
 
@@ -1539,7 +1547,9 @@ The primary inventory-slot widget used across hotbar, inventory, trade, and equi
 public function copyFrom(src:Slot):void        // bulk-copy all state to this slot
 public function clear():void                   // reset data, name, rarity, quantity, quality, image, tooltips
 public function activate():void                // fires SLOT.ACTIVATE(data) via ExternalInterface
-public function startCooldown(total:Number, elapsed:Number, scale:Number=1):void   // tweens radial sweep on cooldown MC
+public function startCooldown(cooldownDuration:Number, remainingDuration:Number, timeScale:Number=1):void
+    // sweeps the cooldown MC from remainingDuration/cooldownDuration of a turn down to 0
+    // over remainingDuration/timeScale seconds (IggyTween), then calls stopCooldown()
 public function stopCooldown():void
 public function setSlotSize(size:Number):void  // resizes the ObjectPreview image container
 public function setRarityScale(s:Number):void  // uniform scale on rarityAnchorMC
@@ -1548,7 +1558,7 @@ public function showTooltipAt(x:Number=NaN, y:Number=NaN):void
 public function hideTooltip():void
 ```
 
-**Mouse/tooltip bridge:** On roll-over the slot calls `ExternalInterface.call("SLOT.POINTER_ENTER", data, stageX, stageY)` and optionally `TOOLTIP.SHOW`. On roll-out it calls `TOOLTIP.HIDE` and `SLOT.POINTER_LEAVE`. Click calls `SLOT.ACTIVATE(data)` and plays a UI sound via `ExternalInterface.call("POST_SOUND_EVENT", ...)`.
+**Mouse/tooltip bridge:** On roll-over the slot calls `ExternalInterface.call("SLOT.POINTER_ENTER", data, x, y)`, where `(x, y)` is the global position of the point a quarter across and halfway down the slot plus `TooltipOffset`. This is the call the item tooltip comes from: the engine looks the item up by `data` and draws the tooltip card itself, growing it right and down from `(x, y)` and turning it round only at the edge of the screen. `TOOLTIP.SHOW(x, y, tooltipName, tooltipDescription)` is the separate plain-text tooltip, anchored at the slot's horizontal centre one slot-height above it (at its top edge in some copies) and sent only when `tooltipName` or `tooltipDescription` is set. Roll-over also hides `newSlotItemGlow`, so looking at a new item clears its glow. On roll-out it calls `TOOLTIP.HIDE` and `SLOT.POINTER_LEAVE(data)` and deselects. Mouse-down sets `selected` and, when `data` is non-null and `dragEnabled`, starts `SlotDragDropHelper.startDrag`. Click calls `activate()`: `POST_SOUND_EVENT("Play_ui_window_click_item")`, then `SLOT.ACTIVATE(data)`.
 
 ---
 
@@ -1673,7 +1683,7 @@ Height is purely computed (`headerHeight + numRows * rowHeight` when expanded; `
 
 #### `DynamicRowViewExternalDataSource` — `extends Object`
 
-The glue layer between `DynamicRowView` and the game's JavaScript/Iggy layer. Registers four `ExternalInterface` callbacks at construction time (when `IggyFunctions.inIggy` is true):
+The glue layer between `DynamicRowView` and the game's JavaScript/Iggy layer. Registers up to five `ExternalInterface` callbacks at construction time (when `IggyFunctions.inIggy` is true); older copies lack `updateData`, and the oldest `updateCurrentView` as well:
 
 | Callback name | Direction | Action |
 |---|---|---|
@@ -1718,6 +1728,8 @@ public var reverseAdd:Boolean = false   // inserts children at index 0 instead o
 ```
 
 `addChild`/`removeChild` are overridden to route through `viewportMovieClip`.
+
+`onMouseWheel` keeps only the sign of `MouseEvent.delta`: each wheel event moves `scrollV` by `mouseWheelSensitivity` units, and only while the vertical scrollbar is visible. `KiwiComboBox.setScrollSize` reduces its dropdown's wheel `delta` to the sign the same way.
 
 ---
 

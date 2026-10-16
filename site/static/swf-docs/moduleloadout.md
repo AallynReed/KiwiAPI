@@ -1,5 +1,5 @@
 # moduleloadout.swf
-> The Module Loadout panel in Trove where a player equips and swaps active modules, passive modules, and reliquaries on their character, and views/swaps their active companion. It is opened from the character sheet and supports both PC and console navigation.
+> The Module Loadout panel in Trove — Geode's Discovery Suit loadout (`$ModuleLoadout_WindowName`, "DISCOVERY SUIT LOADOUT") — where a player equips and swaps active modules, passive modules, and reliquaries on their character, and views/swaps their active companion. It is opened from the character sheet and supports both PC and console navigation.
 
 **Document/main class:** `ModuleLoadout` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 9 game-logic classes (plus 5 `ModuleLoadout_fla` timeline symbols and ~35 asset-wrapper/skin classes)
@@ -20,13 +20,13 @@ The `draw()` override (triggered by `STYLES` invalidation) re-positions companio
 
 ### Public methods (also registered as ExternalInterface callbacks in Iggy)
 - `setCompanionName(name:String)` — shows and sets `companionName` TextField; invalidates STYLES.
-- `addCompanionStat(text:String)` — appends a `StatText` instance above the companion swap button; invalidates STYLES for layout.
+- `addCompanionStat(text:String)` — appends a `StatText` instance above the companion swap button; invalidates STYLES for layout. Each line arrives already formatted by the engine (`+{0} {1}` in the client), e.g. "+25% Rocket Boot Acceleration".
 - `clearCompanionStats()` — hides all `StatText` instances.
-- `addModule(iconImage, itemImage, tooltipTitle, tooltipDesc, rarity:int, hotkey:String, showSwap:Boolean, itemIndex:int)` — adds a `ModuleItem` (active module slot); positions it vertically at `moduleListYPosition + n * moduleListSpacing`; adjusts description text alignment based on whether an icon image is present.
+- `addModule(iconImage, itemImage, tooltipTitle, tooltipDesc, rarity:int, hotkey:String, showSwap:Boolean, itemIndex:int)` — adds a `ModuleItem` (active module slot); `itemIndex` is the engine's slot number (0–1) and becomes the slots' `data`; positions it vertically at `moduleListYPosition + n * moduleListSpacing`; adjusts description text alignment based on whether an icon image is present.
 - `clearModules()` — hides all `ModuleItem` instances.
 - `addModuleListItem(moduleIndex, iconImage, abilityImage, name, desc, level, rarity:int, isUnlocked:Boolean, hotkey:String, rarityColor:uint)` — adds a `ModuleSelectButton` to the swap-module popup list (`m_moduleList`), laid out in a 2-column grid.
 - `clearSelectModuleList()` — hides all `ModuleSelectButton` instances and resets console cursor.
-- `addPassiveModule(iconImage, name, desc, tooltip, rarity:int, color:uint)` — adds a `ModulePassive` to a 2-column grid on the right side.
+- `addPassiveModule(iconImage, name, desc, level:String, rarity:int, levelColor:uint)` — adds a `ModulePassive` to a 2-column grid on the right side. The fourth argument is the module's level text (e.g. "Level 10") and the last its colour — the same pair `addModuleListItem` puts into `moduleLevel` — but this method drops both: only `moduleName` is written, and `name`/`desc` go to the slot tooltip.
 - `clearPassiveModules()` — hides all `ModulePassive` instances.
 - `addReliquary(index, iconImage, name, desc, xp:Number, maxXp:Number, isLocked:Boolean, rarityIndex:int)` — adds a `MegaItem` (reliquary slot); positioned at `reliquaryListYPosition + n * reliquaryListSpacing`.
 - `clearReqliquaries()` — hides all `MegaItem` instances.
@@ -35,13 +35,14 @@ The `draw()` override (triggered by `STYLES` invalidation) re-positions companio
 
 ### Key fields
 - `m_acceptButton : LabelButton` — "Accept" button; translate key `$Accept`; fires `AcceptClicked` via ExternalInterface.
-- `m_moduleList : MovieClip` — container for the swap-module popup; holds `closeBtn` and the dynamically added `ModuleSelectButton` children; initially hidden.
+- `m_moduleList : MovieClip` — container for the swap-module popup; holds `closeBtn` and the dynamically added `ModuleSelectButton` children. The SWF only ever hides it (once, in `configUI`); the engine opens the list by setting `m_moduleList.visible = true` after answering `OpenSwapModule`.
 - `swapCompanion : MovieClip` (configured as `LabelButton`) — translate key `$ModuleLoadout_SwapBtnCompanion`; fires `OnSwapCompanion`.
-- `companionIcon : ArtClip` — renders the companion's portrait; `data = 4` on init.
+- `companionIcon : ArtClip` — renders the companion's portrait; `data = 4` on init. Filled by the engine, which also writes `displayName` and `description` on it.
 - `companionName : TextField` — companion name label.
-- `companionRarity : TextField` — companion rarity label; positioned below `companionName` in `draw()`.
-- `unequippedCompanionText : TextField` — shown when no companion is equipped.
-- `petBackground : MovieClip` — visual background for the companion panel.
+- `companionRarity : TextField` — companion rarity label; positioned below `companionName` in `draw()`. Its text comes from the engine; the SWF never assigns it.
+- `unequippedCompanionText : TextField` — shown when no companion is equipped. The engine sets its text and visibility; its `visible` flag is what marks "no companion".
+- `petBackground : MovieClip` — visual background for the companion panel; also driven by the engine.
+- `currentIndex : int` (private) — slot id of the controller-selected element: 0–1 active modules, 2–3 reliquaries, 4 companion, −1 for a passive module. Same numbering as the slots' `data` (`ModuleItem` gets `itemIndex`, `MegaItem` gets `index + 2`, `companionIcon` is 4).
 - `passiveModules : Array` — pool of `ModulePassive` instances.
 - `moduleSelectList : Array` — pool of `ModuleSelectButton` instances (in the swap popup).
 - `moduleButtons : Array` — pool of `ModuleItem` instances.
@@ -53,12 +54,13 @@ The `draw()` override (triggered by `STYLES` invalidation) re-positions companio
 - Layout constants: `moduleListXPosition=108.45`, `moduleListYPosition=72.55`, `moduleListSpacing=127.45`, `reliquaryListXPosition=110`, `reliquaryListYPosition=361.35`, `reliquaryListSpacing=125.15`, `passiveModuleListXPosition=596`, `passiveModuleListYPosition=77`, `passiveModuleListXSpacing=151.95`, `passiveModuleListYSpacing=127`, `NUM_PASSIVE_COLUMNS=2`, `companionStatXPosition=671.85`, `companionSkillPadding=25.6`, `companionRarityPadding=−4`, `moduleSelectListXPosition=23.75`, `moduleSelectListYPosition=58.45`, `moduleSelectListXSpacing=455.15`, `moduleSelectListYSpacing=184.55`, `passiveModuleImageSize=74.5`.
 
 ### Frame scripts / timeline
-- `frame1` — `stop()` (PC layout).
-- `frame12` — `stop()` (console layout; no additional child navigation).
+- `frame1` — `stop()`; frame label `PC`.
+- `frame12` — `stop()`; frame label `Console`. Removes `m_acceptButton` and one unnamed child; places nothing new.
 - `__setProp_handler` on `FRAME_CONSTRUCTED` — re-applies `m_acceptButton` component inspector props when the frame changes (translate key `$Accept`).
 
 ### Runtime dependencies & integration
 - **IggyFunctions.inIggy** — gates ExternalInterface callback registration.
+- **Engine-written fields** — the client's string block for this screen names, besides the callbacks and outbound calls, the fields `m_moduleList`, `companionIcon` (with `displayName` / `description`), `companionName`, `companionRarity`, `unequippedCompanionText`, `petBackground` and `currentIndex`, plus `$ModuleLoadout_NoModuleTitle` ("Empty!") and `$ModuleLoadout_NoModuleDescription` ("Select a module!"). The engine reaches those fields by name rather than through callbacks.
 - **ExternalInterface.call** (outgoing): `AcceptClicked`, `CloseSwapModule`, `OnSwapCompanion`, `OpenSwapModule(itemIndex)`, `OnSwapReliquary(index)`, `SelectedModule(moduleIndex)`.
 - **IsConsole()** — adjusts passive module tooltip style and auto-selects first item in module lists.
 - **HighlightUtil** (`_kiwi.Util.HighlightUtil`) — `highlightMovieClip` / `unhighlightMovieClip` used for console focus; `ModuleSelectButton.selectHighlight` used instead for select items.
@@ -71,7 +73,7 @@ The `draw()` override (triggered by `STYLES` invalidation) re-positions companio
 ## Other game-specific classes
 
 - `ModuleItem` — Embed symbol125; extends `UIComponent`; displays one active module slot with `image` (ArtClip for the module ability icon), `itemImage` (Slot for the item render), `swapButton` (LabelButton, label `$ModuleLoadout_SwapBtn`), `moduleName` and `description` TextFields; `onSwapClicked` calls `ExternalInterface.call("OpenSwapModule", itemIndex)`.
-- `ModulePassive` — Embed symbol106; extends `UIComponent`; read-only display of a passive module with `itemImage` (Slot), `moduleName`, `moduleLevel`, `moduleDescription` TextFields; no interaction logic.
+- `ModulePassive` — Embed symbol106; extends `UIComponent`; read-only display of a passive module with `itemImage` (Slot), `moduleName`, `moduleLevel`, `moduleDescription` TextFields; no interaction logic. Only `moduleName` is ever written — `moduleLevel` and `moduleDescription` stay as authored.
 - `MegaItem` — Embed symbol146; extends `UIComponent`; reliquary slot with `itemImage` (Slot), `swapBtn` (LabelButton, label `$ModuleLoadout_SwapBtn` / `$ModuleLoadout_UnlockBtn` depending on locked state), `xpBar` MovieClip (fill + highlight sub-clips), `reliquaryXP` TextField, `moduleName` TextField, `lockedImage`/`locked`/`unequipped`/`m_emptySlot` visibility states; `SetData` computes XP bar fill as `fill.scaleX = clamp(xp/maxXp, 0, 1)`; calls `ExternalInterface.call("OnSwapReliquary", m_index)`.
 - `ModuleSelectButton` — Embed symbol104; extends `UIComponent`; shown in the swap-module popup; 4 frame labels (Default, hover, down, Locked) plus console variants (frames 1, 10, 21, 32); `SetData` sets `itemRender` (Slot), `abilityIcon` (ArtClip), name/level/description TextFields, hotkey MovieClip (console uses `htmlText`), and locked state; `onClick` fires `ExternalInterface.call("SelectedModule", moduleIndex)` unless locked; `KiwiTextUtil.rainbowify` applied to `moduleLevel` when rarity == 6.
 - `StatText` — Embed symbol44; trivial `MovieClip` with a single `textField:TextField`; used for companion stat lines.

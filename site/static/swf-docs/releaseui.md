@@ -1,6 +1,6 @@
 # releaseui.swf
 
-> Displays a release/loading screen overlay in Trove that shows a primary message and a secondary instruction line. Supports both plain-text and HTML-rich text depending on whether the game is running on a console platform, via two ExternalInterface callbacks that push text from the game engine.
+> Displays the death message strip in Trove — the overlay that stands on screen while the player is dead (the client drives it as `DeathUI`) — showing a primary message and a secondary instruction line. Supports both plain-text and HTML-rich text depending on whether the game is running on a console platform, via two ExternalInterface callbacks that push text from the game engine.
 
 **Document/main class:** `ReleaseUI` (extends `_kiwi.Core.UIComponent`)
 **SWF-specific classes:** 1
@@ -16,8 +16,8 @@
 
 ### Key fields
 
-- `messageText : TextField` — Primary message area displayed to the player (e.g. loading status, patch notes header).
-- `instructions : MovieClip` — Container symbol; holds a child `TextField` named `"instructionText"` for secondary/control-hint text.
+- `messageText : TextField` — Primary message area displayed to the player: Open Sans Semibold 30 pt, white, centred, single line, no wrap.
+- `instructions : MovieClip` — Container symbol; holds a child `TextField` named `"instructionText"` for secondary/control-hint text (24 pt, otherwise styled like `messageText`).
 
 ### Runtime dependencies & integration
 
@@ -27,6 +27,9 @@
 - **`IsConsole()`** — Iggy global function (not in `IggyFunctions` class); controls whether text is assigned as `htmlText` or plain `text`.
 - **`setupTranslation()`** — Inherited UIComponent method; called in the constructor to initialize any framework-level localization setup.
 - No translate keys called directly in this class; no outbound ExternalInterface calls; no timers; no frame scripts.
+- **Engine side:** the client's block for this screen (`DeathUI`, `ReleaseUI.swf`) names `SET_TEXT`, `SET_INSTRUCTION_TEXT` and `$Death_RespawnFormat` ("Time until respawn: {0} seconds"). The SWF does no substitution, so strings arrive already formatted, and the countdown is re-sent every second. The game's death strings are `$Death_AwaitingRessurection` ("Awaiting Resurrection..."), `$Death_Respawning`, `$Death_Defeated`, `$Death_NextWave`, `$Death_RespawnFormat`, `$Death_ReleaseMsg` ("Or press [HK:Loot] to release") and `$Death_BattleRoyaleRelease`.
+- There is no show or hide callback: the game puts the window up and takes it down without telling the SWF.
+- **Timeline:** 630 × 144 stage, 41 frames at 24 fps. The art is one nine-slice bitmap (grey plate, pale blue border) scaled 14.65 × 4.79 across the strip, with a black drop shadow at distance 0 (blur 10) that reads as a soft glow. The main timeline re-places `instructions` every frame with a colour transform whose alpha multiplier walks 51 → 256 → 51 (frames 1, 20, 40), so the instruction line breathes on a ~1.7 s loop.
 
 ## Other game-specific classes
 
