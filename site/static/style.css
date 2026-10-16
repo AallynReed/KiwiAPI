@@ -1877,7 +1877,6 @@ body.ready .hero-sub { opacity: 1; transform: translateY(0); }
 .final-logo { width: 64px; height: 64px; margin: 0 auto 4px; border-radius: 14px; }
 .final-cta h2 { font-size: var(--type-h2); }
 .final-cta p  { color: var(--text-mute); font-size: var(--type-lead); }
-.final-cta .final-note { font-size: .9rem; }
 .final-actions {
   display: flex;
   flex-wrap: wrap;
