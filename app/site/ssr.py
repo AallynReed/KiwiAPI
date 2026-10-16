@@ -708,6 +708,8 @@ def mod_project_view(project: Any) -> dict:
     p = _dict(project)
     if not p:
         return {}
+    releases = [r for r in (p.get("releases") or [])
+                if isinstance(r, dict) and r.get("status", "published") == "published"]
     return {
         "title": p.get("title") or p.get("slug") or "",
         "summary": text(p.get("summary"), 300),
@@ -719,7 +721,35 @@ def mod_project_view(project: Any) -> dict:
         "stars": num(p.get("star_count") or 0),
         "updated": date(p.get("updated_at")),
         "datetime": datetime_attr(p.get("updated_at")),
+        "releases": [{
+            "title": r.get("title") or r.get("tag") or "",
+            "date": date(r.get("published_at")),
+            "datetime": datetime_attr(r.get("published_at")),
+            "changelog": text(r.get("changelog"), 400),
+        } for r in releases[:10]],
+        "file": _release_file(releases[0]) if releases else "",
     }
+
+
+def _release_file(r: dict) -> str:
+    name, size = r.get("tmod_filename") or "", r.get("tmod_size")
+    if not name or not isinstance(size, int):
+        return name
+    return f"{name} · {size / 1048576:.1f} MB" if size >= 1048576 else f"{name} · {max(1, round(size / 1024))} KB"
+
+
+def mod_related_view(profile: Any, slug: str, title: str) -> dict:
+    """Up to 8 other mods by the same modder for the persistent "More from this
+    modder" links: same line first (the part of the title before " - "), then by
+    downloads. Mod pages otherwise link to nothing but the hub, so this is what
+    lets a crawler walk from one mod to the next."""
+    d = _dict(profile)
+    line = title.partition(" - ")[0] if " - " in title else None
+    mods = [m for m in _items(d, "mods") if m.get("handle") and m.get("slug") and m["slug"] != slug]
+    mods.sort(key=lambda m: (not (line and (m.get("title") or "").startswith(line + " - ")),
+                             -(m.get("download_count") or 0)))
+    return {"mods": [{"title": m.get("title") or m["slug"], "url": f"/mods/{m['handle']}/{m['slug']}"}
+                     for m in mods[:8]]}
 
 
 def mod_profile_view(profile: Any) -> dict:
@@ -732,7 +762,7 @@ def mod_profile_view(profile: Any) -> dict:
         "tagline": text(d.get("tagline"), 200),
         "readme": text(d.get("readme"), 900),
         "mods": [_mod_card(m) for m in _items(d, "mods")
-                 if m.get("handle") and m.get("slug")][:ROWS],
+                 if m.get("handle") and m.get("slug")][:200],
     }
 
 

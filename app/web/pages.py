@@ -722,6 +722,8 @@ async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLRes
         # Same payload, no extra round-trip: the mod's title, description, tags
         # and stats become server-rendered body copy, not just meta tags.
         ctx["ssr"] = ssr.mod_project_view(project)
+        profile = await ssr.cached(_ssr_fetch, f"/site/mods/profile/{quote(handle)}", ttl=600)
+        ctx["related"] = ssr.mod_related_view(profile, slug, title)
         app_ld = {
             "@type": "SoftwareApplication", "name": title, "url": page_url,
             "description": desc[:300], "applicationCategory": "GameApplication",

@@ -62,8 +62,26 @@
                 {%- if ssr.updated %}<li><span data-i18n>Updated</span>: <time datetime="{{ ssr.datetime }}">{{ ssr.updated }}</time></li>{% endif %}
             </ul>
             {%- if ssr.description %}<p class="ssr-prose">{{ ssr.description }}</p>{% endif %}
+            {%- if ssr.file %}<p class="ssr-prose"><span data-i18n>Download</span>: {{ ssr.file }}</p>{% endif %}
+            {%- if ssr.releases %}
+            <h2 data-i18n>Versions</h2>
+            <ol class="ssr-prose">{% for r in ssr.releases %}
+                <li><strong>{{ r.title }}</strong>{% if r.date %} · <time datetime="{{ r.datetime }}">{{ r.date }}</time>{% endif %}{% if r.changelog %} - {{ r.changelog }}{% endif %}</li>{% endfor %}
+            </ol>
+            {%- endif %}
             {% else %}<p class="mp-loading" data-i18n>Loading…</p>{% endif %}
         </div>
+        {%- if related and related.mods %}
+        <!-- Outside #mp-root on purpose: the page JS replaces the root, and these links have to survive it. -->
+        <section class="mp-section mp-related" aria-labelledby="mp-related-title">
+            <div class="mp-section-head"><h2 class="mp-section-title" id="mp-related-title"><i class="fa-solid fa-cubes" aria-hidden="true"></i> <span data-i18n>More from this modder</span></h2></div>
+            <div class="mp-forklist mp-related-list">
+                {%- for m in related.mods %}
+                <a class="mp-fork-item" href="{{ m.url }}"><i class="fa-solid fa-cube" aria-hidden="true"></i> <span class="mp-fork-title">{{ m.title }}</span></a>
+                {%- endfor %}
+            </div>
+        </section>
+        {%- endif %}
     </main>
 
     <!-- Modals are built into here by the page JS. -->
