@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#0a0e14">
     <meta name="color-scheme" content="dark">
     <link rel="canonical" href="{{ og_page_url }}">
+    {% if ld %}<script type="application/ld+json">{{ ld | safe }}</script>{% endif %}
     <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/static/assets/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="/static/assets/favicon.png">

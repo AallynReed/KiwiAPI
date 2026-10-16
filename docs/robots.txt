@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /*.md$
+
+Sitemap: https://docs.aallyn.net/sitemap.xml

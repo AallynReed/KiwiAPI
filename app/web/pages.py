@@ -13,6 +13,7 @@ CAS reads - lives on the API in ``app/site/router.py``; robots/sitemap live in
 ``app/web/meta.py``.
 """
 import asyncio
+import json
 import logging
 import re
 from pathlib import Path
@@ -401,7 +402,8 @@ async def custom_art_page(request: Request) -> HTMLResponse:
 async def mod_stats_page(request: Request) -> HTMLResponse:
     """Daily downloads and subscribers for every mod of ``mod_stats_handle`` on the
     Mods Hub, Trovesaurus and Steam Workshop. The data comes from ``/site/mod-stats``."""
-    return _TEMPLATES.TemplateResponse(request, "mod-stats.html", {})
+    return _TEMPLATES.TemplateResponse(
+        request, "mod-stats.html", {"ssr": await ssr.mod_stats_view(_ssr_fetch)})
 
 
 @router.get("/gems-guide", response_class=HTMLResponse)
@@ -662,6 +664,19 @@ def _plain_excerpt(md: str | None, limit: int = 280) -> str:
     return t[:limit]
 
 
+def _ld(data: dict) -> str:
+    """JSON-LD for a ``<script type="application/ld+json">`` block, with ``<`` escaped
+    so user-written text (a mod title or summary) can't close the script tag."""
+    return json.dumps({"@context": "https://schema.org", **data},
+                      ensure_ascii=False).replace("<", "\\u003c")
+
+
+def _crumbs(*trail: tuple[str, str]) -> dict:
+    return {"@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": i, "name": name, "item": url}
+        for i, (name, url) in enumerate(trail, 1)]}
+
+
 @router.get("/mods/{handle}/{slug}", response_class=HTMLResponse)
 async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLResponse:
     """A single mod's page: banner, previews, description, releases (with
@@ -707,6 +722,28 @@ async def mods_project_page(request: Request, handle: str, slug: str) -> HTMLRes
         # Same payload, no extra round-trip: the mod's title, description, tags
         # and stats become server-rendered body copy, not just meta tags.
         ctx["ssr"] = ssr.mod_project_view(project)
+        app_ld = {
+            "@type": "SoftwareApplication", "name": title, "url": page_url,
+            "description": desc[:300], "applicationCategory": "GameApplication",
+            "applicationSubCategory": "Trove mod", "operatingSystem": "Windows",
+            "isAccessibleForFree": True,
+            "offers": {"@type": "Offer", "price": 0, "priceCurrency": "USD"},
+            "author": {"@type": "Person", "name": owner or handle, "url": f"{_APP}/mods/{handle}"},
+            "isPartOf": {"@id": f"{_APP}/#website"},
+        }
+        if img_sha:
+            app_ld["image"] = ctx["og_image"]
+        if project.get("created_at"):
+            app_ld["datePublished"] = project["created_at"]
+        if project.get("last_release_at") or project.get("updated_at"):
+            app_ld["dateModified"] = project.get("last_release_at") or project["updated_at"]
+        if isinstance(project.get("download_count"), int):
+            app_ld["interactionStatistic"] = {
+                "@type": "InteractionCounter", "interactionType": "https://schema.org/DownloadAction",
+                "userInteractionCount": project["download_count"]}
+        ctx["ld"] = _ld({"@graph": [app_ld, _crumbs(
+            ("Mods Hub", f"{_APP}/mods"), (owner or handle, f"{_APP}/mods/{handle}"),
+            (title, page_url))]})
     return _TEMPLATES.TemplateResponse(request, "mods_project.html", ctx)
 
 
@@ -746,6 +783,17 @@ async def mods_profile_page(request: Request, handle: str) -> HTMLResponse:
         "twitter_card": "summary_large_image" if data.get("banner_url") else "summary",
         "ssr": ssr.mod_profile_view(data),
     })
+    person = {"@type": "Person", "name": name, "alternateName": handle, "url": page_url,
+              "description": desc[:300]}
+    if data.get("avatar_url"):
+        person["image"] = data["avatar_url"]
+    if data.get("website_url"):
+        person["sameAs"] = [data["website_url"]]
+    profile = {"@type": "ProfilePage", "url": page_url, "mainEntity": person}
+    if data.get("joined_at"):
+        profile["dateCreated"] = data["joined_at"]
+    ctx["ld"] = _ld({"@graph": [profile, _crumbs(
+        ("Mods Hub", f"{_APP}/mods"), (name, page_url))]})
     return _TEMPLATES.TemplateResponse(request, "mods_profile.html", ctx)
 
 

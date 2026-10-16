@@ -4,6 +4,7 @@ __pycache__/
 venv/
 .venv-check/
 .env
+/secrets/
 
 # Local AI-assistant / editor tooling
 .claude/

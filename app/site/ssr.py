@@ -33,12 +33,15 @@ concurrently (``asyncio.gather``) so first paint costs one round-trip, not N.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import re
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 from urllib.parse import quote
+
+from app.core.config import settings
 
 logger = logging.getLogger("kiwi.site.ssr")
 
@@ -599,6 +602,37 @@ async def giveaways_view(fetch: Fetch) -> dict:
         "ends": date(g.get("ends_at")),
         "winner": g.get("winner_username") or "",
     } for g in _items(data)][:12]}
+
+
+_ZAKROS_LINES = ("Zakros UI", "Zakros FX", "Zakros BP")
+
+
+async def mod_stats_view(fetch: Fetch) -> dict:
+    """Every Zakros mod grouped by line and linked to its hub page, plus an
+    ItemList so the one page naming the whole family carries it in the HTML."""
+    data = await cached(fetch, "/site/mod-stats", ttl=600)
+    lines: dict[str, list[dict]] = {}
+    for m in _items(data, "mods"):
+        title, handle, slug = m.get("title") or "", m.get("handle"), m.get("slug")
+        if title and handle and slug:
+            line = title.partition(" - ")[0] if " - " in title else "Zakros"
+            lines.setdefault(line, []).append({"title": title, "url": f"/mods/{handle}/{slug}"})
+    order = {name: i for i, name in enumerate(_ZAKROS_LINES)}
+    groups = [{"line": name, "mods": sorted(ms, key=lambda x: x["title"].lower())}
+              for name, ms in sorted(lines.items(), key=lambda kv: (order.get(kv[0], 99), kv[0]))]
+    if not groups:
+        return {}
+    base = settings.app_url.rstrip("/")
+    flat = [m for g in groups for m in g["mods"]]
+    ld = {
+        "@context": "https://schema.org", "@type": "CollectionPage",
+        "name": "Zakros UI, FX and BP mods for Trove", "url": f"{base}/zakros-ui-stats",
+        "about": {"@type": "Thing", "name": "Zakros UI"},
+        "mainEntity": {"@type": "ItemList", "numberOfItems": len(flat), "itemListElement": [
+            {"@type": "ListItem", "position": i, "name": m["title"], "url": base + m["url"]}
+            for i, m in enumerate(flat, 1)]},
+    }
+    return {"groups": groups, "ld": json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c")}
 
 
 async def leaderboards_view(fetch: Fetch) -> dict:

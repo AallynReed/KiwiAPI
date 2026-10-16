@@ -280,6 +280,10 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/guides", "guides_enabled"),
     ("/allies", "allies_enabled"),
     ("/gem-tools", "gem_tools_enabled"),
+    ("/gem-evaluator", "gem_evaluator_enabled"),
+    ("/gem-builds", "gem_builds_enabled"),
+    ("/calculators", "calculators_enabled"),
+    ("/zakros-ui-stats", None),
     ("/fishing-guide", "fishing_guide_enabled"),
     ("/gear-guide", "gear_guide_enabled"),
     ("/loot-collector-guide", "loot_collector_guide_enabled"),
@@ -318,7 +322,7 @@ SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
 # silently de-indexed.
 _ROBOTS_BLOCKED_HOSTS = frozenset(
     url.split("://", 1)[-1].split("/", 1)[0].lower()
-    for url in (settings.api_url, settings.dev_url, settings.docs_url)
+    for url in (settings.api_url, settings.dev_url)
 )
 
 def robots_body(host: str) -> str:
@@ -334,7 +338,8 @@ def robots_body(host: str) -> str:
     the stale entries, because Google must be allowed to crawl a URL to see its
     redirect and drop it. So they allow page crawling (the pages just 301 away) while
     still blocking the JSON API subtrees (/v1, /site, /git) so payloads are never
-    indexed. dev./docs. keep the blanket disallow - they have no such redirect."""
+    indexed. dev. keeps the blanket disallow. docs. is meant to rank for "Kiwi API"
+    and serves its own static robots.txt."""
     host = (host or "").lower()
     if host in API_SIDE_HOSTS:
         return (
