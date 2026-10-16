@@ -216,6 +216,18 @@
   // The floating support pill is wired by the shared app.js (loaded on this
   // page now), so no standalone copy is needed here.
 
+  // The server stamps the UTC instant; show it in the reader's timezone and
+  // the site language, keeping the UTC text if the stamp doesn't parse.
+  function renderUpdated() {
+    const el = document.getElementById('docsUpdated');
+    if (!el) return;
+    const when = new Date(el.getAttribute('datetime'));
+    if (isNaN(when)) return;
+    el.textContent = when.toLocaleString(document.documentElement.lang || undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    el.title = when.toString();
+  }
+  renderUpdated();
+
   // ---- Boot ----
   fetch(BASE + 'index.json', { cache: 'no-cache' })
     .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -227,5 +239,6 @@
   // Re-translate the JS-built sidebar chrome when the user switches language.
   document.addEventListener('btt-lang-changed', () => {
     if (lastManifest) { buildSidebar(lastManifest); if (currentFile) setActive(currentFile); }
+    renderUpdated();
   });
 })();

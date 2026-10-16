@@ -41,6 +41,9 @@
             <p class="eyebrow" data-i18n>Reverse-engineered</p>
             <h1 data-i18n>Trove UI <span class="highlight-blue">Reference</span></h1>
             <p data-i18n>Decompiled Flash (<code>.swf</code>) screens — 108 files.</p>
+            {%- if doc_updated %}
+            <p class="sidebar-updated"><span data-i18n>Last updated</span> <time id="docsUpdated" datetime="{{ doc_updated[0] }}">{{ doc_updated[1] }}</time></p>
+            {%- endif %}
         </div>
 
         <div class="sidebar-search">

@@ -16,7 +16,7 @@ import json
 import os
 import re
 import sys
-from datetime import date
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -88,7 +88,7 @@ def main() -> int:
             lead = SUMMARY.match((DOCS / it["file"]).read_text(encoding="utf-8"))
             if lead:
                 it["summary"] = lead.group(1).strip()
-        index["checked"] = date.today().isoformat()
+        index["checked"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         write_crlf(index_path, json.dumps(index, indent=2, ensure_ascii=False) + "\n")
         readme = DOCS / "README.md"
         text = readme.read_text(encoding="utf-8").replace("\r\n", "\n")

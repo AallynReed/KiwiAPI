@@ -79,6 +79,8 @@ a:hover { text-decoration: underline; }
 }
 .sidebar-head h1 { margin: 4px 0 2px; font-size: 1.15rem; }
 .sidebar-head p { margin: 0; color: var(--text-dim); font-size: 0.8rem; }
+.sidebar-head .sidebar-updated { margin-top: 6px; }
+.sidebar-updated time { color: var(--text-main); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .sidebar-search {
     position: relative; margin: 4px 0 14px;

@@ -8,6 +8,7 @@ in its ``index.json`` (plus the README overview) are served.
 """
 import json
 import re
+from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 
@@ -31,7 +32,7 @@ def _path(slug: str) -> str:
 
 
 @lru_cache(maxsize=1)
-def _manifest(mtime: float) -> tuple[list[dict], dict[str, dict]]:
+def _manifest(mtime: float) -> tuple[list[dict], dict[str, dict], str | None]:
     data = json.loads((DOCS_DIR / "index.json").read_text(encoding="utf-8"))
     groups, by_slug = [], {}
     for g in data.get("groups") or []:
@@ -46,12 +47,24 @@ def _manifest(mtime: float) -> tuple[list[dict], dict[str, dict]]:
             items.append(entry)
             by_slug[slug.lower()] = entry
         groups.append({"title": g.get("title") or "", "shared": g.get("kind") == "shared", "docs": items})
-    return groups, by_slug
+    return groups, by_slug, data.get("checked")
 
 
 def manifest() -> tuple[list[dict], dict[str, dict]]:
     """(groups for the sidebar, slug.lower() -> doc entry). Re-read when index.json changes."""
-    return _manifest((DOCS_DIR / "index.json").stat().st_mtime)
+    return _manifest((DOCS_DIR / "index.json").stat().st_mtime)[:2]
+
+
+def last_updated() -> tuple[str, str] | None:
+    """(ISO UTC, readable UTC) of the `checked` stamp scripts/swf_docs_check.py --update writes."""
+    stamp = _manifest((DOCS_DIR / "index.json").stat().st_mtime)[2]
+    if not stamp:
+        return None
+    try:
+        when = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return stamp, when.strftime("%d %b %Y, %H:%M UTC")
 
 
 @lru_cache(maxsize=256)
@@ -101,4 +114,5 @@ def page_context(slug: str | None) -> dict | None:
         "doc_url": url, "doc_html": _render(real, md.stat().st_mtime), "doc_groups": groups,
         "doc_ld": json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c"),
         "doc_count": sum(len(g["docs"]) for g in groups),
+        "doc_updated": last_updated(),
     }
