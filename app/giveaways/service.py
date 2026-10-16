@@ -340,11 +340,14 @@ async def draw_now(giveaway_id: str) -> GiveawayAdminView:
 # ── Public + entries ────────────────────────────────────────────────────────
 
 async def list_public() -> list[GiveawayPublicView]:
-    rows = (
-        await Giveaway.find(Giveaway.status != GiveawayStatus.cancelled)
-        .sort("-starts_at").limit(50).to_list()
+    """Open, then every upcoming one (soonest first), then the 50 most recent
+    past draws. Bucketed so a long pre-scheduled run can't crowd out the open
+    giveaway or past winners."""
+    past = (
+        await Giveaway.find(In(Giveaway.status, [GiveawayStatus.drawn, GiveawayStatus.closed]))
+        .sort("-ends_at").limit(50).to_list()
     )
-    return [_public_view(g) for g in rows]
+    return [*(await list_ongoing()), *(await list_upcoming()), *(_public_view(g) for g in past)]
 
 
 async def list_ongoing() -> list[GiveawayPublicView]:
