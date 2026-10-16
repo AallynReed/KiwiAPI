@@ -47,7 +47,7 @@ _PAGE_PATHS = frozenset({
 # Dynamic site page subtrees (parameterised routes like /mods/{slug},
 # /modpacks/{handle}/{slug} and /player/{name}). Matched by prefix so the slug/name
 # page gets the relaxed site CSP + no-cache, same as the bare listing pages above.
-_PAGE_PREFIXES = ("/mods/", "/modpacks/", "/player/", "/drop/")
+_PAGE_PREFIXES = ("/mods/", "/modpacks/", "/player/", "/drop/", "/swf-docs/")
 
 
 def _is_site_path(path: str) -> bool:

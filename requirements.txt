@@ -10,6 +10,7 @@ aiosmtplib==5.1.1
 redis==5.2.1
 asyncpg==0.30.0
 jinja2==3.1.6
+markdown-it-py==4.2.0
 python-multipart==0.0.31
 # Pure-Python git (no native `git` binary). Backs the Mods Hub git store + the
 # authenticated smart-HTTP server (`git clone/pull/push` over /git/mods/*).

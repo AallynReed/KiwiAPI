@@ -178,6 +178,12 @@ except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
     print(f"[site-dev] sigil unavailable ({_e}); /site/stats/sigil will 503")
     _SIGIL_OK = False
 
+try:
+    from app.web import swf_docs as _swf_docs
+except Exception as _e:  # noqa: BLE001 - dev-only, degrade gracefully
+    print(f"[site-dev] swf-docs pages unavailable ({_e}); /swf-docs serves the bare shell")
+    _swf_docs = None
+
 # Serve the same CSP the edge does. Without it an inline <script> or `onclick=`
 # works perfectly here and is silently refused in production - the one class of
 # bug this server used to be blind to.
@@ -1730,8 +1736,12 @@ class Handler(SimpleHTTPRequestHandler):
             return self._send_file(TEMPLATES / "support.html", "text/html")
         if path == "/documentation":
             return self._send_file(TEMPLATES / "docs.html", "text/html")
-        if path == "/swf-docs":
-            return self._send_file(TEMPLATES / "swf-docs.html", "text/html")
+        if path == "/swf-docs" or path.startswith("/swf-docs/"):
+            doc = unquote(path[len("/swf-docs/"):]) if path.startswith("/swf-docs/") else None
+            ctx = _swf_docs.page_context(doc) if _swf_docs else {}
+            if ctx is None:
+                return self.send_error(404)
+            return self._send_file(TEMPLATES / "swf-docs.html", "text/html", ctx)
         if path == "/terms":
             return self._send_file(TEMPLATES / "terms.html", "text/html")
         if path == "/privacy":

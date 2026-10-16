@@ -258,8 +258,8 @@ def feature_blocks(p: str, f: dict) -> bool:
 # must be truthy; ``None`` = always on). The attr is a key of
 # ``SITE_FEATURE_FLAGS``, so a page whose master toggle is OFF drops out of the
 # sitemap instead of being advertised to Google as a 404. Private/utility/noindex
-# pages (/login, /dashboard, /swf-docs) are deliberately omitted. The dynamic
-# mod/modpack pages are appended separately by the sitemap renderer.
+# pages (/login, /dashboard) are deliberately omitted. The dynamic mod/modpack
+# pages and the per-doc /swf-docs/<slug> pages are appended by the sitemap renderer.
 SITEMAP_PAGES: tuple[tuple[str, str | None], ...] = (
     ("/", None),
     ("/app", None),

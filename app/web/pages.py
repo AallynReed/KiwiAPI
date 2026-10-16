@@ -29,6 +29,7 @@ from app.site import abilities_page, allies_page, classes_page, commands_page, h
 from app.site.feature_map import SITE_FEATURE_FLAGS
 from app.web import appearance
 from app.web import feature_flags as web_flags
+from app.web import swf_docs as swf_doc_pages
 
 logger = logging.getLogger("kiwi.web.pages")
 
@@ -185,11 +186,24 @@ async def documentation(request: Request) -> HTMLResponse:
 
 @router.get("/swf-docs", response_class=HTMLResponse)
 async def swf_docs(request: Request) -> HTMLResponse:
-    """Hidden, unlisted reference: a markdown viewer with a grouped, searchable
-    sidebar over the decompiled Trove Flash UI (``.swf``) docs. No nav/footer
-    link and ``noindex``; the page shell loads its index + markdown from
-    ``/static/swf-docs/*`` and renders client-side via the shared md renderer."""
-    return _TEMPLATES.TemplateResponse(request, "swf-docs.html", {})
+    """The decompiled Trove Flash UI (``.swf``) reference overview. Each doc also
+    has its own server-rendered page below; the viewer (``swf-docs.js``) switches
+    between them in place."""
+    return _TEMPLATES.TemplateResponse(
+        request, "swf-docs.html", swf_doc_pages.page_context(None) or {})
+
+
+@router.get("/swf-docs/{doc}", response_class=HTMLResponse, response_model=None)
+async def swf_doc(request: Request, doc: str) -> HTMLResponse | RedirectResponse:
+    """One doc of the Flash UI reference, its markdown rendered into the HTML."""
+    if doc.lower() == swf_doc_pages.OVERVIEW.lower():
+        return RedirectResponse("/swf-docs", status_code=301)
+    ctx = swf_doc_pages.page_context(doc)
+    if ctx is None:
+        raise HTTPException(status_code=404, detail="No such document.")
+    if doc != ctx["doc_slug"]:
+        return RedirectResponse(f"/swf-docs/{ctx['doc_slug']}", status_code=301)
+    return _TEMPLATES.TemplateResponse(request, "swf-docs.html", ctx)
 
 
 @router.get("/commands", response_class=HTMLResponse)

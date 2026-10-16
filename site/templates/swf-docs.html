@@ -3,10 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trove UI (Flash) Reference</title>
-    <meta name="description" content="Decompiled reference for Trove's Flash UI (.swf) files — document classes, game-logic classes, and timeline symbols for every screen.">
+    <title>{{ doc_title or "Trove UI (Flash) Reference" }}</title>
+    <meta name="description" content="{{ doc_desc or "Decompiled reference for Trove's Flash UI (.swf) files: document classes, game-logic classes, and timeline symbols for every screen." }}">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://trove.aallyn.net/swf-docs">
+    <link rel="canonical" href="{{ doc_url or "https://trove.aallyn.net/swf-docs" }}">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Better Trove Tools">
+    <meta property="og:title" content="{{ doc_title or "Trove UI (Flash) Reference" }}">
+    <meta property="og:description" content="{{ doc_desc or "Decompiled reference for Trove's Flash UI (.swf) files." }}">
+    <meta property="og:url" content="{{ doc_url or "https://trove.aallyn.net/swf-docs" }}">
+    <meta property="og:image" content="https://trove.aallyn.net/static/assets/logo.png">
+    <meta name="twitter:card" content="summary">
+    {%- if doc_ld %}
+    <script type="application/ld+json">{{ doc_ld | safe }}</script>
+    {%- endif %}
+    {%- if doc_file %}<meta name="swf-doc" content="{{ doc_file }}">{% endif %}
     <link rel="shortcut icon" href="/static/assets/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/static/assets/favicon.png" type="image/png">
     <link rel="stylesheet" href="/static/fonts/fonts.css">
@@ -38,13 +49,23 @@
         </div>
 
         <nav id="sideNav">
+            {%- for g in doc_groups or [] %}
+            <div class="nav-group{% if g.shared %} nav-group--shared{% endif %}">
+                <div class="nav-group-title"><i class="fa-solid fa-{{ 'layer-group' if g.shared else 'folder' }}"></i> {{ g.title }}</div>
+                <ul>{% for it in g.docs %}<li><a href="{{ it.url }}"{% if it.slug == doc_slug %} class="active"{% endif %}><span>{{ it.label }}</span>{% if it.mainClass and it.mainClass != '—' %}<span class="cls">{{ it.mainClass }}</span>{% endif %}</a></li>{% endfor %}</ul>
+            </div>
+            {%- endfor %}
             <div class="nav-empty" id="navEmpty" data-i18n>No matching screens.</div>
         </nav>
     </aside>
 
     <!-- ============================ CONTENT ============================ -->
     <main id="docBody" class="content">
+        {%- if doc_html %}
+        <div class="md-body">{{ doc_html | safe }}</div>
+        {%- else %}
         <div class="doc-loading"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> <span data-i18n>Loading…</span></div>
+        {%- endif %}
     </main>
 </div>
 

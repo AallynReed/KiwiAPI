@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.core.internal_api import internal_get
 from app.site.feature_map import SITEMAP_PAGES, robots_body
 from app.web import feature_flags as web_flags
+from app.web import swf_docs as swf_doc_pages
 from app.web.pages import _all_public_cards
 
 logger = logging.getLogger("kiwi.web.meta")
@@ -76,6 +77,7 @@ async def _render_sitemap() -> str:
         for path, attr in SITEMAP_PAGES
         if attr is None or flags.get(attr, True)
     ]
+    entries += [(base + path, None) for path in swf_doc_pages.doc_paths()]
     if flags.get("mods_hub_enabled", True):
         mods, modders, packs = await asyncio.gather(
             _all_public_cards("/site/mods/projects"),

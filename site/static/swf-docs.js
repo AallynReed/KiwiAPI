@@ -2,7 +2,9 @@
    swf-docs.js - hidden "Trove UI (Flash) decompile" reference.
    Fetches a grouped manifest, builds a searchable sidebar, and renders the
    selected markdown doc (via window.BTTMarkdown) into the content pane.
-   Deep-links: #<file-without-.md> (e.g. #atlas). Default view = README.
+   Each doc is its own page, /swf-docs/<file-without-.md> (server-rendered by
+   app/web/swf_docs.py); this switches between them in place with pushState.
+   Old #<slug> links are redirected to the path form. Default view = README.
    ═══════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -29,6 +31,16 @@
   const t = (s) => (window.BTTi18n && window.BTTi18n.t ? window.BTTi18n.t(s) : s);
 
   const slug = (file) => file.replace(/\.md$/i, '');
+  const urlFor = (file) => (slug(file) === 'README' ? '/swf-docs' : '/swf-docs/' + slug(file));
+  const TITLE = 'Trove UI (Flash) Reference';
+  const find = (want) => links.find((l) => slug(l.file).toLowerCase() === want.toLowerCase());
+
+  // Same-page doc switch: update the address bar, then render.
+  function go(file, replace) {
+    const url = urlFor(file);
+    if (location.pathname !== url || location.hash) history[replace ? 'replaceState' : 'pushState']({ file }, '', url);
+    load(file);
+  }
 
   const openSidebar  = () => { sidebar.classList.add('open'); backdrop.classList.add('show'); };
   const closeSidebar = () => { sidebar.classList.remove('open'); backdrop.classList.remove('show'); };
@@ -63,7 +75,7 @@
         byFile.set(it.file, it);
         const li = document.createElement('li');
         const a = document.createElement('a');
-        a.href = '#' + slug(it.file);
+        a.href = urlFor(it.file);
         a.dataset.file = it.file;
         a.title = it.summary || '';
         const label = (it.swf || it.file).replace(/\.swf$/i, '');
@@ -71,9 +83,9 @@
           ? '<span class="cls">' + escapeHtml(it.mainClass) + '</span>' : '';
         a.innerHTML = '<span>' + escapeHtml(label) + '</span>' + cls;
         a.addEventListener('click', (e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
           e.preventDefault();
-          if (location.hash === a.getAttribute('href')) load(it.file);
-          else location.hash = a.getAttribute('href');
+          go(it.file);
           closeSidebar();
         });
         li.appendChild(a);
@@ -109,6 +121,8 @@
   }
 
   function render(html, meta) {
+    const cls = meta && meta.mainClass && meta.mainClass !== '—' ? ' (' + meta.mainClass + ')' : '';
+    document.title = meta ? (meta.swf || slug(currentFile)) + cls + ' - ' + TITLE : TITLE + ' - every Trove .swf screen decompiled';
     let chips = '';
     if (meta) {
       if (meta.swf)  chips += '<span class="doc-chip"><i class="fa-regular fa-file-code"></i> ' + escapeHtml(meta.swf) + '</span>';
@@ -118,33 +132,43 @@
     content.innerHTML =
       (chips ? '<div class="doc-meta">' + chips + '</div>' : '') +
       '<div class="md-body">' + html + '</div>' +
-      '<div class="doc-foot"><span>' + escapeHtml(t('Trove UI (Flash) decompile reference')) + '</span><span><a href="#README">' + escapeHtml(t('Overview')) + '</a> · <a href="/">' + escapeHtml(t('Home')) + '</a></span></div>';
+      '<div class="doc-foot"><span>' + escapeHtml(t('Trove UI (Flash) decompile reference')) + '</span><span><a href="/swf-docs">' + escapeHtml(t('Overview')) + '</a> · <a href="/">' + escapeHtml(t('Home')) + '</a></span></div>';
     rewriteDocLinks();
     content.scrollIntoView({ block: 'start' });
     window.scrollTo({ top: 0 });
   }
 
   // Cross-doc links in the rendered markdown point at sibling files
-  // (e.g. `[atlas.swf](./atlas.md)`). Rewrite them to the in-page `#slug`
-  // form so they switch docs via hashchange instead of navigating away, and
-  // strip the target=_blank the sanitizer adds so they stay in this tab.
+  // (e.g. `[atlas.swf](./atlas.md)`). Rewrite them to the doc's page path and
+  // strip the target=_blank the sanitizer adds so they stay in this tab; the
+  // click handler below then switches docs in place.
   function rewriteDocLinks() {
     content.querySelectorAll('.md-body a[href]').forEach((a) => {
       const m = (a.getAttribute('href') || '').match(/(?:^|\/)([^/?#]+)\.md(?:[?#].*)?$/i);
       if (!m) return;
-      a.setAttribute('href', '#' + m[1]);
+      a.setAttribute('href', urlFor(m[1] + '.md'));
       a.removeAttribute('target');
       a.setAttribute('rel', 'noopener');
     });
   }
 
-  function fromHash() {
-    const want = (location.hash || '').replace(/^#/, '').trim();
-    if (want) {
-      const hit = links.find((l) => slug(l.file).toLowerCase() === want.toLowerCase());
-      if (hit) { load(hit.file); return; }
-    }
-    load('README.md');
+  content.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="/swf-docs"]');
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    const want = a.getAttribute('href').replace(/^\/swf-docs\/?/, '').replace(/[?#].*$/, '');
+    const hit = want ? find(want) : null;
+    if (want && !hit) return;
+    e.preventDefault();
+    go(hit ? hit.file : 'README.md');
+  });
+
+  function fromLocation() {
+    const m = location.pathname.match(/^\/swf-docs\/([^/]+)\/?$/);
+    const want = m ? decodeURIComponent(m[1]) : '';
+    const legacy = (location.hash || '').replace(/^#/, '').trim();
+    const hit = (want && find(want)) || (!want && legacy && find(legacy));
+    if (hit && !want) { go(hit.file, true); return; }
+    load(hit ? hit.file : 'README.md');
   }
 
   // ---- Search filter ----
@@ -173,7 +197,12 @@
   // ---- Chrome wiring ----
   if (menuBtn) menuBtn.addEventListener('click', () => sidebar.classList.contains('open') ? closeSidebar() : openSidebar());
   backdrop.addEventListener('click', closeSidebar);
-  window.addEventListener('hashchange', fromHash);
+  window.addEventListener('popstate', fromLocation);
+  // Old #<slug> links still work; any other hash is an in-page anchor, left alone.
+  window.addEventListener('hashchange', () => {
+    const hit = find((location.hash || '').replace(/^#/, '').trim());
+    if (hit) go(hit.file, true);
+  });
   window.addEventListener('scroll', () => { toTop.classList.toggle('show', window.scrollY > 500); }, { passive: true });
   toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   document.addEventListener('keydown', (e) => {
@@ -190,7 +219,7 @@
   // ---- Boot ----
   fetch(BASE + 'index.json', { cache: 'no-cache' })
     .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then((manifest) => { buildSidebar(manifest); fromHash(); })
+    .then((manifest) => { buildSidebar(manifest); fromLocation(); })
     .catch((err) => {
       content.innerHTML = '<div class="doc-error"><i class="fa-solid fa-triangle-exclamation"></i> ' + escapeHtml(t('Failed to load the document index.')) + ' ' + escapeHtml(String(err.message || err)) + '</div>';
     });
