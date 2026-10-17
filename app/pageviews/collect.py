@@ -5,8 +5,9 @@ renders HTML. Crawlers and link unfurlers that don't run JavaScript never show u
 prefetches aren't views, and the script can report foreground time on the page and
 how fast it loaded.
 
-The visitor hash, bot test and every label are computed here, in the website
-container; only the digest and coarse labels go on to the API (via ``beacon``).
+The visitor hash, bot test (user agent, plus the network: cloud-hosted browsers are
+scanners) and every label are computed here, in the website container; only the
+digest and coarse labels go on to the API (via ``beacon``).
 Always answers 204 so a blocked or malformed beacon tells the sender nothing.
 """
 from __future__ import annotations
@@ -24,6 +25,7 @@ from starlette.routing import Match
 from app.core.config import settings
 from app.core.middleware import _PAGE_PATHS, _PAGE_PREFIXES
 from app.core.utils import client_ip, utcnow
+from app.geo_maintenance import geoip
 from app.pageviews import classify
 from app.pageviews.beacon import beacon
 
@@ -151,7 +153,8 @@ async def collect(request: Request) -> Response:
             return Response(status_code=204)
         if origin and not classify.is_own_host((urlsplit(origin).hostname or "").lower()):
             return Response(status_code=204)
-        if _over_limit(client_ip(request) or "unknown"):
+        ip = client_ip(request) or "unknown"
+        if geoip.asn(ip) in classify.CLOUD_ASNS or _over_limit(ip):
             return Response(status_code=204)
         body = await request.body()
         if len(body) > _MAX_BODY:

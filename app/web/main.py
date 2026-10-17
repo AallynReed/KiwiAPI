@@ -47,6 +47,8 @@ async def lifespan(app: FastAPI):
     # to the api's internal ingest - the one thing the presentation tier reports
     # back (see app/pageviews/collect.py).
     beacon.start()
+    if beacon.enabled:
+        geoip.ensure_asn()   # the collector's cloud-network test
     yield
     await beacon.stop()
     await geoip.stop()

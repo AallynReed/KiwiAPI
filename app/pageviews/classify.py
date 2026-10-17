@@ -24,6 +24,15 @@ def is_bot(ua: str) -> bool:
     return not ua or not ua.startswith("Mozilla/") or bool(BOT_RE.search(ua))
 
 
+# A browser on a cloud or crawler network is a scanner, not a player: Tencent, Alibaba,
+# Huawei, Baidu, AWS, Google, Azure, DigitalOcean, OVH, Hetzner, Linode, Vultr, Oracle,
+# Contabo, Scaleway, SEMrush (numbers checked against DB-IP ASN Lite).
+CLOUD_ASNS = frozenset({
+    45090, 132203, 37963, 45102, 55990, 136907, 38365, 55967, 16509, 14618, 15169,
+    396982, 8075, 14061, 16276, 24940, 63949, 20473, 31898, 51167, 12876, 209366,
+})
+
+
 # --- referrer -> (channel, source) ---------------------------------------------
 
 CHANNELS = ("direct", "search", "social", "ai", "referral", "email", "campaign")
