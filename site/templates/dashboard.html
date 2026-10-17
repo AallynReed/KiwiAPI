@@ -196,6 +196,17 @@
                             <p class="dash-error" id="dash-mod-error" hidden></p>
                         </article>
                         <div class="dash-tiles" id="mods-tiles" hidden></div>
+                        <article class="dash-card dash-ms" id="mods-stats" hidden>
+                            <div class="dash-ms-head">
+                                <h2 class="dash-card-title"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> <span data-i18n>Who's looking at your mods</span></h2>
+                                <select id="mods-stats-days" aria-label="Period" data-i18n-aria-label>
+                                    <option value="7" data-i18n>Last 7 days</option>
+                                    <option value="30" selected data-i18n>Last 30 days</option>
+                                    <option value="90" data-i18n>Last 90 days</option>
+                                </select>
+                            </div>
+                            <div id="mods-stats-body"><p class="dash-loading" data-i18n>Loading…</p></div>
+                        </article>
                         <div class="dash-filter" id="mods-filter-wrap" hidden>
                             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                             <input type="search" id="mods-filter" autocomplete="off" data-i18n-placeholder placeholder="Filter your mods by title" aria-label="Filter your mods by title">

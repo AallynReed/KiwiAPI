@@ -36,8 +36,11 @@ Python 3.13 · FastAPI + Uvicorn · Beanie/PyMongo on MongoDB 7 · Redis 7 · Po
   via GitHub secret scanning.
 - **Rate limiting** — Redis sliding-window with per-endpoint overrides and standard
   `X-RateLimit-*` / `Retry-After` headers.
-- **Usage & site analytics** — every authenticated request is recorded and aggregated;
-  cookieless page-view counts for the showcase site.
+- **Usage & site analytics** — every authenticated request is recorded and aggregated. The
+  website counts page views with its own small script (no cookies, bots and prefetches left out)
+  and groups them into visits at query time: channels and sources, entry and exit pages,
+  sections, devices, browsers, languages, time on page and bounce rate, compared with the
+  previous period, plus a live visitor count. Mod creators see the same for their own mods.
 - **Admin** — superuser-only panel for users, tokens, usage, and feature toggles.
 - Shared plumbing for new endpoints: cursor pagination, idempotency keys, request-id
   correlation, and one consistent error envelope.

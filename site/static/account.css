@@ -794,6 +794,50 @@
   font-family: 'JetBrains Mono', SFMono-Regular, Consolas, monospace;
 }
 
+/* ── Who's looking at your mods ──────────────────────────────────────────── */
+.dash-ms { margin: 14px 0 18px; }
+.dash-ms[hidden] { display: none; }
+.dash-ms-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.dash-ms-head .dash-card-title { margin: 0; }
+.dash-ms .dash-tiles { margin: 10px 0 14px; }
+.dash-ms .dash-tile { background: rgba(255,255,255,.02); }
+.dash-delta { font-size: .78rem; font-weight: 600; color: var(--text-mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dash-delta.up { color: var(--accent-green); }
+.dash-delta.down { color: var(--accent-red); }
+.dash-ms-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.dash-ms-chart text { font-size: 10px; fill: var(--text-soft); }
+.dash-ms-area { fill: color-mix(in oklab, var(--accent-blue) 18%, transparent); }
+.dash-ms-line { fill: none; stroke: var(--accent-blue); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.dash-ms-line2 { fill: none; stroke: var(--accent-green); stroke-width: 1.5; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.dash-ms-legend { list-style: none; display: flex; gap: 16px; margin: 6px 0 0; padding: 0; font-size: .78rem; color: var(--text-mute); }
+.dash-ms-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.dash-ms-key { width: 14px; height: 3px; border-radius: 2px; background: var(--accent-blue); }
+.dash-ms-key2 { background: repeating-linear-gradient(90deg, var(--accent-green) 0 4px, transparent 4px 7px); }
+.dash-ms-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 22px 28px; margin-top: 18px; }
+.dash-ms-title { margin: 0 0 10px; font-size: .95rem; font-weight: 600; }
+.dash-ms-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.dash-ms-row { position: relative; display: flex; align-items: baseline; gap: 10px; padding: 7px 10px; border-radius: 8px; }
+.dash-ms-wash { position: absolute; inset: 0 auto 0 0; background: color-mix(in oklab, var(--accent-blue) 14%, transparent); border-radius: 8px; }
+.dash-ms-name { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
+.dash-ms-name a { color: var(--text); }
+.dash-ms-name a:hover { color: var(--text); text-decoration: underline; }
+.dash-ms-num { position: relative; font-variant-numeric: tabular-nums; font-size: .9rem; white-space: nowrap; }
+.dash-ms-share, .dash-ms-sub { color: var(--text-soft); font-size: .78rem; }
+.dash-ms-list + .dash-btn { margin-top: 10px; }
+.dash-ms-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.dash-ms-chips li { padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); font-size: .8rem; }
+.dash-ms-devbar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.05); }
+.dash-ms-devlist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--text-mute); }
+.dash-ms-devlist li { display: inline-flex; align-items: center; gap: 6px; }
+.dash-ms-devlist strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.dash-ms-devlist .dash-ms-dev { width: 10px; height: 10px; border-radius: 3px; }
+.dash-ms-dev { display: block; }
+.dash-ms-dev-desktop { background: var(--accent-blue); }
+.dash-ms-dev-mobile { background: var(--accent-green); }
+.dash-ms-dev-tablet { background: var(--accent-purple); }
+.dash-ms-dev-other { background: var(--text-soft); }
+.dash-ms-note { margin: 16px 0 0; font-size: .8rem; color: var(--text-mute); }
+
 @media (max-width: 720px) {
   .dash-grid { grid-template-columns: 1fr; }
   .dash-field { grid-template-columns: 110px 1fr; }

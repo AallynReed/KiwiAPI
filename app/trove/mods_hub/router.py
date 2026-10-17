@@ -37,6 +37,7 @@ from app.core.config import settings
 from app.core.dependencies import AccessContext, get_current_user, public_scope
 from app.core.errors import COMMON_ERROR_RESPONSES, APIError, ErrorCode
 from app.core.features import require_mod_issues_enabled
+from app.pageviews import service as pageviews
 from app.site_auth.models import SiteUser
 from app.trove import mod_categories
 from app.trove.mods_hub import creators, issues, service, store
@@ -550,6 +551,28 @@ async def my_project_placement(
 @mods_hub_write_router.get("/me/starred")
 async def my_starred(user: SiteUser = _USER) -> dict:
     return {"items": await service.list_starred(user)}
+
+
+@mods_hub_write_router.get("/me/stats")
+async def my_mod_stats(
+    days: int = Query(default=30, ge=7, le=90), user: SiteUser = _USER,
+) -> dict:
+    """How many people looked at the mods you own or help with, how they found them
+    and on what device - from the site's own anonymous page-view counts."""
+    mods = await service.list_owned(user)
+    by_path = {f"/mods/{m['handle']}/{m['slug']}": m for m in mods
+               if m.get("handle") and m.get("slug")}
+    report = await pageviews.paths_report(list(by_path), days)
+    seen = {r["path"]: r for r in report["pages"]}
+    rows = [{
+        "title": m.get("title") or m["slug"], "handle": m["handle"], "slug": m["slug"],
+        "downloads": m.get("download_count", 0),
+        "views": seen.get(path, {}).get("views", 0),
+        "visitors": seen.get(path, {}).get("visitors", 0),
+        "engaged": seen.get(path, {}).get("engaged", 0),
+    } for path, m in by_path.items()]
+    rows.sort(key=lambda r: (-r["views"], r["title"].lower()))
+    return {**{k: v for k, v in report.items() if k != "pages"}, "mods": rows}
 
 
 @mods_hub_write_router.patch("/me/profile")

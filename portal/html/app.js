@@ -1273,137 +1273,355 @@ async function renderOverview(days = 30) {
   sel.addEventListener("change", () => renderOverview(Number(sel.value)));
 }
 
-// Admin · Site Analytics - cookieless page views + unique visitors for the public
-// showcase site. Unique visitors are counted once per UTC day (IP+UA salted hash);
-// dynamic pages are grouped by route template (e.g. /player/{name}).
-// Inline SVG trend chart (views + unique visitors over time). Vanilla/CSP-clean:
-// no chart lib, colours come from the portal's CSS vars so it themes automatically.
-// Per-point hit circles carry a <title> for native hover tooltips.
-function pvTrendChart(series, gran) {
-  const W = 720, H = 220, padL = 46, padR = 14, padT = 14, padB = 26;
-  const iw = W - padL - padR, ih = H - padT - padB, n = series.length;
-  const maxV = Math.max(1, ...series.map((p) => Math.max(p.views, p.unique_visitors)));
+// --- Site analytics ---------------------------------------------------------
+// One report (GET /admin/pageviews) drives everything: KPI tiles that compare with
+// the previous window, a chart of the chosen metric, and breakdown tables. Clicking a
+// table row narrows every figure to the visits that match it.
+
+const pvState = { days: 30, metric: "visitors", compare: true, filters: {} };
+let _pvLive = null;
+
+const PV_FILTER_LABEL = {
+  channel: "Channel", source: "Source", device: "Device", browser: "Browser",
+  os: "OS", lang: "Language", entry: "Entry page",
+};
+const PV_CHANNEL = {
+  direct: "Direct", search: "Search engines", social: "Social",
+  ai: "AI assistants", referral: "Other sites", email: "Email", campaign: "Campaigns",
+};
+const PV_LANG = {
+  en: "English", de: "German", es: "Spanish", fr: "French", ja: "Japanese", ko: "Korean",
+  "pt-PT": "Portuguese", ru: "Russian", th: "Thai", "zh-CN": "Chinese",
+};
+const PV_METRICS = [
+  { k: "visitors", label: "Visitors", of: (s) => s.visitors },
+  { k: "visits", label: "Visits", of: (s) => s.visits },
+  { k: "pageviews", label: "Page views", of: (s) => s.pageviews },
+  { k: "ppv", label: "Pages / visit", of: (s) => (s.visits ? s.pageviews / s.visits : 0), dec: 2 },
+  { k: "bounce", label: "Bounce rate", of: (s) => (s.visits ? (s.bounces / s.visits) * 100 : 0), pct: true, lowerIsBetter: true },
+  { k: "time", label: "Time per visit", of: (s) => (s.visits ? s.engaged / s.visits : 0), time: true },
+];
+
+function pvTime(sec) {
+  sec = Math.round(sec || 0);
+  if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m < 60 ? `${m}m ${String(s).padStart(2, "0")}s` : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
+}
+
+function pvFmt(metric, v) {
+  if (metric.time) return pvTime(v);
+  if (metric.pct) return `${v.toFixed(1)}%`;
+  if (metric.dec) return v.toFixed(metric.dec);
+  return Math.round(v).toLocaleString();
+}
+
+// Change vs the previous window. Rates move in points, counts in percent; bounce
+// rate is inverted so a drop reads as good.
+function pvDelta(metric, cur, prev) {
+  if (prev == null) return "";
+  if (!prev && !cur) return "";
+  if (!prev) return `<span class="pv-delta up">new</span>`;
+  const diff = metric.pct ? cur - prev : ((cur - prev) / prev) * 100;
+  if (Math.abs(diff) < 0.05) return `<span class="pv-delta flat">±0${metric.pct ? " pts" : "%"}</span>`;
+  const good = metric.lowerIsBetter ? diff < 0 : diff > 0;
+  const txt = `${diff > 0 ? "▲" : "▼"} ${Math.abs(diff).toFixed(Math.abs(diff) < 10 ? 1 : 0)}${metric.pct ? " pts" : "%"}`;
+  return `<span class="pv-delta ${good ? "up" : "down"}">${txt}</span>`;
+}
+
+function pvLabel(dim, key) {
+  if (key == null || key === "") return dim === "source" ? "Direct" : "Unknown";
+  if (dim === "channel") return PV_CHANNEL[key] || key;
+  if (dim === "lang") return PV_LANG[key] ? `${PV_LANG[key]} (${key})` : key;
+  if (dim === "device") return key.charAt(0).toUpperCase() + key.slice(1);
+  return key;
+}
+
+function pvQuery() {
+  const q = new URLSearchParams({ days: String(pvState.days) });
+  for (const [k, v] of Object.entries(pvState.filters)) q.set(k, v);
+  return q.toString();
+}
+
+// Line chart of one metric, previous window dashed underneath, days before the
+// stats script existed shaded so a short history doesn't read as a drop.
+function pvChart(report, metric) {
+  const W = 760, H = 240, padL = 52, padR = 16, padT = 16, padB = 28;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const cur = report.series, n = cur.length;
+  const prev = pvState.compare && report.previous ? report.previous.series : null;
+  const vals = cur.map((s) => metric.of(s));
+  const pvals = prev ? prev.map((s) => metric.of(s)) : [];
+  const maxV = Math.max(metric.pct ? 10 : 1, ...vals, ...pvals) * 1.08;
   const x = (i) => (n <= 1 ? padL + iw / 2 : padL + (iw * i) / (n - 1));
   const y = (v) => padT + ih * (1 - v / maxV);
-  const line = (k) => series.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p[k]).toFixed(1)}`).join(" ");
-  const area = (k) => `${line(k)} L${x(n - 1).toFixed(1)} ${(padT + ih).toFixed(1)} L${x(0).toFixed(1)} ${(padT + ih).toFixed(1)} Z`;
+  const path = (arr) => arr.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(" ");
 
-  const ticks = 4;
   let grid = "";
-  for (let t = 0; t <= ticks; t++) {
-    const val = Math.round((maxV * t) / ticks), gy = y(val);
-    grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W - padR}" y2="${gy.toFixed(1)}" stroke="var(--border)" stroke-width="1"/>`;
-    grid += `<text x="${padL - 6}" y="${(gy + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--faint)">${val.toLocaleString()}</text>`;
+  for (let t = 0; t <= 4; t++) {
+    const v = (maxV * t) / 4, gy = y(v);
+    grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W - padR}" y2="${gy.toFixed(1)}" stroke="var(--border)"/>`;
+    grid += `<text x="${padL - 8}" y="${(gy + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--faint)">${esc(pvFmt(metric, metric.pct || metric.dec || metric.time ? v : Math.round(v)))}</text>`;
   }
 
-  const every = Math.max(1, Math.ceil(n / 6));
-  let xl = "", dots = "";
-  series.forEach((p, i) => {
+  // Buckets before tracking began.
+  let zone = "";
+  if (report.tracking_since) {
+    const start = new Date(report.tracking_since).getTime();
+    const bucketEnd = (b) => new Date(b.length > 10 ? `${b}:00Z` : `${b}T00:00:00Z`).getTime()
+      + (report.granularity === "hour" ? 3600e3 : 86400e3);
+    let first = cur.findIndex((s) => bucketEnd(s.bucket) > start);
+    if (first === -1) first = n;
+    if (first > 0) {
+      const x1 = first >= n ? W - padR : (x(first - 1) + x(first)) / 2;
+      zone = `<rect x="${padL}" y="${padT}" width="${(x1 - padL).toFixed(1)}" height="${ih}" fill="var(--panel-2)"/>
+        <text x="${((padL + x1) / 2).toFixed(1)}" y="${padT + 14}" text-anchor="middle" font-size="10" fill="var(--faint)">not tracked yet</text>`;
+    }
+  }
+
+  const every = Math.max(1, Math.ceil(n / 7));
+  let xl = "";
+  cur.forEach((s, i) => {
     if (i % every === 0 || i === n - 1) {
-      const lbl = gran === "hour" ? p.bucket.slice(11, 16) : p.bucket.slice(5);
+      const lbl = report.granularity === "hour" ? s.bucket.slice(11, 16) : s.bucket.slice(5);
       xl += `<text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="var(--faint)">${lbl}</text>`;
     }
-    const tip = `${p.bucket} — ${p.views.toLocaleString()} views, ${p.unique_visitors.toLocaleString()} visitors`;
-    dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.unique_visitors).toFixed(1)}" r="2.2" fill="var(--green)"/>`;
-    dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.views).toFixed(1)}" r="2.5" fill="var(--accent)"/>`;
-    dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(p.views).toFixed(1)}" r="11" fill="transparent"><title>${esc(tip)}</title></circle>`;
   });
 
-  return `<svg viewBox="0 0 ${W} ${H}" class="pv-chart" role="img" aria-label="Page views over time">
-      ${grid}
-      <path d="${area("views")}" fill="var(--accent)" fill-opacity="0.12"/>
-      <path d="${line("views")}" fill="none" stroke="var(--accent)" stroke-width="2"/>
-      <path d="${line("unique_visitors")}" fill="none" stroke="var(--green)" stroke-width="2"/>
-      ${xl}${dots}
-    </svg>`;
+  const area = n ? `${path(vals)} L${x(n - 1).toFixed(1)} ${padT + ih} L${x(0).toFixed(1)} ${padT + ih} Z` : "";
+  return `<div class="pv-chart-wrap">
+    <svg viewBox="0 0 ${W} ${H}" class="pv-chart" id="pv-chart" tabindex="0" role="img"
+         aria-label="${esc(metric.label)} over time. Use the arrow keys to read each point.">
+      ${zone}${grid}
+      ${prev ? `<path d="${path(pvals)}" fill="none" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="4 4"/>` : ""}
+      <path d="${area}" fill="var(--accent)" fill-opacity="0.12"/>
+      <path d="${path(vals)}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+      ${xl}
+      <line id="pv-cross" x1="0" x2="0" y1="${padT}" y2="${padT + ih}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>
+      <circle id="pv-dot" r="4" fill="var(--accent)" visibility="hidden"/>
+    </svg>
+    <div class="pv-tip" id="pv-tip" hidden></div>
+  </div>`;
 }
 
-// Horizontal bar chart for the busiest pages (top 10), width-scaled to the leader.
-function pvBars(pages, num) {
-  const top = pages.slice(0, 10);
-  const max = Math.max(1, ...top.map((p) => p.views));
-  return top
-    .map((p) => {
-      const pct = ((p.views / max) * 100).toFixed(1);
-      return `<div class="pv-bar-row">
-        <div class="pv-bar-label mono" title="${esc(p.path)}">${esc(p.path)}</div>
-        <div class="pv-bar-track"><div class="pv-bar-fill" style="width:${pct}%"></div></div>
-        <div class="pv-bar-val">${num(p.views)}</div>
-      </div>`;
-    })
-    .join("");
+function wirePvChart(report, metric) {
+  const svg = document.getElementById("pv-chart");
+  if (!svg) return;
+  const cur = report.series, n = cur.length;
+  const prev = pvState.compare && report.previous ? report.previous.series : null;
+  const tip = document.getElementById("pv-tip"), cross = document.getElementById("pv-cross"), dot = document.getElementById("pv-dot");
+  const W = 760, padL = 52, padR = 16, iw = W - padL - padR;
+  const vals = cur.map((s) => metric.of(s));
+  const maxV = Math.max(metric.pct ? 10 : 1, ...vals, ...(prev ? prev.map((s) => metric.of(s)) : [])) * 1.08;
+  const x = (i) => (n <= 1 ? padL + iw / 2 : padL + (iw * i) / (n - 1));
+  const y = (v) => 16 + (240 - 16 - 28) * (1 - v / maxV);
+  let idx = -1;
+  const show = (i) => {
+    idx = Math.max(0, Math.min(n - 1, i));
+    const s = cur[idx], cx = x(idx);
+    cross.setAttribute("x1", cx); cross.setAttribute("x2", cx); cross.setAttribute("visibility", "visible");
+    dot.setAttribute("cx", cx); dot.setAttribute("cy", y(vals[idx])); dot.setAttribute("visibility", "visible");
+    const when = report.granularity === "hour" ? `${s.bucket.slice(0, 10)} ${s.bucket.slice(11)} UTC` : s.bucket;
+    const p = prev && prev[idx];
+    tip.innerHTML = `<strong>${esc(when)}</strong><br>${esc(metric.label)}: ${esc(pvFmt(metric, vals[idx]))}`
+      + (p ? `<br><span class="muted">Previous (${esc(p.bucket.slice(report.granularity === "hour" ? 11 : 5))}): ${esc(pvFmt(metric, metric.of(p)))}</span>` : "");
+    tip.hidden = false;
+    const box = svg.getBoundingClientRect();
+    const left = (cx / W) * box.width;
+    tip.style.left = `${Math.min(Math.max(left, 70), box.width - 70)}px`;
+  };
+  const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); };
+  svg.addEventListener("mousemove", (e) => {
+    const box = svg.getBoundingClientRect();
+    const vx = ((e.clientX - box.left) / box.width) * W;
+    show(Math.round(((vx - padL) / iw) * (n - 1)));
+  });
+  svg.addEventListener("mouseleave", hide);
+  svg.addEventListener("blur", hide);
+  svg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      show(idx < 0 ? n - 1 : idx + (e.key === "ArrowRight" ? 1 : -1));
+    } else if (e.key === "Escape") hide();
+  });
 }
 
-async function renderPageviews(days = 30) {
+// A breakdown table: sortable columns, a bar wash behind each label, and (for visit
+// dimensions) a click that filters the whole report to that value.
+function pvTable(id, title, rows, opt) {
+  const total = rows.reduce((a, r) => a + (r[opt.primary] || 0), 0) || 1;
+  const sort = opt.sort || opt.primary;
+  const sorted = rows.slice().sort((a, b) => (opt.col(b, sort) - opt.col(a, sort)) || 0);
+  const shown = opt.all ? sorted : sorted.slice(0, 10);
+  const max = Math.max(1, ...rows.map((r) => r[opt.primary] || 0));
+  const head = opt.cols.map((c) => `<th class="num"><button type="button" class="pv-sort${c.k === sort ? " on" : ""}" data-tbl="${id}" data-sort="${c.k}">${esc(c.h)}</button></th>`).join("");
+  const body = shown.length ? shown.map((r) => {
+    const pct = ((r[opt.primary] || 0) / max) * 100;
+    const label = opt.label(r.key);
+    const click = opt.dim && r.key != null ? ` class="pv-click" tabindex="0" data-dim="${opt.dim}" data-val="${esc(r.key)}" title="Show only these visits"` : "";
+    const share = Math.round(((r[opt.primary] || 0) / total) * 100);
+    return `<tr${click}>
+      <td class="pv-lbl"><span class="pv-wash" style="width:${pct.toFixed(1)}%"></span><span class="pv-lbl-text${opt.mono ? " mono" : ""}" title="${esc(label)}">${esc(label)}</span></td>
+      ${opt.cols.map((c) => `<td class="num">${c.k === opt.primary ? `${esc(c.f(r))} <span class="pv-share">${share}%</span>` : esc(c.f(r))}</td>`).join("")}
+    </tr>`;
+  }).join("") : `<tr><td colspan="${opt.cols.length + 1}" class="muted">Nothing yet.</td></tr>`;
+  const more = rows.length > 10
+    ? `<button type="button" class="btn small pv-more" data-tbl="${id}">${opt.all ? "Show top 10" : `Show all ${rows.length}`}</button>` : "";
+  return `<div class="card pv-card"><h3>${esc(title)}</h3>
+    <table class="pv-table"><thead><tr><th></th>${head}</tr></thead><tbody>${body}</tbody></table>${more}</div>`;
+}
+
+const PV_VISIT_COLS = [
+  { k: "visits", h: "Visits", f: (r) => r.visits.toLocaleString() },
+  { k: "visitors", h: "Visitors", f: (r) => r.visitors.toLocaleString() },
+  { k: "bounce", h: "Bounce", f: (r) => (r.visits ? `${Math.round((r.bounces / r.visits) * 100)}%` : "-") },
+  { k: "time", h: "Time", f: (r) => pvTime(r.visits ? r.engaged / r.visits : 0) },
+];
+const PV_HIT_COLS = [
+  { k: "views", h: "Views", f: (r) => r.views.toLocaleString() },
+  { k: "visitors", h: "Visitors", f: (r) => r.visitors.toLocaleString() },
+  { k: "time", h: "Time on page", f: (r) => pvTime(r.views ? r.engaged / r.views : 0) },
+];
+function pvVisitCol(r, k) {
+  if (k === "bounce") return r.visits ? r.bounces / r.visits : 0;
+  if (k === "time") return r.visits ? r.engaged / r.visits : 0;
+  return r[k] || 0;
+}
+function pvHitCol(r, k) { return k === "time" ? (r.views ? r.engaged / r.views : 0) : (r[k] || 0); }
+
+const PV_TABLES = [
+  { id: "channels", title: "Channels", dim: "channel", label: (k) => pvLabel("channel", k) },
+  { id: "sources", title: "Sources", dim: "source", label: (k) => pvLabel("source", k) },
+  { id: "entries", title: "Entry pages", dim: "entry", label: (k) => k || "Unknown", mono: true },
+  { id: "exits", title: "Exit pages", label: (k) => k || "Unknown", mono: true },
+  { id: "sections", title: "Sections", hits: true, label: (k) => k || "Unknown", mono: true },
+  { id: "pages", title: "Pages", hits: true, label: (k) => k || "Unknown", mono: true },
+  { id: "devices", title: "Devices", dim: "device", label: (k) => pvLabel("device", k) },
+  { id: "browsers", title: "Browsers", dim: "browser", label: (k) => pvLabel("browser", k) },
+  { id: "os", title: "Operating systems", dim: "os", label: (k) => pvLabel("os", k) },
+  { id: "langs", title: "Site language", dim: "lang", label: (k) => pvLabel("lang", k) },
+];
+const pvTableState = {};
+
+function pvTablesHTML(report) {
+  return PV_TABLES.map((t) => {
+    const st = pvTableState[t.id] || {};
+    return pvTable(t.id, t.title, report[t.id] || [], {
+      dim: t.dim, label: t.label, mono: t.mono, all: st.all, sort: st.sort,
+      primary: t.hits ? "views" : "visits",
+      cols: t.hits ? PV_HIT_COLS : PV_VISIT_COLS,
+      col: t.hits ? pvHitCol : pvVisitCol,
+    });
+  }).join("");
+}
+
+async function pvLiveTick() {
+  const el = document.getElementById("pv-live");
+  if (!el || state.tab !== "pageviews") { clearInterval(_pvLive); _pvLive = null; return; }
+  try {
+    const live = await API.call("/admin/pageviews/live");
+    const pages = live.pages.map((p) => `${p.path} (${p.visitors})`).join("\n");
+    el.innerHTML = `<span class="pv-live-dot" aria-hidden="true"></span>${live.visitors.toLocaleString()} on the site now`;
+    el.title = pages ? `Being read now:\n${pages}` : "Nobody right now";
+  } catch (_) { /* keep the last value */ }
+}
+
+async function renderPageviews(days) {
+  if (days) pvState.days = days;
   const body = document.getElementById("tab-body");
-  body.innerHTML = `<div class="loading">Loading site analytics…</div>`;
-  let stats;
-  try { stats = await API.call(`/admin/pageviews?days=${days}`); }
+  if (!document.getElementById("pv-root")) body.innerHTML = `<div class="loading">Loading site analytics…</div>`;
+  let report;
+  try { report = await API.call(`/admin/pageviews?${pvQuery()}`); }
   catch (ex) { body.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; return; }
 
-  const num = (n) => Number(n || 0).toLocaleString();
-  const pRow = (p) => `
-    <tr>
-      <td class="mono">${esc(p.path)}</td>
-      <td>${num(p.views)}</td>
-      <td>${num(p.unique_visitors)}</td>
-    </tr>`;
-
-  const hasData = stats.total_views > 0 && stats.series.length;
-  const chartBlock = hasData
-    ? `<div class="pv-legend">
-         <span class="pv-key"><span class="pv-swatch" style="background:var(--accent)"></span>Page views</span>
-         <span class="pv-key"><span class="pv-swatch" style="background:var(--green)"></span>Unique visitors</span>
-         <span class="pv-gran">${stats.granularity === "hour" ? "hourly" : "daily"}</span>
-       </div>
-       ${pvTrendChart(stats.series, stats.granularity)}`
-    : `<p class="muted" style="padding:24px 0;text-align:center">No page views in this window yet.</p>`;
-
-  const barsBlock = hasData
-    ? `<h3 style="margin:22px 0 10px;font-size:1rem">Busiest pages</h3>
-       <div class="pv-bars">${pvBars(stats.pages, num)}</div>`
-    : "";
+  const metric = PV_METRICS.find((m) => m.k === pvState.metric) || PV_METRICS[0];
+  const t = report.totals;
+  const p = report.previous && report.previous.totals;
+  const tiles = PV_METRICS.map((m) => {
+    return `<button type="button" class="stat pv-tile${m.k === metric.k ? " on" : ""}" data-metric="${m.k}" aria-pressed="${m.k === metric.k}">
+      <div class="n">${esc(pvFmt(m, m.of(t)))}</div>
+      <div class="l">${esc(m.label)} ${pvDelta(m, m.of(t), p ? m.of(p) : null)}</div>
+      ${m.k === "time" && t.median_engaged != null ? `<div class="pv-sub">median ${esc(pvTime(t.median_engaged))}</div>` : ""}
+    </button>`;
+  }).join("");
+  const chips = Object.entries(pvState.filters).map(([k, v]) =>
+    `<button type="button" class="pv-chip" data-unfilter="${k}" title="Remove filter">${esc(PV_FILTER_LABEL[k] || k)}: ${esc(pvLabel(k, v))} <span aria-hidden="true">×</span></button>`).join("");
+  const since = report.tracking_since ? new Date(report.tracking_since) : null;
+  const sinceNote = since
+    ? `Counted by the page's own script since ${since.toISOString().slice(0, 10)}: bots, link previews and prefetches aren't counted.`
+    : "No visits counted by the page script yet. They appear here within a minute of the first page view.";
+  const compareNote = !report.previous ? " The previous period isn't shown because it starts before counting began." : "";
 
   body.innerHTML = `
-    <div class="card">
-      <div class="row" style="align-items:center;margin-bottom:6px">
-        <h2 style="flex:1;margin:0">Site analytics - last ${days === 1 ? "24 hours" : days + " days"}</h2>
-        <select id="pv-days" style="max-width:140px;flex:0 0 auto">
-          <option value="1">24 hours</option><option value="7">7 days</option>
-          <option value="30">30 days</option><option value="90">90 days</option>
-        </select>
+    <div id="pv-root">
+      <div class="card">
+        <div class="pv-head">
+          <h2>Site analytics</h2>
+          <span class="pv-live" id="pv-live" role="status"><span class="pv-live-dot" aria-hidden="true"></span>…</span>
+          <label class="pv-compare"><input type="checkbox" id="pv-compare"${pvState.compare ? " checked" : ""}> Compare with previous period</label>
+          <select id="pv-days" aria-label="Period">
+            <option value="1">Last 24 hours</option><option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option><option value="90">Last 90 days</option>
+          </select>
+        </div>
+        ${chips ? `<div class="pv-chips">${chips}</div>` : ""}
+        <div class="pv-tiles">${tiles}</div>
+        ${pvChart(report, metric)}
+        <div class="pv-legend">
+          <span class="pv-key"><span class="pv-swatch" style="background:var(--accent)"></span>${esc(metric.label)}</span>
+          ${pvState.compare && report.previous ? `<span class="pv-key"><span class="pv-swatch pv-swatch-dash"></span>Previous period</span>` : ""}
+          <span class="pv-gran">${report.granularity === "hour" ? "hourly, UTC" : "daily, UTC"}</span>
+        </div>
+        <p class="hint" style="margin-top:12px">${esc(sinceNote + compareNote)} A visit ends after 30 minutes without a page view; a bounce is a one-page visit shorter than 10 seconds. Visitors are counted once per day (cookieless hash). Add <span class="mono">?nostats=1</span> to any page to stop counting your own browser.</p>
       </div>
-      <div class="stat-grid">
-        <div class="stat"><div class="n">${num(stats.total_views)}</div><div class="l">Page views</div></div>
-        <div class="stat"><div class="n">${num(stats.unique_visitors)}</div><div class="l">Unique visitors</div></div>
-        <div class="stat"><div class="n">${num(stats.views_today)}</div><div class="l">Views today</div></div>
-      </div>
-      ${chartBlock}
-      ${barsBlock}
-      <p class="hint" style="margin-top:22px">Public showcase-site page loads, one row per real page URL (each mod and player page individually), top ${stats.pages.length} by views. Unique visitors are counted once per day (cookieless IP+UA hash, no cookie stored); static assets and JSON proxies aren't counted.</p>
-      <table>
-        <thead><tr><th>Page</th><th>Views</th><th>Unique visitors</th></tr></thead>
-        <tbody id="pv-rows"></tbody>
-      </table>
+      <div class="pv-grid" id="pv-tables">${pvTablesHTML(report)}</div>
     </div>`;
 
-  const rowsEl = document.getElementById("pv-rows");
-  rowsEl.innerHTML = stats.pages.length
-    ? stats.pages.map(pRow).join("")
-    : `<tr><td colspan="3" class="muted">No page views in this window yet.</td></tr>`;
-
-  const sel = document.getElementById("pv-days"); sel.value = String(days);
+  const sel = document.getElementById("pv-days");
+  sel.value = String(pvState.days);
   sel.addEventListener("change", () => renderPageviews(Number(sel.value)));
+  document.getElementById("pv-compare").addEventListener("change", (e) => { pvState.compare = e.target.checked; renderPageviews(); });
+  body.querySelectorAll(".pv-tile").forEach((b) => b.addEventListener("click", () => { pvState.metric = b.dataset.metric; renderPageviews(); }));
+  body.querySelectorAll("[data-unfilter]").forEach((b) => b.addEventListener("click", () => { delete pvState.filters[b.dataset.unfilter]; renderPageviews(); }));
+  wirePvChart(report, metric);
+
+  const tables = document.getElementById("pv-tables");
+  const rerenderTables = () => { tables.innerHTML = pvTablesHTML(report); };
+  tables.addEventListener("click", (e) => {
+    const sortBtn = e.target.closest(".pv-sort");
+    const moreBtn = e.target.closest(".pv-more");
+    const row = e.target.closest(".pv-click");
+    if (sortBtn) {
+      pvTableState[sortBtn.dataset.tbl] = { ...(pvTableState[sortBtn.dataset.tbl] || {}), sort: sortBtn.dataset.sort };
+      rerenderTables();
+    } else if (moreBtn) {
+      const st = pvTableState[moreBtn.dataset.tbl] || {};
+      pvTableState[moreBtn.dataset.tbl] = { ...st, all: !st.all };
+      rerenderTables();
+    } else if (row) {
+      pvState.filters[row.dataset.dim] = row.dataset.val;
+      renderPageviews();
+    }
+  });
+  tables.addEventListener("keydown", (e) => {
+    const row = e.target.closest(".pv-click");
+    if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); row.click(); }
+  });
+
+  pvLiveTick();
+  if (!_pvLive) _pvLive = setInterval(pvLiveTick, 30000);
 
   // Design feedback: the homepage's "Do you like the new design?" thumbs, anonymous tallies.
+  const num = (n) => Number(n || 0).toLocaleString();
   const fbCard = document.createElement("div");
   fbCard.className = "card";
   fbCard.style.marginTop = "18px";
   fbCard.innerHTML = `<div class="loading">Loading design feedback…</div>`;
-  body.appendChild(fbCard);
+  document.getElementById("pv-root").appendChild(fbCard);
+  const fbDays = pvState.days;
   try {
-    const fb = await API.call(`/admin/design-feedback?days=${days}`);
-    fbCard.innerHTML = designFeedbackHTML(fb, days, num);
+    const fb = await API.call(`/admin/design-feedback?days=${fbDays}`);
+    fbCard.innerHTML = designFeedbackHTML(fb, fbDays, num);
   } catch (ex) { fbCard.innerHTML = `<p class="err-text">${esc(ex.message)}</p>`; }
 }
 

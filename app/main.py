@@ -72,8 +72,6 @@ from app.images.router import router as images_router
 from app.mod_stats.router import router as mod_stats_router
 from app.mod_stats.service import start_mod_stats_refresher, stop_mod_stats_refresher
 from app.pageviews.ingest import router as pageview_ingest_router
-from app.pageviews.middleware import add_pageview_middleware
-from app.pageviews.recorder import recorder as pageview_recorder
 from app.scanning.router import router as scanning_router
 from app.site.router import router as site_router
 from app.site_auth.account import router as site_account_router
@@ -173,7 +171,6 @@ async def lifespan(app: FastAPI):
     from app.trove.modpacks.service import backfill_modpack_handles
     await backfill_modpack_handles()  # same resync for modpacks
     usage_recorder.start()
-    pageview_recorder.start()  # buffered writer for showcase-site page-view analytics
     start_email_worker()
     start_news_refresher()
     start_feeds_refresher()
@@ -213,7 +210,6 @@ async def lifespan(app: FastAPI):
     await stop_news_refresher()
     await stop_email_worker()
     await usage_recorder.stop()
-    await pageview_recorder.stop()
     await close_redis()
     await close_postgres()
     await close_db()
@@ -314,7 +310,7 @@ register_error_handlers(app)
 # Middleware is registered inner-first; the LAST one added is the OUTERMOST layer.
 # Resulting execution order (outer → inner):
 #   CORS → request-context → api-host-redirect → security → idempotency → usage
-#     → pageview → head → route
+#     → head → route
 # Rationale:
 #   • CORS outermost, so even error responses get access-control headers.
 #   • request-context just inside CORS: tags the request id and converts unhandled
@@ -322,15 +318,12 @@ register_error_handlers(app)
 #   • security (headers + body cap) outside idempotency, so even a replayed
 #     response still carries the security headers.
 #   • idempotency outside usage, so a replay doesn't double-count a usage event.
-#   • pageview: GET page loads aren't idempotency-keyed, so no replay double-count;
-#     it reads the matched route + final response to log site views.
 #   • head innermost: flips HEAD→GET for routing only, so the analytics layers
 #     above still see the real HEAD and skip their GET-only accounting.
 #   • api-host-redirect just inside request-context: 301s showcase pages that
 #     leaked onto the api host to app_url, short-circuiting before the heavier
 #     inner layers (a bare redirect needs none of them).
 add_head_method_middleware(app)
-add_pageview_middleware(app)
 add_usage_middleware(app)
 add_idempotency_middleware(app)
 add_security_middleware(app)

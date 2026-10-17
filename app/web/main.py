@@ -27,7 +27,8 @@ from app.core.middleware import (
 from app.core.observability import add_request_context_middleware, configure_logging
 from app.geo_maintenance import geoip
 from app.geo_maintenance.gate import add_geo_maintenance_middleware
-from app.pageviews.beacon import add_pageview_beacon_middleware, beacon
+from app.pageviews.beacon import beacon
+from app.pageviews.collect import router as pageview_collect_router
 from app.trove.decode import store as gamedata
 from app.web.meta import router as meta_router
 from app.web.pages import router as pages_router
@@ -42,8 +43,9 @@ async def lifespan(app: FastAPI):
     configure_logging(logging.DEBUG if settings.debug else logging.INFO)
     logger.info("website container up (api=%s, internal=%s)",
                 settings.api_url, settings.internal_api_url)
-    # Page views are hashed here and beaconed to the api's internal ingest - the
-    # one thing the presentation tier reports back (see app/pageviews/beacon.py).
+    # Page views reported by the site's stats script are hashed here and beaconed
+    # to the api's internal ingest - the one thing the presentation tier reports
+    # back (see app/pageviews/collect.py).
     beacon.start()
     yield
     await beacon.stop()
@@ -69,12 +71,10 @@ register_error_handlers(app)   # themed HTML 404 for pages (branches on Accept +
 #   • head innermost: flips HEAD→GET for routing only.
 # Omitted vs the API: CORS (pages are same-origin), usage/idempotency accounting
 # (no DB here), and the api-host redirect (the website IS the canonical host).
-# The pageview layer IS here, but as a beacon to the api rather than a DB write.
 # The regional maintenance gate sits inside security so its page gets the headers.
 # Compression sits outermost: the edge proxy only gzips text/html, so /static
 # CSS, JS and locale JSON are compressed here or not at all.
 add_head_method_middleware(app)
-add_pageview_beacon_middleware(app)
 add_geo_maintenance_middleware(app)
 add_security_middleware(app)
 add_request_context_middleware(app)
@@ -88,6 +88,7 @@ if (_SITE_ROOT / "static").is_dir():
 
 app.include_router(meta_router)    # robots.txt / sitemap.xml / BingSiteAuth.xml
 app.include_router(pages_router)   # the HTML page routes
+app.include_router(pageview_collect_router)   # POST /s - the stats script's beacon
 
 
 @app.get("/health", include_in_schema=False)

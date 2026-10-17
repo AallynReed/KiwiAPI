@@ -40,8 +40,7 @@ from app.core.errors import APIError, ErrorCode, raise_from_value_error
 from app.core.pagination import Page, paginate_newest_first
 from app.core.scopes import decode
 from app.core.utils import iso, to_oid, utcnow
-from app.pageviews.schemas import PageviewSummary
-from app.pageviews.service import aggregate_pageviews
+from app.pageviews import service as pageviews
 from app.site_auth.models import SiteUser
 from app.site_auth.schemas import SiteUsernameRequestBody
 from app.site_auth.usernames import _load_site_user_or_404
@@ -334,19 +333,30 @@ async def activity_overview(
     )
 
 
-@router.get("/pageviews", response_model=PageviewSummary)
+@router.get("/pageviews")
 async def site_pageviews(
-    days: int = Query(default=30, ge=1, le=365),
-    top: int = Query(default=100, ge=1, le=1000),
-) -> PageviewSummary:
-    """Showcase-site page-view + unique-visitor rollup for the Site Analytics tab.
+    days: int = Query(default=30, ge=1, le=90),
+    channel: str | None = Query(default=None, max_length=40),
+    source: str | None = Query(default=None, max_length=80),
+    device: str | None = Query(default=None, max_length=40),
+    browser: str | None = Query(default=None, max_length=40),
+    os: str | None = Query(default=None, max_length=40),
+    lang: str | None = Query(default=None, max_length=10),
+    entry: str | None = Query(default=None, max_length=500),
+) -> dict:
+    """The Site Analytics report: visitors, visits, page views, bounce rate and time
+    on site against the previous window, plus channels, sources, entry/exit pages,
+    sections, pages, devices, browsers, OS and languages. Any filter narrows every
+    figure to the visits that match it."""
+    return await pageviews.site_report(days, {
+        "channel": channel, "source": source, "device": device, "browser": browser,
+        "os": os, "lang": lang, "entry": entry})
 
-    Per-page views and unique visitors over the last ``days`` days, one row per
-    real page URL (each mod / player page individually), capped to the ``top`` pages
-    by views. Unique visitors are counted once per UTC day (cookieless salted-hash
-    dedupe); static assets and the JSON proxies aren't counted.
-    """
-    return await aggregate_pageviews(days, top)
+
+@router.get("/pageviews/live")
+async def site_pageviews_live() -> dict:
+    """Visitors with a page open right now (heard from in the last 5 minutes)."""
+    return await pageviews.live()
 
 
 # --- Market interest-items (admin) -----------------------------------------

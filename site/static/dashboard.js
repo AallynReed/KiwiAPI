@@ -796,6 +796,7 @@
     if (!list) return;
     const items = await getMods();
     renderModsTiles(items);
+    if (Array.isArray(items) && items.length) loadModStats();
     if (items === null) {
       list.innerHTML = `<p class="dash-empty">${esc(t("Couldn't load your mods right now."))}</p>`;
     } else if (!items.length) {
@@ -817,6 +818,172 @@
       statTile(t('Forks'), sumBy(items, 'fork_count'), 'fa-code-fork'),
     ].join('');
     box.hidden = false;
+  }
+
+  // ── Who's looking at your mods ──
+  // Anonymous page views of the mods you own or help with (GET /v1/mods/hub/me/stats).
+  let _modStats = null, _modStatsDays = 30, _modStatsAll = false;
+
+  async function loadModStats(days) {
+    const card = $('mods-stats'), body = $('mods-stats-body'), sel = $('mods-stats-days');
+    if (!card || !body) return;
+    if (days) _modStatsDays = days;
+    if (sel && !sel.dataset.wired) {
+      sel.dataset.wired = '1';
+      sel.addEventListener('change', () => loadModStats(Number(sel.value)));
+    }
+    card.hidden = false;
+    const r = await Auth.callJSON('/v1/mods/hub/me/stats?days=' + _modStatsDays);
+    if (!r.ok || !r.data) {
+      body.innerHTML = `<p class="dash-error">${esc(t("Couldn't load your mod stats right now."))}</p>`;
+      return;
+    }
+    _modStats = r.data;
+    renderModStats();
+  }
+
+  function msTime(sec) {
+    sec = Math.round(sec || 0);
+    if (sec < 60) return sec + 's';
+    return Math.floor(sec / 60) + 'm ' + String(sec % 60).padStart(2, '0') + 's';
+  }
+
+  function msDelta(cur, prev) {
+    if (prev == null || (!cur && !prev)) return '';
+    const vs = t('compared with the previous period');
+    if (!prev) return `<span class="dash-delta up">${esc(t('new'))}<span class="sr-only"> ${esc(vs)}</span></span>`;
+    const d = Math.round(((cur - prev) / prev) * 100);
+    if (!d) return `<span class="dash-delta">±0%<span class="sr-only"> ${esc(vs)}</span></span>`;
+    const word = d > 0 ? t('up') : t('down');
+    return `<span class="dash-delta ${d > 0 ? 'up' : 'down'}"><span aria-hidden="true">${d > 0 ? '▲' : '▼'}</span><span class="sr-only">${esc(word)}</span> ${Math.abs(d)}%<span class="sr-only"> ${esc(vs)}</span></span>`;
+  }
+
+  function msTile(label, value, delta, icon) {
+    return `<div class="dash-tile">
+        <span class="dash-tile-num"><i class="fa-solid ${icon}" aria-hidden="true"></i> ${esc(value)}</span>
+        <span class="dash-tile-label">${esc(label)} ${delta}</span>
+      </div>`;
+  }
+
+  // Views (area) and visitors (line) per day.
+  function msChart(series) {
+    const W = 720, H = 160, padL = 8, padR = 8, padT = 10, padB = 22;
+    const n = series.length;
+    if (n < 2) return '';
+    const max = Math.max(1, ...series.map((s) => s.views)) * 1.1;
+    const x = (i) => padL + ((W - padL - padR) * i) / (n - 1);
+    const y = (v) => padT + (H - padT - padB) * (1 - v / max);
+    const line = (k) => series.map((s, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(s[k]).toFixed(1)}`).join(' ');
+    const area = `${line('views')} L${x(n - 1).toFixed(1)} ${H - padB} L${x(0).toFixed(1)} ${H - padB} Z`;
+    const every = Math.max(1, Math.ceil(n / 6));
+    let labels = '', dots = '';
+    series.forEach((s, i) => {
+      if (i % every === 0 || i === n - 1) {
+        labels += `<text x="${x(i).toFixed(1)}" y="${H - 6}" text-anchor="middle">${esc(s.bucket.slice(5))}</text>`;
+      }
+      dots += `<circle cx="${x(i).toFixed(1)}" cy="${y(s.views).toFixed(1)}" r="9" fill="transparent"><title>${esc(s.bucket)}: ${s.views.toLocaleString()} ${esc(t('views'))}, ${s.visitors.toLocaleString()} ${esc(t('visitors'))}</title></circle>`;
+    });
+    const total = series.reduce((a, s) => a + s.views, 0);
+    const peak = series.reduce((a, s) => (s.views > a.views ? s : a), series[0]);
+    const summary = t('Page views per day') + ': ' + total.toLocaleString() + ' ' + t('in total') +
+      (peak.views ? ', ' + t('busiest day') + ' ' + peak.bucket + ' (' + peak.views.toLocaleString() + ')' : '');
+    return `<div class="dash-ms-chart">
+        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(summary)}">
+          <path d="${area}" class="dash-ms-area"/>
+          <path d="${line('views')}" class="dash-ms-line"/>
+          <path d="${line('visitors')}" class="dash-ms-line2"/>
+          ${labels}${dots}
+        </svg>
+        <ul class="dash-ms-legend">
+          <li><span class="dash-ms-key"></span>${esc(t('Page views'))}</li>
+          <li><span class="dash-ms-key dash-ms-key2"></span>${esc(t('Visitors'))}</li>
+        </ul>
+      </div>`;
+  }
+
+  // Built per render so each label goes through t() after the locale has loaded.
+  const msChannels = () => ({
+    internal: t('Browsing Better Trove Tools'), direct: t('Direct links and apps'),
+    search: t('Search engines'), social: t('Discord, Reddit and social'), ai: t('AI assistants'),
+    referral: t('Other websites'), email: t('Email'), campaign: t('Campaigns'),
+  });
+  const msDevices = () => ({ desktop: t('Desktop'), mobile: t('Mobile'), tablet: t('Tablet') });
+
+  function msBars(rows, label) {
+    const max = Math.max(1, ...rows.map((r) => r.views));
+    const total = rows.reduce((a, r) => a + r.views, 0) || 1;
+    return rows.map((r) => `<li class="dash-ms-row">
+        <span class="dash-ms-wash" style="width:${((r.views / max) * 100).toFixed(1)}%"></span>
+        <span class="dash-ms-name">${label(r)}</span>
+        <span class="dash-ms-num">${r.views.toLocaleString()} <span class="dash-ms-share">${Math.round((r.views / total) * 100)}%</span></span>
+      </li>`).join('');
+  }
+
+  function renderModStats() {
+    const body = $('mods-stats-body');
+    const d = _modStats;
+    if (!body || !d) return;
+    const tot = d.totals, prev = d.previous;
+    const tiles = [
+      msTile(t('Page views'), tot.views.toLocaleString(), msDelta(tot.views, prev && prev.views), 'fa-eye'),
+      msTile(t('Visitors'), tot.visitors.toLocaleString(), msDelta(tot.visitors, prev && prev.visitors), 'fa-user'),
+      msTile(t('Time on page'), msTime(tot.views ? tot.engaged / tot.views : 0), '', 'fa-clock'),
+    ].join('');
+
+    const since = d.tracking_since ? new Date(d.tracking_since) : null;
+    const startedInWindow = since && since > new Date(d.since);
+    const note = esc(t("Counted anonymously: bots don't count, and each person counts once a day.")) +
+      (startedInWindow ? ' ' + esc(t('Counting started on {date}, so earlier days are empty.')
+        .replace('{date}', since.toLocaleDateString())) : '');
+
+    if (!tot.views) {
+      body.innerHTML = `<div class="dash-tiles">${tiles}</div>
+        <p class="dash-empty">${esc(t("No visits in this period yet. Share your mod's link and they'll show up here."))}</p>
+        <p class="dash-ms-note">${note}</p>`;
+      return;
+    }
+
+    const mods = d.mods || [];
+    const shownMods = _modStatsAll ? mods : mods.slice(0, 8);
+    const modRows = msBars(shownMods, (m) =>
+      `<a href="/mods/${encodeURIComponent(m.handle)}/${encodeURIComponent(m.slug)}">${esc(m.title)}</a>` +
+      ` <span class="dash-ms-sub">${m.visitors.toLocaleString()} ${esc(t('visitors'))}</span>`);
+    const moreBtn = mods.length > 8
+      ? `<button type="button" class="dash-btn dash-btn-mini dash-btn-ghost" id="mods-stats-more">${esc(_modStatsAll ? t('Show fewer') : t('Show all'))}</button>` : '';
+    const channels = msChannels(), deviceNames = msDevices();
+    const chanRows = msBars(d.channels || [], (r) => esc(channels[r.key] || r.key || t('Unknown')));
+    const sites = (d.sources || []).slice(0, 6)
+      .map((s) => `<li>${esc(s.key)} <span class="dash-ms-share">${s.views.toLocaleString()}</span></li>`).join('');
+    const devTotal = (d.devices || []).reduce((a, r) => a + r.views, 0) || 1;
+    const devices = (d.devices || []).map((r) => {
+      const pct = Math.round((r.views / devTotal) * 100);
+      return `<li><span class="dash-ms-dev dash-ms-dev-${esc(r.key || 'other')}" aria-hidden="true"></span>${esc(deviceNames[r.key] || t('Unknown'))} <strong>${pct}%</strong></li>`;
+    }).join('');
+    const devBar = (d.devices || []).map((r) =>
+      `<span class="dash-ms-dev dash-ms-dev-${esc(r.key || 'other')}" style="width:${((r.views / devTotal) * 100).toFixed(1)}%"></span>`).join('');
+
+    body.innerHTML = `
+      <div class="dash-tiles">${tiles}</div>
+      ${msChart(d.series || [])}
+      <div class="dash-ms-grid">
+        <section>
+          <h3 class="dash-ms-title">${esc(t('Most viewed'))}</h3>
+          <ul class="dash-ms-list">${modRows}</ul>
+          ${moreBtn}
+        </section>
+        <section>
+          <h3 class="dash-ms-title">${esc(t('How people find your mods'))}</h3>
+          <ul class="dash-ms-list">${chanRows}</ul>
+          ${sites ? `<p class="dash-ms-sub" style="margin:10px 0 4px">${esc(t('Top sites'))}</p><ul class="dash-ms-chips">${sites}</ul>` : ''}
+          <h3 class="dash-ms-title" style="margin-top:18px">${esc(t('Devices'))}</h3>
+          <div class="dash-ms-devbar" aria-hidden="true">${devBar}</div>
+          <ul class="dash-ms-devlist">${devices}</ul>
+        </section>
+      </div>
+      <p class="dash-ms-note">${note}</p>`;
+
+    const more = $('mods-stats-more');
+    if (more) more.addEventListener('click', () => { _modStatsAll = !_modStatsAll; renderModStats(); });
   }
 
   // Client-side title filter - only worth showing once the list is long enough to
