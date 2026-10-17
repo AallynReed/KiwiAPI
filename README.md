@@ -125,8 +125,10 @@ See `.env.example` for the full list.
 
 All services bind to `127.0.0.1`; the proxy routes `api.aallyn.net` → `:15546` (only `/v1/*`
 + `/health`), `dev.aallyn.net` → `:25470`, `docs.aallyn.net` → `:25468`, and
-`trove.aallyn.net` → `:15546` (all paths). Run Uvicorn with `--proxy-headers` so client IPs
-are correct for rate limiting. Bodies are capped at 8 MB, except the `.tmod` tools and bot
+`trove.aallyn.net` → `:15546` (all paths). Set `FORWARDED_ALLOW_IPS` to the address the
+proxy connects from: Uvicorn then takes the client IP from the rightmost `X-Forwarded-For`
+entry the proxy added, so rate limits key on the real visitor and a client-sent header is
+ignored. Never set it to `*`, which trusts the client's own leftmost entry. Bodies are capped at 8 MB, except the `.tmod` tools and bot
 cfg ingests (`/v1/mods/*`, `/v1/leaderboards/insert`, `/v1/market/insert`) at 20 MB, and the
 Sound Studio + Mod Workshop builds (`/site/sound-studio/build`, `/site/mod-workshop/*`,
 which upload a whole bank or a whole mod at once) at 32 MB, and the Blueprint Editor

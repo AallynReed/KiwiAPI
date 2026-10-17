@@ -235,8 +235,11 @@ services:
     # endless generators, so uvicorn's graceful shutdown waits for them forever and
     # docker SIGKILLs the container at the 10s stop timeout - 10s on every deploy.
     # Force those connections closed after 3s and exit; clients auto-reconnect.
+    #
+    # --forwarded-allow-ips: only the edge proxy may set X-Forwarded-For. It appends to
+    # whatever the client sent, so trusting "*" let any client pick its own IP.
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "*",
+              "--proxy-headers", "--forwarded-allow-ips", "${FORWARDED_ALLOW_IPS:-127.0.0.1}",
               "--timeout-graceful-shutdown", "3"]
     # Headroom for the update archiver: it decompresses several .tfa archives
     # concurrently (each held whole in RAM), which the old 512m couldn't fit.
@@ -326,7 +329,7 @@ services:
       - ./.gamedata:/data/gamedata:ro
       - ./.geoip:/data/geoip
     command: ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "*"]
+              "--proxy-headers", "--forwarded-allow-ips", "${FORWARDED_ALLOW_IPS:-127.0.0.1}"]
     mem_limit: 512m
     logging:
       driver: json-file

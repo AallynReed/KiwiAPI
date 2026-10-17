@@ -50,12 +50,12 @@ COPY app ./app
 
 EXPOSE 8000
 
-# --proxy-headers / --forwarded-allow-ips: trust the reverse proxy in front of us
-# so request.client.host and the URL scheme reflect the real client, not the proxy.
+# --proxy-headers: trust X-Forwarded-For only from $FORWARDED_ALLOW_IPS (uvicorn reads
+# it; default 127.0.0.1), so request.client.host is the real client, not the proxy.
 # --timeout-graceful-shutdown: the endless SSE streams would otherwise hold the
 # graceful shutdown open until docker's stop timeout SIGKILLs us (see compose).
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
-     "--proxy-headers", "--forwarded-allow-ips", "*", \
+     "--proxy-headers", \
      "--timeout-graceful-shutdown", "3"]
 
 # ---------------------------------------------------------------------------

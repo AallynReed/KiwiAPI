@@ -7,7 +7,7 @@ cross-origin against ``api.aallyn.net``. See ``app/web/__init__.py``.
 
 Run it like the API but with this module:
     uvicorn app.web.main:app --host 0.0.0.0 --port 8000 --proxy-headers \
-        --forwarded-allow-ips '*'
+        --forwarded-allow-ips <reverse proxy IP>
 """
 import logging
 from contextlib import asynccontextmanager
