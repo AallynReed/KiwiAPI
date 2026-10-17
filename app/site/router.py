@@ -15,7 +15,6 @@ first paint lives in ``app/site/ssr.py`` and is driven from the web tier alone.
 """
 
 import asyncio
-import hashlib
 import json
 import logging
 import re
@@ -2943,8 +2942,8 @@ async def site_workshop_blueprint(
     _limit: None = _WORKSHOP_LIMIT,
 ) -> Response:
     """Decoded voxel data for one ``.blueprint`` inside an uploaded ``.tmod``, for the
-    in-page 3D preview - the same payload (and the same payload cache) the Mods Hub's
-    viewer reads, keyed on the artifact's own hash rather than on a stored release."""
+    in-page 3D preview - the same payload the Mods Hub's viewer reads. Never cached:
+    the decoded voxels are still the uploader's mod, so every call pays the decode."""
     data = await file.read()
     if not data:
         raise APIError(400, ErrorCode.bad_request, "That file is empty.")
@@ -2953,9 +2952,9 @@ async def site_workshop_blueprint(
         return await asyncio.to_thread(
             mods_hub_service._decode_blueprint_payload, data, path)
 
-    cached = await bp_cache.get_or_build(
-        bp_cache.key_for_tmod(hashlib.sha256(data).hexdigest(), path), build, fmt)
-    return bp_cache.respond(request, cached)
+    resp = bp_cache.respond(request, await bp_cache.build_uncached(build, fmt))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @router.post("/site/mod-workshop/swf/scripts", response_class=JSONResponse)
