@@ -121,11 +121,15 @@ THUMB_WIDTHS = (200, 400, 708, 1416)
 def render_thumbnail(data: bytes, width: int) -> bytes | None:
     """Downscale to ``width`` and encode WebP. ``None`` means serve the original.
 
+    An image already that narrow keeps its size but is still re-encoded when the
+    WebP comes out clearly lighter: a 1280px PNG banner asked for at 1416 was
+    shipping 690 KB as the page's largest paint. Never upscales.
+
     Sync and CPU-bound - call it through ``asyncio.to_thread``.
 
     Returning None rather than raising is deliberate: every reason to decline is
-    a case where the original IS the right answer (already small enough, an
-    animated GIF a resize would freeze on its first frame, a file Pillow won't
+    a case where the original IS the right answer (already a light enough file,
+    an animated GIF a resize would freeze on its first frame, a file Pillow won't
     open), so the caller has nothing to handle.
 
     Resampling runs on premultiplied alpha. Pillow's LANCZOS averages the colour
@@ -137,20 +141,24 @@ def render_thumbnail(data: bytes, width: int) -> bytes | None:
         img.load()
     except Exception:
         return None
-    if img.width <= width or getattr(img, "n_frames", 1) > 1:
+    resize = img.width > width
+    if getattr(img, "n_frames", 1) > 1 or (not resize and img.format == "WEBP"):
         return None
-    height = max(1, round(img.height * width / img.width))
+    size = (width, max(1, round(img.height * width / img.width))) if resize else img.size
     has_alpha = img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info)
     try:
-        if has_alpha:
-            small = _resize_straight_alpha(img, (width, height))
+        if not resize:
+            small = img.convert("RGBA" if has_alpha else "RGB")
+        elif has_alpha:
+            small = _resize_straight_alpha(img, size)
         else:
-            small = img.convert("RGB").resize((width, height), Image.LANCZOS)
+            small = img.convert("RGB").resize(size, Image.LANCZOS)
         buf = io.BytesIO()
         small.save(buf, "WEBP", quality=82, method=4)
     except Exception:
         return None
-    return buf.getvalue()
+    out = buf.getvalue()
+    return out if resize or len(out) < len(data) * 3 // 4 else None
 
 
 def _resize_straight_alpha(img: Image.Image, size: tuple[int, int]) -> Image.Image:
