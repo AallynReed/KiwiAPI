@@ -1,13 +1,15 @@
 """Draw the voxel construction island into app/geo_maintenance/maintenance.html.
 
 Same projection and face shading as the homepage island (home_voxel.js isoSVG).
-Rerun after editing the scene: python scripts/build_maintenance_page.py
+Rerun after editing the scene: python scripts/build_maintenance_page.py [other pages]
+Extra paths (e.g. the edge proxy's copy of the page) get the same art.
 """
 from __future__ import annotations
 
 import math
 import random
 import re
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -334,13 +336,15 @@ def render() -> str:
 
 
 def main() -> None:
-    html = PAGE.read_text(encoding="utf-8")
-    html, n = re.subn(r"<!-- island -->.*?<!-- /island -->",
-                      lambda _: f"<!-- island -->\n{render()}\n<!-- /island -->", html, flags=re.S)
-    if n != 1:
-        raise SystemExit("island markers not found in " + str(PAGE))
-    PAGE.write_text(html, encoding="utf-8", newline="\n")
-    print(f"wrote {PAGE} ({len(html) // 1024} KB)")
+    art = render()
+    for page in [PAGE, *map(Path, sys.argv[1:])]:
+        html, n = re.subn(r"<!-- island -->.*?<!-- /island -->",
+                          lambda _: f"<!-- island -->\n{art}\n<!-- /island -->",
+                          page.read_text(encoding="utf-8"), flags=re.S)
+        if n != 1:
+            raise SystemExit("island markers not found in " + str(page))
+        page.write_text(html, encoding="utf-8", newline="\n")
+        print(f"wrote {page} ({len(html) // 1024} KB)")
 
 
 if __name__ == "__main__":
