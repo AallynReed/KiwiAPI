@@ -202,8 +202,13 @@
       </div>`);
     }
 
+    // Keep the banner element already in the page (server-rendered or from the last
+    // render): it is the largest paint and may still be loading.
+    const banner = $root.querySelector('img.mp-banner');
     $root.innerHTML = parts.join('');
     $root.classList.remove('mp-root-ssr');
+    const fresh = $root.querySelector('img.mp-banner');
+    if (banner && fresh && banner.src === fresh.src) fresh.replaceWith(banner);
     // Lets the page pull its top padding and float the back link over the hero.
     const main = $root.closest('.mp-main');
     if (main) main.classList.add('mp-has-hero');

@@ -315,7 +315,7 @@ async def cards_with_avatars(projects: list[ModProject]) -> list[dict]:
         ModProfile.find(In(ModProfile.site_user_id, owner_ids)).to_list(),
     )
     by_user = {pr.site_user_id: pr for pr in profiles}
-    urls = {u.id: _profile_avatar_url(u, by_user.get(u.id)) for u in users}
+    urls = {u.id: _profile_avatar_url(u, by_user.get(u.id), small=True) for u in users}
     # Emit the owner's CURRENT username as the link handle, even if the stored
     # owner_handle has drifted - otherwise /mods/<stale-handle>/<slug> resolves to
     # the wrong/no owner and the real owner sees read-only viewer mode. (The boot
@@ -3724,21 +3724,23 @@ async def refresh_popularity() -> None:
 _DISCORD_CDN = "https://cdn.discordapp.com"
 
 
-def _discord_avatar_url(user: SiteUser) -> str | None:
+def _discord_avatar_url(user: SiteUser, size: int = 256) -> str | None:
     """A Discord CDN avatar URL from the stored hash (falls back to the account's
     default embed avatar). Used when a modder hasn't uploaded a custom one."""
     if user.discord_id is None:
         return None
     if user.discord_avatar:
         ext = "gif" if user.discord_avatar.startswith("a_") else "png"
-        return f"{_DISCORD_CDN}/avatars/{user.discord_id}/{user.discord_avatar}.{ext}?size=256"
+        return f"{_DISCORD_CDN}/avatars/{user.discord_id}/{user.discord_avatar}.{ext}?size={size}"
     return f"{_DISCORD_CDN}/embed/avatars/{(user.discord_id >> 22) % 6}.png"
 
 
-def _profile_avatar_url(user: SiteUser, profile: ModProfile | None) -> str | None:
+def _profile_avatar_url(user: SiteUser, profile: ModProfile | None, small: bool = False) -> str | None:
+    """``small`` is for bylines and cards, drawn at 20-35px (a 256px PNG was ~95 KB)."""
     if profile is not None and profile.avatar_sha:
-        return _public_img_url(profile.avatar_sha)
-    return _discord_avatar_url(user)
+        url = _public_img_url(profile.avatar_sha)
+        return f"{url}?w=200" if small and url else url
+    return _discord_avatar_url(user, 64 if small else 256)
 
 
 async def owner_avatar_url(project: ModProject) -> str | None:
@@ -3749,7 +3751,8 @@ async def owner_avatar_url(project: ModProject) -> str | None:
     user = await SiteUser.get(project.owner_id)
     if user is None:
         return None
-    return _profile_avatar_url(user, await ModProfile.find_one(ModProfile.site_user_id == user.id))
+    return _profile_avatar_url(user, await ModProfile.find_one(ModProfile.site_user_id == user.id),
+                               small=True)
 
 
 def profile_dto(user: SiteUser, profile: ModProfile | None, is_owner: bool,
