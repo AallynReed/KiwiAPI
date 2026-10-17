@@ -11,6 +11,7 @@ values, and the cache preserves strict types (int stays int, never a JSON str).
 from __future__ import annotations
 
 import json
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -63,6 +64,8 @@ class TunableSetting:
     # Optional allowed-values list for enum-like strings (None = any value
     # accepted within type).
     choices: tuple[str, ...] | None = None
+    # Optional regex a string value must fully match.
+    pattern: str | None = None
 
 
 def _t(**kw: Any) -> TunableSetting:
@@ -2320,6 +2323,21 @@ REGISTRY: dict[str, TunableSetting] = {
         ),
         min_value=1, max_value=50,
     ),
+    # ── Regional access ───────────────────────────────────────────────
+    "geo_maintenance_countries": _t(
+        key="geo_maintenance_countries",
+        default="",
+        type="str",
+        category="regional_access",
+        description=(
+            "Country codes (ISO 3166-1 alpha-2, comma-separated, e.g. \"FR\" or "
+            "\"FR, DE\") whose visitors get the \"Under maintenance\" page on every "
+            "website page. Country comes from the visitor's IP via DB-IP's database, "
+            "looked up in memory and never stored. Empty = off. The API, bot and "
+            "BTT app are unaffected."
+        ),
+        pattern=r"\s*([A-Za-z]{2}\s*(,\s*[A-Za-z]{2}\s*)*)?",
+    ),
 }
 
 
@@ -2356,6 +2374,8 @@ def _validate(spec: TunableSetting, value: Any) -> Any:
             raise InvalidSettingError(
                 f"{spec.key} must be one of {list(spec.choices)}"
             )
+        if spec.pattern is not None and not re.fullmatch(spec.pattern, value):
+            raise InvalidSettingError(f"{spec.key} has an invalid format")
         return value
     if spec.type == "bool":
         if not isinstance(value, bool):

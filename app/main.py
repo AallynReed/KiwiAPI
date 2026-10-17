@@ -63,6 +63,7 @@ from app.embed.router import embed_api_router, embed_page_router
 from app.events.bus import start_event_bus, stop_event_bus
 from app.events.router import router as events_router
 from app.events.scheduler import start_event_scheduler, stop_event_scheduler
+from app.geo_maintenance.router import router as geo_maintenance_router
 from app.giveaways.admin import router as giveaways_admin_router
 from app.giveaways.router import public_router as giveaways_public_router
 from app.giveaways.router import router as giveaways_router
@@ -384,6 +385,7 @@ app.include_router(site_auth_router, include_in_schema=False)
 app.include_router(site_account_router, include_in_schema=False)  # GDPR export + self-delete (site_auth)
 app.include_router(moderation_router, include_in_schema=False)  # public notice-and-action reports (DSA)
 app.include_router(pageview_ingest_router)  # website-container page-view beacon (shared-secret)
+app.include_router(geo_maintenance_router)  # website-container regional maintenance list (shared-secret)
 app.include_router(site_oauth_router, include_in_schema=False)
 app.include_router(tokens_router, include_in_schema=False)
 app.include_router(admin_router, include_in_schema=False)

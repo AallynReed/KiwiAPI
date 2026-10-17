@@ -428,6 +428,9 @@ class Settings(BaseSettings):
     # recorded. Set the SAME value on the api and web services.
     internal_key: str = ""
 
+    # Website-side home of DB-IP's IP-to-country database (see app/geo_maintenance).
+    geoip_dir: str = "data/geoip"
+
     # Mongo connection - inside Docker the host is the compose service name.
     mongo_uri: str = "mongodb://localhost:27016"
     mongo_db: str = "kiwi"

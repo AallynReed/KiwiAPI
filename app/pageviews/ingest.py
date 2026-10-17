@@ -11,14 +11,13 @@ from the internet as well - hence the shared-secret header. With
 ``INTERNAL_KEY`` unset the endpoint 404s outright (it does not fall open), which
 is the pre-split behaviour: no rows, but also nothing spoofable.
 """
-import hmac
 import logging
 
 from fastapi import APIRouter, Header
 from pydantic import BaseModel, Field
 
-from app.core.config import settings
 from app.core.errors import APIError, ErrorCode
+from app.core.internal_api import internal_key_ok
 from app.pageviews.models import PageView
 from app.pageviews.recorder import recorder
 
@@ -37,17 +36,12 @@ class BeaconBatch(BaseModel):
     events: list[BeaconEvent] = Field(max_length=500)
 
 
-def _authorised(supplied: str) -> bool:
-    key = settings.internal_key
-    return bool(key) and hmac.compare_digest(supplied, key)
-
-
 @router.post("/pageviews", status_code=202)
 async def ingest_pageviews(
     batch: BeaconBatch, x_internal_key: str = Header(default=""),
 ) -> dict:
     """Record a batch of page views beaconed by the website container."""
-    if not _authorised(x_internal_key):
+    if not internal_key_ok(x_internal_key):
         raise APIError(status_code=404, code=ErrorCode.not_found, message="Not found.")
     for event in batch.events:
         recorder.record(PageView(route=event.route, path=event.path,

@@ -81,6 +81,13 @@ serving the previous file and shows up in the dev panel's **Game data** tab with
 traceback, where it can be rerun. `python -m app.trove.decode` rebuilds the repo copies from a
 local client.
 
+**Regional maintenance.** The admin panel's Configuration → Regional access setting
+(`geo_maintenance_countries`) takes a list of country codes; website visitors from those
+countries get the maintenance page (`app/geo_maintenance/maintenance.html`, its voxel art drawn
+by `scripts/build_maintenance_page.py`) instead of any page. The web container resolves the
+country from the visitor's IP with DB-IP's free database, downloaded monthly to `./.geoip`;
+nothing about the visitor is stored. The API, bot and BTT app are unaffected.
+
 Its 3D model and particle-effect viewers are also **embeddable**: another site can iframe
 `trove.aallyn.net/embed/viewer` to preview a mod it hosts, a mod on the hub, a dressed character, or
 anything in the live game — a creature by its own prefab name, or a single blueprint filename, which

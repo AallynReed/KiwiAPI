@@ -26,6 +26,9 @@ data/
 # File drops - whatever people upload through a one-off PIN link (bind mount target, user content)
 .drops/
 
+# Website IP-to-country database, refreshed monthly (bind mount target)
+.geoip/
+
 # Custom art worker - Flex SDK, TroveUI checkout, bare repo and release tokens (server-only)
 .flex/
 .custom-art/

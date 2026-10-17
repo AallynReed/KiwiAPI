@@ -306,6 +306,8 @@ services:
       # Signs the page-view beacon to the api's internal ingest (and salts the
       # cookieless visitor hash, which is why it matches the api's value).
       INTERNAL_KEY: ${INTERNAL_KEY:-}
+      # IP-to-country database for the regional maintenance gate (downloaded monthly).
+      GEOIP_DIR: /data/geoip
       # Discord OAuth toggle. The website performs no token exchange (the /login
       # button links to the api's OAuth start endpoint); it needs these only so
       # settings.discord_oauth_enabled is true and the sign-in button renders
@@ -322,6 +324,7 @@ services:
       # Templates + static + ~20 MB of screenshots (same bind mount the api uses).
       - ./site:/app/site:ro
       - ./.gamedata:/data/gamedata:ro
+      - ./.geoip:/data/geoip
     command: ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000",
               "--proxy-headers", "--forwarded-allow-ips", "*"]
     mem_limit: 512m

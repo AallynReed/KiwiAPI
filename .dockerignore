@@ -12,6 +12,7 @@ data/
 .mods/
 .drops/
 .embed/
+.geoip/
 site/static/assets/
 .env
 README.md

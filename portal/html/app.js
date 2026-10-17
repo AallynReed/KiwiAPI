@@ -2862,6 +2862,7 @@ const CONFIG_CATEGORY_LABELS = {
   class_activity: "Class activity",
   trove_status: "Trove server status",
   community_feeds: "Community feeds",
+  regional_access: "Regional access",
 };
 
 async function renderConfigTab() {
