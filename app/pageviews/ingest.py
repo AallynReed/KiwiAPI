@@ -20,7 +20,7 @@ from pymongo.errors import BulkWriteError
 from app.core.errors import APIError, ErrorCode
 from app.core.internal_api import internal_key_ok
 from app.core.utils import utcnow
-from app.pageviews.models import PageView
+from app.pageviews.models import PagePerf, PageView
 
 logger = logging.getLogger("kiwi.pageviews")
 
@@ -30,7 +30,7 @@ _Label = Field(default=None, max_length=80)
 
 
 class BeaconEvent(BaseModel):
-    kind: Literal["pv", "end"] = "pv"
+    kind: Literal["pv", "end", "perf"] = "pv"
     pid: str | None = Field(default=None, max_length=40)
     route: str = Field(default="", max_length=200)
     path: str = Field(default="", max_length=500)
@@ -42,6 +42,7 @@ class BeaconEvent(BaseModel):
     browser: str | None = _Label
     os: str | None = _Label
     lang: str | None = _Label
+    perf: PagePerf | None = None
 
 
 class BeaconBatch(BaseModel):
@@ -52,12 +53,34 @@ def _collection():
     return PageView.get_pymongo_collection()
 
 
+def _updates(events: list[BeaconEvent], now) -> dict[str, dict]:
+    """One update per page load from its time and perf beacons. Time and layout
+    shift only grow, so the largest report wins; load timings are set as sent."""
+    out: dict[str, dict] = {}
+    for e in events:
+        if not e.pid or e.kind == "pv":
+            continue
+        op = out.setdefault(e.pid, {"$set": {"last_at": now}})
+        grow = op.setdefault("$max", {})
+        if e.kind == "end":
+            grow["engaged_s"] = max(grow.get("engaged_s", 0), e.engaged_s)
+        elif e.perf is not None:
+            for k, v in e.perf.model_dump(exclude_none=True).items():
+                if k == "cls":
+                    grow["perf.cls"] = max(grow.get("perf.cls", 0), v)
+                else:
+                    op["$set"][f"perf.{k}"] = v
+        if not grow:
+            del op["$max"]
+    return out
+
+
 async def record_batch(events: list[BeaconEvent]) -> None:
-    """Insert the views, then apply the time beacons to them. Views go first so a
-    time beacon in the same batch as its view still finds it."""
+    """Insert the views, then apply the time and perf beacons to them. Views go first
+    so a beacon in the same batch as its view still finds it."""
     now = utcnow()
     views = [
-        {**e.model_dump(exclude={"kind"}), "engaged_s": 0, "created_at": now, "last_at": now}
+        {**e.model_dump(exclude={"kind", "perf"}), "engaged_s": 0, "created_at": now, "last_at": now}
         for e in events
         if e.kind == "pv" and e.route and e.path and len(e.visitor_hash) >= 8
     ]
@@ -69,14 +92,10 @@ async def record_batch(events: list[BeaconEvent]) -> None:
             if any(err.get("code") != 11000 for err in exc.details.get("writeErrors", [])):
                 raise
 
-    engaged: dict[str, int] = {}
-    for e in events:
-        if e.kind == "end" and e.pid:
-            engaged[e.pid] = max(engaged.get(e.pid, 0), e.engaged_s)
-    if engaged:
+    updates = _updates(events, now)
+    if updates:
         await _collection().bulk_write([
-            UpdateOne({"pid": pid}, {"$max": {"engaged_s": s}, "$set": {"last_at": now}})
-            for pid, s in engaged.items()
+            UpdateOne({"pid": pid}, op) for pid, op in updates.items()
         ], ordered=False)
 
 

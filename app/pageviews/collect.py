@@ -2,7 +2,8 @@
 
 A page view is counted when the page's own script reports it, not when the server
 renders HTML. Crawlers and link unfurlers that don't run JavaScript never show up,
-prefetches aren't views, and the script can report foreground time on the page.
+prefetches aren't views, and the script can report foreground time on the page and
+how fast it loaded.
 
 The visitor hash, bot test and every label are computed here, in the website
 container; only the digest and coarse labels go on to the API (via ``beacon``).
@@ -33,6 +34,9 @@ router = APIRouter(include_in_schema=False)
 _MAX_BODY = 4096
 _PER_MINUTE = 120
 _MAX_ENGAGED = 6 * 3600
+_PERF_KEYS = ("ttfb", "fcp", "lcp", "dcl", "load")
+_MAX_MS = 120_000
+_MAX_CLS = 10_000     # CLS x1000
 _PID = re.compile(r"^[A-Za-z0-9-]{8,40}$")
 _LANGS = frozenset({"en", "de", "es", "fr", "ja", "ko", "pt-PT", "ru", "th", "zh-CN"})
 
@@ -83,7 +87,7 @@ def _over_limit(ip: str) -> bool:
 def _int(value, lo: int, hi: int) -> int:
     try:
         return max(lo, min(hi, int(value)))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return lo
 
 
@@ -95,6 +99,13 @@ def build_event(request: Request, data: dict) -> dict | None:
     kind = data.get("t")
     if kind == "end":
         return {"kind": "end", "pid": pid, "engaged_s": _int(data.get("s"), 0, _MAX_ENGAGED)}
+    if kind == "perf":
+        # 0 = not measured, so it is left out rather than stored.
+        perf = {k: v for k in _PERF_KEYS if (v := _int(data.get(k), 0, _MAX_MS))}
+        return {"kind": "perf", "pid": pid, "perf": perf} if perf else None
+    if kind == "cls":
+        cls = _int(data.get("c"), -1, _MAX_CLS)
+        return {"kind": "perf", "pid": pid, "perf": {"cls": cls}} if cls >= 0 else None
     if kind != "pv":
         return None
 

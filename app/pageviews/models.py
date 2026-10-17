@@ -1,10 +1,22 @@
 from datetime import datetime
 
 from beanie import Document
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymongo import ASCENDING, DESCENDING, IndexModel
 
 from app.core.utils import utcnow
+
+
+class PagePerf(BaseModel):
+    """How fast one page load was on the visitor's device, in ms (CLS x1000).
+    A missing value was not measured."""
+
+    ttfb: int | None = Field(default=None, ge=0, le=120_000)
+    fcp: int | None = Field(default=None, ge=0, le=120_000)
+    lcp: int | None = Field(default=None, ge=0, le=120_000)
+    dcl: int | None = Field(default=None, ge=0, le=120_000)
+    load: int | None = Field(default=None, ge=0, le=120_000)
+    cls: int | None = Field(default=None, ge=0, le=10_000)
 
 
 class PageView(Document):
@@ -30,6 +42,7 @@ class PageView(Document):
     browser: str | None = None
     os: str | None = None
     lang: str | None = None         # the site language the page was shown in
+    perf: PagePerf | None = None    # load timings, set by the perf beacons
 
     created_at: datetime = Field(default_factory=utcnow)
     last_at: datetime | None = None  # last time beacon heard from this page (live count)

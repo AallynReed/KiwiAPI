@@ -1278,7 +1278,7 @@ async function renderOverview(days = 30) {
 // the previous window, a chart of the chosen metric, and breakdown tables. Clicking a
 // table row narrows every figure to the visits that match it.
 
-const pvState = { days: 30, metric: "visitors", compare: true, filters: {} };
+const pvState = { days: 30, metric: "visitors", compare: true, filters: {}, engBy: "all", speedBy: "device" };
 let _pvLive = null;
 
 const PV_FILTER_LABEL = {
@@ -1449,6 +1449,10 @@ function wirePvChart(report, metric) {
 // A breakdown table: sortable columns, a bar wash behind each label, and (for visit
 // dimensions) a click that filters the whole report to that value.
 function pvTable(id, title, rows, opt) {
+  return `<div class="card pv-card"><h3>${esc(title)}</h3>${pvTableInner(id, rows, opt)}</div>`;
+}
+
+function pvTableInner(id, rows, opt) {
   const total = rows.reduce((a, r) => a + (r[opt.primary] || 0), 0) || 1;
   const sort = opt.sort || opt.primary;
   const sorted = rows.slice().sort((a, b) => (opt.col(b, sort) - opt.col(a, sort)) || 0);
@@ -1467,8 +1471,31 @@ function pvTable(id, title, rows, opt) {
   }).join("") : `<tr><td colspan="${opt.cols.length + 1}" class="muted">Nothing yet.</td></tr>`;
   const more = rows.length > 10
     ? `<button type="button" class="btn small pv-more" data-tbl="${id}">${opt.all ? "Show top 10" : `Show all ${rows.length}`}</button>` : "";
-  return `<div class="card pv-card"><h3>${esc(title)}</h3>
-    <table class="pv-table"><thead><tr><th></th>${head}</tr></thead><tbody>${body}</tbody></table>${more}</div>`;
+  return `<table class="pv-table"><thead><tr><th></th>${head}</tr></thead><tbody>${body}</tbody></table>${more}`;
+}
+
+// Sort / show-all / filter clicks for the tables inside `el`.
+function wirePvTables(el, rerender) {
+  el.addEventListener("click", (e) => {
+    const sortBtn = e.target.closest(".pv-sort");
+    const moreBtn = e.target.closest(".pv-more");
+    const row = e.target.closest(".pv-click");
+    if (sortBtn) {
+      pvTableState[sortBtn.dataset.tbl] = { ...(pvTableState[sortBtn.dataset.tbl] || {}), sort: sortBtn.dataset.sort };
+      rerender();
+    } else if (moreBtn) {
+      const st = pvTableState[moreBtn.dataset.tbl] || {};
+      pvTableState[moreBtn.dataset.tbl] = { ...st, all: !st.all };
+      rerender();
+    } else if (row) {
+      pvState.filters[row.dataset.dim] = row.dataset.val;
+      renderPageviews();
+    }
+  });
+  el.addEventListener("keydown", (e) => {
+    const row = e.target.closest(".pv-click");
+    if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); row.click(); }
+  });
 }
 
 const PV_VISIT_COLS = [
@@ -1526,6 +1553,253 @@ async function pvLiveTick() {
   } catch (_) { /* keep the last value */ }
 }
 
+// --- Time on site and load speed ---------------------------------------------
+// Time on site: visits per band of foreground seconds. Each band doubles the last, so
+// a healthy audience draws a bell and instant exits spike on the left. Load speed: the
+// landing page of each visit, timed on the visitor's own device.
+
+const PV_ENG_SPLITS = { all: "All visits", channel: "Channel", device: "Device" };
+const PV_SPEED_SPLITS = { device: "Device", browser: "Browser", entry: "Entry page" };
+const PV_SERIES = ["var(--accent)", "var(--green)", "var(--amber)", "var(--violet)", "var(--red)"];
+const PV_ENG_MIN = 25;   // fewer measured visits than this is noise, not a curve
+// Google's Core Web Vitals lines (good up to, poor above), scored on the 75th percentile.
+const PV_RATE = { vis: [2500, 4000], ttfb: [800, 1800], cls: [100, 250] };
+
+function pvMs(v) {
+  if (v == null) return "–";
+  return v < 1000 ? `${Math.round(v / 10) * 10} ms` : `${(v / 1000).toFixed(1)} s`;
+}
+function pvCls(v) { return v == null ? "–" : (v / 1000).toFixed(2); }
+function pvShare(a, b) { return b ? `${((a / b) * 100).toFixed(1)}%` : "–"; }
+function pvSec(s) { return s >= 60 ? `${s / 60}m` : `${s}s`; }
+function pvBandName(bounds, j) {   // column j = band j + 1
+  return j === bounds.length - 1 ? `${pvSec(bounds[j])} or more` : `${pvSec(bounds[j])} – ${pvSec(bounds[j + 1])}`;
+}
+function pvRating(kind, v) {
+  const t = PV_RATE[kind];
+  if (v == null || !t) return "";
+  const [cls, word] = v <= t[0] ? ["good", "Good"] : v <= t[1] ? ["warn", "Needs work"] : ["poor", "Poor"];
+  return `<span class="pv-rate ${cls}">${word}</span>`;
+}
+function pvStat(label, value, sub, extra) {
+  return `<div class="stat pv-stat"><div class="l">${esc(label)}</div><div class="n">${esc(value)}${extra || ""}</div>${sub ? `<div class="pv-sub">${esc(sub)}</div>` : ""}</div>`;
+}
+function pvSeg(name, options, current) {
+  return `<div class="pv-seg" role="group" aria-label="Split by">${Object.entries(options).map(([k, label]) =>
+    `<button type="button" data-seg="${name}" data-val="${k}" aria-pressed="${k === current}">${esc(label)}</button>`).join("")}</div>`;
+}
+function pvNiceStep(x) {
+  const p = 10 ** Math.floor(Math.log10(x));
+  return [1, 2, 2.5, 5, 10].map((m) => m * p).find((v) => v >= x);
+}
+
+// Monotone cubic through the band centres: smooth, but never dips below zero or
+// invents a peak the bars don't have.
+function pvSmooth(pts) {
+  const n = pts.length;
+  if (n < 2) return "";
+  const dx = [], m = [], t = [];
+  for (let i = 0; i < n - 1; i++) { dx[i] = pts[i + 1][0] - pts[i][0]; m[i] = (pts[i + 1][1] - pts[i][1]) / dx[i]; }
+  t[0] = m[0]; t[n - 1] = m[n - 2];
+  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (m[i] === 0) { t[i] = t[i + 1] = 0; continue; }
+    const a = t[i] / m[i], b = t[i + 1] / m[i], q = a * a + b * b;
+    if (q > 9) { const k = 3 / Math.sqrt(q); t[i] = k * a * m[i]; t[i + 1] = k * b * m[i]; }
+  }
+  const f = (v) => v.toFixed(1);
+  let d = `M${f(pts[0][0])},${f(pts[0][1])}`;
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i] / 3;
+    d += `C${f(pts[i][0] + h)},${f(pts[i][1] + t[i] * h)} ${f(pts[i + 1][0] - h)},${f(pts[i + 1][1] - t[i + 1] * h)} ${f(pts[i + 1][0])},${f(pts[i + 1][1])}`;
+  }
+  return d;
+}
+
+// Band 0 is "no time measured": counted, but kept out of the curve.
+function pvEngShape(g) {
+  const measured = g.n.slice(1).reduce((a, b) => a + b, 0);
+  return { measured, share: g.n.slice(1).map((v) => (measured ? (v * 100) / measured : 0)) };
+}
+
+function pvEngSeries(E) {
+  const by = pvState.engBy;
+  if (by === "all") {
+    const out = [{ name: "This period", g: E.total, color: PV_SERIES[0], bars: true }];
+    if (pvState.compare && E.previous && pvEngShape(E.previous).measured >= PV_ENG_MIN)
+      out.push({ name: "Previous period", g: E.previous, color: "var(--faint)", dash: true });
+    return { series: out.map((sr) => ({ ...sr, ...pvEngShape(sr.g) })), hidden: 0 };
+  }
+  const series = [];
+  let hidden = 0;
+  for (const g of E.split[by] || []) {
+    const shape = pvEngShape(g);
+    if (shape.measured < PV_ENG_MIN || series.length >= PV_SERIES.length) { hidden++; continue; }
+    series.push({ name: pvLabel(by, g.key), key: g.key, g, color: PV_SERIES[series.length], ...shape });
+  }
+  return { series, hidden };
+}
+
+const PV_ENG_W = 760, PV_ENG_H = 250, PV_ENG_M = { l: 44, r: 12, t: 26, b: 28 };
+
+function pvEngChart(E, series) {
+  const bounds = E.bounds, nb = bounds.length, W = PV_ENG_W, H = PV_ENG_H, M = PV_ENG_M;
+  const iw = W - M.l - M.r, ih = H - M.t - M.b, bw = iw / nb;
+  const peak = Math.max(1, ...series.flatMap((sr) => sr.share));
+  const step = pvNiceStep(peak / 5), ticks = Math.ceil(peak / step), max = step * ticks;
+  const cx = (j) => M.l + (j + 0.5) * bw;
+  const y = (v) => M.t + ih - (v * ih) / max;
+  let out = `<rect id="pv-eng-hot" x="0" y="${M.t}" width="${bw.toFixed(1)}" height="${ih}" fill="var(--panel-2)" visibility="hidden"/>`;
+  for (let i = 0; i <= ticks; i++) {
+    const v = step * i, yy = y(v);
+    out += `<line x1="${M.l}" x2="${W - M.r}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="var(--border)"/>`;
+    out += `<text x="${M.l - 8}" y="${(yy + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)">${+v.toFixed(1)}%</text>`;
+  }
+  bounds.forEach((b, j) => {
+    out += `<text x="${(M.l + j * bw).toFixed(1)}" y="${H - 8}" text-anchor="${j ? "middle" : "start"}" font-size="10" fill="var(--muted)">${pvSec(b)}</text>`;
+  });
+  series.slice().reverse().forEach((sr) => {
+    if (sr.bars) sr.share.forEach((v, j) => {
+      out += `<rect x="${(M.l + j * bw + bw * 0.15).toFixed(1)}" y="${y(v).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${Math.max(0, y(0) - y(v)).toFixed(1)}" rx="3" fill="${sr.color}" fill-opacity="0.18"/>`;
+    });
+    out += `<path d="${pvSmooth(sr.share.map((v, j) => [cx(j), y(v)]))}" fill="none" stroke="${sr.color}" stroke-width="2"${sr.dash ? ' stroke-dasharray="4 4"' : ""}/>`;
+  });
+  // The median, placed inside its band on the log scale.
+  const med = pvState.engBy === "all" ? E.total.median : null;
+  if (med && med >= bounds[0]) {
+    let j = bounds.findIndex((b) => med < b);
+    if (j < 0) j = nb;
+    const lo = bounds[j - 1], hi = bounds[j] || lo * 2;
+    const xm = M.l + (j - 1) * bw + bw * Math.min(1, Math.max(0, Math.log(med / lo) / Math.log(hi / lo)));
+    out += `<line x1="${xm.toFixed(1)}" x2="${xm.toFixed(1)}" y1="${M.t - 8}" y2="${M.t + ih}" stroke="var(--text)" stroke-width="1" stroke-dasharray="2 3"/>`;
+    out += `<text x="${xm.toFixed(1)}" y="${M.t - 12}" text-anchor="${xm > W - 90 ? "end" : "middle"}" font-size="10" fill="var(--text)">median ${esc(pvTime(med))}</text>`;
+  }
+  return `<div class="pv-chart-wrap">
+    <svg viewBox="0 0 ${W} ${H}" class="pv-chart" id="pv-eng-chart" tabindex="0" role="img"
+         aria-label="Share of visits by time on site. Use the arrow keys to read each band.">${out}</svg>
+    <div class="pv-tip" id="pv-eng-tip" hidden></div>
+  </div>`;
+}
+
+function wirePvEngChart(E, series) {
+  const svg = document.getElementById("pv-eng-chart");
+  if (!svg) return;
+  const nb = E.bounds.length, W = PV_ENG_W, M = PV_ENG_M, bw = (W - M.l - M.r) / nb;
+  const tip = document.getElementById("pv-eng-tip"), hot = document.getElementById("pv-eng-hot");
+  let idx = -1;
+  const show = (j) => {
+    idx = Math.max(0, Math.min(nb - 1, j));
+    hot.setAttribute("x", (M.l + idx * bw).toFixed(1));
+    hot.setAttribute("visibility", "visible");
+    tip.innerHTML = `<strong>${esc(pvBandName(E.bounds, idx))}</strong>` + series.map((sr) => {
+      const n = sr.g.n[idx + 1];
+      return `<br><span class="pv-swatch" style="background:${sr.color}"></span> ${sr.share[idx].toFixed(1)}% · ${esc(sr.name)} · ${n.toLocaleString()} visit${n === 1 ? "" : "s"}`;
+    }).join("");
+    tip.hidden = false;
+    const box = svg.getBoundingClientRect();
+    const left = ((M.l + (idx + 0.5) * bw) / W) * box.width;
+    tip.style.left = `${Math.min(Math.max(left, tip.offsetWidth / 2), box.width - tip.offsetWidth / 2)}px`;
+  };
+  const hide = () => { tip.hidden = true; hot.setAttribute("visibility", "hidden"); };
+  svg.addEventListener("mousemove", (e) => {
+    const box = svg.getBoundingClientRect();
+    const j = Math.floor((((e.clientX - box.left) / box.width) * W - M.l) / bw);
+    if (j < 0 || j >= nb) hide(); else show(j);
+  });
+  svg.addEventListener("mouseleave", hide);
+  svg.addEventListener("blur", hide);
+  svg.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      show(idx < 0 ? 0 : idx + (e.key === "ArrowRight" ? 1 : -1));
+    } else if (e.key === "Escape") hide();
+  });
+}
+
+function drawPvEng(report) {
+  const el = document.getElementById("pv-eng");
+  const E = report.engagement;
+  const head = `<div class="pv-card-head"><h3>Time on site</h3>${pvSeg("eng", PV_ENG_SPLITS, pvState.engBy)}</div>`;
+  const tot = E.total, all = tot.n.reduce((a, b) => a + b, 0), { measured } = pvEngShape(tot);
+  if (!measured) {
+    el.innerHTML = `${head}<p class="muted">No visits with time measured in this period.</p>`;
+    return;
+  }
+  const sum = (from, to) => tot.n.slice(from, to).reduce((a, b) => a + b, 0);
+  const prevMed = pvState.compare && E.previous && E.previous.median != null ? `previous period ${pvTime(E.previous.median)}` : "";
+  const stats = [
+    pvStat("Median visit", pvTime(tot.median), prevMed || "of visits with time measured"),
+    pvStat("Leave within 4 s", pvShare(sum(1, 3), measured), `${sum(1, 3).toLocaleString()} visits`),
+    pvStat("Stay over 1 min", pvShare(sum(7), measured), `${sum(7).toLocaleString()} visits`),
+    pvStat("No time measured", pvShare(tot.n[0], all), `${tot.n[0].toLocaleString()} of ${all.toLocaleString()} visits`),
+  ].join("");
+  const { series, hidden } = pvEngSeries(E);
+  const chart = series.length
+    ? pvEngChart(E, series)
+    : `<p class="muted">No ${esc(PV_ENG_SPLITS[pvState.engBy].toLowerCase())} has ${PV_ENG_MIN} or more visits with time measured in this period.</p>`;
+  const keys = series.map((sr) => {
+    const label = `<span class="pv-swatch${sr.dash ? " pv-swatch-dash" : ""}"${sr.dash ? "" : ` style="background:${sr.color}"`}></span>${esc(sr.name)}
+      <span class="pv-key-n">${sr.measured.toLocaleString()} measured${sr.g.median != null ? ` · median ${esc(pvTime(sr.g.median))}` : ""}</span>`;
+    return sr.key != null
+      ? `<button type="button" class="pv-key pv-key-btn" data-fdim="${pvState.engBy}" data-fval="${esc(sr.key)}" title="Show only these visits">${label}</button>`
+      : `<span class="pv-key">${label}</span>`;
+  }).join("");
+  const more = hidden ? `<span class="pv-key-n">${hidden} more with fewer than ${PV_ENG_MIN} measured visits not shown</span>` : "";
+  el.innerHTML = `${head}<div class="pv-stats">${stats}</div>${chart}
+    <div class="pv-legend pv-legend-wrap">${keys}${more}</div>
+    <p class="hint" style="margin:12px 0 0">Foreground seconds per visit, in bands that double. A healthy audience draws a bell; visitors who leave at once show up on the left. Visits with no time measured (closed at once, or opened in a background tab and never looked at) are left out of the curve.</p>`;
+  wirePvEngChart(E, series);
+}
+
+const PV_SPEED_COLS = [
+  { k: "n", h: "Visits", f: (r) => r.n.toLocaleString() },
+  { k: "p50", h: "Median", f: (r) => pvMs(r.p50) },
+  { k: "p75", h: "p75", f: (r) => pvMs(r.p75) },
+  { k: "slow", h: "Over 3 s", f: (r) => pvShare(r.slow, r.seen) },
+  { k: "ttfb", h: "Server p75", f: (r) => pvMs(r.ttfb) },
+  { k: "cls", h: "Shift p75", f: (r) => pvCls(r.cls) },
+];
+function pvSpeedCol(r, k) { return k === "slow" ? (r.seen ? r.slow / r.seen : 0) : (r[k] == null ? -1 : r[k]); }
+
+function drawPvSpeed(report) {
+  const el = document.getElementById("pv-speed");
+  const S = report.speed, t = S.total, by = pvState.speedBy;
+  const head = (note) => `<div class="pv-card-head"><h3>Load speed</h3>${note ? `<span class="muted pv-card-note">${esc(note)}</span>` : ""}${pvSeg("speed", PV_SPEED_SPLITS, by)}</div>`;
+  if (!t || !t.n) {
+    el.innerHTML = `${head("")}<p class="muted">No load timings in this period yet.</p>`;
+    return;
+  }
+  const stats = [
+    pvStat("Visible in", pvMs(t.p50), "median"),
+    pvStat("1 in 4 waits over", pvMs(t.p75), "75th percentile, what Google scores", pvRating("vis", t.p75)),
+    pvStat(`Over ${S.slow_ms / 1000} s`, pvShare(t.slow, t.seen), `${t.slow.toLocaleString()} of ${t.seen.toLocaleString()} visits`),
+    pvStat("Server response", pvMs(t.ttfb), "time to first byte, p75", pvRating("ttfb", t.ttfb)),
+    pvStat("Layout shift", pvCls(t.cls), t.cls_n ? `p75 · ${pvShare(t.cls_poor, t.cls_n)} jump badly` : "not reported yet", pvRating("cls", t.cls)),
+    pvStat("Fully loaded", pvMs(t.load), `p75 · page ready ${pvMs(t.dcl)}`),
+  ].join("");
+  const sec = (v) => v / 1000;
+  const labels = S.bounds.map((b, i) => (i ? `${sec(S.bounds[i - 1])} – ${sec(b)} s` : `Under ${sec(b)} s`))
+    .concat([`Over ${sec(S.bounds[S.bounds.length - 1])} s`, "No paint timing"]);
+  const top = Math.max(1, ...S.bands);
+  const bars = S.bands.map((n, i) => {
+    if (!n && i === S.bands.length - 1) return "";
+    const lower = i ? S.bounds[i - 1] : 0;
+    const tone = i === S.bands.length - 1 ? "none" : lower >= 5000 ? "poor" : lower >= S.slow_ms ? "warn" : "good";
+    return `<div class="pv-band"><span class="pv-band-l">${esc(labels[i])}</span>
+      <span class="pv-band-bar"><i class="${tone}" style="width:${Math.max(n ? 1 : 0, (n / top) * 100).toFixed(1)}%"></i></span>
+      <span class="pv-band-n">${n.toLocaleString()} <span class="pv-share">${Math.round((n / t.n) * 100)}%</span></span></div>`;
+  }).join("");
+  const st = pvTableState[`speed-${by}`] || {};
+  const table = pvTableInner(`speed-${by}`, S.split[by] || [], {
+    dim: by, label: (k) => (by === "entry" ? k || "Unknown" : pvLabel(by, k)), mono: by === "entry",
+    all: st.all, sort: st.sort, primary: "n", cols: PV_SPEED_COLS, col: pvSpeedCol,
+  });
+  el.innerHTML = `${head(`landing page of ${t.n.toLocaleString()} of ${report.totals.visits.toLocaleString()} visits`)}
+    <div class="pv-stats six">${stats}</div>
+    <div class="pv-speed-body"><div class="pv-bands">${bars}</div><div class="pv-speed-table">${table}</div></div>
+    <p class="hint" style="margin:12px 0 0">Timed on each visit's first page, on the visitor's own device; later pages reuse its cached files. Visible is when the largest element was painted (the first paint in browsers that don't report it, such as Safari). Google rates a page good when 3 in 4 visits see it within 2.5 s and its layout shift stays under 0.1. Only Chromium browsers report layout shift.</p>`;
+}
+
 async function renderPageviews(days) {
   if (days) pvState.days = days;
   const body = document.getElementById("tab-body");
@@ -1574,6 +1848,8 @@ async function renderPageviews(days) {
         </div>
         <p class="hint" style="margin-top:12px">${esc(sinceNote + compareNote)} A visit ends after 30 minutes without a page view; a bounce is a one-page visit shorter than 10 seconds. Visitors are counted once per day (cookieless hash). Add <span class="mono">?nostats=1</span> to any page to stop counting your own browser.</p>
       </div>
+      <div class="card pv-wide" id="pv-eng"></div>
+      <div class="card pv-wide" id="pv-speed"></div>
       <div class="pv-grid" id="pv-tables">${pvTablesHTML(report)}</div>
     </div>`;
 
@@ -1586,27 +1862,32 @@ async function renderPageviews(days) {
   wirePvChart(report, metric);
 
   const tables = document.getElementById("pv-tables");
-  const rerenderTables = () => { tables.innerHTML = pvTablesHTML(report); };
-  tables.addEventListener("click", (e) => {
-    const sortBtn = e.target.closest(".pv-sort");
-    const moreBtn = e.target.closest(".pv-more");
-    const row = e.target.closest(".pv-click");
-    if (sortBtn) {
-      pvTableState[sortBtn.dataset.tbl] = { ...(pvTableState[sortBtn.dataset.tbl] || {}), sort: sortBtn.dataset.sort };
-      rerenderTables();
-    } else if (moreBtn) {
-      const st = pvTableState[moreBtn.dataset.tbl] || {};
-      pvTableState[moreBtn.dataset.tbl] = { ...st, all: !st.all };
-      rerenderTables();
-    } else if (row) {
-      pvState.filters[row.dataset.dim] = row.dataset.val;
+  wirePvTables(tables, () => { tables.innerHTML = pvTablesHTML(report); });
+
+  // Split buttons redraw their card; legend keys filter like a table row.
+  const eng = document.getElementById("pv-eng"), speed = document.getElementById("pv-speed");
+  const keepFocus = (el, sel) => { const b = el.querySelector(sel); if (b) b.focus(); };
+  drawPvEng(report);
+  drawPvSpeed(report);
+  eng.addEventListener("click", (e) => {
+    const seg = e.target.closest("[data-seg]"), key = e.target.closest("[data-fdim]");
+    if (seg) {
+      pvState.engBy = seg.dataset.val;
+      drawPvEng(report);
+      keepFocus(eng, `[data-seg][data-val="${seg.dataset.val}"]`);
+    } else if (key) {
+      pvState.filters[key.dataset.fdim] = key.dataset.fval;
       renderPageviews();
     }
   });
-  tables.addEventListener("keydown", (e) => {
-    const row = e.target.closest(".pv-click");
-    if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); row.click(); }
+  speed.addEventListener("click", (e) => {
+    const seg = e.target.closest("[data-seg]");
+    if (!seg) return;
+    pvState.speedBy = seg.dataset.val;
+    drawPvSpeed(report);
+    keepFocus(speed, `[data-seg][data-val="${seg.dataset.val}"]`);
   });
+  wirePvTables(speed, () => drawPvSpeed(report));
 
   pvLiveTick();
   if (!_pvLive) _pvLive = setInterval(pvLiveTick, 30000);
