@@ -27,13 +27,12 @@
     <meta name="twitter:description" content="{{ og_desc }}">
     <meta name="twitter:image" content="{{ og_image }}">
     <meta name="twitter:image:alt" content="{{ og_image_alt }}">
+    <link rel="preconnect" href="https://api.aallyn.net">
     <link rel="stylesheet" href="/static/fonts/fonts.css">
     <link rel="stylesheet" href="/static/fonts/fontawesome.min.css">
 
     <link rel="stylesheet" href="/static/style.min.css">
     <link rel="stylesheet" href="/static/mods_project.min.css">
-    <link rel="stylesheet" href="/static/audio_player.min.css">
-    <link rel="stylesheet" href="/static/swf_code.min.css">
     <meta name="mh-slug" content="{{ slug }}">
     <meta name="mh-handle" content="{{ handle }}">
 </head>
@@ -105,6 +104,10 @@
 
     {% include "partials/support_widget.html" %}
 
+    <!-- Styles for the file viewer's audio player and the .swf code modal: down here
+         they don't hold up the first paint of the hero. -->
+    <link rel="stylesheet" href="/static/audio_player.min.css">
+    <link rel="stylesheet" href="/static/swf_code.min.css">
     <script src="/static/app.min.js"></script>
     <script src="/static/_site_util.min.js"></script>
     <script src="/static/toast.min.js"></script>
