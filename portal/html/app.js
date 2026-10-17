@@ -3662,6 +3662,9 @@ async function renderAdminUser(userId, days = 30) {
         <tr><td class="muted">Member since</td><td>${fmtDay(user.created_at)}</td></tr>
         <tr><td class="muted">Last login</td><td>${fmt(user.last_login_at)}</td></tr>
       </table>
+      ${user.is_superuser ? "" : `<div class="row" style="margin-top:12px">
+        <button class="btn small ${user.is_active ? "danger" : ""}" id="terminate-user" style="flex:0 0 auto">${user.is_active ? "Terminate access" : "Reactivate"}</button>
+      </div>`}
       <div class="stat-grid" style="margin-top:14px">
         <div class="stat"><div class="n">${activity.total_requests}</div><div class="l">Requests (${days}d)</div></div>
         <div class="stat"><div class="n">${activity.error_count}</div><div class="l">Errors</div></div>
@@ -3687,6 +3690,15 @@ async function renderAdminUser(userId, days = 30) {
     </div>`;
 
   document.getElementById("admin-back").addEventListener("click", () => renderUsers());
+  document.getElementById("terminate-user")?.addEventListener("click", async () => {
+    const terminating = user.is_active;
+    if (terminating && !confirm(`Terminate ${user.email}? This revokes every token, ends their sessions and blocks sign-in.`)) return;
+    try {
+      const r = await API.call(`/admin/users/${userId}/${terminating ? "terminate" : "reactivate"}`, { method: "POST" });
+      toast(terminating ? `Access terminated · ${r.revoked} token(s) revoked.` : "Account reactivated. Old tokens stay revoked.", "ok");
+      renderAdminUser(userId, days);
+    } catch (ex) { toast(ex.message, "err"); }
+  });
   document.getElementById("revoke-all").addEventListener("click", async () => {
     if (!confirm(`Revoke ALL active tokens for ${user.email}?`)) return;
     try {

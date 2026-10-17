@@ -170,6 +170,40 @@ async def revoke_user_tokens(user_id: PydanticObjectId) -> dict[str, int]:
     return {"revoked": count}
 
 
+@router.post("/users/{user_id}/terminate")
+async def terminate_user(
+    user_id: PydanticObjectId, admin: User = Depends(get_current_superuser),
+) -> dict:
+    """Cut an account off: disable it, revoke every API token and end every
+    portal session. Logins, refreshes and token calls all check ``is_active``."""
+    from app.auth.sessions import revoke_all_sessions
+    user = await _require_user(user_id)
+    if user.is_superuser or user.id == admin.id:
+        raise APIError(status_code=400, code=ErrorCode.bad_request,
+                       message="Admin accounts can't be terminated")
+    user.is_active = False
+    await revoke_all_sessions(user)  # saves the user + bumps token_version
+    active = ApiToken.find(ApiToken.user_id == user_id, ApiToken.revoked == False)  # noqa: E712
+    count = await active.count()
+    if count:
+        await active.update(Set({  # pyright: ignore[reportGeneralTypeIssues]
+            ApiToken.revoked: True,
+            ApiToken.revoked_at: utcnow(),
+            ApiToken.revoke_reason: "Access terminated by administrator",
+        }))
+    return {"id": str(user.id), "is_active": False, "revoked": count}
+
+
+@router.post("/users/{user_id}/reactivate")
+async def reactivate_user(user_id: PydanticObjectId) -> dict:
+    """Let a terminated account sign in again. Its old tokens stay revoked."""
+    user = await _require_user(user_id)
+    user.is_active = True
+    user.updated_at = utcnow()
+    await user.save()
+    return {"id": str(user.id), "is_active": True}
+
+
 @router.get("/users/{user_id}/activity", response_model=ActivitySummary)
 async def user_activity(
     user_id: PydanticObjectId,
