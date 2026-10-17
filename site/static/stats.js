@@ -61,7 +61,13 @@
   // largest paint settles), or when the visitor leaves first. Times count from when the
   // page was shown, so a prerendered page isn't charged for loading in the background.
   // A page restored from the back/forward cache didn't load, so it sends nothing.
+  // Anything that happened after the page was first hidden is left out: a tab opened in
+  // the background loads throttled and paints only when looked at.
   var measured = false;
+  var hiddenAt = document.visibilityState === 'hidden' && !document.prerendering ? 0 : Infinity;
+  document.addEventListener('visibilitychange', function (e) {
+    if (document.visibilityState === 'hidden' && hiddenAt === Infinity) hiddenAt = e.timeStamp;
+  }, true);
   function measure() {
     var P = window.performance;
     if (measured || !P || !P.getEntriesByType || !window.PerformanceObserver) return;
@@ -74,7 +80,7 @@
       } catch (e) { return false; }
     }
     observe('paint', function (e) { if (e.name === 'first-contentful-paint') fcp = e.startTime; });
-    observe('largest-contentful-paint', function (e) { lcp = e.startTime; });
+    observe('largest-contentful-paint', function (e) { if (e.startTime < hiddenAt) lcp = e.startTime; });
     // Layout shift (CLS) the way Google scores it: the worst burst of shifts (gaps under
     // 1 s, at most 5 s), shifts right after input excluded. It grows while the page is
     // open, so it goes again each time the page is hidden.
@@ -89,10 +95,16 @@
     function report() {
       if (sent) return;
       sent = true;
-      var n = P.getEntriesByType('navigation')[0] || {}, shown = n.activationStart || 0;
+      var n = P.getEntriesByType('navigation')[0] || {}, shown = n.activationStart || 0, hid = hiddenAt;
+      try {   // hidden before this script ran (Chromium keeps a record)
+        P.getEntriesByType('visibility-state').forEach(function (e) {
+          if (e.name === 'hidden' && e.startTime >= shown && e.startTime < hid) hid = e.startTime;
+        });
+      } catch (e) { /* not recorded */ }
       function ms(v) { return v ? Math.max(1, Math.round(v - shown)) : 0; }
-      send({ t: 'perf', id: perfId, ttfb: ms(n.responseStart), fcp: ms(fcp), lcp: ms(lcp),
-        dcl: ms(n.domContentLoadedEventEnd), load: ms(n.loadEventEnd) });
+      function seen(v) { return v < hid ? ms(v) : 0; }
+      send({ t: 'perf', id: perfId, ttfb: ms(n.responseStart), fcp: seen(fcp), lcp: seen(lcp),
+        dcl: seen(n.domContentLoadedEventEnd), load: seen(n.loadEventEnd) });
     }
     function leaving() {
       report();

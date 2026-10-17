@@ -8,6 +8,7 @@ from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.core import static_version
 from app.core.config import settings
 from app.core.csp import API_CSP as _API_CSP
 from app.core.csp import SITE_CSP as _SITE_CSP
@@ -161,11 +162,15 @@ def add_security_middleware(app: FastAPI) -> None:
         h.setdefault("X-Frame-Options", "DENY")
         # The showcase site pulls FontAwesome / GSAP from CDN and needs a looser CSP.
         h.setdefault("Content-Security-Policy", _SITE_CSP if _is_site_path(path) else _API_CSP)
-        # Static assets + HTML pages always revalidate, so a deploy is picked up
-        # immediately without ``?v=`` cache-busting. StaticFiles' ETag /
-        # Last-Modified keep this to cheap 304s. The /site/ JSON proxies set
-        # their own max-age and are intentionally excluded.
-        if path.startswith("/static/") or path in _PAGE_PATHS or path.startswith(_PAGE_PREFIXES):
+        # Static files: cached for good when the URL carries their content hash
+        # (pages link them that way), otherwise revalidated. Same bytes for every
+        # visitor, so the credential rule below doesn't apply to them.
+        if path.startswith("/static/"):
+            h["Cache-Control"] = static_version.cache_control(path, request.query_params.get("v"))
+            return response
+        # HTML pages always revalidate, so a deploy is picked up at once. The /site/
+        # JSON proxies set their own max-age and are intentionally excluded.
+        if path in _PAGE_PATHS or path.startswith(_PAGE_PREFIXES):
             h.setdefault("Cache-Control", "no-cache")
         # A response produced for a CREDENTIAL is per-user and must never be
         # stored by a shared cache. Enforced here, not per-route, for two

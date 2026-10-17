@@ -16,6 +16,8 @@
 }
 /* The hero starts flush under the navbar; the back link rides over it. */
 .mp-main.mp-has-hero { padding-top: 0; }
+/* Until the script renders, keep what follows the root below the fold. */
+.mp-root-ssr { min-height: 100vh; }
 
 /* GitHub-style two-column body: wide file browser + about on the left, a
    releases → history → clone → forks sidebar on the right. */

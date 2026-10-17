@@ -710,8 +710,19 @@ def mod_project_view(project: Any) -> dict:
         return {}
     releases = [r for r in (p.get("releases") or [])
                 if isinstance(r, dict) and r.get("status", "published") == "published"]
+    api = settings.api_url.rstrip("/")
+    banner, latest = p.get("banner_sha"), releases[0] if releases else {}
+    avatar = p.get("owner_avatar_url")
     return {
         "title": p.get("title") or p.get("slug") or "",
+        # The hero, in the same markup and URLs mods_project.js renders, so its
+        # swap changes nothing on screen and the banner is already cached.
+        "banner_url": f"{api}/site/mods/image/{quote(banner)}?w=1416" if isinstance(banner, str) else "",
+        "source_visible": bool(p.get("source_visible")),
+        "stray": bool(p.get("is_stray")),
+        "avatar": avatar if isinstance(avatar, str) and avatar.startswith("https://") else "",
+        "download_url": f"{api}/site/mods/releases/{quote(str(latest['id']))}/download" if latest.get("id") else "",
+        "release_tag": latest.get("tag") or "",
         "summary": text(p.get("summary"), 300),
         "description": text(p.get("description"), 1200),
         "author": p.get("author") or p.get("owner_username") or "",

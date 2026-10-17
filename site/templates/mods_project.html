@@ -43,21 +43,37 @@
 
     {% include "partials/navbar.html" %}
 
-    <main id="main" class="mp-main">
+    <main id="main" class="mp-main{% if ssr and ssr.title %} mp-has-hero{% endif %}">
         <a class="mp-back" href="/mods"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> <span data-i18n>Mods Hub</span></a>
         <!-- Server-rendered first paint (see app/site/ssr.py). mods_project.js
              replaces this whole root on load with the full page (previews, file
-             browser, releases, owner controls). Until this existed the mod pages
-             shipped as a bare "Loading…" - which is exactly why they were held
-             out of the sitemap. -->
-        <div id="mp-root" class="mp-root" aria-live="polite">
+             browser, releases, owner controls). The hero matches its markup so the
+             swap doesn't move anything, and the root holds a screen of height until
+             then so the links below don't jump. -->
+        <div id="mp-root" class="mp-root{% if ssr and ssr.title %} mp-root-ssr{% endif %}" aria-live="polite">
             {%- if ssr and ssr.title %}
-            <h1>{{ ssr.title }}</h1>
-            {%- if ssr.author %}<p class="ssr-prose"><span data-i18n>By</span> <a href="/mods/{{ handle }}">{{ ssr.author }}</a></p>{% endif %}
-            {%- if ssr.summary %}<p class="ssr-prose">{{ ssr.summary }}</p>{% endif %}
-            {%- if ssr.tags %}<ul class="ssr-chips">{% for t in ssr.tags %}<li>{{ t }}</li>{% endfor %}</ul>{% endif %}
+            <header class="mp-header{% if not ssr.source_visible %} is-doc{% endif %}">
+                <div class="mp-banner-wrap">
+                    {%- if ssr.banner_url %}<img class="mp-banner" src="{{ ssr.banner_url }}" alt="" decoding="async" fetchpriority="high">
+                    {%- else %}<div class="mp-banner placeholder"><i class="fa-solid fa-cube"></i></div>{% endif %}
+                    <span class="mp-banner-scrim" aria-hidden="true"></span>
+                </div>
+                <div class="mp-header-body">
+                    <div class="mp-titlerow"><h1 class="mp-title">{{ ssr.title }}</h1></div>
+                    <div class="mp-meta">
+                        {%- if ssr.stray %}<span><i class="fa-solid fa-user"></i> {{ ssr.author }}</span>
+                        {%- else %}<span>{% if ssr.avatar %}<img class="mp-author-av" src="{{ ssr.avatar }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">{% else %}<i class="fa-solid fa-user"></i>{% endif %}<a class="mp-author-link" href="/mods/{{ handle }}">{{ ssr.owner or ssr.author }}</a></span>{% endif %}
+                        <span><i class="fa-solid fa-download"></i> {{ ssr.downloads }} <span data-i18n>downloads</span></span>
+                    </div>
+                    {%- if ssr.summary %}<p class="mp-summary">{{ ssr.summary }}</p>{% endif %}
+                    {%- if ssr.tags %}<div class="mp-tags">{% for t in ssr.tags %}<span class="mp-tag">{{ t }}</span>{% endfor %}</div>{% endif %}
+                    <div class="mp-actions">
+                        {%- if ssr.download_url %}<a class="mp-btn mp-btn-primary" href="{{ ssr.download_url }}"><i class="fa-solid fa-download"></i> <span data-i18n>Download</span>{% if ssr.release_tag %} <span class="mp-release-tagchip">{{ ssr.release_tag }}</span>{% endif %}</a>
+                        {%- else %}<span class="mp-muted" data-i18n>No release yet</span>{% endif %}
+                    </div>
+                </div>
+            </header>
             <ul class="ssr-chips">
-                <li><span data-i18n>Downloads</span>: {{ ssr.downloads }}</li>
                 <li><span data-i18n>Stars</span>: {{ ssr.stars }}</li>
                 {%- if ssr.updated %}<li><span data-i18n>Updated</span>: <time datetime="{{ ssr.datetime }}">{{ ssr.updated }}</time></li>{% endif %}
             </ul>

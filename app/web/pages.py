@@ -19,10 +19,12 @@ import re
 from pathlib import Path
 from urllib.parse import quote
 
+import jinja2
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from app.core import static_version
 from app.core.config import settings
 from app.core.internal_api import internal_get
 from app.site import abilities_page, allies_page, classes_page, commands_page, hubs, ssr
@@ -54,10 +56,18 @@ def _flag_map(request: Request) -> dict[str, bool]:
 _API = settings.api_url.rstrip("/")   # data-plane origin (api.aallyn.net)
 _APP = settings.app_url.rstrip("/")   # this site's own origin (trove.aallyn.net)
 
+class _LinkedTemplate(jinja2.Template):
+    """A page whose /static links carry their content version (see static_version)."""
+
+    def render(self, *args, **kwargs) -> str:
+        return static_version.link(super().render(*args, **kwargs))
+
+
 _TEMPLATES = Jinja2Templates(
     directory=str(Path(settings.site_root) / "templates"),
     context_processors=[web_flags.context, appearance.context],
 )
+_TEMPLATES.env.template_class = _LinkedTemplate
 
 router = APIRouter(
     tags=["web"], include_in_schema=False,

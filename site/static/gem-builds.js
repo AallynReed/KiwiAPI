@@ -54,6 +54,7 @@
   let builds = [];
   let page = 0;
   let calculating = false;
+  let firstResults = false;   // Health waits for these: it sits below them and would be pushed off-screen
   let starChartInfo = null;   // {paths_count, stats} | {error:true} | null
   let advancedOpen = false;
 
@@ -366,6 +367,7 @@
     } finally {
       calculating = false;
       renderResults();
+      if (!firstResults) { firstResults = true; renderHealth(); }
     }
   }
 
@@ -548,7 +550,7 @@
 
   function renderHealth() {
     if (!elHealth) return;
-    elHealth.hidden = !hpApplies();
+    elHealth.hidden = !firstResults || !hpApplies();
     if (elHealth.hidden) return;
     elHealth.textContent = "";
     const results = (health && health.results) || [];

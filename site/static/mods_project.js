@@ -203,6 +203,7 @@
     }
 
     $root.innerHTML = parts.join('');
+    $root.classList.remove('mp-root-ssr');
     // Lets the page pull its top padding and float the back link over the hero.
     const main = $root.closest('.mp-main');
     if (main) main.classList.add('mp-has-hero');
