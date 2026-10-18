@@ -2544,8 +2544,9 @@ async def get_btt_mod_blocklist(ctx: AccessContext = _BTT) -> BttModBlocklist:
     hidden when its id, its author's id, or any of its files' md5 hashes is listed.
     Ids are the catalog's own, not Mods Hub ids. ``hashes`` also carries every
     release of a mod taken down on the Mods Hub. ``workshop_items`` are Steam
-    Workshop item ids the app unsubscribes the player from and deletes. The rest is
-    edited in the master panel."""
+    Workshop item ids the app unsubscribes the player from and deletes, and
+    ``workshop_authors`` SteamID64s whose every item it treats the same way. The
+    rest is edited in the master panel."""
     from app.btt_blocklist import service as btt_blocklist
     from app.trove.mods_hub.service import taken_down_md5s
     entries = await btt_blocklist.served()
@@ -2553,6 +2554,7 @@ async def get_btt_mod_blocklist(ctx: AccessContext = _BTT) -> BttModBlocklist:
         authors=entries["author"], mods=entries["mod"],
         hashes=list(dict.fromkeys(entries["hash"] + await taken_down_md5s())),
         workshop_items=entries["workshop"],
+        workshop_authors=entries["workshop_author"],
     )
 
 

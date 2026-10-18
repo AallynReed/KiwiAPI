@@ -7,8 +7,9 @@ from app.core.errors import APIError, ErrorCode
 from app.core.utils import iso, to_oid
 
 _VALID = {"author": re.compile(r"\d+"), "mod": re.compile(r"\d+"), "hash": re.compile(r"[0-9a-f]{32}"),
-          "workshop": re.compile(r"\d+")}
-_LABEL = {"author": "author id", "mod": "mod id", "hash": "md5 hash", "workshop": "Steam Workshop item id"}
+          "workshop": re.compile(r"\d+"), "workshop_author": re.compile(r"7656\d{13}")}
+_LABEL = {"author": "author id", "mod": "mod id", "hash": "md5 hash", "workshop": "Steam Workshop item id",
+          "workshop_author": "SteamID64"}
 
 
 def parse_values(raw: str) -> list[str]:
@@ -52,7 +53,7 @@ async def remove(entry_id: str) -> None:
 
 
 async def served() -> dict[str, list[str]]:
-    out: dict[str, list[str]] = {"author": [], "mod": [], "hash": [], "workshop": []}
+    out: dict[str, list[str]] = {"author": [], "mod": [], "hash": [], "workshop": [], "workshop_author": []}
     for entry in await BttModBlock.find().sort("created_at").to_list():
         out[entry.kind].append(entry.value)
     return out

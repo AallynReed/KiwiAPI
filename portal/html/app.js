@@ -5034,14 +5034,15 @@ async function renderModsModeration() {
       </div>
       <p class="hint" style="margin:0 0 10px">Mods BetterTroveTools hides from its external mod catalog tab: the list,
         installs, update checks and links. Ids are the catalog's own, not Mods Hub ids; hashes are md5. Mods taken
-        down here are hidden by their hashes automatically. Steam Workshop item ids are unsubscribed from and deleted
-        wherever they are installed.</p>
+        down here are hidden by their hashes automatically. Steam Workshop item ids, and every item by a listed
+        Workshop author, are unsubscribed from and deleted wherever they are installed.</p>
       <form id="bttbl-form" class="row" style="gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px">
         <select id="bttbl-kind" aria-label="Entry type" style="width:150px">
           <option value="author">Author id</option>
           <option value="mod">Mod id</option>
           <option value="hash">File hash (md5)</option>
           <option value="workshop">Steam Workshop item id</option>
+          <option value="workshop_author">Steam Workshop author (SteamID64)</option>
         </select>
         <textarea id="bttbl-values" rows="1" aria-label="Values" spellcheck="false"
           placeholder="One or more, separated by commas or new lines"
@@ -5421,7 +5422,7 @@ async function renderModsModeration() {
 
 function wireBttBlocklistCard() {
   const listEl = document.getElementById("bttbl-list");
-  const KIND = { author: "Author", mod: "Mod", hash: "Hash", workshop: "Workshop" };
+  const KIND = { author: "Author", mod: "Mod", hash: "Hash", workshop: "Workshop", workshop_author: "Workshop author" };
 
   async function load() {
     listEl.innerHTML = `<div class="loading">Loading…</div>`;
