@@ -327,6 +327,7 @@ class BttModBlocklist(BaseModel):
     authors: list[str]            # catalog author ids
     mods: list[str]               # catalog mod ids
     hashes: list[str]             # md5 file hashes, lowercased
+    workshop_items: list[str] = []  # Steam Workshop item ids BTT unsubscribes from and deletes
 
 
 # --- Events (Trovesaurus calendar) -----------------------------------------

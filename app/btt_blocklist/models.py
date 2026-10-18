@@ -7,12 +7,12 @@ from pymongo import ASCENDING, IndexModel
 
 from app.core.utils import utcnow
 
-BlockKind = Literal["author", "mod", "hash"]
+BlockKind = Literal["author", "mod", "hash", "workshop"]
 
 
 class BttModBlock(Document):
     kind: BlockKind
-    value: str                                   # catalog id, or lowercase md5
+    value: str                                   # catalog id, lowercase md5, or Steam Workshop item id
     note: str = ""
     created_at: datetime = Field(default_factory=utcnow)
 
