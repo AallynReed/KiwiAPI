@@ -71,6 +71,7 @@ from app.giveaways.worker import start_giveaway_worker, stop_giveaway_worker
 from app.images.router import router as images_router
 from app.mod_stats.router import router as mod_stats_router
 from app.mod_stats.service import start_mod_stats_refresher, stop_mod_stats_refresher
+from app.steam_workshop.service import start_steam_workshop_refresher, stop_steam_workshop_refresher
 from app.pageviews.ingest import router as pageview_ingest_router
 from app.scanning.router import router as scanning_router
 from app.site.router import router as site_router
@@ -176,6 +177,7 @@ async def lifespan(app: FastAPI):
     start_feeds_refresher()
     start_events_refresher()
     start_mod_stats_refresher()
+    start_steam_workshop_refresher()
     start_chaos_refresher()
     start_status_prober()  # Trove server status (auth + optional game socket), every 60s
     start_delve_refresher()
@@ -205,6 +207,7 @@ async def lifespan(app: FastAPI):
     await stop_chaos_refresher()
     await stop_status_prober()
     await stop_mod_stats_refresher()
+    await stop_steam_workshop_refresher()
     await stop_events_refresher()
     await stop_feeds_refresher()
     await stop_news_refresher()

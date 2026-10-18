@@ -700,6 +700,10 @@ class Settings(BaseSettings):
     trove_events_refresh_seconds: int = 900   # background refresh cadence (15 min)
     trove_events_history_days: int = 365      # prune events whose end is older than this
 
+    # --- Steam Workshop catalog for BTT's Steam tab (app/steam_workshop) ---
+    steam_web_api_key: str = ""               # Steam lists a Workshop only to a key; empty = off
+    steam_workshop_refresh_seconds: int = 21600
+
     # --- Live event stream (SSE: GET /v1/events/stream) ---
     # Push model so consumers stop polling challenge/chaos-chest at the top of the
     # hour. Events fan out across uvicorn workers via Redis pub/sub on this channel

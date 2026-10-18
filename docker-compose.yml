@@ -160,6 +160,8 @@ services:
       DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY:-}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
       DISCORD_INSTALL_URL: ${DISCORD_INSTALL_URL:-}
+      # Lists Trove's Steam Workshop for BTT's Steam tab. Blank = tab stays empty.
+      STEAM_WEB_API_KEY: ${STEAM_WEB_API_KEY:-}
       # Game-file version archiver. OFF by default - set to true ONLY when the
       # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
       TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}

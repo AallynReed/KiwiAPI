@@ -139,6 +139,7 @@ from app.trove.schemas import (
     BttCommit,
     BttLatestPerPlatform,
     BttModBlocklist,
+    BttWorkshopCatalog,
     BttPlatformLatest,
     BttReleaseInfo,
     BttReleaseList,
@@ -2536,6 +2537,14 @@ async def get_btt_changelog(
         rate_limited=doc.rate_limited,
         fetched_at=doc.fetched_at,
     )
+
+
+@btt_router.get("/workshop", response_model=BttWorkshopCatalog)
+async def get_btt_workshop(ctx: AccessContext = _BTT) -> BttWorkshopCatalog:
+    """Trove's Steam Workshop for BetterTroveTools' Steam tab, mirrored every few
+    hours, with the blocklist's ``workshop_items`` and ``workshop_authors`` left out."""
+    from app.steam_workshop.service import catalog
+    return BttWorkshopCatalog(**await catalog())
 
 
 @btt_router.get("/mod-blocklist", response_model=BttModBlocklist)

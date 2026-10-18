@@ -11,6 +11,7 @@ from app.admin.runtime_config import RuntimeConfig
 from app.auth.models import Session, User
 from app.bot.models import Club, GuildConfig, TrackedAnnouncement
 from app.btt_blocklist.models import BttModBlock
+from app.steam_workshop.models import SteamWorkshopItem
 from app.core.config import settings
 from app.core.email_outbox import OutboxEmail
 from app.core.utils import utcnow
@@ -113,6 +114,7 @@ DOCUMENT_MODELS = [
     ArtRequest,                          # custom art requests for Zakros UI Chat + Nameplate
     ModStatsSnapshot,                    # daily mod counts across hub, Trovesaurus, Steam
     BttModBlock,                         # BTT's external mod catalog blocklist
+    SteamWorkshopItem,                   # Trove's Steam Workshop, mirrored for BTT's Steam tab
 ]
 
 # Beanie 2.x uses PyMongo's native async client (Motor is no longer used).

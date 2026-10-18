@@ -331,6 +331,26 @@ class BttModBlocklist(BaseModel):
     workshop_authors: list[str] = []  # SteamID64s whose Workshop items BTT unsubscribes from and deletes
 
 
+class BttWorkshopItem(BaseModel):
+    published_file_id: str
+    title: str
+    description: str
+    creator: str                  # SteamID64
+    creator_name: str
+    preview_url: str
+    file_size: int
+    created: int                  # unix seconds
+    updated: int
+    subscriptions: int
+    favorites: int
+    tags: list[str]
+
+
+class BttWorkshopCatalog(BaseModel):
+    items: list[BttWorkshopItem]  # most subscribed first, blocklisted items and authors left out
+    fetched_at: str | None        # last mirror of Steam; None before the first one
+
+
 # --- Events (Trovesaurus calendar) -----------------------------------------
 
 
