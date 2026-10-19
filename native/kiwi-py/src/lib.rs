@@ -185,8 +185,17 @@ fn bp_encode<'py>(
     Some(PyBytes::new(py, &bytes))
 }
 
+/// `wem.convert`: `(bytes, mime, extension)`, or None to let Python handle it.
+#[pyfunction]
+#[pyo3(signature = (raw, codebooks=None))]
+fn wem_convert<'py>(py: Python<'py>, raw: &[u8], codebooks: Option<&[u8]>) -> Option<(Bound<'py, PyBytes>, &'static str, &'static str)> {
+    let c = py.detach(|| kiwi_core::audio::convert(raw, codebooks))?;
+    Some((PyBytes::new(py, &c.bytes), c.mime, c.ext))
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(wem_convert, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_hash, m)?)?;
     m.add_function(wrap_pyfunction!(harvest_strings, m)?)?;
     m.add_function(wrap_pyfunction!(bp_decode, m)?)?;

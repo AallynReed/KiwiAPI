@@ -114,6 +114,10 @@ class CodebookLibrary:
 
     __slots__ = ("_data", "_offsets")
 
+    @property
+    def raw(self) -> bytes:
+        return self._data
+
     def __init__(self, raw: bytes) -> None:
         if len(raw) < 4:
             raise VorbisError("codebook library is truncated")

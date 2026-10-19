@@ -28,7 +28,12 @@ import struct
 from dataclasses import dataclass
 
 from app.trove.audio.ogg import OggWriter
-from app.trove.audio.wwise_vorbis import BitReader, BitWriter, VorbisError, rebuild_setup
+from app.trove.audio.wwise_vorbis import BitReader, BitWriter, VorbisError, library, rebuild_setup
+
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
 
 FMT_PCM = 0xFFFE
 FMT_ADPCM = 0x0002
@@ -125,6 +130,14 @@ def parse(raw: bytes) -> WemInfo:
 
 def convert(raw: bytes) -> tuple[bytes, str, str]:
     """Return ``(bytes, mime, extension)`` for a browser-playable rendering."""
+    if _native is not None:
+        try:
+            codebooks: bytes | None = library().raw
+        except VorbisError:
+            codebooks = None
+        out = _native.wem_convert(raw if type(raw) is bytes else bytes(raw), codebooks)
+        if out is not None:
+            return out
     info = parse(raw)
     if info.codec == "vorbis":
         return _to_ogg(raw, info), "audio/ogg", "ogg"
