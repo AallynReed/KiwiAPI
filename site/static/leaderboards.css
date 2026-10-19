@@ -103,70 +103,59 @@
   outline-offset: 2px;
 }
 
-/* ─── 7-day picker ─────────────────────────────────────────────────── */
+/* ─── Day picker: one segmented row, one cell per trove-day ───────────── */
 
+.lb-day-row { min-width: 0; }
 .lb-day-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-/* Extended archive (signed-in users): many chips would wrap into a tall block,
-   so lay them out as one horizontal, snap-scrolling row instead. */
-.lb-day-picker.lb-day-picker--scroll {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-}
-.lb-day-picker--scroll .lb-day {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  border: 1px solid var(--bg-line, #1f2733);
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-card, #131922);
+  overflow: hidden;
 }
 .lb-day-loading {
-  flex: 1 1 100%;
   color: var(--text-mute);
   font-size: .9rem;
-  padding: 16px;
+  padding: 14px;
   text-align: center;
 }
-/* Compact single-line chip: date + capture time on one row (no "DAY" label). */
 .lb-day {
-  flex: 1 1 auto;
-  min-width: 120px;
+  min-width: 0;
   display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: center;
-  gap: 7px;
-  white-space: nowrap;
-  padding: 8px 12px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 10px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 8px;
+  border: 0;
+  border-left: 1px solid var(--bg-line, #1f2733);
+  background: transparent;
   color: var(--text);
   font-family: inherit;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: background .12s ease, border-color .12s ease, transform .08s ease;
+  transition: background .12s ease, color .12s ease;
 }
-.lb-day:hover {
-  background: rgba(255,255,255,.07);
-  border-color: rgba(255,255,255,.18);
+.lb-day:first-child { border-left: 0; }
+.lb-day:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+.lb-day:focus-visible {
+  outline: 2px solid var(--accent-blue, #58a6ff);
+  outline-offset: -2px;
 }
-.lb-day:active { transform: scale(.97); }
 .lb-day.active {
-  background: rgba(120,180,255,.16);
-  border-color: rgba(120,180,255,.55);
-  color: var(--accent-blue);
-  box-shadow: 0 0 0 1px rgba(120,180,255,.25) inset;
+  background: color-mix(in srgb, var(--accent-blue, #58a6ff) 16%, transparent);
+  box-shadow: inset 0 -2px 0 var(--accent-blue, #58a6ff);
+  color: color-mix(in srgb, var(--accent-blue, #58a6ff) 75%, white);
 }
-.lb-day-empty {
-  cursor: not-allowed;
-  opacity: .42;
-}
-.lb-day-empty:hover {
-  background: rgba(255,255,255,.04);
-  border-color: rgba(255,255,255,.1);
+.lb-day-empty { cursor: not-allowed; opacity: .45; }
+.lb-day-empty:hover { background: transparent; }
+.lb-day-date,
+.lb-day-meta {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .lb-day-date {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
@@ -174,20 +163,11 @@
   font-weight: 600;
 }
 .lb-day-meta {
-  font-size: .72rem;
+  font-size: .75rem;
   color: var(--text-mute);
-  font-family: SFMono-Regular, Consolas, monospace;
 }
-.lb-day.active .lb-day-meta { color: rgba(120,180,255,.85); }
+.lb-day.active .lb-day-meta { color: inherit; opacity: .85; }
 
-/* ─── Archive access row (recent chips + a date-jump / sign-in prompt) ───── */
-.lb-day-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.lb-day-row > .lb-day-picker { flex: 1 1 320px; min-width: 0; }
 .lb-search-wrap {
   position: relative;
   display: block;
@@ -1791,15 +1771,15 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
 }
 
 @media (max-width: 640px) {
-  /* Collapse the picker into a horizontal scroller so each chip stays
-     legible on phones. */
+  /* Seven cells don't fit a phone: keep the row, let it scroll and snap. */
   .lb-day-picker {
-    flex-wrap: nowrap;
+    grid-auto-columns: minmax(104px, 1fr);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding-bottom: 6px;
+    scrollbar-width: none;
   }
-  .lb-day { flex: 0 0 auto; scroll-snap-align: start; }
+  .lb-day-picker::-webkit-scrollbar { display: none; }
+  .lb-day { scroll-snap-align: start; }
   .lb-day-date { font-size: .85rem; }
 }
 
@@ -1813,18 +1793,8 @@ button.lb-cheater-board-name.lb-cheater-board-link:hover i {
   .lb-title { font-size: 1.9rem; }
   .lb-subtitle { font-size: .95rem; }
 
-  /* The day row is a grid item, and grid items get ``min-width: auto`` - the
-     archive CTA is ``white-space: nowrap`` and the picker's flex-basis kept the
-     row from shrinking, so the row sized itself to max-content and dragged the
-     ENTIRE PAGE out to ~1100px of horizontal scroll on a 375px screen. A fixed
-     ``minmax(0, 1fr)`` track plus an explicit ``min-width: 0`` breaks that chain;
-     the picker then scrolls inside its own box the way it was meant to. */
+  /* Grid items default to min-width:auto; without this the picker widens the page. */
   .lb-toolbar-field { min-width: 0; }
-  .lb-day-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
 
   /* Tab strip: four tabs run ~810px wide against a ~340px phone, so it has
      always been a horizontal scroller - but with the scrollbar hidden there
