@@ -207,7 +207,11 @@ exposed to Python through `native/kiwi-py` as the `kiwi_native` module. The Dock
 builds it in its own stage. Each ported Python function prefers `kiwi_native` and keeps its
 Python body as the fallback and the parity reference (`tests/unit/native/`).
 
-Ported so far: `troveio.calculate_hash` (~180× faster) and `binfab.harvest_strings` (~40×).
+Ported so far: `troveio.calculate_hash` (~180× faster), `binfab.harvest_strings` (~40×), and the
+blueprint voxel tables: `codec.decode_full`/`encode`, `render.voxel.decode_render_map` and
+`pack_blueprint`, and `mods_hub.assembly`'s grid decode. zlib stays in Python so compressed bytes are
+unchanged; any input the Rust side can't reproduce exactly returns `None` and reruns in Python, so
+errors are raised exactly as before.
 
 ```bash
 pip install "maturin>=1.15,<2"

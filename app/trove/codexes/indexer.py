@@ -186,7 +186,7 @@ class _Maps:
         and the same part blueprints recur across a creature's whole family. The cheap
         ``is_empty_blueprint`` check short-circuits the placeholders, which is the case
         this exists to detect, so only real models pay for a decode."""
-        from app.trove.render.voxel import decode, is_empty_blueprint, to_render_voxels
+        from app.trove.render.voxel import decode_render_map, is_empty_blueprint
         key = name.replace("\\", "/").lower().removeprefix("blueprints/")
         cached = self._model_size.get(key)
         if cached is not None:
@@ -196,7 +196,7 @@ class _Maps:
         raw = self.store.get(sha) if (sha and self.store is not None) else None
         if raw and not is_empty_blueprint(raw):
             try:
-                size = len(to_render_voxels(decode(raw)))
+                size = len(decode_render_map(raw))
             except Exception:  # noqa: BLE001 - an undecodable model is simply not usable
                 size = 0
         self._model_size[key] = size

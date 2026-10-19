@@ -111,6 +111,22 @@ def load_animation_graph(skeleton: str) -> bytes | None:
         return f.read()
 
 
+def _native_grid_payload(raw: bytes) -> tuple[int, bytes] | None:
+    """``(version, payload)`` for kiwi_native's grid decoders, inflated the way
+    ``_decode_v5_grid`` inflates. None without the module or outside v3-v5."""
+    from app.trove.blueprint import codec
+
+    if codec._native is None or raw[:5] != b"kiwib" or len(raw) < 9:
+        return None
+    version = struct.unpack_from("<I", raw, 5)[0]
+    if version in (3, 4):
+        return version, raw if type(raw) is bytes else bytes(raw)
+    if version == 5:
+        d = zlib.decompressobj()
+        return version, d.decompress(raw[9:]) + d.flush()
+    return None
+
+
 def _decode_grid(raw: bytes) -> list[tuple]:
     """Decode ANY .blueprint version to grid voxels, in the same un-mirrored, absolute
     grid space ``_decode_v5_grid`` produces.
@@ -120,8 +136,14 @@ def _decode_grid(raw: bytes) -> list[tuple]:
     blueprints - several character heads and every eye mesh are v3 - and a decoder that
     only spoke v5 dropped them silently, which is a part quietly missing from a model
     rather than an error anyone sees."""
+    from app.trove.blueprint import codec
     from app.trove.render.voxel import KIND_CODE, material_for
 
+    native = _native_grid_payload(raw)
+    if native is not None and codec._native is not None:
+        out = codec._native.bp_grid(*native)
+        if out is not None:
+            return out
     if raw[:5] != b"kiwib":
         return []
     version = struct.unpack_from("<I", raw, 5)[0]
@@ -293,13 +315,23 @@ def _part_at(key: str, raw: bytes, scale: float) -> dict | None:
 
     if raw[:5] != b"kiwib" or is_empty_blueprint(raw):
         return None
-    vox = _decode_grid(raw)
-    if not vox:
-        return None
-    part = {"name": key,
-            "x": [v[0] for v in vox], "y": [v[1] for v in vox], "z": [v[2] for v in vox],
-            "rgb": [v[3] for v in vox], "kind": [v[4] for v in vox], "level": [v[5] for v in vox]}
-    spec = [v[6] for v in vox]
+    from app.trove.blueprint import codec
+
+    native = _native_grid_payload(raw)
+    cols = codec._native.bp_grid_columns(*native) if native is not None and codec._native else None
+    if cols is not None:
+        if not cols[0]:
+            return None
+        xs, ys, zs, rgb, kind, level, spec = cols
+        part = {"name": key, "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level}
+    else:
+        vox = _decode_grid(raw)
+        if not vox:
+            return None
+        part = {"name": key,
+                "x": [v[0] for v in vox], "y": [v[1] for v in vox], "z": [v[2] for v in vox],
+                "rgb": [v[3] for v in vox], "kind": [v[4] for v in vox], "level": [v[5] for v in vox]}
+        spec = [v[6] for v in vox]
     if any(spec):                        # all-rough is the common case: don't ship the array
         part["spec"] = spec
     if scale != 1.0:

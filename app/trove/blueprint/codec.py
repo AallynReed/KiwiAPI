@@ -47,6 +47,11 @@ DEFAULT_TYPE = 0x15          # 21 -- standard solid voxel
 DEFAULT_W = 0
 SUPPORTED_VERSIONS = (3, 4, 5)
 
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
+
 
 class BlueprintError(ValueError):
     """Raised when bytes are not a decodable kiwib blueprint."""
@@ -228,11 +233,29 @@ def _decode_v5(data: bytes) -> DecodedBlueprint:
     return DecodedBlueprint(5, (sx, sy, sz), (px, py, pz), voxels, entity_blob)
 
 
+def native_payload(data: bytes) -> tuple[int, bytes] | None:
+    """``(version, payload)`` for the kiwi_native blueprint functions: the file for
+    v3/v4, the inflated body for v5. None without the module or for other versions."""
+    if _native is None:
+        return None
+    version = blueprint_version(data)
+    if version in (3, 4):
+        return version, data if type(data) is bytes else bytes(data)
+    if version == 5:
+        return version, inflate_v5(data)
+    return None
+
+
 def decode_full(data: bytes) -> DecodedBlueprint:
     """Decode to a ``DecodedBlueprint`` (voxels **plus** size, origin and entity blob).
 
     Use this whenever the result will be re-encoded; ``decode`` keeps only the voxels,
     which is enough to draw a model but not to save one back losslessly."""
+    native = native_payload(data)
+    if native is not None and _native is not None:
+        r = _native.bp_decode(*native)
+        if r is not None:
+            return DecodedBlueprint(*r[:5], offset=r[5])
     version = blueprint_version(data)
     if version is None:
         raise BlueprintError("Not a Trove blueprint (missing 'kiwib' magic).")
@@ -413,6 +436,11 @@ def encode(
     v5 that also renumbers every linear index, so the origin would no longer line up
     with where the game expects the model to sit.
     """
+    if _native is not None and isinstance(entity_blob, (bytes, bytearray)):
+        blob = bytes(entity_blob if version in (3, 4) else (entity_blob or b"\x00\x00\x00\x00"))
+        out = _native.bp_encode(voxels, version, size, pos, offset, blob)
+        if out is not None:
+            return out if version in (3, 4) else MAGIC + struct.pack("<I", 5) + zlib.compress(out, 9)
     if not voxels:
         raise BlueprintError("Cannot encode a blueprint with no voxels.")
     if version not in SUPPORTED_VERSIONS:

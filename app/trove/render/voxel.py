@@ -95,6 +95,16 @@ def material_for(r: int, g: int, b: int, w: int, t: int) -> tuple[int, int, int,
     return r, g, b, kind, level, (0 if kind != "S" else max(0, min(int(w), 7)))
 
 
+def decode_render_map(raw: bytes) -> dict:
+    """``to_render_voxels(decode(raw))``, in Rust when kiwi_native is installed."""
+    native = _codec.native_payload(raw)
+    if native is not None and _codec._native is not None:
+        out = _codec._native.bp_render_map(*native)
+        if out is not None:
+            return out
+    return to_render_voxels(decode(raw))
+
+
 def to_render_voxels(decoded: list[dict]) -> dict:
     """``{(x,y,z): (r,g,b,kind,level,spec)}`` -- level = glass alpha level 16+32*w."""
     out = {}
@@ -117,6 +127,21 @@ def pack_blueprint(raw: bytes, path: str, *, cap: int = RENDER_VOXEL_CAP) -> dic
     CPU-bound - call via ``asyncio.to_thread``."""
     if is_empty_blueprint(raw):
         raise BlueprintEmpty("This blueprint is an empty placeholder (no voxels to show).")
+    native = _codec.native_payload(raw)
+    cols = _codec._native.bp_render_columns(*native) if native is not None and _codec._native else None
+    if cols:
+        xs, ys, zs, rgb, kind, level, spec = cols
+        if len(xs) > cap:
+            raise BlueprintTooLarge(f"This model is too large to preview ({len(xs):,} voxels).")
+        packed = {
+            "path": path,
+            "count": len(xs),
+            "size": [max(xs) - min(xs) + 1, max(ys) - min(ys) + 1, max(zs) - min(zs) + 1],
+            "x": xs, "y": ys, "z": zs, "rgb": rgb, "kind": kind, "level": level,
+        }
+        if any(spec):
+            packed["spec"] = spec
+        return packed
     voxels = to_render_voxels(decode(raw))
     if not voxels:
         raise BlueprintEmpty("That blueprint has no voxels.")
@@ -425,7 +450,7 @@ def render_blueprint_png(data: bytes, dim: int = 256, params: dict | None = None
     ``contain=True`` (thumbnails): fill the frame, then crop-to-content + centre in a
     square -- ignores the catalog-faithful framing in favour of a tidy, centred image.
     """
-    voxels = to_render_voxels(decode(data))
+    voxels = decode_render_map(data)
     p = dict(params or {})
     if contain:
         p.setdefault("fit", "tight")
