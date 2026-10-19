@@ -3177,7 +3177,7 @@ async function renderCustomArt() {
   pane.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => modal(
     "Approve this request",
     `<label>Name <span class="muted">(the file name the mods match on - fix it here if it's off)</span></label>
-     <input id="art-approve-name" value="${b.dataset.name}" maxlength="64">`,
+     <input id="art-approve-name" value="${esc(b.dataset.name)}" maxlength="64">`,
     async () => {
       const name = document.getElementById("art-approve-name").value.trim();
       await API.call(`/admin/custom-art/${b.dataset.approve}/approve`, { method: "POST", body: { name } });
