@@ -473,8 +473,34 @@ fn lb_parse<'py>(py: Python<'py>, text: &str, entry_cls: &Bound<'py, PyAny>) -> 
     Ok(Some(out))
 }
 
+/// One capture's per-board scores, decoded from a binary COPY.
+#[pyclass(frozen)]
+struct ActCapture(kiwi_core::activity::Capture);
+
+/// Decode a binary COPY of `(board_uuid, player_id, score)`; None if malformed.
+#[pyfunction]
+fn act_decode(py: Python<'_>, data: &[u8]) -> Option<ActCapture> {
+    py.detach(|| kiwi_core::activity::decode_copy(data)).map(ActCapture)
+}
+
+/// `_pair_estimate`: (sorted active player ids, boards in both captures,
+/// {board: active count} for boards with any).
+#[pyfunction]
+fn act_pair(
+    py: Python<'_>,
+    early: &ActCapture,
+    late: &ActCapture,
+    boards: Vec<i32>,
+) -> (Vec<i64>, usize, HashMap<i32, usize>) {
+    let p = py.detach(|| kiwi_core::activity::pair(&early.0, &late.0, &boards));
+    (p.active, p.boards, p.per_board)
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<ActCapture>()?;
+    m.add_function(wrap_pyfunction!(act_decode, m)?)?;
+    m.add_function(wrap_pyfunction!(act_pair, m)?)?;
     m.add_function(wrap_pyfunction!(lb_parse, m)?)?;
     m.add_function(wrap_pyfunction!(det_board_families, m)?)?;
     m.add_function(wrap_pyfunction!(det_history, m)?)?;

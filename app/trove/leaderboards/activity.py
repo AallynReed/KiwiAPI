@@ -37,6 +37,11 @@ from app.trove.leaderboards import service as lb_service
 
 logger = logging.getLogger(__name__)
 
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
+
 
 # Result cache: {(anchor_late, anchor_early): (stored_at, payload)}.
 _CACHE: dict[tuple[int, int], tuple[float, dict]] = {}
@@ -324,25 +329,38 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
 
     # Unguarded loads: a failure should make the warmer retry rather than publish
     # a bogus 0.
-    late_maps = await _load_anchor_maps(anchor_late, board_uuids)
-    early_map = await _load_anchor_maps(anchor_early, board_uuids)
+    late_cap = await _load_capture(anchor_late, board_uuids)
+    early_cap = await _load_capture(anchor_early, board_uuids)
 
     active_union: set[str] = set()
     per_board: list[dict] = []
-    for uuid in board_uuids:
-        late = late_maps.get(uuid)
-        if not late:
-            continue
-        s = _board_active_names(late, early_map.get(uuid, {}))
-        if s:
-            active_union.update(s)
-            meta = meta_by_uuid[uuid]
-            per_board.append({
-                "uuid": uuid,
-                "name": meta["name"],
-                "category": meta["category"],
-                "active_players": len(s),
-            })
+    if not isinstance(late_cap, dict) and not isinstance(early_cap, dict) and _native is not None:
+        ids, _, counts = _native.act_pair(early_cap, late_cap, board_uuids)
+        active_union = set(await _pg.player_names(ids))
+        for uuid in board_uuids:
+            if counts.get(uuid):
+                meta = meta_by_uuid[uuid]
+                per_board.append({
+                    "uuid": uuid, "name": meta["name"], "category": meta["category"],
+                    "active_players": counts[uuid],
+                })
+    else:
+        late_maps = await _load_anchor_maps(anchor_late, board_uuids)
+        early_map = await _load_anchor_maps(anchor_early, board_uuids)
+        for uuid in board_uuids:
+            late = late_maps.get(uuid)
+            if not late:
+                continue
+            s = _board_active_names(late, early_map.get(uuid, {}))
+            if s:
+                active_union.update(s)
+                meta = meta_by_uuid[uuid]
+                per_board.append({
+                    "uuid": uuid,
+                    "name": meta["name"],
+                    "category": meta["category"],
+                    "active_players": len(s),
+                })
 
     per_board.sort(key=lambda b: -b["active_players"])
 
@@ -416,6 +434,33 @@ async def _load_anchor_maps(
     is the unit the streaming backfill holds in memory: one capture at a time."""
     from app.trove.leaderboards import pg_store
     return await pg_store.anchor_maps(anchor, board_uuids)
+
+
+async def _load_capture(anchor: int, board_uuids: list[int]):
+    """One capture for the pair rule: decoded in Rust when kiwi_native is
+    installed, else ``_load_anchor_maps``'s dicts."""
+    if _native is not None:
+        from app.trove.leaderboards import pg_store
+        cap = await pg_store.anchor_capture(anchor, board_uuids)
+        if cap is not None:
+            return cap
+    return await _load_anchor_maps(anchor, board_uuids)
+
+
+async def _pair_names(
+    early, late, boards: dict[int, dict], early_ts: int, late_ts: int,
+) -> tuple[set[str], int]:
+    """``_pair_estimate`` for captures from ``_load_capture``."""
+    from app.trove.leaderboards import pg_store
+    if _native is not None and not isinstance(early, dict) and not isinstance(late, dict):
+        ids, nboards, _ = _native.act_pair(early, late, list(boards))
+        return set(await pg_store.player_names(ids)), nboards
+    uuids = list(boards)
+    if not isinstance(early, dict):
+        early = await _load_anchor_maps(early_ts, uuids)
+    if not isinstance(late, dict):
+        late = await _load_anchor_maps(late_ts, uuids)
+    return _pair_estimate(early, late, boards, early_ts, late_ts)
 
 
 def _pair_estimate(
@@ -532,20 +577,20 @@ async def backfill_history(
     active_floor = int(time.time()) - _ACTIVE_RETENTION_SECONDS
     computed = failed = unmeasured = 0
     prev_anchor: int | None = None
-    prev_maps: dict[int, dict[str, float]] | None = None
+    prev_maps = None
     # Contiguous run of this replay's windows, oldest first: (early, late, names).
     chain: deque[tuple[int, int, set[str]]] = deque()
 
     for i, anchor in enumerate(needed):
-        cur_maps = await _load_anchor_maps(anchor, board_uuids)
+        cur_maps = await _load_capture(anchor, board_uuids)
         early = early_of.get(anchor)
         if early is not None:
             try:
                 if early == prev_anchor and prev_maps is not None:
                     early_maps = prev_maps
                 else:
-                    early_maps = await _load_anchor_maps(early, board_uuids)
-                active_names, nboards = _pair_estimate(
+                    early_maps = await _load_capture(early, board_uuids)
+                active_names, nboards = await _pair_names(
                     early_maps, cur_maps, boards, early, anchor)
                 if anchor >= active_floor:
                     await pg_store.record_active_window(anchor, active_names)

@@ -12,6 +12,7 @@ anchor's day-partition (sub-second for a ~720k-row snapshot).
 """
 from __future__ import annotations
 
+import io
 import json
 
 from app.core.postgres import acquire
@@ -402,8 +403,37 @@ async def anchor_maps(anchor: int, board_uuids: list[int]) -> dict[int, dict[str
         )
     out: dict[int, dict[str, float]] = {}
     for r in rows:
-        out.setdefault(r["board_uuid"], {})[r["player_name"]] = r["score"]
+        board = out.setdefault(r["board_uuid"], {})
+        prev = board.get(r["player_name"])
+        if prev is None or r["score"] > prev:    # listed twice: keep the higher score
+            board[r["player_name"]] = r["score"]
     return out
+
+
+async def anchor_capture(anchor: int, board_uuids: list[int]):
+    """The same capture as ``anchor_maps``, decoded by kiwi_native from a binary
+    COPY of ids and scores (no names, no Python row objects). None without the
+    module."""
+    from app.trove.leaderboards.activity import _native
+    if _native is None:
+        return None
+    buf = io.BytesIO()
+    async with acquire() as con:
+        await con.copy_from_query(
+            "SELECT board_uuid, player_id, score FROM entry "
+            "WHERE anchor = $1 AND board_uuid = ANY($2::int[])",
+            anchor, board_uuids, output=buf, format="binary",
+        )
+    return _native.act_decode(buf.getvalue())
+
+
+async def player_names(ids: list[int]) -> list[str]:
+    """Display names for player ids."""
+    if not ids:
+        return []
+    async with acquire() as con:
+        rows = await con.fetch("SELECT name FROM player WHERE id = ANY($1::bigint[])", ids)
+    return [r["name"] for r in rows]
 
 
 # ── per-window active-player set (the 24h/7d rollup source) ───────────────────

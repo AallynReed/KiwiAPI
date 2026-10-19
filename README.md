@@ -216,7 +216,9 @@ preview now parses uploads in-process under a step budget (`view.UPLOAD_BUDGET`)
 exhausts it still goes to the isolated child process.
 The leaderboard alt-cluster kernels (`detection._board_families`, `_cluster_history_signals`) run in Rust
 too (~13× / ~4×); their tie-breaks are deterministic in both versions.
-Capture ingest parses the LeaderBot.cfg dump in Rust (`kiwi_native.lb_parse`, off the event loop). zlib stays in Python so compressed bytes are
+Capture ingest parses the LeaderBot.cfg dump in Rust (`kiwi_native.lb_parse`, off the event loop).
+Player activity (live estimate and the admin rebuild) reads each capture as a binary COPY decoded in
+Rust (`act_decode` / `act_pair`), ~4x per capture pair. zlib stays in Python so compressed bytes are
 unchanged; any input the Rust side can't reproduce exactly returns `None` and reruns in Python, so
 errors are raised exactly as before.
 
