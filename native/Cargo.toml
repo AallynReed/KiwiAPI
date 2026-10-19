@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["kiwi-core", "kiwi-py"]
+
+[profile.release]
+lto = true
+codegen-units = 1

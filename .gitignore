@@ -76,3 +76,6 @@ backups/
 
 *.tmp
 .gamedata/
+
+# Rust build output
+native/target/

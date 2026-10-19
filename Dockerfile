@@ -1,3 +1,16 @@
+# Rust hot paths (native/), built into an abi3 wheel the app stage installs.
+FROM python:3.13-slim AS native
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.97.1
+ENV PATH=/root/.cargo/bin:$PATH
+RUN pip install --no-cache-dir "maturin>=1.15,<2"
+COPY native /native
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/native/target \
+    cd /native/kiwi-py && maturin build --release --locked -o /wheels
+
 FROM python:3.13-slim AS app
 
 # Keep Python lean and unbuffered for clean container logs.
@@ -45,6 +58,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # (and no writable cache) at runtime - otherwise the first /v1/ocr/character call
 # would download ~15 MB of ONNX models. Constructing RapidOCR() fetches them.
 RUN python -c "from rapidocr import RapidOCR; RapidOCR()"
+
+COPY --from=native /wheels /tmp/wheels
+RUN pip install --no-cache-dir /tmp/wheels/*.whl && rm -rf /tmp/wheels
 
 COPY app ./app
 

@@ -156,6 +156,16 @@ def harvest_strings(data: bytes, min_len: int = 2, max_len: int = 512) -> list[t
     return out
 
 
+_harvest_strings_py = harvest_strings
+try:
+    import kiwi_native as _native
+
+    def harvest_strings(data: bytes, min_len: int = 2, max_len: int = 512) -> list[tuple[int, int, str]]:  # type: ignore[no-redef]
+        return _native.harvest_strings(data if type(data) is bytes else bytes(data), min_len, max_len)
+except ImportError:
+    pass
+
+
 def _real_fields(data: bytes) -> list[tuple[int, int, str]]:
     """``harvest_strings`` scans every byte offset, so it emits spurious sub-strings
     that start INSIDE a real string's bytes (e.g. ``024/...`` one byte into ``2024/...``).

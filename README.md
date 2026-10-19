@@ -23,7 +23,8 @@ Fully dockerized. **MongoDB** + **Redis** + **PostgreSQL**, all persisted to loc
 ## Stack
 
 Python 3.13 · FastAPI + Uvicorn · Beanie/PyMongo on MongoDB 7 · Redis 7 · PostgreSQL
-(leaderboards, market, codexes) · Argon2 + JWT auth · hashed API tokens.
+(leaderboards, market, codexes) · Argon2 + JWT auth · hashed API tokens · Rust (`native/`)
+for CPU-heavy hot paths, on the way to an all-Rust server.
 
 ## Platform features
 
@@ -159,6 +160,7 @@ site/           # showcase website (templates + static)
                 #   server-rendered first paint: app/site/ssr.py
 portal/         # developer-portal SPA
 docs/           # static docs (guide + Redoc reference + llms.txt)
+native/         # Rust workspace: kiwi-core (pure Rust) + kiwi-py (PyO3 module `kiwi_native`)
 ```
 
 ## Adding an endpoint
@@ -196,6 +198,24 @@ ruff check app tests          # lint
 pytest tests/unit             # unit tests (no services needed)
 pytest tests/integration -m integration   # needs Docker (testcontainers spin up Mongo + Redis)
 ```
+
+### Rust hot paths (`native/`)
+
+The long-term goal is an all-Rust server. Until then, CPU-heavy functions move into
+`native/kiwi-core` (plain Rust, no Python types, so the future server reuses it) and are
+exposed to Python through `native/kiwi-py` as the `kiwi_native` module. The Docker image
+builds it in its own stage. Each ported Python function prefers `kiwi_native` and keeps its
+Python body as the fallback and the parity reference (`tests/unit/native/`).
+
+Ported so far: `troveio.calculate_hash` (~180× faster) and `binfab.harvest_strings` (~40×).
+
+```bash
+pip install "maturin>=1.15,<2"
+cd native/kiwi-py && maturin develop --release   # build + install into the active venv
+cargo test --manifest-path native/Cargo.toml      # Rust unit tests
+```
+
+Without the module everything still runs on the Python fallbacks.
 
 ## Backups
 

@@ -46,6 +46,16 @@ def calculate_hash(data: bytes) -> int:
     return (_FNV_PRIME * (h ^ val)) & _MASK32
 
 
+_calculate_hash_py = calculate_hash
+try:
+    import kiwi_native as _native
+
+    def calculate_hash(data: bytes) -> int:  # type: ignore[no-redef]
+        return _native.calculate_hash(data if type(data) is bytes else bytes(data))
+except ImportError:
+    pass
+
+
 def write_leb128(value: int) -> bytes:
     out = bytearray()
     while value >= 0x80:

@@ -1,0 +1,12 @@
+[package]
+name = "kiwi-py"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+kiwi-core = { version = "0.1.0", path = "../kiwi-core" }
+pyo3 = { version = "0.30.1", features = ["abi3-py311", "extension-module"] }
+
+[lib]
+name = "kiwi_native"
+crate-type = ["cdylib"]
