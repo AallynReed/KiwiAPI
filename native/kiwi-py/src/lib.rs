@@ -554,8 +554,48 @@ fn ren_diff(
     py.detach(|| kiwi_core::renames::diff(&a.0, &b.0, min_boards))
 }
 
+/// `player_board_agg` folded in memory, capture by capture.
+#[pyclass]
+struct AggBuilder(kiwi_core::agg::Agg);
+
+type AggRecord = (i64, i32, i32, i64, i64, i64, i32, f64, i64, Option<i64>);
+
+#[pymethods]
+impl AggBuilder {
+    #[new]
+    fn new() -> Self {
+        AggBuilder(Default::default())
+    }
+
+    /// Fold one capture's binary COPY; the number of (player, board) rows it
+    /// held, or None if the bytes aren't that COPY.
+    fn fold(&mut self, py: Python<'_>, anchor: i64, data: &[u8]) -> Option<usize> {
+        let agg = &mut self.0;
+        py.detach(|| agg.fold_copy(anchor, data))
+    }
+
+    fn __len__(&self) -> usize {
+        self.0.rows.len()
+    }
+
+    /// Rows in `player_board_agg` column order (player_id, board_uuid, best_rank,
+    /// appearances, first_seen, last_seen, latest_rank, latest_score,
+    /// last_folded_anchor, last_rise).
+    fn records(&self) -> Vec<AggRecord> {
+        self.0
+            .rows
+            .iter()
+            .map(|(&(p, b), r)| {
+                (p, b, r.best_rank, r.appearances, r.first_seen, r.last_seen, r.latest_rank,
+                 r.latest_score, r.last_folded, r.last_rise)
+            })
+            .collect()
+    }
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<AggBuilder>()?;
     m.add_class::<RenKeys>()?;
     m.add_class::<RenFp>()?;
     m.add_function(wrap_pyfunction!(ren_keys, m)?)?;

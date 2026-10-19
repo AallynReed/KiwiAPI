@@ -2283,7 +2283,7 @@ async function renderLeaderboards() {
           <button class="btn small danger" id="rc-dup-reset" type="button">Reset &amp; recalculate</button>
         </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="flex:1 1 200px"><strong>Player board aggregate</strong> <span class="muted" style="font-size:.78rem">— per-player best/latest/appearances that powers the fast /player profile; maintained at ingest. Seed once on an existing dataset or after backfills (whole archive, background).</span></span>
+          <span style="flex:1 1 200px"><strong>Player board aggregate</strong> <span class="muted" style="font-size:.78rem">— per-player best/latest/appearances/last played that powers the fast /player profile; maintained at ingest. Rebuild after out-of-order backfills (replays the whole archive in the background, tens of minutes; the live table stays up until a short swap at the end).</span></span>
           <button class="btn small" id="rc-agg-rebuild" type="button">Rebuild</button>
         </div>
         <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
@@ -2555,7 +2555,8 @@ function wireRecomputeCard() {
       try { s = await API.call("/admin/leaderboards/rebuild-player-agg/status"); }
       catch (_) { return; }
       if (s && s.running) {
-        show("Rebuilding player board aggregate… (scanning all stored captures)");
+        const at = s.anchor ? new Date(s.anchor * 1000).toISOString().slice(0, 16).replace("T", " ") : "…";
+        show(`Rebuilding player board aggregate… ${(s.captures || 0).toLocaleString()} captures replayed (at ${at} UTC).`);
       } else {
         clearInterval(_aggPoll); _aggPoll = null;
         if (s && s.error) show(`Player aggregate rebuild failed: ${s.error}`);

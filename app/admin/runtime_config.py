@@ -1686,9 +1686,9 @@ REGISTRY: dict[str, TunableSetting] = {
         category="renames",
         description=(
             "Only compare two captures for renames when they are within this "
-            "many seconds of each other. Captures are hourly, so 5400s (1.5h) "
-            "is 'the adjacent capture plus slack for a delayed one' - never a "
-            "multi-hour outage gap, across which score drift + population churn "
+            "many seconds of each other. Captures land every ~6h, so 27000s "
+            "(7.5h) is 'the adjacent capture plus slack for a delayed one' - "
+            "never an outage gap, across which score drift + population churn "
             "would corrupt the fingerprint match. Pairs beyond this are skipped."
         ),
         min_value=3600, max_value=86400,

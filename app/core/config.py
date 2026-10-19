@@ -228,7 +228,7 @@ class Settings(BaseSettings):
     # corrupt the fingerprint match, so pairs beyond this are skipped entirely.
     # 5400s = 1.5h (captures are hourly, so this is "the adjacent capture plus
     # a little slack for a delayed/missed one", never a multi-hour outage gap).
-    renames_max_gap_seconds: int = 5400
+    renames_max_gap_seconds: int = 27000
     # A rename is only emitted when the vanished + appeared names match on at
     # least this many lifetime boards. 2+ near-identical Mastery-scale scores
     # coinciding by chance between two distinct accounts is astronomically

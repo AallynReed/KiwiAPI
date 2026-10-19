@@ -743,10 +743,12 @@ async def player_board_summary(name: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-async def _fold_anchor_into_agg(con, anchor: int) -> None:
+async def _fold_anchor_into_agg(con, anchor: int, table: str = "player_board_agg",
+                                timeout: float | None = None) -> None:
     """Fold one just-inserted capture into ``player_board_agg`` (called INSIDE
     write_snapshot's transaction, after the entry INSERT). One set-based upsert
-    over this anchor's partition only - cheap.
+    over this anchor's partition only - cheap. ``table`` is the rebuild's staging
+    copy when replaying history (an internal name, never user input).
 
     Idempotent for the common forward-ingest + exact-replay cases: ``appearances``
     increments only when the anchor is strictly newer than what's already folded
@@ -756,7 +758,7 @@ async def _fold_anchor_into_agg(con, anchor: int) -> None:
     trued up by rebuild_player_board_agg). ``last_rise`` moves only when this
     capture is newer than the last one folded AND its score is higher."""
     await con.execute(
-        "INSERT INTO player_board_agg AS a "
+        f"INSERT INTO {table} AS a "
         "  (player_id, board_uuid, best_rank, appearances, first_seen, last_seen, "
         "   latest_rank, latest_score, last_folded_anchor) "
         # DISTINCT ON guarantees one row per (player, board) so ON CONFLICT never
@@ -767,7 +769,7 @@ async def _fold_anchor_into_agg(con, anchor: int) -> None:
         "       e.player_id, e.board_uuid, e.rank, 1, e.anchor, e.anchor, "
         "       e.rank, e.score, e.anchor "
         "FROM entry e WHERE e.anchor = $1 "
-        "ORDER BY e.player_id, e.board_uuid, e.rank ASC "
+        "ORDER BY e.player_id, e.board_uuid, e.rank ASC, e.score DESC "
         "ON CONFLICT (player_id, board_uuid) DO UPDATE SET "
         "  best_rank    = LEAST(a.best_rank, EXCLUDED.best_rank), "
         "  first_seen   = LEAST(a.first_seen, EXCLUDED.first_seen), "
@@ -781,7 +783,7 @@ async def _fold_anchor_into_agg(con, anchor: int) -> None:
         "                      THEN EXCLUDED.latest_score ELSE a.latest_score END, "
         f"  last_rise    = {_LAST_RISE_RULE}, "
         "  last_folded_anchor = GREATEST(a.last_folded_anchor, EXCLUDED.last_folded_anchor)",
-        anchor,
+        anchor, timeout=timeout,
     )
 
 
@@ -802,18 +804,33 @@ async def backfill_last_rise(on_progress=None) -> int:
     One capture per step keeps each statement the size of an hourly ingest;
     sorting a whole trove-day partition at once is too heavy for the cold tier.
     Captures that land while it runs are picked up by the loop. Returns the
-    number of live rows whose ``last_rise`` changed. A session advisory lock
-    refuses a second run from any process, which would drop this one's scratch."""
+    number of live rows whose ``last_rise`` changed."""
+    return await _agg_job(_backfill_last_rise, on_progress)
+
+
+_AGG_JOB_LOCK = 0x4C415354   # "LAST"
+
+
+async def _agg_job(job, on_progress) -> int:
+    """Run one whole-history ``player_board_agg`` job on its own connection. A
+    session advisory lock refuses a second one from any process: two would fight
+    over the same tables and the same cold disk."""
     async with acquire() as con:
-        if not await con.fetchval("SELECT pg_try_advisory_lock($1)", _LAST_RISE_LOCK):
-            raise RuntimeError("A last-played backfill is already running.")
+        if not await con.fetchval("SELECT pg_try_advisory_lock($1)", _AGG_JOB_LOCK):
+            raise RuntimeError("Another player-aggregate job is already running.")
         try:
-            return await _backfill_last_rise(con, on_progress)
+            return await job(con, on_progress)
         finally:
-            await con.execute("SELECT pg_advisory_unlock($1)", _LAST_RISE_LOCK)
+            await con.execute("SELECT pg_advisory_unlock($1)", _AGG_JOB_LOCK)
 
 
-_LAST_RISE_LOCK = 0x4C415354   # "LAST"
+async def _anchors_after(con, after: int = -1):
+    """Every stored capture anchor after ``after``, oldest first, one indexed probe
+    each - so captures that land while a replay runs are picked up too."""
+    anchor = await con.fetchval("SELECT min(anchor) FROM entry WHERE anchor > $1", after)
+    while anchor is not None:
+        yield anchor
+        anchor = await con.fetchval("SELECT min(anchor) FROM entry WHERE anchor > $1", anchor)
 
 
 async def _backfill_last_rise(con, on_progress) -> int:
@@ -826,27 +843,53 @@ async def _backfill_last_rise(con, on_progress) -> int:
         ") WITH (fillfactor = 50)"
     )
     try:
-        first = anchor = await con.fetchval("SELECT min(anchor) FROM entry")
+        from app.trove.leaderboards.activity import _native
+        first = None
         done = 0
-        while anchor is not None:
-            await con.execute(
-                "INSERT INTO player_last_rise_scratch AS a "
-                "  (player_id, board_uuid, last_seen, latest_score) "
-                "SELECT DISTINCT ON (player_id, board_uuid) player_id, board_uuid, anchor, score "
-                "FROM entry WHERE anchor = $1 "
-                "ORDER BY player_id, board_uuid, rank ASC "
-                "ON CONFLICT (player_id, board_uuid) DO UPDATE SET "
-                f"  last_rise    = {_LAST_RISE_RULE}, "
-                "  latest_score = CASE WHEN EXCLUDED.last_seen >= a.last_seen "
-                "                      THEN EXCLUDED.latest_score ELSE a.latest_score END, "
-                "  last_seen    = GREATEST(a.last_seen, EXCLUDED.last_seen)",
-                anchor, timeout=600,
+        if _native is not None:
+            # The rebuild's in-memory replay carries last_rise; keep only what
+            # the merge below needs.
+            builder = _native.AggBuilder()
+            async for anchor in _anchors_after(con):
+                if first is None:
+                    first = anchor
+                buf = io.BytesIO()
+                await con.copy_from_query(
+                    "SELECT board_uuid, player_id, rank, score FROM entry WHERE anchor = $1",
+                    anchor, output=buf, format="binary", timeout=600,
+                )
+                if builder.fold(anchor, buf.getvalue()) is None:
+                    raise RuntimeError(f"capture {anchor} could not be read")
+                done += 1
+                if on_progress is not None:
+                    on_progress(done, first, anchor)
+            await con.copy_records_to_table(
+                "player_last_rise_scratch",
+                records=[(r[0], r[1], r[5], r[7], r[9]) for r in builder.records()],
+                columns=["player_id", "board_uuid", "last_seen", "latest_score", "last_rise"],
+                timeout=1800,
             )
-            done += 1
-            if on_progress is not None:
-                on_progress(done, first, anchor)
-            anchor = await con.fetchval(
-                "SELECT min(anchor) FROM entry WHERE anchor > $1", anchor)
+            del builder
+        else:
+            async for anchor in _anchors_after(con):
+                if first is None:
+                    first = anchor
+                await con.execute(
+                    "INSERT INTO player_last_rise_scratch AS a "
+                    "  (player_id, board_uuid, last_seen, latest_score) "
+                    "SELECT DISTINCT ON (player_id, board_uuid) player_id, board_uuid, anchor, score "
+                    "FROM entry WHERE anchor = $1 "
+                    "ORDER BY player_id, board_uuid, rank ASC, score DESC "
+                    "ON CONFLICT (player_id, board_uuid) DO UPDATE SET "
+                    f"  last_rise    = {_LAST_RISE_RULE}, "
+                    "  latest_score = CASE WHEN EXCLUDED.last_seen >= a.last_seen "
+                    "                      THEN EXCLUDED.latest_score ELSE a.latest_score END, "
+                    "  last_seen    = GREATEST(a.last_seen, EXCLUDED.last_seen)",
+                    anchor, timeout=600,
+                )
+                done += 1
+                if on_progress is not None:
+                    on_progress(done, first, anchor)
         res = await con.execute(
             "UPDATE player_board_agg a SET last_rise = s.last_rise "
             "FROM player_last_rise_scratch s "
@@ -860,38 +903,99 @@ async def _backfill_last_rise(con, on_progress) -> int:
     return int(res.split()[-1]) if res.startswith("UPDATE") else 0
 
 
-async def rebuild_player_board_agg() -> int:
-    """Full recompute of ``player_board_agg`` from the entry table (the expensive
-    all-history scan, done ONCE). Use to seed the table on an existing dataset,
-    or to true up appearance counts after out-of-order backfills. Returns the row
-    count written. Runs in a transaction so readers never see a half-built table."""
-    async with acquire() as con:
+async def rebuild_player_board_agg(on_progress=None) -> int:
+    """Full recompute of ``player_board_agg`` from every stored capture. Seeds the
+    table on an existing dataset and trues up appearance counts after out-of-order
+    backfills. Returns the row count.
+
+    Replays the captures oldest first by the ingest fold's rule: in memory in Rust
+    when kiwi_native is installed (one COPY read per capture), else through the fold
+    SQL into an unlogged staging copy. The one-statement version sorted all ~1.5B
+    rows at once and could not finish. Readers keep the live table until a short
+    swap at the end, which first folds any capture ingest added meanwhile.
+    ``on_progress(done, first_anchor, anchor)`` is called per capture."""
+    return await _agg_job(_rebuild_player_board_agg, on_progress)
+
+
+_AGG_STAGING = "player_board_agg_rebuild"
+
+
+async def _replay_agg_native(con, native, on_progress) -> int | None:
+    """Every capture folded in memory by kiwi_native (the ingest fold's rule),
+    then written to the staging table in one COPY. Returns the last capture."""
+    builder = native.AggBuilder()
+    first = last = None
+    done = 0
+    async for anchor in _anchors_after(con):
+        if first is None:
+            first = anchor
+        buf = io.BytesIO()
+        await con.copy_from_query(
+            "SELECT board_uuid, player_id, rank, score FROM entry WHERE anchor = $1",
+            anchor, output=buf, format="binary", timeout=600,
+        )
+        if builder.fold(anchor, buf.getvalue()) is None:
+            raise RuntimeError(f"capture {anchor} could not be read")
+        last = anchor
+        done += 1
+        if on_progress is not None:
+            on_progress(done, first, anchor)
+    await con.execute(f"CREATE TABLE {_AGG_STAGING} (LIKE player_board_agg INCLUDING ALL)")
+    await con.copy_records_to_table(_AGG_STAGING, records=builder.records(),
+                                    columns=_AGG_COLUMNS, timeout=1800)
+    return last
+
+
+async def _replay_agg_sql(con, on_progress) -> int | None:
+    """Every capture folded by the ingest fold's SQL into an unlogged staging copy.
+    Returns the last capture."""
+    # Unlogged, with room for in-page updates while thousands of captures fold in;
+    # made logged and compacted before it replaces the live table.
+    await con.execute(
+        f"CREATE UNLOGGED TABLE {_AGG_STAGING} (LIKE player_board_agg INCLUDING ALL) "
+        "WITH (fillfactor = 50)"
+    )
+    first = last = None
+    done = 0
+    async for anchor in _anchors_after(con):
+        if first is None:
+            first = anchor
+        await _fold_anchor_into_agg(con, anchor, _AGG_STAGING, timeout=600)
+        last = anchor
+        done += 1
+        if on_progress is not None:
+            on_progress(done, first, anchor)
+    await con.execute(f"ALTER TABLE {_AGG_STAGING} RESET (fillfactor)")
+    await con.execute(f"ALTER TABLE {_AGG_STAGING} SET LOGGED", timeout=1800)
+    return last
+
+
+_AGG_COLUMNS = ["player_id", "board_uuid", "best_rank", "appearances", "first_seen",
+                "last_seen", "latest_rank", "latest_score", "last_folded_anchor", "last_rise"]
+
+
+async def _rebuild_player_board_agg(con, on_progress) -> int:
+    from app.trove.leaderboards.activity import _native
+    await con.execute(f"DROP TABLE IF EXISTS {_AGG_STAGING}")
+    try:
+        if _native is not None:
+            last = await _replay_agg_native(con, _native, on_progress)
+        else:
+            last = await _replay_agg_sql(con, on_progress)
         async with con.transaction():
-            await con.execute("TRUNCATE player_board_agg")
-            # One row per (player, board, capture) - the best-ranked, as the ingest
-            # fold keeps - so a name listed twice can't read as a rise against itself.
-            await con.execute(
-                "INSERT INTO player_board_agg "
-                "  (player_id, board_uuid, best_rank, appearances, first_seen, "
-                "   last_seen, latest_rank, latest_score, last_folded_anchor, last_rise) "
-                "WITH d AS ("
-                "  SELECT DISTINCT ON (player_id, board_uuid, anchor) "
-                "         player_id, board_uuid, anchor, rank, score"
-                "  FROM entry ORDER BY player_id, board_uuid, anchor, rank"
-                "), r AS ("
-                "  SELECT *, lag(score) OVER w AS prev, lead(anchor) OVER w AS next"
-                "  FROM d WINDOW w AS (PARTITION BY player_id, board_uuid ORDER BY anchor)"
-                ") "
-                "SELECT player_id, board_uuid, MIN(rank)::int, COUNT(*)::bigint,"
-                "       MIN(anchor)::bigint, MAX(anchor)::bigint,"
-                "       (MAX(rank)  FILTER (WHERE next IS NULL))::int,"
-                "       (MAX(score) FILTER (WHERE next IS NULL)),"
-                "       MAX(anchor)::bigint,"
-                "       MAX(anchor) FILTER (WHERE score > prev) "
-                "FROM r GROUP BY player_id, board_uuid"
-            )
-            count = await con.fetchval("SELECT count(*) FROM player_board_agg")
-    return int(count or 0)
+            # Ingest keeps folding into the live table until this lock; whatever it
+            # added since the replay's last capture is folded here before the swap.
+            await con.execute("LOCK TABLE player_board_agg IN ACCESS EXCLUSIVE MODE",
+                              timeout=600)
+            async for anchor in _anchors_after(con, last if last is not None else -1):
+                await _fold_anchor_into_agg(con, anchor, _AGG_STAGING, timeout=600)
+            await con.execute("DROP TABLE player_board_agg")
+            await con.execute(f"ALTER TABLE {_AGG_STAGING} RENAME TO player_board_agg")
+            await con.execute(f"ALTER INDEX {_AGG_STAGING}_pkey RENAME TO player_board_agg_pkey")
+    finally:
+        await con.execute(f"DROP TABLE IF EXISTS {_AGG_STAGING}")
+    await con.execute("ANALYZE player_board_agg")
+    return int(await con.fetchval("SELECT count(*) FROM player_board_agg") or 0)
 
 
 async def board_top_series(

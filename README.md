@@ -220,7 +220,9 @@ Capture ingest parses the LeaderBot.cfg dump in Rust (`kiwi_native.lb_parse`, of
 Player activity (live estimate and the admin rebuild) reads each capture as a binary COPY decoded in
 Rust (`act_decode` / `act_pair`), ~4x per capture pair; class activity uses the same captures with
 `act_class_sets` (~7x).
-The renames and duplicates rebuilds use the same COPY captures (`ren_fingerprint`/`ren_diff`, `dup_groups`). zlib stays in Python so compressed bytes are
+The renames and duplicates rebuilds use the same COPY captures (`ren_fingerprint`/`ren_diff`, `dup_groups`).
+The player board aggregate rebuild and the last-played backfill replay every capture in memory with
+`AggBuilder` (the ingest fold's rule) and write the result in one COPY before swapping it in. zlib stays in Python so compressed bytes are
 unchanged; any input the Rust side can't reproduce exactly returns `None` and reruns in Python, so
 errors are raised exactly as before.
 

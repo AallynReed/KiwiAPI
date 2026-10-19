@@ -652,11 +652,12 @@ async def set_leaderboard_board_reset_kind(
 # --- Leaderboards: rebuild the per-player board aggregate ------------------
 # player_board_agg is maintained incrementally at ingest, but an existing
 # dataset (pre-feature) needs a one-time full seed, and out-of-order backfills
-# can undercount appearances. This runs the full recompute in the background
-# (a big all-history scan) and reports status for the poll below. Master-only
-# via the router-level dep.
+# can undercount appearances. This replays every stored capture in the
+# background (hours over the full archive, mostly cold-disk reads) and reports
+# progress for the poll below. Master-only via the router-level dep.
 _agg_rebuild_status: dict = {
-    "running": False, "rows": None, "finished_at": None, "error": None,
+    "running": False, "captures": 0, "first_anchor": None, "anchor": None,
+    "rows": None, "started_at": None, "finished_at": None, "error": None,
 }
 
 
@@ -665,9 +666,15 @@ async def _run_agg_rebuild() -> None:
     import time as _time
 
     from app.trove.leaderboards import pg_store
-    _agg_rebuild_status.update(running=True, error=None)
+
+    def progress(done: int, first: int, anchor: int) -> None:
+        _agg_rebuild_status.update(captures=done, first_anchor=first, anchor=anchor)
+
+    _agg_rebuild_status.update(running=True, captures=0, first_anchor=None, anchor=None,
+                               rows=None, error=None, started_at=int(_time.time()),
+                               finished_at=None)
     try:
-        rows = await pg_store.rebuild_player_board_agg()
+        rows = await pg_store.rebuild_player_board_agg(on_progress=progress)
         _agg_rebuild_status.update(rows=rows)
     except Exception as exc:  # noqa: BLE001 - surface via status, never 500 a bg task
         _agg_rebuild_status.update(error=str(exc))
@@ -680,8 +687,8 @@ async def _run_agg_rebuild() -> None:
 async def rebuild_player_board_agg(background_tasks: BackgroundTasks) -> dict:
     """Full recompute of the per-player board aggregate (the /player profile's
     fast read). Seeds the table on an existing dataset and trues up appearance
-    counts after backfills. Runs in the background (a full all-history scan);
-    poll ``/admin/leaderboards/rebuild-player-agg/status``."""
+    counts after backfills. Runs in the background (replays every capture, then
+    swaps the table in); poll ``/admin/leaderboards/rebuild-player-agg/status``."""
     if not settings.postgres_enabled:
         raise APIError(status_code=400, code=ErrorCode.bad_request,
                        message="Postgres backend is disabled")
@@ -695,7 +702,7 @@ async def rebuild_player_board_agg(background_tasks: BackgroundTasks) -> dict:
 
 @router.get("/leaderboards/rebuild-player-agg/status")
 async def rebuild_player_board_agg_status() -> dict:
-    """Current state of the last player-aggregate rebuild (running / row count)."""
+    """Progress of the last player-aggregate rebuild (captures replayed, row count)."""
     return _agg_rebuild_status
 
 

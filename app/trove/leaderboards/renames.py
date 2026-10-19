@@ -18,7 +18,7 @@ name **appears** carrying the same lifetime fingerprint, that's a rename.
 Two guards make it reliable and reset-proof:
 
 * **Adjacency gate.** Only capture pairs within ``renames_max_gap_seconds``
-  (default 1.5h - captures are hourly) are compared. Across a wider gap the
+  (default 7.5h - captures land every ~6h) are compared. Across a wider gap the
   fingerprint drifts (the player keeps grinding) and the board population churns,
   both of which corrupt the match, so those pairs are skipped entirely.
 * **Lifetime-only fingerprint.** Resetting (daily/weekly) boards are never used.

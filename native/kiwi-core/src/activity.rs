@@ -13,19 +13,19 @@ pub struct Capture {
     pub boards: FxHashMap<i32, FxHashMap<i64, f64>>,
 }
 
-fn be_i32(b: &[u8], at: usize) -> Option<i32> {
+pub(crate) fn be_i32(b: &[u8], at: usize) -> Option<i32> {
     Some(i32::from_be_bytes(b.get(at..at + 4)?.try_into().ok()?))
 }
 
-fn be_i16(b: &[u8], at: usize) -> Option<i16> {
+pub(crate) fn be_i16(b: &[u8], at: usize) -> Option<i16> {
     Some(i16::from_be_bytes(b.get(at..at + 2)?.try_into().ok()?))
 }
 
-fn be_8(b: &[u8], at: usize) -> Option<[u8; 8]> {
+pub(crate) fn be_8(b: &[u8], at: usize) -> Option<[u8; 8]> {
     b.get(at..at + 8)?.try_into().ok()
 }
 
-const SIGNATURE: &[u8; 11] = b"PGCOPY\n\xff\r\n\0";
+pub(crate) const SIGNATURE: &[u8; 11] = b"PGCOPY\n\xff\r\n\0";
 
 /// Decode a binary COPY of `(int4, int8, float8)` rows. None if it isn't one.
 pub fn decode_copy(data: &[u8]) -> Option<Capture> {
