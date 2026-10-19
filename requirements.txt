@@ -3,7 +3,7 @@ uvicorn[standard]==0.49.0
 beanie==2.1.0
 pydantic-settings==2.14.2
 email-validator==2.3.0
-pyjwt==2.13.0
+pyjwt==2.15.0
 argon2-cffi==25.1.0
 httpx==0.28.1
 aiosmtplib==5.1.2
@@ -14,7 +14,7 @@ markdown-it-py==4.2.0
 python-multipart==0.0.31
 # Pure-Python git (no native `git` binary). Backs the Mods Hub git store + the
 # authenticated smart-HTTP server (`git clone/pull/push` over /git/mods/*).
-dulwich==1.2.5
+dulwich==1.2.9
 cryptography==50.0.0
 tzdata==2025.2
 # Reads DB-IP's IP-to-country .mmdb for the website's regional maintenance gate.
