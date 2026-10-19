@@ -7,10 +7,11 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use kiwi_core::blueprint::{self, Decoded, InVoxel, Rendered};
+use kiwi_core::detection;
 use kiwi_core::wire;
 use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyList, PyString, PyTuple};
+use pyo3::types::{PyBytes, PyDict, PyFloat, PyList, PyString, PyTuple};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -328,8 +329,127 @@ fn wire_parse<'py>(
     Ok(Some(out))
 }
 
+/// A score Python compares exactly: an int within 2^53, or a float.
+fn exact_f64(v: &Bound<'_, PyAny>) -> Option<f64> {
+    if v.is_instance_of::<PyFloat>() {
+        return v.extract::<f64>().ok();
+    }
+    let i = v.extract::<i64>().ok()?;
+    (i.unsigned_abs() <= 1 << 53).then_some(i as f64)
+}
+
+/// `_board_families_py` over the board's entry dicts: `[(canonical stem, entry
+/// indices)]`, or None when an entry can't be read exactly.
+#[pyfunction]
+fn det_board_families(
+    py: Python<'_>,
+    entries: &Bound<'_, PyAny>,
+    min_size: usize,
+    band_pct: f64,
+    max_edit: i64,
+    stem_fn: &Bound<'_, PyAny>,
+) -> PyResult<Option<Vec<detection::Family>>> {
+    let Ok(entries) = entries.cast::<PyList>() else { return Ok(None) };
+    let (k_name, k_score, k_rank) = (intern!(py, "player_name"), intern!(py, "score"), intern!(py, "rank"));
+    let n = entries.len();
+    let (mut names, mut stems, mut scores, mut ranks) =
+        (Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n));
+    let mut cache: HashMap<String, String> = HashMap::new();
+    for e in entries.iter() {
+        let Ok(e) = e.cast_into::<PyDict>() else { return Ok(None) };
+        let (Some(name), Some(score), Some(rank)) = (e.get_item(k_name)?, e.get_item(k_score)?, e.get_item(k_rank)?)
+        else {
+            return Ok(None);
+        };
+        let (Ok(name), Some(score), Ok(rank)) = (name.extract::<String>(), exact_f64(&score), rank.extract::<i64>())
+        else {
+            return Ok(None);
+        };
+        let stem = match detection::name_stem(&name) {
+            Some(s) => s,
+            None => match cache.get(&name) {
+                Some(s) => s.clone(),
+                None => {
+                    let s = stem_fn.call1((&name,))?.extract::<String>()?;
+                    cache.insert(name.clone(), s.clone());
+                    s
+                }
+            },
+        };
+        names.push(name);
+        stems.push(stem);
+        scores.push(score);
+        ranks.push(rank);
+    }
+    let rows: Vec<detection::Entry> = (0..n)
+        .map(|i| detection::Entry { name: &names[i], stem: &stems[i], score: scores[i], rank: ranks[i] })
+        .collect();
+    Ok(Some(py.detach(|| detection::board_families(&rows, min_size, band_pct, max_edit))))
+}
+
+type History = (
+    Vec<(String, Vec<usize>)>,
+    Vec<(String, Vec<i64>)>,
+    Vec<detection::Group>,
+    Vec<Vec<String>>,
+);
+
+/// `_cluster_history_signals`' CPU work: (active hours, board sets, per-board
+/// lockstep groups, schedule groups), or None for input Python must handle.
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn det_history(
+    py: Python<'_>,
+    series_by_board: &Bound<'_, PyDict>,
+    anchors: Vec<i64>,
+    min_gain: f64,
+    pct: f64,
+    tol: f64,
+    min_match: i64,
+    min_ratio: f64,
+    min_density: f64,
+    min_group: usize,
+    max_cell: usize,
+    sched_min_hours: i64,
+    sched_min_sim: f64,
+) -> PyResult<Option<History>> {
+    let slot_of: HashMap<i64, usize> = anchors.iter().enumerate().map(|(i, a)| (*a, i)).collect();
+    let mut boards: Vec<detection::Board> = Vec::with_capacity(series_by_board.len());
+    for (uuid, series) in series_by_board.iter() {
+        let (Ok(uuid), Ok(series)) = (uuid.extract::<i64>(), series.cast_into::<PyDict>()) else { return Ok(None) };
+        let mut names = Vec::with_capacity(series.len());
+        for (name, sc) in series.iter() {
+            let (Ok(name), Ok(sc)) = (name.extract::<String>(), sc.cast_into::<PyDict>()) else { return Ok(None) };
+            let mut pts = Vec::with_capacity(sc.len());
+            for (a, v) in sc.iter() {
+                let Some(&slot) = a.extract::<i64>().ok().and_then(|a| slot_of.get(&a)) else { continue };
+                let Some(v) = exact_f64(&v) else { return Ok(None) };
+                pts.push((slot, v));
+            }
+            pts.sort_by_key(|p| p.0);
+            names.push((name, pts));
+        }
+        boards.push((uuid, names));
+    }
+    let p = detection::Params { min_gain, pct, tol, min_match, min_ratio, min_density, min_group, max_cell };
+    let out = py.detach(|| {
+        let (hours, on) = detection::history_features(&boards, min_gain);
+        let groups = detection::comovement_groups(&boards, &p);
+        let sched = if sched_min_hours > 0 {
+            detection::schedule_groups(&hours, sched_min_hours as usize, sched_min_sim, min_group, min_density, max_cell, anchors.len())
+        } else {
+            Vec::new()
+        };
+        let hours = hours.into_iter().map(|(n, s)| (n, s.into_iter().collect())).collect();
+        (hours, on, groups, sched)
+    });
+    Ok(Some(out))
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(det_board_families, m)?)?;
+    m.add_function(wrap_pyfunction!(det_history, m)?)?;
     m.add_function(wrap_pyfunction!(wire_parse, m)?)?;
     m.add_function(wrap_pyfunction!(wire_set_sections, m)?)?;
     m.add_function(wrap_pyfunction!(swf_lossless, m)?)?;

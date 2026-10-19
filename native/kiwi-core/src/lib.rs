@@ -3,6 +3,7 @@
 pub mod audio;
 pub mod binfab;
 pub mod blueprint;
+pub mod detection;
 pub mod swf;
 pub mod troveio;
 pub mod wire;

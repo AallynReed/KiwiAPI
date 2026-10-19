@@ -58,6 +58,11 @@ from app.trove.leaderboards import service as lb_service
 
 logger = logging.getLogger(__name__)
 
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
+
 
 # Cache: {cache_key: (stored_at_unix, payload)}.
 _CACHE: dict[tuple, tuple[float, dict]] = {}
@@ -1305,36 +1310,7 @@ def _detect_clusters(
             continue
         boards_scanned += 1
 
-        # Exact-stem grouping, then a fuzzy merge of near stems.
-        stem_groups: dict[str, list[dict]] = {}
-        for e in entries:
-            stem = _name_stem(e["player_name"])
-            if len(stem) < 2:
-                continue  # too short to be a meaningful family key
-            stem_groups.setdefault(stem, []).append(e)
-        if not stem_groups:
-            continue
-        # Only stems whose EXACT group already has ≥2 distinct names are
-        # eligible for the quadratic fuzzy merge - on a board of tens of
-        # thousands of unique names that pool is tiny, so the edit-distance
-        # step stays cheap. (A purely typo'd family where every variant
-        # appears exactly once is the rare miss; numbered alts share one
-        # exact stem and are caught regardless.)
-        candidate_stems = [
-            s for s, ents in stem_groups.items()
-            if len({e["player_name"] for e in ents}) >= 2
-        ]
-        canon = _merge_stems(list(stem_groups.keys()), max_edit, candidate_stems)
-        merged: dict[str, list[dict]] = {}
-        for stem, ents in stem_groups.items():
-            merged.setdefault(canon.get(stem, stem), []).extend(ents)
-
-        for cstem, ents in merged.items():
-            if len({e["player_name"] for e in ents}) < min_size:
-                continue
-            subset = _densest_band(ents, band_pct, min_size)
-            if subset is None:
-                continue
+        for cstem, subset in _board_families(entries, min_size, band_pct, max_edit):
             scores = [e["score"] for e in subset]
             ranks = [e["rank"] for e in subset]
             lo, hi = min(scores), max(scores)
@@ -1386,6 +1362,53 @@ def _detect_clusters(
     # Most-suspicious-first, then biggest family as a tiebreaker.
     clusters.sort(key=lambda c: (-c["confidence"], -c["member_count"]))
     return clusters, boards_scanned
+
+
+def _board_families(
+    entries: list[dict], min_size: int, band_pct: float, max_edit: int,
+) -> list[tuple[str, list[dict]]]:
+    """One board's alt families: ``(canonical stem, densest near-score subset)``."""
+    if _native is not None:
+        found = _native.det_board_families(entries, min_size, band_pct, max_edit, _name_stem)
+        if found is not None:
+            return [(cstem, [entries[i] for i in idxs]) for cstem, idxs in found]
+    return _board_families_py(entries, min_size, band_pct, max_edit)
+
+
+def _board_families_py(
+    entries: list[dict], min_size: int, band_pct: float, max_edit: int,
+) -> list[tuple[str, list[dict]]]:
+    # Exact-stem grouping, then a fuzzy merge of near stems.
+    stem_groups: dict[str, list[dict]] = {}
+    for e in entries:
+        stem = _name_stem(e["player_name"])
+        if len(stem) < 2:
+            continue  # too short to be a meaningful family key
+        stem_groups.setdefault(stem, []).append(e)
+    if not stem_groups:
+        return []
+    # Only stems whose EXACT group already has ≥2 distinct names are eligible
+    # for the quadratic fuzzy merge - on a board of tens of thousands of unique
+    # names that pool is tiny, so the edit-distance step stays cheap. (A purely
+    # typo'd family where every variant appears exactly once is the rare miss;
+    # numbered alts share one exact stem and are caught regardless.)
+    candidate_stems = [
+        s for s, ents in stem_groups.items()
+        if len({e["player_name"] for e in ents}) >= 2
+    ]
+    canon = _merge_stems(list(stem_groups.keys()), max_edit, candidate_stems)
+    merged: dict[str, list[dict]] = {}
+    for stem, ents in stem_groups.items():
+        merged.setdefault(canon.get(stem, stem), []).extend(ents)
+
+    out: list[tuple[str, list[dict]]] = []
+    for cstem, ents in merged.items():
+        if len({e["player_name"] for e in ents}) < min_size:
+            continue
+        subset = _densest_band(ents, band_pct, min_size)
+        if subset is not None:
+            out.append((cstem, subset))
+    return out
 
 
 def _cluster_confidence(
@@ -1566,6 +1589,45 @@ def _cluster_history_signals(
     loaded series, then run the history producers: co-movement (lockstep gains),
     schedule correlation (same active/idle hours), and the per-player weekly
     uptime (no-sleep) check."""
+    native = (_native.det_history(series_by_board, anchors, min_gain, pct, tol, min_match,
+                                  min_ratio, min_density, min_group, max_cell,
+                                  sched_min_hours, sched_min_sim)
+              if _native is not None else None)
+    if native is not None:
+        hours, boards, groups, sched = native
+        active_hours = {name: set(slots) for name, slots in hours}
+        board_sets = {name: set(uuids) for name, uuids in boards}
+        comovement = _merge_board_groups(
+            [{"uuid": u, "members": set(m), "matching_hours": mh, "avg_gain": g}
+             for u, m, mh, g in groups], meta_by_board, min_group, min_match)
+        schedule = [_build_schedule_cluster(set(mem), active_hours, board_sets,
+                                            meta_by_board, sched_min_hours)
+                    for mem in sched] if sched_min_hours > 0 else []
+    else:
+        active_hours, board_sets = _history_features(series_by_board, anchors, min_gain)
+        comovement = _cluster_comovement(
+            series_by_board, meta_by_board, anchors,
+            min_gain, pct, tol, min_match, min_ratio, min_density, min_group, max_cell,
+        )
+        schedule = (
+            _cluster_schedule(active_hours, board_sets, meta_by_board,
+                              sched_min_hours, sched_min_sim, min_group, min_density,
+                              max_cell, len(anchors))
+            if sched_min_hours > 0 else []
+        )
+    player_flags = _weekly_uptime_flags(active_hours, board_sets, len(anchors) - 1, uptime_frac)
+    return {
+        "comovement": comovement, "schedule": schedule,
+        "active_hours": active_hours, "board_sets": board_sets,
+        "player_flags": player_flags,
+    }
+
+
+def _history_features(
+    series_by_board: dict[int, dict[str, dict[int, float]]], anchors: list[int], min_gain: float,
+) -> tuple[dict[str, set], dict[str, set]]:
+    """Each account's active capture slots (score rose by ``min_gain`` since the
+    previous capture) and the boards it appears on."""
     slot_of = {a: i for i, a in enumerate(anchors)}
     active_hours: dict[str, set] = {}
     board_sets: dict[str, set] = {}
@@ -1577,23 +1639,7 @@ def _cluster_history_signals(
                 (s0, v0), (s1, v1) = pts[j - 1], pts[j]
                 if s1 == s0 + 1 and (v1 - v0) >= min_gain:
                     active_hours.setdefault(name, set()).add(s1)
-
-    comovement = _cluster_comovement(
-        series_by_board, meta_by_board, anchors,
-        min_gain, pct, tol, min_match, min_ratio, min_density, min_group, max_cell,
-    )
-    schedule = (
-        _cluster_schedule(active_hours, board_sets, meta_by_board,
-                          sched_min_hours, sched_min_sim, min_group, min_density,
-                          max_cell, len(anchors))
-        if sched_min_hours > 0 else []
-    )
-    player_flags = _weekly_uptime_flags(active_hours, board_sets, len(anchors) - 1, uptime_frac)
-    return {
-        "comovement": comovement, "schedule": schedule,
-        "active_hours": active_hours, "board_sets": board_sets,
-        "player_flags": player_flags,
-    }
+    return active_hours, board_sets
 
 
 # Don't run the weekly uptime check until at least this many captures have
@@ -1616,7 +1662,7 @@ def _weekly_uptime_flags(
         frac = len(hrs) / num_slots
         if frac < uptime_frac:
             continue
-        board_uuid = next(iter(board_sets.get(name, ())), None)
+        board_uuid = min(board_sets.get(name, ()), default=None)
         if board_uuid is None:
             continue
         flags.append({
@@ -1643,6 +1689,18 @@ def _cluster_comovement(
     component is then tightened to its dense core (``min_density``) so a loose
     transitive chain collapses. Groups are merged across boards by member
     overlap."""
+    board_groups = _comovement_board_groups(
+        series_by_board, anchors, min_gain, pct, tol, min_match, min_ratio,
+        min_density, min_group, max_cell)
+    return _merge_board_groups(board_groups, meta_by_board, min_group, min_match)
+
+
+def _comovement_board_groups(
+    series_by_board: dict[int, dict[str, dict[int, float]]], anchors: list[int],
+    min_gain: float, pct: float, tol: float, min_match: int, min_ratio: float,
+    min_density: float, min_group: int, max_cell: int,
+) -> list[dict]:
+    """Per board, the lockstep groups: ``{uuid, members, matching_hours, avg_gain}``."""
     slot_of = {a: i for i, a in enumerate(anchors)}
     band = 1.0 + tol if tol > 0 else 1.0  # tolerance-band width
 
@@ -1745,12 +1803,18 @@ def _cluster_comovement(
             if len(mem) < min_group:
                 continue
             mh = sum(1 for cell in usable_cells if len(cells[cell] & mem) >= 2)
-            avg_gain = sum(acct_gain.get(m, 0.0) for m in mem) / len(mem)
+            avg_gain = sum(acct_gain.get(m, 0.0) for m in sorted(mem)) / len(mem)
             board_groups.append({
                 "uuid": uuid, "members": set(mem),
                 "matching_hours": mh, "avg_gain": avg_gain,
             })
+    return board_groups
 
+
+def _merge_board_groups(
+    board_groups: list[dict], meta_by_board: dict[int, dict], min_group: int, min_match: int,
+) -> list[dict]:
+    """Cross-board merge of per-board lockstep groups into clusters."""
     if not board_groups:
         return []
 
@@ -1772,7 +1836,7 @@ def _cluster_comovement(
     by_member: dict[str, int] = {}
     for idx, g in enumerate(board_groups):
         gfind(idx)
-        for m in g["members"]:
+        for m in sorted(g["members"]):
             if m in by_member:
                 gunion(idx, by_member[m])
             else:
@@ -1818,8 +1882,9 @@ def _cluster_comovement(
 def _tighten_component(members: set[str], adj: dict[str, set], min_density: float) -> set[str]:
     """Reduce a connected component to its dense core: while the internal edge
     density is below ``min_density``, drop the member with the fewest in-group
-    edges. A true ring is a near-clique (stays); a loose transitive chain peels
-    down to ≤2 and is then discarded by the caller's ``min_group`` check."""
+    edges (the alphabetically first on a tie). A true ring is a near-clique
+    (stays); a loose transitive chain peels down to ≤2 and is then discarded by
+    the caller's ``min_group`` check."""
     mem = set(members)
     while len(mem) > 2:
         deg = {m: len(adj.get(m, _EMPTY) & mem) for m in mem}
@@ -1827,7 +1892,7 @@ def _tighten_component(members: set[str], adj: dict[str, set], min_density: floa
         possible = len(mem) * (len(mem) - 1) / 2
         if possible <= 0 or edges / possible >= min_density:
             break
-        mem.discard(min(mem, key=lambda m: deg[m]))
+        mem.discard(min(mem, key=lambda m: (deg[m], m)))
     return mem
 
 
@@ -1929,6 +1994,16 @@ def _cluster_schedule(
     near-full schedules match every busy account trivially. Bounded: bucket by a
     coarse signature (6-slot blocks) so only same-rhythm accounts are compared
     pairwise; skip oversized buckets (a common schedule, not a ring)."""
+    return [_build_schedule_cluster(mem, active_hours, board_sets, meta_by_board, min_hours)
+            for mem in _schedule_groups(active_hours, min_hours, min_sim, min_group,
+                                        min_density, max_cell, num_slots)]
+
+
+def _schedule_groups(
+    active_hours: dict[str, set], min_hours: int, min_sim: float,
+    min_group: int, min_density: float, max_cell: int, num_slots: int,
+) -> list[set[str]]:
+    """The member sets of each shared-schedule group, before they're described."""
     max_active = max(min_hours, int(num_slots * _SCHEDULE_MAX_ACTIVE_FRACTION))
     cands = {nm: hrs for nm, hrs in active_hours.items()
              if min_hours <= len(hrs) <= max_active}
@@ -1972,12 +2047,11 @@ def _cluster_schedule(
     for node in adj:
         comps.setdefault(find(node), set()).add(node)
 
-    out: list[dict] = []
+    out: list[set[str]] = []
     for mem in comps.values():
         mem = _tighten_component(mem, adj, min_density)
-        if len(mem) < min_group:
-            continue
-        out.append(_build_schedule_cluster(mem, active_hours, board_sets, meta_by_board, min_hours))
+        if len(mem) >= min_group:
+            out.append(mem)
     return out
 
 
@@ -1997,7 +2071,7 @@ def _build_schedule_cluster(
     # Per-board presence (so the card + chart have boards to show).
     board_members: dict[int, list[str]] = {}
     for m in names:
-        for u in board_sets.get(m, set()):
+        for u in sorted(board_sets.get(m, set())):
             board_members.setdefault(u, []).append(m)
     boards_info = []
     for u, ms in board_members.items():
