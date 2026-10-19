@@ -54,6 +54,7 @@ dependencies = [
  "kiwi-core",
  "mimalloc",
  "pyo3",
+ "rustc-hash",
  "stacker",
 ]
 
