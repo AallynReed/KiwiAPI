@@ -96,7 +96,8 @@ def load_animation_graph(skeleton: str) -> bytes | None:
     """The creature's animation state machine - ``rigs/graph/<skeleton>.graph.json`` - or
     None for a rig that has none (props and chests carry no graph).
 
-    Read out of the game's own ``models/<rig>.gsf`` by granny_re/build_anim_graph.py: the
+    Read out of the ``.gsf`` the rig's prefabs name (often not ``<rig>.gsf``: the faerie
+    plays ``companion_faerie.gsf``) by granny_re/build_anim_graph.py: the
     states, which clip each one plays, the edges between them and the cross-fade on every
     edge. It is what lets the viewer offer "Jump" instead of jump_begin/jump_cycle/
     jump_end as three unrelated buttons - the chaining is the game's, not a guess made
