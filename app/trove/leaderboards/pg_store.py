@@ -89,13 +89,21 @@ async def write_snapshot(boards: list[ParsedBoard], anchor: int) -> dict:
                 "_stg", records=_records(),
                 columns=["board_uuid", "anchor", "rank", "score", "name"],
             )
-            # New players → assign ids (keep latest casing). Then resolve every
-            # entry's player_id by joining the staging rows back to player.
+            # A temp table has no statistics until analysed; the joins below
+            # were planned blind without it.
+            await con.execute("ANALYZE _stg")
+            # New players → assign ids (keep this capture's casing). Then resolve
+            # every entry's player_id by joining the staging rows back to player.
+            # Grouped in byte order ("C") rather than the database collation:
+            # equality is the same, and the en_US sort of ~700k names was most of
+            # this statement. Two spellings in one capture keep the byte-smallest;
+            # an unchanged spelling isn't rewritten.
             await con.execute(
-                "INSERT INTO player (name, name_lower) "
-                "SELECT DISTINCT ON (lower(name)) name, lower(name) FROM _stg "
-                "ORDER BY lower(name) "
-                "ON CONFLICT (name_lower) DO UPDATE SET name = EXCLUDED.name"
+                'INSERT INTO player (name, name_lower) '
+                'SELECT min(name COLLATE "C"), lower(name) COLLATE "C" FROM _stg '
+                'GROUP BY lower(name) COLLATE "C" '
+                'ON CONFLICT (name_lower) DO UPDATE SET name = EXCLUDED.name '
+                'WHERE player.name IS DISTINCT FROM EXCLUDED.name'
             )
             await con.execute(
                 "INSERT INTO entry (board_uuid, anchor, rank, score, player_id) "
@@ -1304,7 +1312,12 @@ async def _record_case_collisions(con, anchor: int) -> None:
         "SELECT lower(s.name), max(s.name), 'case', 'case_only', "
         "       count(DISTINCT s.board_uuid)::int, count(DISTINCT s.name)::int, "
         "       to_jsonb(array_agg(DISTINCT s.name)), $1, $1, '{}'::jsonb, 1, $1 "
-        "FROM _stg s GROUP BY lower(s.name) HAVING count(DISTINCT s.name) > 1 "
+        # Byte-order pre-filter: a name has several spellings exactly when its
+        # smallest and largest differ, so only those few pay for the DISTINCTs.
+        "FROM _stg s WHERE lower(s.name) COLLATE \"C\" IN ("
+        "  SELECT lower(name) COLLATE \"C\" FROM _stg GROUP BY 1 "
+        "  HAVING min(name COLLATE \"C\") <> max(name COLLATE \"C\")) "
+        "GROUP BY lower(s.name) HAVING count(DISTINCT s.name) > 1 "
         "ON CONFLICT (name_lower) DO UPDATE SET "
         "  name = EXCLUDED.name, "
         "  kind = CASE WHEN player_duplicate.kind IN ('same_name', 'both') "

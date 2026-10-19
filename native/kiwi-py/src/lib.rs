@@ -446,8 +446,36 @@ fn det_history(
     Ok(Some(out))
 }
 
+type DumpLine<'py> = (String, String, String, String, String, Bound<'py, PyList>);
+
+/// `parser.py`'s board lines with entries already built as `entry_cls`
+/// (``ParsedEntry``) tuples, or None to parse the whole dump in Python.
+#[pyfunction]
+fn lb_parse<'py>(py: Python<'py>, text: &str, entry_cls: &Bound<'py, PyAny>) -> PyResult<Option<Vec<DumpLine<'py>>>> {
+    let Some(lines) = py.detach(|| kiwi_core::lbdump::parse(text)) else { return Ok(None) };
+    // tuple.__new__(ParsedEntry, ...) skips the NamedTuple's Python-level __new__.
+    let new = py.get_type::<PyTuple>().getattr(intern!(py, "__new__"))?;
+    let mut out = Vec::with_capacity(lines.len());
+    for l in lines {
+        let entries = PyList::empty(py);
+        for (rank, name, score) in &l.entries {
+            entries.append(new.call1((entry_cls, (*rank, *name, *score)))?)?;
+        }
+        out.push((
+            l.name_id.to_owned(),
+            l.category_id.to_owned(),
+            l.uuid.to_owned(),
+            l.name.to_owned(),
+            l.category.to_owned(),
+            entries,
+        ));
+    }
+    Ok(Some(out))
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(lb_parse, m)?)?;
     m.add_function(wrap_pyfunction!(det_board_families, m)?)?;
     m.add_function(wrap_pyfunction!(det_history, m)?)?;
     m.add_function(wrap_pyfunction!(wire_parse, m)?)?;

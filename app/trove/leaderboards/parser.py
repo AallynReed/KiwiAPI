@@ -19,6 +19,11 @@ from typing import NamedTuple
 
 logger = logging.getLogger("kiwi.trove.leaderboards.parser")
 
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
+
 # Captures: name_id$category_id$uuid = name$category##entries
 # Greedy bits restricted so ``$`` and ``##`` aren't swallowed across fields.
 _BOARD_RE = re.compile(
@@ -95,7 +100,7 @@ def _parse_entries(raw: str) -> list[ParsedEntry]:
         if len(parts) != 3:
             continue
         rank_s, player, score_s = parts
-        if not rank_s.isdigit():
+        if not rank_s.isdecimal():   # isdigit() also passes "²", which int() rejects
             continue
         try:
             score = float(score_s)
@@ -115,21 +120,35 @@ def parse_dump(text: str) -> list[ParsedBoard]:
     board's ``contest`` flag, so "Contests" is never stored as a category.
     Boards under the ``FAVORITES`` UI grouping are dropped.
     """
+    # (name_id, category_id, uuid, name, category, entries): the entries are
+    # already parsed by Rust, or the raw string for _parse_entries.
+    lines = None
+    if _native is not None:
+        try:
+            lines = _native.lb_parse(text, ParsedEntry)
+        except UnicodeEncodeError:   # lone surrogates: only Python can read them
+            lines = None
+    if lines is None:
+        lines = [(m["name_id"], m["category_id"], m["uuid"], m["name"], m["category"], m["entries"])
+                 for m in _BOARD_RE.finditer(text)]
+
     # We can't decide a board until we've seen all its lines, because the real
     # line and the contest overlay can appear in either order.
-    real: dict[int, re.Match[str]] = {}   # uuid -> real-category line (first wins)
+    real: dict[int, tuple] = {}             # uuid -> real-category line (first wins)
     contest: dict[int, str] = {}            # uuid -> "weekly" | "daily"
     order: list[int] = []                   # uuids in first-seen order
-    for m in _BOARD_RE.finditer(text):
-        if m["category"].strip().upper() == "FAVORITES":
+    seen: set[int] = set()
+    for m in lines:
+        if m[4].strip().upper() == "FAVORITES":
             continue
         try:
-            uuid = int(m["uuid"])
+            uuid = int(m[2])
         except ValueError:
             continue
-        if uuid not in order:
+        if uuid not in seen:
+            seen.add(uuid)
             order.append(uuid)
-        ctype = contest_type_for(m["category_id"])
+        ctype = contest_type_for(m[1])
         if ctype is not None:
             contest.setdefault(uuid, ctype)   # overlay -> flag only, not a board
         elif uuid not in real:
@@ -147,13 +166,14 @@ def parse_dump(text: str) -> list[ParsedBoard]:
                 uuid,
             )
             continue
+        entries = m[5]
         boards.append(ParsedBoard(
-            name_id=m["name_id"],
-            category_id=m["category_id"],
+            name_id=m[0],
+            category_id=m[1],
             uuid=uuid,
-            name=m["name"],
-            category=m["category"].strip(),
-            entries=_parse_entries(m["entries"]),
+            name=m[3],
+            category=m[4].strip(),
+            entries=_parse_entries(entries) if isinstance(entries, str) else entries,
             contest=contest.get(uuid),
         ))
     return boards

@@ -227,7 +227,8 @@ async def insert_dump(
     anchor). ``allow_backfill`` lifts the 14-day anchor limit for a re-seed AND
     skips the completeness guard (a bulk re-seed of already-collected data trusts
     the operator; the guard is for live captures)."""
-    boards = parse_dump(text)
+    # Off the event loop: a full dump is ~700k rows.
+    boards = await asyncio.to_thread(parse_dump, text)
     if not boards:
         logger.warning("leaderboards: parsed 0 boards from %d-char dump", len(text))
         return {"boards": 0, "entries": 0, "created_at": None}
