@@ -210,7 +210,7 @@ Python body as the fallback and the parity reference (`tests/unit/native/`).
 Ported so far: `troveio.calculate_hash` (~180× faster), `binfab.harvest_strings` (~40×), and the
 blueprint voxel tables: `codec.decode_full`/`encode`, `render.voxel.decode_render_map` and
 `pack_blueprint`, `mods_hub.assembly`'s grid decode, and `audio.wem.convert` (Vorbis to Ogg, ADPCM,
-PCM; ~80×). zlib stays in Python so compressed bytes are
+PCM; ~80×), and SWF lossless bitmaps plus shape-fill and sprite matrix parsing (~28×). zlib stays in Python so compressed bytes are
 unchanged; any input the Rust side can't reproduce exactly returns `None` and reruns in Python, so
 errors are raised exactly as before.
 

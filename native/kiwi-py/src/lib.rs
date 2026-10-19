@@ -193,8 +193,45 @@ fn wem_convert<'py>(py: Python<'py>, raw: &[u8], codebooks: Option<&[u8]>) -> Op
     Some((PyBytes::new(py, &c.bytes), c.mime, c.ext))
 }
 
+type MatrixTuple = (f64, f64, f64, f64, i64, i64);
+
+fn matrix_tuple(m: kiwi_core::swf::Matrix) -> MatrixTuple {
+    (m.sx, m.sy, m.r0, m.r1, m.tx, m.ty)
+}
+
+/// `_decode_lossless` pixels after inflation, as RGBA bytes.
+#[pyfunction]
+fn swf_lossless<'py>(
+    py: Python<'py>,
+    fmt: u8,
+    has_alpha: bool,
+    width: usize,
+    height: usize,
+    colors: usize,
+    data: &[u8],
+) -> Option<Bound<'py, PyBytes>> {
+    let px = py.detach(|| kiwi_core::swf::lossless_pixels(fmt, has_alpha, width, height, colors, data))?;
+    Some(PyBytes::new(py, &px))
+}
+
+/// `_shape_bitmap_fills` as `[(bitmap id, (sx, sy, r0, r1, tx, ty))]`.
+#[pyfunction]
+fn swf_shape_fills(body: &[u8], version: u32) -> Option<Vec<(u16, MatrixTuple)>> {
+    kiwi_core::swf::shape_bitmap_fills(body, version)
+        .map(|v| v.into_iter().map(|(id, m)| (id, matrix_tuple(m))).collect())
+}
+
+/// PlaceObject bit fields: `(matrix or None, bytes consumed)`.
+#[pyfunction]
+fn swf_place_bits(data: &[u8], has_matrix: bool, has_cxform: bool) -> Option<(Option<MatrixTuple>, usize)> {
+    kiwi_core::swf::place_bits(data, has_matrix, has_cxform).map(|(m, n)| (m.map(matrix_tuple), n))
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(swf_lossless, m)?)?;
+    m.add_function(wrap_pyfunction!(swf_shape_fills, m)?)?;
+    m.add_function(wrap_pyfunction!(swf_place_bits, m)?)?;
     m.add_function(wrap_pyfunction!(wem_convert, m)?)?;
     m.add_function(wrap_pyfunction!(calculate_hash, m)?)?;
     m.add_function(wrap_pyfunction!(harvest_strings, m)?)?;

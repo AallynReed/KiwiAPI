@@ -43,6 +43,11 @@ from PIL import Image
 
 logger = logging.getLogger("kiwi.swf")
 
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
+
 # A malformed or hostile file must not be able to exhaust the box. These bound
 # the work before any of it is done.
 MAX_INFLATED = 256 * 1024 * 1024   # refuse absurd decompression bombs
@@ -233,6 +238,11 @@ def _decode_lossless(body: bytes, tag: int) -> tuple[int, Image.Image, str]:
         raise SwfError(f"bad lossless zlib: {exc}") from None
 
     has_alpha = tag == 36
+    if _native is not None:
+        px = _native.swf_lossless(fmt, has_alpha, width, height, colors, data)
+        if px is not None:
+            codec = {3: f"indexed/{colors}", 4: "rgb555"}.get(fmt, "argb32" if has_alpha else "rgb24")
+            return char_id, Image.frombytes("RGBA", (width, height), px), codec
     if fmt == 3:
         # Indexed. Palette first, then one byte per pixel, rows padded to 4.
         stride = (width + 3) & ~3
@@ -429,6 +439,10 @@ def _shape_bitmap_refs(body: bytes, version: int) -> list[int]:
 def _shape_bitmap_fills(body: bytes, version: int) -> list[tuple[int, Matrix]]:
     """A DefineShape's bitmap fill styles: the bitmap id and the matrix mapping it
     into the shape (a 1:1 fill has a scale of 20, pixels to twips)."""
+    if _native is not None:
+        fills = _native.swf_shape_fills(bytes(body), version)
+        if fills is not None:
+            return [(cid, Matrix(*m)) for cid, m in fills]
     bits = _BitReader(body)
     bits.read(16)                          # ShapeId
     n = bits.read(5)                       # ShapeBounds RECT
@@ -538,11 +552,17 @@ def _sprite_frames(body: bytes) -> list[dict[int, Placement]]:
             if flags & 0x02:
                 char_id = struct.unpack("<H", tag[off : off + 2])[0]
                 off += 2
-            bits = _BitReader(tag[off:])
-            matrix = _read_matrix(bits) if flags & 0x04 else (prev.matrix if prev else Matrix())
-            if flags & 0x08:
-                _skip_cxform_alpha(bits)
-            off += bits.byte_pos
+            placed = _native.swf_place_bits(tag[off:], bool(flags & 0x04), bool(flags & 0x08)) if _native else None
+            if placed is not None:
+                read, used = placed
+                matrix = Matrix(*read) if read is not None else (prev.matrix if prev else Matrix())
+                off += used
+            else:
+                bits = _BitReader(tag[off:])
+                matrix = _read_matrix(bits) if flags & 0x04 else (prev.matrix if prev else Matrix())
+                if flags & 0x08:
+                    _skip_cxform_alpha(bits)
+                off += bits.byte_pos
             if flags & 0x10:
                 off += 2                                # Ratio
             name = prev.name if prev else None

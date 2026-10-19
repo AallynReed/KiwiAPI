@@ -3,4 +3,5 @@
 pub mod audio;
 pub mod binfab;
 pub mod blueprint;
+pub mod swf;
 pub mod troveio;
