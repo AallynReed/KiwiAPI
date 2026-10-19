@@ -7,6 +7,7 @@ edition = "2024"
 kiwi-core = { version = "0.1.0", path = "../kiwi-core" }
 mimalloc = "0.1.52"
 pyo3 = { version = "0.30.1", features = ["abi3-py311", "extension-module"] }
+rustc-hash = "2.1.3"
 stacker = "0.1.25"
 
 [lib]

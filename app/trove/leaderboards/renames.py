@@ -70,6 +70,24 @@ from app.trove.leaderboards.models import is_lifetime_kind
 
 logger = logging.getLogger(__name__)
 
+# (kiwi_native.RenKeys, {key id: name key}, {player id: display name}) for the
+# Rust fingerprints; rebuilt when a capture holds a player it hasn't seen.
+_KEYS: tuple | None = None
+
+
+async def _player_keys(refresh: bool = False) -> tuple:
+    global _KEYS
+    if _KEYS is None or refresh:
+        from app.trove.leaderboards.activity import _native
+        rows = await pg_store.all_player_names()
+        index: dict[str, int] = {}
+        ids, kids = [], []
+        for pid, name in rows:
+            ids.append(pid)
+            kids.append(index.setdefault(name.strip().lower(), len(index)))
+        _KEYS = (_native.ren_keys(ids, kids), {v: k for k, v in index.items()}, dict(rows))
+    return _KEYS
+
 METHOD_VERSION = 1
 
 # Confidence is capped below 1.0: even a perfect multi-board carry-over could, in
@@ -162,6 +180,19 @@ async def _fingerprints(
     (tiny/round scores aren't distinctive enough to fingerprint on)."""
     if not uuids:
         return {}
+    from app.trove.leaderboards.activity import _native
+    if _native is not None:
+        cap = await pg_store.anchor_capture(anchor, uuids)
+        if cap is not None:
+            fp = _native.ren_fingerprint(cap, float(min_score), (await _player_keys())[0])
+            if fp is None:
+                fp = _native.ren_fingerprint(cap, float(min_score), (await _player_keys(True))[0])
+            if fp is not None:
+                return fp
+    return await _fingerprints_py(anchor, uuids, min_score)
+
+
+async def _fingerprints_py(anchor: int, uuids: list[int], min_score: float) -> dict[str, dict]:
     maps = await pg_store.anchor_maps(anchor, uuids)  # {uuid: {display_name: score}}
     out: dict[str, dict] = {}
     for uuid, scores in maps.items():
@@ -170,10 +201,34 @@ async def _fingerprints(
                 continue
             key = name.strip().lower()
             fp = out.get(key)
+            # Two spellings of one key: the smallest names it, the higher score stands.
             if fp is None:
                 fp = out[key] = {"display": name, "boards": {}}
-            fp["boards"][uuid] = score
+            elif name < fp["display"]:
+                fp["display"] = name
+            prev = fp["boards"].get(uuid)
+            if prev is None or score > prev:
+                fp["boards"][uuid] = score
     return out
+
+
+async def _diff(fp_a, fp_b, a: int, b: int, cfg: _Cfg) -> tuple[dict, dict]:
+    """The vanished and appeared names as ``_match`` takes them, from either kind
+    of fingerprint (Rust's, or ``_fingerprints_py``'s dicts)."""
+    if not isinstance(fp_a, dict) and not isinstance(fp_b, dict):
+        from app.trove.leaderboards.activity import _native
+        only_a, only_b = _native.ren_diff(fp_a, fp_b, max(1, cfg.min_boards))
+        _, key_of, name_of = await _player_keys()
+
+        def side(rows):
+            return {key_of[k]: {"display": min(name_of[i] for i in ids), "boards": dict(boards)}
+                    for k, boards, ids in rows}
+        return side(only_a), side(only_b)
+    if not isinstance(fp_a, dict):
+        fp_a = await _fingerprints_py(a, cfg.lifetime_uuids, cfg.min_score)
+    if not isinstance(fp_b, dict):
+        fp_b = await _fingerprints_py(b, cfg.lifetime_uuids, cfg.min_score)
+    return fp_a, fp_b
 
 
 # ── matcher ──────────────────────────────────────────────────────────────────
@@ -197,6 +252,12 @@ def _match(
     }
     if not disappeared or not appeared:
         return []
+    # Fixed order (names, then boards) so equal-ranked candidates break ties the
+    # same way every run.
+    disappeared = {k: {**v, "boards": dict(sorted(v["boards"].items()))}
+                   for k, v in sorted(disappeared.items())}
+    appeared = {k: {**v, "boards": dict(sorted(v["boards"].items()))}
+                for k, v in sorted(appeared.items())}
 
     # Per-board sorted score index over the appeared set, for range lookups.
     # {uuid: (sorted_scores[list], names[list] aligned)}.
@@ -378,7 +439,8 @@ async def _process_pair(a: int, b: int, cfg: _Cfg, now: int,
         fp_a = await _fingerprints(a, cfg.lifetime_uuids, cfg.min_score)
     if fp_b is None:
         fp_b = await _fingerprints(b, cfg.lifetime_uuids, cfg.min_score)
-    events = _match(fp_a, fp_b, a, b, cfg, now)
+    da, db = await _diff(fp_a, fp_b, a, b, cfg)
+    events = _match(da, db, a, b, cfg, now)
     return events, fp_a, fp_b
 
 

@@ -516,8 +516,52 @@ fn act_class_sets(
     py.detach(|| kiwi_core::activity::class_sets(&early.0, &late.0, &gates.0, &reset, &floors))
 }
 
+/// `duplicate_groups_at` over a binary COPY of `(board_uuid, player_id, rank,
+/// score)`: `[(player_id, board_uuid, occurrences)]`, or None if malformed.
+#[pyfunction]
+fn dup_groups(py: Python<'_>, data: &[u8]) -> Option<Vec<(i64, i32, i32)>> {
+    py.detach(|| kiwi_core::activity::duplicate_groups(data))
+}
+
+/// Player id -> name key, for rename fingerprints.
+#[pyclass(frozen)]
+struct RenKeys(rustc_hash::FxHashMap<i64, i64>);
+
+#[pyfunction]
+fn ren_keys(ids: Vec<i64>, keys: Vec<i64>) -> RenKeys {
+    RenKeys(ids.into_iter().zip(keys).collect())
+}
+
+/// One capture's rename fingerprints.
+#[pyclass(frozen)]
+struct RenFp(kiwi_core::renames::Fps);
+
+/// `_fingerprints` over a lifetime-board capture; None if a player has no key.
+#[pyfunction]
+fn ren_fingerprint(py: Python<'_>, capture: &ActCapture, min_score: f64, keys: &RenKeys) -> Option<RenFp> {
+    py.detach(|| kiwi_core::renames::fingerprint(&capture.0, min_score, &keys.0)).map(RenFp)
+}
+
+/// Names only in `a` / only in `b` with at least `min_boards` boards:
+/// `([(key, [(board, score)], ids)], [...])`.
+#[pyfunction]
+fn ren_diff(
+    py: Python<'_>,
+    a: &RenFp,
+    b: &RenFp,
+    min_boards: usize,
+) -> (kiwi_core::renames::Side, kiwi_core::renames::Side) {
+    py.detach(|| kiwi_core::renames::diff(&a.0, &b.0, min_boards))
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<RenKeys>()?;
+    m.add_class::<RenFp>()?;
+    m.add_function(wrap_pyfunction!(ren_keys, m)?)?;
+    m.add_function(wrap_pyfunction!(ren_fingerprint, m)?)?;
+    m.add_function(wrap_pyfunction!(ren_diff, m)?)?;
+    m.add_function(wrap_pyfunction!(dup_groups, m)?)?;
     m.add_function(wrap_pyfunction!(act_class_sets, m)?)?;
     m.add_class::<ActCapture>()?;
     m.add_function(wrap_pyfunction!(act_decode, m)?)?;

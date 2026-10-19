@@ -183,6 +183,56 @@ pub fn class_sets(early: &Capture, late: &Capture, gates: &Capture, reset: &Rese
         .collect()
 }
 
+/// Decode a binary COPY of `(board_uuid int4, player_id int8, rank int4,
+/// score float8)` rows and return `pg_store.duplicate_groups_at`'s groups:
+/// `(player_id, board_uuid, distinct (rank, score) count)` where that count is
+/// over 1, ordered by player then board. None if the bytes aren't that COPY.
+pub fn duplicate_groups(data: &[u8]) -> Option<Vec<(i64, i32, i32)>> {
+    if data.get(..11)? != SIGNATURE {
+        return None;
+    }
+    let ext = be_i32(data, 15)?;
+    let mut at = 19 + usize::try_from(ext).ok()?;
+    // Postgres compares float8 with -0 = 0 and every NaN equal.
+    let canon = |s: f64| if s == 0.0 { 0u64 } else if s.is_nan() { f64::NAN.to_bits() } else { s.to_bits() };
+    let mut seen: FxHashMap<(i64, i32), FxHashSet<(i32, u64)>> = FxHashMap::default();
+    loop {
+        let fields = be_i16(data, at)?;
+        at += 2;
+        if fields == -1 {
+            break;
+        }
+        if fields != 4 || be_i32(data, at)? != 4 {
+            return None;
+        }
+        let board = be_i32(data, at + 4)?;
+        at += 8;
+        if be_i32(data, at)? != 8 {
+            return None;
+        }
+        let player = i64::from_be_bytes(be_8(data, at + 4)?);
+        at += 12;
+        if be_i32(data, at)? != 4 {
+            return None;
+        }
+        let rank = be_i32(data, at + 4)?;
+        at += 8;
+        if be_i32(data, at)? != 8 {
+            return None;
+        }
+        let score = f64::from_be_bytes(be_8(data, at + 4)?);
+        at += 12;
+        seen.entry((player, board)).or_default().insert((rank, canon(score)));
+    }
+    let mut out: Vec<(i64, i32, i32)> = seen
+        .into_iter()
+        .filter(|(_, v)| v.len() > 1)
+        .map(|((p, b), v)| (p, b, v.len() as i32))
+        .collect();
+    out.sort_unstable();
+    Some(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

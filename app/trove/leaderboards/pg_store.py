@@ -427,6 +427,13 @@ async def anchor_capture(anchor: int, board_uuids: list[int]):
     return _native.act_decode(buf.getvalue())
 
 
+async def all_player_names() -> list[tuple[int, str]]:
+    """Every ``(player id, display name)``."""
+    async with acquire() as con:
+        rows = await con.fetch("SELECT id, name FROM player")
+    return [(r["id"], r["name"]) for r in rows]
+
+
 async def player_names(ids: list[int]) -> dict[int, str]:
     """``{player id: display name}``."""
     if not ids:
@@ -1390,16 +1397,29 @@ async def duplicate_groups_at(anchor: int) -> list[dict]:
     WORSE (0.80s/anchor for a whole day-partition vs 0.26s one at a time), so the
     per-anchor loop stays. What remains is inherent: finding a name listed twice
     on a board means grouping every row of every capture, ~692M rows."""
+    from app.trove.leaderboards.activity import _native
     async with acquire() as con:
-        rows = await con.fetch(
-            "SELECT player_id, board_uuid, "
-            "       count(DISTINCT (rank, score))::int AS occurrences "
-            "FROM entry WHERE anchor = $1 "
-            "GROUP BY player_id, board_uuid "
-            "HAVING count(DISTINCT (rank, score)) > 1 "
-            "ORDER BY player_id, board_uuid",
-            anchor,
-        )
+        rows = None
+        if _native is not None:
+            # The same grouping in Rust over a binary COPY: Postgres only scans.
+            buf = io.BytesIO()
+            await con.copy_from_query(
+                "SELECT board_uuid, player_id, rank, score FROM entry WHERE anchor = $1",
+                anchor, output=buf, format="binary",
+            )
+            found = _native.dup_groups(buf.getvalue())
+            if found is not None:
+                rows = [{"player_id": p, "board_uuid": b, "occurrences": n} for p, b, n in found]
+        if rows is None:
+            rows = await con.fetch(
+                "SELECT player_id, board_uuid, "
+                "       count(DISTINCT (rank, score))::int AS occurrences "
+                "FROM entry WHERE anchor = $1 "
+                "GROUP BY player_id, board_uuid "
+                "HAVING count(DISTINCT (rank, score)) > 1 "
+                "ORDER BY player_id, board_uuid",
+                anchor,
+            )
         if not rows:
             return []
         ids = sorted({r["player_id"] for r in rows})

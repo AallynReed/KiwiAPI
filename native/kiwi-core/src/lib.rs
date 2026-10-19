@@ -6,6 +6,7 @@ pub mod binfab;
 pub mod blueprint;
 pub mod detection;
 pub mod lbdump;
+pub mod renames;
 pub mod swf;
 pub mod troveio;
 pub mod wire;
