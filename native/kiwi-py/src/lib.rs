@@ -496,8 +496,29 @@ fn act_pair(
     (p.active, p.boards, p.per_board)
 }
 
+/// `_class_active_sets` by player id: `[(class, active ids, clean ids | None)]`.
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn act_class_sets(
+    py: Python<'_>,
+    early: &ActCapture,
+    late: &ActCapture,
+    gates: &ActCapture,
+    crossed: bool,
+    short: bool,
+    power_rank: f64,
+    effort: f64,
+    xp: f64,
+    xp_board: i32,
+) -> Vec<kiwi_core::activity::ClassSet> {
+    let reset = kiwi_core::activity::ResetWindow { crossed, short };
+    let floors = kiwi_core::activity::Floors { power_rank, effort, xp, xp_board };
+    py.detach(|| kiwi_core::activity::class_sets(&early.0, &late.0, &gates.0, &reset, &floors))
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(act_class_sets, m)?)?;
     m.add_class::<ActCapture>()?;
     m.add_function(wrap_pyfunction!(act_decode, m)?)?;
     m.add_function(wrap_pyfunction!(act_pair, m)?)?;

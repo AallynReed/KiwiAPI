@@ -112,6 +112,77 @@ pub fn pair(early: &Capture, late: &Capture, boards: &[i32]) -> Pair {
     Pair { active, boards: counted, per_board }
 }
 
+/// The weekly-reset situation of one capture window (decided by the caller).
+pub struct ResetWindow {
+    /// A reset fell inside the window.
+    pub crossed: bool,
+    /// ...and the window is short enough to count as measured but empty.
+    pub short: bool,
+}
+
+/// "Established" floors for the clean view; a floor of 0 is a no-op.
+pub struct Floors {
+    pub power_rank: f64,
+    pub effort: f64,
+    pub xp: f64,
+    pub xp_board: i32,
+}
+
+/// One class's window: (class index, active player ids, clean ids or None).
+pub type ClassSet = (i64, Vec<i64>, Option<Vec<i64>>);
+
+/// `class_activity._class_active_sets` by player id. `late`/`early` hold the
+/// Effort boards; `gates` the Power Rank boards (+ XP) at the window end.
+pub fn class_sets(early: &Capture, late: &Capture, gates: &Capture, reset: &ResetWindow, f: &Floors) -> Vec<ClassSet> {
+    let mut by_class: std::collections::BTreeMap<i64, FxHashSet<i64>> = Default::default();
+    let mut buf = Vec::new();
+    for (uuid, l) in &late.boards {
+        if l.is_empty() {
+            continue;
+        }
+        let class = i64::from(*uuid).rem_euclid(1000);
+        let e = early.boards.get(uuid).filter(|e| !e.is_empty());
+        if reset.short {
+            if e.is_some() {
+                by_class.entry(class).or_default();
+            }
+            continue;
+        }
+        let Some(e) = e else { continue };
+        if reset.crossed {
+            continue;
+        }
+        buf.clear();
+        board_active(l, e, &mut buf);
+        by_class.entry(class).or_default().extend(buf.iter().copied());
+    }
+    let xp = (f.xp > 0.0).then(|| gates.boards.get(&f.xp_board)).flatten();
+    let empty = FxHashMap::default();
+    by_class
+        .into_iter()
+        .map(|(class, players)| {
+            let pr = gates.boards.get(&(1000 + class as i32));
+            let clean = pr.map(|pr| {
+                let effort = late.boards.get(&(4000 + class as i32)).unwrap_or(&empty);
+                let mut c: Vec<i64> = players
+                    .iter()
+                    .copied()
+                    .filter(|p| {
+                        pr.get(p).copied().unwrap_or(0.0) >= f.power_rank
+                            && effort.get(p).copied().unwrap_or(0.0) >= f.effort
+                            && xp.is_none_or(|x| x.get(p).copied().unwrap_or(0.0) >= f.xp)
+                    })
+                    .collect();
+                c.sort_unstable();
+                c
+            });
+            let mut active: Vec<i64> = players.into_iter().collect();
+            active.sort_unstable();
+            (class, active, clean)
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

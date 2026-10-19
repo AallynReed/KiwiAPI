@@ -336,7 +336,7 @@ async def _compute(anchor_late: int, anchor_early: int) -> dict:
     per_board: list[dict] = []
     if not isinstance(late_cap, dict) and not isinstance(early_cap, dict) and _native is not None:
         ids, _, counts = _native.act_pair(early_cap, late_cap, board_uuids)
-        active_union = set(await _pg.player_names(ids))
+        active_union = set((await _pg.player_names(ids)).values())
         for uuid in board_uuids:
             if counts.get(uuid):
                 meta = meta_by_uuid[uuid]
@@ -454,7 +454,7 @@ async def _pair_names(
     from app.trove.leaderboards import pg_store
     if _native is not None and not isinstance(early, dict) and not isinstance(late, dict):
         ids, nboards, _ = _native.act_pair(early, late, list(boards))
-        return set(await pg_store.player_names(ids)), nboards
+        return set((await pg_store.player_names(ids)).values()), nboards
     uuids = list(boards)
     if not isinstance(early, dict):
         early = await _load_anchor_maps(early_ts, uuids)

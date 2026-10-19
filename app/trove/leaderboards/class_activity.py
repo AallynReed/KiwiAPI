@@ -202,6 +202,34 @@ def _class_active_sets(
     return out
 
 
+async def _sets_for(
+    early, late, gates, early_ts: int, late_ts: int,
+    pr_thr: int, effort_thr: int, xp_thr: int,
+    board_uuids: list[int], gate_uuids: list[int],
+) -> dict[int, tuple[set[str], set[str] | None]]:
+    """``_class_active_sets`` for captures from ``activity._load_capture``: in Rust
+    when all three decoded, else on the Python maps."""
+    from app.trove.leaderboards import pg_store
+    native = _act._native
+    if native is not None and not any(isinstance(c, dict) for c in (early, late, gates)):
+        crossed = bool(lb_service.reset_boundaries_for_kind(_KIND, early_ts, late_ts))
+        short = crossed and late_ts - early_ts <= _SHORT_RESET_WINDOW_SECONDS
+        rows = native.act_class_sets(early, late, gates, crossed, short, float(pr_thr),
+                                     float(effort_thr), float(xp_thr), _XP_BOARD)
+        name = await pg_store.player_names(sorted({p for _, a, _ in rows for p in a}))
+        return {i: ({name[p] for p in a}, None if c is None else {name[p] for p in c})
+                for i, a, c in rows}
+    if not isinstance(early, dict):
+        early = await _act._load_anchor_maps(early_ts, board_uuids)
+    if not isinstance(late, dict):
+        late = await _act._load_anchor_maps(late_ts, board_uuids)
+    if not isinstance(gates, dict):
+        gates = await _act._load_anchor_maps(late_ts, gate_uuids)
+    return _class_active_sets(early, late, early_ts, late_ts,
+                              pr_maps=gates, threshold=pr_thr, effort_threshold=effort_thr,
+                              xp_map=gates.get(_XP_BOARD), xp_threshold=xp_thr)
+
+
 def _counts_of(sets: dict[int, tuple[set[str], set[str] | None]]) -> dict[int, dict]:
     """``{class_index: {"raw": int, "clean": int|None}}`` - the set sizes."""
     return {i: {"raw": len(s), "clean": len(c) if c is not None else None}
@@ -267,16 +295,14 @@ async def estimate_class_activity(*, force: bool = False) -> dict:
 
     pr_thr, effort_thr, xp_thr = await _clean_thresholds()
     board_uuids = stats.class_effort_board_uuids()   # Effort only (Paragon excluded)
-    late_maps = await _act._load_anchor_maps(anchor_late, board_uuids)
-    early_maps = await _act._load_anchor_maps(anchor_early, board_uuids)
+    late_maps = await _act._load_capture(anchor_late, board_uuids)
+    early_maps = await _act._load_capture(anchor_early, board_uuids)
     # Power Rank (+ XP, when that floor is on) snapshot at the window END gates
     # the clean view (one extra query; Effort scores come from late_maps above).
     gate_uuids = stats.class_pr_board_uuids() + ([_XP_BOARD] if xp_thr > 0 else [])
-    pr_maps = await _act._load_anchor_maps(anchor_late, gate_uuids)
-    sets = _class_active_sets(early_maps, late_maps, anchor_early, anchor_late,
-                              pr_maps=pr_maps, threshold=pr_thr,
-                              effort_threshold=effort_thr,
-                              xp_map=pr_maps.get(_XP_BOARD), xp_threshold=xp_thr)
+    pr_maps = await _act._load_capture(anchor_late, gate_uuids)
+    sets = await _sets_for(early_maps, late_maps, pr_maps, anchor_early, anchor_late,
+                           pr_thr, effort_thr, xp_thr, board_uuids, gate_uuids)
     counts = _counts_of(sets)
 
     now_ts = int(time.time())
@@ -547,25 +573,22 @@ async def backfill_class_history(
     active_floor = int(time.time()) - _ACTIVE_RETENTION_SECONDS
     computed = failed = empty_skipped = 0
     prev_anchor: int | None = None
-    prev_maps: dict[int, dict[str, float]] | None = None
+    prev_maps = None
     # Contiguous run of this replay's windows, oldest first: (early, late, sets).
     chain: deque[tuple[int, int, dict]] = deque()
 
     for idx, anchor in enumerate(needed):
-        cur_maps = await _act._load_anchor_maps(anchor, board_uuids)
+        cur_maps = await _act._load_capture(anchor, board_uuids)
         early = early_of.get(anchor)
         if early is not None:
             try:
                 early_maps = prev_maps if (early == prev_anchor and prev_maps is not None) \
-                    else await _act._load_anchor_maps(early, board_uuids)
+                    else await _act._load_capture(early, board_uuids)
                 # Power Rank (+ XP, when that floor is on) snapshot at the
                 # window END gates the clean view.
-                pr_maps = await _act._load_anchor_maps(anchor, pr_board_uuids)
-                sets = _class_active_sets(early_maps, cur_maps, early, anchor,
-                                          pr_maps=pr_maps, threshold=pr_thr,
-                                          effort_threshold=effort_thr,
-                                          xp_map=pr_maps.get(_XP_BOARD),
-                                          xp_threshold=xp_thr)
+                pr_maps = await _act._load_capture(anchor, pr_board_uuids)
+                sets = await _sets_for(early_maps, cur_maps, pr_maps, early, anchor,
+                                       pr_thr, effort_thr, xp_thr, board_uuids, pr_board_uuids)
                 if anchor >= active_floor:
                     await pg_store.record_class_active_window(anchor, sets)
                 if chain and chain[-1][1] != early:

@@ -427,13 +427,13 @@ async def anchor_capture(anchor: int, board_uuids: list[int]):
     return _native.act_decode(buf.getvalue())
 
 
-async def player_names(ids: list[int]) -> list[str]:
-    """Display names for player ids."""
+async def player_names(ids: list[int]) -> dict[int, str]:
+    """``{player id: display name}``."""
     if not ids:
-        return []
+        return {}
     async with acquire() as con:
-        rows = await con.fetch("SELECT name FROM player WHERE id = ANY($1::bigint[])", ids)
-    return [r["name"] for r in rows]
+        rows = await con.fetch("SELECT id, name FROM player WHERE id = ANY($1::bigint[])", ids)
+    return {r["id"]: r["name"] for r in rows}
 
 
 # ── per-window active-player set (the 24h/7d rollup source) ───────────────────
