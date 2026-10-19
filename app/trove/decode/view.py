@@ -6,10 +6,11 @@
 language table (field 0 = ``{0 key, 1 text}`` rows) comes back as plain key/text
 pairs as well, since that is all a text mod changes.
 
-The input is a stranger's upload and the reader is a search, so ``describe_isolated``
-runs it in a child process (this module's ``__main__``) under a wall-clock kill and,
-off Windows, an address-space cap - a crafted file costs one bounded process, never
-the API worker.
+The input is a stranger's upload and the reader is a search. ``describe_isolated``
+runs the Rust reader in-process under a step budget, which bounds both time and
+memory; only a file that exhausts it (or a missing kiwi_native) goes to a child
+process (this module's ``__main__``) under a wall-clock kill and, off Windows, an
+address-space cap - a crafted file costs one bounded process, never the API worker.
 """
 from __future__ import annotations
 
@@ -22,12 +23,14 @@ from typing import Any
 
 from app.trove.decode import fields as F
 from app.trove.decode.ability import _is_damage, _is_healing, is_modifier
-from app.trove.decode.wire import Obj, Repeated, WireError, parse
+from app.trove.decode.wire import Obj, Prefab, Repeated, WireError, native_parse, parse
 
 MAX_BYTES = 1024 * 1024
 MAX_NODES = 60_000
 TIMEOUT_SECONDS = 30
 MEMORY_LIMIT_BYTES = 1024 * 1024 * 1024
+# ~2.7x the costliest game prefab (goldenthread, 1.1M steps); ~70 bytes a step.
+UPLOAD_BUDGET = 3_000_000
 _CONCURRENT = asyncio.Semaphore(2)
 _ROOT = Path(__file__).resolve().parents[3]
 
@@ -172,8 +175,24 @@ def describe(data: bytes) -> dict:
         pf = parse(data)
     except WireError:
         raise BinfabViewError("This file couldn't be read as a Trove prefab.") from None
+    return _describe_prefab(pf, len(data))
+
+
+def _describe_native(data: bytes) -> dict | None:
+    """``describe`` with the reader held to ``UPLOAD_BUDGET``; None when the budget
+    or kiwi_native ran out, so the caller can fall back to the child process."""
+    if not data:
+        raise BinfabViewError("That file is empty.")
+    try:
+        pf = native_parse(data, UPLOAD_BUDGET)
+    except WireError:
+        raise BinfabViewError("This file couldn't be read as a Trove prefab.") from None
+    return None if pf is None else _describe_prefab(pf, len(data))
+
+
+def _describe_prefab(pf: Prefab, size: int) -> dict:
     budget = _Budget()
-    out: dict = {"kind": pf.kind, "size": len(data)}
+    out: dict = {"kind": pf.kind, "size": size}
     if pf.kind == "entity":
         out["type_id"] = pf.type_id
         out["components"] = [
@@ -200,11 +219,15 @@ def _limit_memory() -> None:
 
 
 async def describe_isolated(data: bytes) -> dict:
-    """``describe`` in a child process: killed past ``TIMEOUT_SECONDS``, and on
-    Linux unable to map more than ``MEMORY_LIMIT_BYTES``."""
+    """``describe`` for an upload: in-process under ``UPLOAD_BUDGET`` when Rust can
+    finish it, otherwise in a child process killed past ``TIMEOUT_SECONDS`` and, on
+    Linux, unable to map more than ``MEMORY_LIMIT_BYTES``."""
     if len(data) > MAX_BYTES:
         raise BinfabViewError("This file is too large to lay out.")
     async with _CONCURRENT:
+        result = await asyncio.to_thread(_describe_native, data)
+        if result is not None:
+            return result
         proc = await asyncio.create_subprocess_exec(
             sys.executable, "-m", "app.trove.decode.view", cwd=str(_ROOT),
             stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,

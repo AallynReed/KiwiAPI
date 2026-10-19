@@ -48,6 +48,13 @@ from typing import Any
 
 from app.trove.decode.sections import COMPONENT_SECTIONS
 
+try:
+    import kiwi_native as _native
+
+    _native.wire_set_sections(COMPONENT_SECTIONS)
+except ImportError:
+    _native = None
+
 END, OBJ, ARR, MAP, CUSTOM, BIGMAP, STRMAP = 0x0F, 0x17, 0x1F, 0x27, 0x2F, 0x37, 0x3F
 _EMPTY = object()                   # an array slot created but given no value
 MAX_SECTIONS = 8
@@ -424,10 +431,31 @@ def _entity(data: bytes) -> Prefab | None:
 # few prefabs (claim/goldenthread) need more Python frames than the default 1,000
 # even though the real data nests under 20 deep.
 RECURSION_LIMIT = 20_000
+# Search steps the Rust reader may take before handing a file back to Python.
+NATIVE_BUDGET = 200_000_000
+
+
+def native_parse(data: bytes, budget: int = NATIVE_BUDGET) -> Prefab | None:
+    """``parse`` in Rust. None when kiwi_native is missing or the budget or nesting
+    limit ran out, which says nothing about the file; WireError when Python would
+    raise it too."""
+    if _native is None:
+        return None
+    out = _native.wire_parse(data if type(data) is bytes else bytes(data), budget, Obj, Repeated)
+    if out is None:
+        return None
+    if out[0] == "entity":
+        return Prefab("entity", out[1], list(out[2]))
+    if out[0] == "object":
+        return Prefab("object", root=out[1])
+    raise WireError("no reading fills the object exactly")
 
 
 def parse(data: bytes) -> Prefab:
     """A whole prefab file. Raises WireError when no reading fits."""
+    pf = native_parse(data)
+    if pf is not None:
+        return pf
     if sys.getrecursionlimit() < RECURSION_LIMIT:
         sys.setrecursionlimit(RECURSION_LIMIT)
     try:

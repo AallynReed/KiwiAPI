@@ -3,10 +3,17 @@
 //! Functions that return `None` are telling the Python caller to run its own
 //! reference implementation, which then raises exactly what it always raised.
 
+use std::collections::HashMap;
+use std::sync::RwLock;
+
 use kiwi_core::blueprint::{self, Decoded, InVoxel, Rendered};
+use kiwi_core::wire;
 use pyo3::intern;
 use pyo3::prelude::*;
-use pyo3::types::{PyBytes, PyDict, PyList, PyTuple};
+use pyo3::types::{PyBytes, PyDict, PyList, PyString, PyTuple};
+
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[pyfunction]
 fn calculate_hash(py: Python<'_>, data: &[u8]) -> u32 {
@@ -227,8 +234,104 @@ fn swf_place_bits(data: &[u8], has_matrix: bool, has_cxform: bool) -> Option<(Op
     kiwi_core::swf::place_bits(data, has_matrix, has_cxform).map(|(m, n)| (m.map(matrix_tuple), n))
 }
 
+fn wire_value<'py>(py: Python<'py>, v: &wire::Val, obj_cls: &Bound<'py, PyAny>, rep_cls: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
+    stacker::maybe_grow(64 * 1024, 4 * 1024 * 1024, || {
+        let conv = |x: &wire::Val| wire_value(py, x, obj_cls, rep_cls);
+        Ok(match v {
+            wire::Val::Int(i) => i.into_pyobject(py)?.into_any(),
+            wire::Val::Float(f) => f.into_pyobject(py)?.into_any(),
+            wire::Val::Str(s) => PyString::new(py, s).into_any(),
+            wire::Val::Bytes(b) => PyBytes::new(py, b).into_any(),
+            wire::Val::Packed(xs) => PyTuple::new(py, xs.iter().map(conv).collect::<PyResult<Vec<_>>>()?)?.into_any(),
+            wire::Val::Sec(chain) => {
+                let d = PyDict::new(py);
+                for (idx, xs) in wire::section_fields(chain) {
+                    let val = if xs.len() == 1 {
+                        conv(&xs[0])?
+                    } else {
+                        let items = xs.iter().map(|s| conv(s)).collect::<PyResult<Vec<_>>>()?;
+                        rep_cls.call1((PyList::new(py, items)?,))?
+                    };
+                    d.set_item(idx, val)?;
+                }
+                d.into_any()
+            }
+            wire::Val::Obj(chain) => {
+                let secs = wire::obj_sections(chain);
+                let items = secs.iter().map(|s| conv(s)).collect::<PyResult<Vec<_>>>()?;
+                obj_cls.call1((PyList::new(py, items)?,))?
+            }
+            wire::Val::List(chain) => {
+                let items = wire::list_values(chain)
+                    .iter()
+                    .map(|x| match x {
+                        Some(x) => conv(x),
+                        None => Ok(py.None().into_bound(py)),
+                    })
+                    .collect::<PyResult<Vec<_>>>()?;
+                PyList::new(py, items)?.into_any()
+            }
+            wire::Val::Map(chain) => {
+                let d = PyDict::new(py);
+                for (k, x) in wire::map_items(chain) {
+                    let val = match x {
+                        Some(x) => conv(&x)?,
+                        None => py.None().into_bound(py),
+                    };
+                    match k {
+                        wire::MapKey::Int(i) => d.set_item(i, val)?,
+                        wire::MapKey::Str(s) => d.set_item(&*s, val)?,
+                    }
+                }
+                d.into_any()
+            }
+        })
+    })
+}
+
+/// `wire.parse`: `("entity", type_id, [(cid, Obj)])`, `("object", Obj)`,
+/// `("none",)` where Python raises WireError, or None when the budget or the
+/// nesting limit stopped it.
+static WIRE_SECTIONS: RwLock<Option<HashMap<i128, i128>>> = RwLock::new(None);
+
+/// Install `COMPONENT_SECTIONS` once, so each parse doesn't convert the dict.
+#[pyfunction]
+fn wire_set_sections(sections: HashMap<i128, i128>) {
+    *WIRE_SECTIONS.write().unwrap_or_else(|e| e.into_inner()) = Some(sections);
+}
+
+#[pyfunction]
+fn wire_parse<'py>(
+    py: Python<'py>,
+    data: &[u8],
+    budget: u64,
+    obj_cls: &Bound<'py, PyAny>,
+    rep_cls: &Bound<'py, PyAny>,
+) -> PyResult<Option<Bound<'py, PyTuple>>> {
+    let parsed = {
+        let guard = WIRE_SECTIONS.read().unwrap_or_else(|e| e.into_inner());
+        let empty = HashMap::new();
+        wire::parse(data, guard.as_ref().unwrap_or(&empty), budget)
+    };
+    let out = match parsed {
+        wire::Outcome::Abort => return Ok(None),
+        wire::Outcome::NoReading => ("none",).into_pyobject(py)?,
+        wire::Outcome::Parsed(wire::Prefab::Object(v)) => ("object", wire_value(py, &v, obj_cls, rep_cls)?).into_pyobject(py)?,
+        wire::Outcome::Parsed(wire::Prefab::Entity { type_id, components }) => {
+            let comps = components
+                .iter()
+                .map(|(cid, v)| Ok((*cid, wire_value(py, v, obj_cls, rep_cls)?)))
+                .collect::<PyResult<Vec<_>>>()?;
+            ("entity", type_id, comps).into_pyobject(py)?
+        }
+    };
+    Ok(Some(out))
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(wire_parse, m)?)?;
+    m.add_function(wrap_pyfunction!(wire_set_sections, m)?)?;
     m.add_function(wrap_pyfunction!(swf_lossless, m)?)?;
     m.add_function(wrap_pyfunction!(swf_shape_fills, m)?)?;
     m.add_function(wrap_pyfunction!(swf_place_bits, m)?)?;

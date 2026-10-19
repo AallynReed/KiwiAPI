@@ -2988,8 +2988,9 @@ async def site_workshop_binfab(
     _limit: None = _WORKSHOP_LIMIT,
 ) -> JSONResponse:
     """One ``.binfab`` inside an uploaded ``.tmod`` laid out field by field (or, for a
-    language table, as key/text rows). Read in a bounded child process, since the
-    reader is a search and the file is a stranger's; nothing is kept."""
+    language table, as key/text rows). Read under a step budget (a bounded child
+    process past it), since the reader is a search and the file is a stranger's;
+    nothing is kept."""
     from app.trove.decode import view as binfab_view
 
     data = await file.read()

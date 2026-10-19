@@ -5,3 +5,4 @@ pub mod binfab;
 pub mod blueprint;
 pub mod swf;
 pub mod troveio;
+pub mod wire;
