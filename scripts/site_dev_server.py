@@ -2237,7 +2237,7 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_header("Content-Length", str(len(blob)))
                 self.send_header(
                     "Content-Disposition",
-                    f'attachment; filename="{slug}-main-stub123.zip"')
+                    f'attachment; filename="{re.sub(r"[^A-Za-z0-9._-]", "", slug)}-main-stub123.zip"')
                 self.end_headers()
                 return self.wfile.write(blob)
             if sub == "tree":

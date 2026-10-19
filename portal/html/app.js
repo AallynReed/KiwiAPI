@@ -2337,7 +2337,7 @@ function wireDeleteCapture() {
     if (!Number.isFinite(a) || a <= 0) { toast("Enter a valid anchor (unix seconds)", "err"); return; }
     const when = new Date(a * 1000).toISOString().replace("T", " ").slice(0, 16);
     modal("Delete capture " + a + "?",
-      `<p>Deletes every entry for the capture at <code>${a}</code> (<b>${when} UTC</b>) and rebuilds
+      `<p>Deletes every entry for the capture at <code>${esc(String(a))}</code> (<b>${esc(when)} UTC</b>) and rebuilds
        activity so any spike it caused becomes a clean gap.</p>
        <p class="hint">Derived from the captures — nothing irreplaceable is lost.</p>`,
       async () => {
