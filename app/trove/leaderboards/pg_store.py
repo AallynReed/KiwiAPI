@@ -309,22 +309,25 @@ async def top_entries_for_boards(uuids: list[int], anchor: int) -> dict[int, dic
     """The rank-1 entry for each of ``uuids`` at one ``anchor`` (the caller
     passes the latest published snapshot; rank-1 is the highest score).
 
-    Powers the free Mastery / Power Rank "records" endpoint. ``anchor`` is a
-    CONSTANT here, so Postgres PRUNES the RANGE-partitioned ``entry`` table to
-    that single day's partition and reads rank-1 per board straight off the
-    ``(board_uuid, anchor, rank)`` index (``DISTINCT ON`` + ``ORDER BY rank``).
-    Boards absent from that snapshot are simply missing from the result.
+    Powers the free Mastery / Power Rank "records" endpoint. One ``LIMIT 1``
+    lookup per board off the ``(board_uuid, anchor, rank)`` index; a
+    ``DISTINCT ON`` over the whole snapshot joined every row to ``player`` first
+    (~350 ms). Capped boards tie hundreds of players at rank 1, so ties go to the
+    lowest ``player_id``. Boards absent from that snapshot are missing from the
+    result.
     """
     if not uuids:
         return {}
     async with acquire() as con:
         rows = await con.fetch(
-            "SELECT DISTINCT ON (e.board_uuid) "
-            "       e.board_uuid, p.name AS player_name, e.score, e.anchor "
-            "FROM entry e "
-            "JOIN player p ON p.id = e.player_id "
-            "WHERE e.board_uuid = ANY($1) AND e.anchor = $2 "
-            "ORDER BY e.board_uuid, e.rank",
+            "SELECT b.uuid AS board_uuid, p.name AS player_name, t.score, t.anchor "
+            "FROM unnest($1::int[]) AS b(uuid) "
+            "CROSS JOIN LATERAL ("
+            "    SELECT e.player_id, e.score, e.anchor FROM entry e "
+            "    WHERE e.board_uuid = b.uuid AND e.anchor = $2 "
+            "    ORDER BY e.rank, e.player_id LIMIT 1"
+            ") t "
+            "JOIN player p ON p.id = t.player_id",
             uuids, anchor,
         )
     return {
