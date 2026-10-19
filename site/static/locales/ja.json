@@ -537,7 +537,7 @@
   "Toggle the buffs you actually run (food, Berserker Battler, and so on).": "実際に使うバフ（食べ物、Berserker Battler など）を切り替えます。",
   "too few entries": "エントリー数が不足",
   "Top players over the last 7 days": "過去7日間のトッププレイヤー",
-  "Top players per board, ranked. Hourly captures, {days}-day live retention, full archive beyond.": "ボードごとの上位プレイヤー、順位付き。毎時キャプチャ、{days} 日間のライブ保持、それ以降は完全アーカイブ。",
+  "Top players per board, ranked. Hourly captures, {days}-day live retention.": "ボードごとの上位プレイヤー、順位付き。毎時キャプチャ、{days} 日間のライブ保持。",
   "Top {n} · {h} captures": "トップ{n}・{h}回のキャプチャ",
   "Troubleshooting &amp; FAQ": "トラブルシューティング &amp; よくある質問",
   "Trove Commands": "Troveコマンド",

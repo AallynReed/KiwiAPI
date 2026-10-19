@@ -2113,7 +2113,7 @@
   "Top build": "บิลด์อันดับหนึ่ง",
   "Top mover": "ขยับแรงที่สุด",
   "Top players over the last 7 days": "ผู้เล่นอันดับต้นใน 7 วันที่ผ่านมา",
-  "Top players per board, ranked. Hourly captures, {days}-day live retention, full archive beyond.": "ผู้เล่นอันดับต้นของแต่ละบอร์ด จัดอันดับไว้แล้ว เก็บข้อมูลรายชั่วโมง เก็บแบบสด {days} วัน และมีคลังข้อมูลเต็มย้อนหลังต่อจากนั้น",
+  "Top players per board, ranked. Hourly captures, {days}-day live retention.": "ผู้เล่นอันดับต้นของแต่ละบอร์ด จัดอันดับไว้แล้ว เก็บข้อมูลรายชั่วโมง เก็บแบบสด {days} วัน",
   "Top {n} · {h} captures": "{n} อันดับแรก · เก็บข้อมูล {h} ครั้ง",
   "Total": "รวม",
   "Total dmg": "ดาเมจรวม",

@@ -537,7 +537,7 @@
   "Toggle the buffs you actually run (food, Berserker Battler, and so on).": "Activez les buffs que vous utilisez réellement (nourriture, Berserker Battler, etc.).",
   "too few entries": "trop peu d'entrées",
   "Top players over the last 7 days": "Meilleurs joueurs des 7 derniers jours",
-  "Top players per board, ranked. Hourly captures, {days}-day live retention, full archive beyond.": "Meilleurs joueurs par classement, par rang. Captures horaires, {days} jours en direct, archive complète au-delà.",
+  "Top players per board, ranked. Hourly captures, {days}-day live retention.": "Meilleurs joueurs par classement, par rang. Captures horaires, {days} jours en direct.",
   "Top {n} · {h} captures": "Top {n} · {h} captures",
   "Troubleshooting &amp; FAQ": "Dépannage &amp; FAQ",
   "Trove Commands": "Commandes Trove",

@@ -1046,7 +1046,7 @@
   "Toggle the buffs you actually run (food, Berserker Battler, and so on).": "실제로 사용하는 버프(음식, Berserker Battler 등)를 켜고 끄세요.",
   "Too large to preview ({size}) — download it to inspect.": "미리보기에는 너무 큽니다({size}) — 다운로드해서 확인하세요.",
   "Top players over the last 7 days": "최근 7일간 상위 플레이어",
-  "Top players per board, ranked. Hourly captures, {days}-day live retention, full archive beyond.": "보드별 상위 플레이어 순위. 시간별 캡처, {days}일간 실시간 보관, 이후는 전체 아카이브.",
+  "Top players per board, ranked. Hourly captures, {days}-day live retention.": "보드별 상위 플레이어 순위. 시간별 캡처, {days}일간 실시간 보관.",
   "Top {n} · {h} captures": "상위 {n} · 캡처 {h}회",
   "Tradable": "거래 가능",
   "Troubleshooting &amp; FAQ": "문제 해결 &amp; FAQ",

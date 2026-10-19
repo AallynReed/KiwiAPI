@@ -90,7 +90,6 @@ class Settings(BaseSettings):
     # to cap cold-read load. The anon window also gates the top-5 board-history
     # chart: it's only drawn for captures within this recent window.
     leaderboards_anon_retention_days: int = 7
-    leaderboards_extended_retention_days: int = 36500
     # Anchors older than this count as "archive" reads and pay an extra, tighter
     # per-token bucket ON TOP of the standard cap - a caller can trawl the archive
     # cheaply per-read but not in a tight loop. Same 3-day window as the hot window.

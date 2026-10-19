@@ -537,7 +537,7 @@
   "Toggle the buffs you actually run (food, Berserker Battler, and so on).": "Включите бафы, которые вы действительно используете (еда, Berserker Battler и так далее).",
   "too few entries": "слишком мало записей",
   "Top players over the last 7 days": "Лучшие игроки за последние 7 дней",
-  "Top players per board, ranked. Hourly captures, {days}-day live retention, full archive beyond.": "Лучшие игроки по каждой таблице, по рангу. Ежечасные снимки, {days} дня в живом доступе, далее - полный архив.",
+  "Top players per board, ranked. Hourly captures, {days}-day live retention.": "Лучшие игроки по каждой таблице, по рангу. Ежечасные снимки, {days} дня в живом доступе.",
   "Top {n} · {h} captures": "Топ {n} · {h} срезов",
   "Troubleshooting &amp; FAQ": "Устранение неполадок &amp; FAQ",
   "Trove Commands": "Команды Trove",

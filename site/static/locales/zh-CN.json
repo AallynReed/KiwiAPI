@@ -537,7 +537,7 @@
   "Toggle the buffs you actually run (food, Berserker Battler, and so on).": "切换你实际使用的增益（食物、Berserker Battler 等）。",
   "too few entries": "记录过少",
   "Top players over the last 7 days": "过去 7 天的顶尖玩家",
-  "Top players per board, ranked. Hourly captures, {days}-day live retention, full archive beyond.": "每个榜单的顶尖玩家，按排名展示。每小时采集，{days} 天热数据保留，更早的进入完整归档。",
+  "Top players per board, ranked. Hourly captures, {days}-day live retention.": "每个榜单的顶尖玩家，按排名展示。每小时采集，{days} 天热数据保留。",
   "Top {n} · {h} captures": "前 {n} 名 · {h} 次抓取",
   "Troubleshooting &amp; FAQ": "疑难排解 &amp; 常见问题",
   "Trove Commands": "Trove 命令",

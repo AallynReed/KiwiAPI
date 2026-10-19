@@ -1719,45 +1719,36 @@ async def site_codex_crafting(
 # /site/leaderboards/* JSON endpoints: mirror the read-side helpers from
 # app/trove/router.py.
 
-async def _lb_browse_window_days(user: SiteUser | None) -> int:
-    """Day-picker history window (in days) for this caller: signed-in Dashboard
-    users get the extended window (effectively the whole cold-tiered archive);
-    anonymous callers are capped to the recent hot window. Deeper captures live on
-    the slower cold disk, so the anon cap is what bounds anonymous cold-read load."""
-    key = ("leaderboards_extended_retention_days" if user is not None
-           else "leaderboards_anon_retention_days")
-    return max(1, int(await runtime_config.get_setting(key)))
+async def _lb_browse_window_days() -> int:
+    """How many days of leaderboard history the site lets anyone browse. Older
+    captures stay stored but are not served, signed in or not."""
+    return max(1, int(await runtime_config.get_setting("leaderboards_anon_retention_days")))
 
 
-async def _guard_lb_archive_anchor(anchor: int, user: SiteUser | None) -> None:
-    """403 if ``anchor`` predates the caller's browse window - the deeper archive
-    is a signed-in perk. Signed-in users pass (their window is effectively all
-    history); the client never requests older anchors for anon, so this only trips
-    a direct/deep-link hit."""
-    window = await _lb_browse_window_days(user)
+async def _guard_lb_archive_anchor(anchor: int) -> None:
+    """403 if ``anchor`` predates the browse window. The page never asks for one,
+    so this only trips a direct or deep-link hit."""
+    window = await _lb_browse_window_days()
     if anchor < int(time.time()) - window * 86400:
-        anon_days = max(1, int(await runtime_config.get_setting("leaderboards_anon_retention_days")))
         from app.core.errors import APIError, ErrorCode
         raise APIError(
             status_code=403, code=ErrorCode.forbidden,
-            message=f"Sign in to view captures older than {anon_days} days.",
+            message=f"Captures older than {window} days aren't available.",
         )
 
 
 @router.get("/site/leaderboards/config", response_class=JSONResponse)
-async def site_lb_config(
-    user: SiteUser | None = Depends(get_optional_site_user),
-) -> JSONResponse:
+async def site_lb_config() -> JSONResponse:
     """Runtime tunables the leaderboards page needs to render its chrome.
 
     The hot-retention window (so the subtitle's "N-day live retention" line
     tracks master-panel changes within the 5s runtime_config cache window), the
-    day-picker window for THIS caller (anon vs signed-in) + the top-5 chart's
-    max age, plus the cheater/alt-cluster calculation switches so the page can
-    hide the Possible-cheaters / Alt-clusters tabs when their compute is disabled."""
+    day-picker window + the top-5 chart's max age, plus the cheater/alt-cluster
+    calculation switches so the page can hide the Possible-cheaters / Alt-clusters
+    tabs when their compute is disabled."""
     days = await runtime_config.get_setting("leaderboards_hot_retention_days")
-    picker_days = await _lb_browse_window_days(user)
-    graph_max_age_days = max(1, int(await runtime_config.get_setting("leaderboards_anon_retention_days")))
+    picker_days = await _lb_browse_window_days()
+    graph_max_age_days = picker_days
     cheaters_on = await feature_flags.is_enabled(feature_flags.CHEATER_DETECTION_FLAG)
     clusters_on = await feature_flags.is_enabled(feature_flags.ALT_CLUSTERS_FLAG)
     renames_on = await feature_flags.is_enabled(feature_flags.RENAMES_FLAG)
@@ -1765,8 +1756,6 @@ async def site_lb_config(
     return JSONResponse(
         {
             "hot_retention_days": int(days),
-            # Day-picker depth for THIS caller + the top-5 chart's cutoff.
-            "logged_in": user is not None,
             "picker_days": picker_days,
             "graph_max_age_days": graph_max_age_days,
             "cheater_detection_enabled": cheaters_on,
@@ -1775,9 +1764,7 @@ async def site_lb_config(
             "renames_enabled": renames_on,
             "duplicates_enabled": duplicates_on,
         },
-        # Auth-dependent (picker_days/logged_in vary by the bearer token), so it
-        # must not be shared-cached across callers.
-        headers={"Cache-Control": "private, max-age=15", "Vary": "Authorization"},
+        headers={"Cache-Control": "public, max-age=15"},
     )
 
 
@@ -1841,38 +1828,29 @@ async def site_lb_timestamps(
 
 
 @router.get("/site/leaderboards/days", response_class=JSONResponse)
-async def site_lb_days(
-    user: SiteUser | None = Depends(get_optional_site_user),
-) -> JSONResponse:
-    """The latest capture anchor per trove-day within THIS caller's browse window -
-    anonymous callers get the recent hot window, signed-in Dashboard users get the
-    whole cold-tiered archive. Powers the date-picker: one anchor per selectable
-    day, newest first. Reads straight from Postgres (a per-day loose index scan),
-    not the hot Redis snapshot, so it can reach past the ~365-capture cache."""
-    window = await _lb_browse_window_days(user)
-    # Served from the warmer-maintained Redis cache (the compute scans the cold
-    # tier); slice to THIS caller's window.
+async def site_lb_days() -> JSONResponse:
+    """The latest capture anchor per trove-day within the browse window, newest
+    first."""
+    window = await _lb_browse_window_days()
+    # Served from the warmer-maintained Redis cache, sliced to the window.
     anchors = await leaderboards_cache.get_days(400)
     cutoff = int(time.time()) - window * 86400
     anchors = [a for a in anchors if a >= cutoff]
     return JSONResponse(
         {"items": anchors, "count": len(anchors)},
-        # Auth-dependent (the window depends on the bearer token) - not shared-cacheable.
-        headers={"Cache-Control": "private, max-age=120", "Vary": "Authorization"},
+        headers={"Cache-Control": "public, max-age=120"},
     )
 
 
 @router.get("/site/leaderboards/boards", response_class=JSONResponse)
 async def site_lb_boards(
     created_at: int = Query(..., description="Anchor in unix seconds"),
-    user: SiteUser | None = Depends(get_optional_site_user),
 ) -> JSONResponse:
-    await _guard_lb_archive_anchor(created_at, user)
+    await _guard_lb_archive_anchor(created_at)
     rows = await leaderboards_cache.get_boards(created_at)
     return JSONResponse(
         {"created_at": created_at, "items": rows, "count": len(rows)},
-        # Auth-gated (old anchors are signed-in only), so not shared-cacheable.
-        headers={"Cache-Control": "private, max-age=60", "Vary": "Authorization"},
+        headers={"Cache-Control": "public, max-age=60"},
     )
 
 
@@ -2019,9 +1997,8 @@ async def site_lb_entries(
     created_at: int = Query(..., description="Anchor in unix seconds"),
     limit: int = Query(default=100, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
-    user: SiteUser | None = Depends(get_optional_site_user),
 ) -> JSONResponse:
-    await _guard_lb_archive_anchor(created_at, user)
+    await _guard_lb_archive_anchor(created_at)
     items, total, comparison = await leaderboards_cache.get_entries(
         uuid, created_at, limit=limit, offset=offset,
     )
@@ -2031,8 +2008,7 @@ async def site_lb_entries(
             "items": items, "count": len(items), "total": total,
             "comparison": comparison,
         },
-        # Auth-gated (old anchors are signed-in only), so not shared-cacheable.
-        headers={"Cache-Control": "private, max-age=30", "Vary": "Authorization"},
+        headers={"Cache-Control": "public, max-age=30"},
     )
 
 

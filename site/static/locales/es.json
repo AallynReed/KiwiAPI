@@ -1046,7 +1046,7 @@
   "Toggle the buffs you actually run (food, Berserker Battler, and so on).": "Activa las mejoras que realmente usas (comida, Berserker Luchador, etc.).",
   "Too large to preview ({size}) — download it to inspect.": "Demasiado grande para previsualizar ({size}) — descárgalo para inspeccionarlo.",
   "Top players over the last 7 days": "Mejores jugadores en los últimos 7 días",
-  "Top players per board, ranked. Hourly captures, {days}-day live retention, full archive beyond.": "Mejores jugadores por tabla, clasificados. Capturas cada hora, retención en vivo de {days} días, archivo completo más allá de eso.",
+  "Top players per board, ranked. Hourly captures, {days}-day live retention.": "Mejores jugadores por tabla, clasificados. Capturas cada hora, retención en vivo de {days} días.",
   "Top {n} · {h} captures": "Top {n} · {h} capturas",
   "Tradable": "Comerciable",
   "Troubleshooting &amp; FAQ": "Solución de problemas y preguntas frecuentes",
