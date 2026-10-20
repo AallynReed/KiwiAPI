@@ -10,7 +10,7 @@ import os
 from collections import OrderedDict
 from pathlib import Path
 
-from app.trove.updates.archive import decompress_tfa, parse_tfi
+from app.trove.updates.archive import archive_size, decompress_tfa, parse_tfi
 
 
 class GameTree:
@@ -92,6 +92,7 @@ class LiveTree(GameTree):
     def __init__(self, root: str | os.PathLike, prefixes: list[str]):
         self._root = Path(root)
         self._where: dict[str, tuple[Path, int, int, int]] = {}
+        self._sizes: dict[tuple[Path, int], int] = {}
         self._loose = set(_loose(self._root, prefixes))
         for prefix in prefixes:
             for dp, _, fs in os.walk(self._root / prefix):
@@ -99,8 +100,11 @@ class LiveTree(GameTree):
                     continue
                 d = Path(dp)
                 rel = d.relative_to(self._root).as_posix()
-                for e in parse_tfi((d / "index.tfi").read_bytes()):
+                entries = parse_tfi((d / "index.tfi").read_bytes())
+                for e in entries:
                     self._where[f"{rel}/{e.name}"] = (d, e.archive_index, e.offset, e.size)
+                for ai in {e.archive_index for e in entries}:
+                    self._sizes[(d, ai)] = archive_size(entries, ai)
         self._archives: OrderedDict[tuple[Path, int], bytes] = OrderedDict()
         super().__init__([*self._where, *self._loose])
 
@@ -111,7 +115,7 @@ class LiveTree(GameTree):
         key = (d, ai)
         content = self._archives.get(key)
         if content is None:
-            content = decompress_tfa((d / f"archive{ai}.tfa").read_bytes())
+            content = decompress_tfa((d / f"archive{ai}.tfa").read_bytes(), self._sizes.get(key))
             self._archives[key] = content
             if len(self._archives) > 16:
                 self._archives.popitem(last=False)

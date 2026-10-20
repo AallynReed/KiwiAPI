@@ -135,7 +135,8 @@ async def _sync_directory(branch, directory, work, plan, old_manifest, cdn, stor
         names = changed_by_archive.get(ai, [])
         if names and tfa_e is not None:
             tfa_bytes = await cdn.download_file(content_path, tfa_path, tfa_e["sha1"], expected_size=tfa_e["size"])
-            content = await asyncio.to_thread(archive.decompress_tfa, tfa_bytes)
+            content = await asyncio.to_thread(
+                archive.decompress_tfa, tfa_bytes, archive.archive_size(new_full.values(), ai))
             for path in names:
                 e = new_full[path]
                 change_type = "added" if path not in old_fnv else "modified"

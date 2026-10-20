@@ -226,7 +226,8 @@ The player board aggregate rebuild and the last-played backfill replay every cap
 `.tmod` read and build (header table, inflate or de-frame, checksums, base64; ~3x / ~2x), SWF static
 arrays (`swf.abc`, ~3x) and the gem build ranking (`calculate_builds`, Farm ~27x) run in Rust too.
 zlib is Rust as well (`troveio.inflate`/`deflate`, flate2 on zlib-rs): every inflate matches CPython's
-zlib, and `.tmod` level-0 streams are byte-identical. Level-9 blueprint output is valid but not
+zlib, and `.tmod` level-0 streams are byte-identical. Update-archive `.tfa` files inflate in Rust too,
+straight into the result when the index predicts the size (`archive.archive_size`, ~1.4x). Level-9 blueprint output is valid but not
 byte-identical to C zlib for a few percent of files (slightly smaller overall). Any input the Rust
 side can't reproduce exactly returns `None` and reruns in Python, so errors are raised exactly as before.
 

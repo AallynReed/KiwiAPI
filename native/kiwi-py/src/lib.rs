@@ -622,10 +622,22 @@ fn swf_static_arrays<'py>(py: Python<'py>, swf: &[u8]) -> PyResult<Option<Bound<
 
 /// `zlib.decompressobj()` over `data[offset:]` (`strict`: the stream must end, as
 /// one-shot `zlib.decompress` requires). None where Python's zlib raises.
+/// With `size_hint`, an output of exactly that size is written straight into
+/// the bytes object (no copy); any other size takes the normal path.
 #[pyfunction]
-#[pyo3(signature = (data, offset=0, strict=false))]
-fn zlib_inflate<'py>(py: Python<'py>, data: &[u8], offset: usize, strict: bool) -> Option<Bound<'py, PyBytes>> {
-    let z = py.detach(|| kiwi_core::zlib::inflate(data.get(offset..).unwrap_or(&[]), usize::MAX))?;
+#[pyo3(signature = (data, offset=0, strict=false, size_hint=None))]
+fn zlib_inflate<'py>(py: Python<'py>, data: &[u8], offset: usize, strict: bool, size_hint: Option<usize>) -> Option<Bound<'py, PyBytes>> {
+    let input = data.get(offset..).unwrap_or(&[]);
+    if let Some(n) = size_hint.filter(|&n| n > 0) {
+        let exact = PyBytes::new_with(py, n, |buf| match py.detach(|| kiwi_core::zlib::inflate_exact(input, buf)) {
+            Some(eof) if eof || !strict => Ok(()),
+            _ => Err(pyo3::exceptions::PyValueError::new_err("")),
+        });
+        if let Ok(b) = exact {
+            return Some(b);
+        }
+    }
+    let z = py.detach(|| kiwi_core::zlib::inflate(input, usize::MAX))?;
     (z.eof || !strict).then(|| PyBytes::new(py, &z.data))
 }
 

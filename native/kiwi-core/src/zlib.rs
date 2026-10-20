@@ -35,6 +35,29 @@ pub fn inflate(input: &[u8], cap: usize) -> Option<Inflated> {
     }
 }
 
+/// `inflate` straight into `buf`: Some(eof) when the output is exactly
+/// `buf.len()` bytes, None when it is longer, shorter or invalid.
+pub fn inflate_exact(input: &[u8], buf: &mut [u8]) -> Option<bool> {
+    let mut d = Decompress::new(true);
+    loop {
+        let (in0, out0) = (d.total_in() as usize, d.total_out() as usize);
+        let status = d.decompress(&input[in0..], &mut buf[out0..], FlushDecompress::None).ok()?;
+        let out = d.total_out() as usize;
+        if status == Status::StreamEnd {
+            return (out == buf.len()).then_some(true);
+        }
+        if d.total_in() as usize == in0 && out == out0 {
+            if out < buf.len() {
+                return None;
+            }
+            // Full: any further byte means the guess was short.
+            let mut probe = [0u8; 1];
+            let status = d.decompress(&input[d.total_in() as usize..], &mut probe, FlushDecompress::None).ok()?;
+            return (d.total_out() as usize == buf.len()).then_some(status == Status::StreamEnd);
+        }
+    }
+}
+
 /// `compressobj(level)`, fed `chunk`-sized `compress()` calls, then
 /// `flush(Z_FINISH)`, or `flush(Z_SYNC_FLUSH)` when `sync` (the `.tmod` stream).
 pub fn deflate(input: &[u8], level: u32, chunk: usize, sync: bool) -> Option<Vec<u8>> {
@@ -87,6 +110,14 @@ mod tests {
         let r = inflate(&HELLO[..8], usize::MAX).unwrap();
         assert!(!r.eof);
         assert!(inflate(b"\x78\x9c\xff\xff\xff", usize::MAX).is_none());
+    }
+
+    #[test]
+    fn exact_inflate_only_on_the_right_size() {
+        for (len, want) in [(17, Some(true)), (16, None), (18, None), (0, None)] {
+            assert_eq!(inflate_exact(HELLO, &mut vec![0; len]), want, "{len}");
+        }
+        assert_eq!(inflate_exact(&HELLO[..12], &mut vec![0; inflate(&HELLO[..12], usize::MAX).unwrap().data.len()]), Some(false));
     }
 
     #[test]

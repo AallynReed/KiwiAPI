@@ -63,12 +63,13 @@ except ImportError:
     pass
 
 
-def inflate(data: bytes, offset: int = 0, strict: bool = False) -> bytes:
+def inflate(data: bytes, offset: int = 0, strict: bool = False, size_hint: int | None = None) -> bytes:
     """zlib-inflate ``data[offset:]`` like ``decompressobj()`` (trailing bytes
     ignored, a truncated stream yields what it decoded), or like one-shot
-    ``zlib.decompress`` when ``strict``. Raises ``zlib.error`` as Python's does."""
+    ``zlib.decompress`` when ``strict``. Raises ``zlib.error`` as Python's does.
+    A correct ``size_hint`` (the output length) saves a copy; a wrong one costs nothing."""
     if _native_zlib is not None:
-        out = _native_zlib.zlib_inflate(data if type(data) is bytes else bytes(data), offset, strict)
+        out = _native_zlib.zlib_inflate(data if type(data) is bytes else bytes(data), offset, strict, size_hint)
         if out is not None:
             return out
     if strict:

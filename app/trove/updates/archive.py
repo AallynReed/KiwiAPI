@@ -1,4 +1,4 @@
-"""Pure-Python Trove `.tfa` / `.tfi` archive reader.
+"""Trove `.tfa` / `.tfi` archive reader (inflate in Rust via `troveio.inflate`).
 
 A directory like `ui/` holds one `index.tfi` plus `archive0.tfa`, `archive1.tfa`, …
 The `.tfi` is the index: a flat list of logical-file entries, each pointing at the
@@ -24,7 +24,7 @@ import zlib
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
-from app.trove.troveio import calculate_hash, read_leb128
+from app.trove.troveio import calculate_hash, inflate, read_leb128
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,10 +58,17 @@ def parse_tfi(data: bytes) -> list[TfiEntry]:
     return entries
 
 
-def decompress_tfa(raw: bytes) -> bytes:
-    """Inflate a `.tfa`'s zlib stream into the concatenated file content."""
+def archive_size(entries: Iterable[TfiEntry], archive_index: int) -> int:
+    """An archive's inflated length per its index: the last file's end, padded to 4."""
+    end = max((e.offset + e.size for e in entries if e.archive_index == archive_index), default=0)
+    return end + (-end) % 4
+
+
+def decompress_tfa(raw: bytes, size_hint: int | None = None) -> bytes:
+    """Inflate a `.tfa`'s zlib stream into the concatenated file content.
+    ``size_hint`` (``archive_size``) lets it inflate without an extra copy."""
     try:
-        return zlib.decompressobj(wbits=zlib.MAX_WBITS).decompress(raw)
+        return inflate(raw, size_hint=size_hint)
     except zlib.error as e:
         raise ArchiveError(f"could not inflate .tfa: {e}") from e
 
@@ -82,8 +89,8 @@ def extract_archive(tfa_raw: bytes, entries: Iterable[TfiEntry], archive_index: 
 
     Needs only this archive + the parsed TFI - sibling archives aren't required.
     """
-    content = decompress_tfa(tfa_raw)
     members = entries_for_archive(entries, archive_index)
+    content = decompress_tfa(tfa_raw, archive_size(members, archive_index))
     return {e.name: data for e, data in slice_entries(content, members)}
 
 
