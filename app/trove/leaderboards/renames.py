@@ -71,8 +71,10 @@ from app.trove.leaderboards.models import is_lifetime_kind
 logger = logging.getLogger(__name__)
 
 # (kiwi_native.RenKeys, {key id: name key}, {player id: display name}) for the
-# Rust fingerprints; rebuilt when a capture holds a player it hasn't seen.
+# Rust fingerprints; rebuilt when a capture holds a player it hasn't seen. Key ids
+# only ever grow, so fingerprints taken before and after a rebuild still compare.
 _KEYS: tuple | None = None
+_KEY_INDEX: dict[str, int] = {}
 
 
 async def _player_keys(refresh: bool = False) -> tuple:
@@ -80,7 +82,7 @@ async def _player_keys(refresh: bool = False) -> tuple:
     if _KEYS is None or refresh:
         from app.trove.leaderboards.activity import _native
         rows = await pg_store.all_player_names()
-        index: dict[str, int] = {}
+        index = _KEY_INDEX
         ids, kids = [], []
         for pid, name in rows:
             ids.append(pid)
