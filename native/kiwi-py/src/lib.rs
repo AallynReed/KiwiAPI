@@ -593,12 +593,135 @@ impl AggBuilder {
     }
 }
 
+fn abc_value<'py>(py: Python<'py>, v: &kiwi_core::abc::Val) -> PyResult<Bound<'py, PyAny>> {
+    use kiwi_core::abc::Val;
+    Ok(match v {
+        Val::None => py.None().into_bound(py),
+        Val::Bool(b) => pyo3::types::PyBool::new(py, *b).to_owned().into_any(),
+        Val::Int(i) => i.into_pyobject(py)?.into_any(),
+        Val::Float(f) => PyFloat::new(py, *f).into_any(),
+        Val::Str(s) => PyString::new(py, s).into_any(),
+        Val::List(xs) => PyList::new(py, xs.iter().map(|x| abc_value(py, x)).collect::<PyResult<Vec<_>>>()?)?.into_any(),
+    })
+}
+
+/// `abc.static_arrays` over a whole movie: `{class: {static: [values]}}`.
+#[pyfunction]
+fn swf_static_arrays<'py>(py: Python<'py>, swf: &[u8]) -> PyResult<Option<Bound<'py, PyDict>>> {
+    let Some(parsed) = py.detach(|| kiwi_core::abc::movie_static_arrays(swf)) else { return Ok(None) };
+    let out = PyDict::new(py);
+    for (class, arrays) in &parsed {
+        let d = PyDict::new(py);
+        for (name, v) in arrays {
+            d.set_item(name, abc_value(py, v)?)?;
+        }
+        out.set_item(class, d)?;
+    }
+    Ok(Some(out))
+}
+
+/// `zlib.decompressobj()` over `data[offset:]` (`strict`: the stream must end, as
+/// one-shot `zlib.decompress` requires). None where Python's zlib raises.
+#[pyfunction]
+#[pyo3(signature = (data, offset=0, strict=false))]
+fn zlib_inflate<'py>(py: Python<'py>, data: &[u8], offset: usize, strict: bool) -> Option<Bound<'py, PyBytes>> {
+    let z = py.detach(|| kiwi_core::zlib::inflate(data.get(offset..).unwrap_or(&[]), usize::MAX))?;
+    (z.eof || !strict).then(|| PyBytes::new(py, &z.data))
+}
+
+/// `zlib.compress(data, level)`, or the `.tmod` stream (`chunk` + `sync`).
+#[pyfunction]
+#[pyo3(signature = (data, level, chunk=usize::MAX, sync=false))]
+fn zlib_deflate<'py>(py: Python<'py>, data: &[u8], level: u32, chunk: usize, sync: bool) -> Option<Bound<'py, PyBytes>> {
+    let z = py.detach(|| kiwi_core::zlib::deflate(data, level, chunk, sync))?;
+    Some(PyBytes::new(py, &z))
+}
+
+/// `extract._decompress` for FWS/CWS movies; None for ZWS or bad input.
+#[pyfunction]
+fn swf_decompress<'py>(py: Python<'py>, raw: &[u8]) -> Option<Bound<'py, PyBytes>> {
+    let m = py.detach(|| kiwi_core::swf::movie(raw).map(|m| m.into_owned()))?;
+    Some(PyBytes::new(py, &m))
+}
+
+/// `build_tmod`'s serializer over normalized `(path, content)` files.
+#[pyfunction]
+fn tmod_pack<'py>(
+    py: Python<'py>,
+    version: u16,
+    properties: Vec<(String, String)>,
+    files: Vec<(String, pyo3::pybacked::PyBackedBytes)>,
+) -> Option<Bound<'py, PyBytes>> {
+    let props: Vec<(&str, &str)> = properties.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let files: Vec<(&str, &[u8])> = files.iter().map(|(p, c)| (p.as_str(), &c[..])).collect();
+    let out = py.detach(|| kiwi_core::tmod::pack(version, &props, &files))?;
+    Some(PyBytes::new(py, &out))
+}
+
+type TmodEntry = (String, u32, u32, u32, u32);
+type TmodHeader = (Vec<(String, String)>, Vec<TmodEntry>, bool);
+
+/// `_read_header`'s success path: `(properties, entries, repaired)`.
+#[pyfunction]
+fn tmod_header(py: Python<'_>, data: &[u8], header_size: usize, prop_count: u16) -> Option<TmodHeader> {
+    let h = py.detach(|| kiwi_core::tmod::header(data, header_size, prop_count))?;
+    let entries = h.entries.into_iter().map(|e| (e.path, e.index, e.offset, e.size, e.checksum)).collect();
+    Some((h.properties, entries, h.repaired))
+}
+
+/// Every entry's content as base64, from the file stream at `header_size`.
+#[pyfunction]
+fn tmod_contents(py: Python<'_>, data: &[u8], header_size: usize, entries: Vec<TmodEntry>) -> Vec<String> {
+    let compressed = data.get(header_size..).unwrap_or(&[]);
+    let entries: Vec<_> = entries
+        .into_iter()
+        .map(|(path, index, offset, size, checksum)| kiwi_core::tmod::Entry { path, index, offset, size, checksum })
+        .collect();
+    py.detach(|| kiwi_core::tmod::contents(compressed, &entries))
+}
+
+type GemLine = ((f64, f64), (f64, f64), (f64, f64));
+
+/// `calculate_builds`' ranking: the top `limit` rows as
+/// `(boosts, cfirst, csecond, light, final, coefficient)`.
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn gem_rank(
+    py: Python<'_>,
+    empowered: Option<GemLine>,
+    lesser: Option<GemLine>,
+    base: (f64, f64, f64, f64, f64, f64),
+    class_bonus: Option<f64>,
+    farm: bool,
+    light_target: i64,
+    precise: bool,
+    limit: usize,
+) -> Vec<(Vec<u8>, f64, f64, f64, f64, f64)> {
+    let pair = |(a, b): (f64, f64)| [a, b];
+    let lines = |l: GemLine| [pair(l.0), pair(l.1), pair(l.2)];
+    let gems = empowered.zip(lesser).map(|(e, l)| kiwi_core::gems::GemLines { empowered: lines(e), lesser: lines(l) });
+    let (first, second, third, fourth, fifth, sixth) = base;
+    let base = kiwi_core::gems::Base { first, second, third, fourth, fifth, sixth };
+    py.detach(|| kiwi_core::gems::rank(gems.as_ref(), &base, class_bonus, farm, light_target, precise, limit))
+        .into_iter()
+        .map(|(b, a, c, d, e, f)| (b.to_vec(), a, c, d, e, f))
+        .collect()
+}
+
 #[pymodule]
 fn kiwi_native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<AggBuilder>()?;
     m.add_class::<RenKeys>()?;
     m.add_class::<RenFp>()?;
     m.add_function(wrap_pyfunction!(ren_keys, m)?)?;
+    m.add_function(wrap_pyfunction!(swf_static_arrays, m)?)?;
+    m.add_function(wrap_pyfunction!(swf_decompress, m)?)?;
+    m.add_function(wrap_pyfunction!(zlib_inflate, m)?)?;
+    m.add_function(wrap_pyfunction!(zlib_deflate, m)?)?;
+    m.add_function(wrap_pyfunction!(tmod_header, m)?)?;
+    m.add_function(wrap_pyfunction!(tmod_pack, m)?)?;
+    m.add_function(wrap_pyfunction!(tmod_contents, m)?)?;
+    m.add_function(wrap_pyfunction!(gem_rank, m)?)?;
     m.add_function(wrap_pyfunction!(ren_fingerprint, m)?)?;
     m.add_function(wrap_pyfunction!(ren_diff, m)?)?;
     m.add_function(wrap_pyfunction!(dup_groups, m)?)?;

@@ -4,7 +4,8 @@ Some game facts live only in interface code: the welcome screen's
 ``WelcomeDailyBonusWindow.BONUSES`` is the one place that says Monday's bonus is
 the ``shadow`` set of texts. ``static_arrays`` reads every class's static
 initialiser and returns the literal arrays it assigns, without decompiling
-anything else. Pure + stdlib-only.
+anything else. Parsed in Rust when kiwi_native is built; ``_parse`` is the
+reference.
 
 Format: the ABC File Format chapter of the AVM2 overview (constant pool, method,
 metadata, instance, class, script and method-body tables, in that order).
@@ -14,6 +15,11 @@ from __future__ import annotations
 import struct
 
 from app.trove.swf.extract import SwfError, _decompress, _iter_tags
+
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
 
 DO_ABC, DO_ABC2 = 72, 82
 QNAMES = (0x07, 0x0D)
@@ -251,6 +257,8 @@ def _literal_arrays(code: bytes, strings, ints, uints, doubles, names) -> dict[s
 def static_arrays(swf: bytes) -> dict[str, dict[str, list]]:
     """``class name -> {static name: literal array}`` for every class in the movie
     whose static initialiser assigns array literals (strings, numbers, booleans)."""
+    if _native is not None and (native := _native.swf_static_arrays(swf)) is not None:
+        return native
     out: dict[str, dict[str, list]] = {}
     for block in _abc_blocks(swf):
         try:

@@ -6,6 +6,13 @@ verified byte-for-byte against the native `trove.dll` (golden values pinned in
 tests/unit/trove/test_tmod.py) - do NOT "simplify" the signed-char tail handling.
 """
 
+import zlib
+
+try:
+    import kiwi_native as _native_zlib
+except ImportError:
+    _native_zlib = None
+
 _FNV_OFFSET = 2166136261
 _FNV_PRIME = 16777619
 _MASK32 = 0xFFFFFFFF
@@ -54,6 +61,29 @@ try:
         return _native.calculate_hash(data if type(data) is bytes else bytes(data))
 except ImportError:
     pass
+
+
+def inflate(data: bytes, offset: int = 0, strict: bool = False) -> bytes:
+    """zlib-inflate ``data[offset:]`` like ``decompressobj()`` (trailing bytes
+    ignored, a truncated stream yields what it decoded), or like one-shot
+    ``zlib.decompress`` when ``strict``. Raises ``zlib.error`` as Python's does."""
+    if _native_zlib is not None:
+        out = _native_zlib.zlib_inflate(data if type(data) is bytes else bytes(data), offset, strict)
+        if out is not None:
+            return out
+    if strict:
+        return zlib.decompress(data[offset:])
+    d = zlib.decompressobj()
+    return d.decompress(data[offset:]) + d.flush()
+
+
+def deflate(data: bytes, level: int = 9) -> bytes:
+    """``zlib.compress(data, level)``."""
+    if _native_zlib is not None:
+        out = _native_zlib.zlib_deflate(data if type(data) is bytes else bytes(data), level)
+        if out is not None:
+            return out
+    return zlib.compress(data, level)
 
 
 def write_leb128(value: int) -> bytes:

@@ -15,8 +15,9 @@ import json
 import os
 import re
 import struct
-import zlib
 from functools import cache, lru_cache
+
+from app.trove.troveio import inflate
 
 _RIG_DIR = os.path.join(os.path.dirname(__file__), "rigs")
 _RIG_NAME_RE = re.compile(r"^[a-z0-9_]+$")   # skeleton / animation names; also blocks path traversal
@@ -122,8 +123,7 @@ def _native_grid_payload(raw: bytes) -> tuple[int, bytes] | None:
     if version in (3, 4):
         return version, raw if type(raw) is bytes else bytes(raw)
     if version == 5:
-        d = zlib.decompressobj()
-        return version, d.decompress(raw[9:]) + d.flush()
+        return version, inflate(raw, 9)
     return None
 
 
@@ -176,8 +176,7 @@ def _decode_v5_grid(raw: bytes) -> list[tuple]:
     specular map) via the same ground-truth mapping as the catalog renderer, so the
     viewer shades it like the game instead of as flat opaque cubes."""
     from app.trove.render.voxel import KIND_CODE, material_for
-    d = zlib.decompressobj()
-    body = d.decompress(raw[9:]) + d.flush()
+    body = inflate(raw, 9)
     px, py, pz, sx, sy, sz, count, start = struct.unpack_from("<8i", body, 0)
     off = 32
     deltas = struct.unpack_from(f"<{count-1}i", body, off) if count > 1 else (); off += 4*(count-1)

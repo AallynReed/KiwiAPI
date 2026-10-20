@@ -1,8 +1,8 @@
 """Read and build Trove ``.tmod`` mod files (binary format).
 
 Ported from BetterTroveTools (`models/trove/mod.py`, `trove.c`, `utils/functions.py`).
-Pure Python - the FNV-1a-variant checksum (BTT ships it as a C extension) is
-reimplemented here so the API needs no native lib. Nothing is stored: read parses
+The header table, stream checks and base64 run in Rust when kiwi_native is
+built; the Python below is the reference and fallback. Nothing is stored: read parses
 an uploaded tmod; build serializes one in memory and returns the bytes.
 
 Format (all multi-byte ints little-endian, strings UTF-8):
@@ -28,6 +28,11 @@ from app.trove import mod_categories
 from app.trove.troveio import calculate_hash, read_leb128, write_leb128
 
 __all__ = ["calculate_hash", "read_leb128", "write_leb128"]
+
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
 
 _CHUNK = 32768
 # The modLoader header BTT stamps as "BTT"; the API stamps its own marker instead.
@@ -114,18 +119,21 @@ def _verify_stream(stream: bytes, entries: list[dict]) -> bool:
     return True   # all files empty, or every checked file matched
 
 
+def _inflate(compressed) -> bytes | None:
+    try:
+        d = zlib.decompressobj(wbits=zlib.MAX_WBITS)
+        return d.decompress(compressed) + d.flush()
+    except zlib.error:
+        return None
+
+
 def _decompress_file_stream(compressed: bytes, entries: list[dict]) -> bytes:
     """Decompress a .tmod file stream, robust to BOTH a standard zlib stream (our own
     ``build_tmod``) AND Trove's custom stored-block framing (real game / BTT mods).
     zlib decodes the latter WITHOUT raising but yields shifted/garbage bytes, so we
     verify each candidate against the per-file checksums and fall back to the manual
     de-framer when zlib's output doesn't check out."""
-    primary: bytes | None = None
-    try:
-        d = zlib.decompressobj(wbits=zlib.MAX_WBITS)
-        primary = d.decompress(compressed) + d.flush()
-    except zlib.error:
-        primary = None
+    primary = _inflate(compressed)
     if primary is not None and _verify_stream(primary, entries):
         return primary
     manual = _manual_decompress(compressed)
@@ -226,19 +234,24 @@ def read_tmod(data: bytes, metadata_only: bool = False) -> dict:
         # The file table (path/offset/size/checksum) lives in the header. Parse it
         # FIRST so the decompressor can verify its output against the checksums
         # (needed to detect zlib's silent mis-decode of Trove's custom framing).
-        properties, entries, header_repaired = _read_header(data, header_size, prop_count)
+        native = _native.tmod_header(data, header_size, prop_count) if _native is not None else None
+        if native is not None:
+            pairs, rows, header_repaired = native
+            properties = dict(pairs)
+            entries = [{"path": p, "index": i, "offset": o, "size": n, "checksum": c}
+                       for p, i, o, n, c in rows]
+        else:
+            properties, entries, header_repaired = _read_header(data, header_size, prop_count)
 
-        file_stream = b""
-        if not metadata_only:
+        files: list[dict] = [dict(e) for e in entries]
+        if not metadata_only and native is not None:
+            for entry, content in zip(files, _native.tmod_contents(data, header_size, rows), strict=True):
+                entry["content_base64"] = content
+        elif not metadata_only:
             file_stream = _decompress_file_stream(data[header_size:], entries)
-
-        files: list[dict] = []
-        for e in entries:
-            entry = dict(e)
-            if not metadata_only:
+            for entry in files:
                 entry["content_base64"] = base64.b64encode(
-                    file_stream[e["offset"]:e["offset"] + e["size"]]).decode("ascii")
-            files.append(entry)
+                    file_stream[entry["offset"]:entry["offset"] + entry["size"]]).decode("ascii")
     except (IndexError, UnicodeDecodeError, ValueError) as e:
         if isinstance(e, TmodError):
             raise
@@ -288,16 +301,27 @@ def build_tmod(version: int, properties: dict[str, str], files: list[tuple[str, 
         if flags:
             props["flags"] = str(flags)
 
-    file_stream = bytearray()
-    files_table = bytearray()
-    offset = 0
+    packed: list[tuple[str, bytes]] = []
     for raw_path, content in files:
         path = raw_path.replace("\\", "/").lstrip("/")
         if lowercase_paths and not path.lower().endswith(".cfg"):
             path = path.lower()
-        path_bytes = path.encode("utf-8")
-        if len(path_bytes) > 255:
+        if len(path.encode("utf-8")) > 255:
             raise TmodError(f"internal path too long for the .tmod format (>255 bytes): {path}")
+        packed.append((path, content))
+
+    if (_native is not None and 0 <= version <= 0xFFFF and len(props) <= 0xFFFF
+            and all(type(k) is str and type(v) is str for k, v in props.items())):
+        out = _native.tmod_pack(version, list(props.items()),
+                                [(p, c if isinstance(c, (bytes, bytearray)) else bytes(c)) for p, c in packed])
+        if out is not None:
+            return out
+
+    file_stream = bytearray()
+    files_table = bytearray()
+    offset = 0
+    for path, content in packed:
+        path_bytes = path.encode("utf-8")
         size = len(content)
         padded = content + b"\x00" * ((4 - size % 4) % 4)
         files_table += bytes([len(path_bytes)]) + path_bytes

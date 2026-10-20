@@ -17,6 +17,11 @@ from typing import Any
 from app.trove.decode import store as gamedata
 from app.trove.gems.bases import build_gem_stats
 
+try:
+    import kiwi_native as _native
+except ImportError:
+    _native = None
+
 _DATA_DIR = Path(__file__).parent.parent / "gamedata"
 
 BUILD_TYPES = ("Light", "Farm", "Health")
@@ -410,6 +415,28 @@ class GemOptimizerEngine:
         def rd(value: float, digits: int) -> float:
             return round(value, 8 if precise else digits)
 
+        if _native is not None and self.gem_stats:
+            lines = self._gem_lines(build_type)
+            ranked = _native.gem_rank(
+                lines["Empowered"], lines["Lesser"],
+                (float(first), float(second), float(third), float(fourth), float(fifth), float(sixth)),
+                None if class_bonus is None else float(class_bonus), build_type == "Farm",
+                light_target, precise, 200)
+            raw_builds = [[[b[0:2], b[2:4], b[4:7], b[7:10]], cf, cs, light, fourth, fifth, fin, class_bonus, coef]
+                          for b, cf, cs, light, fin, coef in ranked]
+        else:
+            raw_builds = self._rank_py(build_type, first, second, third, fourth, fifth, sixth,
+                                       class_bonus, light_target, rd)
+        return self._format(raw_builds, build_type, light_target, rd)
+
+    def _gem_lines(self, build_type: str) -> dict:
+        names = (("Maximum Health", "Maximum Health %") if build_type == "Health"
+                 else ("Damage", "Critical Damage")) + ("Light",)
+        return {t: tuple(tuple(float(v) for v in self.gem_stats[t][n][:2]) for n in names)
+                for t in ("Empowered", "Lesser")}
+
+    def _rank_py(self, build_type, first, second, third, fourth, fifth, sixth,
+                 class_bonus, light_target, rd) -> list:
         raw_builds = []
         for build_tuple in self.generate_combinations(farm=build_type == "Farm"):
             build = list(build_tuple)
@@ -424,7 +451,9 @@ class GemOptimizerEngine:
             raw_builds.append([build, cfirst, csecond, rd(cthird * (sixth / 100), 2), fourth, fifth, final, class_bonus, coefficient])
 
         raw_builds.sort(key=lambda x: ([abs(x[3] - light_target), -x[-1]] if light_target else -x[-1]))
+        return raw_builds[:200]
 
+    def _format(self, raw_builds: list, build_type: str, light_target: int, rd) -> list[dict]:
         results = []
         for i, build_data in enumerate(raw_builds[:200]):
             boosts: list[int] = []

@@ -41,6 +41,8 @@ from dataclasses import dataclass, field
 
 from PIL import Image
 
+from app.trove.troveio import inflate
+
 logger = logging.getLogger("kiwi.swf")
 
 try:
@@ -111,6 +113,8 @@ def _decompress(raw: bytes) -> bytes:
     if sig == b"FWS":
         return raw
     if sig == b"CWS":
+        if _native is not None and (movie := _native.swf_decompress(raw)) is not None:
+            return movie
         try:
             obj = zlib.decompressobj()
             body = obj.decompress(raw[8:], MAX_INFLATED)
@@ -233,7 +237,7 @@ def _decode_lossless(body: bytes, tag: int) -> tuple[int, Image.Image, str]:
         colors = body[off] + 1
         off += 1
     try:
-        data = zlib.decompress(body[off:])
+        data = inflate(body, off, strict=True)
     except zlib.error as exc:
         raise SwfError(f"bad lossless zlib: {exc}") from None
 
@@ -371,7 +375,7 @@ def _decode_jpeg(
     plane = b""
     if alpha_blob:
         try:
-            plane = zlib.decompress(alpha_blob)
+            plane = inflate(alpha_blob, strict=True)
         except zlib.error:
             plane = b""
     # An alpha plane that is opaque everywhere carries no information - dropping it

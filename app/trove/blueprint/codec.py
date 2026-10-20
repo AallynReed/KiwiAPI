@@ -42,6 +42,8 @@ from __future__ import annotations
 import struct
 import zlib
 
+from app.trove.troveio import deflate, inflate
+
 MAGIC = b"kiwib"
 DEFAULT_TYPE = 0x15          # 21 -- standard solid voxel
 DEFAULT_W = 0
@@ -112,8 +114,7 @@ def inflate_v5(data: bytes) -> bytes:
     a few catalogue files carry trailing bytes past the stream, and the one-shot call
     treats those as a truncation error."""
     try:
-        d = zlib.decompressobj()
-        return d.decompress(data[9:]) + d.flush()
+        return inflate(data, 9)
     except zlib.error as exc:
         raise BlueprintError(f"Failed to inflate v5 blueprint: {exc}") from exc
 
@@ -440,7 +441,7 @@ def encode(
         blob = bytes(entity_blob if version in (3, 4) else (entity_blob or b"\x00\x00\x00\x00"))
         out = _native.bp_encode(voxels, version, size, pos, offset, blob)
         if out is not None:
-            return out if version in (3, 4) else MAGIC + struct.pack("<I", 5) + zlib.compress(out, 9)
+            return out if version in (3, 4) else MAGIC + struct.pack("<I", 5) + deflate(out)
     if not voxels:
         raise BlueprintError("Cannot encode a blueprint with no voxels.")
     if version not in SUPPORTED_VERSIONS:
@@ -505,4 +506,4 @@ def _encode_v5(voxels, sx, sy, sz, pos, entity_blob) -> bytes:
         payload += struct.pack("<I", b | (g << 8) | (r << 16) | (w << 24))
     payload += entity_blob
 
-    return MAGIC + struct.pack("<I", 5) + zlib.compress(bytes(payload), 9)
+    return MAGIC + struct.pack("<I", 5) + deflate(bytes(payload))

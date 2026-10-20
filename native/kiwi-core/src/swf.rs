@@ -239,3 +239,52 @@ mod tests {
         assert_eq!(px, vec![127, 127, 127, 128]);
     }
 }
+
+/// `extract.MAX_INFLATED`.
+pub const MAX_INFLATED: usize = 256 * 1024 * 1024;
+
+/// `extract._decompress` for FWS and CWS movies; None for LZMA (ZWS) and every
+/// case Python raises on.
+pub fn movie(raw: &[u8]) -> Option<std::borrow::Cow<'_, [u8]>> {
+    if raw.len() < 8 {
+        return None;
+    }
+    match &raw[..3] {
+        b"FWS" => Some(raw.into()),
+        b"CWS" => {
+            let body = crate::zlib::inflate(&raw[8..], MAX_INFLATED)?;
+            let mut out = Vec::with_capacity(8 + body.data.len());
+            out.extend_from_slice(b"FWS");
+            out.extend_from_slice(&raw[3..8]);
+            out.extend_from_slice(&body.data);
+            Some(out.into())
+        }
+        _ => None,
+    }
+}
+
+/// `extract._iter_tags`: `(code, body)` per top-level tag.
+pub fn tags(data: &[u8]) -> Option<Vec<(u16, &[u8])>> {
+    let first = *data.get(8)?;
+    let nbits = (first >> 3) as usize;
+    let mut p = 8 + (5 + nbits * 4).div_ceil(8) + 4;
+    let mut out = Vec::new();
+    loop {
+        let Some(head) = data.get(p..p + 2) else { return Some(out) };
+        p += 2;
+        let packed = u16::from_le_bytes([head[0], head[1]]);
+        let code = packed >> 6;
+        let mut len = (packed & 0x3F) as usize;
+        if len == 0x3F {
+            let Some(raw) = data.get(p..p + 4) else { return Some(out) };
+            p += 4;
+            len = u32::from_le_bytes([raw[0], raw[1], raw[2], raw[3]]) as usize;
+        }
+        let Some(body) = data.get(p..p + len) else { return Some(out) };
+        p += len;
+        out.push((code, body));
+        if code == 0 {
+            return Some(out);
+        }
+    }
+}
