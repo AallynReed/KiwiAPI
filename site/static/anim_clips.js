@@ -18,7 +18,7 @@
      var bar = AnimClips.bar({ host: el, kit: kit, onPick: play });
      var prog = AnimClips.timeline(kit.programs[key], loadedClips);
      var at = AnimClips.frameAt(prog, seconds);
-     var pose = AnimClips.sample(at, 'head');          // { p: [3], q: [4] } | null
+     var pose = AnimClips.sample(at, 'head');          // { p: [3], q: [4], m: [9] | null } | null
 */
 (function () {
   'use strict';
@@ -54,17 +54,20 @@
 
   // ---- decoding ------------------------------------------------------------ //
 
-  /* One baked animation clip (TANIM1). Layout, little-endian:
-       8s  magic "TANIM1\0\0"
+  /* One baked animation clip (TANIM1 or TANIM2). Layout, little-endian:
+       8s  magic "TANIM1\0\0" or "TANIM2\0\0"
        u32 ap_count, u32 frame_count, u32 fps, u32 name_blob_len
        ..  name_blob: NUL-separated attach-point keys, NUL-padded to a 4-byte boundary
-       ..  frame_count * ap_count * 7 float32: position xyz then quaternion xyzw
+       ..  TANIM1: frame_count * ap_count * 7 float32: position xyz then quaternion xyzw
+       ..  TANIM2: 12 float32 per point: position xyz then the 3x3 linear part
+           column-major - rotation AND the scale the game draws the part at
      The float payload is 4-byte aligned by construction, so it wraps with no copy. */
   function decode(buf) {
     var dv = new DataView(buf);
     var head = new Uint8Array(buf, 0, 6), magic = '';
     for (var i = 0; i < 6; i++) magic += String.fromCharCode(head[i]);
-    if (magic !== 'TANIM1') throw new Error('bad animation clip');
+    if (magic !== 'TANIM1' && magic !== 'TANIM2') throw new Error('bad animation clip');
+    var stride = magic === 'TANIM2' ? 12 : 7;
     var apCount = dv.getUint32(8, true), frameCount = dv.getUint32(12, true);
     var fps = dv.getUint32(16, true), nb = dv.getUint32(20, true);
     var raw = new Uint8Array(buf, 24, nb), s = '';
@@ -73,8 +76,8 @@
     var apIndex = {};
     for (var k = 0; k < keys.length; k++) apIndex[keys[k]] = k;
     return {
-      fps: fps, frameCount: frameCount, apCount: apCount, apIndex: apIndex,
-      data: new Float32Array(buf, 24 + nb, frameCount * apCount * 7),
+      fps: fps, frameCount: frameCount, apCount: apCount, apIndex: apIndex, stride: stride,
+      data: new Float32Array(buf, 24 + nb, frameCount * apCount * stride),
     };
   }
 
@@ -491,41 +494,69 @@
     return { A: cur, f: local * cur.fps, B: null, g: 0, u: 0 };
   }
 
-  /* The pose of one attach point, as position + quaternion, or null when the clip does
+  /* The pose of one attach point - a position plus a rotation (q) or, when the clip
+     carries scale, the 3x3 linear part (m, column-major) - or null when the clip does
      not drive it. Clips bake at the game's rate (30fps) and the display runs at 60/120,
-     so the pose blends between the two neighbouring frames rather than snapping to one -
-     the transforms are rigid, so that is a lerp on position and a slerp on rotation. The
-     next frame wraps to 0 because playback loops. */
-  function sampleOne(A, ai, f, out) {
-    var n = A.frameCount, f0 = Math.floor(f), a = f - f0, d = A.data;
-    var o = ((f0 % n) * A.apCount + ai) * 7;
+     so the pose blends between the two neighbouring frames rather than snapping to one.
+     The next frame wraps to 0 because playback loops. */
+  function readPose(A, ai, frame, out) {
+    var st = A.stride, o = (frame * A.apCount + ai) * st, d = A.data;
     out.p[0] = d[o]; out.p[1] = d[o + 1]; out.p[2] = d[o + 2];
-    out.q[0] = d[o + 3]; out.q[1] = d[o + 4]; out.q[2] = d[o + 5]; out.q[3] = d[o + 6];
+    if (st === 12) {
+      if (!out.m) out.m = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      for (var i = 0; i < 9; i++) out.m[i] = d[o + 3 + i];
+    } else {
+      out.m = null;
+      out.q[0] = d[o + 3]; out.q[1] = d[o + 4]; out.q[2] = d[o + 5]; out.q[3] = d[o + 6];
+    }
+  }
+
+  function sampleOne(A, ai, f, out) {
+    var n = A.frameCount, f0 = Math.floor(f), a = f - f0;
+    readPose(A, ai, f0 % n, out);
     if (a) {
-      var o2 = (((f0 + 1) % n) * A.apCount + ai) * 7;
-      lerpInto(out, d[o2], d[o2 + 1], d[o2 + 2],
-               d[o2 + 3], d[o2 + 4], d[o2 + 5], d[o2 + 6], a);
+      readPose(A, ai, (f0 + 1) % n, _next);
+      lerpInto(out, _next, a);
     }
     return out;
   }
 
-  function lerpInto(out, px, py, pz, qx, qy, qz, qw, a) {
-    out.p[0] += (px - out.p[0]) * a;
-    out.p[1] += (py - out.p[1]) * a;
-    out.p[2] += (pz - out.p[2]) * a;
-    // shortest arc: flip the target when the two quaternions face opposite ways
-    var dot = out.q[0] * qx + out.q[1] * qy + out.q[2] * qz + out.q[3] * qw;
-    var s = dot < 0 ? -1 : 1;
-    out.q[0] += (s * qx - out.q[0]) * a;
-    out.q[1] += (s * qy - out.q[1]) * a;
-    out.q[2] += (s * qz - out.q[2]) * a;
-    out.q[3] += (s * qw - out.q[3]) * a;
-    var len = Math.hypot(out.q[0], out.q[1], out.q[2], out.q[3]) || 1;
-    for (var i = 0; i < 4; i++) out.q[i] /= len;
+  function quatToMat(q, m) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    var x2 = x + x, y2 = y + y, z2 = z + z;
+    var xx = x * x2, xy = x * y2, xz = x * z2, yy = y * y2, yz = y * z2, zz = z * z2;
+    var wx = w * x2, wy = w * y2, wz = w * z2;
+    m[0] = 1 - (yy + zz); m[1] = xy + wz; m[2] = xz - wy;
+    m[3] = xy - wz; m[4] = 1 - (xx + zz); m[5] = yz + wx;
+    m[6] = xz + wy; m[7] = yz - wx; m[8] = 1 - (xx + yy);
   }
 
-  var _scratch = { p: [0, 0, 0], q: [0, 0, 0, 1] };
-  var _other = { p: [0, 0, 0], q: [0, 0, 0, 1] };
+  var _mB = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+  /* out += (b - out) * a. Two rigid poses lerp position and rotation; once either side
+     carries scale both go through the 3x3, which is a plain lerp. */
+  function lerpInto(out, b, a) {
+    out.p[0] += (b.p[0] - out.p[0]) * a;
+    out.p[1] += (b.p[1] - out.p[1]) * a;
+    out.p[2] += (b.p[2] - out.p[2]) * a;
+    if (out.m || b.m) {
+      if (!out.m) { out.m = [0, 0, 0, 0, 0, 0, 0, 0, 0]; quatToMat(out.q, out.m); }
+      var bm = b.m;
+      if (!bm) { bm = _mB; quatToMat(b.q, bm); }
+      for (var k = 0; k < 9; k++) out.m[k] += (bm[k] - out.m[k]) * a;
+      return;
+    }
+    // shortest arc: flip the target when the two quaternions face opposite ways
+    var dot = out.q[0] * b.q[0] + out.q[1] * b.q[1] + out.q[2] * b.q[2] + out.q[3] * b.q[3];
+    var s = dot < 0 ? -1 : 1;
+    for (var i = 0; i < 4; i++) out.q[i] += (s * b.q[i] - out.q[i]) * a;
+    var len = Math.hypot(out.q[0], out.q[1], out.q[2], out.q[3]) || 1;
+    for (var j = 0; j < 4; j++) out.q[j] /= len;
+  }
+
+  var _scratch = { p: [0, 0, 0], q: [0, 0, 0, 1], m: null };
+  var _other = { p: [0, 0, 0], q: [0, 0, 0, 1], m: null };
+  var _next = { p: [0, 0, 0], q: [0, 0, 0, 1], m: null };
 
   /* The pose of `apKey` at the moment `frameAt` described - including the cross-fade
      into the next clip when there is one. Returns a SHARED object: read it before the
@@ -538,8 +569,7 @@
       var bi = at.B.apIndex[apKey];
       if (bi !== undefined) {
         sampleOne(at.B, bi, at.g, _other);
-        lerpInto(_scratch, _other.p[0], _other.p[1], _other.p[2],
-                 _other.q[0], _other.q[1], _other.q[2], _other.q[3], at.u);
+        lerpInto(_scratch, _other, at.u);
       }
     }
     return _scratch;

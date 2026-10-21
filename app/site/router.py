@@ -4042,7 +4042,7 @@ async def site_mods_release_cfg(
 async def site_rig_animation(skeleton: str, name: str) -> Response:
     """Lazily-loaded baked animation clip for a creature rig (the model viewer fetches
     these on demand when a clip is played). Public, shared across mods using the rig.
-    Binary ``TANIM1`` - position+quaternion per attach point per frame."""
+    Binary ``TANIM1`` (position+quaternion) or ``TANIM2`` (position+3x3, scale included)."""
     anim = await mods_hub_service.load_rig_animation(skeleton, name)
     return Response(content=anim, media_type="application/octet-stream",
                     headers={"Cache-Control": "public, max-age=3600"})

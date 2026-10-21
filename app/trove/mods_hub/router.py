@@ -349,9 +349,10 @@ async def get_release_blueprint(
 async def get_rig_animation(skeleton: str, name: str, ctx: AccessContext = _ASSET) -> Response:
     """Baked animation clip for a creature rig, lazily (the assembled-model payload
     carries only animation metadata; the viewer fetches clips on demand). Binary
-    ``TANIM1``: an 8-byte magic, then ``ap_count``/``frame_count``/``fps``/name-blob
-    length as u32, the NUL-separated attach-point keys, then
-    ``frame_count x ap_count x 7`` float32 - position xyz then quaternion xyzw."""
+    ``TANIM1``/``TANIM2``: an 8-byte magic, then ``ap_count``/``frame_count``/``fps``/
+    name-blob length as u32, the NUL-separated attach-point keys, then
+    ``frame_count x ap_count x 7`` float32 (position xyz, quaternion xyzw) for TANIM1, or
+    x 12 (position xyz, 3x3 linear part column-major, scale included) for TANIM2."""
     data = await service.load_rig_animation(skeleton, name)
     return Response(content=data, media_type="application/octet-stream",
                     headers={"Cache-Control": "public, max-age=3600"})

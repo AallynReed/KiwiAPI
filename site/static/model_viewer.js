@@ -393,6 +393,7 @@
     var prog = null;     // the compiled timeline currently playing
     var barCtl = null;   // the shared control bar, once it is built
     var _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _one = new THREE.Vector3(1, 1, 1);
+    var _m4 = new THREE.Matrix4();
     function renderOnce() { renderer.render(scene, camera); }
     function request() { if (anim) return; if (!pending) { pending = true; requestAnimationFrame(function () { pending = false; renderOnce(); }); } }
     // Backdrop picker + "Save PNG". Optional, so a page that hasn't loaded the
@@ -410,10 +411,16 @@
       data.parts.forEach(function (p) {
         var pose = AC().sample(at, p.name), meshes = meshByPart[p.name];
         if (!pose || !meshes) return;
-        _p.set(pose.p[0], pose.p[1], pose.p[2]);
-        _q.set(pose.q[0], pose.q[1], pose.q[2], pose.q[3]);
-        var sm = scaleOf[p.name] || scaleM;
-        for (var i = 0; i < meshes.length; i++) meshes[i].matrix.compose(_p, _q, _one).multiply(sm);
+        var sm = scaleOf[p.name] || scaleM, m = pose.m;
+        if (m) {
+          _m4.set(m[0], m[3], m[6], pose.p[0], m[1], m[4], m[7], pose.p[1],
+                  m[2], m[5], m[8], pose.p[2], 0, 0, 0, 1);
+        } else {
+          _p.set(pose.p[0], pose.p[1], pose.p[2]);
+          _q.set(pose.q[0], pose.q[1], pose.q[2], pose.q[3]);
+          _m4.compose(_p, _q, _one);
+        }
+        for (var i = 0; i < meshes.length; i++) meshes[i].matrix.copy(_m4).multiply(sm);
       });
     }
     function loop(ts2) {

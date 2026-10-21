@@ -75,14 +75,15 @@ def _rigs() -> dict:
 
 
 def load_animation(skeleton: str, name: str) -> bytes | None:
-    """Lazily load ONE baked animation clip - the raw ``TANIM1`` bytes of
+    """Lazily load ONE baked animation clip - the raw ``TANIM1``/``TANIM2`` bytes of
     ``rigs/anim/<skeleton>/<name>.anim`` - or None. The rig JSON only carries animation
     METADATA (name/fps/frame-count) so the model payload stays small; the viewer fetches
     a clip on demand when it is played.
 
-    The clip is binary rather than JSON because the attach-point transforms are pure
-    rigid, so each one is stored as position(3) + quaternion(4) float32 instead of a 4x4
-    matrix of JSON text - about 10x smaller across the ~3.2k baked clips. The viewer
+    The clip is binary rather than JSON: a rigid attach point is position(3) +
+    quaternion(4) float32 (TANIM1) instead of a 4x4 matrix of JSON text, about 10x
+    smaller. A clip where the game scales a part (a folded wing is the arm at 68%) is
+    TANIM2: position + the full 3x3, since a quaternion can't say scale. The viewer
     rebuilds the matrices. Names are validated (no path traversal)."""
     if not (_RIG_NAME_RE.match(skeleton or "") and _RIG_NAME_RE.match(name or "")):
         return None

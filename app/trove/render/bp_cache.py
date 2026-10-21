@@ -56,7 +56,7 @@ PACK_VERSION = "v3"     # v3: the codec stopped mirroring X, so every cached pay
 # Bump when the baked rigs (``mods_hub/rigs``) or ``mods_hub/assembly.py`` change
 # the shape of an assembled creature. The live rig map has its own signature in the
 # key (see ``key_for_assembly``); this covers what ships in the repo.
-ASSEMBLY_VERSION = "a21"     # a21: rigs take their clips from the .gsf their prefabs name
+ASSEMBLY_VERSION = "a22"     # a22: rest poses and clips carry the scale the game draws parts at (TANIM2)
 
 # Bump when ``app.trove.swf.extract`` changes what a manifest holds or how a
 # bitmap is decoded. Namespaces the SWF keys only.

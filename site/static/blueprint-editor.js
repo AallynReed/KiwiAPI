@@ -2406,8 +2406,11 @@
     state.docs.forEach(function (d, i) {
       var pose = placedOn(d) ? AC().sample(at, d.ap) : null;
       var m = pose
-        ? matMul(matMul(compose(pose.p[0], pose.p[1], pose.p[2],
-                                pose.q[0], pose.q[1], pose.q[2], pose.q[3]),
+        ? matMul(matMul(pose.m
+                          ? [pose.m[0], pose.m[1], pose.m[2], 0, pose.m[3], pose.m[4], pose.m[5], 0,
+                             pose.m[6], pose.m[7], pose.m[8], 0, pose.p[0], pose.p[1], pose.p[2], 1]
+                          : compose(pose.p[0], pose.p[1], pose.p[2],
+                                    pose.q[0], pose.q[1], pose.q[2], pose.q[3]),
                         matScale(vs * (r.scales[d.ap] || 1))), frameOf(d))
         : matrixFor(d);
       if (i === state.active) state.scene.setModelMatrix(m);
