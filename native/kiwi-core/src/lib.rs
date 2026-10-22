@@ -9,6 +9,7 @@ pub mod binfab;
 pub mod blueprint;
 pub mod btt;
 pub mod detection;
+pub mod duplicates;
 pub mod feeds;
 pub mod form;
 pub mod gems;

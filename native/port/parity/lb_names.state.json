@@ -1,0 +1,10 @@
+{
+ "postgres": [
+  {"table": "player_rename", "order_by": "from_name_lower, to_name_lower, to_anchor", "mask": ["created_at"]},
+  {"table": "player_duplicate", "order_by": "name_lower", "mask": ["updated_at"]}
+ ],
+ "redis": [
+  {"pattern": "lb:renames:*", "mask_ttl": true, "mask": ["started_at", "finished_at"]},
+  {"pattern": "lb:duplicates:*", "mask_ttl": true, "mask": ["started_at", "finished_at"]}
+ ]
+}

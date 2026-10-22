@@ -4,6 +4,7 @@
 //! missing here is a 405, not a trip to Python.
 
 pub mod btt;
+pub mod lb_names;
 pub mod lb_players;
 pub mod leaf;
 pub mod misc;
@@ -50,6 +51,7 @@ async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next
     next.run(req).await
         .merge(lb_players::router())
         .merge(crate::activity::router())
+        .merge(lb_names::router())
 }
 
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`
