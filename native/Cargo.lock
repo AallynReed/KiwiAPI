@@ -1347,6 +1347,7 @@ dependencies = [
  "png",
  "regex",
  "rustc-hash",
+ "serde_json",
  "stacker",
 ]
 

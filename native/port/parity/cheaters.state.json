@@ -1,0 +1,13 @@
+{
+ "redis": [
+  {"pattern": "lb:cache:timestamps", "mask_ttl": true},
+  {"pattern": "lb:cache:ready_anchor", "mask_ttl": true},
+  {"pattern": "lb:cache:boards:*", "mask_ttl": true},
+  {"pattern": "lb:cache:entries:*", "mask_ttl": true},
+  {"pattern": "lb:cache:cheaters:*", "mask_ttl": true},
+  {"pattern": "lb:cache:bhist:*", "mask_ttl": true, "mask": ["window_start", "window_end"]}
+ ],
+ "postgres": [
+  {"table": "entry", "order_by": "board_uuid, anchor, rank, player_id"}
+ ]
+}

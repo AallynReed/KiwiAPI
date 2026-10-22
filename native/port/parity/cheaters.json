@@ -1,0 +1,20 @@
+[
+ {"name": "v1_anon", "path": "/v1/leaderboards/cheaters", "mask": ["computed_at"], "compare_headers": ["x-ratelimit-limit"]},
+ {"name": "v1_token", "path": "/v1/leaderboards/cheaters", "mask": ["computed_at"],
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"}, "compare_headers": ["x-ratelimit-limit"]},
+ {"name": "v1_bad_token", "path": "/v1/leaderboards/cheaters", "headers": {"Authorization": "Bearer kiwi_nope"}},
+ {"name": "v1_query_ignored", "path": "/v1/leaderboards/cheaters?limit=5&x=%F0%9F%98%80", "mask": ["computed_at"]},
+ {"name": "v1_gzip_cors", "path": "/v1/leaderboards/cheaters", "mask": ["computed_at"],
+  "headers": {"Accept-Encoding": "gzip", "Origin": "https://trove.aallyn.net"}},
+ {"name": "v1_head", "method": "HEAD", "path": "/v1/leaderboards/cheaters"},
+ {"name": "v1_preflight", "method": "OPTIONS", "path": "/v1/leaderboards/cheaters",
+  "headers": {"Origin": "https://docs.aallyn.net", "Access-Control-Request-Method": "GET"}},
+ {"name": "v1_trailing_slash", "path": "/v1/leaderboards/cheaters/", "compare_headers": ["location"]},
+ {"name": "site", "path": "/site/leaderboards/cheaters", "mask": ["computed_at"]},
+ {"name": "site_browser", "path": "/site/leaderboards/cheaters", "mask": ["computed_at"],
+  "headers": {"Accept": "text/html,application/json", "Accept-Encoding": "gzip"}},
+ {"name": "site_head", "method": "HEAD", "path": "/site/leaderboards/cheaters"},
+ {"name": "recompute_get_405", "path": "/v1/leaderboards/cheaters/recompute", "compare_headers": ["allow"]},
+ {"name": "views_recompute_get_405", "path": "/v1/leaderboards/views/recompute", "compare_headers": ["allow"]},
+ {"name": "views_recompute_head_405", "method": "HEAD", "path": "/v1/leaderboards/views/recompute", "compare_headers": ["allow"]}
+]
