@@ -206,10 +206,24 @@ impl std::fmt::Display for ApiError {
 
 impl std::error::Error for ApiError {}
 
+/// Marks a response as Python's unhandled-exception 500: the request-id layer
+/// rebuilds it there, past the layers Python's exception skipped.
+#[derive(Clone, Copy)]
+pub struct Unhandled;
+
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        (self.status, [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))], self.body())
-            .into_response()
+        let unhandled = self.status == StatusCode::INTERNAL_SERVER_ERROR
+            && self.code == ErrorCode::InternalError.as_str()
+            && self.message == "Internal server error"
+            && self.details.is_none();
+        let mut res =
+            (self.status, [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))], self.body())
+                .into_response();
+        if unhandled {
+            res.extensions_mut().insert(Unhandled);
+        }
+        res
     }
 }
 

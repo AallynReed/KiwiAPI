@@ -31,8 +31,8 @@ pub async fn request_context(req: Request, next: Next) -> Response {
     let rid: Arc<str> = rid.into();
     let run = AssertUnwindSafe(next.run(req)).catch_unwind();
     let mut res = match crate::request_id::scope(rid.to_string(), run).await {
-        Ok(res) => res,
-        Err(_) => {
+        Ok(res) if res.extensions().get::<crate::error::Unhandled>().is_none() => res,
+        _ => {
             tracing::error!(rid = %rid, "Unhandled error on {method} {path}");
             envelope_with(&rid, 500, "internal_error", "Internal server error")
         }

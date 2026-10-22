@@ -173,7 +173,9 @@ pub async fn record(State(state): State<AppState>, mut req: Request, next: Next)
 
     let response = next.run(req).await;
 
-    if let Some((user_id, token_id)) = slot.get() {
+    if let Some((user_id, token_id)) =
+        slot.get().filter(|_| response.extensions().get::<crate::error::Unhandled>().is_none())
+    {
         let path = starlette_path(&raw_path);
         enqueue(
             &state,
