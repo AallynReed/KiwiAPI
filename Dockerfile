@@ -57,8 +57,8 @@ RUN python -c 'import hashlib,io,sys,urllib.request,zipfile;v=sys.argv[1];w=sys.
     && test -f /opt/ffdec/ffdec.jar
 
 # Install dependencies first so they cache independently of source changes.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt constraints.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
 # Bake the RapidOCR models into the image so the OCR endpoint needs no network
 # (and no writable cache) at runtime - otherwise the first /v1/ocr/character call
