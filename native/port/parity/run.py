@@ -25,7 +25,8 @@ unless the request sets one), ``compare_headers`` (extra headers to compare),
 ``ignore_headers``, ``mask`` (JSON fields replaced before comparing; the
 bodies are then compared re-serialized instead of byte for byte),
 ``allow_diff`` (``status``, ``body``, ``capture`` or ``header:<name>``:
-reported but not failing) with a ``reason``, and ``capture``.
+reported but not failing) with a ``reason``, ``capture``, and ``sleep``
+(seconds to wait first, for background jobs the previous requests started).
 
 ``${NAME}`` in the path, a header value or a ``body`` string (also strings
 inside a JSON body) expands per target: first what ``capture`` took from that
@@ -62,6 +63,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.parse
 import zlib
 
@@ -344,6 +346,8 @@ def main(argv: list[str] | None = None) -> int:
         name = spec.get("name") or f"{spec.get('method', 'GET')} {spec['path']}"
         if args.only and name not in args.only:
             continue
+        if spec.get("sleep"):
+            time.sleep(float(spec["sleep"]))
         ran += 1
         rid = f"parity-{n}"
         a = send(target_a, spec, rid, args.timeout, defaults, spec_dir)
