@@ -1,14 +1,14 @@
 //! The outbound clients, configured like the `httpx.AsyncClient`s they
-//! replace: HTTP/1.1, gzip/deflate, certifi-style bundled roots, httpx's
-//! per-phase timeouts and redirect policy.
+//! replace: HTTP/1.1, gzip/deflate, the shared TLS config, httpx's per-phase
+//! timeouts and redirect policy.
 
 use std::{sync::OnceLock, time::Duration};
 
 use axum::http::{HeaderMap, HeaderValue, header};
 use reqwest::{Client, redirect::Policy};
 
-/// `app/core/http.py` `KIWI_UA`.
-pub const KIWI_UA: &str = "KiwiAPI/1.0";
+use crate::http::KIWI_UA;
+
 /// `app/trove/feeds.py` `_UA`.
 pub const FEEDS_UA: &str = "KiwiAPI/1.0 (+https://api.aallyn.net)";
 /// `app/trove/feeds.py` `_BILIBILI_UA`.
@@ -26,19 +26,9 @@ pub struct Clients {
     pub image: Client,
 }
 
-fn tls() -> rustls::ClientConfig {
-    let roots = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
-    rustls::ClientConfig::builder_with_provider(std::sync::Arc::new(rustls::crypto::ring::default_provider()))
-        .with_safe_default_protocol_versions()
-        .expect("ring supports the default TLS versions")
-        .with_root_certificates(roots)
-        .with_no_client_auth()
-}
-
 fn build(timeout: u64, follow: bool, headers: HeaderMap) -> Client {
     let t = Duration::from_secs(timeout);
-    Client::builder()
-        .tls_backend_preconfigured(tls())
+    crate::http::client_builder()
         .default_headers(headers)
         .connect_timeout(t)
         .read_timeout(t)

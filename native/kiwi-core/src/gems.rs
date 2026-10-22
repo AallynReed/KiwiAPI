@@ -24,6 +24,10 @@ pub enum GemError {
 }
 
 impl GemError {
+    pub(crate) fn zero_div() -> Self {
+        GemError::ZeroDivision("float division by zero".into())
+    }
+
     pub fn message(&self) -> &str {
         match self {
             GemError::Value(m)

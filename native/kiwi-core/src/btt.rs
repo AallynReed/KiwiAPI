@@ -6,6 +6,9 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
+use crate::pystr::is_space;
+pub use crate::pystr::strip as py_strip;
+
 pub const PLATFORMS: [&str; 3] = ["windows", "linux", "android"];
 pub const CHANNELS: [&str; 2] = ["release", "beta"];
 
@@ -41,16 +44,6 @@ pub fn platform_order(names: &[&str], platform: &str) -> Vec<usize> {
         names.iter().enumerate().filter_map(|(i, n)| asset_priority(n, platform).map(|p| (p, i))).collect();
     matched.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| names[a.1].cmp(names[b.1])));
     matched.into_iter().map(|(_, i)| i).collect()
-}
-
-/// `str.isspace()` for one char.
-pub fn is_space(c: char) -> bool {
-    c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c)
-}
-
-/// `str.strip()`.
-pub fn py_strip(s: &str) -> &str {
-    s.trim_matches(is_space)
 }
 
 static VERSION: LazyLock<Regex> =

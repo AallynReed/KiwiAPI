@@ -4,15 +4,7 @@ use axum::http::HeaderValue;
 use mongodb::bson::Bson;
 use serde_json::Value;
 
-/// `str.isspace()` for one char (Rust's `is_whitespace` lacks U+001C..U+001F).
-pub fn is_space(c: char) -> bool {
-    c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c)
-}
-
-/// `str.strip()` with no arguments.
-pub fn strip(s: &str) -> &str {
-    s.trim_matches(is_space)
-}
+pub use kiwi_core::pystr::{is_space, strip};
 
 /// A header value as Starlette decodes it (latin-1).
 pub fn latin1(value: &HeaderValue) -> String {

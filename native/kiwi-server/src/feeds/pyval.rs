@@ -7,17 +7,7 @@ use serde_json::{Map, Value};
 
 use crate::{pyfloat, validation::py_repr_str};
 
-/// `bool(v)`.
-pub fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
-    }
-}
+pub use crate::features::py_truthy as truthy;
 
 /// `d.get(key)` on something that must be a dict (AttributeError otherwise).
 pub fn get<'a>(d: &'a Value, key: &str) -> anyhow::Result<Option<&'a Value>> {

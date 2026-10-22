@@ -27,11 +27,12 @@ use serde_json::{Value, json};
 use crate::{
     auth::{Public, RequireScope, extract::public_scope, scopes::STATS_READ},
     error::{ApiError, ErrorCode},
+    features::py_truthy,
     gamedata::{Gamedata, read_json},
     middleware::pyurl::scope_path,
     pyjson,
     state::AppState,
-    validation::{BodyInput, Field, FromBody, FromParams, Input, Params, Query, Validator, read_body},
+    validation::{BodyInput, Field, FromBody, FromParams, Input, Params, Query, Validator, read_body, validate},
 };
 
 pub fn router() -> Router<AppState> {
@@ -47,11 +48,6 @@ pub fn router() -> Router<AppState> {
 
 fn gamedata(state: &AppState) -> &'static Gamedata {
     Gamedata::global(state.settings())
-}
-
-/// A FastAPI response-model body that was rendered ahead of time.
-fn json_body(body: impl Into<Body>) -> Response {
-    ([(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))], body.into()).into_response()
 }
 
 type Scoped = RequireScope<{ STATS_READ }>;
@@ -136,7 +132,7 @@ pub fn stat_table(gd: &Gamedata, stat: &str) -> Result<String, ApiError> {
 
 fn table(state: &AppState, scope: Scoped, stat: &str) -> Result<Response, ApiError> {
     let body = stat_table(gamedata(state), stat)?;
-    Ok((scope.0.rate_limit, json_body(body)).into_response())
+    Ok((scope.0.rate_limit, pyjson::json_response(body)).into_response())
 }
 
 async fn power_rank(State(state): State<AppState>, scope: Scoped) -> Result<Response, ApiError> {
@@ -155,7 +151,7 @@ async fn light(State(state): State<AppState>, scope: Scoped) -> Result<Response,
 
 async fn list_classes(State(state): State<AppState>, scope: Scoped) -> Result<Response, ApiError> {
     let body = classes::list_body(gamedata(&state))?;
-    Ok((scope.0.rate_limit, json_body(body)).into_response())
+    Ok((scope.0.rate_limit, pyjson::json_response(body)).into_response())
 }
 
 const CLASS_PREFIX: &str = "/v1/stats/classes/";
@@ -165,7 +161,7 @@ async fn get_class(State(state): State<AppState>, scope: Scoped, uri: Uri) -> Re
     let path = scope_path(&uri);
     let tech_name = path.strip_prefix(CLASS_PREFIX).unwrap_or_default();
     let body = classes::class_body(gamedata(&state), tech_name)?;
-    Ok((scope.0.rate_limit, json_body(body)).into_response())
+    Ok((scope.0.rate_limit, pyjson::json_response(body)).into_response())
 }
 
 // --- coefficient -----------------------------------------------------------
@@ -192,9 +188,7 @@ impl FromBody for CoefficientReq {
 
 /// The `CoefficientRequest` body model, or its 422.
 pub fn parse_coefficient(body: &BodyInput) -> Result<CoefficientReq, ApiError> {
-    let mut v = Validator::default();
-    let parsed = CoefficientReq::from_body(Field::new(&mut v, vec!["body".into()], body.input()));
-    v.finish(parsed)?.ok_or_else(ApiError::internal)
+    validate(body)
 }
 
 /// `CoefficientResponse` for a validated request.
@@ -223,7 +217,7 @@ async fn coefficient(State(state): State<AppState>, req: Request) -> Response {
         Err(r) => return r.into_response(),
     };
     match parse_coefficient(&body).and_then(|req| coefficient_body(&req)) {
-        Ok(body) => (ctx.rate_limit, json_body(body)).into_response(),
+        Ok(body) => (ctx.rate_limit, pyjson::json_response(body)).into_response(),
         Err(e) => e.into_response(),
     }
 }
@@ -241,18 +235,6 @@ impl FromParams for SigilQuery {
             power_rank: p.query("power_rank").int().ge(0).le(10_000_000).required(),
             mastery: p.query("mastery").int().ge(0).le(100_000).required(),
         }
-    }
-}
-
-/// Python truthiness of a parsed JSON value.
-fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(m) => !m.is_empty(),
     }
 }
 
@@ -305,7 +287,7 @@ fn render_sigil(data: Option<&Value>, shield: usize, wings: usize) -> Option<Vec
 /// `sigil_png(power_rank, mastery)` as the route answers it.
 pub fn sigil_png(gd: &Gamedata, power_rank: i64, mastery: i64) -> Result<Bytes, ApiError> {
     let data = gd.load("insignia.json");
-    if !data.as_deref().is_some_and(truthy) {
+    if !data.as_deref().is_some_and(py_truthy) {
         return Err(ApiError::new(
             StatusCode::SERVICE_UNAVAILABLE,
             ErrorCode::ServiceUnavailable,

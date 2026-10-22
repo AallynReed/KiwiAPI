@@ -2,15 +2,7 @@
 
 use super::tables::DECIMAL_ZEROS;
 
-/// `str.isspace()` for one char (Rust's `is_whitespace` lacks U+001C..U+001F).
-pub fn is_space(c: char) -> bool {
-    c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c)
-}
-
-/// `str.strip()`.
-pub fn strip(s: &str) -> &str {
-    s.trim_matches(is_space)
-}
+pub use crate::pystr::{is_space, strip};
 
 /// `unicodedata.decimal(c)`.
 pub fn decimal(c: char) -> Option<u32> {

@@ -15,7 +15,8 @@
 use std::{borrow::Cow, cell::Cell, fmt::Write};
 
 use axum::{
-    http::{HeaderValue, header},
+    body::Body,
+    http::{HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
 use serde_json::{Map, Number, Value};
@@ -153,8 +154,14 @@ pub fn write_str(out: &mut String, s: &str, ascii: bool) {
 
 const APPLICATION_JSON: HeaderValue = HeaderValue::from_static("application/json");
 
-fn json_response(body: String) -> Response {
-    ([(header::CONTENT_TYPE, APPLICATION_JSON)], body).into_response()
+/// An already-rendered JSON body.
+pub fn json_response(body: impl Into<Body>) -> Response {
+    ([(header::CONTENT_TYPE, APPLICATION_JSON)], body.into()).into_response()
+}
+
+/// The 204 FastAPI sends for a `-> None` route: JSON content type, no body.
+pub fn no_content() -> Response {
+    (StatusCode::NO_CONTENT, [(header::CONTENT_TYPE, APPLICATION_JSON)]).into_response()
 }
 
 /// A Starlette `JSONResponse` (`Content-Type: application/json`, body

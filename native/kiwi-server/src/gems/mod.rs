@@ -8,7 +8,6 @@
 
 mod data;
 mod star_chart;
-mod store;
 mod wire;
 
 #[cfg(test)]
@@ -35,12 +34,12 @@ use serde_json::Value;
 use crate::{
     auth::{RequireScope, extract::require_scope, scopes::GEMS_READ},
     error::ApiError,
+    gamedata::Gamedata,
     pyjson::PydanticJson,
     ratelimit::RateLimitInfo,
     state::AppState,
-    validation::{BodyInput, Field, FromBody, FromParams, Params, Query, Validator, read_body},
+    validation::{Field, FromBody, FromParams, Params, Query, read_body, validate},
 };
-use store::Store;
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -107,8 +106,8 @@ fn is_value(e: &GemError) -> bool {
     matches!(e, GemError::Value(_) | GemError::Evaluator(_))
 }
 
-fn store(state: &AppState) -> &'static Store {
-    Store::global(&state.settings().gamedata_dir)
+fn store(state: &AppState) -> &'static Gamedata {
+    Gamedata::global(state.settings())
 }
 
 thread_local! {
@@ -135,7 +134,7 @@ fn with_rng<T>(f: impl FnOnce(&mut PyRandom) -> T) -> T {
 
 /// A POST route: body read (malformed JSON is a 422 before auth), the scope,
 /// then validation and the route.
-async fn gated<B: FromBody>(State(state): State<AppState>, req: Request, run: fn(&Store, B) -> Reply) -> Response {
+async fn gated<B: FromBody>(State(state): State<AppState>, req: Request, run: fn(&Gamedata, B) -> Reply) -> Response {
     let (parts, body) = req.into_parts();
     let body = match read_body(&parts.headers, body).await {
         Ok(b) => b,
@@ -148,17 +147,6 @@ async fn gated<B: FromBody>(State(state): State<AppState>, req: Request, run: fn
     match validate::<B>(&body) {
         Ok(req) => run(store(&state), req).respond(ctx.rate_limit),
         Err(e) => e.into_response(),
-    }
-}
-
-/// The body model, or its 422.
-fn validate<B: FromBody>(body: &BodyInput) -> Result<B, ApiError> {
-    let mut v = Validator::default();
-    let value = B::from_body(Field::new(&mut v, vec!["body".into()], body.input()));
-    match v.finish(value) {
-        Ok(Some(b)) => Ok(b),
-        Ok(None) => Err(ApiError::internal()),
-        Err(e) => Err(e.into()),
     }
 }
 
@@ -190,7 +178,7 @@ impl FromBody for GenerateReq {
     }
 }
 
-fn run_generate(s: &Store, req: GenerateReq) -> Reply {
+fn run_generate(s: &Gamedata, req: GenerateReq) -> Reply {
     let data = data::gems(s);
     let id = wire::now_id();
     match with_rng(|rng| Gem::create(&data.up, &req.params, id, rng)) {
@@ -223,7 +211,7 @@ fn action(data: &Upgrades, gem: &Gem, applied: Result<bool, GemError>, caught: f
     }
 }
 
-fn run_augment(s: &Store, mut req: AugmentReq) -> Reply {
+fn run_augment(s: &Gamedata, mut req: AugmentReq) -> Reply {
     let data = data::gems(s);
     let applied = req.gem.augment_stat(&data.up, req.position, req.augment);
     action(&data.up, &req.gem, applied, |e| matches!(e, GemError::Index(_)) || is_value(e))
@@ -248,13 +236,13 @@ fn is_index(e: &GemError) -> bool {
     matches!(e, GemError::Index(_))
 }
 
-fn run_spark(s: &Store, mut req: PositionReq) -> Reply {
+fn run_spark(s: &Gamedata, mut req: PositionReq) -> Reply {
     let data = data::gems(s);
     let applied = with_rng(|rng| req.gem.spark_stat(req.position, rng));
     action(&data.up, &req.gem, applied, is_index)
 }
 
-fn run_flare(s: &Store, mut req: PositionReq) -> Reply {
+fn run_flare(s: &Gamedata, mut req: PositionReq) -> Reply {
     let data = data::gems(s);
     let applied = with_rng(|rng| req.gem.flare_stat(req.position, rng));
     action(&data.up, &req.gem, applied, is_index)
@@ -275,7 +263,7 @@ impl FromBody for LevelUpReq {
     }
 }
 
-fn run_level_up(s: &Store, mut req: LevelUpReq) -> Reply {
+fn run_level_up(s: &Gamedata, mut req: LevelUpReq) -> Reply {
     let data = data::gems(s);
     let level = req.gem.level;
     match with_rng(|rng| req.gem.level_up(&data.up, req.booster.as_deref(), rng)) {
@@ -299,7 +287,7 @@ impl FromBody for SetLevelReq {
     }
 }
 
-fn run_set_level(s: &Store, mut req: SetLevelReq) -> Reply {
+fn run_set_level(s: &Gamedata, mut req: SetLevelReq) -> Reply {
     let data = data::gems(s);
     let applied = with_rng(|rng| req.gem.set_level(&data.up, req.level, rng));
     action(&data.up, &req.gem, applied, |_| false)
@@ -335,7 +323,7 @@ fn evaluator_error(e: GemError) -> Reply {
     }
 }
 
-fn run_evaluate(s: &Store, req: EvaluateReq) -> Reply {
+fn run_evaluate(s: &Gamedata, req: EvaluateReq) -> Reply {
     let data = data::gems(s);
     match evaluator::evaluate(&data.up, req.tier, req.gem_type, req.level, &req.stats, req.auto_guess) {
         Ok(e) => Reply::Json(wire::evaluation_json(&e)),
@@ -362,7 +350,7 @@ impl FromBody for SimpleReq {
     }
 }
 
-fn run_evaluate_simple(s: &Store, req: SimpleReq) -> Reply {
+fn run_evaluate_simple(s: &Gamedata, req: SimpleReq) -> Reply {
     let data = data::gems(s);
     match evaluator::evaluate_simple(&data.up, req.tier, req.gem_type, req.power_rank, req.level) {
         Ok(e) => Reply::Json(wire::simple_json(&e)),
@@ -416,7 +404,7 @@ impl FromBody for BuildReq {
     }
 }
 
-fn run_builds(s: &Store, req: BuildReq) -> Reply {
+fn run_builds(s: &Gamedata, req: BuildReq) -> Reply {
     let d = data::builds(s);
     let gem_stats = match &d.gem_stats {
         Ok(g) => g,
@@ -468,7 +456,7 @@ impl FromBody for HealthReq {
     }
 }
 
-fn run_health(s: &Store, req: HealthReq) -> Reply {
+fn run_health(s: &Gamedata, req: HealthReq) -> Reply {
     let d = data::builds(s);
     let gem_stats = match &d.gem_stats {
         Ok(g) => g,
@@ -506,7 +494,7 @@ impl FromParams for LevelCostsQ {
     }
 }
 
-fn run_level_costs(s: &Store, q: &LevelCostsQ) -> Reply {
+fn run_level_costs(s: &Gamedata, q: &LevelCostsQ) -> Reply {
     let data = data::gems(s);
     let plan = kiwi_core::gems::catalog::tier(q.tier)
         .and_then(|t| Ok((t, kiwi_core::gems::catalog::gem_type(q.gem_type)?)))
@@ -542,7 +530,7 @@ impl FromParams for StatRangeQ {
     }
 }
 
-fn run_stat_range(s: &Store, q: &StatRangeQ) -> Reply {
+fn run_stat_range(s: &Gamedata, q: &StatRangeQ) -> Reply {
     let data = data::gems(s);
     match evaluator::stat_range(&data.up, q.tier, q.gem_type, q.stat_type, q.level, q.extra_containers, q.element) {
         Ok(r) => Reply::Json(wire::stat_range_json(&r)),
@@ -550,13 +538,13 @@ fn run_stat_range(s: &Store, q: &StatRangeQ) -> Reply {
     }
 }
 
-fn run_lookups(s: &Store) -> Reply {
+fn run_lookups(s: &Gamedata) -> Reply {
     let data = data::gems(s);
     let abilities = data::abilities(s);
     Reply::json(wire::lookups_json(&data.up, &abilities))
 }
 
-fn run_build_options(s: &Store) -> Reply {
+fn run_build_options(s: &Gamedata) -> Reply {
     let d = data::builds(s);
     if let Err(e) = &d.gem_stats {
         return Reply::Unhandled(e.message().to_owned());

@@ -5,7 +5,7 @@
 use std::{
     future::Future,
     io,
-    sync::{Arc, OnceLock, RwLock},
+    sync::RwLock,
     time::{Duration, Instant},
 };
 
@@ -20,10 +20,7 @@ use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     net::TcpStream,
 };
-use tokio_rustls::{
-    TlsConnector,
-    rustls::{ClientConfig, RootCertStore, crypto::ring, pki_types::ServerName},
-};
+use tokio_rustls::{TlsConnector, rustls::pki_types::ServerName};
 
 use super::{COLLECTION, REDIS_KEY, segment_from_doc, unix_now, unknown_snapshot};
 use crate::{
@@ -279,21 +276,6 @@ pub async fn probe_auth(url: &str, timeout: f64) -> Value {
     }
 }
 
-fn tls_config() -> Result<Arc<ClientConfig>, &'static str> {
-    static CFG: OnceLock<Option<Arc<ClientConfig>>> = OnceLock::new();
-    CFG.get_or_init(|| {
-        let roots = RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
-        let cfg = ClientConfig::builder_with_provider(Arc::new(ring::default_provider()))
-            .with_safe_default_protocol_versions()
-            .ok()?
-            .with_root_certificates(roots)
-            .with_no_client_auth();
-        Some(Arc::new(cfg))
-    })
-    .clone()
-    .ok_or("ConnectError")
-}
-
 pub(super) async fn post_login(url: &str, timeout: Duration) -> Result<Reply, &'static str> {
     let uri: Uri = url.parse().map_err(|_| "InvalidURL")?;
     let tls = match uri.scheme_str() {
@@ -324,7 +306,7 @@ pub(super) async fn post_login(url: &str, timeout: Duration) -> Result<Reply, &'
         return exchange(tcp, req, timeout).await;
     }
     let name = ServerName::try_from(bare.to_owned()).map_err(|_| "ConnectError")?;
-    let handshake = TlsConnector::from(tls_config()?).connect(name, tcp);
+    let handshake = TlsConnector::from(crate::http::tls_config()).connect(name, tcp);
     let stream =
         tokio::time::timeout(timeout, handshake).await.map_err(|_| "ConnectTimeout")?.map_err(|_| "ConnectError")?;
     exchange(stream, req, timeout).await

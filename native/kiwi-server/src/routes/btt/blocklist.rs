@@ -2,8 +2,8 @@
 //! `/admin/btt/mod-blocklist` editing routes (`app/btt_blocklist`).
 
 use axum::{
-    extract::{FromRequest, FromRequestParts, Request, State},
-    http::{HeaderValue, StatusCode, header},
+    extract::State,
+    http::StatusCode,
     response::{IntoResponse, Response},
 };
 use kiwi_core::btt::{BLOCK_KINDS, check_block_values, py_strip};
@@ -15,9 +15,9 @@ use crate::{
     auth::{Public, Superuser, scopes::BTT_READ},
     dt,
     error::{ApiError, ApiResult},
-    pyjson::PydanticJson,
+    pyjson::{self, PydanticJson},
     state::AppState,
-    validation::{Field, FromBody, FromParams, Params, Path, Validator, read_body},
+    validation::{DepsThenBody, Field, FromBody, FromParams, Params, Path},
 };
 
 pub const BLOCKLIST: &str = "btt_mod_blocklist";
@@ -140,27 +140,6 @@ impl FromBody for BlockAdd {
     }
 }
 
-/// A body on a superuser route, in FastAPI's order: malformed JSON (422),
-/// then the router's `get_current_superuser`, then body validation.
-pub struct AdminBody<T>(pub T);
-
-impl<T: FromBody> FromRequest<AppState> for AdminBody<T> {
-    type Rejection = Response;
-
-    async fn from_request(req: Request, state: &AppState) -> Result<Self, Response> {
-        let (mut parts, body) = req.into_parts();
-        let body = read_body(&parts.headers, body).await.map_err(IntoResponse::into_response)?;
-        Superuser::from_request_parts(&mut parts, state).await.map_err(IntoResponse::into_response)?;
-        let mut v = Validator::default();
-        let value = T::from_body(Field::new(&mut v, vec!["body".into()], body.input()));
-        match v.finish(value) {
-            Ok(Some(t)) => Ok(AdminBody(t)),
-            Ok(None) => Err(ApiError::internal().into_response()),
-            Err(e) => Err(e.into_response()),
-        }
-    }
-}
-
 /// `add`: every new value inserted (duplicates skipped), as dtos.
 pub(crate) async fn admin_add_core<S: Store>(s: &S, req: &BlockAdd) -> ApiResult<Value> {
     let values = check_block_values(&req.kind, &req.values).map_err(ApiError::bad_request)?;
@@ -182,7 +161,10 @@ pub(crate) async fn admin_add_core<S: Store>(s: &S, req: &BlockAdd) -> ApiResult
     Ok(obj(vec![("added", Value::Array(added))]))
 }
 
-pub async fn admin_add(State(state): State<AppState>, AdminBody(req): AdminBody<BlockAdd>) -> ApiResult<Response> {
+pub async fn admin_add(
+    State(state): State<AppState>,
+    DepsThenBody(_, req): DepsThenBody<Superuser, BlockAdd>,
+) -> ApiResult<Response> {
     Ok((StatusCode::CREATED, PydanticJson(admin_add_core(&Mongo(&state), &req).await?)).into_response())
 }
 
@@ -200,7 +182,7 @@ pub(crate) async fn admin_remove_core<S: Store>(s: &S, entry_id: &str) -> ApiRes
     if !s.delete_block(id).await? {
         return Err(not_found());
     }
-    Ok((StatusCode::NO_CONTENT, [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))]).into_response())
+    Ok(pyjson::no_content())
 }
 
 pub async fn admin_remove(

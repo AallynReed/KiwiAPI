@@ -7,8 +7,7 @@ use std::{collections::HashMap, path::Path, sync::OnceLock};
 use kiwi_core::rotations::BIOME_ICON_FALLBACK;
 use serde_json::{Map, Value, json};
 
-/// Relative to the working directory, which is the repo root in the image (`/app`).
-pub const BASELINE_DIR: &str = "app/trove/gamedata";
+pub use crate::gamedata::BASELINE_DIR;
 
 pub struct Gamedata {
     pub daily: Map<String, Value>,
@@ -24,14 +23,10 @@ pub struct Invalid;
 pub type Out<T = Value> = Result<T, Invalid>;
 
 fn load(dir: &Path, file: &str) -> Map<String, Value> {
-    std::fs::read(dir.join(file))
-        .ok()
-        .and_then(|b| crate::pyjson::loads(&b).ok())
-        .and_then(|v| match v {
-            Value::Object(m) => Some(m),
-            _ => None,
-        })
-        .unwrap_or_default()
+    match crate::gamedata::read_json(&dir.join(file)) {
+        Some(Value::Object(m)) => m,
+        _ => Map::new(),
+    }
 }
 
 impl Gamedata {

@@ -10,10 +10,8 @@ use kiwi_core::gems::{
 };
 use serde_json::{Map, Value};
 
-use super::{
-    star_chart::StarChart,
-    store::{Cached, Store},
-};
+use super::star_chart::StarChart;
+use crate::gamedata::Gamedata;
 
 pub const UPGRADES: &str = "gem_upgrades.json";
 pub const ABILITIES: &str = "gem_abilities.json";
@@ -171,9 +169,8 @@ pub struct GemsData {
     pub up: Upgrades,
 }
 
-pub fn gems(store: &Store) -> Arc<GemsData> {
-    static CACHE: std::sync::LazyLock<Cached<GemsData>> = std::sync::LazyLock::new(Cached::default);
-    CACHE.get(store, &[UPGRADES], |s| GemsData { up: upgrades(s.load(UPGRADES).as_ref()) })
+pub fn gems(gd: &Gamedata) -> Arc<GemsData> {
+    gd.cached("gems.upgrades", &[UPGRADES], || GemsData { up: upgrades(gd.load(UPGRADES).as_deref()) })
 }
 
 /// A food or ally: key, label, stat lines.
@@ -248,16 +245,15 @@ fn health_sources(v: Option<&Value>) -> HealthSources {
     HealthSources { sums, gear_lines }
 }
 
-pub fn builds(store: &Store) -> Arc<BuildsData> {
-    static CACHE: std::sync::LazyLock<Cached<BuildsData>> = std::sync::LazyLock::new(Cached::default);
-    CACHE.get(store, &BUILD_FILES, |s| {
-        let (class_names, classes) = classes(s.load("classes.json").as_ref());
-        let face = s.load("builds/face_damage.json");
+pub fn builds(gd: &Gamedata) -> Arc<BuildsData> {
+    gd.cached("gems.builds", &BUILD_FILES, || {
+        let (class_names, classes) = classes(gd.load("classes.json").as_deref());
+        let face = gd.load("builds/face_damage.json");
         let mut sums = HashMap::new();
         for name in SUM_FILES {
-            let data = s.load(&format!("builds/{name}.json"));
-            let total = match obj(data.as_ref()) {
-                Some(m) if !m.is_empty() => sum_values(data.as_ref()).f64(),
+            let data = gd.load(&format!("builds/{name}.json"));
+            let total = match obj(data.as_deref()) {
+                Some(m) if !m.is_empty() => sum_values(data.as_deref()).f64(),
                 _ => 0.0,
             };
             sums.insert(name, total);
@@ -265,19 +261,18 @@ pub fn builds(store: &Store) -> Arc<BuildsData> {
         BuildsData {
             class_names,
             classes,
-            foods: bonuses(s.load("builds/food.json").as_ref()),
-            allies: bonuses(s.load("builds/ally.json").as_ref()),
-            face_damage: obj(face.as_ref()).map_or(0.0, |m| num(m.get("Face"))),
+            foods: bonuses(gd.load("builds/food.json").as_deref()),
+            allies: bonuses(gd.load("builds/ally.json").as_deref()),
+            face_damage: obj(face.as_deref()).map_or(0.0, |m| num(m.get("Face"))),
             sums,
-            health: health_sources(s.load("builds/health_optimizer.json").as_ref()),
-            chart: StarChart::new(s.load("star_chart.json").as_ref()),
-            gem_stats: upgrades(s.load(UPGRADES).as_ref()).build_gem_stats(),
+            health: health_sources(gd.load("builds/health_optimizer.json").as_deref()),
+            chart: StarChart::new(gd.load("star_chart.json").as_deref()),
+            gem_stats: upgrades(gd.load(UPGRADES).as_deref()).build_gem_stats(),
         }
     })
 }
 
-/// `gamedata.load("gem_abilities.json", [])`, cached on the file.
-pub fn abilities(store: &Store) -> Arc<Value> {
-    static CACHE: std::sync::LazyLock<Cached<Value>> = std::sync::LazyLock::new(Cached::default);
-    CACHE.get(store, &[ABILITIES], |s| s.load(ABILITIES).unwrap_or_else(|| Value::Array(Vec::new())))
+/// `gamedata.load("gem_abilities.json", [])`.
+pub fn abilities(gd: &Gamedata) -> Arc<Value> {
+    gd.load(ABILITIES).unwrap_or_else(|| Arc::new(Value::Array(Vec::new())))
 }

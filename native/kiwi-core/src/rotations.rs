@@ -231,7 +231,7 @@ pub fn challenge_window(now: i64) -> ChallengeWindow {
 
 /// `captures.classify_challenge`: the literals are a public contract.
 pub fn classify_challenge(name: Option<&str>) -> Option<&'static str> {
-    let n = py_strip(name?);
+    let n = crate::pystr::strip(name?);
     if n.is_empty() {
         return None;
     }
@@ -242,11 +242,6 @@ pub fn classify_challenge(name: Option<&str>) -> Option<&'static str> {
         "Target Challenge" => "target",
         _ => "dungeon",
     })
-}
-
-/// `str.strip()`: Rust's whitespace plus U+001C..U+001F.
-pub fn py_strip(s: &str) -> &str {
-    s.trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c))
 }
 
 // --- merchants -------------------------------------------------------------

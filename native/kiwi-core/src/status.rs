@@ -1,6 +1,6 @@
 //! Pure parts of `app/trove/status.py`: the history window and the prober's verdicts.
 
-use crate::gems::py_round;
+use crate::{gems::py_round, pystr::strip};
 
 /// `_ENVIRONMENTS`, in snapshot order.
 pub const ENVIRONMENTS: [&str; 3] = ["eu", "us", "pts"];
@@ -120,7 +120,7 @@ pub fn overall(environments: &[(&str, &str)]) -> &'static str {
 pub fn parse_anchors(hosts: &str) -> Vec<(String, u64)> {
     let mut out = Vec::new();
     for raw in hosts.split(',') {
-        let raw = raw.trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c));
+        let raw = strip(raw);
         let Some((host, port)) = raw.rsplit_once(':') else { continue };
         if host.is_empty() || port.is_empty() || !port.bytes().all(|b| b.is_ascii_digit()) {
             continue;
@@ -132,7 +132,7 @@ pub fn parse_anchors(hosts: &str) -> Vec<(String, u64)> {
 
 /// `bytes.fromhex(s.strip())`; `None` where Python raises ValueError.
 pub fn fromhex(s: &str) -> Option<Vec<u8>> {
-    let s = s.trim_matches(|c: char| c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c));
+    let s = strip(s);
     let b = s.as_bytes();
     let mut out = Vec::new();
     let mut i = 0;

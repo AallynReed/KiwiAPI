@@ -2,7 +2,6 @@
 //! pages, the supporters list and its admin CRUD, design-feedback votes and
 //! the content-moderation report endpoint.
 
-mod body;
 pub mod design_feedback;
 mod docs_html;
 pub mod meta;

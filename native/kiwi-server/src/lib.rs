@@ -11,6 +11,7 @@ pub mod features;
 pub mod feeds;
 pub mod gamedata;
 pub mod gems;
+pub mod http;
 pub mod jobs;
 pub mod middleware;
 pub mod proxy;

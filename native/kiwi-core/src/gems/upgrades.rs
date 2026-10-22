@@ -122,10 +122,6 @@ impl GemStats {
     }
 }
 
-fn zero_div() -> GemError {
-    GemError::ZeroDivision("float division by zero".into())
-}
-
 impl Upgrades {
     pub fn upgrade_data(&self, tier: u8, gem_type: u8, element: u8) -> Result<&Record, GemError> {
         let ft = cat::file_tier(tier);
@@ -237,7 +233,7 @@ impl Upgrades {
         let roll = self.stat_roll(tier, gem_type, element, stat)?;
         let base = self.stat_base(tier, gem_type, element, stat)?;
         if base == 0.0 {
-            return Err(zero_div());
+            return Err(GemError::zero_div());
         }
         Ok([py_round(roll.min / base, 9), py_round(roll.max / base, 9)])
     }

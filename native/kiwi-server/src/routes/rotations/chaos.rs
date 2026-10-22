@@ -249,7 +249,7 @@ pub fn normalize(payload: &Value) -> Option<Map<String, Value>> {
 /// `refresh_chaos_chest`: true when an item was stored.
 async fn refresh(state: AppState) -> anyhow::Result<()> {
     let url = &state.settings().trove_chaos_chest_url;
-    let body = http::get(url, &[("user-agent", http::KIWI_UA.to_owned())], Duration::from_secs(15)).await?;
+    let body = http::get(url, &[("user-agent", crate::http::KIWI_UA.to_owned())], Duration::from_secs(15)).await?;
     let payload = pyjson::loads(&body).map_err(|e| anyhow::anyhow!("chaos chest payload: {e:?}"))?;
     let Some(item) = normalize(&payload) else {
         tracing::info!("Chaos Chest relay: no item");

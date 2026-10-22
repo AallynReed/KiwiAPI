@@ -15,7 +15,7 @@ use kiwi_core::leaf::{FeedbackRow, Tally, Votes, tally};
 use mongodb::bson::{Bson, Document, doc};
 use serde_json::{Map, Value, json};
 
-use super::{body::DepsThenBody, internal};
+use super::internal;
 use crate::{
     auth::{Rejection, Superuser, client::client_ip, pyutil::int_of},
     dt,
@@ -24,7 +24,7 @@ use crate::{
     ratelimit::check_rate_limit,
     runtime_config,
     state::AppState,
-    validation::{Field, FromBody, FromParams, Params, Query},
+    validation::{DepsThenBody, Field, FromBody, FromParams, Params, Query},
 };
 
 pub const COLLECTION: &str = "design_feedback";

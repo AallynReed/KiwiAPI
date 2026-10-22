@@ -164,8 +164,7 @@ impl Store for Mongo<'_> {
 
 /// httpx's `timeout=` bounds each connect and read, not the whole request.
 fn http_client(timeout: Duration) -> anyhow::Result<reqwest::Client> {
-    let _ = rustls::crypto::ring::default_provider().install_default();
-    Ok(reqwest::Client::builder().connect_timeout(timeout).read_timeout(timeout).build()?)
+    Ok(crate::http::client_builder().connect_timeout(timeout).read_timeout(timeout).build()?)
 }
 
 // --- Python values ----------------------------------------------------------

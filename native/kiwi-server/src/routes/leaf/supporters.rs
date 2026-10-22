@@ -18,7 +18,8 @@ use mongodb::{
 };
 use serde_json::{Value, json};
 
-use super::{body::DepsThenBody, internal};
+use super::internal;
+pub use crate::pyjson::no_content;
 use crate::{
     auth::{Public, Superuser, scopes},
     dt,
@@ -27,7 +28,7 @@ use crate::{
     pyjson::PydanticJson,
     ratelimit::RateLimitInfo,
     state::AppState,
-    validation::{Field, FromBody},
+    validation::{DepsThenBody, Field, FromBody},
 };
 
 pub const COLLECTION: &str = "supporters";
@@ -199,11 +200,6 @@ async fn admin_replace(
         coll.insert_one(row.to_doc(ObjectId::new())).await.map_err(internal)?;
     }
     Ok(PydanticJson(json!({"removed": removed, "added": cleaned.len()})))
-}
-
-/// The 204 FastAPI sends for a `-> None` route: JSON content type, no body.
-pub fn no_content() -> Response {
-    (StatusCode::NO_CONTENT, [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))]).into_response()
 }
 
 /// The `{name}` Python's router sees, or `None` when its decoded path

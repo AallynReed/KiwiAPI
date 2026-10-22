@@ -27,6 +27,7 @@ use serde_json::{Map, Value, json};
 use crate::{
     auth::{AccessContext, Public, extract::public_scope, scopes::MISC_READ},
     error::ApiError,
+    gamedata::BASELINE_DIR,
     pyjson::PydanticJson,
     state::AppState,
     validation::{Field, Validator, read_body},
@@ -44,12 +45,10 @@ pub fn router() -> Router<AppState> {
         .route("/v1/misc/feedback", post(feedback::post_feedback))
 }
 
-const GAMEDATA: &str = "app/trove/gamedata";
-
 /// `modding_software()` validated through `ModdingSoftware`; `None` where the
 /// file is missing or does not fit the model (a 500 in Python).
 pub fn modding_software(path: &Path) -> Option<Value> {
-    let raw: Value = serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()?;
+    let raw = crate::gamedata::read_json(path)?;
     let mut categories = Vec::new();
     for (key, cat) in raw.as_object()? {
         let cat = cat.as_object()?;
@@ -78,7 +77,7 @@ async fn software(Public(ctx): Misc) -> Response {
     static CACHE: OnceLock<Value> = OnceLock::new();
     let body = match CACHE.get() {
         Some(v) => v.clone(),
-        None => match modding_software(&Path::new(GAMEDATA).join("modding_software.json")) {
+        None => match modding_software(&Path::new(BASELINE_DIR).join("modding_software.json")) {
             Some(v) => CACHE.get_or_init(|| v).clone(),
             None => return ApiError::internal().into_response(),
         },
@@ -160,7 +159,8 @@ async fn interest_set(state: &AppState) -> Result<BTreeSet<String>, ApiError> {
         .await
         .map_err(|e| internal(&e))?;
     let items: BTreeSet<String> = if docs.is_empty() {
-        let raw = std::fs::read_to_string(Path::new(GAMEDATA).join("market_items.json")).map_err(|e| internal(&e))?;
+        let raw =
+            std::fs::read_to_string(Path::new(BASELINE_DIR).join("market_items.json")).map_err(|e| internal(&e))?;
         let list: Vec<String> = serde_json::from_str(&raw).map_err(|e| internal(&e))?;
         list.into_iter().collect()
     } else {

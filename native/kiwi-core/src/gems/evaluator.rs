@@ -139,10 +139,6 @@ pub struct StatInput {
     pub extra_containers: i64,
 }
 
-fn zero_div() -> GemError {
-    GemError::ZeroDivision("float division by zero".into())
-}
-
 fn candidate(
     data: &Upgrades,
     tier: u8,
@@ -169,11 +165,11 @@ fn candidate(
         let base = data.stat_base(tier, gem_type, element, stat)?;
         let [t0, t1] = data.threshold(tier, gem_type, element, stat)?;
         if base == 0.0 {
-            return Err(zero_div());
+            return Err(GemError::zero_div());
         }
         let threshold_progress = ((value / base) - increments as f64) / containers as f64;
         if t1 - t0 == 0.0 {
-            return Err(zero_div());
+            return Err(GemError::zero_div());
         }
         let raw = (threshold_progress - t0) / (t1 - t0);
         let display = clamp01(raw);

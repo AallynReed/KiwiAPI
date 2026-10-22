@@ -199,24 +199,13 @@ fn validate_claims(c: &Claims, now: f64) -> Result<(), JwtError> {
             return Err(JwtError::Expired);
         }
     }
-    if c.get("aud").is_some_and(truthy) {
+    if c.get("aud").is_some_and(crate::features::py_truthy) {
         return Err(JwtError::Claim);
     }
     if c.get("sub").is_some_and(|s| !s.is_string()) || c.get("jti").is_some_and(|s| !s.is_string()) {
         return Err(JwtError::Claim);
     }
     Ok(())
-}
-
-fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64() != Some(0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
-    }
 }
 
 pub fn now_f64() -> f64 {

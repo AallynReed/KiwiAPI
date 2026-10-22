@@ -15,8 +15,8 @@ use serde_json::Value;
 use super::*;
 use crate::{pyjson, validation::Params};
 
-fn store() -> Store {
-    Store::new(None, PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata"))
+fn store() -> Gamedata {
+    Gamedata::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata"), None)
 }
 
 fn fixture(name: &str) -> Value {
@@ -47,7 +47,7 @@ fn query<Q: FromParams>(qs: &str, run: impl FnOnce(Q) -> Reply) -> (u16, String)
     }
 }
 
-async fn post<B: FromBody>(case: &Value, run: fn(&Store, B) -> Reply, s: &Store) -> (u16, String) {
+async fn post<B: FromBody>(case: &Value, run: fn(&Gamedata, B) -> Reply, s: &Gamedata) -> (u16, String) {
     let mut headers = HeaderMap::new();
     if let Some(ct) = case["content_type"].as_str() {
         headers.insert(header::CONTENT_TYPE, HeaderValue::from_str(ct).expect("content type"));
@@ -63,7 +63,7 @@ async fn post<B: FromBody>(case: &Value, run: fn(&Store, B) -> Reply, s: &Store)
     }
 }
 
-async fn dispatch(s: &Store, case: &Value) -> (u16, String) {
+async fn dispatch(s: &Gamedata, case: &Value) -> (u16, String) {
     let path = case["path"].as_str().expect("path");
     let (route, qs) = path.split_once('?').unwrap_or((path, ""));
     match route.trim_start_matches("/v1/gems/") {

@@ -50,6 +50,7 @@ use axum::{
     body::Body,
     extract::{FromRequest, FromRequestParts, RawPathParams, Request},
     http::{HeaderMap, StatusCode, header, request::Parts},
+    response::{IntoResponse, Response},
 };
 use mongodb::bson::oid::ObjectId;
 use serde_json::{Map, Value};
@@ -1452,6 +1453,14 @@ fn finish_body<T>(v: Validator, value: Option<T>) -> Result<T, ApiError> {
     }
 }
 
+/// Validates a body [`read_body`] already read, for routes that run their
+/// dependencies in between.
+pub fn validate<T: FromBody>(body: &BodyInput) -> Result<T, ApiError> {
+    let mut v = Validator::default();
+    let value = body_value::<T>(&mut v, body);
+    finish_body(v, value)
+}
+
 /// A JSON body validated by `T`.
 pub struct Json<T>(pub T);
 
@@ -1461,9 +1470,7 @@ impl<S: Send + Sync, T: FromBody> FromRequest<S> for Json<T> {
     async fn from_request(req: Request, _state: &S) -> Result<Self, ApiError> {
         let (parts, body) = req.into_parts();
         let body = read_body(&parts.headers, body).await?;
-        let mut v = Validator::default();
-        let value = body_value::<T>(&mut v, &body);
-        finish_body(v, value).map(Json)
+        validate(&body).map(Json)
     }
 }
 
@@ -1482,5 +1489,28 @@ impl<S: Send + Sync, P: FromParams, B: FromBody> FromRequest<S> for Checked<P, B
         let mut v = p.v;
         let value = body_value::<B>(&mut v, &body);
         finish_body(v, value.map(|b| (params, b))).map(|(p, b)| Checked(p, b))
+    }
+}
+
+/// A body behind dependencies, in FastAPI's order: read and decoded first (a
+/// syntax error is a 422 before any dependency runs), then the dependency
+/// extractor, then validation.
+pub struct DepsThenBody<D, B>(pub D, pub B);
+
+impl<S, D, B> FromRequest<S> for DepsThenBody<D, B>
+where
+    S: Send + Sync,
+    D: FromRequestParts<S> + Send,
+    D::Rejection: IntoResponse,
+    B: FromBody + Send,
+{
+    type Rejection = Response;
+
+    async fn from_request(req: Request, state: &S) -> Result<Self, Response> {
+        let (mut parts, body) = req.into_parts();
+        let body = read_body(&parts.headers, body).await.map_err(IntoResponse::into_response)?;
+        let deps = D::from_request_parts(&mut parts, state).await.map_err(IntoResponse::into_response)?;
+        let value = validate::<B>(&body).map_err(IntoResponse::into_response)?;
+        Ok(DepsThenBody(deps, value))
     }
 }

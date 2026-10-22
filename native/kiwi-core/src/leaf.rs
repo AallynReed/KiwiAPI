@@ -2,15 +2,7 @@
 //! (`app/supporters/service.py`) and the design-feedback tallies
 //! (`app/design_feedback/service.py`).
 
-/// `str.isspace()` for one char (Rust's `is_whitespace` lacks U+001C..U+001F).
-fn is_py_space(c: char) -> bool {
-    c.is_whitespace() || ('\u{1c}'..='\u{1f}').contains(&c)
-}
-
-/// `str.strip()` with no arguments.
-pub fn py_strip(s: &str) -> &str {
-    s.trim_matches(is_py_space)
-}
+pub use crate::pystr::strip as py_strip;
 
 /// `str.strip().lower()`.
 pub fn normalize_handle(s: &str) -> String {

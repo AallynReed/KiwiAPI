@@ -5,13 +5,10 @@ use std::{sync::OnceLock, time::Duration};
 
 use bytes::Bytes;
 
-pub const KIWI_UA: &str = "KiwiAPI/1.0";
-
 fn client() -> &'static reqwest::Client {
     static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
     CLIENT.get_or_init(|| {
-        let _ = rustls::crypto::ring::default_provider().install_default();
-        reqwest::Client::builder().redirect(reqwest::redirect::Policy::limited(20)).build().expect("reqwest client")
+        crate::http::client_builder().redirect(reqwest::redirect::Policy::limited(20)).build().expect("reqwest client")
     })
 }
 

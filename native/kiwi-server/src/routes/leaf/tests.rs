@@ -17,7 +17,6 @@ use serde_json::{Value, json};
 use tower::ServiceExt;
 
 use super::{
-    body::validate,
     design_feedback::{Days, DesignVote, count_of, since_day, summary_body, tally_docs},
     meta,
     moderation::{reachable, report_doc, target_query},
@@ -32,7 +31,7 @@ use crate::{
     ratelimit::RateLimitInfo,
     request_id,
     state::{AppState, Inner},
-    validation::{FromParams, Params, read_body},
+    validation::{FromParams, Params, read_body, validate},
 };
 
 fn golden() -> &'static Value {

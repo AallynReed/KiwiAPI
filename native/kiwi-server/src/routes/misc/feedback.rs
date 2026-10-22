@@ -19,7 +19,7 @@ use regex::Regex;
 use serde_json::{Map, Value, json};
 
 use crate::{
-    auth::client::client_ip,
+    auth::{client::client_ip, pyutil::bson_int},
     dt,
     error::ApiError,
     pyjson::{self, PydanticJson},
@@ -285,10 +285,6 @@ fn opt(v: &Option<String>) -> Bson {
     v.as_ref().map_or(Bson::Null, |s| Bson::String(s.clone()))
 }
 
-fn int(n: usize) -> Bson {
-    i32::try_from(n).map_or(Bson::Int64(n as i64), Bson::Int32)
-}
-
 async fn setting(state: &AppState, key: &str) -> Result<i64, Response> {
     match get_setting(state, key).await {
         Ok(v) => v.as_i64().ok_or_else(|| ApiError::internal().into_response()),
@@ -375,7 +371,7 @@ pub async fn post_feedback(State(state): State<AppState>, req: Request) -> Respo
     let attachments: Vec<Bson> = files
         .iter()
         .map(|(name, data, ctype)| {
-            Bson::Document(doc! {"filename": name, "content_type": ctype, "size": int(data.len())})
+            Bson::Document(doc! {"filename": name, "content_type": ctype, "size": bson_int(data.len() as i64)})
         })
         .collect();
     let entry: Document = doc! {
@@ -425,18 +421,10 @@ pub struct Webhook {
     pub files: Vec<(String, Vec<u8>, String)>,
 }
 
-/// `httpx.AsyncClient(timeout=20)` over rustls (ring, webpki roots).
+/// `httpx.AsyncClient(timeout=20)`.
 pub fn http_client() -> Option<&'static reqwest::Client> {
     static HTTP: LazyLock<Option<reqwest::Client>> = LazyLock::new(|| {
-        let roots = rustls::RootCertStore { roots: webpki_roots::TLS_SERVER_ROOTS.to_vec() };
-        let provider = std::sync::Arc::new(rustls::crypto::ring::default_provider());
-        let tls = rustls::ClientConfig::builder_with_provider(provider)
-            .with_safe_default_protocol_versions()
-            .map_err(|e| tracing::error!("feedback webhook TLS: {e}"))
-            .ok()?
-            .with_root_certificates(roots)
-            .with_no_client_auth();
-        let client = reqwest::Client::builder().timeout(Duration::from_secs(20)).tls_backend_preconfigured(tls).build();
+        let client = crate::http::client_builder().timeout(Duration::from_secs(20)).build();
         client.map_err(|e| tracing::error!("feedback webhook client: {e}")).ok()
     });
     HTTP.as_ref()
