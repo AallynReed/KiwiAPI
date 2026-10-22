@@ -284,21 +284,31 @@ pub async fn write_snapshot(pool: &Pool, boards: &[Board<'_>], anchor: i64) -> P
     tx.batch_execute(&partition_ddl(anchor)).await.map_err(pg_err)?;
     let cleared = exec(&*tx, "DELETE FROM entry WHERE anchor = $1", &[anchor]).await?;
 
+    // executemany: one statement, every row pipelined in order.
     if !boards.is_empty() {
         let stmt = tx.prepare(BOARD_UPSERT).await.map_err(pg_err)?;
-        for (i, b) in boards.iter().enumerate() {
-            let uuid = int4(b.uuid, &format!("query argument $1 in element #{i} of executemany() sequence"))?;
-            tx.execute(&stmt, &[&uuid, &b.name_id, &b.name, &b.category_id, &b.category]).await.map_err(pg_err)?;
+        let uuids = boards
+            .iter()
+            .enumerate()
+            .map(|(i, b)| int4(b.uuid, &format!("query argument $1 in element #{i} of executemany() sequence")))
+            .collect::<PgResult<Vec<i32>>>()?;
+        let mut pending = Vec::with_capacity(boards.len());
+        for (b, uuid) in boards.iter().zip(&uuids) {
+            let row: [&(dyn ToSql + Sync); 5] = [uuid, &b.name_id, &b.name, &b.category_id, &b.category];
+            pending.push(tx.execute_raw(&stmt, row));
         }
+        futures::future::try_join_all(pending).await.map_err(pg_err)?;
     }
     let contests: Vec<(i32, &str)> = boards.iter().filter_map(|b| Some((b.uuid as i32, b.contest?))).collect();
     if !contests.is_empty() {
         let stmt = tx.prepare(CONTEST_INSERT).await.map_err(pg_err)?;
-        let anchor_ty = stmt.params()[1].clone();
-        for (uuid, kind) in contests {
-            let a = int_arg(&anchor_ty, 1, anchor)?;
-            tx.execute(&stmt, &[&uuid, a.as_ref(), &kind]).await.map_err(pg_err)?;
+        let a = int_arg(&stmt.params()[1], 1, anchor)?;
+        let mut pending = Vec::with_capacity(contests.len());
+        for (uuid, kind) in &contests {
+            let row: [&(dyn ToSql + Sync); 3] = [uuid, a.as_ref(), kind];
+            pending.push(tx.execute_raw(&stmt, row));
         }
+        futures::future::try_join_all(pending).await.map_err(pg_err)?;
     }
 
     tx.batch_execute(STAGING).await.map_err(pg_err)?;

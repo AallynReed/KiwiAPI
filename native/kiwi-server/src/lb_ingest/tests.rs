@@ -238,14 +238,11 @@ fn outcome_of(d: &Value) -> Outcome {
 async fn insert_dump_composition() {
     for c in cases("insert_dump") {
         let st = FakeStore { case: c, calls: Mutex::new(Vec::new()) };
-        let got = ingest::insert_dump(
-            &st,
-            s(&c["text"]),
-            c["timestamp"].as_i64(),
-            c["backfill"].as_bool().unwrap(),
-            i(&c["now"]),
-        )
-        .await;
+        let got =
+            ingest::insert_dump(&st, s(&c["text"]), c["timestamp"].as_i64(), c["backfill"].as_bool().unwrap(), &|| {
+                i(&c["now"])
+            })
+            .await;
         match got {
             Ok(o) => assert_eq!(outcome_json(&o), c["summary"], "{}", c["name"]),
             Err(e) => assert_eq!(e, s(&c["error"]), "{}", c["name"]),
@@ -684,6 +681,6 @@ async fn postgres_write_and_jobs() {
     let rebuilt = store::rebuild_player_board_agg(&pool, &|_, _, _| {}).await.unwrap();
     assert_eq!(rebuilt, 2);
     store::backfill_last_rise(&pool, &|_, _, _| {}).await.unwrap();
-    let out = ingest::insert_dump(&ingest::Live(&st), text, Some(anchor), true, anchor).await.unwrap();
+    let out = ingest::insert_dump(&ingest::Live(&st), text, Some(anchor), true, &|| anchor).await.unwrap();
     assert!(matches!(out, Outcome::Stored { .. }));
 }

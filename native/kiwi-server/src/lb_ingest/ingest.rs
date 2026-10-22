@@ -129,13 +129,14 @@ async fn assess(st: &impl IngestStore, boards: &[Board<'_>], anchor: i64) -> Res
         .map(|v| (v, prev, prev_counts.len(), cur_counts.len())))
 }
 
-/// `insert_dump(text, timestamp=, allow_backfill=)` at `now`; Err is `str(exc)`.
+/// `insert_dump(text, timestamp=, allow_backfill=)`, reading `clock` once the
+/// dump is parsed (as Python does); Err is `str(exc)`.
 pub async fn insert_dump(
     st: &impl IngestStore,
     text: &str,
     timestamp: Option<i64>,
     allow_backfill: bool,
-    now: i64,
+    clock: &(dyn Fn() -> i64 + Sync),
 ) -> Result<Outcome, String> {
     // Off the async workers (a full dump is ~700k rows), borrowing the text.
     let boards = match tokio::runtime::Handle::current().runtime_flavor() {
@@ -147,6 +148,7 @@ pub async fn insert_dump(
         return Ok(Outcome::Empty);
     }
 
+    let now = clock();
     let mut rejected_timestamp = None;
     let created_at = match timestamp {
         Some(ts) if ts > 0 => match lbparse::normalize_timestamp(ts, now, allow_backfill)? {
@@ -314,8 +316,8 @@ pub async fn process_dump(
     allow_backfill: bool,
     warm: bool,
 ) -> Option<Outcome> {
-    let now = chrono::Utc::now().timestamp();
-    let result = insert_dump(&Live(state), &text, timestamp, allow_backfill, now).await;
+    let clock = || chrono::Utc::now().timestamp();
+    let result = insert_dump(&Live(state), &text, timestamp, allow_backfill, &clock).await;
     match &result {
         Err(e) => tracing::error!("leaderboard ingest processing failed: {e}"),
         Ok(Outcome::Skipped { created_at, verdict, .. }) => {
