@@ -9,6 +9,7 @@ pub mod config;
 pub mod db;
 pub mod dt;
 pub mod error;
+pub mod events;
 pub mod features;
 pub mod feeds;
 pub mod gamedata;

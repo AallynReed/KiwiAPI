@@ -44,16 +44,16 @@ fn ported() -> Router<AppState> {
         .merge(crate::lb_warmer::router())
         .merge(crate::market::router())
         .merge(store::router())
+        .merge(crate::events::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's
 /// `{uuid:int}` next to literals Python still serves): the rest go to Python
 /// after routing but before the ported stack has touched the request.
 async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next) -> Response {
-    let defer = req
-        .extensions()
-        .get::<MatchedPath>()
-        .is_some_and(|m| crate::lbread::defers(m.as_str(), req.method(), req.uri().path()));
+    let defer = req.extensions().get::<MatchedPath>().is_some_and(|m| {
+        crate::lbread::defers(m.as_str(), req.method(), req.uri().path()) || crate::events::defers(m.as_str())
+    });
     if defer && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
         return proxy(State(state), ConnectInfo(peer), req).await;
     }

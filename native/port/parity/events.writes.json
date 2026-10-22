@@ -1,0 +1,9 @@
+[
+ {"name": "stream_seeded", "path": "/v1/events/stream", "stream_seconds": 4, "sse_mask": ["ts", "data.seconds_remaining"],
+  "compare_headers": ["connection", "x-accel-buffering", "x-ratelimit-limit"]},
+ {"name": "stream_seeded_token", "path": "/v1/events/stream", "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"},
+  "stream_seconds": 3, "sse_mask": ["ts", "data.seconds_remaining"], "compare_headers": ["connection", "x-accel-buffering"]},
+ {"name": "stream_post_405", "method": "POST", "path": "/v1/events/stream", "body": {}},
+ {"name": "stream_delete_405", "method": "DELETE", "path": "/v1/events/stream"},
+ {"name": "stream_head_405", "method": "HEAD", "path": "/v1/events/stream"}
+]

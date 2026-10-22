@@ -27,6 +27,9 @@ bodies are then compared re-serialized instead of byte for byte),
 ``allow_diff`` (``status``, ``body``, ``capture`` or ``header:<name>``:
 reported but not failing) with a ``reason``, ``capture``, and ``sleep``
 (seconds to wait first, for background jobs the previous requests started).
+``stream_seconds`` reads a never-ending body (SSE) for that long and compares
+what arrived; ``sse_mask`` masks fields of every ``data:`` JSON line the way
+``mask`` does, after checking each line is exactly ``json.dumps`` of itself.
 
 ``${NAME}`` in the path, a header value or a ``body`` string (also strings
 inside a JSON body) expands per target: first what ``capture`` took from that
@@ -170,12 +173,47 @@ def send(target: Target, spec: dict, rid: str, timeout: float, defaults=(), spec
         for k, v in headers:
             conn.putheader(k, v)
         conn.endheaders(body)
+        sock = conn.sock
         resp = conn.getresponse()
+        if spec.get("stream_seconds"):
+            return Reply(resp.status, resp.getheaders(), _read_for(resp, sock, float(spec["stream_seconds"])))
         return Reply(resp.status, resp.getheaders(), resp.read())
     except Exception as e:  # noqa: BLE001 - any transport failure is a reportable result
         return Reply(0, [], b"", error=f"{type(e).__name__}: {e}")
     finally:
         conn.close()
+
+
+def _read_for(resp, sock, seconds: float) -> bytes:
+    """What a body that never ends sends within ``seconds``."""
+    deadline = time.monotonic() + seconds
+    out = b""
+    while (left := deadline - time.monotonic()) > 0:
+        sock.settimeout(left)
+        try:
+            chunk = resp.read1(65536)
+        except TimeoutError:
+            break
+        if not chunk:
+            break
+        out += chunk
+    return out
+
+
+def _sse_normalize(body: bytes, paths: list[str]) -> tuple[bytes, list[str]]:
+    """The body with ``paths`` masked in each ``data:`` line, and the lines that
+    are not byte for byte ``json.dumps`` of their own JSON."""
+    lines, bad = [], []
+    for line in body.split(b"\n"):
+        doc = _json(line[6:]) if line.startswith(b"data: ") else None
+        if doc is not None:
+            if json.dumps(doc).encode() != line[6:]:
+                bad.append(line[:160].decode("utf-8", "replace"))
+            for p in paths:
+                _mask(doc, p)
+            line = b"data: " + json.dumps(doc).encode()
+        lines.append(line)
+    return b"\n".join(lines), bad
 
 
 _PATH_TOKEN = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
@@ -271,6 +309,10 @@ def compare(spec: dict, a: Reply, b: Reply, raw: bool) -> list[tuple[str, str]]:
     da, db = a.decoded(), b.decoded()
     if raw and a.body != b.body:
         diffs.append(("body", "encoded body bytes differ\n    " + _first_difference(a.body, b.body)))
+    if spec.get("sse_mask") is not None:
+        (da, bad_a), (db, bad_b) = _sse_normalize(da, spec["sse_mask"]), _sse_normalize(db, spec["sse_mask"])
+        for side, bad in (("A", bad_a), ("B", bad_b)):
+            diffs.extend(("body", f"{side} data line is not json.dumps output: {line}") for line in bad)
     if spec.get("mask"):
         ja, jb = _json(da), _json(db)
         if ja is None or jb is None:

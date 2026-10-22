@@ -41,6 +41,8 @@
 # IMG (default trove-app:latest) runs every container; RS_IMG overrides it for
 # B's kiwi-server alone, so a branch build is tested without retagging the
 # production image. Wait budget per service: WAIT seconds (default 180).
+# RS_OWNS (default empty) is the sandbox kiwi-server's RUST_OWNS: event_listener
+# moves /v1/events/stream to Rust there.
 set -euo pipefail
 
 NET=kiwi-parity
@@ -77,7 +79,7 @@ up() {
   docker run -d --rm --name kp-py --network "$NET" "${ENV[@]}" -e RUST_OWNS="$LOOPS" \
     -v "$PWD/app:/app/app:ro" -v "$PWD/.gamedata:/data/gamedata:ro" -v "$PWD/site:/app/site:ro" \
     "$IMG" uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*' >/dev/null
-  docker run -d --rm --name kp-rs --network "$NET" "${ENV[@]}" -e RUST_OWNS= \
+  docker run -d --rm --name kp-rs --network "$NET" "${ENV[@]}" -e RUST_OWNS="${RS_OWNS:-}" \
     -e PY_UPSTREAM=http://kp-py:8000 -e KIWI_BIND=0.0.0.0:8000 \
     -v "$PWD/app:/app/app:ro" -v "$PWD/.gamedata:/data/gamedata:ro" -v "$PWD/site:/app/site:ro" \
     "$IMG" kiwi-server >/dev/null
@@ -205,7 +207,7 @@ twin_up() {
   done
   twin_py a "$(loops_without "$moved")"
   twin_py b
-  docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" -e RUST_OWNS="$moved" \
+  docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" -e RUST_OWNS="${RS_OWNS:-$moved}" \
     -e KIWI_BIND=0.0.0.0:8000 -e PY_UPSTREAM=http://api-py:8000 -e FORWARDED_ALLOW_IPS='*' \
     "${TWIN_MOUNTS[@]}" "$RS_IMG" kiwi-server >/dev/null
   twin_wait
