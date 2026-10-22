@@ -18,7 +18,8 @@ SPEC.json is a list of requests:
     ]
 
 Per request: ``method`` (default GET), ``path`` (with query), ``headers`` (object,
-or list of [name, value] pairs to repeat a header), ``body`` (a string is sent as
+or list of [name, value] pairs to repeat a header; values expand ``${VAR}`` from
+the environment, e.g. a token), ``body`` (a string is sent as
 UTF-8, anything else as JSON) or ``body_b64``, ``compare_headers`` (extra
 headers to compare), ``ignore_headers``, ``mask`` (JSON fields replaced before
 comparing; the bodies are then compared re-serialized instead of byte for
@@ -48,6 +49,7 @@ import difflib
 import gzip
 import http.client
 import json
+import os
 import re
 import sys
 import urllib.parse
@@ -79,7 +81,7 @@ class Reply:
 
 def _request_headers(spec: dict) -> list[tuple[str, str]]:
     h = spec.get("headers") or {}
-    return [(k, str(v)) for k, v in (h.items() if isinstance(h, dict) else h)]
+    return [(k, os.path.expandvars(str(v))) for k, v in (h.items() if isinstance(h, dict) else h)]
 
 
 def _request_body(spec: dict) -> bytes | None:
