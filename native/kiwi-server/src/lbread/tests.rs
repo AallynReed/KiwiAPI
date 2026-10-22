@@ -585,19 +585,15 @@ async fn deferred_requests_reach_python_untouched() {
         }
     };
     for (method, path) in [
-        (Method::POST, "/v1/leaderboards/insert"),
+        (Method::POST, "/v1/leaderboards/warm"),
+        (Method::POST, "/v1/leaderboards/delete-anchor"),
+        (Method::POST, "/v1/leaderboards/reingest-backlog"),
         (Method::POST, "/v1/leaderboards/1000"),
-        (Method::GET, "/v1/leaderboards/cheaters"),
-        (Method::HEAD, "/v1/leaderboards/renames"),
         (Method::GET, "/v1/leaderboards/%31"),
         (Method::GET, "/v1/leaderboards/2147483648"),
-        (Method::GET, "/v1/leaderboards/renames/history"),
-        (Method::GET, "/v1/leaderboards/players/Alpha/history"),
         (Method::GET, "/v1/leaderboards/"),
         (Method::GET, "/v1/leaderboards/1000/"),
-        (Method::GET, "/site/leaderboards/activity/history"),
-        (Method::GET, "/site/leaderboards/renames/health"),
-        (Method::GET, "/site/leaderboards/players/Alpha/profile"),
+        (Method::GET, "/site/leaderboards/nope/health"),
     ] {
         let resp = send(method.clone(), path).await;
         assert_eq!(resp.headers().get("x-upstream").map(|v| v.to_str().unwrap()), Some("py"), "{method} {path}");

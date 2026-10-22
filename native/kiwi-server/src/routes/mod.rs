@@ -36,6 +36,13 @@ fn ported() -> Router<AppState> {
         .merge(btt::router())
         .merge(crate::feeds::router())
         .merge(crate::lbread::router())
+        .merge(lb_players::router())
+        .merge(crate::activity::router())
+        .merge(lb_names::router())
+        .merge(crate::lb_ingest::router())
+        .merge(crate::cheaters::router())
+        .merge(crate::market::router())
+        .merge(store::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's
@@ -50,13 +57,6 @@ async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next
         return proxy(State(state), ConnectInfo(peer), req).await;
     }
     next.run(req).await
-        .merge(lb_players::router())
-        .merge(crate::activity::router())
-        .merge(lb_names::router())
-        .merge(crate::lb_ingest::router())
-        .merge(crate::cheaters::router())
-        .merge(crate::market::router())
-        .merge(store::router())
 }
 
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`
