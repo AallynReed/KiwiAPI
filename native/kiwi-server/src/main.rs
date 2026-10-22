@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use std::time::Duration;
 
-use kiwi_server::{config::Settings, routes, state::AppState, usage};
+use kiwi_server::{config::Settings, jobs, routes, state::AppState, usage};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -17,6 +17,7 @@ async fn main() -> anyhow::Result<()> {
     let settings = Settings::from_env()?;
     let bind: SocketAddr = settings.bind.parse()?;
     let state = AppState::new(settings).await?;
+    jobs::start(&state);
     let app = routes::app(state);
 
     let listener = tokio::net::TcpListener::bind(bind).await?;

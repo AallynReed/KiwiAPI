@@ -72,6 +72,8 @@ x-api-environment: &api-environment
   # cutover, when the website moves to its own container, set this to the api
   # host so Discord/webhook embeds keep resolving. See app/core/config.py.
   ASSET_BASE_URL: ${ASSET_BASE_URL:-}
+  # Background loops kiwi-server runs instead of Python (app/core/rust_owns.py).
+  RUST_OWNS: ${RUST_OWNS:-}
 
 x-api-volumes: &api-volumes
   # Bind-mount the source so host edits are picked up (api-py runs it; api has it
