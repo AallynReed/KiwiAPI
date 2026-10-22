@@ -8,6 +8,7 @@ pub mod db;
 pub mod dt;
 pub mod error;
 pub mod features;
+pub mod feeds;
 pub mod gamedata;
 pub mod gems;
 pub mod jobs;

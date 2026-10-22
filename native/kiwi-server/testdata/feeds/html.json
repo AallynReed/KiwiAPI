@@ -1,0 +1,1728 @@
+{
+ "python": "3.14.3",
+ "trees": [
+  {
+   "html": "plain text only",
+   "tree": [
+    [
+     "NavigableString",
+     "plain text only"
+    ]
+   ]
+  },
+  {
+   "html": "<p>a<b>bold</b>c</p>",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "a"
+      ],
+      [
+       "b",
+       [],
+       [
+        [
+         "NavigableString",
+         "bold"
+        ]
+       ]
+      ],
+      [
+       "NavigableString",
+       "c"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<div class='x  y\tz' id=main data-v-1>t</div>",
+   "tree": [
+    [
+     "div",
+     [
+      [
+       "class",
+       [
+        "x",
+        "y",
+        "z"
+       ]
+      ],
+      [
+       "id",
+       "main"
+      ],
+      [
+       "data-v-1",
+       ""
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "t"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<a href=//www.bilibili.com/video/BV1/ class=\"\">link</a>",
+   "tree": [
+    [
+     "a",
+     [
+      [
+       "href",
+       "//www.bilibili.com/video/BV1/"
+      ],
+      [
+       "class",
+       []
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "link"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<img src=a.png><source srcset=\"x\"><br/><p>after</p>",
+   "tree": [
+    [
+     "img",
+     [
+      [
+       "src",
+       "a.png"
+      ]
+     ],
+     []
+    ],
+    [
+     "source",
+     [
+      [
+       "srcset",
+       "x"
+      ]
+     ],
+     []
+    ],
+    [
+     "br",
+     [],
+     []
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "after"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<source x=1></source><p>s</p>",
+   "tree": [
+    [
+     "source",
+     [
+      [
+       "x",
+       "1"
+      ]
+     ],
+     []
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "s"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<source><source/><p>nested?</p></source>",
+   "tree": [
+    [
+     "source",
+     [],
+     []
+    ],
+    [
+     "source",
+     [],
+     [
+      [
+       "p",
+       [],
+       [
+        [
+         "NavigableString",
+         "nested?"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<div><span>unclosed<p>para</div>tail",
+   "tree": [
+    [
+     "div",
+     [],
+     [
+      [
+       "span",
+       [],
+       [
+        [
+         "NavigableString",
+         "unclosed"
+        ],
+        [
+         "p",
+         [],
+         [
+          [
+           "NavigableString",
+           "para"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    [
+     "NavigableString",
+     "tail"
+    ]
+   ]
+  },
+  {
+   "html": "</p>stray end<div>x</div></div></div>",
+   "tree": [
+    [
+     "NavigableString",
+     "stray end"
+    ],
+    [
+     "div",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<!-- c1 --><!----><!--[--><!--]--><!--->x<!-->y",
+   "tree": [
+    [
+     "Comment",
+     " c1 "
+    ],
+    [
+     "Comment",
+     " "
+    ],
+    [
+     "Comment",
+     "["
+    ],
+    [
+     "Comment",
+     "]"
+    ],
+    [
+     "Comment",
+     "->x<!"
+    ],
+    [
+     "NavigableString",
+     "y"
+    ]
+   ]
+  },
+  {
+   "html": "<!--a--!>b<!-- -- >c-->d",
+   "tree": [
+    [
+     "Comment",
+     "a"
+    ],
+    [
+     "NavigableString",
+     "b"
+    ],
+    [
+     "Comment",
+     " -- >c"
+    ],
+    [
+     "NavigableString",
+     "d"
+    ]
+   ]
+  },
+  {
+   "html": "<!DOCTYPE html><html><head><title>T &amp; <b>x</b></title></head><body>b</body></html>",
+   "tree": [
+    [
+     "Doctype",
+     "html"
+    ],
+    [
+     "html",
+     [],
+     [
+      [
+       "head",
+       [],
+       [
+        [
+         "title",
+         [],
+         [
+          [
+           "NavigableString",
+           "T & <b>x</b>"
+          ]
+         ]
+        ]
+       ]
+      ],
+      [
+       "body",
+       [],
+       [
+        [
+         "NavigableString",
+         "b"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<script>var a = '<div>'; if (a < b && c > d) {}</script><p>after script</p>",
+   "tree": [
+    [
+     "script",
+     [],
+     [
+      [
+       "Script",
+       "var a = '<div>'; if (a < b && c > d) {}"
+      ]
+     ]
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "after script"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<script>x</scripty>y</script >z",
+   "tree": [
+    [
+     "script",
+     [],
+     [
+      [
+       "Script",
+       "x</scripty>y"
+      ]
+     ]
+    ],
+    [
+     "NavigableString",
+     "z"
+    ]
+   ]
+  },
+  {
+   "html": "<style>p{color:red}</style><textarea>&lt;a&gt; <b></textarea>",
+   "tree": [
+    [
+     "style",
+     [],
+     [
+      [
+       "Stylesheet",
+       "p{color:red}"
+      ]
+     ]
+    ],
+    [
+     "textarea",
+     [],
+     [
+      [
+       "NavigableString",
+       "<a> <b>"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<template>tpl text<b>in</b></template><rt>ruby</rt><rp>(</rp>",
+   "tree": [
+    [
+     "template",
+     [],
+     [
+      [
+       "TemplateString",
+       "tpl text"
+      ],
+      [
+       "b",
+       [],
+       [
+        [
+         "TemplateString",
+         "in"
+        ]
+       ]
+      ]
+     ]
+    ],
+    [
+     "rt",
+     [],
+     [
+      [
+       "RubyTextString",
+       "ruby"
+      ]
+     ]
+    ],
+    [
+     "rp",
+     [],
+     [
+      [
+       "RubyParenthesisString",
+       "("
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "&amp; &lt; &gt; &quot; &#39; &#x27; &#169; &copy &copyx &nbsp;&unknown; &a-b",
+   "tree": [
+    [
+     "NavigableString",
+     "& < > \" ' ' © © &copyx  &unknown &a-b"
+    ]
+   ]
+  },
+  {
+   "html": "&#128; &#129; &#150; &#0; &#65; &#x1F600; &#1114112; &#x110000;",
+   "tree": [
+    [
+     "NavigableString",
+     "€  – \u0000 A 😀 � �"
+    ]
+   ]
+  },
+  {
+   "html": "a & b &# &#; &#x; &#xZ &",
+   "tree": [
+    [
+     "NavigableString",
+     "a & b &# &#; &#x; &#xZ &"
+    ]
+   ]
+  },
+  {
+   "html": "<p title=\"&amp;&amp=x&copy;&copyx &#65&#x42;\">t</p>",
+   "tree": [
+    [
+     "p",
+     [
+      [
+       "title",
+       "&&amp=x©&copyx AB"
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "t"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<p a=\"1\" a=\"2\" B=3 c d='' e = 'q' f= g =h>dup</p>",
+   "tree": [
+    [
+     "p",
+     [
+      [
+       "a",
+       "2"
+      ],
+      [
+       "b",
+       "3"
+      ],
+      [
+       "c",
+       ""
+      ],
+      [
+       "d",
+       ""
+      ],
+      [
+       "e",
+       "q"
+      ],
+      [
+       "f",
+       "g"
+      ],
+      [
+       "=h",
+       ""
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "dup"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<p x='unterminated>after</p>",
+   "tree": []
+  },
+  {
+   "html": "<p x= 'unterminated y=1>after</p>",
+   "tree": [
+    [
+     "p",
+     [
+      [
+       "x",
+       ""
+      ],
+      [
+       "'unterminated",
+       ""
+      ],
+      [
+       "y",
+       "1"
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "after"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<p x='a'y=\"b\"z=c/>slashy</p>",
+   "tree": [
+    [
+     "p",
+     [
+      [
+       "x",
+       "a"
+      ],
+      [
+       "y",
+       "b"
+      ],
+      [
+       "z",
+       "c/"
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "slashy"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<a/b/c>weird</a>",
+   "tree": [
+    [
+     "a",
+     [
+      [
+       "b",
+       ""
+      ],
+      [
+       "c",
+       ""
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "weird"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<A HREF='X'>Upper</A>",
+   "tree": [
+    [
+     "a",
+     [
+      [
+       "href",
+       "X"
+      ]
+     ],
+     [
+      [
+       "NavigableString",
+       "Upper"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<p>line1\n  <span>  </span>\n\n<span> </span></p>",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "line1\n  "
+      ],
+      [
+       "span",
+       [],
+       [
+        [
+         "NavigableString",
+         " "
+        ]
+       ]
+      ],
+      [
+       "NavigableString",
+       "\n"
+      ],
+      [
+       "span",
+       [],
+       [
+        [
+         "NavigableString",
+         " "
+        ]
+       ]
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<pre>  \n  </pre><p>  \n  </p>",
+   "tree": [
+    [
+     "pre",
+     [],
+     [
+      [
+       "NavigableString",
+       "  \n  "
+      ]
+     ]
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "\n"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<![CDATA[cdata text]]><p>x</p>",
+   "tree": [
+    [
+     "CData",
+     "cdata text"
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<?php echo 1 ?><p>pi</p>",
+   "tree": [
+    [
+     "ProcessingInstruction",
+     "php echo 1 ?"
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "pi"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<!weird decl><p>bogus</p>",
+   "tree": [
+    [
+     "Comment",
+     "weird decl"
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "bogus"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "</>empty end</ 1>bogus end<p>z</p>",
+   "tree": [
+    [
+     "NavigableString",
+     "empty end"
+    ],
+    [
+     "Comment",
+     " 1"
+    ],
+    [
+     "NavigableString",
+     "bogus end"
+    ],
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "z"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p><",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ],
+    [
+     "NavigableString",
+     "<"
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p></",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ],
+    [
+     "NavigableString",
+     "</"
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p></di",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p><div",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p><!--unclosed",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ],
+    [
+     "Comment",
+     "unclosed"
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p><!doctype",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ],
+    [
+     "Doctype",
+     " "
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p><?unclosed",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ],
+    [
+     "ProcessingInstruction",
+     "unclosed"
+    ]
+   ]
+  },
+  {
+   "html": "<p>x</p><![CDATA[unclosed",
+   "tree": [
+    [
+     "p",
+     [],
+     [
+      [
+       "NavigableString",
+       "x"
+      ]
+     ]
+    ],
+    [
+     "CData",
+     "unclosed"
+    ]
+   ]
+  },
+  {
+   "html": "text &amp",
+   "tree": [
+    [
+     "NavigableString",
+     "text &"
+    ]
+   ]
+  },
+  {
+   "html": "text &#12",
+   "tree": [
+    [
+     "NavigableString",
+     "text \f"
+    ]
+   ]
+  },
+  {
+   "html": "<div class=\"bili-video-card\"><a href=\"//www.bilibili.com/video/BV9/\"><picture><source srcset=\"//i0.hdslb.com/a.jpg@1w.avif\"></picture></a><h3 class=\"bili-video-card__info--tit\" title=\"T &amp; t\">T</h3><span class=\"bili-video-card__info--author\"> au<!--c--> thor </span><span class=\"bili-video-card__info--date\"> · 03-04</span><div class=\"bili-video-card\">inner</div></div>",
+   "tree": [
+    [
+     "div",
+     [
+      [
+       "class",
+       [
+        "bili-video-card"
+       ]
+      ]
+     ],
+     [
+      [
+       "a",
+       [
+        [
+         "href",
+         "//www.bilibili.com/video/BV9/"
+        ]
+       ],
+       [
+        [
+         "picture",
+         [],
+         [
+          [
+           "source",
+           [
+            [
+             "srcset",
+             "//i0.hdslb.com/a.jpg@1w.avif"
+            ]
+           ],
+           []
+          ]
+         ]
+        ]
+       ]
+      ],
+      [
+       "h3",
+       [
+        [
+         "class",
+         [
+          "bili-video-card__info--tit"
+         ]
+        ],
+        [
+         "title",
+         "T & t"
+        ]
+       ],
+       [
+        [
+         "NavigableString",
+         "T"
+        ]
+       ]
+      ],
+      [
+       "span",
+       [
+        [
+         "class",
+         [
+          "bili-video-card__info--author"
+         ]
+        ]
+       ],
+       [
+        [
+         "NavigableString",
+         " au"
+        ],
+        [
+         "Comment",
+         "c"
+        ],
+        [
+         "NavigableString",
+         " thor "
+        ]
+       ]
+      ],
+      [
+       "span",
+       [
+        [
+         "class",
+         [
+          "bili-video-card__info--date"
+         ]
+        ]
+       ],
+       [
+        [
+         "NavigableString",
+         " · 03-04"
+        ]
+       ]
+      ],
+      [
+       "div",
+       [
+        [
+         "class",
+         [
+          "bili-video-card"
+         ]
+        ]
+       ],
+       [
+        [
+         "NavigableString",
+         "inner"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ]
+  },
+  {
+   "html": "<xmp><b>raw</b></xmp><iframe><p>if</p></iframe><noembed>&amp;</noembed><plaintext><p>rest</p>",
+   "tree": [
+    [
+     "xmp",
+     [],
+     [
+      [
+       "NavigableString",
+       "<b>raw</b>"
+      ]
+     ]
+    ],
+    [
+     "iframe",
+     [],
+     [
+      [
+       "NavigableString",
+       "<p>if</p>"
+      ]
+     ]
+    ],
+    [
+     "noembed",
+     [],
+     [
+      [
+       "NavigableString",
+       "&amp;"
+      ]
+     ]
+    ],
+    [
+     "plaintext",
+     [],
+     [
+      [
+       "NavigableString",
+       "<p>rest</p>"
+      ]
+     ]
+    ]
+   ]
+  }
+ ],
+ "errors": [
+  {
+   "html": "<p>&#12a; then more</p>",
+   "error": "ValueError"
+  }
+ ],
+ "page_raw": {
+  "tree_sha256": "e580373ddbe43daf8657474761f2619ff9afbd68af42f09f7b8d5fd2c7caf4fb",
+  "cards": [
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1Dqjz6ME5F/",
+    "title": "【宝藏世界/trove】萌新小知识P1 每日每周必做事项",
+    "author": "星河雷亚",
+    "date": " · 6月20日",
+    "srcset": "//i2.hdslb.com/bfs/archive/29a70a5bd0c85845ab9c0c01be985189576e6ed9.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1yDeE6SES5/",
+    "title": "元素觉醒爽玩！！！开局用到毕业",
+    "author": "染个白毛装老头",
+    "date": " · 9月15日",
+    "srcset": "//i2.hdslb.com/bfs/archive/f142820ad72bca3183207d0b37e1eae6a1d5bdf3.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1fcp16UEek/",
+    "title": "怎麼花最值！《瑪奇 Mobile》老玩家給新人的長期規劃建議",
+    "author": "放牧猫",
+    "date": " · 10月14日",
+    "srcset": "//i1.hdslb.com/bfs/archive/a8a9d844aef7ca1aeab62de6dcfa013132b8e462.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1Xq3czKELt/",
+    "title": "很好奇！有多少人是冲着，这主角才买的游戏？",
+    "author": "一嫩牛五方一",
+    "date": " · 2025年6月29日",
+    "srcset": "//i0.hdslb.com/bfs/archive/880e36aeec6cbfb6c29ad3d000cb7bf1c469dba7.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1ddpB6ZEhK/",
+    "title": "Steam淘到宝藏MMORPG《Norroth 诺罗斯》！还有2天开服，开荒攻略提前备好",
+    "author": "橘猫克苏鲁",
+    "date": " · 10月14日",
+    "srcset": "//i1.hdslb.com/bfs/archive/190b782352e02babc3349dcd710d5d1fa54f03ba.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1t4421S7rm/",
+    "title": "[符文铁砧+龙碎]小功略，不刷本也能有材料！  [Trove/宝藏世界]",
+    "author": "小熊L1KE",
+    "date": " · 2024年6月22日",
+    "srcset": "//i2.hdslb.com/bfs/archive/a197242e2d749bdbc4d134cfc03d156b087cebc1.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1FyJ66PEen/",
+    "title": "【GTAonline】万圣节活动第三周，还能有多垃圾的一周呢，250万挑战奖励别错过哦~！！GTA在线模式游戏更新",
+    "author": "飞天香鸡腿",
+    "date": " · 10月15日",
+    "srcset": "//i2.hdslb.com/bfs/archive/089742fe933ed7ee8e4d8f96536e5ed9686aca3b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1giaf6vE5J/",
+    "title": "[账号找回] R星账户邮箱换绑-最后手段：邮箱联系客服大法",
+    "author": "黑宫千夜",
+    "date": " · 9月30日",
+    "srcset": "//i2.hdslb.com/bfs/archive/460e73d6f0caa4c5c999decfa5085077b7f5c29b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1RjJ96fEni/",
+    "title": "玩《银松镇》前必看——我最后悔的几件事",
+    "author": "豆浆老师-Switch2",
+    "date": " · 10月16日",
+    "srcset": "//i0.hdslb.com/bfs/archive/e913eb6c104c9513a1f913997da34e3d7d326648.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1akh16FE8Z/",
+    "title": "Madium注入器【免费要卡密】",
+    "author": "泽萧_Official",
+    "date": " · 9月25日",
+    "srcset": "//i0.hdslb.com/bfs/archive/af695c03551d8f5847f91ecfc76981dd8df0c3cf.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1a45e6XEZZ/",
+    "title": "带萌新入坑宝藏世界TROVE#1教程世界大改",
+    "author": "陨莫",
+    "date": " · 5月15日",
+    "srcset": "//i2.hdslb.com/bfs/archive/8dff29c9cffc260b69311a7e306f16b48e0632ee.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1PFJ96rEvE/",
+    "title": "7小时拿白金!【银松镇】保姆级地毯式全收集 白金攻略 极致路线规划避免重复 背包扩容/全结局/纪念品/地图/咖啡/武器/解谜",
+    "author": "金萝卜须",
+    "date": " · 10月16日",
+    "srcset": "//i2.hdslb.com/bfs/archive/99e926f4bf8a20b420ca090b89ca9b78ccd41f82.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV132NX6nE1x/",
+    "title": "宝藏世界/Trove 萌新必学！3分钟带你玩转拍卖行(1)-加工定律",
+    "author": "小逸_nya",
+    "date": " · 7月14日",
+    "srcset": "//i2.hdslb.com/bfs/archive/ef06d6f6b5b3e794b14895c3128a9ba7a6db8cb0.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1dq8z6LE3U/",
+    "title": "[Trove/宝藏世界]左忍者右枪兵,爽!都可以爽!",
+    "author": "幻夜_星辉_",
+    "date": " · 8月21日",
+    "srcset": "//i1.hdslb.com/bfs/archive/b642344c788830f10ba287529ee1a7f6279a103f.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1MLpn6AESE/",
+    "title": "游戏抓包gm教程",
+    "author": "Ting无",
+    "date": " · 10月11日",
+    "srcset": "//i1.hdslb.com/bfs/archive/4bb62961b784336e3e5744541b9d0b86d0a3b850.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1LVtx6qEwB/",
+    "title": "【宝藏世界trove】星期机制隐藏坐骑全流程！！！保姆级攻略！！",
+    "author": "尼古拉斯-加斯",
+    "date": " · 8月31日",
+    "srcset": "//i2.hdslb.com/bfs/archive/cc9ee6ab6eed95a6e448c11ac58b64db37e712c3.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1o91yYCEoq/",
+    "title": "［trove/宝藏世界］满专精纪念^ω^ 假的嘻嘻~\\(≧▽≦)/~!",
+    "author": "肉肉的小柠萌",
+    "date": " · 2024年10月7日",
+    "srcset": "//i1.hdslb.com/bfs/archive/186facc913afd8f0a3b9706255e3bb8939fd1c38.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1YW4y1Z7XT/",
+    "title": "[Trove/宝藏世界]4w战斗力教学视频",
+    "author": "小熊L1KE",
+    "date": " · 2023年7月17日",
+    "srcset": "//i1.hdslb.com/bfs/archive/cdf036362de0bccca453f712cdf7b32d5e7a7413.png@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1gJnG66EGQ/",
+    "title": "夯爆了！回忆杀！QQ宠物复刻版来啦，快乐找回青春吧，支持电脑 mac 安卓 苹果 鸿蒙",
+    "author": "AI茶谈",
+    "date": " · 10月18日",
+    "srcset": "//i2.hdslb.com/bfs/archive/269f38b9aea4321fed74140a3da3da21d6238ec9.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1JRnT63EMT/",
+    "title": "AI修复停服游戏太烧token？教你一招，token额度直接翻倍！",
+    "author": "星之墨辰",
+    "date": " · 10月18日",
+    "srcset": "//i1.hdslb.com/bfs/archive/c3344fa3de9773db9327259affa790285bf211c7.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1kfWqehECp/",
+    "title": "「宝藏世界｜Trove」9999锻造箱出c5的概率？冲冲周榜！",
+    "author": "克里Kry",
+    "date": " · 2024年8月25日",
+    "srcset": "//i1.hdslb.com/bfs/archive/951cbeaf9ad185a2f41926af98728195f83ef496.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1FbA6zqE55/",
+    "title": "【猎户座沙盒】2026 电脑端+手机端 保姆级下载教程！！",
+    "author": "IucK星落",
+    "date": " · 2月27日",
+    "srcset": "//i0.hdslb.com/bfs/archive/70f74538b889760ed49661004e20b34c69494dc4.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1kDbL6sErk/",
+    "title": "【元素觉醒】一口气看完近战法师养成录 火战法篇 我的世界 整合包",
+    "author": "夜不成寐_",
+    "date": " · 9月6日",
+    "srcset": "//i0.hdslb.com/bfs/archive/c095dd3f2d2c769f1e069326e1d62d5b727fccc1.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1Zx7L6HEVJ/",
+    "title": "以防你没见过黑金鸟",
+    "author": "柏文大人",
+    "date": " · 6月26日",
+    "srcset": "//i2.hdslb.com/bfs/archive/c1a3342465f30fda918585179fbeb2513376965e.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1w4jf6mEL1/",
+    "title": "【宝藏世界】教你如何玩新版本宝藏世界妖精诡术师",
+    "author": "雅马邑白兰地",
+    "date": " · 6月22日",
+    "srcset": "//i0.hdslb.com/bfs/archive/ddc140bb21740f472b62b4dbb3f56e83299657de.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1FG896fEK3/",
+    "title": "太色了！ 8月超人气网游MMO 这建模 肉 眼可见 arrogance 实机试玩",
+    "author": "小飞moor",
+    "date": " · 8月26日",
+    "srcset": "//i1.hdslb.com/bfs/archive/e015350d17004679323866a3a60673a063b44d35.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV16Mnj6eEPe/",
+    "title": "[奶块杂谈]易燃之后，再无辅助，敖烈已随易燃弓一同仙逝……",
+    "author": "晓亮没睡醒啊",
+    "date": " · 10月19日",
+    "srcset": "//i2.hdslb.com/bfs/archive/5dcf12bac4b9ba8c26ef2c09a0c65fde6078c4cd.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1bsaN6VEhM/",
+    "title": "原来这游戏一半内容都被隐藏! 符文世界:龙之荒野1.0正式版新手攻略",
+    "author": "Kim和Nana的游戏世界",
+    "date": " · 9月24日",
+    "srcset": "//i1.hdslb.com/bfs/archive/6c097d83a058dae50e5eace5d4793ded6d142687.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1CdpU6BEZA/",
+    "title": "全境封锁2：万圣节活动来袭！莱克星顿返厂！头牌惨遭削弱！恶化不再消耗代币！Y8S3.2更新简报！",
+    "author": "森牧阳",
+    "date": " · 10月15日",
+    "srcset": "//i0.hdslb.com/bfs/archive/37008e9653b27b6dbe4125c7e73277fd6127dccd.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1EaJR6BEbZ/",
+    "title": "雌小鬼生存【自然之需】",
+    "author": "我是狍子Deer",
+    "date": " · 10月19日",
+    "srcset": "//i1.hdslb.com/bfs/archive/51a4e2997cc6d01836893dd5bb2dc184f5fb3076.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1pHnB6NEVS/",
+    "title": "为了心爱的人类女孩，小小僵尸决定弑神！",
+    "author": "以子OvO",
+    "date": " · 2天前",
+    "srcset": "//i0.hdslb.com/bfs/archive/63bf8b79c13d5a5d3cd0e964c3b292b0a363963b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1Lop46bELu/",
+    "title": "饥荒手机联机熔炉模式模组",
+    "author": "小林哥Zz",
+    "date": " · 10月9日",
+    "srcset": "//i0.hdslb.com/bfs/archive/dc7a391a67de057a059818b420a1100fb739749c.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1W7nw6wEkS/",
+    "title": "【饥荒联机】查理恢复人形，或将成为可用角色？测试服一览",
+    "author": "三个蘑菇一条命",
+    "date": " · 3天前",
+    "srcset": "//i2.hdslb.com/bfs/archive/0de63735d58e3917d0484dedae11852dae7080da.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1ErJ46ZESw/",
+    "title": "13年了还在更新，《饥饿鲨进化》怎么越来越逆天了，现在又更新了什么新鲨鱼？？",
+    "author": "康悠优",
+    "date": " · 10月17日",
+    "srcset": "//i2.hdslb.com/bfs/archive/430a521cf7b9a2b0e7c4e8b4903316716a3bc796.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1VeJD6DE2E/",
+    "title": "Boyce - 幻术",
+    "author": "无效の伤害",
+    "date": " · 10月16日",
+    "srcset": "//i0.hdslb.com/bfs/archive/618d09ddf62b4a921009c91c553063b5a7b522c4.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1pLez6NE3q/",
+    "title": "【宝藏世界/Trove】ks辅助mod  区块可视化mod更新",
+    "author": "一只尾鲤",
+    "date": " · 9月20日",
+    "srcset": "//i0.hdslb.com/bfs/archive/679f8fb69b827464700171f5f879ae05b07833eb.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1vPJe6TEe7/",
+    "title": "【猛鬼追魂：复苏】猛男无双流攻略视频解说",
+    "author": "YUI型菌",
+    "date": " · 10月17日",
+    "srcset": "//i1.hdslb.com/bfs/archive/22d35a54bbc5deafbdfaea674c72265f47ec8ad2.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1Hnnw6FErb/",
+    "title": "预下载10月21日0点开启！《失落城堡2》手游 x《魔法工艺》惊喜联动公测上线",
+    "author": "失落城堡2手游官方",
+    "date": " · 3天前",
+    "srcset": "//i1.hdslb.com/bfs/archive/41e1dc1410cd21693224cc98450ad588b70c90b7.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1fHKn6gEUJ/",
+    "title": "Roblox罗布乐思下载及注册教程",
+    "author": "小嘎Ugc",
+    "date": " · 7月17日",
+    "srcset": "//i2.hdslb.com/bfs/archive/b80d71f97b6cf897667db46ec5ac2baf2235f6d0.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1W7pz6CE7H/",
+    "title": "【珠神之战】重生之我在TNT玩弹珠机",
+    "author": "柚在摸鱼了",
+    "date": " · 10月13日",
+    "srcset": "//i1.hdslb.com/bfs/archive/b3a58137aa54282ca6ad782c596ebf56f9b61beb.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1yS8A6hExp/",
+    "title": "大复制时代",
+    "author": "薯片味的橘猫",
+    "date": " · 8月21日",
+    "srcset": "//i0.hdslb.com/bfs/archive/8ce5c8328bccc4f85e6d9f80b9fb490ee791be88.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/zh-Hans/video/BV1ZBJ16kE3A/",
+    "title": "XIN计划脚本10月15日更新",
+    "author": "bili_CyberM",
+    "date": " · 10月15日",
+    "srcset": "//i0.hdslb.com/bfs/archive/c2d0640e89e8bc3c8f918e2440169acc8027881b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   }
+  ]
+ },
+ "page_rewritten": {
+  "tree_sha256": "f3801b17d286d0867131177eb291a435b65e8f363528931752f4b1cecbe44ecc",
+  "cards": [
+   {
+    "href": "//www.bilibili.com/video/BV1Dqjz6ME5F/",
+    "title": "【宝藏世界/trove】萌新小知识P1 每日每周必做事项",
+    "author": "星河雷亚",
+    "date": " · 6月20日",
+    "srcset": "//i2.hdslb.com/bfs/archive/29a70a5bd0c85845ab9c0c01be985189576e6ed9.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1yDeE6SES5/",
+    "title": "元素觉醒爽玩！！！开局用到毕业",
+    "author": "染个白毛装老头",
+    "date": " · 9月15日",
+    "srcset": "//i2.hdslb.com/bfs/archive/f142820ad72bca3183207d0b37e1eae6a1d5bdf3.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1fcp16UEek/",
+    "title": "怎麼花最值！《瑪奇 Mobile》老玩家給新人的長期規劃建議",
+    "author": "放牧猫",
+    "date": " · 10月14日",
+    "srcset": "//i1.hdslb.com/bfs/archive/a8a9d844aef7ca1aeab62de6dcfa013132b8e462.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1Xq3czKELt/",
+    "title": "很好奇！有多少人是冲着，这主角才买的游戏？",
+    "author": "一嫩牛五方一",
+    "date": " · 2025年6月29日",
+    "srcset": "//i0.hdslb.com/bfs/archive/880e36aeec6cbfb6c29ad3d000cb7bf1c469dba7.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1ddpB6ZEhK/",
+    "title": "Steam淘到宝藏MMORPG《Norroth 诺罗斯》！还有2天开服，开荒攻略提前备好",
+    "author": "橘猫克苏鲁",
+    "date": " · 10月14日",
+    "srcset": "//i1.hdslb.com/bfs/archive/190b782352e02babc3349dcd710d5d1fa54f03ba.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1t4421S7rm/",
+    "title": "[符文铁砧+龙碎]小功略，不刷本也能有材料！  [Trove/宝藏世界]",
+    "author": "小熊L1KE",
+    "date": " · 2024年6月22日",
+    "srcset": "//i2.hdslb.com/bfs/archive/a197242e2d749bdbc4d134cfc03d156b087cebc1.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1FyJ66PEen/",
+    "title": "【GTAonline】万圣节活动第三周，还能有多垃圾的一周呢，250万挑战奖励别错过哦~！！GTA在线模式游戏更新",
+    "author": "飞天香鸡腿",
+    "date": " · 10月15日",
+    "srcset": "//i2.hdslb.com/bfs/archive/089742fe933ed7ee8e4d8f96536e5ed9686aca3b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1giaf6vE5J/",
+    "title": "[账号找回] R星账户邮箱换绑-最后手段：邮箱联系客服大法",
+    "author": "黑宫千夜",
+    "date": " · 9月30日",
+    "srcset": "//i2.hdslb.com/bfs/archive/460e73d6f0caa4c5c999decfa5085077b7f5c29b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1RjJ96fEni/",
+    "title": "玩《银松镇》前必看——我最后悔的几件事",
+    "author": "豆浆老师-Switch2",
+    "date": " · 10月16日",
+    "srcset": "//i0.hdslb.com/bfs/archive/e913eb6c104c9513a1f913997da34e3d7d326648.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1akh16FE8Z/",
+    "title": "Madium注入器【免费要卡密】",
+    "author": "泽萧_Official",
+    "date": " · 9月25日",
+    "srcset": "//i0.hdslb.com/bfs/archive/af695c03551d8f5847f91ecfc76981dd8df0c3cf.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1a45e6XEZZ/",
+    "title": "带萌新入坑宝藏世界TROVE#1教程世界大改",
+    "author": "陨莫",
+    "date": " · 5月15日",
+    "srcset": "//i2.hdslb.com/bfs/archive/8dff29c9cffc260b69311a7e306f16b48e0632ee.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1PFJ96rEvE/",
+    "title": "7小时拿白金!【银松镇】保姆级地毯式全收集 白金攻略 极致路线规划避免重复 背包扩容/全结局/纪念品/地图/咖啡/武器/解谜",
+    "author": "金萝卜须",
+    "date": " · 10月16日",
+    "srcset": "//i2.hdslb.com/bfs/archive/99e926f4bf8a20b420ca090b89ca9b78ccd41f82.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV132NX6nE1x/",
+    "title": "宝藏世界/Trove 萌新必学！3分钟带你玩转拍卖行(1)-加工定律",
+    "author": "小逸_nya",
+    "date": " · 7月14日",
+    "srcset": "//i2.hdslb.com/bfs/archive/ef06d6f6b5b3e794b14895c3128a9ba7a6db8cb0.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1dq8z6LE3U/",
+    "title": "[Trove/宝藏世界]左忍者右枪兵,爽!都可以爽!",
+    "author": "幻夜_星辉_",
+    "date": " · 8月21日",
+    "srcset": "//i1.hdslb.com/bfs/archive/b642344c788830f10ba287529ee1a7f6279a103f.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1MLpn6AESE/",
+    "title": "游戏抓包gm教程",
+    "author": "Ting无",
+    "date": " · 10月11日",
+    "srcset": "//i1.hdslb.com/bfs/archive/4bb62961b784336e3e5744541b9d0b86d0a3b850.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1LVtx6qEwB/",
+    "title": "【宝藏世界trove】星期机制隐藏坐骑全流程！！！保姆级攻略！！",
+    "author": "尼古拉斯-加斯",
+    "date": " · 8月31日",
+    "srcset": "//i2.hdslb.com/bfs/archive/cc9ee6ab6eed95a6e448c11ac58b64db37e712c3.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1o91yYCEoq/",
+    "title": "［trove/宝藏世界］满专精纪念^ω^ 假的嘻嘻~\\(≧▽≦)/~!",
+    "author": "肉肉的小柠萌",
+    "date": " · 2024年10月7日",
+    "srcset": "//i1.hdslb.com/bfs/archive/186facc913afd8f0a3b9706255e3bb8939fd1c38.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1YW4y1Z7XT/",
+    "title": "[Trove/宝藏世界]4w战斗力教学视频",
+    "author": "小熊L1KE",
+    "date": " · 2023年7月17日",
+    "srcset": "//i1.hdslb.com/bfs/archive/cdf036362de0bccca453f712cdf7b32d5e7a7413.png@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1gJnG66EGQ/",
+    "title": "夯爆了！回忆杀！QQ宠物复刻版来啦，快乐找回青春吧，支持电脑 mac 安卓 苹果 鸿蒙",
+    "author": "AI茶谈",
+    "date": " · 10月18日",
+    "srcset": "//i2.hdslb.com/bfs/archive/269f38b9aea4321fed74140a3da3da21d6238ec9.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1JRnT63EMT/",
+    "title": "AI修复停服游戏太烧token？教你一招，token额度直接翻倍！",
+    "author": "星之墨辰",
+    "date": " · 10月18日",
+    "srcset": "//i1.hdslb.com/bfs/archive/c3344fa3de9773db9327259affa790285bf211c7.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1kfWqehECp/",
+    "title": "「宝藏世界｜Trove」9999锻造箱出c5的概率？冲冲周榜！",
+    "author": "克里Kry",
+    "date": " · 2024年8月25日",
+    "srcset": "//i1.hdslb.com/bfs/archive/951cbeaf9ad185a2f41926af98728195f83ef496.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1FbA6zqE55/",
+    "title": "【猎户座沙盒】2026 电脑端+手机端 保姆级下载教程！！",
+    "author": "IucK星落",
+    "date": " · 2月27日",
+    "srcset": "//i0.hdslb.com/bfs/archive/70f74538b889760ed49661004e20b34c69494dc4.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1kDbL6sErk/",
+    "title": "【元素觉醒】一口气看完近战法师养成录 火战法篇 我的世界 整合包",
+    "author": "夜不成寐_",
+    "date": " · 9月6日",
+    "srcset": "//i0.hdslb.com/bfs/archive/c095dd3f2d2c769f1e069326e1d62d5b727fccc1.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1Zx7L6HEVJ/",
+    "title": "以防你没见过黑金鸟",
+    "author": "柏文大人",
+    "date": " · 6月26日",
+    "srcset": "//i2.hdslb.com/bfs/archive/c1a3342465f30fda918585179fbeb2513376965e.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1w4jf6mEL1/",
+    "title": "【宝藏世界】教你如何玩新版本宝藏世界妖精诡术师",
+    "author": "雅马邑白兰地",
+    "date": " · 6月22日",
+    "srcset": "//i0.hdslb.com/bfs/archive/ddc140bb21740f472b62b4dbb3f56e83299657de.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1FG896fEK3/",
+    "title": "太色了！ 8月超人气网游MMO 这建模 肉 眼可见 arrogance 实机试玩",
+    "author": "小飞moor",
+    "date": " · 8月26日",
+    "srcset": "//i1.hdslb.com/bfs/archive/e015350d17004679323866a3a60673a063b44d35.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV16Mnj6eEPe/",
+    "title": "[奶块杂谈]易燃之后，再无辅助，敖烈已随易燃弓一同仙逝……",
+    "author": "晓亮没睡醒啊",
+    "date": " · 10月19日",
+    "srcset": "//i2.hdslb.com/bfs/archive/5dcf12bac4b9ba8c26ef2c09a0c65fde6078c4cd.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1bsaN6VEhM/",
+    "title": "原来这游戏一半内容都被隐藏! 符文世界:龙之荒野1.0正式版新手攻略",
+    "author": "Kim和Nana的游戏世界",
+    "date": " · 9月24日",
+    "srcset": "//i1.hdslb.com/bfs/archive/6c097d83a058dae50e5eace5d4793ded6d142687.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1CdpU6BEZA/",
+    "title": "全境封锁2：万圣节活动来袭！莱克星顿返厂！头牌惨遭削弱！恶化不再消耗代币！Y8S3.2更新简报！",
+    "author": "森牧阳",
+    "date": " · 10月15日",
+    "srcset": "//i0.hdslb.com/bfs/archive/37008e9653b27b6dbe4125c7e73277fd6127dccd.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1EaJR6BEbZ/",
+    "title": "雌小鬼生存【自然之需】",
+    "author": "我是狍子Deer",
+    "date": " · 10月19日",
+    "srcset": "//i1.hdslb.com/bfs/archive/51a4e2997cc6d01836893dd5bb2dc184f5fb3076.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1pHnB6NEVS/",
+    "title": "为了心爱的人类女孩，小小僵尸决定弑神！",
+    "author": "以子OvO",
+    "date": " · 2天前",
+    "srcset": "//i0.hdslb.com/bfs/archive/63bf8b79c13d5a5d3cd0e964c3b292b0a363963b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1Lop46bELu/",
+    "title": "饥荒手机联机熔炉模式模组",
+    "author": "小林哥Zz",
+    "date": " · 10月9日",
+    "srcset": "//i0.hdslb.com/bfs/archive/dc7a391a67de057a059818b420a1100fb739749c.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1W7nw6wEkS/",
+    "title": "【饥荒联机】查理恢复人形，或将成为可用角色？测试服一览",
+    "author": "三个蘑菇一条命",
+    "date": " · 3天前",
+    "srcset": "//i2.hdslb.com/bfs/archive/0de63735d58e3917d0484dedae11852dae7080da.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1ErJ46ZESw/",
+    "title": "13年了还在更新，《饥饿鲨进化》怎么越来越逆天了，现在又更新了什么新鲨鱼？？",
+    "author": "康悠优",
+    "date": " · 10月17日",
+    "srcset": "//i2.hdslb.com/bfs/archive/430a521cf7b9a2b0e7c4e8b4903316716a3bc796.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1VeJD6DE2E/",
+    "title": "Boyce - 幻术",
+    "author": "无效の伤害",
+    "date": " · 10月16日",
+    "srcset": "//i0.hdslb.com/bfs/archive/618d09ddf62b4a921009c91c553063b5a7b522c4.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1pLez6NE3q/",
+    "title": "【宝藏世界/Trove】ks辅助mod  区块可视化mod更新",
+    "author": "一只尾鲤",
+    "date": " · 9月20日",
+    "srcset": "//i0.hdslb.com/bfs/archive/679f8fb69b827464700171f5f879ae05b07833eb.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1vPJe6TEe7/",
+    "title": "【猛鬼追魂：复苏】猛男无双流攻略视频解说",
+    "author": "YUI型菌",
+    "date": " · 10月17日",
+    "srcset": "//i1.hdslb.com/bfs/archive/22d35a54bbc5deafbdfaea674c72265f47ec8ad2.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1Hnnw6FErb/",
+    "title": "预下载10月21日0点开启！《失落城堡2》手游 x《魔法工艺》惊喜联动公测上线",
+    "author": "失落城堡2手游官方",
+    "date": " · 3天前",
+    "srcset": "//i1.hdslb.com/bfs/archive/41e1dc1410cd21693224cc98450ad588b70c90b7.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1fHKn6gEUJ/",
+    "title": "Roblox罗布乐思下载及注册教程",
+    "author": "小嘎Ugc",
+    "date": " · 7月17日",
+    "srcset": "//i2.hdslb.com/bfs/archive/b80d71f97b6cf897667db46ec5ac2baf2235f6d0.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1W7pz6CE7H/",
+    "title": "【珠神之战】重生之我在TNT玩弹珠机",
+    "author": "柚在摸鱼了",
+    "date": " · 10月13日",
+    "srcset": "//i1.hdslb.com/bfs/archive/b3a58137aa54282ca6ad782c596ebf56f9b61beb.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1yS8A6hExp/",
+    "title": "大复制时代",
+    "author": "薯片味的橘猫",
+    "date": " · 8月21日",
+    "srcset": "//i0.hdslb.com/bfs/archive/8ce5c8328bccc4f85e6d9f80b9fb490ee791be88.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   },
+   {
+    "href": "//www.bilibili.com/video/BV1ZBJ16kE3A/",
+    "title": "XIN计划脚本10月15日更新",
+    "author": "bili_CyberM",
+    "date": " · 10月15日",
+    "srcset": "//i0.hdslb.com/bfs/archive/c2d0640e89e8bc3c8f918e2440169acc8027881b.jpg@672w_378h_1c_!web-search-common-cover.avif"
+   }
+  ]
+ }
+}

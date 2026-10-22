@@ -45,6 +45,7 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
     Router::new().merge(misc::router())
     Router::new().merge(trove_status::router())
     Router::new().merge(btt::router())
+    Router::new().merge(crate::feeds::router())
 }
 
 pub fn app(state: AppState) -> Router {
