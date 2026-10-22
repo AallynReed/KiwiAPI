@@ -136,11 +136,17 @@ async fn convert(State(state): State<AppState>, req: Request) -> Response {
     }
 }
 
+static INTEREST_CACHE: Mutex<Option<(BTreeSet<String>, Instant)>> = Mutex::new(None);
+
+/// `_invalidate_interest_cache`, after an admin edit.
+pub(crate) fn invalidate_interest_cache() {
+    *INTEREST_CACHE.lock().unwrap_or_else(|e| e.into_inner()) = None;
+}
+
 /// `market_service._interest_items_set`: the allow-list (30s cache), or the
 /// bundled seed list while the collection is empty.
-async fn interest_set(state: &AppState) -> Result<BTreeSet<String>, ApiError> {
-    static CACHE: Mutex<Option<(BTreeSet<String>, Instant)>> = Mutex::new(None);
-    if let Some((items, at)) = CACHE.lock().unwrap_or_else(|e| e.into_inner()).as_ref()
+pub(crate) async fn interest_set(state: &AppState) -> Result<BTreeSet<String>, ApiError> {
+    if let Some((items, at)) = INTEREST_CACHE.lock().unwrap_or_else(|e| e.into_inner()).as_ref()
         && at.elapsed() < Duration::from_secs(30)
     {
         return Ok(items.clone());
@@ -175,7 +181,7 @@ async fn interest_set(state: &AppState) -> Result<BTreeSet<String>, ApiError> {
         }
         out
     };
-    *CACHE.lock().unwrap_or_else(|e| e.into_inner()) = Some((items.clone(), Instant::now()));
+    *INTEREST_CACHE.lock().unwrap_or_else(|e| e.into_inner()) = Some((items.clone(), Instant::now()));
     Ok(items)
 }
 
