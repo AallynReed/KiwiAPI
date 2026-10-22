@@ -1,0 +1,29 @@
+[
+ {"name": "activity_og", "path": "/activity/og.png", "allow_diff": ["body"],
+  "reason": "same pixels as Pillow (src/og/tests.rs); production's zlib-ng deflates them into a different stream, and each side renders at its own time"},
+ {"name": "activity_og_1m", "path": "/activity/og.png?period=1m", "allow_diff": ["body"], "reason": "see activity_og"},
+ {"name": "activity_og_upper", "path": "/activity/og.png?period=1M", "allow_diff": ["body"], "reason": "see activity_og"},
+ {"name": "activity_og_unknown_period", "path": "/activity/og.png?period=1d&period=", "allow_diff": ["body"], "reason": "see activity_og"},
+ {"name": "activity_og_lang_ignored", "path": "/activity/og.png?lang=ja", "allow_diff": ["body"], "reason": "see activity_og"},
+ {"name": "activity_og_head", "method": "HEAD", "path": "/activity/og.png"},
+ {"name": "activity_og_credentialed", "path": "/activity/og.png", "headers": {"Cookie": "kiwi_site_access=x"},
+  "allow_diff": ["body"], "reason": "see activity_og"},
+ {"name": "activity_og_slash", "path": "/activity/og.png/"},
+
+ {"name": "status_og", "path": "/status/og.png", "allow_diff": ["body"],
+  "reason": "same pixels as Pillow for the same snapshot; the deflate stream and the 'Checked Ns ago' second differ"},
+ {"name": "status_og_lang_en", "path": "/status/og.png?lang=en", "allow_diff": ["body"], "reason": "see status_og"},
+ {"name": "status_og_lang_unknown", "path": "/status/og.png?lang=xx", "allow_diff": ["body"], "reason": "see status_og"},
+ {"name": "status_og_lang_ja_python", "path": "/status/og.png?lang=ja", "allow_diff": ["body"],
+  "reason": "deferred to Python; still time-dependent text"},
+ {"name": "status_og_lang_last_wins", "path": "/status/og.png?lang=de&lang=en", "allow_diff": ["body"], "reason": "see status_og"},
+ {"name": "status_og_head", "method": "HEAD", "path": "/status/og.png"},
+
+ {"name": "badge", "path": "/embed/status.svg"},
+ {"name": "badge_gzip", "path": "/embed/status.svg", "headers": {"Accept-Encoding": "gzip"}},
+ {"name": "badge_own_origin", "path": "/embed/status.svg", "headers": {"Origin": "https://trove.aallyn.net"}},
+ {"name": "badge_foreign_origin", "path": "/embed/status.svg", "headers": {"Origin": "https://example.com"}},
+ {"name": "badge_preflight", "method": "OPTIONS", "path": "/embed/status.svg",
+  "headers": {"Origin": "https://example.com", "Access-Control-Request-Method": "GET"}},
+ {"name": "badge_head", "method": "HEAD", "path": "/embed/status.svg"}
+]

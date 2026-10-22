@@ -53,6 +53,7 @@ fn ported() -> Router<AppState> {
         .merge(crate::dm_subs::router())
         .merge(crate::drops::router())
         .merge(crate::internal::router())
+        .merge(crate::og::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's
@@ -74,6 +75,8 @@ async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: 
     if let Some(field) = matched.as_ref().and_then(|m| crate::portal::defer::email_field(m.as_str(), req.method())) {
         (req, defer) = crate::portal::defer::inspect(req, field).await;
     }
+        crate::lbread::defers(m.as_str(), req.method(), req.uri().path()) || crate::og::defers(m.as_str(), req.uri())
+    });
     if defer && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
         return proxy(State(state), ConnectInfo(peer), req).await;
     }

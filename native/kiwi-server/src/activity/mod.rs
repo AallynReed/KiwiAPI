@@ -23,6 +23,8 @@ use axum::{
 
 use crate::state::AppState;
 
+pub use routes::SITE_FLAGS;
+
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/v1/activity/current", get(routes::v1_current))

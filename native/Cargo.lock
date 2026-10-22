@@ -1354,6 +1354,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kiwi-pil"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "crc32fast",
+ "png",
+ "serde_json",
+ "zlib-rs",
+]
+
+[[package]]
 name = "kiwi-py"
 version = "0.1.0"
 dependencies = [
@@ -1388,11 +1399,13 @@ dependencies = [
  "hyper-util",
  "idna",
  "kiwi-core",
+ "kiwi-pil",
  "libz-sys",
  "mimalloc",
  "mongodb",
  "percent-encoding",
  "pin-project-lite",
+ "png",
  "redis",
  "regex",
  "reqwest",

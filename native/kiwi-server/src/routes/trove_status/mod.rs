@@ -217,7 +217,7 @@ pub fn segment_from_doc(d: &Document) -> anyhow::Result<Segment> {
     Ok(Segment { status, online, started_at, ended_at })
 }
 
-async fn load_segments(state: &AppState, env: &str) -> anyhow::Result<Vec<Segment>> {
+pub async fn load_segments(state: &AppState, env: &str) -> anyhow::Result<Vec<Segment>> {
     let db = state.inner.db.mongo.as_ref().ok_or_else(|| anyhow::anyhow!("MONGO_URI not configured"))?;
     let mut cursor =
         db.collection::<Document>(COLLECTION).find(doc! { "env": env }).sort(doc! { "started_at": 1 }).await?;
