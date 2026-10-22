@@ -1,0 +1,2040 @@
+{
+ "python": "3.11.9",
+ "env": {
+  "APP_NAME": "Kiwi <API> \"\u00e9\" {x}",
+  "API_URL": "https://api.example.test",
+  "DOCS_URL": "https://docs.example.test/?a=1&b=<2>",
+  "DEV_URL": "https://dev.example.test",
+  "CAPTCHA_PROVIDER": "hcaptcha",
+  "CAPTCHA_SITEKEY": "10000000-ffff-ffff-ffff-000000000001",
+  "REQUIRE_VERIFIED_FOR_TOKENS": "false",
+  "TOKEN_CREATION_DAILY_LIMIT": "7",
+  "GITHUB_CLIENT_ID": "gh-id",
+  "GITHUB_CLIENT_SECRET": "gh-secret",
+  "DISCORD_CLIENT_ID": "123",
+  "SECRET_KEY": "leaf-fixture-secret"
+ },
+ "http": [
+  {
+   "name": "health",
+   "method": "GET",
+   "url": "/health",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_000"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "15",
+    "content-type": "application/json"
+   },
+   "resp": "{\"status\":\"ok\"}"
+  },
+  {
+   "name": "config",
+   "method": "GET",
+   "url": "/config",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_001"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "2989",
+    "content-type": "application/json"
+   },
+   "resp": "{\"app_name\":\"Kiwi <API> \\\"\u00e9\\\" {x}\",\"api_url\":\"https://api.example.test\",\"captcha_provider\":\"hcaptcha\",\"captcha_sitekey\":\"10000000-ffff-ffff-ffff-000000000001\",\"require_verified_for_tokens\":false,\"scopes\":[{\"key\":\"rotations:read\",\"bit\":1,\"resource\":\"rotations\",\"description\":\"Read rotation/timer data - server time, bonuses, merchants, biomes\"},{\"key\":\"feeds:read\",\"bit\":2,\"resource\":\"feeds\",\"description\":\"Read relayed feeds - Trove news, Twitch/YouTube/Bilibili\"},{\"key\":\"stats:read\",\"bit\":4,\"resource\":\"stats\",\"description\":\"Read raw game-stat data - stat tables (power rank / magic find / light) and classes\"},{\"key\":\"gems:read\",\"bit\":8,\"resource\":\"gems\",\"description\":\"Use the gem tools - simulator (generate/augment), evaluator, and build optimizer\"},{\"key\":\"misc:read\",\"bit\":16,\"resource\":\"misc\",\"description\":\"Misc tools - third-party modding software list and the time converter\"},{\"key\":\"mods:read\",\"bit\":32,\"resource\":\"mods\",\"description\":\"Mod tools - decompile a .tmod file and build a .tmod from files\"},{\"key\":\"updates:read\",\"bit\":64,\"resource\":\"updates\",\"description\":\"Browse archived game files - versions, directory structure, and single-file download\"},{\"key\":\"codexes:read\",\"bit\":128,\"resource\":\"codexes\",\"description\":\"Read parsed game codexes - collectibles, styles, recipes and items, the relationships between them, badge requirements and progression trees\"},{\"key\":\"btt:read\",\"bit\":256,\"resource\":\"btt\",\"description\":\"Read BetterTroveTools releases - latest version per platform and channel\"},{\"key\":\"leaderboards:read\",\"bit\":512,\"resource\":\"leaderboards\",\"description\":\"Read Trove in-game leaderboards - boards, entries, timestamps\"},{\"key\":\"market:read\",\"bit\":1024,\"resource\":\"market\",\"description\":\"Read Trove marketplace listings - listings, items, interest list, price history\"},{\"key\":\"activity:read\",\"bit\":2048,\"resource\":\"activity\",\"description\":\"Read Trove player-activity estimates - live active-player count and multi-period trend series\"},{\"key\":\"giveaways:read\",\"bit\":4096,\"resource\":\"giveaways\",\"description\":\"Read public giveaways - ongoing draws, prizes, entry counts\"},{\"key\":\"events:read\",\"bit\":8192,\"resource\":\"events\",\"description\":\"Subscribe to the live event stream (SSE) - real-time challenge + chaos-chest push updates\"},{\"key\":\"ocr:read\",\"bit\":16384,\"resource\":\"ocr\",\"description\":\"Read character stats from a screenshot - self-hosted OCR of the in-game stat sheet\"},{\"key\":\"store:read\",\"bit\":32768,\"resource\":\"store\",\"description\":\"Read the in-game Kiwi Store catalog - categories, products, prices, deals, loot odds\"},{\"key\":\"mods:write\",\"bit\":65536,\"resource\":\"mods\",\"description\":\"Manage Mods Hub projects for creators who connected their account to yours - create mods, cut and publish releases, edit metadata, images and visibility\"}],\"token_creation_daily_limit\":7,\"revoke_reasons\":[\"No longer using it\",\"Rotating to a new token\",\"Possibly compromised\",\"Created by mistake\"],\"github_oauth_enabled\":true,\"discord_oauth_enabled\":false}"
+  },
+  {
+   "name": "config_query_ignored",
+   "method": "GET",
+   "url": "/config?x=1",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_002"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "2989",
+    "content-type": "application/json"
+   },
+   "resp": "{\"app_name\":\"Kiwi <API> \\\"\u00e9\\\" {x}\",\"api_url\":\"https://api.example.test\",\"captcha_provider\":\"hcaptcha\",\"captcha_sitekey\":\"10000000-ffff-ffff-ffff-000000000001\",\"require_verified_for_tokens\":false,\"scopes\":[{\"key\":\"rotations:read\",\"bit\":1,\"resource\":\"rotations\",\"description\":\"Read rotation/timer data - server time, bonuses, merchants, biomes\"},{\"key\":\"feeds:read\",\"bit\":2,\"resource\":\"feeds\",\"description\":\"Read relayed feeds - Trove news, Twitch/YouTube/Bilibili\"},{\"key\":\"stats:read\",\"bit\":4,\"resource\":\"stats\",\"description\":\"Read raw game-stat data - stat tables (power rank / magic find / light) and classes\"},{\"key\":\"gems:read\",\"bit\":8,\"resource\":\"gems\",\"description\":\"Use the gem tools - simulator (generate/augment), evaluator, and build optimizer\"},{\"key\":\"misc:read\",\"bit\":16,\"resource\":\"misc\",\"description\":\"Misc tools - third-party modding software list and the time converter\"},{\"key\":\"mods:read\",\"bit\":32,\"resource\":\"mods\",\"description\":\"Mod tools - decompile a .tmod file and build a .tmod from files\"},{\"key\":\"updates:read\",\"bit\":64,\"resource\":\"updates\",\"description\":\"Browse archived game files - versions, directory structure, and single-file download\"},{\"key\":\"codexes:read\",\"bit\":128,\"resource\":\"codexes\",\"description\":\"Read parsed game codexes - collectibles, styles, recipes and items, the relationships between them, badge requirements and progression trees\"},{\"key\":\"btt:read\",\"bit\":256,\"resource\":\"btt\",\"description\":\"Read BetterTroveTools releases - latest version per platform and channel\"},{\"key\":\"leaderboards:read\",\"bit\":512,\"resource\":\"leaderboards\",\"description\":\"Read Trove in-game leaderboards - boards, entries, timestamps\"},{\"key\":\"market:read\",\"bit\":1024,\"resource\":\"market\",\"description\":\"Read Trove marketplace listings - listings, items, interest list, price history\"},{\"key\":\"activity:read\",\"bit\":2048,\"resource\":\"activity\",\"description\":\"Read Trove player-activity estimates - live active-player count and multi-period trend series\"},{\"key\":\"giveaways:read\",\"bit\":4096,\"resource\":\"giveaways\",\"description\":\"Read public giveaways - ongoing draws, prizes, entry counts\"},{\"key\":\"events:read\",\"bit\":8192,\"resource\":\"events\",\"description\":\"Subscribe to the live event stream (SSE) - real-time challenge + chaos-chest push updates\"},{\"key\":\"ocr:read\",\"bit\":16384,\"resource\":\"ocr\",\"description\":\"Read character stats from a screenshot - self-hosted OCR of the in-game stat sheet\"},{\"key\":\"store:read\",\"bit\":32768,\"resource\":\"store\",\"description\":\"Read the in-game Kiwi Store catalog - categories, products, prices, deals, loot odds\"},{\"key\":\"mods:write\",\"bit\":65536,\"resource\":\"mods\",\"description\":\"Manage Mods Hub projects for creators who connected their account to yours - create mods, cut and publish releases, edit metadata, images and visibility\"}],\"token_creation_daily_limit\":7,\"revoke_reasons\":[\"No longer using it\",\"Rotating to a new token\",\"Possibly compromised\",\"Created by mistake\"],\"github_oauth_enabled\":true,\"discord_oauth_enabled\":false}"
+  },
+  {
+   "name": "api_info",
+   "method": "GET",
+   "url": "/api-info",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_003"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "1013",
+    "content-type": "text/html; charset=utf-8"
+   },
+   "resp": "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Kiwi <API> \"\u00e9\" {x}</title>\n<style>\n  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;\n    font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif;\n    background:#0d1117; color:#e6edf3; }\n  .card { text-align:center; padding:40px; max-width:440px; }\n  h1 { font-size:2rem; margin:0 0 10px; }\n  h1 .mark { color:#58a6ff; }\n  p { color:#9aa4b2; margin:0 0 24px; }\n  a { color:#58a6ff; text-decoration:none; margin:0 10px; font-weight:600; }\n  a:hover { text-decoration:underline; }\n</style></head><body>\n  <div class=\"card\">\n    <h1><span class=\"mark\">\u25c6</span> Kiwi <API> \"\u00e9\" {x}</h1>\n    <p>Programmatic API access. Authenticate requests with an API token.</p>\n    <a href=\"https://docs.example.test/?a=1&b=<2>\">Documentation</a>\u00b7<a href=\"https://dev.example.test\">Developer Portal</a>\n  </div>\n</body></html>"
+  },
+  {
+   "name": "docs",
+   "method": "GET",
+   "url": "/docs",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_004"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "1018",
+    "content-type": "text/html; charset=utf-8"
+   },
+   "resp": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css\">\n    <link rel=\"shortcut icon\" href=\"https://fastapi.tiangolo.com/img/favicon.png\">\n    <title>Kiwi <API> \"\u00e9\" {x} - Swagger UI</title>\n    </head>\n    <body>\n    <div id=\"swagger-ui\">\n    </div>\n    <script src=\"https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js\"></script>\n    <!-- `SwaggerUIBundle` is now available on the page -->\n    <script>\n    const ui = SwaggerUIBundle({\n        url: '/openapi.json',\n    \"dom_id\": \"#swagger-ui\",\n\"layout\": \"BaseLayout\",\n\"deepLinking\": true,\n\"showExtensions\": true,\n\"showCommonExtensions\": true,\noauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',\n    presets: [\n        SwaggerUIBundle.presets.apis,\n        SwaggerUIBundle.SwaggerUIStandalonePreset\n        ],\n    })\n    </script>\n    </body>\n    </html>\n    "
+  },
+  {
+   "name": "redoc",
+   "method": "GET",
+   "url": "/redoc",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_005"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "900",
+    "content-type": "text/html; charset=utf-8"
+   },
+   "resp": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <title>Kiwi <API> \"\u00e9\" {x} - ReDoc</title>\n    <!-- needed for adaptive design -->\n    <meta charset=\"utf-8\"/>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    \n    <link href=\"https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700\" rel=\"stylesheet\">\n    \n    <link rel=\"shortcut icon\" href=\"https://fastapi.tiangolo.com/img/favicon.png\">\n    <!--\n    ReDoc doesn't change outer page styles\n    -->\n    <style>\n      body {\n        margin: 0;\n        padding: 0;\n      }\n    </style>\n    </head>\n    <body>\n    <noscript>\n        ReDoc requires Javascript to function. Please enable it to browse the documentation.\n    </noscript>\n    <redoc spec-url=\"/openapi.json\"></redoc>\n    <script src=\"https://cdn.jsdelivr.net/npm/redoc@2/bundles/redoc.standalone.js\"> </script>\n    </body>\n    </html>\n    "
+  },
+  {
+   "name": "oauth2_redirect",
+   "method": "GET",
+   "url": "/docs/oauth2-redirect?code=x",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_006"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "3012",
+    "content-type": "text/html; charset=utf-8"
+   },
+   "resp": "\n    <!doctype html>\n    <html lang=\"en-US\">\n    <head>\n        <title>Swagger UI: OAuth2 Redirect</title>\n    </head>\n    <body>\n    <script>\n        'use strict';\n        function run () {\n            var oauth2 = window.opener.swaggerUIRedirectOauth2;\n            var sentState = oauth2.state;\n            var redirectUrl = oauth2.redirectUrl;\n            var isValid, qp, arr;\n\n            if (/code|token|error/.test(window.location.hash)) {\n                qp = window.location.hash.substring(1).replace('?', '&');\n            } else {\n                qp = location.search.substring(1);\n            }\n\n            arr = qp.split(\"&\");\n            arr.forEach(function (v,i,_arr) { _arr[i] = '\"' + v.replace('=', '\":\"') + '\"';});\n            qp = qp ? JSON.parse('{' + arr.join() + '}',\n                    function (key, value) {\n                        return key === \"\" ? value : decodeURIComponent(value);\n                    }\n            ) : {};\n\n            isValid = qp.state === sentState;\n\n            if ((\n              oauth2.auth.schema.get(\"flow\") === \"accessCode\" ||\n              oauth2.auth.schema.get(\"flow\") === \"authorizationCode\" ||\n              oauth2.auth.schema.get(\"flow\") === \"authorization_code\"\n            ) && !oauth2.auth.code) {\n                if (!isValid) {\n                    oauth2.errCb({\n                        authId: oauth2.auth.name,\n                        source: \"auth\",\n                        level: \"warning\",\n                        message: \"Authorization may be unsafe, passed state was changed in server. The passed state wasn't returned from auth server.\"\n                    });\n                }\n\n                if (qp.code) {\n                    delete oauth2.state;\n                    oauth2.auth.code = qp.code;\n                    oauth2.callback({auth: oauth2.auth, redirectUrl: redirectUrl});\n                } else {\n                    let oauthErrorMsg;\n                    if (qp.error) {\n                        oauthErrorMsg = \"[\"+qp.error+\"]: \" +\n                            (qp.error_description ? qp.error_description+ \". \" : \"no accessCode received from the server. \") +\n                            (qp.error_uri ? \"More info: \"+qp.error_uri : \"\");\n                    }\n\n                    oauth2.errCb({\n                        authId: oauth2.auth.name,\n                        source: \"auth\",\n                        level: \"error\",\n                        message: oauthErrorMsg || \"[Authorization failed]: no accessCode received from the server.\"\n                    });\n                }\n            } else {\n                oauth2.callback({auth: oauth2.auth, token: qp, isValid: isValid, redirectUrl: redirectUrl});\n            }\n            window.close();\n        }\n\n        if (document.readyState !== 'loading') {\n            run();\n        } else {\n            document.addEventListener('DOMContentLoaded', function () {\n                run();\n            });\n        }\n    </script>\n    </body>\n    </html>\n        "
+  },
+  {
+   "name": "health_405",
+   "method": "POST",
+   "url": "/health",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_007"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_007\"}}"
+  },
+  {
+   "name": "config_405",
+   "method": "DELETE",
+   "url": "/config",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_008"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_008\"}}"
+  },
+  {
+   "name": "api_info_405",
+   "method": "PUT",
+   "url": "/api-info",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_009"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_009\"}}"
+  },
+  {
+   "name": "supporters_public_405",
+   "method": "POST",
+   "url": "/v1/misc/supporters",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_010"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_010\"}}"
+  },
+  {
+   "name": "admin_supporters_405",
+   "method": "PATCH",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_011"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_011\"}}"
+  },
+  {
+   "name": "admin_supporters_405_delete",
+   "method": "DELETE",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_012"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_012\"}}"
+  },
+  {
+   "name": "admin_supporter_405",
+   "method": "GET",
+   "url": "/admin/supporters/nz",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_013"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "DELETE",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_013\"}}"
+  },
+  {
+   "name": "admin_df_405",
+   "method": "POST",
+   "url": "/admin/design-feedback",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_014"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_014\"}}"
+  },
+  {
+   "name": "df_405",
+   "method": "GET",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_015"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_015\"}}"
+  },
+  {
+   "name": "report_405",
+   "method": "GET",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_016"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-length": "110",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_016\"}}"
+  },
+  {
+   "name": "admin_list_noauth",
+   "method": "GET",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_017"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_017\"}}"
+  },
+  {
+   "name": "admin_list_badtoken",
+   "method": "GET",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "authorization",
+     "Bearer not.a.jwt"
+    ],
+    [
+     "x-request-id",
+     "req_h_018"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "123",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_h_018\"}}"
+  },
+  {
+   "name": "admin_list_basic",
+   "method": "GET",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "authorization",
+     "Basic abc"
+    ],
+    [
+     "x-request-id",
+     "req_h_019"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_019\"}}"
+  },
+  {
+   "name": "admin_add_noauth",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_020"
+    ]
+   ],
+   "body": "{\"name\": \"x\"}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_020\"}}"
+  },
+  {
+   "name": "admin_add_noauth_invalid",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_021"
+    ]
+   ],
+   "body": "{\"nope\": 1}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_021\"}}"
+  },
+  {
+   "name": "admin_add_badjson_first",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_022"
+    ]
+   ],
+   "body": "{\"name\": ",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "224",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",9],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"req_h_022\"}}"
+  },
+  {
+   "name": "admin_replace_badjson_first",
+   "method": "PUT",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_023"
+    ]
+   ],
+   "body": "[1 2]",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "232",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",3],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting ',' delimiter\"}}],\"request_id\":\"req_h_023\"}}"
+  },
+  {
+   "name": "admin_replace_noauth",
+   "method": "PUT",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_024"
+    ]
+   ],
+   "body": "{\"names\": 5}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_024\"}}"
+  },
+  {
+   "name": "admin_delete_noauth",
+   "method": "DELETE",
+   "url": "/admin/supporters/nz",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_025"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_025\"}}"
+  },
+  {
+   "name": "admin_delete_badtoken",
+   "method": "DELETE",
+   "url": "/admin/supporters/n%20z",
+   "headers": [
+    [
+     "authorization",
+     "Bearer not.a.jwt"
+    ],
+    [
+     "x-request-id",
+     "req_h_026"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "123",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_h_026\"}}"
+  },
+  {
+   "name": "admin_delete_slash",
+   "method": "DELETE",
+   "url": "/admin/supporters/a%2Fb",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_027"
+    ]
+   ],
+   "body": "",
+   "status": 404,
+   "resp_headers": {
+    "content-length": "92",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"Not Found\",\"details\":null,\"request_id\":\"req_h_027\"}}"
+  },
+  {
+   "name": "admin_df_noauth_bad_days",
+   "method": "GET",
+   "url": "/admin/design-feedback?days=0",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_028"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_028\"}}"
+  },
+  {
+   "name": "admin_df_badtoken",
+   "method": "GET",
+   "url": "/admin/design-feedback",
+   "headers": [
+    [
+     "authorization",
+     "Bearer not.a.jwt"
+    ],
+    [
+     "x-request-id",
+     "req_h_029"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "123",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_h_029\"}}"
+  },
+  {
+   "name": "df_badjson_first",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_030"
+    ]
+   ],
+   "body": "{\"design\" \"voxel\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "233",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",10],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting ':' delimiter\"}}],\"request_id\":\"req_h_030\"}}"
+  },
+  {
+   "name": "df_bad_utf8_first",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_031"
+    ]
+   ],
+   "body": "{\"design\": \"\u00ff\"}",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "120",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"There was an error parsing the body\",\"details\":null,\"request_id\":\"req_h_031\"}}"
+  },
+  {
+   "name": "report_missing_body",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_032"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_032\"}}"
+  },
+  {
+   "name": "report_null",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_033"
+    ]
+   ],
+   "body": "null",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_033\"}}"
+  },
+  {
+   "name": "report_list",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_034"
+    ]
+   ],
+   "body": "[]",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "247",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[]}],\"request_id\":\"req_h_034\"}}"
+  },
+  {
+   "name": "report_empty",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_035"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "348",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"target_type\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"handle\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"reason\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_h_035\"}}"
+  },
+  {
+   "name": "report_types",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_036"
+    ]
+   ],
+   "body": "{\"target_type\": \"user\", \"handle\": 5, \"slug\": null, \"reason\": [\"x\"]}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "579",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"literal_error\",\"loc\":[\"body\",\"target_type\"],\"msg\":\"Input should be 'mod', 'modpack' or 'profile'\",\"input\":\"user\",\"ctx\":{\"expected\":\"'mod', 'modpack' or 'profile'\"}},{\"type\":\"string_type\",\"loc\":[\"body\",\"handle\"],\"msg\":\"Input should be a valid string\",\"input\":5},{\"type\":\"string_type\",\"loc\":[\"body\",\"slug\"],\"msg\":\"Input should be a valid string\",\"input\":null},{\"type\":\"string_type\",\"loc\":[\"body\",\"reason\"],\"msg\":\"Input should be a valid string\",\"input\":[\"x\"]}],\"request_id\":\"req_h_036\"}}"
+  },
+  {
+   "name": "report_lengths",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_037"
+    ]
+   ],
+   "body": "{\"target_type\": \"mod\", \"handle\": \"\", \"slug\": \"sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\", \"reason\": \"ab\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "659",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"handle\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"slug\"],\"msg\":\"String should have at most 140 characters\",\"input\":\"sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\",\"ctx\":{\"max_length\":140}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"reason\"],\"msg\":\"String should have at least 3 characters\",\"input\":\"ab\",\"ctx\":{\"min_length\":3}}],\"request_id\":\"req_h_037\"}}"
+  },
+  {
+   "name": "report_lengths_max",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_038"
+    ]
+   ],
+   "body": "{\"target_type\": \"profile\", \"handle\": \"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\", \"reason\": \"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "2452",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"handle\"],\"msg\":\"String should have at most 64 characters\",\"input\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"ctx\":{\"max_length\":64}},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"reason\"],\"msg\":\"String should have at most 2000 characters\",\"input\":\"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr\",\"ctx\":{\"max_length\":2000}}],\"request_id\":\"req_h_038\"}}"
+  },
+  {
+   "name": "report_unicode_len",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_039"
+    ]
+   ],
+   "body": "{\"target_type\": \"modpack\", \"handle\": \"\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\ud83d\\ude00\", \"reason\": \"\\ud83d\\ude00\\ud83d\\ude00\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "522",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"handle\"],\"msg\":\"String should have at most 64 characters\",\"input\":\"\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\ud83d\ude00\",\"ctx\":{\"max_length\":64}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"reason\"],\"msg\":\"String should have at least 3 characters\",\"input\":\"\ud83d\ude00\ud83d\ude00\",\"ctx\":{\"min_length\":3}}],\"request_id\":\"req_h_039\"}}"
+  },
+  {
+   "name": "report_badjson",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_040"
+    ]
+   ],
+   "body": "{\"target_type\": mod}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "225",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",16],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"req_h_040\"}}"
+  },
+  {
+   "name": "report_text_ct",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "text/plain"
+    ],
+    [
+     "x-request-id",
+     "req_h_041"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "249",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"{}\"}],\"request_id\":\"req_h_041\"}}"
+  }
+ ],
+ "validation": [
+  {
+   "name": "vote_missing",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "x-request-id",
+     "req_v_000"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_v_000\"}}"
+  },
+  {
+   "name": "vote_null",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_001"
+    ]
+   ],
+   "body": "null",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_v_001\"}}"
+  },
+  {
+   "name": "vote_empty",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_002"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "264",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"design\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"vote\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_v_002\"}}"
+  },
+  {
+   "name": "vote_bad",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_003"
+    ]
+   ],
+   "body": "{\"design\": \"Voxel\", \"theme\": \"dim\", \"vote\": 1}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "555",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"literal_error\",\"loc\":[\"body\",\"design\"],\"msg\":\"Input should be 'voxel' or 'classic'\",\"input\":\"Voxel\",\"ctx\":{\"expected\":\"'voxel' or 'classic'\"}},{\"type\":\"literal_error\",\"loc\":[\"body\",\"theme\"],\"msg\":\"Input should be 'auto', 'light' or 'dark'\",\"input\":\"dim\",\"ctx\":{\"expected\":\"'auto', 'light' or 'dark'\"}},{\"type\":\"literal_error\",\"loc\":[\"body\",\"vote\"],\"msg\":\"Input should be 'up' or 'down'\",\"input\":1,\"ctx\":{\"expected\":\"'up' or 'down'\"}}],\"request_id\":\"req_v_003\"}}"
+  },
+  {
+   "name": "vote_theme_null",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_004"
+    ]
+   ],
+   "body": "{\"design\": \"classic\", \"theme\": null, \"vote\": \"up\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "270",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"literal_error\",\"loc\":[\"body\",\"theme\"],\"msg\":\"Input should be 'auto', 'light' or 'dark'\",\"input\":null,\"ctx\":{\"expected\":\"'auto', 'light' or 'dark'\"}}],\"request_id\":\"req_v_004\"}}"
+  },
+  {
+   "name": "vote_ok",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_005"
+    ]
+   ],
+   "body": "{\"design\": \"voxel\", \"vote\": \"down\", \"extra\": 1}",
+   "status": 202,
+   "resp_headers": {
+    "content-length": "11",
+    "content-type": "application/json"
+   },
+   "resp": "{\"ok\":true}"
+  },
+  {
+   "name": "vote_ok_theme",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_006"
+    ]
+   ],
+   "body": "{\"design\": \"classic\", \"theme\": \"dark\", \"vote\": \"up\"}",
+   "status": 202,
+   "resp_headers": {
+    "content-length": "11",
+    "content-type": "application/json"
+   },
+   "resp": "{\"ok\":true}"
+  },
+  {
+   "name": "vote_no_ct",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "x-request-id",
+     "req_v_007"
+    ]
+   ],
+   "body": "{\"design\": \"voxel\", \"vote\": \"up\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "288",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"{\\\"design\\\": \\\"voxel\\\", \\\"vote\\\": \\\"up\\\"}\"}],\"request_id\":\"req_v_007\"}}"
+  },
+  {
+   "name": "add_missing",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "x-request-id",
+     "req_v_008"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_v_008\"}}"
+  },
+  {
+   "name": "add_types",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_009"
+    ]
+   ],
+   "body": "{\"name\": 5}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "206",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"req_v_009\"}}"
+  },
+  {
+   "name": "add_list",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_010"
+    ]
+   ],
+   "body": "[\"a\"]",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "250",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[\"a\"]}],\"request_id\":\"req_v_010\"}}"
+  },
+  {
+   "name": "add_empty",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_011"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "187",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"name\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_v_011\"}}"
+  },
+  {
+   "name": "replace_types",
+   "method": "PUT",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_012"
+    ]
+   ],
+   "body": "{\"names\": [\"a\", 2, null, \"b\"]}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "309",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"names\",1],\"msg\":\"Input should be a valid string\",\"input\":2},{\"type\":\"string_type\",\"loc\":[\"body\",\"names\",2],\"msg\":\"Input should be a valid string\",\"input\":null}],\"request_id\":\"req_v_012\"}}"
+  },
+  {
+   "name": "replace_not_list",
+   "method": "PUT",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_013"
+    ]
+   ],
+   "body": "{\"names\": \"abc\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "207",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"list_type\",\"loc\":[\"body\",\"names\"],\"msg\":\"Input should be a valid list\",\"input\":\"abc\"}],\"request_id\":\"req_v_013\"}}"
+  },
+  {
+   "name": "replace_missing",
+   "method": "PUT",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_v_014"
+    ]
+   ],
+   "body": "{\"name\": []}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "197",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"names\"],\"msg\":\"Field required\",\"input\":{\"name\":[]}}],\"request_id\":\"req_v_014\"}}"
+  },
+  {
+   "name": "days_low",
+   "method": "GET",
+   "url": "/admin/design-feedback?days=0",
+   "headers": [
+    [
+     "x-request-id",
+     "req_v_015"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "243",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"greater_than_equal\",\"loc\":[\"query\",\"days\"],\"msg\":\"Input should be greater than or equal to 1\",\"input\":\"0\",\"ctx\":{\"ge\":1}}],\"request_id\":\"req_v_015\"}}"
+  },
+  {
+   "name": "days_high",
+   "method": "GET",
+   "url": "/admin/design-feedback?days=366",
+   "headers": [
+    [
+     "x-request-id",
+     "req_v_016"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "243",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"less_than_equal\",\"loc\":[\"query\",\"days\"],\"msg\":\"Input should be less than or equal to 365\",\"input\":\"366\",\"ctx\":{\"le\":365}}],\"request_id\":\"req_v_016\"}}"
+  },
+  {
+   "name": "days_text",
+   "method": "GET",
+   "url": "/admin/design-feedback?days=abc",
+   "headers": [
+    [
+     "x-request-id",
+     "req_v_017"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "250",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"days\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"abc\"}],\"request_id\":\"req_v_017\"}}"
+  },
+  {
+   "name": "days_float",
+   "method": "GET",
+   "url": "/admin/design-feedback?days=1.5",
+   "headers": [
+    [
+     "x-request-id",
+     "req_v_018"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "250",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"days\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"1.5\"}],\"request_id\":\"req_v_018\"}}"
+  }
+ ],
+ "recorded_votes": [
+  [
+   "voxel",
+   "auto",
+   "down"
+  ],
+  [
+   "classic",
+   "dark",
+   "up"
+  ],
+  [
+   "voxel",
+   "auto",
+   "up"
+  ]
+ ],
+ "responses": [
+  {
+   "name": "public_list",
+   "method": "GET",
+   "url": "/v1/misc/supporters",
+   "headers": [
+    [
+     "x-request-id",
+     "req_s_000"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "96",
+    "content-type": "application/json",
+    "x-ratelimit-limit": "30",
+    "x-ratelimit-remaining": "29",
+    "x-ratelimit-reset": "1767323045",
+    "cache-control": "public, max-age=300"
+   },
+   "resp": "{\"supporters\":[\"IINikstarII\",\"Nao373\",\"Wahoo\",\"b\u00f8ryzje\",\"nz \\\"q\\\"\",\"Tues\u2028\",\"\ud83d\ude00\"],\"count\":7}"
+  },
+  {
+   "name": "admin_list",
+   "method": "GET",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "x-request-id",
+     "req_s_001"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "194",
+    "content-type": "application/json"
+   },
+   "resp": "{\"items\":[{\"name\":\"IINikstarII\",\"added_by\":null,\"created_at\":\"2025-03-04T05:06:07.123000Z\"},{\"name\":\"\u00fcn\u00ef\",\"added_by\":\"65a1b2c3d4e5f60718293a4b\",\"created_at\":\"2025-03-04T05:06:07Z\"}],\"count\":2}"
+  },
+  {
+   "name": "admin_add",
+   "method": "POST",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_s_002"
+    ]
+   ],
+   "body": "{\"name\": \"  N\\u00e9w  \"}",
+   "status": 201,
+   "resp_headers": {
+    "content-length": "96",
+    "content-type": "application/json"
+   },
+   "resp": "{\"name\":\"N\u00e9w\",\"added_by\":\"65a1b2c3d4e5f60718293a4b\",\"created_at\":\"2025-03-04T05:06:07.123456Z\"}"
+  },
+  {
+   "name": "admin_replace",
+   "method": "PUT",
+   "url": "/admin/supporters",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_s_003"
+    ]
+   ],
+   "body": "{\"names\": [\"a\", \"b\"]}",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "23",
+    "content-type": "application/json"
+   },
+   "resp": "{\"removed\":7,\"added\":2}"
+  },
+  {
+   "name": "admin_delete",
+   "method": "DELETE",
+   "url": "/admin/supporters/%20nz",
+   "headers": [
+    [
+     "x-request-id",
+     "req_s_004"
+    ]
+   ],
+   "body": "",
+   "status": 204,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "resp": ""
+  },
+  {
+   "name": "admin_delete_missing",
+   "method": "DELETE",
+   "url": "/admin/supporters/n%C3%A9'%22x",
+   "headers": [
+    [
+     "x-request-id",
+     "req_s_005"
+    ]
+   ],
+   "body": "",
+   "status": 404,
+   "resp_headers": {
+    "content-length": "111",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"No supporter named 'n\u00e9'\\\"x'\",\"details\":null,\"request_id\":\"req_s_005\"}}"
+  },
+  {
+   "name": "df_post",
+   "method": "POST",
+   "url": "/site/design-feedback",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_s_006"
+    ]
+   ],
+   "body": "{\"design\": \"voxel\", \"vote\": \"up\"}",
+   "status": 202,
+   "resp_headers": {
+    "content-length": "11",
+    "content-type": "application/json"
+   },
+   "resp": "{\"ok\":true}"
+  }
+ ],
+ "resolve": [
+  {
+   "kind": "mod",
+   "handle": " AALLYN ",
+   "slug": "Cool-Mod\t",
+   "filter": [
+    [
+     "owner_handle",
+     "aallyn"
+    ],
+    [
+     "slug",
+     "cool-mod"
+    ]
+   ],
+   "doc": {
+    "owner_handle": "aallyn",
+    "slug": "cool-mod",
+    "id": "65a1b2c3d4e5f60718293a41",
+    "title": "Cool Mod",
+    "visibility": "public"
+   },
+   "result": [
+    "65a1b2c3d4e5f60718293a41",
+    "Cool Mod",
+    "/mods/aallyn/cool-mod"
+   ]
+  },
+  {
+   "kind": "mod",
+   "handle": "aallyn",
+   "slug": "draft",
+   "filter": [
+    [
+     "owner_handle",
+     "aallyn"
+    ],
+    [
+     "slug",
+     "draft"
+    ]
+   ],
+   "doc": {
+    "owner_handle": "aallyn",
+    "slug": "draft",
+    "id": "65a1b2c3d4e5f60718293a41",
+    "title": "D",
+    "visibility": "draft"
+   },
+   "result": null
+  },
+  {
+   "kind": "mod",
+   "handle": "aallyn",
+   "slug": "web",
+   "filter": [
+    [
+     "owner_handle",
+     "aallyn"
+    ],
+    [
+     "slug",
+     "web"
+    ]
+   ],
+   "doc": {
+    "owner_handle": "aallyn",
+    "slug": "web",
+    "id": "65a1b2c3d4e5f60718293a41",
+    "title": "W",
+    "visibility": "public_website_only"
+   },
+   "result": null
+  },
+  {
+   "kind": "mod",
+   "handle": "\u00d6LAF",
+   "slug": "\u00dcNLISTED",
+   "filter": [
+    [
+     "owner_handle",
+     "\u00f6laf"
+    ],
+    [
+     "slug",
+     "\u00fcnlisted"
+    ]
+   ],
+   "doc": {
+    "owner_handle": "\u00f6laf",
+    "slug": "\u00fcnlisted",
+    "id": "65a1b2c3d4e5f60718293a41",
+    "title": "",
+    "visibility": "unlisted"
+   },
+   "result": [
+    "65a1b2c3d4e5f60718293a41",
+    "",
+    "/mods/\u00f6laf/\u00fcnlisted"
+   ]
+  },
+  {
+   "kind": "mod",
+   "handle": "aallyn",
+   "slug": "missing",
+   "filter": [
+    [
+     "owner_handle",
+     "aallyn"
+    ],
+    [
+     "slug",
+     "missing"
+    ]
+   ],
+   "doc": null,
+   "result": null
+  },
+  {
+   "kind": "modpack",
+   "handle": "Aallyn",
+   "slug": "PACK",
+   "filter": [
+    [
+     "owner_handle",
+     "aallyn"
+    ],
+    [
+     "slug",
+     "pack"
+    ]
+   ],
+   "doc": {
+    "owner_handle": "aallyn",
+    "slug": "pack",
+    "id": "65a1b2c3d4e5f60718293a42",
+    "title": "Pack",
+    "visibility": "unlisted"
+   },
+   "result": [
+    "65a1b2c3d4e5f60718293a42",
+    "Pack",
+    "/modpacks/aallyn/pack"
+   ]
+  },
+  {
+   "kind": "modpack",
+   "handle": "aallyn",
+   "slug": "hidden",
+   "filter": [
+    [
+     "owner_handle",
+     "aallyn"
+    ],
+    [
+     "slug",
+     "hidden"
+    ]
+   ],
+   "doc": {
+    "owner_handle": "aallyn",
+    "slug": "hidden",
+    "id": "65a1b2c3d4e5f60718293a42",
+    "title": "H",
+    "visibility": "draft"
+   },
+   "result": null
+  },
+  {
+   "kind": "profile",
+   "handle": "AALLYN",
+   "slug": "ignored",
+   "filter": [
+    [
+     "handle",
+     "aallyn"
+    ]
+   ],
+   "doc": {
+    "handle": "aallyn",
+    "id": "65a1b2c3d4e5f60718293a43",
+    "display_name": "Aallyn"
+   },
+   "result": [
+    "65a1b2c3d4e5f60718293a43",
+    "Aallyn",
+    "/mods/aallyn"
+   ]
+  },
+  {
+   "kind": "profile",
+   "handle": "\u2003NZ\u001f",
+   "slug": "",
+   "filter": [
+    [
+     "handle",
+     "nz"
+    ]
+   ],
+   "doc": {
+    "handle": "nz",
+    "id": "65a1b2c3d4e5f60718293a43",
+    "display_name": ""
+   },
+   "result": [
+    "65a1b2c3d4e5f60718293a43",
+    "nz",
+    "/mods/nz"
+   ]
+  },
+  {
+   "kind": "profile",
+   "handle": "nobody",
+   "slug": "",
+   "filter": [
+    [
+     "handle",
+     "nobody"
+    ]
+   ],
+   "doc": null,
+   "result": null
+  },
+  {
+   "kind": "mod",
+   "handle": "\u0130STANBUL",
+   "slug": "\u03a3\u0391\u03a3",
+   "filter": [
+    [
+     "owner_handle",
+     "i\u0307stanbul"
+    ],
+    [
+     "slug",
+     "\u03c3\u03b1\u03c2"
+    ]
+   ],
+   "doc": null,
+   "result": null
+  }
+ ],
+ "reports": [
+  {
+   "name": "report_ok",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_m_000"
+    ]
+   ],
+   "body": "{\"target_type\": \"mod\", \"handle\": \"h\", \"slug\": \"s\", \"reason\": \"  spam\\n \", \"extra\": true}",
+   "status": 202,
+   "resp_headers": {
+    "content-length": "21",
+    "content-type": "application/json"
+   },
+   "resp": "{\"status\":\"received\"}"
+  },
+  {
+   "name": "report_not_found",
+   "method": "POST",
+   "url": "/v1/moderation/report",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_m_001"
+    ]
+   ],
+   "body": "{\"target_type\": \"profile\", \"handle\": \"missing\", \"reason\": \"why?\"}",
+   "status": 404,
+   "resp_headers": {
+    "content-length": "114",
+    "content-type": "application/json"
+   },
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"That content couldn't be found.\",\"details\":null,\"request_id\":\"req_m_001\"}}"
+  }
+ ],
+ "report_docs": [
+  {
+   "target_type": "mod",
+   "target_id": "65a1b2c3d4e5f60718293a41",
+   "target_label": "",
+   "target_url": "/mods/h/s",
+   "reason": "spam"
+  }
+ ],
+ "clean": [
+  {
+   "names": [
+    "a",
+    "b"
+   ],
+   "out": [
+    "a",
+    "b"
+   ],
+   "result": {
+    "removed": 3,
+    "added": 2
+   }
+  },
+  {
+   "names": [
+    "  Nz ",
+    "nz",
+    "NZ",
+    "Wahoo"
+   ],
+   "out": [
+    "Nz",
+    "Wahoo"
+   ],
+   "result": {
+    "removed": 3,
+    "added": 2
+   }
+  },
+  {
+   "names": [
+    "",
+    "   ",
+    "\t"
+   ],
+   "out": null,
+   "error": "Provide at least one name (use DELETE to remove individually)"
+  },
+  {
+   "names": [],
+   "out": null,
+   "error": "Provide at least one name (use DELETE to remove individually)"
+  },
+  {
+   "names": [
+    "\u2003x\u001c",
+    "X",
+    "x "
+   ],
+   "out": [
+    "x"
+   ],
+   "result": {
+    "removed": 3,
+    "added": 1
+   }
+  },
+  {
+   "names": [
+    "Stra\u00dfe",
+    "STRASSE",
+    "strasse"
+   ],
+   "out": [
+    "Stra\u00dfe",
+    "STRASSE"
+   ],
+   "result": {
+    "removed": 3,
+    "added": 2
+   }
+  },
+  {
+   "names": [
+    "\u0130",
+    "i\u0307"
+   ],
+   "out": [
+    "\u0130"
+   ],
+   "result": {
+    "removed": 3,
+    "added": 1
+   }
+  },
+  {
+   "names": [
+    "\u039f\u0394\u039f\u03a3",
+    "\u03bf\u03b4\u03bf\u03c2",
+    "\u03bf\u03b4\u03bf\u03c3"
+   ],
+   "out": [
+    "\u039f\u0394\u039f\u03a3",
+    "\u03bf\u03b4\u03bf\u03c3"
+   ],
+   "result": {
+    "removed": 3,
+    "added": 2
+   }
+  },
+  {
+   "names": [
+    "a",
+    "A",
+    "b",
+    "a"
+   ],
+   "out": [
+    "a",
+    "b"
+   ],
+   "result": {
+    "removed": 3,
+    "added": 2
+   }
+  }
+ ],
+ "add_errors": [
+  {
+   "name": "",
+   "lookup": [],
+   "stored": null,
+   "error": "Supporter name cannot be empty"
+  },
+  {
+   "name": "  \t",
+   "lookup": [],
+   "stored": null,
+   "error": "Supporter name cannot be empty"
+  },
+  {
+   "name": " nz ",
+   "lookup": [
+    "nz"
+   ],
+   "stored": null,
+   "error": "Supporter 'nz' already exists"
+  },
+  {
+   "name": "Wahoo",
+   "lookup": [
+    "Wahoo"
+   ],
+   "stored": null,
+   "error": "Supporter 'Wahoo' already exists"
+  },
+  {
+   "name": "wahoo",
+   "lookup": [
+    "wahoo"
+   ],
+   "stored": "wahoo",
+   "error": null
+  },
+  {
+   "name": "\u3000\u00dcn\u00ef\u001d",
+   "lookup": [
+    "\u00dcn\u00ef"
+   ],
+   "stored": "\u00dcn\u00ef",
+   "error": null
+  }
+ ],
+ "summary": {
+  "now": "2026-03-01T00:30:00+00:00",
+  "since": [
+   {
+    "days": 1,
+    "since": "2026-03-01"
+   },
+   {
+    "days": 2,
+    "since": "2026-02-28"
+   },
+   {
+    "days": 30,
+    "since": "2026-01-31"
+   },
+   {
+    "days": 365,
+    "since": "2025-03-02"
+   }
+  ],
+  "tallies": [
+   {
+    "rows": [],
+    "out": "{\"days\":30,\"total\":{\"up\":0,\"down\":0},\"by_design\":{\"voxel\":{\"up\":0,\"down\":0},\"classic\":{\"up\":0,\"down\":0}},\"by_theme\":{\"auto\":{\"up\":0,\"down\":0},\"light\":{\"up\":0,\"down\":0},\"dark\":{\"up\":0,\"down\":0}},\"series\":[]}"
+   },
+   {
+    "rows": [
+     {
+      "_id": "x",
+      "day": "2026-02-28",
+      "design": "voxel",
+      "theme": "auto",
+      "vote": "up",
+      "count": 3
+     },
+     {
+      "day": "2026-02-27",
+      "design": "classic",
+      "theme": "dark",
+      "vote": "down",
+      "count": 2
+     },
+     {
+      "day": "2026-02-28",
+      "design": "voxel",
+      "theme": "light",
+      "vote": "down",
+      "count": 1
+     },
+     {
+      "day": "2026-02-28",
+      "design": "neon",
+      "theme": "sepia",
+      "vote": "up",
+      "count": 4
+     },
+     {
+      "day": "2026-02-26",
+      "design": "",
+      "theme": null,
+      "vote": "up"
+     },
+     {
+      "day": "2026-02-26",
+      "design": "voxel",
+      "vote": "maybe",
+      "count": 9
+     },
+     {
+      "day": "2026-02-25",
+      "vote": "down",
+      "count": 2.9
+     },
+     {
+      "day": "2026-02-25",
+      "design": "zeta",
+      "theme": "auto",
+      "vote": "up",
+      "count": "12"
+     },
+     {
+      "day": "2026-02-25",
+      "design": "alpha",
+      "theme": "dark",
+      "vote": "up",
+      "count": true
+     },
+     {
+      "day": "2026-02-24",
+      "design": "voxel",
+      "theme": "auto",
+      "vote": "down",
+      "count": null
+     },
+     {
+      "day": "2026-02-24",
+      "design": "voxel",
+      "theme": "auto",
+      "vote": "up",
+      "count": 0
+     }
+    ],
+    "out": "{\"days\":30,\"total\":{\"up\":20,\"down\":5},\"by_design\":{\"voxel\":{\"up\":3,\"down\":1},\"classic\":{\"up\":0,\"down\":2},\"neon\":{\"up\":4,\"down\":0},\"?\":{\"up\":0,\"down\":2},\"zeta\":{\"up\":12,\"down\":0},\"alpha\":{\"up\":1,\"down\":0}},\"by_theme\":{\"auto\":{\"up\":15,\"down\":0},\"light\":{\"up\":0,\"down\":1},\"dark\":{\"up\":1,\"down\":2},\"sepia\":{\"up\":4,\"down\":0},\"?\":{\"up\":0,\"down\":2}},\"series\":[{\"day\":\"2026-02-24\",\"up\":0,\"down\":0},{\"day\":\"2026-02-25\",\"up\":13,\"down\":2},{\"day\":\"2026-02-26\",\"up\":0,\"down\":0},{\"day\":\"2026-02-27\",\"up\":0,\"down\":2},{\"day\":\"2026-02-28\",\"up\":7,\"down\":1}]}"
+   },
+   {
+    "rows": [
+     {
+      "day": "2026-02-28",
+      "design": "voxel",
+      "theme": "auto",
+      "vote": "up",
+      "count": "__nan__"
+     }
+    ],
+    "out": null,
+    "error": "ValueError"
+   },
+   {
+    "rows": [
+     {
+      "day": "2026-02-28",
+      "design": "voxel",
+      "theme": "auto",
+      "vote": "nope",
+      "count": "x"
+     }
+    ],
+    "out": null,
+    "error": "ValueError"
+   }
+  ]
+ },
+ "models": {
+  "content_report": [
+   "target_type",
+   "target_id",
+   "target_label",
+   "target_url",
+   "reason",
+   "resolved",
+   "created_at"
+  ],
+  "supporter": [
+   "name",
+   "added_by",
+   "created_at"
+  ]
+ }
+}

@@ -9,6 +9,7 @@ pub mod blueprint;
 pub mod detection;
 pub mod gems;
 pub mod lbdump;
+pub mod leaf;
 pub mod renames;
 pub mod swf;
 pub mod tmod;

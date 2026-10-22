@@ -229,24 +229,6 @@ pub fn lossless_pixels(
     Some(out)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn signed_bits() {
-        let mut r = BitReader::new(&[0b1110_0000]);
-        assert_eq!(r.read_signed(3), Some(-1));
-        assert_eq!(r.byte_pos(), 1);
-    }
-
-    #[test]
-    fn premultiplied_alpha_is_undone() {
-        let px = lossless_pixels(5, true, 1, 1, 0, &[128, 64, 64, 64]).unwrap();
-        assert_eq!(px, vec![127, 127, 127, 128]);
-    }
-}
-
 /// `extract.MAX_INFLATED`.
 pub const MAX_INFLATED: usize = 256 * 1024 * 1024;
 
@@ -293,5 +275,23 @@ pub fn tags(data: &[u8]) -> Option<Vec<(u16, &[u8])>> {
         if code == 0 {
             return Some(out);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn signed_bits() {
+        let mut r = BitReader::new(&[0b1110_0000]);
+        assert_eq!(r.read_signed(3), Some(-1));
+        assert_eq!(r.byte_pos(), 1);
+    }
+
+    #[test]
+    fn premultiplied_alpha_is_undone() {
+        let px = lossless_pixels(5, true, 1, 1, 0, &[128, 64, 64, 64]).unwrap();
+        assert_eq!(px, vec![127, 127, 127, 128]);
     }
 }

@@ -3,6 +3,8 @@
 //! Python app. Port a path with every method Python serves on it: a method
 //! missing here is a 405, not a trip to Python.
 
+pub mod leaf;
+
 use std::sync::Arc;
 
 use axum::Router;
@@ -11,7 +13,7 @@ use crate::{middleware, proxy::proxy, state::AppState};
 
 /// Routes answered in Rust.
 fn ported() -> Router<AppState> {
-    Router::new()
+    Router::new().merge(leaf::router())
 }
 
 pub fn app(state: AppState) -> Router {
