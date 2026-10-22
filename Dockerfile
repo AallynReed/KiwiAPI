@@ -1,4 +1,5 @@
-# Rust hot paths (native/), built into an abi3 wheel the app stage installs.
+# Rust (native/): the abi3 wheel the Python app imports, and kiwi-server, the
+# front door that answers ported routes and proxies the rest to Python.
 FROM python:3.13-slim AS native
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl build-essential \
@@ -10,6 +11,11 @@ COPY native /native
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/native/target \
     cd /native/kiwi-py && maturin build --release --locked -o /wheels
+# The target dir is a cache mount, so the binary is copied out in the same step.
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/native/target \
+    cd /native && cargo build --release --locked -p kiwi-server \
+    && install -D target/release/kiwi-server /out/kiwi-server
 
 FROM python:3.13-slim AS app
 
@@ -62,10 +68,13 @@ RUN python -c "from rapidocr import RapidOCR; RapidOCR()"
 COPY --from=native /wheels /tmp/wheels
 RUN pip install --no-cache-dir /tmp/wheels/*.whl && rm -rf /tmp/wheels
 
+COPY --from=native /out/kiwi-server /usr/local/bin/kiwi-server
+
 COPY app ./app
 
 EXPOSE 8000
 
+# The Python app on its own (compose runs kiwi-server as `api` and this as `api-py`).
 # --proxy-headers: trust X-Forwarded-For only from $FORWARDED_ALLOW_IPS (uvicorn reads
 # it; default 127.0.0.1), so request.client.host is the real client, not the proxy.
 # --timeout-graceful-shutdown: the endless SSE streams would otherwise hold the

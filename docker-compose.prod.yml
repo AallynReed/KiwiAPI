@@ -1,14 +1,15 @@
 # Production overrides. Apply with:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 #
-# Swaps the dev --reload (single worker) for multiple uvicorn workers and no
-# auto-reload. Code still comes from the ./app bind mount (synced), so a deploy
-# = sync + recreate; for fully immutable deploys, bake the image instead.
+# Runs the Python app with several uvicorn workers. Code still comes from the
+# ./app bind mount (synced), so a deploy = sync + recreate; for fully immutable
+# deploys, bake the image instead. kiwi-server (api) needs no override: it is one
+# multi-threaded process.
 services:
-  api:
+  api-py:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "${FORWARDED_ALLOW_IPS:-127.0.0.1}", "--workers", "${API_WORKERS:-8}",
-              "--timeout-graceful-shutdown", "3"]
+              "--proxy-headers", "--forwarded-allow-ips", "*", "--workers", "${API_WORKERS:-8}",
+              "--timeout-keep-alive", "120", "--timeout-graceful-shutdown", "3"]
 
   # Website (presentation only) - a few workers is plenty; it does no heavy CPU,
   # just template rendering + thin internal_get fan-out to the api.

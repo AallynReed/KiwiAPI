@@ -37,7 +37,7 @@ async fn send(app: Router, method: &str, uri: &str) -> (StatusCode, Value) {
 
 fn disabled_body(name: &str) -> Value {
     serde_json::json!({"error": {"code": "not_found", "message": format!("The {name} is currently disabled."),
-                                 "details": null, "request_id": null}})
+                                 "details": null, "request_id": "-"}})
 }
 
 #[tokio::test]

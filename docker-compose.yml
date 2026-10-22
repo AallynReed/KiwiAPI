@@ -1,3 +1,103 @@
+# Shared by api (kiwi-server) and api-py (the Python app behind it): a ported route
+# needs the same stores, secrets and data paths Python uses.
+x-api-environment: &api-environment
+  MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
+  MONGO_DB: ${MONGO_DB:-kiwi}
+  REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+  # Postgres - the leaderboards domain only (entries/boards/players/activity).
+  POSTGRES_DSN: ${POSTGRES_DSN:-postgresql://${POSTGRES_USER:-kiwi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-kiwi_lb}}
+  # Override these in a .env file (see .env.example) - do NOT ship the defaults.
+  SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
+  # Shared secret for the internal page-view ingest the web container posts to.
+  # Same value on api + web, or Site Analytics records nothing.
+  INTERNAL_KEY: ${INTERNAL_KEY:-}
+  CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-turnstile}
+  CAPTCHA_SECRET: ${CAPTCHA_SECRET:-}
+  CAPTCHA_SITEKEY: ${CAPTCHA_SITEKEY:-}
+  # Master/admin account - created or promoted to superuser on startup.
+  ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+  USAGE_RETENTION_DAYS: ${USAGE_RETENTION_DAYS:-30}
+  # Email (Postfix on the host). host.docker.internal resolves via extra_hosts.
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-25}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+  SMTP_SSL: ${SMTP_SSL:-false}
+  MAIL_FROM: ${MAIL_FROM:-no-reply@aallyn.net}
+  # Daily rate-limit digest recipient (and how aggressive).
+  RATE_LIMIT_ALERT_EMAIL: ${RATE_LIMIT_ALERT_EMAIL:-aallyn@aallyn.net}
+  RATE_LIMIT_ALERT_THRESHOLD: ${RATE_LIMIT_ALERT_THRESHOLD:-20}
+  # "Sign in with GitHub" (optional). Leave blank to disable.
+  GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+  GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+  # "Sign in with Discord" + Discord interactions (optional). Leave blank to disable.
+  DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+  DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+  DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY:-}
+  DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+  DISCORD_INSTALL_URL: ${DISCORD_INSTALL_URL:-}
+  # Lists Trove's Steam Workshop for BTT's Steam tab. Blank = tab stays empty.
+  STEAM_WEB_API_KEY: ${STEAM_WEB_API_KEY:-}
+  # Game-file version archiver. OFF by default - set to true ONLY when the
+  # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
+  TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}
+  TROVE_UPDATE_STORE_DIR: ${TROVE_UPDATE_STORE_DIR:-/data/updates}
+  # Game data rebuilt after each patch (app/trove/decode); read by api, web and bot.
+  GAMEDATA_DIR: /data/gamedata
+  # Server-side ingest backlog (gzipped dumps keyed by anchor; re-ingestable
+  # from the admin panel). Bind-mounted below; drop <unix>.cfg files in too.
+  BACKLOG_DIR: ${BACKLOG_DIR:-/data/backlog}
+  # Mods Hub store: per-project git repos + images + compiled .tmod blobs.
+  # Bind-mounted below so mods survive a container rebuild.
+  MODS_STORE_DIR: ${MODS_STORE_DIR:-/data/mods}
+  # Files received through a one-off PIN upload link (see app/drops).
+  DROPS_STORE_DIR: ${DROPS_STORE_DIR:-/data/drops}
+  # TroveUI bare repo: the daily mod statistics read its Trovesaurus and Steam ids.
+  CUSTOM_ART_REMOTE: /data/troveui.git
+  # Delve-rotation source (week-based). Refresher stays off until the URL is set.
+  TROVE_DELVE_SOURCE_URL: ${TROVE_DELVE_SOURCE_URL:-}
+  TROVE_DELVE_SOURCE_REFERER: ${TROVE_DELVE_SOURCE_REFERER:-}
+  # BTT release relay: optional GitHub PAT (lifts 60/hr unauth -> 5000/hr).
+  BTT_RELEASES_REPO: ${BTT_RELEASES_REPO:-AallynReed/BetterTroveTools}
+  BTT_RELEASES_TOKEN: ${BTT_RELEASES_TOKEN:-}
+  # Community feeds: Twitch + YouTube credentials (Bilibili is credential-less).
+  # Leave blank to disable that feed (it just serves empty).
+  TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
+  TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
+  YT_API_KEY: ${YT_API_KEY:-}
+  # Public base for off-site-embedded API renders (board/announce/activity
+  # PNGs + Image-Studio images). Empty => app_url (same-origin default). At
+  # cutover, when the website moves to its own container, set this to the api
+  # host so Discord/webhook embeds keep resolving. See app/core/config.py.
+  ASSET_BASE_URL: ${ASSET_BASE_URL:-}
+
+x-api-volumes: &api-volumes
+  # Bind-mount the source so host edits are picked up (api-py runs it; api has it
+  # for `docker compose exec api python ...`).
+  - ./app:/app/app
+  # Content-addressed blob store for the game-file archive (host: ./.game_updates).
+  # Many GB once enabled - kept out of git and the image build context.
+  - ./.game_updates:/data/updates
+  - ./.gamedata:/data/gamedata
+  # Ingest backlog: every leaderboard dump the API receives is gzip-saved here
+  # keyed by anchor, so the whole history can be re-ingested from the admin
+  # panel with no upload. Drop <unix>.cfg files in by hand too. Kept out of
+  # git (can grow large).
+  - ./.backlog:/data/backlog
+  # Mods Hub store: shared mods' git repos, uploaded images and compiled
+  # .tmod release artifacts. Kept out of git (user content, grows).
+  - ./.mods:/data/mods
+  # File drops: whatever people send through a one-off upload link.
+  # Kept out of git (arbitrary user files).
+  - ./.drops:/data/drops
+  - ./.troveui.git:/data/troveui.git:ro
+  # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
+  # Bind-mounted so the heavy binary assets don't bake into the image; the
+  # api container serves trove.aallyn.net out of this directory.
+  - ./site:/app/site:ro
+
 services:
   mongo:
     image: mongo:7
@@ -122,78 +222,42 @@ services:
     # Bound to localhost so only the local reverse proxy can reach it.
     ports:
       - "${BIND_ADDR:-127.0.0.1}:15546:8000"
+    # kiwi-server (native/kiwi-server) answers the routes ported to Rust and proxies
+    # everything else to api-py. It resolves the visitor from X-Forwarded-For exactly
+    # as uvicorn did (only FORWARDED_ALLOW_IPS may set it) and hands Python just that
+    # address. KIWI_PROXY_ALL=1 in .env sends every route to Python again.
     environment:
-      MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
-      MONGO_DB: ${MONGO_DB:-kiwi}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
-      # Postgres - the leaderboards domain only (entries/boards/players/activity).
-      POSTGRES_DSN: ${POSTGRES_DSN:-postgresql://${POSTGRES_USER:-kiwi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-kiwi_lb}}
-      # Override these in a .env file (see .env.example) - do NOT ship the defaults.
-      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
-      # Shared secret for the internal page-view ingest the web container posts to.
-      # Same value on api + web, or Site Analytics records nothing.
-      INTERNAL_KEY: ${INTERNAL_KEY:-}
-      CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-turnstile}
-      CAPTCHA_SECRET: ${CAPTCHA_SECRET:-}
-      CAPTCHA_SITEKEY: ${CAPTCHA_SITEKEY:-}
-      # Master/admin account - created or promoted to superuser on startup.
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
-      USAGE_RETENTION_DAYS: ${USAGE_RETENTION_DAYS:-30}
-      # Email (Postfix on the host). host.docker.internal resolves via extra_hosts.
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-25}
-      SMTP_USERNAME: ${SMTP_USERNAME:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
-      SMTP_SSL: ${SMTP_SSL:-false}
-      MAIL_FROM: ${MAIL_FROM:-no-reply@aallyn.net}
-      # Daily rate-limit digest recipient (and how aggressive).
-      RATE_LIMIT_ALERT_EMAIL: ${RATE_LIMIT_ALERT_EMAIL:-aallyn@aallyn.net}
-      RATE_LIMIT_ALERT_THRESHOLD: ${RATE_LIMIT_ALERT_THRESHOLD:-20}
-      # "Sign in with GitHub" (optional). Leave blank to disable.
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      # "Sign in with Discord" + Discord interactions (optional). Leave blank to disable.
-      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
-      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
-      DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY:-}
-      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
-      DISCORD_INSTALL_URL: ${DISCORD_INSTALL_URL:-}
-      # Lists Trove's Steam Workshop for BTT's Steam tab. Blank = tab stays empty.
-      STEAM_WEB_API_KEY: ${STEAM_WEB_API_KEY:-}
-      # Game-file version archiver. OFF by default - set to true ONLY when the
-      # blob disk (./.game_updates) has room; the first sync pulls multi-GB.
-      TROVE_UPDATE_ENABLED: ${TROVE_UPDATE_ENABLED:-false}
-      TROVE_UPDATE_STORE_DIR: ${TROVE_UPDATE_STORE_DIR:-/data/updates}
-      # Game data rebuilt after each patch (app/trove/decode); read by api, web and bot.
-      GAMEDATA_DIR: /data/gamedata
-      # Server-side ingest backlog (gzipped dumps keyed by anchor; re-ingestable
-      # from the admin panel). Bind-mounted below; drop <unix>.cfg files in too.
-      BACKLOG_DIR: ${BACKLOG_DIR:-/data/backlog}
-      # Mods Hub store: per-project git repos + images + compiled .tmod blobs.
-      # Bind-mounted below so mods survive a container rebuild.
-      MODS_STORE_DIR: ${MODS_STORE_DIR:-/data/mods}
-      # Files received through a one-off PIN upload link (see app/drops).
-      DROPS_STORE_DIR: ${DROPS_STORE_DIR:-/data/drops}
-      # TroveUI bare repo: the daily mod statistics read its Trovesaurus and Steam ids.
-      CUSTOM_ART_REMOTE: /data/troveui.git
-      # Delve-rotation source (week-based). Refresher stays off until the URL is set.
-      TROVE_DELVE_SOURCE_URL: ${TROVE_DELVE_SOURCE_URL:-}
-      TROVE_DELVE_SOURCE_REFERER: ${TROVE_DELVE_SOURCE_REFERER:-}
-      # BTT release relay: optional GitHub PAT (lifts 60/hr unauth -> 5000/hr).
-      BTT_RELEASES_REPO: ${BTT_RELEASES_REPO:-AallynReed/BetterTroveTools}
-      BTT_RELEASES_TOKEN: ${BTT_RELEASES_TOKEN:-}
-      # Community feeds: Twitch + YouTube credentials (Bilibili is credential-less).
-      # Leave blank to disable that feed (it just serves empty).
-      TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID:-}
-      TWITCH_CLIENT_SECRET: ${TWITCH_CLIENT_SECRET:-}
-      YT_API_KEY: ${YT_API_KEY:-}
-      # Public base for off-site-embedded API renders (board/announce/activity
-      # PNGs + Image-Studio images). Empty => app_url (same-origin default). At
-      # cutover, when the website moves to its own container, set this to the api
-      # host so Discord/webhook embeds keep resolving. See app/core/config.py.
-      ASSET_BASE_URL: ${ASSET_BASE_URL:-}
+      <<: *api-environment
+      KIWI_BIND: 0.0.0.0:8000
+      PY_UPSTREAM: http://api-py:8000
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+      KIWI_PROXY_ALL: ${KIWI_PROXY_ALL:-}
+      RUST_LOG: ${RUST_LOG:-info}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      api-py:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes: *api-volumes
+    command: ["kiwi-server"]
+    # Graceful shutdown waits for open connections, and proxied SSE streams never end.
+    stop_grace_period: 5s
+    mem_limit: 1g
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # The Python app, now behind kiwi-server. No published port: only api reaches it.
+  api-py:
+    image: trove-app:latest   # built by the api service (same image, different command)
+    restart: unless-stopped
+    environment: *api-environment
     depends_on:
       mongo:
         condition: service_healthy
@@ -204,30 +268,7 @@ services:
     # Lets the container reach the host's Postfix as host.docker.internal.
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # Bind-mount the source so host edits are picked up; --reload restarts on change.
-    # (Production override docker-compose.prod.yml swaps --reload for --workers.)
-    volumes:
-      - ./app:/app/app
-      # Content-addressed blob store for the game-file archive (host: ./.game_updates).
-      # Many GB once enabled - kept out of git and the image build context.
-      - ./.game_updates:/data/updates
-      - ./.gamedata:/data/gamedata
-      # Ingest backlog: every leaderboard dump the API receives is gzip-saved here
-      # keyed by anchor, so the whole history can be re-ingested from the admin
-      # panel with no upload. Drop <unix>.cfg files in by hand too. Kept out of
-      # git (can grow large).
-      - ./.backlog:/data/backlog
-      # Mods Hub store: shared mods' git repos, uploaded images and compiled
-      # .tmod release artifacts. Kept out of git (user content, grows).
-      - ./.mods:/data/mods
-      # File drops: whatever people send through a one-off upload link.
-      # Kept out of git (arbitrary user files).
-      - ./.drops:/data/drops
-      - ./.troveui.git:/data/troveui.git:ro
-      # BetterTroveTools showcase site (templates + static + ~20 MB of screenshots).
-      # Bind-mounted so the heavy binary assets don't bake into the image; the
-      # api container serves trove.aallyn.net out of this directory.
-      - ./site:/app/site:ro
+    volumes: *api-volumes
     # NOTE: no --reload. It's a dev-only flag - it restarts the worker on any
     # .py change (deploys touch those constantly), which kills in-flight
     # leaderboard ingests + the cache warmer mid-pass. Use ./deploy.sh (it
@@ -238,11 +279,14 @@ services:
     # docker SIGKILLs the container at the 10s stop timeout - 10s on every deploy.
     # Force those connections closed after 3s and exit; clients auto-reconnect.
     #
-    # --forwarded-allow-ips: only the edge proxy may set X-Forwarded-For. It appends to
-    # whatever the client sent, so trusting "*" let any client pick its own IP.
+    # --forwarded-allow-ips "*": the only peer is kiwi-server, which always REPLACES
+    # X-Forwarded-For with the one client it resolved, so request.client.host stays the
+    # visitor. Safe only while this service publishes no port.
+    # --timeout-keep-alive 120: outlives kiwi-server's 90s idle pool, so Python never
+    # closes a connection the proxy is about to reuse.
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "${FORWARDED_ALLOW_IPS:-127.0.0.1}",
-              "--timeout-graceful-shutdown", "3"]
+              "--proxy-headers", "--forwarded-allow-ips", "*",
+              "--timeout-keep-alive", "120", "--timeout-graceful-shutdown", "3"]
     # Headroom for the update archiver: it decompresses several .tfa archives
     # concurrently (each held whole in RAM), which the old 512m couldn't fit.
     # If a single giant archive still OOMs, lower TROVE_UPDATE_CONCURRENCY instead.

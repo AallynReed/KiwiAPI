@@ -1,7 +1,7 @@
 //! Streaming reverse proxy to the Python app for every route not ported yet.
 //! Bodies stream both ways (uploads, SSE, git smart-HTTP), the Host header is
-//! kept (Python's api-host redirect reads it) and the peer is appended to
-//! X-Forwarded-For like any proxy hop.
+//! kept (Python's api-host redirect reads it) and X-Forwarded-For/-Proto carry
+//! the client this server resolved.
 
 use std::net::SocketAddr;
 
@@ -12,6 +12,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
+use crate::middleware::{forwarded, pyurl::header_value};
 use crate::state::AppState;
 
 const HOP_BY_HOP: [&str; 8] = [
@@ -55,14 +56,12 @@ pub async fn proxy(
     parts.version = axum::http::Version::HTTP_11;
     strip_hop_by_hop(&mut parts.headers);
 
-    let peer_ip = peer.ip().to_string();
-    let forwarded = match parts.headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
-        Some(prev) if !prev.trim().is_empty() => format!("{prev}, {peer_ip}"),
-        _ => peer_ip,
-    };
-    if let Ok(v) = HeaderValue::from_str(&forwarded) {
-        parts.headers.insert("x-forwarded-for", v);
-    }
+    // Resolve the client the way uvicorn would (FORWARDED_ALLOW_IPS), then hand
+    // Python only that answer; api-py trusts us with --forwarded-allow-ips '*'.
+    let client = forwarded::resolve(forwarded::trusted(), Some(peer), &parts.headers);
+    parts.headers.remove("x-forwarded-for");
+    parts.headers.insert("x-forwarded-for", header_value(&client.host));
+    parts.headers.insert("x-forwarded-proto", HeaderValue::from_static(client.scheme));
 
     match state.inner.upstream.request(Request::from_parts(parts, body)).await {
         Ok(resp) => {

@@ -31,6 +31,10 @@
 # replaced bind-mounted directory can never leave them serving a stale/empty
 # mount (403).
 #
+# The api service is kiwi-server (Rust, built in the image) in front of api-py
+# (the Python app). Python's logs are under `api-py`. KIWI_PROXY_ALL=1 in .env,
+# then `./deploy.sh --no-pull --no-build`, sends every route back to Python.
+#
 set -euo pipefail
 
 # Always run from the directory this script lives in.
@@ -181,7 +185,7 @@ fi
 echo
 $COMPOSE ps
 echo
-echo "Done. api -> 127.0.0.1:15546 (api/dev hostnames)   docs -> 127.0.0.1:25468"
+echo "Done. api -> 127.0.0.1:15546 (kiwi-server; Python behind it as api-py)   docs -> 127.0.0.1:25468"
 
 if [ "$FOLLOW" -eq 1 ]; then
   echo ">> following logs (Ctrl-C to stop)"

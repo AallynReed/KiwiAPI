@@ -45,11 +45,15 @@ pub async fn scope<F: Future>(rid: String, fut: F) -> F::Output {
 
 /// `"req_" + secrets.token_hex(8)`.
 pub fn generate() -> String {
-    static SEQ: AtomicU64 = AtomicU64::new(0);
-    let mut h = RandomState::new().build_hasher();
-    h.write_u64(SEQ.fetch_add(1, Ordering::Relaxed));
-    h.write_u128(SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
-    format!("req_{:016x}", h.finish())
+    let mut b = [0u8; 8];
+    if getrandom::fill(&mut b).is_err() {
+        static SEQ: AtomicU64 = AtomicU64::new(0);
+        let mut h = RandomState::new().build_hasher();
+        h.write_u64(SEQ.fetch_add(1, Ordering::Relaxed));
+        h.write_u128(SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
+        b = h.finish().to_le_bytes();
+    }
+    format!("req_{}", hex::encode(b))
 }
 
 /// Header bytes as Starlette exposes them (latin-1).

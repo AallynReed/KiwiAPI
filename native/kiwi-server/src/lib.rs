@@ -8,6 +8,7 @@ pub mod db;
 pub mod dt;
 pub mod error;
 pub mod features;
+pub mod middleware;
 pub mod proxy;
 pub mod pyfloat;
 pub mod pyjson;
