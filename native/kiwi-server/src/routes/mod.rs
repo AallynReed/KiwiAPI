@@ -14,7 +14,7 @@ use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
     Router,
-    extract::{ConnectInfo, Request, State},
+    extract::{ConnectInfo, MatchedPath, Request, State},
     middleware::{Next, from_fn_with_state},
     response::Response,
 };
@@ -32,6 +32,21 @@ fn ported() -> Router<AppState> {
         .merge(trove_status::router())
         .merge(btt::router())
         .merge(crate::feeds::router())
+        .merge(crate::lbread::router())
+}
+
+/// A param route can own only some values of its segment (Starlette's
+/// `{uuid:int}` next to literals Python still serves): the rest go to Python
+/// after routing but before the ported stack has touched the request.
+async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next) -> Response {
+    let defer = req
+        .extensions()
+        .get::<MatchedPath>()
+        .is_some_and(|m| crate::lbread::defers(m.as_str(), req.method(), req.uri().path()));
+    if defer && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
+        return proxy(State(state), ConnectInfo(peer), req).await;
+    }
+    next.run(req).await
 }
 
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`
@@ -53,6 +68,7 @@ pub fn app(state: AppState) -> Router {
     let routes = if proxy_all { Router::new() } else { ported() };
     let mw = Arc::new(middleware::Mw::from_state(&state));
     let inner = middleware::wrap(routes, mw, Some(state.clone()))
+        .layer(from_fn_with_state(state.clone(), defer_to_python))
         .fallback(proxy)
         .layer(from_fn_with_state(state.clone(), encoded_slash))
         .with_state(state);

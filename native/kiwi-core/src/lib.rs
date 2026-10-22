@@ -13,6 +13,7 @@ pub mod form;
 pub mod gems;
 pub mod imaging;
 pub mod lbdump;
+pub mod lbread;
 pub mod leaf;
 pub mod pydt;
 pub mod pystr;
