@@ -10,7 +10,6 @@ pub mod rotations;
 pub mod stats;
 pub mod trove_status;
 
-use std::sync::Arc;
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
@@ -28,6 +27,11 @@ fn ported() -> Router<AppState> {
         .merge(leaf::router())
         .merge(rotations::router())
         .merge(stats::router())
+        .merge(crate::gems::router())
+        .merge(misc::router())
+        .merge(trove_status::router())
+        .merge(btt::router())
+        .merge(crate::feeds::router())
 }
 
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`
@@ -41,11 +45,6 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
         return proxy(State(state), ConnectInfo(peer), req).await;
     }
     next.run(req).await
-    Router::new().merge(crate::gems::router())
-    Router::new().merge(misc::router())
-    Router::new().merge(trove_status::router())
-    Router::new().merge(btt::router())
-    Router::new().merge(crate::feeds::router())
 }
 
 pub fn app(state: AppState) -> Router {
