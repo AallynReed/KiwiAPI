@@ -97,6 +97,8 @@ pub fn start(state: &AppState) {
     crate::feeds::spawn_loops(state);
     crate::lb_warmer::start(state);
     crate::events::start_jobs(state);
+    crate::webhooks::start_jobs(state);
+    crate::dm_subs::start_jobs(state);
 }
 
 #[cfg(test)]

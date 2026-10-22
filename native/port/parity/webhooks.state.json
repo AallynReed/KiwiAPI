@@ -1,0 +1,7 @@
+{
+ "mongo": [
+  {"collection": "site_webhooks", "sort": ["label"], "mask": ["_id", "created_at", "updated_at"]},
+  {"collection": "dm_subscriptions", "sort": ["label"], "mask": ["_id", "created_at", "updated_at"]},
+  {"collection": "site_users", "sort": ["username"]}
+ ]
+}
