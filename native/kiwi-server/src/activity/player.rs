@@ -123,6 +123,7 @@ pub async fn estimate_active_players(state: &AppState, force: bool) -> anyhow::R
             m.last_good = Some(p.clone());
             return Ok(p);
         }
+        crate::lb_warmer::trigger();
         return Ok(m.last_good.clone().unwrap_or_else(|| empty(unix_now())));
     }
 

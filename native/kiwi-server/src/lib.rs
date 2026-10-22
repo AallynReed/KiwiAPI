@@ -16,6 +16,7 @@ pub mod gems;
 pub mod http;
 pub mod jobs;
 pub mod lb_ingest;
+pub mod lb_warmer;
 pub mod lbread;
 pub mod market;
 pub mod middleware;

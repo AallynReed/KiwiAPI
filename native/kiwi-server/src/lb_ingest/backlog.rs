@@ -1,5 +1,5 @@
 //! `app/trove/leaderboards/backlog.py`: the gzip-per-anchor dump store and the
-//! re-ingest progress read. The re-ingest job itself stays in Python.
+//! re-ingest progress read. The re-ingest job is `lb_warmer::reingest`.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -127,10 +127,18 @@ pub async fn save(state: &AppState, anchor: i64, text: std::sync::Arc<String>) {
     }
 }
 
-/// `get_status()` from what Redis holds: the shared copy, else this
-/// process's (which never runs a re-ingest, so `{"running": false}`).
+static LOCAL_STATUS: std::sync::Mutex<Option<Value>> = std::sync::Mutex::new(None);
+
+/// `_local_status`: this process's last re-ingest progress.
+pub fn set_local_status(status: Value) {
+    *LOCAL_STATUS.lock().unwrap_or_else(|e| e.into_inner()) = Some(status);
+}
+
+/// `get_status()` from what Redis holds: the shared copy, else this process's.
 pub fn status_from(raw: Option<&[u8]>) -> Value {
-    raw.filter(|r| !r.is_empty()).and_then(|r| pyjson::loads(r).ok()).unwrap_or_else(|| json!({"running": false}))
+    raw.filter(|r| !r.is_empty()).and_then(|r| pyjson::loads(r).ok()).unwrap_or_else(|| {
+        LOCAL_STATUS.lock().unwrap_or_else(|e| e.into_inner()).clone().unwrap_or_else(|| json!({"running": false}))
+    })
 }
 
 pub async fn get_status(state: &AppState) -> Value {

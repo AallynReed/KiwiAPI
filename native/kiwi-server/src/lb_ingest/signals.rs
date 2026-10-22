@@ -5,7 +5,6 @@
 
 use mongodb::bson::{Bson, Document, doc, oid::ObjectId};
 use serde_json::{Value, json};
-use tokio::sync::Notify;
 
 use crate::{
     auth::{
@@ -137,16 +136,13 @@ pub async fn publish_event(state: &AppState, kind: &str, signature: &str, data: 
     })
 }
 
-/// Wakes a Rust-owned leaderboards warmer (`RUST_OWNS=leaderboards_warmer`).
-pub static WARMER_WAKE: Notify = Notify::const_new();
-
 /// `detection.trigger_warmer()`. While Python owns the warmer it lives in a
 /// worker's event loop with no outside signal, so wake it the one way
 /// Python offers: `POST /v1/leaderboards/warm` as the same master (a
 /// short-lived session token, so no rate limit, cooldown or usage row).
 pub fn trigger_warmer(state: &AppState, user: &User) {
     if jobs::owns("leaderboards_warmer") {
-        WARMER_WAKE.notify_one();
+        crate::lb_warmer::trigger();
         return;
     }
     let token = jwt::create_access_token_at(

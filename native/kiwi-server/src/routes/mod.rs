@@ -41,6 +41,7 @@ fn ported() -> Router<AppState> {
         .merge(lb_names::router())
         .merge(crate::lb_ingest::router())
         .merge(crate::cheaters::router())
+        .merge(crate::lb_warmer::router())
         .merge(crate::market::router())
         .merge(store::router())
 }

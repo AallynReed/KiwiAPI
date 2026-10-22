@@ -108,6 +108,7 @@ pub async fn patch_board(State(state): State<AppState>, req: Request) -> Respons
         Err(e) => internal(e).into_response(),
         Ok(None) => ApiError::not_found(format!("No leaderboard with uuid={uuid}")).into_response(),
         Ok(Some(row)) => {
+            crate::cheaters::invalidate_cache();
             signals::trigger_warmer(&state, &admin);
             PydanticJson(board_view(&row)).into_response()
         }

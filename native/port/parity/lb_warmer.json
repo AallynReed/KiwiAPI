@@ -1,0 +1,23 @@
+[
+ {"name": "warm_get_405", "path": "/v1/leaderboards/warm", "compare_headers": ["allow"]},
+ {"name": "warm_head_405", "method": "HEAD", "path": "/v1/leaderboards/warm", "compare_headers": ["allow"]},
+ {"name": "warm_get_jwt_405", "path": "/v1/leaderboards/warm", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
+  "compare_headers": ["allow"]},
+ {"name": "warm_preflight", "method": "OPTIONS", "path": "/v1/leaderboards/warm",
+  "headers": {"Origin": "https://dev.aallyn.net", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization"}},
+ {"name": "warm_options_bare", "method": "OPTIONS", "path": "/v1/leaderboards/warm", "compare_headers": ["allow"]},
+ {"name": "warm_slash", "path": "/v1/leaderboards/warm/", "compare_headers": ["location"]},
+ {"name": "delete_anchor_get_405", "path": "/v1/leaderboards/delete-anchor?anchor=1", "compare_headers": ["allow"]},
+ {"name": "delete_anchor_head_405", "method": "HEAD", "path": "/v1/leaderboards/delete-anchor", "compare_headers": ["allow"]},
+ {"name": "delete_anchor_preflight", "method": "OPTIONS", "path": "/v1/leaderboards/delete-anchor?anchor=1",
+  "headers": {"Origin": "https://dev.aallyn.net", "Access-Control-Request-Method": "POST"}},
+ {"name": "reingest_backlog_get_405", "path": "/v1/leaderboards/reingest-backlog", "compare_headers": ["allow"]},
+ {"name": "reingest_backlog_get_jwt_405", "path": "/v1/leaderboards/reingest-backlog?clear_first=true",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}, "compare_headers": ["allow"]},
+ {"name": "reingest_backlog_preflight", "method": "OPTIONS", "path": "/v1/leaderboards/reingest-backlog",
+  "headers": {"Origin": "https://dev.aallyn.net", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization"}},
+ {"name": "reingest_status_after", "path": "/v1/leaderboards/reingest-status", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "cheaters_recompute_get_405", "path": "/v1/leaderboards/cheaters/recompute", "compare_headers": ["allow"]},
+ {"name": "published_timestamps", "path": "/site/leaderboards/timestamps?limit=3"},
+ {"name": "published_cheaters", "path": "/site/leaderboards/cheaters", "mask": ["computed_at"]}
+]

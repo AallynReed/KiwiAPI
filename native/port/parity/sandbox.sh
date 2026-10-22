@@ -20,7 +20,7 @@
 # then B, and compares what the stores hold afterwards. AREA is a spec
 # basename (leaf) or a spec path under this folder.
 #
-#   native/port/parity/sandbox.sh twin-up             # fresh stacks (replaces any old twin)
+#   native/port/parity/sandbox.sh twin-up [AREA]      # fresh stacks (replaces any old twin)
 #   native/port/parity/sandbox.sh twin-seed AREA      # AREA.seed.js/.seed.sql, restart, tokens
 #   native/port/parity/sandbox.sh twin-run AREA...    # AREA.writes.json (or a spec path)
 #   native/port/parity/sandbox.sh twin-state AREA     # AREA.state.json: diff the stores
@@ -34,6 +34,9 @@
 # cache predates the seed. Tokens stay in the runner (/tmp/a.env, /tmp/b.env).
 # Both stacks see the client CLIENT_IP (default 203.0.113.7) and Host
 # kiwi-parity unless a request sets its own.
+#
+# AREA.loops (optional, comma list) names loops the area moves: A's Python runs
+# them, B's kiwi-server owns them, B's Python still runs none.
 #
 # IMG (default trove-app:latest) runs every container; RS_IMG overrides it for
 # B's kiwi-server alone, so a branch build is tested without retagging the
@@ -163,14 +166,30 @@ twin_stores() {
     postgres:17 >/dev/null
 }
 
+moved_loops() {
+  local f
+  f=$HERE/$(area "$1").loops
+  if [ -f "$f" ]; then tr -d ' \r\n' < "$f"; fi
+}
+
+loops_without() {
+  local out='' l all
+  IFS=, read -ra all <<< "$LOOPS"
+  for l in "${all[@]}"; do
+    case ",$1," in *",$l,"*) ;; *) out=${out:+$out,}$l ;; esac
+  done
+  printf '%s\n' "$out"
+}
+
 twin_py() {
   docker run -d --name "kp-$1-py" --network "kiwi-parity-$1" --network-alias api-py --memory 2g \
-    "${TWIN_ENV[@]}" -e RUST_OWNS="$LOOPS" "${TWIN_MOUNTS[@]}" "$IMG" \
+    "${TWIN_ENV[@]}" -e RUST_OWNS="${2:-$LOOPS}" "${TWIN_MOUNTS[@]}" "$IMG" \
     uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*' \
     --timeout-keep-alive 120 --timeout-graceful-shutdown 3 >/dev/null
 }
 
 twin_up() {
+  local moved=${1:-}
   twin_down
   twin_stores a
   twin_stores b
@@ -184,9 +203,9 @@ twin_up() {
     # Python's interest-item seed has a duplicate name and crashes an empty database.
     docker exec "kp-$s-mongo" mongosh --quiet kiwi --eval "$PLACEHOLDER" >/dev/null
   done
-  twin_py a
+  twin_py a "$(loops_without "$moved")"
   twin_py b
-  docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" -e RUST_OWNS= \
+  docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" -e RUST_OWNS="$moved" \
     -e KIWI_BIND=0.0.0.0:8000 -e PY_UPSTREAM=http://api-py:8000 -e FORWARDED_ALLOW_IPS='*' \
     "${TWIN_MOUNTS[@]}" "$RS_IMG" kiwi-server >/dev/null
   twin_wait
@@ -265,7 +284,7 @@ twin_all() {
   for a in "$@"; do
     a=$(area "$a")
     echo "======== $a"
-    twin_up
+    twin_up "$(moved_loops "$a")"
     twin_seed "$a"
     twin_run "$a" || rc=1
     if [ -f "$HERE/$a.state.json" ]; then twin_state "$a" || rc=1; fi
@@ -280,7 +299,7 @@ case "$cmd" in
   seed) seed "$@" ;;
   run) run "$@" ;;
   down) down ;;
-  twin-up) twin_up ;;
+  twin-up) if [ $# -ge 1 ]; then twin_up "$(moved_loops "$1")"; else twin_up; fi ;;
   twin-seed) [ $# = 1 ] || { echo "usage: $0 twin-seed AREA" >&2; exit 2; }; twin_seed "$1" ;;
   twin-run) [ $# -ge 1 ] || { echo "usage: $0 twin-run AREA|SPEC..." >&2; exit 2; }; twin_run "$@" ;;
   twin-state) [ $# = 1 ] || { echo "usage: $0 twin-state AREA" >&2; exit 2; }; twin_state "$1" ;;

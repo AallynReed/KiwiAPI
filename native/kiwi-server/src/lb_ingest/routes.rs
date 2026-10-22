@@ -155,8 +155,8 @@ pub fn reset_log(t: &store::ResetTally, drop_boards: bool, redis_keys: i64) -> m
 }
 
 /// `POST /v1/leaderboards/reset`. The Python workers' in-process detection,
-/// activity, rename and duplicate memos are theirs to drop; everything they
-/// read from is wiped here.
+/// activity, rename and duplicate memos are theirs to drop; this server's
+/// and everything they read from are wiped here.
 pub async fn reset(
     _on: RequireFeature<features::Leaderboards>,
     State(state): State<AppState>,
@@ -165,6 +165,7 @@ pub async fn reset(
 ) -> Result<Response, ApiError> {
     let pool = store::pool(&state).map_err(internal)?;
     let tally = store::reset_all(pool, q.drop_boards).await.map_err(internal)?;
+    crate::lb_warmer::reset_memos();
     let cleared = signals::reset_cache(&state).await;
     let summary = reset_summary(&tally, q.drop_boards, cleared);
     tracing::warn!("leaderboards: FULL RESET {summary:?}");

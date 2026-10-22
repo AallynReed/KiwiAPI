@@ -124,9 +124,65 @@ pub fn gzip_file(data: &[u8], level: u32, basename: &str, mtime: u32) -> Option<
     Some(out)
 }
 
+/// `gzip.open(path).read()`: every member, `Err` with the message of what
+/// Python raises for a wrong magic number or a truncated stream.
+pub fn gunzip(data: &[u8]) -> Result<Vec<u8>, String> {
+    if data.is_empty() {
+        return Ok(Vec::new());
+    }
+    if !data.starts_with(&[0x1f, 0x8b]) {
+        return Err(format!("Not a gzipped file ({})", bytes_repr(&data[..data.len().min(2)])));
+    }
+    let mut out = Vec::with_capacity(data.len().saturating_mul(4));
+    match std::io::Read::read_to_end(&mut flate2::read::MultiGzDecoder::new(data), &mut out) {
+        Ok(_) => Ok(out),
+        Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => {
+            Err("Compressed file ended before the end-of-stream marker was reached".into())
+        }
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+/// `repr(bytes)`.
+fn bytes_repr(b: &[u8]) -> String {
+    let quote = if b.contains(&b'\'') && !b.contains(&b'"') { '"' } else { '\'' };
+    let mut out = format!("b{quote}");
+    for &c in b {
+        match c {
+            b'\\' => out.push_str("\\\\"),
+            b'\t' => out.push_str("\\t"),
+            b'\n' => out.push_str("\\n"),
+            b'\r' => out.push_str("\\r"),
+            c if char::from(c) == quote => {
+                out.push('\\');
+                out.push(quote);
+            }
+            0x20..0x7f => out.push(char::from(c)),
+            c => out.push_str(&format!("\\x{c:02x}")),
+        }
+    }
+    out.push(quote);
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gunzips_members_and_reports_like_python() {
+        let one = gzip_file(b"one\r\n", 6, "a", 0).unwrap();
+        let two = gzip_file(b"two", 6, "b", 0).unwrap();
+        assert_eq!(gunzip(&[one.clone(), two].concat()).unwrap(), b"one\r\ntwo");
+        assert_eq!(gunzip(b"").unwrap(), b"");
+        assert_eq!(gunzip(b"A$").unwrap_err(), "Not a gzipped file (b'A$')");
+        assert_eq!(gunzip(b"\x00\n").unwrap_err(), "Not a gzipped file (b'\\x00\\n')");
+        assert_eq!(gunzip(b"'").unwrap_err(), "Not a gzipped file (b\"'\")");
+        assert_eq!(
+            gunzip(&one[..one.len() - 6]).unwrap_err(),
+            "Compressed file ended before the end-of-stream marker was reached"
+        );
+    }
 
     #[test]
     fn gzip_file_round_trips() {

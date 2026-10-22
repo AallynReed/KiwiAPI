@@ -1,0 +1,26 @@
+{
+ "mongo": [
+  {"collection": "ingest_log", "sort": ["timestamp"], "mask": ["_id", "timestamp", "user_id"]}
+ ],
+ "postgres": [
+  {"table": "entry", "order_by": "anchor, board_uuid, rank, player_id, score"},
+  {"table": "activity_estimate", "order_by": "window_end", "mask": ["computed_at"]},
+  {"table": "activity_active", "order_by": "window_end, player_lower"},
+  {"table": "class_activity_estimate", "order_by": "class_index, window_end", "mask": ["computed_at"]},
+  {"table": "class_activity_active", "order_by": "window_end, class_index, player_lower"},
+  {"table": "player_rename", "order_by": "from_name_lower, to_name_lower, to_anchor", "mask": ["id", "created_at"]},
+  {"table": "player_duplicate", "order_by": "name_lower", "mask": ["updated_at"]}
+ ],
+ "redis": [
+  {"pattern": "lb:cache:timestamps", "mask_ttl": true},
+  {"pattern": "lb:cache:days", "mask_ttl": true},
+  {"pattern": "lb:cache:ready_anchor", "mask_ttl": true},
+  {"pattern": "lb:cache:boards:*", "mask_ttl": true},
+  {"pattern": "lb:cache:entries:*", "mask_ttl": true},
+  {"pattern": "lb:cache:bhist:*", "mask_ttl": true, "mask": ["window_start", "window_end"]},
+  {"pattern": "lb:cache:cheaters:*", "mask_ttl": true, "mask": ["computed_at"]},
+  {"pattern": "lb:cache:activity:*", "mask_ttl": true, "mask": ["computed_at"]},
+  {"pattern": "lb:cache:activity_class_current", "mask_ttl": true, "mask": ["computed_at"]},
+  {"pattern": "lb:reingest:*", "mask_ttl": true, "mask": ["started_at", "finished_at"]}
+ ]
+}

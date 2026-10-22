@@ -1,7 +1,7 @@
 //! Leaderboard dump ingest and maintenance: `POST /v1/leaderboards/insert`
 //! (the capture bot), `/reset`, `/reingest-status`, and the `/admin`
-//! leaderboards maintenance routes. Re-ingest, delete-anchor and warm stay in
-//! Python: they run Python-only compute (activity backfills, the warmer).
+//! leaderboards maintenance routes. Re-ingest, delete-anchor and warm move with
+//! the warmer (`lb_warmer`).
 //!
 //! The pieces the warmer port needs are public: [`store`] (snapshot write,
 //! player-aggregate jobs, cold tier) and [`signals`] (cache, events, wake-up).
