@@ -45,7 +45,7 @@ omegaconf==2.4.0
 onnxruntime==1.26.0
 opencv-python==5.0.0.93
 packaging==26.3
-pillow==12.3.0
+pillow==13.0.0
 propcache==0.5.4
 protobuf==7.36.2
 pyclipper==1.4.0

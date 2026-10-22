@@ -20,7 +20,7 @@ tzdata==2025.2
 # Reads DB-IP's IP-to-country .mmdb for the website's regional maintenance gate.
 maxminddb==3.2.0
 beautifulsoup4==4.12.3
-pillow==12.3.0
+pillow==13.0.0
 # Blueprint→image voxel rasterizer (app/trove/render) - CPU-only, no GPU.
 numpy==2.4.6
 # JIT-compiles the per-triangle rasterizer hot loop (~20-40x faster than the numpy
