@@ -1,0 +1,10 @@
+{
+ "mongo": [
+  {"collection": "giveaways", "sort": ["title"], "mask": ["_id", "created_at", "updated_at", "drawn_at"]},
+  {"collection": "prize_codes", "sort": ["code"], "mask": ["giveaway_id", "awarded_at"]},
+  {"collection": "giveaway_entries", "sort": ["username", "giveaway_id"], "mask": ["_id", "entered_at"]},
+  {"collection": "vault_items", "sort": ["name"]},
+  {"collection": "email_outbox", "sort": ["to"]},
+  {"collection": "site_users", "sort": ["username"]}
+ ]
+}

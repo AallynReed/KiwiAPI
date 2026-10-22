@@ -1,0 +1,3196 @@
+{
+ "bodies": [
+  {
+   "route": "create",
+   "body": "{\"title\":\"T\",\"starts_at\":\"2026-10-22T11:00:00.000Z\",\"ends_at\":\"2026-10-29T11:00:00.000Z\",\"vault_item_id\":\"65a000000000000000000001\"}",
+   "request_id": "gw-body-001",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-001\"}}",
+   "parsed": {
+    "title": "T",
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": "2026-10-29T11:00:00+00:00",
+    "vault_item_id": "65a000000000000000000001"
+   }
+  },
+  {
+   "route": "create",
+   "body": "{\"title\":\"\",\"description\":null,\"starts_at\":\"2026-10-22T11:00:00Z\",\"ends_at\":\"x\",\"vault_item_id\":5}",
+   "request_id": "gw-body-002",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"title\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"ends_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"x\",\"ctx\":{\"error\":\"input is too short\"}},{\"type\":\"string_type\",\"loc\":[\"body\",\"vault_item_id\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"gw-body-002\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "{\"starts_at\":\"0001-01-01T00:00:00+01:00\"}",
+   "request_id": "gw-body-003",
+   "status": 500,
+   "response": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error\",\"details\":null,\"request_id\":\"gw-body-003\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "{\"title\":\"T\",\"starts_at\":\"2026-10-22T11:00:00Z\",\"ends_at\":\"9999-12-31T23:59:59-01:00\",\"vault_item_id\":\"a\"}",
+   "request_id": "gw-body-004",
+   "status": 500,
+   "response": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error\",\"details\":null,\"request_id\":\"gw-body-004\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "{\"title\":\"ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt\",\"description\":\"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"starts_at\":1,\"ends_at\":2,\"vault_item_id\":\"x\",\"extra\":1}",
+   "request_id": "gw-body-005",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"title\"],\"msg\":\"String should have at most 160 characters\",\"input\":\"ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt\",\"ctx\":{\"max_length\":160}},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"description\"],\"msg\":\"String should have at most 4000 characters\",\"input\":\"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"ctx\":{\"max_length\":4000}}],\"request_id\":\"gw-body-005\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "{\"title\":\"\\u00e9t\\u00e9\",\"description\":\"\",\"starts_at\":\"2026-10-22\",\"ends_at\":\"2026-10-23\",\"vault_item_id\":\"x\"}",
+   "request_id": "gw-body-006",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-006\"}}",
+   "parsed": {
+    "title": "été",
+    "description": "",
+    "starts_at": "2026-10-22T00:00:00+00:00",
+    "ends_at": "2026-10-23T00:00:00+00:00",
+    "vault_item_id": "x"
+   }
+  },
+  {
+   "route": "create",
+   "body": "{}",
+   "request_id": "gw-body-007",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"title\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"ends_at\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"vault_item_id\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"gw-body-007\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "[]",
+   "request_id": "gw-body-008",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[]}],\"request_id\":\"gw-body-008\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "\"str\"",
+   "request_id": "gw-body-009",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"str\"}],\"request_id\":\"gw-body-009\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "{\"title\":",
+   "request_id": "gw-body-010",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",9],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"gw-body-010\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "",
+   "request_id": "gw-body-011",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"gw-body-011\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "null",
+   "request_id": "gw-body-012",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"gw-body-012\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create",
+   "body": "{\"title\":\"T\",\"starts_at\":null,\"ends_at\":[],\"vault_item_id\":null}",
+   "request_id": "gw-body-013",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_type\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime\",\"input\":null},{\"type\":\"datetime_type\",\"loc\":[\"body\",\"ends_at\"],\"msg\":\"Input should be a valid datetime\",\"input\":[]},{\"type\":\"string_type\",\"loc\":[\"body\",\"vault_item_id\"],\"msg\":\"Input should be a valid string\",\"input\":null}],\"request_id\":\"gw-body-013\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{}",
+   "request_id": "gw-body-014",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-014\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": null,
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"title\":null,\"description\":null,\"starts_at\":null,\"ends_at\":null,\"vault_item_id\":null}",
+   "request_id": "gw-body-015",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-015\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": null,
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"title\":\"\"}",
+   "request_id": "gw-body-016",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"title\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}],\"request_id\":\"gw-body-016\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"title\":\"tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt\"}",
+   "request_id": "gw-body-017",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-017\"}}",
+   "parsed": {
+    "title": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+    "description": null,
+    "starts_at": null,
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"vault_item_id\":7}",
+   "request_id": "gw-body-018",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"vault_item_id\"],\"msg\":\"Input should be a valid string\",\"input\":7}],\"request_id\":\"gw-body-018\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"description\":\"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+   "request_id": "gw-body-019",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"description\"],\"msg\":\"String should have at most 4000 characters\",\"input\":\"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"ctx\":{\"max_length\":4000}}],\"request_id\":\"gw-body-019\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00Z\"}",
+   "request_id": "gw-body-020",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-020\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00.000Z\"}",
+   "request_id": "gw-body-021",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-021\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00.123456789Z\"}",
+   "request_id": "gw-body-022",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-022\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00.123456+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00\"}",
+   "request_id": "gw-body-023",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-023\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22 11:00:00+02:00\"}",
+   "request_id": "gw-body-024",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-024\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T09:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00-05:30\"}",
+   "request_id": "gw-body-025",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-025\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T16:30:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00+0530\"}",
+   "request_id": "gw-body-026",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-026\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T05:30:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00Z\"}",
+   "request_id": "gw-body-027",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-027\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22t11:00:00z\"}",
+   "request_id": "gw-body-028",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-028\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22_11:00:00\"}",
+   "request_id": "gw-body-029",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-029\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22\"}",
+   "request_id": "gw-body-030",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-030\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T00:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"20261022\"}",
+   "request_id": "gw-body-031",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-031\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1970-08-23T12:03:42+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"1792665676\"}",
+   "request_id": "gw-body-032",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-032\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T10:41:16+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"1792665676.5\"}",
+   "request_id": "gw-body-033",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-033\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T10:41:16.500000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"1792665676123\"}",
+   "request_id": "gw-body-034",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-034\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T10:41:16.123000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"-1\"}",
+   "request_id": "gw-body-035",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-035\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1969-12-31T23:59:59+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":1792665676}",
+   "request_id": "gw-body-036",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-036\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T10:41:16+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":1792665676123}",
+   "request_id": "gw-body-037",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-037\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T10:41:16.123000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":1792665676.25}",
+   "request_id": "gw-body-038",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-038\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T10:41:16.250000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":-1}",
+   "request_id": "gw-body-039",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-039\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1969-12-31T23:59:59+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":0}",
+   "request_id": "gw-body-040",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-040\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1970-01-01T00:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":1e20}",
+   "request_id": "gw-body-041",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime, dates after 9999 are not supported as unix timestamps\",\"input\":1e+20,\"ctx\":{\"error\":\"dates after 9999 are not supported as unix timestamps\"}}],\"request_id\":\"gw-body-041\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":20000000000}",
+   "request_id": "gw-body-042",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-042\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2603-10-11T11:33:20+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":true}",
+   "request_id": "gw-body-043",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_type\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime\",\"input\":true}],\"request_id\":\"gw-body-043\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":false}",
+   "request_id": "gw-body-044",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_type\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime\",\"input\":false}],\"request_id\":\"gw-body-044\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":null}",
+   "request_id": "gw-body-045",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-045\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": null,
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":[]}",
+   "request_id": "gw-body-046",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_type\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime\",\"input\":[]}],\"request_id\":\"gw-body-046\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":{}}",
+   "request_id": "gw-body-047",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_type\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime\",\"input\":{}}],\"request_id\":\"gw-body-047\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"\"}",
+   "request_id": "gw-body-048",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"\",\"ctx\":{\"error\":\"input is too short\"}}],\"request_id\":\"gw-body-048\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"nope\"}",
+   "request_id": "gw-body-049",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"nope\",\"ctx\":{\"error\":\"input is too short\"}}],\"request_id\":\"gw-body-049\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-13-01T00:00:00\"}",
+   "request_id": "gw-body-050",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, month value is outside expected range of 1-12\",\"input\":\"2026-13-01T00:00:00\",\"ctx\":{\"error\":\"month value is outside expected range of 1-12\"}}],\"request_id\":\"gw-body-050\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-02-30\"}",
+   "request_id": "gw-body-051",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, day value is outside expected range\",\"input\":\"2026-02-30\",\"ctx\":{\"error\":\"day value is outside expected range\"}}],\"request_id\":\"gw-body-051\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-02-29T00:00:00\"}",
+   "request_id": "gw-body-052",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, day value is outside expected range\",\"input\":\"2026-02-29T00:00:00\",\"ctx\":{\"error\":\"day value is outside expected range\"}}],\"request_id\":\"gw-body-052\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T24:00:00\"}",
+   "request_id": "gw-body-053",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T24:00:00\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-053\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:60:00\"}",
+   "request_id": "gw-body-054",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T11:60:00\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-054\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:60\"}",
+   "request_id": "gw-body-055",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T11:00:60\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-055\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00+24:00\"}",
+   "request_id": "gw-body-056",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T11:00:00+24:00\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-056\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00+23:59\"}",
+   "request_id": "gw-body-057",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-057\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-21T11:01:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"0000-01-01T00:00:00\"}",
+   "request_id": "gw-body-058",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime, year 0 is out of range\",\"input\":\"0000-01-01T00:00:00\",\"ctx\":{\"error\":\"year 0 is out of range\"}}],\"request_id\":\"gw-body-058\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"0000-01-01\"}",
+   "request_id": "gw-body-059",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime, year 0 is out of range\",\"input\":\"0000-01-01\",\"ctx\":{\"error\":\"year 0 is out of range\"}}],\"request_id\":\"gw-body-059\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"0001-01-01T00:00:00+01:00\"}",
+   "request_id": "gw-body-060",
+   "status": 500,
+   "response": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error\",\"details\":null,\"request_id\":\"gw-body-060\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"9999-12-31T23:59:59-01:00\"}",
+   "request_id": "gw-body-061",
+   "status": 500,
+   "response": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error\",\"details\":null,\"request_id\":\"gw-body-061\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"0001-01-01T00:00:00-01:00\"}",
+   "request_id": "gw-body-062",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-062\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "0001-01-01T01:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"9999-12-31T23:59:59.999999Z\"}",
+   "request_id": "gw-body-063",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-063\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "9999-12-31T23:59:59.999999+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00.\"}",
+   "request_id": "gw-body-064",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T11:00:00.\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-064\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00,5Z\"}",
+   "request_id": "gw-body-065",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-065\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00.500000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00 \"}",
+   "request_id": "gw-body-066",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T11:00:00 \",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-066\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\" 2026-10-22T11:00:00\"}",
+   "request_id": "gw-body-067",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, invalid character in year\",\"input\":\" 2026-10-22T11:00:00\",\"ctx\":{\"error\":\"invalid character in year\"}}],\"request_id\":\"gw-body-067\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11\"}",
+   "request_id": "gw-body-068",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T11\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-068\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"1e3\"}",
+   "request_id": "gw-body-069",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"1e3\",\"ctx\":{\"error\":\"input is too short\"}}],\"request_id\":\"gw-body-069\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"\\u0661\\u0662\\u0663\"}",
+   "request_id": "gw-body-070",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"١٢٣\",\"ctx\":{\"error\":\"input is too short\"}}],\"request_id\":\"gw-body-070\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":123456789012345678901234567890}",
+   "request_id": "gw-body-071",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime, dates after 9999 are not supported as unix timestamps\",\"input\":123456789012345678901234567890,\"ctx\":{\"error\":\"dates after 9999 are not supported as unix timestamps\"}}],\"request_id\":\"gw-body-071\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":-62135596800}",
+   "request_id": "gw-body-072",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-072\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1968-01-12T20:06:43.200000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":-62135596801}",
+   "request_id": "gw-body-073",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-073\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1968-01-12T20:06:43.199000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":253402300800}",
+   "request_id": "gw-body-074",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-074\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1978-01-11T21:31:40.800000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":1.5}",
+   "request_id": "gw-body-075",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-075\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1970-01-01T00:00:01.500000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":-1.5}",
+   "request_id": "gw-body-076",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-076\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "1969-12-31T23:59:58.500000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"inf\"}",
+   "request_id": "gw-body-077",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"inf\",\"ctx\":{\"error\":\"input is too short\"}}],\"request_id\":\"gw-body-077\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"nan\"}",
+   "request_id": "gw-body-078",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"nan\",\"ctx\":{\"error\":\"input is too short\"}}],\"request_id\":\"gw-body-078\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00.5+01:00\"}",
+   "request_id": "gw-body-079",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-079\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T10:00:00.500000+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00-00:00\"}",
+   "request_id": "gw-body-080",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-080\"}}",
+   "parsed": {
+    "title": null,
+    "description": null,
+    "starts_at": "2026-10-22T11:00:00+00:00",
+    "ends_at": null,
+    "vault_item_id": null
+   }
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T11:00:00+00:00:30\"}",
+   "request_id": "gw-body-081",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T11:00:00+00:00:30\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-081\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-1-2\"}",
+   "request_id": "gw-body-082",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, input is too short\",\"input\":\"2026-1-2\",\"ctx\":{\"error\":\"input is too short\"}}],\"request_id\":\"gw-body-082\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"2026-10-22T1:00:00\"}",
+   "request_id": "gw-body-083",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"datetime_from_date_parsing\",\"loc\":[\"body\",\"starts_at\"],\"msg\":\"Input should be a valid datetime or date, unexpected extra characters at the end of the input\",\"input\":\"2026-10-22T1:00:00\",\"ctx\":{\"error\":\"unexpected extra characters at the end of the input\"}}],\"request_id\":\"gw-body-083\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update",
+   "body": "{\"starts_at\":\"bad\",\"ends_at\":\"0001-01-01T00:00:00+01:00\",\"title\":\"\"}",
+   "request_id": "gw-body-084",
+   "status": 500,
+   "response": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error\",\"details\":null,\"request_id\":\"gw-body-084\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"Radiant\"}",
+   "request_id": "gw-body-085",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-085\"}}",
+   "parsed": {
+    "name": "Radiant",
+    "description": null
+   }
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"\"}",
+   "request_id": "gw-body-086",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"name\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}],\"request_id\":\"gw-body-086\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\"}",
+   "request_id": "gw-body-087",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"name\"],\"msg\":\"String should have at most 120 characters\",\"input\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\",\"ctx\":{\"max_length\":120}}],\"request_id\":\"gw-body-087\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"x\",\"description\":\"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
+   "request_id": "gw-body-088",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"description\"],\"msg\":\"String should have at most 2000 characters\",\"input\":\"ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"ctx\":{\"max_length\":2000}}],\"request_id\":\"gw-body-088\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"description\":\"x\"}",
+   "request_id": "gw-body-089",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"name\"],\"msg\":\"Field required\",\"input\":{\"description\":\"x\"}}],\"request_id\":\"gw-body-089\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":null}",
+   "request_id": "gw-body-090",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":null}],\"request_id\":\"gw-body-090\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"ok\",\"description\":null}",
+   "request_id": "gw-body-091",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-091\"}}",
+   "parsed": {
+    "name": "ok",
+    "description": null
+   }
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":[\"a\"]}",
+   "request_id": "gw-body-092",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":[\"a\"]}],\"request_id\":\"gw-body-092\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update_item",
+   "body": "{}",
+   "request_id": "gw-body-093",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-093\"}}",
+   "parsed": {
+    "name": null,
+    "description": null
+   }
+  },
+  {
+   "route": "update_item",
+   "body": "{\"name\":null}",
+   "request_id": "gw-body-094",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-094\"}}",
+   "parsed": {
+    "name": null,
+    "description": null
+   }
+  },
+  {
+   "route": "update_item",
+   "body": "{\"name\":\"\"}",
+   "request_id": "gw-body-095",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"name\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}],\"request_id\":\"gw-body-095\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update_item",
+   "body": "{\"name\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\"}",
+   "request_id": "gw-body-096",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"name\"],\"msg\":\"String should have at most 120 characters\",\"input\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\",\"ctx\":{\"max_length\":120}}],\"request_id\":\"gw-body-096\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update_item",
+   "body": "{\"description\":\"\"}",
+   "request_id": "gw-body-097",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-097\"}}",
+   "parsed": {
+    "name": null,
+    "description": ""
+   }
+  },
+  {
+   "route": "update_item",
+   "body": "{\"description\":3}",
+   "request_id": "gw-body-098",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"description\"],\"msg\":\"Input should be a valid string\",\"input\":3}],\"request_id\":\"gw-body-098\"}}",
+   "parsed": null
+  },
+  {
+   "route": "add_codes",
+   "body": "{\"codes\":[]}",
+   "request_id": "gw-body-099",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"too_short\",\"loc\":[\"body\",\"codes\"],\"msg\":\"List should have at least 1 item after validation, not 0\",\"input\":[],\"ctx\":{\"field_type\":\"List\",\"min_length\":1,\"actual_length\":0}}],\"request_id\":\"gw-body-099\"}}",
+   "parsed": null
+  },
+  {
+   "route": "add_codes",
+   "body": "{\"codes\":[\"a\",null,3]}",
+   "request_id": "gw-body-100",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"codes\",1],\"msg\":\"Input should be a valid string\",\"input\":null},{\"type\":\"string_type\",\"loc\":[\"body\",\"codes\",2],\"msg\":\"Input should be a valid string\",\"input\":3}],\"request_id\":\"gw-body-100\"}}",
+   "parsed": null
+  },
+  {
+   "route": "add_codes",
+   "body": "{\"codes\":\"abc\"}",
+   "request_id": "gw-body-101",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"list_type\",\"loc\":[\"body\",\"codes\"],\"msg\":\"Input should be a valid list\",\"input\":\"abc\"}],\"request_id\":\"gw-body-101\"}}",
+   "parsed": null
+  },
+  {
+   "route": "add_codes",
+   "body": "{\"codes\":[\"  a \",\"a\",\"\",\"x\"]}",
+   "request_id": "gw-body-102",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-102\"}}",
+   "parsed": {
+    "codes": [
+     "  a ",
+     "a",
+     "",
+     "x"
+    ]
+   }
+  },
+  {
+   "route": "add_codes",
+   "body": "{}",
+   "request_id": "gw-body-103",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"codes\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"gw-body-103\"}}",
+   "parsed": null
+  },
+  {
+   "route": "add_codes",
+   "body": "{\"codes\":null}",
+   "request_id": "gw-body-104",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"list_type\",\"loc\":[\"body\",\"codes\"],\"msg\":\"Input should be a valid list\",\"input\":null}],\"request_id\":\"gw-body-104\"}}",
+   "parsed": null
+  },
+  {
+   "route": "add_codes",
+   "body": "{\"codes\":[[\"a\"]]}",
+   "request_id": "gw-body-105",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"codes\",0],\"msg\":\"Input should be a valid string\",\"input\":[\"a\"]}],\"request_id\":\"gw-body-105\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update_code",
+   "body": "{\"code\":\"\"}",
+   "request_id": "gw-body-106",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}],\"request_id\":\"gw-body-106\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update_code",
+   "body": "{\"code\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+   "request_id": "gw-body-107",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"code\"],\"msg\":\"String should have at most 400 characters\",\"input\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ctx\":{\"max_length\":400}}],\"request_id\":\"gw-body-107\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update_code",
+   "body": "{\"code\":5}",
+   "request_id": "gw-body-108",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"code\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"gw-body-108\"}}",
+   "parsed": null
+  },
+  {
+   "route": "update_code",
+   "body": "{\"code\":\"ok\"}",
+   "request_id": "gw-body-109",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-109\"}}",
+   "parsed": {
+    "code": "ok"
+   }
+  },
+  {
+   "route": "update_code",
+   "body": "{}",
+   "request_id": "gw-body-110",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"code\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"gw-body-110\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"x\"}",
+   "content_type": "text/plain",
+   "request_id": "gw-body-111",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"{\\\"name\\\":\\\"x\\\"}\"}],\"request_id\":\"gw-body-111\"}}",
+   "parsed": null
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"x\"}",
+   "content_type": "application/vnd.api+json",
+   "request_id": "gw-body-112",
+   "status": 400,
+   "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"captured\",\"details\":null,\"request_id\":\"gw-body-112\"}}",
+   "parsed": {
+    "name": "x",
+    "description": null
+   }
+  },
+  {
+   "route": "create_item",
+   "body": "{\"name\":\"x\"}",
+   "content_type": null,
+   "request_id": "gw-body-113",
+   "status": 422,
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"{\\\"name\\\":\\\"x\\\"}\"}],\"request_id\":\"gw-body-113\"}}",
+   "parsed": null
+  }
+ ],
+ "scenario": {
+  "seed": {
+   "site_users": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000001"
+     },
+     "username": "alice",
+     "discord_handle": "alice",
+     "notify_email": "Alice@Example.com",
+     "display_name": "Alice",
+     "is_active": true,
+     "is_verified": true,
+     "is_deleted": false,
+     "discord_id": {
+      "$numberInt": "1001"
+     },
+     "discord_avatar": null,
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "claimed_trove_name": null,
+     "claimed_trove_display": null,
+     "claimed_at": null,
+     "claim_verified": false,
+     "claim_baseline": {},
+     "claim_verified_at": null,
+     "creator_token_hash": null,
+     "creator_token_prefix": null,
+     "creator_token_at": null,
+     "mod_issues_seen_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000002"
+     },
+     "username": "bob",
+     "discord_handle": "bob",
+     "notify_email": null,
+     "display_name": null,
+     "is_active": true,
+     "is_verified": false,
+     "is_deleted": false,
+     "discord_id": {
+      "$numberInt": "1002"
+     },
+     "discord_avatar": null,
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "claimed_trove_name": null,
+     "claimed_trove_display": null,
+     "claimed_at": null,
+     "claim_verified": false,
+     "claim_baseline": {},
+     "claim_verified_at": null,
+     "creator_token_hash": null,
+     "creator_token_prefix": null,
+     "creator_token_at": null,
+     "mod_issues_seen_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000003"
+     },
+     "username": "carol",
+     "discord_handle": "carol",
+     "notify_email": "carol@example.com",
+     "display_name": "",
+     "is_active": true,
+     "is_verified": false,
+     "is_deleted": false,
+     "discord_id": {
+      "$numberInt": "1003"
+     },
+     "discord_avatar": null,
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "claimed_trove_name": null,
+     "claimed_trove_display": null,
+     "claimed_at": null,
+     "claim_verified": false,
+     "claim_baseline": {},
+     "claim_verified_at": null,
+     "creator_token_hash": null,
+     "creator_token_prefix": null,
+     "creator_token_at": null,
+     "mod_issues_seen_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    }
+   ],
+   "users": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000004"
+     },
+     "email": "carol@example.com",
+     "hashed_password": "x",
+     "display_name": null,
+     "is_active": true,
+     "is_verified": false,
+     "is_superuser": false,
+     "roles": [],
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "github_id": null,
+     "email_bounced": true,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    }
+   ]
+  },
+  "next_id": 0,
+  "steps": [
+   {
+    "op": "clock",
+    "now": "2026-10-22T11:00:00.123456+00:00"
+   },
+   {
+    "op": "create_item",
+    "body": {
+     "name": "Radiant Mount",
+     "description": "A shiny mount"
+    },
+    "save": "A",
+    "id": "",
+    "request_id": "gw-step-001",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000005\",\"name\":\"Radiant Mount\",\"description\":\"A shiny mount\",\"available\":0,\"reserved\":0,\"awarded\":0,\"total\":0,\"created_at\":\"2026-10-22T11:00:00.123456Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "create_item",
+    "body": {
+     "name": "Dragon Egg"
+    },
+    "save": "B",
+    "id": "",
+    "request_id": "gw-step-002",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000006\",\"name\":\"Dragon Egg\",\"description\":null,\"available\":0,\"reserved\":0,\"awarded\":0,\"total\":0,\"created_at\":\"2026-10-22T11:00:00.123456Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "create_item",
+    "body": {
+     "name": "Empty Drawer",
+     "description": null
+    },
+    "save": "C",
+    "id": "",
+    "request_id": "gw-step-003",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000007\",\"name\":\"Empty Drawer\",\"description\":null,\"available\":0,\"reserved\":0,\"awarded\":0,\"total\":0,\"created_at\":\"2026-10-22T11:00:00.123456Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "list_items",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-004",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000005\",\"name\":\"Radiant Mount\",\"description\":\"A shiny mount\",\"available\":0,\"reserved\":0,\"awarded\":0,\"total\":0,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000006\",\"name\":\"Dragon Egg\",\"description\":null,\"available\":0,\"reserved\":0,\"awarded\":0,\"total\":0,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000007\",\"name\":\"Empty Drawer\",\"description\":null,\"available\":0,\"reserved\":0,\"awarded\":0,\"total\":0,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "add_codes",
+    "id": "65f000000000000000000005",
+    "body": {
+     "codes": [
+      "  AAA-111 ",
+      "AAA-111",
+      "",
+      "BBB-222",
+      "　CCC-333　",
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "DDD-444",
+      "EEE-555",
+      "\u001cFFF-000\u001f"
+     ]
+    },
+    "request_id": "gw-step-005",
+    "status": 200,
+    "response": "{\"added\":6,\"skipped\":0}",
+    "cache_control": null
+   },
+   {
+    "op": "add_codes",
+    "id": "65f000000000000000000005",
+    "body": {
+     "codes": [
+      "BBB-222",
+      "GGG-666"
+     ]
+    },
+    "request_id": "gw-step-006",
+    "status": 200,
+    "response": "{\"added\":1,\"skipped\":1}",
+    "cache_control": null
+   },
+   {
+    "op": "add_codes",
+    "id": "65f000000000000000000006",
+    "body": {
+     "codes": [
+      "EGG-1",
+      "EGG-2"
+     ]
+    },
+    "request_id": "gw-step-007",
+    "status": 200,
+    "response": "{\"added\":2,\"skipped\":0}",
+    "cache_control": null
+   },
+   {
+    "op": "add_codes",
+    "id": "65f000000000000000000007",
+    "body": {
+     "codes": [
+      "   ",
+      ""
+     ]
+    },
+    "request_id": "gw-step-008",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"No valid codes to add.\",\"details\":null,\"request_id\":\"gw-step-008\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "add_codes",
+    "id": "65f0ffffffffffffffffffff",
+    "body": {
+     "codes": [
+      "x"
+     ]
+    },
+    "request_id": "gw-step-009",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Drawer not found\",\"details\":null,\"request_id\":\"gw-step-009\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "add_codes",
+    "id": "nope",
+    "body": {
+     "codes": [
+      "x"
+     ]
+    },
+    "request_id": "gw-step-010",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid id\",\"details\":null,\"request_id\":\"gw-step-010\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "list_codes",
+    "id": "65f000000000000000000005",
+    "save_codes": {
+     "DDD": 3,
+     "EEE": 2
+    },
+    "body": null,
+    "request_id": "gw-step-011",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000008\",\"code\":\"AAA-111\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000009\",\"code\":\"BBB-222\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000a\",\"code\":\"CCC-333\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000b\",\"code\":\"DDD-444\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000c\",\"code\":\"EEE-555\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000d\",\"code\":\"FFF-000\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000e\",\"code\":\"GGG-666\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "list_codes",
+    "id": "65f0ffffffffffffffffffff",
+    "body": null,
+    "request_id": "gw-step-012",
+    "status": 200,
+    "response": "[]",
+    "cache_control": null
+   },
+   {
+    "op": "update_code",
+    "id": "65f00000000000000000000a",
+    "body": {
+     "code": "EEE-555-fixed"
+    },
+    "request_id": "gw-step-013",
+    "status": 200,
+    "response": "{\"id\":\"65f00000000000000000000a\",\"code\":\"EEE-555-fixed\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "delete_code",
+    "id": "65f00000000000000000000b",
+    "body": null,
+    "request_id": "gw-step-014",
+    "status": 204,
+    "response": "",
+    "cache_control": null
+   },
+   {
+    "op": "delete_code",
+    "id": "65f00000000000000000000b",
+    "body": null,
+    "request_id": "gw-step-015",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Code not found\",\"details\":null,\"request_id\":\"gw-step-015\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "update_code",
+    "id": "65F0FFFFFFFFFFFFFFFFFFFF",
+    "body": {
+     "code": "x"
+    },
+    "request_id": "gw-step-016",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Code not found\",\"details\":null,\"request_id\":\"gw-step-016\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "update_item",
+    "id": "65f000000000000000000006",
+    "body": {
+     "description": "Hatches soon"
+    },
+    "request_id": "gw-step-017",
+    "status": 200,
+    "response": "{\"id\":\"65f000000000000000000006\",\"name\":\"Dragon Egg\",\"description\":\"Hatches soon\",\"available\":2,\"reserved\":0,\"awarded\":0,\"total\":2,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "update_item",
+    "id": "65f000000000000000000005",
+    "body": {
+     "name": "Radiant Mount II",
+     "description": null
+    },
+    "request_id": "gw-step-018",
+    "status": 200,
+    "response": "{\"id\":\"65f000000000000000000005\",\"name\":\"Radiant Mount II\",\"description\":\"A shiny mount\",\"available\":6,\"reserved\":0,\"awarded\":0,\"total\":6,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "update_item",
+    "id": "65f0ffffffffffffffffffff",
+    "body": {},
+    "request_id": "gw-step-019",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Drawer not found\",\"details\":null,\"request_id\":\"gw-step-019\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "update_item",
+    "id": "bad id",
+    "body": {},
+    "request_id": "gw-step-020",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid id\",\"details\":null,\"request_id\":\"gw-step-020\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "list_items",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-021",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000005\",\"name\":\"Radiant Mount II\",\"description\":\"A shiny mount\",\"available\":6,\"reserved\":0,\"awarded\":0,\"total\":6,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000006\",\"name\":\"Dragon Egg\",\"description\":\"Hatches soon\",\"available\":2,\"reserved\":0,\"awarded\":0,\"total\":2,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000007\",\"name\":\"Empty Drawer\",\"description\":null,\"available\":0,\"reserved\":0,\"awarded\":0,\"total\":0,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Bad window",
+     "vault_item_id": "65f000000000000000000005",
+     "starts_at": "2026-10-23T11:00:00.123456Z",
+     "ends_at": "2026-10-23T11:00:00.123456Z"
+    },
+    "id": "",
+    "request_id": "gw-step-022",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"End must be after start.\",\"details\":null,\"request_id\":\"gw-step-022\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Past",
+     "vault_item_id": "65f000000000000000000005",
+     "starts_at": "2026-10-19T11:00:00.123456Z",
+     "ends_at": "2026-10-22T10:00:00.123456Z"
+    },
+    "id": "",
+    "request_id": "gw-step-023",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"End date is in the past.\",\"details\":null,\"request_id\":\"gw-step-023\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "No drawer",
+     "vault_item_id": "65f0ffffffffffffffffffff",
+     "starts_at": "2026-10-22T10:00:00.123456Z",
+     "ends_at": "2026-10-23T11:00:00.123456Z"
+    },
+    "id": "",
+    "request_id": "gw-step-024",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Drawer not found\",\"details\":null,\"request_id\":\"gw-step-024\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Empty",
+     "vault_item_id": "65f000000000000000000007",
+     "starts_at": "2026-10-22T10:00:00.123456Z",
+     "ends_at": "2026-10-23T11:00:00.123456Z"
+    },
+    "id": "",
+    "request_id": "gw-step-025",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"That drawer has no available codes - add some first.\",\"details\":null,\"request_id\":\"gw-step-025\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Bad id",
+     "vault_item_id": "zz",
+     "starts_at": "2026-10-22T10:00:00.123456Z",
+     "ends_at": "2026-10-23T11:00:00.123456Z"
+    },
+    "id": "",
+    "request_id": "gw-step-026",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid id\",\"details\":null,\"request_id\":\"gw-step-026\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Weekly Radiant",
+     "vault_item_id": "65f000000000000000000005",
+     "starts_at": "2026-10-22T10:00:00.123456Z",
+     "ends_at": "2026-10-24T11:00:00.123456Z"
+    },
+    "save": "G1",
+    "id": "",
+    "request_id": "gw-step-027",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f000000000000000000008\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Egg Hunt",
+     "description": "Custom desc",
+     "vault_item_id": "65f000000000000000000006",
+     "starts_at": "2026-10-23T11:00:00.250+00:00",
+     "ends_at": "2026-10-25T06:00:00-05:00"
+    },
+    "save": "G2",
+    "id": "",
+    "request_id": "gw-step-028",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt\",\"description\":\"Custom desc\",\"prize_name\":\"Dragon Egg\",\"status\":\"scheduled\",\"starts_at\":\"2026-10-23T11:00:00.250000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000006\",\"vault_item_name\":\"Dragon Egg\",\"prize_code_id\":\"65f00000000000000000000f\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Flash",
+     "description": "",
+     "vault_item_id": "65f000000000000000000005",
+     "starts_at": "2026-10-22T09:00:00.123456Z",
+     "ends_at": "2026-10-22T12:00:00.123456Z"
+    },
+    "save": "G3",
+    "id": "",
+    "request_id": "gw-step-029",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f000000000000000000009\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "To cancel",
+     "vault_item_id": "65f000000000000000000005",
+     "starts_at": "2026-10-22T10:00:00.123456Z",
+     "ends_at": "2026-10-23T11:00:00.123456Z"
+    },
+    "save": "G4",
+    "id": "",
+    "request_id": "gw-step-030",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000014\",\"title\":\"To cancel\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-23T11:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000a\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Soon",
+     "vault_item_id": "65f000000000000000000005",
+     "starts_at": "2026-10-22T11:30:00.123456Z",
+     "ends_at": "2026-10-30"
+    },
+    "save": "G5",
+    "id": "",
+    "request_id": "gw-step-031",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"scheduled\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000c\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "create",
+    "body": {
+     "title": "Lonely",
+     "vault_item_id": "65f000000000000000000005",
+     "starts_at": "2026-10-22T10:00:00.123456Z",
+     "ends_at": "2026-10-22T12:30:00.123456Z"
+    },
+    "save": "G6",
+    "id": "",
+    "request_id": "gw-step-032",
+    "status": 201,
+    "response": "{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000d\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "list_admin",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-033",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f000000000000000000008\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt\",\"description\":\"Custom desc\",\"prize_name\":\"Dragon Egg\",\"status\":\"scheduled\",\"starts_at\":\"2026-10-23T11:00:00.250000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000006\",\"vault_item_name\":\"Dragon Egg\",\"prize_code_id\":\"65f00000000000000000000f\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f000000000000000000009\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000014\",\"title\":\"To cancel\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-23T11:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000a\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"scheduled\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000c\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000d\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "update",
+    "id": "65f000000000000000000012",
+    "body": {
+     "title": "Egg Hunt Deluxe",
+     "vault_item_id": "65f000000000000000000005"
+    },
+    "request_id": "gw-step-034",
+    "status": 200,
+    "response": "{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"scheduled\",\"starts_at\":\"2026-10-23T11:00:00.250000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000e\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "update",
+    "id": "65f000000000000000000012",
+    "body": {
+     "starts_at": "2026-10-22T10:30:00.123456Z"
+    },
+    "request_id": "gw-step-035",
+    "status": 200,
+    "response": "{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000e\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "update",
+    "id": "65f000000000000000000012",
+    "body": {
+     "ends_at": "2026-10-22T10:00:00.123456Z"
+    },
+    "request_id": "gw-step-036",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"End must be after start.\",\"details\":null,\"request_id\":\"gw-step-036\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "update",
+    "id": "65f000000000000000000012",
+    "body": {
+     "vault_item_id": "65f000000000000000000007"
+    },
+    "request_id": "gw-step-037",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"That drawer has no available codes - add some first.\",\"details\":null,\"request_id\":\"gw-step-037\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "update",
+    "id": "65f000000000000000000012",
+    "body": {
+     "vault_item_id": "65f0ffffffffffffffffffff"
+    },
+    "request_id": "gw-step-038",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Drawer not found\",\"details\":null,\"request_id\":\"gw-step-038\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "update",
+    "id": "65f0ffffffffffffffffffff",
+    "body": {},
+    "request_id": "gw-step-039",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Giveaway not found\",\"details\":null,\"request_id\":\"gw-step-039\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f000000000000000000011",
+    "user": "alice",
+    "body": null,
+    "request_id": "gw-step-040",
+    "status": 200,
+    "response": "{\"giveaway_id\":\"65f000000000000000000011\",\"entered\":true,\"entry_count\":1}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f000000000000000000011",
+    "user": "alice",
+    "body": null,
+    "request_id": "gw-step-041",
+    "status": 200,
+    "response": "{\"giveaway_id\":\"65f000000000000000000011\",\"entered\":true,\"entry_count\":1}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f000000000000000000011",
+    "user": "bob",
+    "body": null,
+    "request_id": "gw-step-042",
+    "status": 200,
+    "response": "{\"giveaway_id\":\"65f000000000000000000011\",\"entered\":true,\"entry_count\":2}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f000000000000000000013",
+    "user": "carol",
+    "body": null,
+    "request_id": "gw-step-043",
+    "status": 200,
+    "response": "{\"giveaway_id\":\"65f000000000000000000013\",\"entered\":true,\"entry_count\":1}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f000000000000000000012",
+    "user": "alice",
+    "body": null,
+    "request_id": "gw-step-044",
+    "status": 200,
+    "response": "{\"giveaway_id\":\"65f000000000000000000012\",\"entered\":true,\"entry_count\":1}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f000000000000000000015",
+    "user": "alice",
+    "body": null,
+    "request_id": "gw-step-045",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"This giveaway isn't open for entries.\",\"details\":null,\"request_id\":\"gw-step-045\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f0ffffffffffffffffffff",
+    "user": "alice",
+    "body": null,
+    "request_id": "gw-step-046",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Giveaway not found\",\"details\":null,\"request_id\":\"gw-step-046\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "0000",
+    "user": "alice",
+    "body": null,
+    "request_id": "gw-step-047",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid id\",\"details\":null,\"request_id\":\"gw-step-047\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "cancel",
+    "id": "65f000000000000000000014",
+    "body": null,
+    "request_id": "gw-step-048",
+    "status": 200,
+    "response": "{\"id\":\"65f000000000000000000014\",\"title\":\"To cancel\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"cancelled\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-23T11:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000a\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "cancel",
+    "id": "65f000000000000000000014",
+    "body": null,
+    "request_id": "gw-step-049",
+    "status": 200,
+    "response": "{\"id\":\"65f000000000000000000014\",\"title\":\"To cancel\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"cancelled\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-23T11:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000a\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "draw_now",
+    "id": "65f000000000000000000014",
+    "body": null,
+    "request_id": "gw-step-050",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Only an open/scheduled giveaway can be drawn.\",\"details\":null,\"request_id\":\"gw-step-050\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "update",
+    "id": "65f000000000000000000014",
+    "body": {
+     "title": "x"
+    },
+    "request_id": "gw-step-051",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"A finished giveaway can't be edited.\",\"details\":null,\"request_id\":\"gw-step-051\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "enter",
+    "id": "65f000000000000000000014",
+    "user": "bob",
+    "body": null,
+    "request_id": "gw-step-052",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"This giveaway isn't open for entries.\",\"details\":null,\"request_id\":\"gw-step-052\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "draw_now",
+    "id": "65f000000000000000000011",
+    "body": null,
+    "request_id": "gw-step-053",
+    "status": 200,
+    "response": "{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f000000000000000000008\",\"winner_user_id\":\"65f000000000000000000001\",\"winner_username\":\"Alice\",\"drawn_at\":\"2026-10-22T11:00:00.123000Z\",\"created_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "cache_control": null
+   },
+   {
+    "op": "cancel",
+    "id": "65f000000000000000000011",
+    "body": null,
+    "request_id": "gw-step-054",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"This giveaway has already finished.\",\"details\":null,\"request_id\":\"gw-step-054\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "mine",
+    "user": "alice",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-055",
+    "status": 200,
+    "response": "{\"giveaway_ids\":[\"65f000000000000000000011\",\"65f000000000000000000012\"]}",
+    "cache_control": null
+   },
+   {
+    "op": "me",
+    "user": "alice",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-056",
+    "status": 200,
+    "response": "[{\"giveaway_id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entered_at\":\"2026-10-22T11:00:00.123000Z\",\"won\":true,\"code\":\"AAA-111\"},{\"giveaway_id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entered_at\":\"2026-10-22T11:00:00.123000Z\",\"won\":false,\"code\":null}]",
+    "cache_control": null
+   },
+   {
+    "op": "me",
+    "user": "bob",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-057",
+    "status": 200,
+    "response": "[{\"giveaway_id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entered_at\":\"2026-10-22T11:00:00.123000Z\",\"won\":false,\"code\":null}]",
+    "cache_control": null
+   },
+   {
+    "op": "mine",
+    "user": "carol",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-058",
+    "status": 200,
+    "response": "{\"giveaway_ids\":[\"65f000000000000000000013\"]}",
+    "cache_control": null
+   },
+   {
+    "op": "ongoing",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-059",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":1,\"winner_username\":null},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":1,\"winner_username\":null}]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "upcoming",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-060",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"scheduled\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"winner_username\":null}]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "ended",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-061",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"winner_username\":\"Alice\"}]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "list_public",
+    "status": 200,
+    "response": "{\"items\":[{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":1,\"winner_username\":null},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":1,\"winner_username\":null},{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"scheduled\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"winner_username\":\"Alice\"}]}"
+   },
+   {
+    "op": "clock",
+    "now": "2026-10-22T13:00:00.123456+00:00"
+   },
+   {
+    "op": "run_due"
+   },
+   {
+    "op": "ongoing",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-065",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":1,\"winner_username\":null},{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"winner_username\":null}]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "upcoming",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-066",
+    "status": 200,
+    "response": "[]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "ended",
+    "query": "days=1",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-067",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"winner_username\":\"Alice\"},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"closed\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":1,\"winner_username\":\"carol\"}]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "list_public",
+    "status": 200,
+    "response": "{\"items\":[{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":1,\"winner_username\":null},{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"winner_username\":\"Alice\"},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"closed\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":1,\"winner_username\":\"carol\"}]}"
+   },
+   {
+    "op": "me",
+    "user": "carol",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-069",
+    "status": 200,
+    "response": "[{\"giveaway_id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entered_at\":\"2026-10-22T11:00:00.123000Z\",\"won\":true,\"code\":\"BBB-222\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "me",
+    "user": "alice",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-070",
+    "status": 200,
+    "response": "[{\"giveaway_id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entered_at\":\"2026-10-22T11:00:00.123000Z\",\"won\":true,\"code\":\"AAA-111\"},{\"giveaway_id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entered_at\":\"2026-10-22T11:00:00.123000Z\",\"won\":false,\"code\":null}]",
+    "cache_control": null
+   },
+   {
+    "op": "list_codes",
+    "id": "65f000000000000000000005",
+    "body": null,
+    "request_id": "gw-step-071",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000008\",\"code\":\"AAA-111\",\"status\":\"awarded\",\"giveaway_id\":\"65f000000000000000000011\",\"awarded_at\":\"2026-10-22T11:00:00.123000Z\",\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000009\",\"code\":\"BBB-222\",\"status\":\"awarded\",\"giveaway_id\":\"65f000000000000000000013\",\"awarded_at\":\"2026-10-22T13:00:00.123000Z\",\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000a\",\"code\":\"EEE-555-fixed\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000c\",\"code\":\"EEE-555\",\"status\":\"reserved\",\"giveaway_id\":\"65f000000000000000000015\",\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000d\",\"code\":\"FFF-000\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f00000000000000000000e\",\"code\":\"GGG-666\",\"status\":\"available\",\"giveaway_id\":null,\"awarded_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "delete_item",
+    "id": "65f000000000000000000005",
+    "body": null,
+    "request_id": "gw-step-072",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"This drawer has codes reserved by or awarded through giveaways - cancel those first.\",\"details\":null,\"request_id\":\"gw-step-072\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "delete_item",
+    "id": "65f000000000000000000007",
+    "body": null,
+    "request_id": "gw-step-073",
+    "status": 204,
+    "response": "",
+    "cache_control": null
+   },
+   {
+    "op": "delete_item",
+    "id": "65f000000000000000000006",
+    "body": null,
+    "request_id": "gw-step-074",
+    "status": 204,
+    "response": "",
+    "cache_control": null
+   },
+   {
+    "op": "delete_item",
+    "id": "65f000000000000000000006",
+    "body": null,
+    "request_id": "gw-step-075",
+    "status": 404,
+    "response": "{\"error\":{\"code\":\"not_found\",\"message\":\"Drawer not found\",\"details\":null,\"request_id\":\"gw-step-075\"}}",
+    "cache_control": null
+   },
+   {
+    "op": "list_items",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-076",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000005\",\"name\":\"Radiant Mount II\",\"description\":\"A shiny mount\",\"available\":3,\"reserved\":1,\"awarded\":2,\"total\":6,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "list_admin",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-077",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f000000000000000000008\",\"winner_user_id\":\"65f000000000000000000001\",\"winner_username\":\"Alice\",\"drawn_at\":\"2026-10-22T11:00:00.123000Z\",\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":1,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000e\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":1,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f000000000000000000009\",\"winner_user_id\":\"65f000000000000000000003\",\"winner_username\":\"carol\",\"drawn_at\":\"2026-10-22T13:00:00.123000Z\",\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000014\",\"title\":\"To cancel\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"cancelled\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-23T11:00:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000a\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000c\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"closed\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"vault_item_id\":\"65f000000000000000000005\",\"vault_item_name\":\"Radiant Mount II\",\"prize_code_id\":\"65f00000000000000000000d\",\"winner_user_id\":null,\"winner_username\":null,\"drawn_at\":null,\"created_at\":\"2026-10-22T11:00:00.123000Z\"}]",
+    "cache_control": null
+   },
+   {
+    "op": "clock",
+    "now": "2026-11-01T11:00:00.123456+00:00"
+   },
+   {
+    "op": "ended",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-079",
+    "status": 200,
+    "response": "[]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "ended",
+    "query": "days=30",
+    "id": "",
+    "body": null,
+    "request_id": "gw-step-080",
+    "status": 200,
+    "response": "[{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"winner_username\":\"Alice\"},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"closed\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":1,\"winner_username\":\"carol\"}]",
+    "cache_control": "public, max-age=30"
+   },
+   {
+    "op": "list_public",
+    "status": 200,
+    "response": "{\"items\":[{\"id\":\"65f000000000000000000012\",\"title\":\"Egg Hunt Deluxe\",\"description\":\"Custom desc\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T10:30:00.123000Z\",\"ends_at\":\"2026-10-25T11:00:00Z\",\"entry_count\":1,\"winner_username\":null},{\"id\":\"65f000000000000000000015\",\"title\":\"Soon\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"open\",\"starts_at\":\"2026-10-22T11:30:00.123000Z\",\"ends_at\":\"2026-10-30T00:00:00Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000011\",\"title\":\"Weekly Radiant\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-24T11:00:00.123000Z\",\"entry_count\":2,\"winner_username\":\"Alice\"},{\"id\":\"65f000000000000000000016\",\"title\":\"Lonely\",\"description\":\"A shiny mount\",\"prize_name\":\"Radiant Mount II\",\"status\":\"closed\",\"starts_at\":\"2026-10-22T10:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:30:00.123000Z\",\"entry_count\":0,\"winner_username\":null},{\"id\":\"65f000000000000000000013\",\"title\":\"Flash\",\"description\":\"\",\"prize_name\":\"Radiant Mount II\",\"status\":\"drawn\",\"starts_at\":\"2026-10-22T09:00:00.123000Z\",\"ends_at\":\"2026-10-22T12:00:00.123000Z\",\"entry_count\":1,\"winner_username\":\"carol\"}]}"
+   }
+  ],
+  "final": {
+   "site_users": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000001"
+     },
+     "username": "alice",
+     "discord_handle": "alice",
+     "notify_email": "Alice@Example.com",
+     "display_name": "Alice",
+     "is_active": true,
+     "is_verified": true,
+     "is_deleted": false,
+     "discord_id": {
+      "$numberInt": "1001"
+     },
+     "discord_avatar": null,
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "claimed_trove_name": null,
+     "claimed_trove_display": null,
+     "claimed_at": null,
+     "claim_verified": false,
+     "claim_baseline": {},
+     "claim_verified_at": null,
+     "creator_token_hash": null,
+     "creator_token_prefix": null,
+     "creator_token_at": null,
+     "mod_issues_seen_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000002"
+     },
+     "username": "bob",
+     "discord_handle": "bob",
+     "notify_email": null,
+     "display_name": null,
+     "is_active": true,
+     "is_verified": false,
+     "is_deleted": false,
+     "discord_id": {
+      "$numberInt": "1002"
+     },
+     "discord_avatar": null,
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "claimed_trove_name": null,
+     "claimed_trove_display": null,
+     "claimed_at": null,
+     "claim_verified": false,
+     "claim_baseline": {},
+     "claim_verified_at": null,
+     "creator_token_hash": null,
+     "creator_token_prefix": null,
+     "creator_token_at": null,
+     "mod_issues_seen_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000003"
+     },
+     "username": "carol",
+     "discord_handle": "carol",
+     "notify_email": "carol@example.com",
+     "display_name": "",
+     "is_active": true,
+     "is_verified": false,
+     "is_deleted": false,
+     "discord_id": {
+      "$numberInt": "1003"
+     },
+     "discord_avatar": null,
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "claimed_trove_name": null,
+     "claimed_trove_display": null,
+     "claimed_at": null,
+     "claim_verified": false,
+     "claim_baseline": {},
+     "claim_verified_at": null,
+     "creator_token_hash": null,
+     "creator_token_prefix": null,
+     "creator_token_at": null,
+     "mod_issues_seen_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    }
+   ],
+   "users": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000004"
+     },
+     "email": "carol@example.com",
+     "hashed_password": "x",
+     "display_name": null,
+     "is_active": true,
+     "is_verified": false,
+     "is_superuser": false,
+     "roles": [],
+     "token_version": {
+      "$numberInt": "0"
+     },
+     "github_id": null,
+     "email_bounced": true,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "last_login_at": null
+    }
+   ],
+   "vault_items": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "name": "Radiant Mount II",
+     "description": "A shiny mount",
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    }
+   ],
+   "prize_codes": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000008"
+     },
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "code": "AAA-111",
+     "status": "awarded",
+     "giveaway_id": {
+      "$oid": "65f000000000000000000011"
+     },
+     "awarded_to": {
+      "$oid": "65f000000000000000000001"
+     },
+     "awarded_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000009"
+     },
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "code": "BBB-222",
+     "status": "awarded",
+     "giveaway_id": {
+      "$oid": "65f000000000000000000013"
+     },
+     "awarded_to": {
+      "$oid": "65f000000000000000000003"
+     },
+     "awarded_at": {
+      "$date": {
+       "$numberLong": "1792674000123"
+      }
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f00000000000000000000a"
+     },
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "code": "EEE-555-fixed",
+     "status": "available",
+     "giveaway_id": null,
+     "awarded_to": null,
+     "awarded_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f00000000000000000000c"
+     },
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "code": "EEE-555",
+     "status": "reserved",
+     "giveaway_id": {
+      "$oid": "65f000000000000000000015"
+     },
+     "awarded_to": null,
+     "awarded_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f00000000000000000000d"
+     },
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "code": "FFF-000",
+     "status": "available",
+     "giveaway_id": null,
+     "awarded_to": null,
+     "awarded_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f00000000000000000000e"
+     },
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "code": "GGG-666",
+     "status": "available",
+     "giveaway_id": null,
+     "awarded_to": null,
+     "awarded_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    }
+   ],
+   "giveaways": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000011"
+     },
+     "title": "Weekly Radiant",
+     "description": "A shiny mount",
+     "prize_name": "Radiant Mount II",
+     "starts_at": {
+      "$date": {
+       "$numberLong": "1792663200123"
+      }
+     },
+     "ends_at": {
+      "$date": {
+       "$numberLong": "1792839600123"
+      }
+     },
+     "status": "drawn",
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "prize_code_id": {
+      "$oid": "65f000000000000000000008"
+     },
+     "winner_user_id": {
+      "$oid": "65f000000000000000000001"
+     },
+     "winner_username": "Alice",
+     "drawn_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "entry_count": {
+      "$numberInt": "2"
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000012"
+     },
+     "title": "Egg Hunt Deluxe",
+     "description": "Custom desc",
+     "prize_name": "Radiant Mount II",
+     "starts_at": {
+      "$date": {
+       "$numberLong": "1792665000123"
+      }
+     },
+     "ends_at": {
+      "$date": {
+       "$numberLong": "1792926000000"
+      }
+     },
+     "status": "open",
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "prize_code_id": {
+      "$oid": "65f00000000000000000000e"
+     },
+     "winner_user_id": null,
+     "winner_username": null,
+     "drawn_at": null,
+     "entry_count": {
+      "$numberInt": "1"
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000013"
+     },
+     "title": "Flash",
+     "description": "",
+     "prize_name": "Radiant Mount II",
+     "starts_at": {
+      "$date": {
+       "$numberLong": "1792659600123"
+      }
+     },
+     "ends_at": {
+      "$date": {
+       "$numberLong": "1792670400123"
+      }
+     },
+     "status": "drawn",
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "prize_code_id": {
+      "$oid": "65f000000000000000000009"
+     },
+     "winner_user_id": {
+      "$oid": "65f000000000000000000003"
+     },
+     "winner_username": "carol",
+     "drawn_at": {
+      "$date": {
+       "$numberLong": "1792674000123"
+      }
+     },
+     "entry_count": {
+      "$numberInt": "1"
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792674000123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000014"
+     },
+     "title": "To cancel",
+     "description": "A shiny mount",
+     "prize_name": "Radiant Mount II",
+     "starts_at": {
+      "$date": {
+       "$numberLong": "1792663200123"
+      }
+     },
+     "ends_at": {
+      "$date": {
+       "$numberLong": "1792753200123"
+      }
+     },
+     "status": "cancelled",
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "prize_code_id": {
+      "$oid": "65f00000000000000000000a"
+     },
+     "winner_user_id": null,
+     "winner_username": null,
+     "drawn_at": null,
+     "entry_count": {
+      "$numberInt": "0"
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000015"
+     },
+     "title": "Soon",
+     "description": "A shiny mount",
+     "prize_name": "Radiant Mount II",
+     "starts_at": {
+      "$date": {
+       "$numberLong": "1792668600123"
+      }
+     },
+     "ends_at": {
+      "$date": {
+       "$numberLong": "1793318400000"
+      }
+     },
+     "status": "open",
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "prize_code_id": {
+      "$oid": "65f00000000000000000000c"
+     },
+     "winner_user_id": null,
+     "winner_username": null,
+     "drawn_at": null,
+     "entry_count": {
+      "$numberInt": "0"
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792674000123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000016"
+     },
+     "title": "Lonely",
+     "description": "A shiny mount",
+     "prize_name": "Radiant Mount II",
+     "starts_at": {
+      "$date": {
+       "$numberLong": "1792663200123"
+      }
+     },
+     "ends_at": {
+      "$date": {
+       "$numberLong": "1792672200123"
+      }
+     },
+     "status": "closed",
+     "vault_item_id": {
+      "$oid": "65f000000000000000000005"
+     },
+     "prize_code_id": {
+      "$oid": "65f00000000000000000000d"
+     },
+     "winner_user_id": null,
+     "winner_username": null,
+     "drawn_at": null,
+     "entry_count": {
+      "$numberInt": "0"
+     },
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1792674000123"
+      }
+     }
+    }
+   ],
+   "giveaway_entries": [
+    {
+     "_id": {
+      "$oid": "65f000000000000000000017"
+     },
+     "giveaway_id": {
+      "$oid": "65f000000000000000000011"
+     },
+     "site_user_id": {
+      "$oid": "65f000000000000000000001"
+     },
+     "username": "Alice",
+     "entered_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f000000000000000000019"
+     },
+     "giveaway_id": {
+      "$oid": "65f000000000000000000011"
+     },
+     "site_user_id": {
+      "$oid": "65f000000000000000000002"
+     },
+     "username": "bob",
+     "entered_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f00000000000000000001a"
+     },
+     "giveaway_id": {
+      "$oid": "65f000000000000000000013"
+     },
+     "site_user_id": {
+      "$oid": "65f000000000000000000003"
+     },
+     "username": "carol",
+     "entered_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    },
+    {
+     "_id": {
+      "$oid": "65f00000000000000000001b"
+     },
+     "giveaway_id": {
+      "$oid": "65f000000000000000000012"
+     },
+     "site_user_id": {
+      "$oid": "65f000000000000000000001"
+     },
+     "username": "Alice",
+     "entered_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     }
+    }
+   ],
+   "email_outbox": [
+    {
+     "_id": {
+      "$oid": "65f00000000000000000001c"
+     },
+     "to": "Alice@Example.com",
+     "subject": "You won: Radiant Mount II!",
+     "text": "Congratulations - you won \"Weekly Radiant\" on Better Trove Tools!\n\nPrize: Radiant Mount II\nYour code: AAA-111\n\nA shiny mount\n\nYour code is also always on your dashboard.\nThanks for playing.\n- Better Trove Tools",
+     "html": "<div style=\"font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#e8ecf3;background:#0a0e14\"><h1 style='font-size:1.4rem;margin:0 0 12px'>You won Radiant Mount II! 🎉</h1><p>Congratulations - you won <strong>Weekly Radiant</strong> on Better Trove Tools.</p><p style='margin:18px 0 6px'>Your code:</p><p style='font-family:monospace;font-size:1.1rem;background:#161b22;border:1px solid #232a33;border-radius:8px;padding:12px 14px'>AAA-111</p><p style='color:#9aa4b2'>A shiny mount</p><p style='margin-top:20px;color:#9aa4b2'>Your code is also always on your dashboard.<br>Thanks for playing.<br>- Better Trove Tools</p></div>",
+     "status": "pending",
+     "attempts": {
+      "$numberInt": "0"
+     },
+     "last_error": null,
+     "next_attempt_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "claimed_at": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "sent_at": null
+    }
+   ]
+  }
+ },
+ "gated": [
+  {
+   "method": "PUT",
+   "path": "/admin/vault/items",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-000",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-000\"}}"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/vault/items/x",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-001",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "PATCH"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-001\"}}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/vault/items/x/codes",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-002",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-002\"}}"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/vault/codes/x",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-003",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "PATCH"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-003\"}}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/giveaways",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-004",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-004\"}}"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/giveaways/x",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-005",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "PATCH"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-005\"}}"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/giveaways/x/draw",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-006",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "POST"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-006\"}}"
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/giveaways/x/cancel",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-007",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "POST"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-007\"}}"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/giveaways/mine",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-008",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-008\"}}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/giveaways/me",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-009",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-009\"}}"
+  },
+  {
+   "method": "GET",
+   "path": "/v1/giveaways/x/enter",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-010",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "POST"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-010\"}}"
+  },
+  {
+   "method": "POST",
+   "path": "/v1/giveaways/ongoing",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-011",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-011\"}}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/v1/giveaways/upcoming",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-012",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-012\"}}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/v1/giveaways/ended",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-013",
+   "status": 405,
+   "headers": {
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   "response": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"gw-gate-013\"}}"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/giveaways",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-014",
+   "status": 401,
+   "headers": {
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   "response": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"gw-gate-014\"}}"
+  },
+  {
+   "method": "GET",
+   "path": "/admin/vault/items",
+   "auth": "Bearer nope",
+   "body": null,
+   "request_id": "gw-gate-015",
+   "status": 401,
+   "headers": {
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   "response": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"gw-gate-015\"}}"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/giveaways",
+   "auth": null,
+   "body": "{\"title\":",
+   "request_id": "gw-gate-016",
+   "status": 422,
+   "headers": {
+    "content-type": "application/json"
+   },
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",9],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"gw-gate-016\"}}"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/giveaways",
+   "auth": null,
+   "body": "{\"title\":\"\"}",
+   "request_id": "gw-gate-017",
+   "status": 401,
+   "headers": {
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   "response": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"gw-gate-017\"}}"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/vault/items/x/codes",
+   "auth": "Basic abc",
+   "body": "{\"codes\":[]}",
+   "request_id": "gw-gate-018",
+   "status": 401,
+   "headers": {
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   "response": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"gw-gate-018\"}}"
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/vault/codes/x",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-019",
+   "status": 401,
+   "headers": {
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   "response": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"gw-gate-019\"}}"
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/giveaways/x",
+   "auth": "Bearer a.b.c",
+   "body": "[1,",
+   "request_id": "gw-gate-020",
+   "status": 422,
+   "headers": {
+    "content-type": "application/json"
+   },
+   "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",3],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"gw-gate-020\"}}"
+  },
+  {
+   "method": "POST",
+   "path": "/admin/giveaways/x/draw",
+   "auth": null,
+   "body": null,
+   "request_id": "gw-gate-021",
+   "status": 401,
+   "headers": {
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   "response": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"gw-gate-021\"}}"
+  }
+ ],
+ "oids": [
+  {
+   "value": "65f000000000000000000001",
+   "ok": "65f000000000000000000001"
+  },
+  {
+   "value": "65F0000000000000000000AB",
+   "ok": "65f0000000000000000000ab"
+  },
+  {
+   "value": "65f00000000000000000000",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "65f0000000000000000000011",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "00000000000000000000 00 ",
+   "ok": "0000000000000000000000"
+  },
+  {
+   "value": "0000000000000000000000 0",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": " 00000000000000000000000",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "zzzzzzzzzzzzzzzzzzzzzzzz",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠٠",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "000000000000",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "0 0000000000000000000000",
+   "status": 400,
+   "message": "Invalid id"
+  },
+  {
+   "value": "\t0000000000000000000000\n",
+   "ok": "0000000000000000000000"
+  }
+ ]
+}
