@@ -36,13 +36,12 @@ pub fn add_vary(h: &mut HeaderMap, fields: &[&str]) {
     h.insert("vary", header_value(&value));
 }
 
-/// Starlette `MutableHeaders.add_vary_header`: always appends.
+/// Starlette 1.9 `MutableHeaders.add_vary_header` (and CORS's Vary write):
+/// every Vary value joined into one, `field` appended, no dedupe.
 pub fn add_vary_header(h: &mut HeaderMap, field: &str) {
-    let value = match first_str(h, "vary") {
-        Some(e) => format!("{e}, {field}"),
-        None => field.to_owned(),
-    };
-    h.insert("vary", header_value(&value));
+    let mut values: Vec<String> = h.get_all("vary").iter().map(|v| latin1(v.as_bytes())).collect();
+    values.push(field.to_owned());
+    h.insert("vary", header_value(&values.join(", ")));
 }
 
 pub fn set(h: &mut HeaderMap, name: &'static str, value: &str) {

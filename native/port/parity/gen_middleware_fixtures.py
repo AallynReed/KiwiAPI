@@ -8,8 +8,8 @@ embed allowlist is fixed. The Rust test (src/middleware/tests.rs) builds the
 same routes from the same table and must reproduce every response byte for
 byte.
 
-Run from the repo root with the project venv:
-    .venv/Scripts/python.exe native/port/parity/gen_middleware_fixtures.py
+Run from the repo root with the production-pinned venv:
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_middleware_fixtures.py
 """
 
 from __future__ import annotations
@@ -292,6 +292,13 @@ CASES = [
     ("redirect_post", "POST", "/login", [RID, ["Host", "api.aallyn.net"]]),
     ("redirect_trove_host", "GET", "/login", [RID, ["Host", "trove.aallyn.net"]]),
     ("redirect_not_page", "GET", "/__mw/small", [RID, ["Host", "api.aallyn.net"]]),
+    ("redirect_qmark", "GET", "/mods/a%3Fb?x=1", [RID, ["Host", "api.aallyn.net"]]),
+    ("redirect_hash_backslash", "GET", "/mods/a%23b%5Cc%09d", [RID, ["Host", "api.aallyn.net"]]),
+    ("redirect_bad_port", "GET", "/login", [RID, ["Host", "api.aallyn.net:99999"]]),
+    ("redirect_zero_port", "GET", "/login", [RID, ["Host", "api.aallyn.net:000443"]]),
+    ("redirect_empty_port", "GET", "/login", [RID, ["Host", "api.aallyn.net:"]]),
+    ("redirect_userinfo", "GET", "/login", [RID, ["Host", "u@api.aallyn.net"]]),
+    ("redirect_host_path", "GET", "/login", [RID, ["Host", "api.aallyn.net/x"]]),
     ("cap_default", "POST", "/__mw/echo", [RID, ["Content-Length", "9000000"]]),
     ("cap_default_cors", "POST", "/__mw/echo", [RID, ["Content-Length", "9000000"], DOCS, GZ]),
     ("cap_at_limit", "POST", "/__mw/echo", [RID, ["Content-Length", "8388608"]]),

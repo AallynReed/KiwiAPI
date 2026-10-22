@@ -1,7 +1,7 @@
 """Regenerate the runtime_config registry table and the golden fixtures from the
-Python code. Run from the repo root with the project venv:
+Python code. Run from the repo root with the production-pinned venv:
 
-    .venv/Scripts/python.exe native/kiwi-server/golden/gen.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/kiwi-server/golden/gen.py
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Regenerate golden.json from the real Python auth code.
 
-Run from anywhere with the project venv:
-    .venv\\Scripts\\python.exe native/kiwi-server/src/auth/testdata/gen_golden.py
+Run from anywhere with the production-pinned venv:
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/kiwi-server/src/auth/testdata/gen_golden.py
 """
 import base64
 import hashlib
@@ -174,7 +174,7 @@ out["scope_masks"] = [{"mask": m, "valid": scopes.is_valid_mask(m), "decode": sc
 ips = ["1.2.3.4", " 10.0.0.1 ", "0:0:0:0:0:0:0:1", "2001:db8:0:0:1:0:0:1",
        "2001:0db8:0000:0000:0000:ff00:0042:8329", "1:0:0:0:0:0:0:8", "::", "1:2:3:4:5:6:7:0",
        "fe80::1:0:0:0", "::1.2.3.4", "0:0:0:0:0:1:2:3", "1.2.3.4/32", "01.2.3.4", "not-an-ip", "",
-       "FE80::ABCD"]
+       "FE80::ABCD", "0:0:0:0:0:ffff:102:304"]
 norm = []
 for ip in ips:
     try:

@@ -12,9 +12,13 @@
   "headers": {"Origin": "https://docs.aallyn.net", "Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": "authorization"}},
  {"name": "preflight_rejected", "method": "OPTIONS", "path": "/v1/stats/classes",
   "headers": {"Origin": "https://evil.example", "Access-Control-Request-Method": "GET"}},
+ {"name": "preflight_query_method", "method": "OPTIONS", "path": "/v1/stats/classes",
+  "headers": {"Origin": "https://docs.aallyn.net", "Access-Control-Request-Method": "QUERY"}},
  {"name": "public_asset_options", "method": "OPTIONS", "path": "/site/rigs/none", "headers": {"Origin": "https://partner.example"}},
  {"name": "page_redirect_api_host", "path": "/login?next=%2Fdashboard", "headers": {"Host": "api.aallyn.net"}},
  {"name": "page_redirect_apex", "method": "HEAD", "path": "/mods/some-mod", "headers": {"Host": "aallyn.net"}},
+ {"name": "page_redirect_escaped_path", "path": "/mods/a%3Fb%23c?x=1", "headers": {"Host": "api.aallyn.net"}},
+ {"name": "page_no_redirect_bad_port", "path": "/login", "headers": {"Host": "api.aallyn.net:99999"}},
  {"name": "events_head_405", "method": "HEAD", "path": "/v1/events/stream"},
  {"name": "credential_cache_rule", "path": "/health", "headers": {"Authorization": "Bearer not-a-token"}},
  {"name": "robots", "path": "/robots.txt"}

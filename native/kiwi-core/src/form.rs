@@ -1,4 +1,4 @@
-//! `await request.form()` as Starlette 1.x runs it over python-multipart
+//! `await request.form()` as Starlette 1.9 runs it over python-multipart
 //! 0.0.31: the `Content-Type` options parser, the multipart state machine
 //! (fed the whole body as one chunk), the urlencoded parser, and the
 //! `FormData` items they produce. Header and field bytes are Latin-1 text.
@@ -134,13 +134,16 @@ pub enum FormValue {
     File(UploadFile),
 }
 
-/// Why `request.form()` failed.
+/// Why `request.form()` failed: Starlette's `MultiPartException`, raised as
+/// `HTTPException(400, message)`. Starlette 1.9 turns python-multipart's own
+/// parse errors into one too.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FormError {
-    /// Starlette's `MultiPartException`, raised as `HTTPException(400, message)`.
     Http(String),
-    /// Any other parser error: FastAPI's 400 "There was an error parsing the body".
-    Parse,
+}
+
+fn invalid_multipart() -> FormError {
+    FormError::Http("Invalid multipart data.".into())
 }
 
 /// `_user_safe_decode`: the UTF-8 codec names, else Latin-1 (what ASCII and
@@ -282,7 +285,7 @@ const FLAG_LAST: u8 = 2;
 
 /// `MultipartParser.write(body)` (one chunk) driving Starlette's callbacks.
 fn run_multipart(data: &[u8], boundary_opt: &[u8], b: &mut Builder<'_>) -> Result<(), FormError> {
-    let parse = || FormError::Parse;
+    let parse = invalid_multipart;
     let mut boundary = b"\r\n--".to_vec();
     boundary.extend_from_slice(boundary_opt);
     let blen = boundary.len();
@@ -593,18 +596,24 @@ fn unquote_bytes(b: &[u8]) -> Vec<u8> {
     out
 }
 
-/// Starlette's `FormParser` over python-multipart's `QuerystringParser`.
-fn parse_urlencoded(body: &[u8]) -> Vec<(String, FormValue)> {
-    body.split(|&c| c == b'&')
-        .filter(|f| !f.is_empty())
-        .map(|f| {
-            let (name, value) = match f.iter().position(|&c| c == b'=') {
-                Some(p) => (&f[..p], &f[p + 1..]),
-                None => (f, &[][..]),
-            };
-            (unquote_plus(&latin1(name)), FormValue::Text(unquote_plus(&latin1(value))))
-        })
-        .collect()
+/// Starlette's `FormParser` over python-multipart's `QuerystringParser`,
+/// with its per-field size (name + value bytes) and field-count limits.
+fn parse_urlencoded(body: &[u8]) -> Result<Vec<(String, FormValue)>, FormError> {
+    let mut items = Vec::new();
+    for f in body.split(|&c| c == b'&').filter(|f| !f.is_empty()) {
+        let (name, value) = match f.iter().position(|&c| c == b'=') {
+            Some(p) => (&f[..p], &f[p + 1..]),
+            None => (f, &[][..]),
+        };
+        if name.len() + value.len() > MAX_PART {
+            return Err(FormError::Http(format!("Field exceeded maximum size of {}KB.", MAX_PART / 1024)));
+        }
+        if items.len() == MAX_FIELDS {
+            return Err(FormError::Http(format!("Too many fields. Maximum number of fields is {MAX_FIELDS}.")));
+        }
+        items.push((unquote_plus(&latin1(name)), FormValue::Text(unquote_plus(&latin1(value)))));
+    }
+    Ok(items)
 }
 
 /// `request.form()` for a body with this `Content-Type` header.
@@ -615,7 +624,7 @@ pub fn parse_form(content_type: Option<&[u8]>, body: &[u8]) -> Result<Vec<(Strin
         let boundary =
             option(&options, b"boundary").ok_or_else(|| FormError::Http("Missing boundary in multipart.".into()))?;
         if boundary.len() > MAX_BOUNDARY {
-            return Err(FormError::Parse);
+            return Err(invalid_multipart());
         }
         let mut b = Builder {
             charset: &charset,
@@ -629,7 +638,7 @@ pub fn parse_form(content_type: Option<&[u8]>, body: &[u8]) -> Result<Vec<(Strin
         run_multipart(body, boundary, &mut b)?;
         Ok(b.items)
     } else if ctype == b"application/x-www-form-urlencoded" {
-        Ok(parse_urlencoded(body))
+        parse_urlencoded(body)
     } else {
         Ok(Vec::new())
     }
@@ -679,7 +688,7 @@ mod tests {
             parse_form(Some(b"multipart/form-data"), b"x"),
             Err(FormError::Http("Missing boundary in multipart.".into()))
         );
-        assert_eq!(parse_form(Some(b"multipart/form-data; boundary=XyZ"), b"garbage"), Err(FormError::Parse));
+        assert_eq!(parse_form(Some(b"multipart/form-data; boundary=XyZ"), b"garbage"), Err(invalid_multipart()));
         let unterminated = b"--XyZ\r\nContent-Disposition: form-data; name=\"message\"\r\n\r\nhello world";
         assert_eq!(parse_form(Some(b"multipart/form-data; boundary=XyZ"), unterminated), Ok(Vec::new()));
     }

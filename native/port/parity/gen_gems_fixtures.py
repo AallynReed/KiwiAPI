@@ -6,18 +6,17 @@ body. Random routes run after ``random.seed(n)``; the Rust test seeds its
 CPython-compatible generator with the same ``n`` and must reproduce the bytes
 (a clock-made ``id`` is masked). ``builds.json`` holds the pre-model output of
 ``calculate_builds`` (the route itself 500s) and ``star_chart.json`` decoded
-codes. ``sum`` is CPython 3.13's (the server's), not this venv's.
+codes.
 
-Run from the repo root with the project venv:
-    .venv/Scripts/python.exe native/port/parity/gen_gems_fixtures.py
+Run from the repo root with the production-pinned venv (its 3.13 ``sum`` is
+the server's):
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_gems_fixtures.py
 """
 
 from __future__ import annotations
 
 import base64
-import builtins
 import json
-import math
 import os
 import random
 import re
@@ -31,48 +30,7 @@ os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
 warnings.filterwarnings("ignore")
 
-_py_sum = builtins.sum
-
-
-def sum313(iterable, start=0):
-    """CPython 3.12/3.13 ``sum``: Neumaier compensation for float terms only."""
-    if not isinstance(start, (int, float)) or isinstance(start, bool):
-        return _py_sum(iterable, start)
-    it = iter(iterable)
-    result = start
-    if type(result) is int:
-        for item in it:
-            if type(item) is int or type(item) is bool:
-                result += item
-                continue
-            result = result + item
-            break
-        else:
-            return result
-    if type(result) is not float:
-        for item in it:
-            result = result + item
-        return result
-    f, c = result, 0.0
-    for item in it:
-        if type(item) is float:
-            t = f + item
-            if abs(f) >= abs(item):
-                c += (f - t) + item
-            else:
-                c += (item - t) + f
-            f = t
-        elif isinstance(item, int):
-            f += float(item)
-        else:
-            f = f + c + item
-            c = 0.0
-    if c and math.isfinite(c):
-        f += c
-    return f
-
-
-builtins.sum = sum313
+assert sys.version_info[:2] == (3, 13), "run with the production-pinned 3.13 venv"
 
 import logging  # noqa: E402
 

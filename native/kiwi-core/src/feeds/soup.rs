@@ -1,5 +1,5 @@
 //! `BeautifulSoup(markup, "html.parser")`: CPython's `html.parser` tokenizer
-//! (the 3.13+/3.14 version production runs, fed once and then closed) driving
+//! (3.13.17's, which production runs, fed once and then closed) driving
 //! bs4 4.12's tree builder, plus the few soupsieve selectors the Bilibili
 //! scrape uses. Offsets are bytes; every byte the grammar tests is ASCII, and
 //! the few length checks Python makes in characters count characters.
@@ -742,14 +742,17 @@ impl<'a> Parser<'a> {
         Some(j)
     }
 
+    /// 3.13.17's order: an abrupt `>` / `->` close right after `<!--` wins
+    /// over a later `-->` / `--!>`.
     fn parse_comment(&mut self, i: usize) -> Option<usize> {
         let b = self.b;
-        let close = (i + 4..b.len()).find(|&p| b[p..].starts_with(b"-->") || b[p..].starts_with(b"--!>"));
-        let (text_end, end) = match close {
-            Some(p) => (p, if b[p + 2] == b'!' { p + 4 } else { p + 3 }),
-            None if b.get(i + 4) == Some(&b'>') => (i + 4, i + 5),
-            None if b[i + 4..].starts_with(b"->") => (i + 4, i + 6),
-            None => return None,
+        let (text_end, end) = if b.get(i + 4) == Some(&b'>') {
+            (i + 4, i + 5)
+        } else if b[i + 4..].starts_with(b"->") {
+            (i + 4, i + 6)
+        } else {
+            let p = (i + 4..b.len()).find(|&p| b[p..].starts_with(b"-->") || b[p..].starts_with(b"--!>"))?;
+            (p, if b[p + 2] == b'!' { p + 4 } else { p + 3 })
         };
         self.out.handle_comment(&self.raw[i + 4..text_end]);
         Some(end)

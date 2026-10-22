@@ -6,8 +6,8 @@ baseline and for hand-made gamedata directories (``store.BASELINE_DIR`` and the
 stats dir pointed at each case). PNG bodies are recorded as the SHA-256 of
 their decoded RGBA pixels: only pixels must match Pillow, not encoder bytes.
 
-Run from the repo root with the project venv:
-    .venv/Scripts/python.exe native/port/parity/gen_stats_fixtures.py
+Run from the repo root with the production-pinned venv:
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_stats_fixtures.py
 Writes native/kiwi-server/testdata/stats/golden.json.
 """
 

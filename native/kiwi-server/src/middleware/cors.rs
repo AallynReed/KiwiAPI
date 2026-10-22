@@ -18,7 +18,9 @@ use super::headers::{add_vary_header, set, set_static};
 use super::paths::is_public_asset;
 use super::pyurl::{first, header_value, scope_path};
 
-const ALL_METHODS: [&str; 7] = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"];
+const ALL_METHODS: [&str; 8] = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "QUERY"];
+const PREFLIGHT_VARY: &str =
+    "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network";
 const EXPOSE: &str = "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition";
 
 fn plain_text(status: StatusCode, text: &'static str, headers: Vec<(&'static str, String)>) -> Response {
@@ -34,7 +36,7 @@ fn plain_text(status: StatusCode, text: &'static str, headers: Vec<(&'static str
 
 fn preflight(mw: &Mw, req: &HeaderMap, origin: &str) -> Response {
     let mut headers: Vec<(&'static str, String)> = vec![
-        ("vary", "Origin".into()),
+        ("vary", PREFLIGHT_VARY.into()),
         ("access-control-allow-methods", ALL_METHODS.join(", ")),
         ("access-control-max-age", "600".into()),
         ("access-control-allow-credentials", "true".into()),
@@ -70,21 +72,26 @@ fn preflight(mw: &Mw, req: &HeaderMap, origin: &str) -> Response {
     plain_text(StatusCode::BAD_REQUEST, text, headers)
 }
 
+/// Starlette 1.9 runs this on every request: with or without an Origin, the
+/// response gets `Origin` appended to its Vary.
 pub async fn cors(State(mw): State<Arc<Mw>>, req: Request, next: Next) -> Response {
-    let Some(origin) = first(req.headers(), "origin") else {
-        return next.run(req).await;
-    };
-    if req.method() == Method::OPTIONS && req.headers().contains_key("access-control-request-method") {
-        return preflight(&mw, req.headers(), &origin);
+    let origin = first(req.headers(), "origin");
+    if let Some(origin) = &origin
+        && req.method() == Method::OPTIONS
+        && req.headers().contains_key("access-control-request-method")
+    {
+        return preflight(&mw, req.headers(), origin);
     }
     let mut res = next.run(req).await;
     let h = res.headers_mut();
-    set_static(h, "access-control-allow-credentials", "true");
-    set_static(h, "access-control-expose-headers", EXPOSE);
-    if mw.cfg.is_allowed_origin(&origin) {
-        set(h, "access-control-allow-origin", &origin);
-        add_vary_header(h, "Origin");
+    if let Some(origin) = &origin {
+        set_static(h, "access-control-allow-credentials", "true");
+        set_static(h, "access-control-expose-headers", EXPOSE);
+        if mw.cfg.is_allowed_origin(origin) {
+            set(h, "access-control-allow-origin", origin);
+        }
     }
+    add_vary_header(h, "Origin");
     res
 }
 

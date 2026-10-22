@@ -1,17 +1,16 @@
 """Golden fixtures for the feeds port, captured from the real Python code.
 
-Two modes, two interpreters:
+Two modes, both run with the production-pinned venv
+(S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe):
 
-    .venv/Scripts/python.exe native/port/parity/gen_feeds_fixtures.py golden
+    python native/port/parity/gen_feeds_fixtures.py golden
         -> native/kiwi-server/testdata/feeds/golden.json (feeds/events/httpx
            logic, the routes' response bodies) and kiwi-core's generated tables
            (native/kiwi-core/src/feeds/tables.rs).
 
-    py -3.14 native/port/parity/gen_feeds_fixtures.py html
+    python native/port/parity/gen_feeds_fixtures.py html
         -> native/kiwi-server/testdata/feeds/html.json: html.parser +
-           BeautifulSoup trees. Production runs Python 3.13.x, whose patched
-           html.parser matches 3.14's, not the venv's 3.11; bs4 4.12.3 is taken
-           from the venv's site-packages.
+           BeautifulSoup 4.12.3 trees.
 
 The saved upstream payloads in testdata/feeds/raw/ were fetched once from
 trovegame.com, trovesaurus.com and search.bilibili.com. The news sections
@@ -33,7 +32,6 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[3]
 DATA = ROOT / "native" / "kiwi-server" / "testdata" / "feeds"
 RAW = DATA / "raw"
-VENV_SITE = Path(r"S:\Desktop\Projects\TroveAPI\.venv\Lib\site-packages")
 UTC = timezone.utc
 
 BILI_REWRITE = ("//www.bilibili.com/zh-Hans/video/", "//www.bilibili.com/video/")
@@ -134,7 +132,6 @@ HTML_ERRORS = [
 
 
 def run_html() -> dict:
-    sys.path.insert(0, str(VENV_SITE))
     import bs4
     from bs4 import BeautifulSoup
 

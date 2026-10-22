@@ -1,13 +1,12 @@
 """Golden fixtures for the misc area (native/kiwi-server/testdata/misc).
 
-    .venv/Scripts/python.exe native/port/parity/gen_misc.py fixtures --multipart-src DIR
-    py -3.14 native/port/parity/gen_misc.py tables
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_misc.py fixtures
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_misc.py tables
 
-Run `fixtures` with PYTHONPATH at the repo root. DIR holds python_multipart
-0.0.31 (the version requirements.txt pins; the dev venv may carry an older
-one). The venv's Python is 3.11, whose C `fromisoformat` matches 3.13 except
-for the three 3.13 changes filtered out of the corpus below (pinned by unit
-tests in kiwi_core::pydt instead). `datetime.fromtimestamp` is emulated the way
+Run both with the production-pinned venv (Python 3.13, python_multipart
+0.0.31) and PYTHONPATH at the repo root. The corpus still leaves out the three
+3.13 `fromisoformat` changes below (pinned by unit tests in kiwi_core::pydt
+instead). `datetime.fromtimestamp` is emulated the way
 CPython does it on Linux (gmtime, then `tz.fromutc`), since Windows' gmtime
 rejects negative and far-future instants. `tables` regenerates
 kiwi-core/src/pystr_table.rs from the running Python's Unicode database.
@@ -20,7 +19,6 @@ import json
 import random
 import re
 import shutil
-import sys
 import unicodedata
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
@@ -250,6 +248,7 @@ def copy_tzdata(keys: list[str]) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src / key, target)
     (dst / "VERSION").write_text(tzdata.IANA_VERSION + "\n", encoding="utf-8", newline="\n")
+    (dst / ".gitattributes").write_text("* binary\n", encoding="utf-8", newline="\n")
 
 
 # --- misc.py functions ------------------------------------------------------
@@ -393,6 +392,13 @@ def forms_fixture() -> None:
         (b"--XyZ--", ct), (b"--XyZ-x", ct), (b"--XyZ\r\n\r\n\r\n--XyZ--", ct), (mp([msg]) + b"--XyZ--\r\n", ct),
         (mp([msg, part(b"message", b"\r\n--XyZ fake boundary text\r\n--XyZx more")]), ct),
     ]
+    urlenc = "application/x-www-form-urlencoded"
+    fields = [b"f%d=1" % i for i in range(1001)]
+    cases += [
+        (b"&".join(fields), urlenc), (b"&&".join([b"message=hello+world", *fields[:999]]) + b"&", urlenc),
+        (b"message=" + mib, urlenc), (b"=" + mib, urlenc), (mib, urlenc),
+        (b"&".join([*fields, b"message=" + mib]), urlenc), (b"&".join([b"message=" + mib, *fields]), urlenc),
+    ]
     good = mp([msg, part(b"contact", b"me@x"), png, part(b"category", b"feature")])
     for _ in range(400):
         body = bytearray(good)
@@ -429,10 +435,7 @@ def forms_fixture() -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("what", choices=["fixtures", "tables"])
-    ap.add_argument("--multipart-src")
     args = ap.parse_args()
-    if args.multipart_src:
-        sys.path.insert(0, args.multipart_src)
     if args.what == "tables":
         tables()
         return
@@ -443,8 +446,7 @@ def main() -> None:
     isoformat_fixture()
     zones_fixture(keys)
     misc_fixture()
-    if args.multipart_src:
-        forms_fixture()
+    forms_fixture()
 
 
 if __name__ == "__main__":

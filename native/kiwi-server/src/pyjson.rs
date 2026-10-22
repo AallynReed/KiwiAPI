@@ -533,11 +533,11 @@ impl Scanner<'_> {
             }
             next += 1;
             end = next + 4;
-            if end >= len {
+            if end > len {
                 return Err(bad_u(next - 1));
             }
             let mut c = hex4(&b[next..end]).ok_or_else(|| bad_u(end - 5))?;
-            if (0xd800..0xdc00).contains(&c) && end + 6 < len && b[end] == b'\\' && b[end + 1] == b'u' {
+            if (0xd800..0xdc00).contains(&c) && end + 6 <= len && b[end] == b'\\' && b[end + 1] == b'u' {
                 let c2 = hex4(&b[end + 2..end + 6]).ok_or_else(|| bad_u(end + 1))?;
                 if (0xdc00..0xe000).contains(&c2) {
                     c = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);

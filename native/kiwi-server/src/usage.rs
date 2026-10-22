@@ -89,12 +89,9 @@ fn untyped_template(axum_path: &str) -> String {
     out
 }
 
-/// Starlette's `request.url.path`: percent-decoded (UTF-8, lossy), cut at a
-/// decoded `?` or `#` the way re-splitting the URL does.
+/// Starlette's `request.url.path` of a raw path: percent-decoded (UTF-8, lossy).
 pub fn starlette_path(raw: &str) -> String {
-    let decoded = percent_encoding::percent_decode_str(raw).decode_utf8_lossy();
-    let end = decoded.find(['?', '#']).unwrap_or(decoded.len());
-    decoded[..end].to_owned()
+    crate::middleware::pyurl::request_url_path(&percent_encoding::percent_decode_str(raw).decode_utf8_lossy())
 }
 
 struct Recorder {

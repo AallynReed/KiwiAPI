@@ -1,7 +1,7 @@
 """Golden fixtures for the stdlib-only behaviour the foundation mirrors.
 
-Run with the production Python version (3.13+, stdlib only):
-    py -3.14 native/kiwi-server/testdata/foundation/gen_stdlib.py
+Run with the production-pinned venv (Python 3.13, stdlib only):
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/kiwi-server/testdata/foundation/gen_stdlib.py
 Writes stdlib.json next to this file. Values cross over in a tagged form
 (see enc) so floats and big ints survive exactly.
 """

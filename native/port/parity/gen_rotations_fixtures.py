@@ -5,8 +5,8 @@ handlers (stores replaced by fakes) and serialized the way FastAPI does it
 (``TypeAdapter(response_model).dump_json``). The sweep of instants stores a
 short sha256 per route; a few instants also keep the full bodies.
 
-Run from the repo root with the project venv:
-    .venv/Scripts/python.exe native/port/parity/gen_rotations_fixtures.py
+Run from the repo root with the production-pinned venv:
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_rotations_fixtures.py
 """
 
 from __future__ import annotations

@@ -290,6 +290,11 @@ async fn wire_framing_matches_uvicorn() {
     let (st, h, _) = raw_http(addr, &get("OPTIONS", "/site/rigs/a", "")).await;
     assert!(st.contains("204"), "{st}");
     assert_eq!((has(&h, "content-length"), has(&h, "allow")), (None, None), "{h:?}");
+
+    let (st, _, _) = raw_http(addr, &get("POST", "/__mw/echo", "Content-Length: 9000000\r\n")).await;
+    assert_eq!(st, "HTTP/1.1 413 Content Too Large");
+    let (st, _, _) = raw_http(addr, &get("GET", "/nowhere", "")).await;
+    assert_eq!(st, "HTTP/1.1 418 I'm a teapot", "proxied answers keep their own reason");
 }
 
 #[test]

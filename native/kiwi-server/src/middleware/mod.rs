@@ -105,8 +105,9 @@ async fn mark(req: Request, next: Next) -> Response {
 
 /// Runs outside axum's own response handling: drops the `Allow` it adds to
 /// answers the stack gave in place of a 405 (CORS preflights, 413s, ...),
-/// writes a 405's `Allow` the way FastAPI does, and keeps a 204/304 free of
-/// Content-Length like Starlette.
+/// writes a 405's `Allow` the way FastAPI does, keeps a 204/304 free of
+/// Content-Length like Starlette, and gives the status line uvicorn's
+/// Python 3.13 reason phrase (`422 Unprocessable Content`, not hyper's).
 async fn finish(mut res: Response) -> Response {
     let Some(t) = res.extensions_mut().remove::<Touched>() else { return res };
     let h = res.headers_mut();
@@ -127,6 +128,12 @@ async fn finish(mut res: Response) -> Response {
     }
     if matches!(res.status().as_u16(), 204 | 304) {
         res.headers_mut().remove(header::CONTENT_LENGTH);
+    }
+    let status = res.status();
+    if let Some(phrase) = crate::error::status_phrase(status.as_u16())
+        && status.canonical_reason() != Some(phrase)
+    {
+        res.extensions_mut().insert(hyper::ext::ReasonPhrase::from_static(phrase.as_bytes()));
     }
     res
 }

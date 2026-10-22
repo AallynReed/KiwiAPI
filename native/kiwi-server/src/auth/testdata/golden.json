@@ -333,7 +333,7 @@
  "argon2_verify": [
   {
    "password": "correct horse",
-   "hash": "$argon2id$v=19$m=65536,t=3,p=4$Hp9HbuK/JJLBRz8/Gn0O3g$Q6zsv5OVtSfyvt1dP1EZangxHy367b0+xTMOBMnE7hg",
+   "hash": "$argon2id$v=19$m=65536,t=3,p=4$h59Kb4Mii2cCbBR5l6EFTg$c8GdT7Siv5fwCKq7vbwK4ui8tZypKX+4nPkg9pCHK54",
    "ok": true,
    "wrong_ok": false
   },
@@ -417,54 +417,54 @@
  ],
  "generated_tokens": [
   {
-   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
-   "hash": "b2cb015f33458e65ae84860c610e48655ef00235cb4c4a98ae97b3b0cd1786ac",
-   "prefix": "kiwi_NqPrUwOV"
+   "token": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_bth9Y8",
+   "hash": "61c8956e0723f1d70a70d5fe289a490b836b1c62e971feab2f5bef9e54f5daa1",
+   "prefix": "kiwi_MuYHURGd"
   },
   {
-   "token": "kiwi_t6y1qXgjHAeV8MAvzIuVec5LYTuv0z1Pddbl5etgU05_b9SOD6",
-   "hash": "c316e5488d6f742b672dd7e4803d2890c00c1e3e91b58783fd3fa9b64ac1fd27",
-   "prefix": "kiwi_t6y1qXgj"
+   "token": "kiwi_b9ay7FX1L5CmwNwhE5TXApiUwF5M4al2uM0ogKoEImw_YsepV",
+   "hash": "1e70b20b8cf3a1fa506b2966eb4b9782f117bc6782d8e47fc3deaa2b39a27ba0",
+   "prefix": "kiwi_b9ay7FX1"
   },
   {
-   "token": "kiwi_rSXFGft10Pv7QHTmNOZiGgbP6MdnfM9eialqXZin2VI_ccrRIg",
-   "hash": "92fab21ea6c2ea15a85a14c4dda9f1bba3efd14002cf4949207c79f8078de835",
-   "prefix": "kiwi_rSXFGft1"
+   "token": "kiwi_VBoENTJo3G65Vq3kGIsragHBMGEZjZzDju3FRLxCpF8_cdzJnk",
+   "hash": "cfdb500124f515164db41bab923116605e73b8a03ec37aa149e3756932f67ade",
+   "prefix": "kiwi_VBoENTJo"
   },
   {
-   "token": "kiwi_IeBORyzcDjVx9EdmlcQuczdCvM9kUn09cwwwiUNIzvf_dInIHQ",
-   "hash": "7213f61a57c1d41518ef75fa8dd4246ffa744c575a875b30b861e82828569ae1",
-   "prefix": "kiwi_IeBORyzc"
+   "token": "kiwi_3UvEGOXQvEKURyLDfYUgtyGQITm2hQulWAfaPorZ3iM_dIWnR1",
+   "hash": "1fabbcd4e4634779b64ce1a599891205bdda5a432e6ac72528da1d0aee160e44",
+   "prefix": "kiwi_3UvEGOXQ"
   },
   {
-   "token": "kiwi_4wxuxKAMiOGAHGIUD9uvjC4CjLMzyEld05T0qmuBHqq_cxcraO",
-   "hash": "c71b1fbdbb3d982bec95e99e18df982c50d308c6aa22551a2fbaea39b4600b5a",
-   "prefix": "kiwi_4wxuxKAM"
+   "token": "kiwi_d5y6gUVENR0vxHcYE7s1XNw65k3Fe3X6IaN2Y6imVdX_bJZ6LH",
+   "hash": "0e8b298c39b121d2ec97bb70a53bb67b6651aeec79463f18821bfd341554603a",
+   "prefix": "kiwi_d5y6gUVE"
   }
  ],
  "checksum_verify": [
   {
-   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
+   "token": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_bth9Y8",
    "result": true
   },
   {
-   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91SA",
+   "token": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_bth9YA",
    "result": false
   },
   {
-   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_1234567",
+   "token": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_1234567",
    "result": null
   },
   {
-   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh_abc",
+   "token": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYj_abc",
    "result": null
   },
   {
-   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_",
+   "token": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_",
    "result": null
   },
   {
-   "token": "other_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
+   "token": "other_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_bth9Y8",
    "result": null
   },
   {
@@ -472,7 +472,7 @@
    "result": null
   },
   {
-   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7\n",
+   "token": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_bth9Y8\n",
    "result": true
   },
   {
@@ -490,8 +490,8 @@
    "hex": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
   },
   {
-   "in": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
-   "hex": "b2cb015f33458e65ae84860c610e48655ef00235cb4c4a98ae97b3b0cd1786ac"
+   "in": "kiwi_MuYHURGd6mys3M7n60QIfK9KFjOJqXQZYJJSKXFSYjV_bth9Y8",
+   "hex": "61c8956e0723f1d70a70d5fe289a490b836b1c62e971feab2f5bef9e54f5daa1"
   },
   {
    "in": "\u00e9t\u00e9",
@@ -854,6 +854,10 @@
   {
    "in": "FE80::ABCD",
    "out": "fe80::abcd"
+  },
+  {
+   "in": "0:0:0:0:0:ffff:102:304",
+   "out": "::ffff:1.2.3.4"
   }
  ],
  "ip_hash": [

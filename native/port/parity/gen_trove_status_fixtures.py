@@ -5,8 +5,8 @@ the app's error handlers) with fixed prober snapshots and fake status segments,
 records what the prober writes to Redis, and runs the real probe helpers against
 local test servers. src/routes/trove_status/tests.rs replays every case.
 
-Run from the repo root with the project venv:
-    .venv/Scripts/python.exe native/port/parity/gen_trove_status_fixtures.py
+Run from the repo root with the production-pinned venv:
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_trove_status_fixtures.py
 """
 
 from __future__ import annotations

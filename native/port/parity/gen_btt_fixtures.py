@@ -7,8 +7,8 @@ the ASGI level with Beanie initialised offline, the stores replaced by the
 fixture documents below, and the auth dependencies overridden where a case
 says so. The Rust test (src/routes/btt/tests.rs) replays all of it.
 
-Run from the repo root with the project venv:
-    .venv/Scripts/python.exe native/port/parity/gen_btt_fixtures.py
+Run from the repo root with the production-pinned venv:
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_btt_fixtures.py
 """
 
 from __future__ import annotations

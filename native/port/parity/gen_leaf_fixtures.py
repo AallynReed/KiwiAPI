@@ -1,6 +1,6 @@
 """Golden fixtures for the leaf routes (health/config/docs, supporters, design
 feedback, moderation), from the repo root:
-    .venv/Scripts/python.exe native/port/parity/gen_leaf_fixtures.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_leaf_fixtures.py
 Writes native/kiwi-server/testdata/leaf/golden.json.
 
 Everything runs against the real `app.main.app` (raw ASGI) or the real service

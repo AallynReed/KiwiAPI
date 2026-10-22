@@ -637,6 +637,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -684,7 +688,11 @@
     ],
     [
      "x-request-id",
-     "req_53a78155db61f538"
+     "req_78c93295e86e6832"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -737,7 +745,11 @@
     ],
     [
      "x-request-id",
-     "req_b8fbfbfd7cf8d1c5"
+     "req_4a560710bef8b6d2"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -795,6 +807,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -850,12 +866,12 @@
      "rid-fixed"
     ],
     [
-     "content-encoding",
-     "gzip"
+     "vary",
+     "Origin, Accept-Encoding"
     ],
     [
-     "vary",
-     "Accept-Encoding"
+     "content-encoding",
+     "gzip"
     ]
    ],
    "body_b64": "H4sIAAAAAAAAAx3WPbIeQQ0F0L0Qd/C1/maGrVCEBAREkFHsnSOnrmv7vXt6JP33L//8zz/+9e+//PVvv3NPnDx1+sx5znu+c/3hPTfOzXPr3D53zn3Ofc/9TvxO+DtxIk/UiT4xJ54T74nv5O/kPemfzJN1sk/Oyefke/I79Tt1T8Up/2Od6lNz6jn1nvpO/07f03E6T/uB+vScfk6/p78zvzP3TJzJM3XGzztnnjPvme88v/Pc88R58jx1nj6PX+c5z3ue77y/897zxnnzvHXePu+c12/7nvc73+9893xxvjxfna/PN+d7zqeMbUMdP338FPLTyE8lP538lPLTyk8tP7k/tcltcdvcVrfdbXnb3tanv6vAG9uvnA6vEq8WrxqvHq8iryavKq8uby6EnDqvPq9Cr0avSq9Or1KvVq9ab62YnGavaq9ur3Kvdq96r36vgq+Gby+tnJKvlq+ar56voq+mr6qvrq+y7+wbkNP3VfjV+FX51flV+tX6VfvV+332scip/ur+Kv9q/6r/6v8CuAQugvvuq5KjcDFcDhfEJXFRXBYXxqVxv31++/48QB7BI3gEj+ARPIJH8AgecfehyvEIHsEjeASP4BE8Yt/zPug/L1pu3/Q+6n3V+6z3Xe/D5hE8gkfkPn05HsEjeASP4BE8gkfwCB5R+43I8QgewSN4BI/gETyCR/CI3o9JjkfwCB7BI3gEj+ARPIJHzH51cjyCR/AIHsEjeASP4BE84tnPU45H8AgewSN4BI/gETyCR7z7HcvxCB7BI3gEj+ARPIJH8IhvP/j94n3yPJJH8kgeySN5JI/kkTzy7miQ45E8kkfySB7JI3kkj+SRsTNEjkfySB7JI3kkj9xJs6NmZ82fYSO342bnzQ6cnTg7cngkj+SRPLJ2KsnxSB7JI3kkj+SRPJJH8sje8SXHI3kkj+SRPJJH8kgeySNn55wcj+SRPJJH8kgeySN5JI98diDK8UgeySN5JI/kkTySR/LIdyenHI/kkTySR/JIHskjeSSP/HbE7ow1ZHkUj+JRPIpH8SgexaN41N1hLMejeBSP4lE8ikfxKB7Fo2KnthyP4lE8ikfxKB7Fo3gUj8od73I8ikfxKB7Fo3YH7BLYLbBr4M8ekNtNsKtgd8EuAx7Fo3gUj+JRvQtDjkfxKB7Fo3gUj+JRPIpHzW4WOR7Fo3gUj+JRPIpH8Sge9ewKkuNRPIpH8SgexaN4FI/iUe/uKjkexaN4FI/iUTyKR/EoHvXtUtutZq3xaB7No3k0j+bRPJpH8+i760+OR/NoHs2jeTSP5tE8mkfH7kk5Hs2jeTSP5tE8mkfzaB6du1DleDSP5tE8mkfzaB7No3l07eaV49E8mkfz6N3Ou553P++C3g39Z0XL7ZLeLb1rmkfzaB7No3k0j57d5XI8mkfzaB7No3k0j+bRPPrZpS/Ho3k0j+bRPJpH82gezaPfvQ7keDSP5tE8mkfzaB7No3n0t2fE3hEOCR7DY3gMj+ExPIbH8Bgec/fgkOMxPIbH8Bgew2N4DI/hMbGXiRyP4TE8hsfwGB7DY3gMj8k9YeR4DI/hMTyGx/AYHsNjeEztrSPHY3gMj+ExPIbH8Bgew2N6jyI5HsNjeMzeTXs47eW0p9PeTns8/bme5PZ+2gOKx/AYHsNjeAyP4THPnllyPIbH8Bgew2N4DI/hMTzm3XtMjsfwGB7DY3gMj+ExPIbHfHu4fX//3/8BiN0PXo0KAAA=",
@@ -911,12 +927,12 @@
      "rid-fixed"
     ],
     [
-     "content-encoding",
-     "gzip"
+     "vary",
+     "Origin, Accept-Encoding"
     ],
     [
-     "vary",
-     "Accept-Encoding"
+     "content-encoding",
+     "gzip"
     ]
    ],
    "body_b64": "H4sIAAAAAAAAAx3WPbIeQQ0F0L0Qd/C1/maGrVCEBAREkFHsnSOnrmv7vXt6JP33L//8zz/+9e+//PVvv3NPnDx1+sx5znu+c/3hPTfOzXPr3D53zn3Ofc/9TvxO+DtxIk/UiT4xJ54T74nv5O/kPemfzJN1sk/Oyefke/I79Tt1T8Up/2Od6lNz6jn1nvpO/07f03E6T/uB+vScfk6/p78zvzP3TJzJM3XGzztnnjPvme88v/Pc88R58jx1nj6PX+c5z3ue77y/897zxnnzvHXePu+c12/7nvc73+9893xxvjxfna/PN+d7zqeMbUMdP338FPLTyE8lP538lPLTyk8tP7k/tcltcdvcVrfdbXnb3tanv6vAG9uvnA6vEq8WrxqvHq8iryavKq8uby6EnDqvPq9Cr0avSq9Or1KvVq9ab62YnGavaq9ur3Kvdq96r36vgq+Gby+tnJKvlq+ar56voq+mr6qvrq+y7+wbkNP3VfjV+FX51flV+tX6VfvV+332scip/ur+Kv9q/6r/6v8CuAQugvvuq5KjcDFcDhfEJXFRXBYXxqVxv31++/48QB7BI3gEj+ARPIJH8AgecfehyvEIHsEjeASP4BE8Yt/zPug/L1pu3/Q+6n3V+6z3Xe/D5hE8gkfkPn05HsEjeASP4BE8gkfwCB5R+43I8QgewSN4BI/gETyCR/CI3o9JjkfwCB7BI3gEj+ARPIJHzH51cjyCR/AIHsEjeASP4BE84tnPU45H8AgewSN4BI/gETyCR7z7HcvxCB7BI3gEj+ARPIJH8IhvP/j94n3yPJJH8kgeySN5JI/kkTzy7miQ45E8kkfySB7JI3kkj+SRsTNEjkfySB7JI3kkj9xJs6NmZ82fYSO342bnzQ6cnTg7cngkj+SRPLJ2KsnxSB7JI3kkj+SRPJJH8sje8SXHI3kkj+SRPJJH8kgeySNn55wcj+SRPJJH8kgeySN5JI98diDK8UgeySN5JI/kkTySR/LIdyenHI/kkTySR/JIHskjeSSP/HbE7ow1ZHkUj+JRPIpH8SgexaN41N1hLMejeBSP4lE8ikfxKB7Fo2KnthyP4lE8ikfxKB7Fo3gUj8od73I8ikfxKB7Fo3YH7BLYLbBr4M8ekNtNsKtgd8EuAx7Fo3gUj+JRvQtDjkfxKB7Fo3gUj+JRPIpHzW4WOR7Fo3gUj+JRPIpH8Sge9ewKkuNRPIpH8SgexaN4FI/iUe/uKjkexaN4FI/iUTyKR/EoHvXtUtutZq3xaB7No3k0j+bRPJpH8+i760+OR/NoHs2jeTSP5tE8mkfH7kk5Hs2jeTSP5tE8mkfzaB6du1DleDSP5tE8mkfzaB7No3l07eaV49E8mkfz6N3Ou553P++C3g39Z0XL7ZLeLb1rmkfzaB7No3k0j57d5XI8mkfzaB7No3k0j+bRPPrZpS/Ho3k0j+bRPJpH82gezaPfvQ7keDSP5tE8mkfzaB7No3n0t2fE3hEOCR7DY3gMj+ExPIbH8Bgec/fgkOMxPIbH8Bgew2N4DI/hMbGXiRyP4TE8hsfwGB7DY3gMj8k9YeR4DI/hMTyGx/AYHsNjeEztrSPHY3gMj+ExPIbH8Bgew2N6jyI5HsNjeMzeTXs47eW0p9PeTns8/bme5PZ+2gOKx/AYHsNjeAyP4THPnllyPIbH8Bgew2N4DI/hMTzm3XtMjsfwGB7DY3gMj+ExPIbHfHu4fX//3/8BiN0PXo0KAAA=",
@@ -970,6 +986,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJpdGVtcyI6WzAsMSwyLDMsNCw1LDYsNyw4LDksMTAsMTEsMTIsMTMsMTQsMTUsMTYsMTcsMTgsMTksMjAsMjEsMjIsMjMsMjQsMjUsMjYsMjcsMjgsMjksMzAsMzEsMzIsMzMsMzQsMzUsMzYsMzcsMzgsMzksNDAsNDEsNDIsNDMsNDQsNDUsNDYsNDcsNDgsNDksNTAsNTEsNTIsNTMsNTQsNTUsNTYsNTcsNTgsNTksNjAsNjEsNjIsNjMsNjQsNjUsNjYsNjcsNjgsNjksNzAsNzEsNzIsNzMsNzQsNzUsNzYsNzcsNzgsNzksODAsODEsODIsODMsODQsODUsODYsODcsODgsODksOTAsOTEsOTIsOTMsOTQsOTUsOTYsOTcsOTgsOTksMTAwLDEwMSwxMDIsMTAzLDEwNCwxMDUsMTA2LDEwNywxMDgsMTA5LDExMCwxMTEsMTEyLDExMywxMTQsMTE1LDExNiwxMTcsMTE4LDExOSwxMjAsMTIxLDEyMiwxMjMsMTI0LDEyNSwxMjYsMTI3LDEyOCwxMjksMTMwLDEzMSwxMzIsMTMzLDEzNCwxMzUsMTM2LDEzNywxMzgsMTM5LDE0MCwxNDEsMTQyLDE0MywxNDQsMTQ1LDE0NiwxNDcsMTQ4LDE0OSwxNTAsMTUxLDE1MiwxNTMsMTU0LDE1NSwxNTYsMTU3LDE1OCwxNTksMTYwLDE2MSwxNjIsMTYzLDE2NCwxNjUsMTY2LDE2NywxNjgsMTY5LDE3MCwxNzEsMTcyLDE3MywxNzQsMTc1LDE3NiwxNzcsMTc4LDE3OSwxODAsMTgxLDE4MiwxODMsMTg0LDE4NSwxODYsMTg3LDE4OCwxODksMTkwLDE5MSwxOTIsMTkzLDE5NCwxOTUsMTk2LDE5NywxOTgsMTk5LDIwMCwyMDEsMjAyLDIwMywyMDQsMjA1LDIwNiwyMDcsMjA4LDIwOSwyMTAsMjExLDIxMiwyMTMsMjE0LDIxNSwyMTYsMjE3LDIxOCwyMTksMjIwLDIyMSwyMjIsMjIzLDIyNCwyMjUsMjI2LDIyNywyMjgsMjI5LDIzMCwyMzEsMjMyLDIzMywyMzQsMjM1LDIzNiwyMzcsMjM4LDIzOSwyNDAsMjQxLDI0MiwyNDMsMjQ0LDI0NSwyNDYsMjQ3LDI0OCwyNDksMjUwLDI1MSwyNTIsMjUzLDI1NCwyNTUsMjU2LDI1NywyNTgsMjU5LDI2MCwyNjEsMjYyLDI2MywyNjQsMjY1LDI2NiwyNjcsMjY4LDI2OSwyNzAsMjcxLDI3MiwyNzMsMjc0LDI3NSwyNzYsMjc3LDI3OCwyNzksMjgwLDI4MSwyODIsMjgzLDI4NCwyODUsMjg2LDI4NywyODgsMjg5LDI5MCwyOTEsMjkyLDI5MywyOTQsMjk1LDI5NiwyOTcsMjk4LDI5OSwzMDAsMzAxLDMwMiwzMDMsMzA0LDMwNSwzMDYsMzA3LDMwOCwzMDksMzEwLDMxMSwzMTIsMzEzLDMxNCwzMTUsMzE2LDMxNywzMTgsMzE5LDMyMCwzMjEsMzIyLDMyMywzMjQsMzI1LDMyNiwzMjcsMzI4LDMyOSwzMzAsMzMxLDMzMiwzMzMsMzM0LDMzNSwzMzYsMzM3LDMzOCwzMzksMzQwLDM0MSwzNDIsMzQzLDM0NCwzNDUsMzQ2LDM0NywzNDgsMzQ5LDM1MCwzNTEsMzUyLDM1MywzNTQsMzU1LDM1NiwzNTcsMzU4LDM1OSwzNjAsMzYxLDM2MiwzNjMsMzY0LDM2NSwzNjYsMzY3LDM2OCwzNjksMzcwLDM3MSwzNzIsMzczLDM3NCwzNzUsMzc2LDM3NywzNzgsMzc5LDM4MCwzODEsMzgyLDM4MywzODQsMzg1LDM4NiwzODcsMzg4LDM4OSwzOTAsMzkxLDM5MiwzOTMsMzk0LDM5NSwzOTYsMzk3LDM5OCwzOTksNDAwLDQwMSw0MDIsNDAzLDQwNCw0MDUsNDA2LDQwNyw0MDgsNDA5LDQxMCw0MTEsNDEyLDQxMyw0MTQsNDE1LDQxNiw0MTcsNDE4LDQxOSw0MjAsNDIxLDQyMiw0MjMsNDI0LDQyNSw0MjYsNDI3LDQyOCw0MjksNDMwLDQzMSw0MzIsNDMzLDQzNCw0MzUsNDM2LDQzNyw0MzgsNDM5LDQ0MCw0NDEsNDQyLDQ0Myw0NDQsNDQ1LDQ0Niw0NDcsNDQ4LDQ0OSw0NTAsNDUxLDQ1Miw0NTMsNDU0LDQ1NSw0NTYsNDU3LDQ1OCw0NTksNDYwLDQ2MSw0NjIsNDYzLDQ2NCw0NjUsNDY2LDQ2Nyw0NjgsNDY5LDQ3MCw0NzEsNDcyLDQ3Myw0NzQsNDc1LDQ3Niw0NzcsNDc4LDQ3OSw0ODAsNDgxLDQ4Miw0ODMsNDg0LDQ4NSw0ODYsNDg3LDQ4OCw0ODksNDkwLDQ5MSw0OTIsNDkzLDQ5NCw0OTUsNDk2LDQ5Nyw0OTgsNDk5LDUwMCw1MDEsNTAyLDUwMyw1MDQsNTA1LDUwNiw1MDcsNTA4LDUwOSw1MTAsNTExLDUxMiw1MTMsNTE0LDUxNSw1MTYsNTE3LDUxOCw1MTksNTIwLDUyMSw1MjIsNTIzLDUyNCw1MjUsNTI2LDUyNyw1MjgsNTI5LDUzMCw1MzEsNTMyLDUzMyw1MzQsNTM1LDUzNiw1MzcsNTM4LDUzOSw1NDAsNTQxLDU0Miw1NDMsNTQ0LDU0NSw1NDYsNTQ3LDU0OCw1NDksNTUwLDU1MSw1NTIsNTUzLDU1NCw1NTUsNTU2LDU1Nyw1NTgsNTU5LDU2MCw1NjEsNTYyLDU2Myw1NjQsNTY1LDU2Niw1NjcsNTY4LDU2OSw1NzAsNTcxLDU3Miw1NzMsNTc0LDU3NSw1NzYsNTc3LDU3OCw1NzksNTgwLDU4MSw1ODIsNTgzLDU4NCw1ODUsNTg2LDU4Nyw1ODgsNTg5LDU5MCw1OTEsNTkyLDU5Myw1OTQsNTk1LDU5Niw1OTcsNTk4LDU5OSw2MDAsNjAxLDYwMiw2MDMsNjA0LDYwNSw2MDYsNjA3LDYwOCw2MDksNjEwLDYxMSw2MTIsNjEzLDYxNCw2MTUsNjE2LDYxNyw2MTgsNjE5LDYyMCw2MjEsNjIyLDYyMyw2MjQsNjI1LDYyNiw2MjcsNjI4LDYyOSw2MzAsNjMxLDYzMiw2MzMsNjM0LDYzNSw2MzYsNjM3LDYzOCw2MzksNjQwLDY0MSw2NDIsNjQzLDY0NCw2NDUsNjQ2LDY0Nyw2NDgsNjQ5LDY1MCw2NTEsNjUyLDY1Myw2NTQsNjU1LDY1Niw2NTcsNjU4LDY1OSw2NjAsNjYxLDY2Miw2NjMsNjY0LDY2NSw2NjYsNjY3LDY2OCw2NjksNjcwLDY3MSw2NzIsNjczLDY3NCw2NzUsNjc2LDY3Nyw2NzgsNjc5LDY4MCw2ODEsNjgyLDY4Myw2ODQsNjg1LDY4Niw2ODcsNjg4LDY4OSw2OTAsNjkxLDY5Miw2OTMsNjk0LDY5NSw2OTYsNjk3LDY5OCw2OTldfQ==",
@@ -1027,6 +1047,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJpdGVtcyI6WzAsMSwyLDMsNCw1LDYsNyw4LDksMTAsMTEsMTIsMTMsMTQsMTUsMTYsMTcsMTgsMTksMjAsMjEsMjIsMjMsMjQsMjUsMjYsMjcsMjgsMjksMzAsMzEsMzIsMzMsMzQsMzUsMzYsMzcsMzgsMzksNDAsNDEsNDIsNDMsNDQsNDUsNDYsNDcsNDgsNDksNTAsNTEsNTIsNTMsNTQsNTUsNTYsNTcsNTgsNTksNjAsNjEsNjIsNjMsNjQsNjUsNjYsNjcsNjgsNjksNzAsNzEsNzIsNzMsNzQsNzUsNzYsNzcsNzgsNzksODAsODEsODIsODMsODQsODUsODYsODcsODgsODksOTAsOTEsOTIsOTMsOTQsOTUsOTYsOTcsOTgsOTksMTAwLDEwMSwxMDIsMTAzLDEwNCwxMDUsMTA2LDEwNywxMDgsMTA5LDExMCwxMTEsMTEyLDExMywxMTQsMTE1LDExNiwxMTcsMTE4LDExOSwxMjAsMTIxLDEyMiwxMjMsMTI0LDEyNSwxMjYsMTI3LDEyOCwxMjksMTMwLDEzMSwxMzIsMTMzLDEzNCwxMzUsMTM2LDEzNywxMzgsMTM5LDE0MCwxNDEsMTQyLDE0MywxNDQsMTQ1LDE0NiwxNDcsMTQ4LDE0OSwxNTAsMTUxLDE1MiwxNTMsMTU0LDE1NSwxNTYsMTU3LDE1OCwxNTksMTYwLDE2MSwxNjIsMTYzLDE2NCwxNjUsMTY2LDE2NywxNjgsMTY5LDE3MCwxNzEsMTcyLDE3MywxNzQsMTc1LDE3NiwxNzcsMTc4LDE3OSwxODAsMTgxLDE4MiwxODMsMTg0LDE4NSwxODYsMTg3LDE4OCwxODksMTkwLDE5MSwxOTIsMTkzLDE5NCwxOTUsMTk2LDE5NywxOTgsMTk5LDIwMCwyMDEsMjAyLDIwMywyMDQsMjA1LDIwNiwyMDcsMjA4LDIwOSwyMTAsMjExLDIxMiwyMTMsMjE0LDIxNSwyMTYsMjE3LDIxOCwyMTksMjIwLDIyMSwyMjIsMjIzLDIyNCwyMjUsMjI2LDIyNywyMjgsMjI5LDIzMCwyMzEsMjMyLDIzMywyMzQsMjM1LDIzNiwyMzcsMjM4LDIzOSwyNDAsMjQxLDI0MiwyNDMsMjQ0LDI0NSwyNDYsMjQ3LDI0OCwyNDksMjUwLDI1MSwyNTIsMjUzLDI1NCwyNTUsMjU2LDI1NywyNTgsMjU5LDI2MCwyNjEsMjYyLDI2MywyNjQsMjY1LDI2NiwyNjcsMjY4LDI2OSwyNzAsMjcxLDI3MiwyNzMsMjc0LDI3NSwyNzYsMjc3LDI3OCwyNzksMjgwLDI4MSwyODIsMjgzLDI4NCwyODUsMjg2LDI4NywyODgsMjg5LDI5MCwyOTEsMjkyLDI5MywyOTQsMjk1LDI5NiwyOTcsMjk4LDI5OSwzMDAsMzAxLDMwMiwzMDMsMzA0LDMwNSwzMDYsMzA3LDMwOCwzMDksMzEwLDMxMSwzMTIsMzEzLDMxNCwzMTUsMzE2LDMxNywzMTgsMzE5LDMyMCwzMjEsMzIyLDMyMywzMjQsMzI1LDMyNiwzMjcsMzI4LDMyOSwzMzAsMzMxLDMzMiwzMzMsMzM0LDMzNSwzMzYsMzM3LDMzOCwzMzksMzQwLDM0MSwzNDIsMzQzLDM0NCwzNDUsMzQ2LDM0NywzNDgsMzQ5LDM1MCwzNTEsMzUyLDM1MywzNTQsMzU1LDM1NiwzNTcsMzU4LDM1OSwzNjAsMzYxLDM2MiwzNjMsMzY0LDM2NSwzNjYsMzY3LDM2OCwzNjksMzcwLDM3MSwzNzIsMzczLDM3NCwzNzUsMzc2LDM3NywzNzgsMzc5LDM4MCwzODEsMzgyLDM4MywzODQsMzg1LDM4NiwzODcsMzg4LDM4OSwzOTAsMzkxLDM5MiwzOTMsMzk0LDM5NSwzOTYsMzk3LDM5OCwzOTksNDAwLDQwMSw0MDIsNDAzLDQwNCw0MDUsNDA2LDQwNyw0MDgsNDA5LDQxMCw0MTEsNDEyLDQxMyw0MTQsNDE1LDQxNiw0MTcsNDE4LDQxOSw0MjAsNDIxLDQyMiw0MjMsNDI0LDQyNSw0MjYsNDI3LDQyOCw0MjksNDMwLDQzMSw0MzIsNDMzLDQzNCw0MzUsNDM2LDQzNyw0MzgsNDM5LDQ0MCw0NDEsNDQyLDQ0Myw0NDQsNDQ1LDQ0Niw0NDcsNDQ4LDQ0OSw0NTAsNDUxLDQ1Miw0NTMsNDU0LDQ1NSw0NTYsNDU3LDQ1OCw0NTksNDYwLDQ2MSw0NjIsNDYzLDQ2NCw0NjUsNDY2LDQ2Nyw0NjgsNDY5LDQ3MCw0NzEsNDcyLDQ3Myw0NzQsNDc1LDQ3Niw0NzcsNDc4LDQ3OSw0ODAsNDgxLDQ4Miw0ODMsNDg0LDQ4NSw0ODYsNDg3LDQ4OCw0ODksNDkwLDQ5MSw0OTIsNDkzLDQ5NCw0OTUsNDk2LDQ5Nyw0OTgsNDk5LDUwMCw1MDEsNTAyLDUwMyw1MDQsNTA1LDUwNiw1MDcsNTA4LDUwOSw1MTAsNTExLDUxMiw1MTMsNTE0LDUxNSw1MTYsNTE3LDUxOCw1MTksNTIwLDUyMSw1MjIsNTIzLDUyNCw1MjUsNTI2LDUyNyw1MjgsNTI5LDUzMCw1MzEsNTMyLDUzMyw1MzQsNTM1LDUzNiw1MzcsNTM4LDUzOSw1NDAsNTQxLDU0Miw1NDMsNTQ0LDU0NSw1NDYsNTQ3LDU0OCw1NDksNTUwLDU1MSw1NTIsNTUzLDU1NCw1NTUsNTU2LDU1Nyw1NTgsNTU5LDU2MCw1NjEsNTYyLDU2Myw1NjQsNTY1LDU2Niw1NjcsNTY4LDU2OSw1NzAsNTcxLDU3Miw1NzMsNTc0LDU3NSw1NzYsNTc3LDU3OCw1NzksNTgwLDU4MSw1ODIsNTgzLDU4NCw1ODUsNTg2LDU4Nyw1ODgsNTg5LDU5MCw1OTEsNTkyLDU5Myw1OTQsNTk1LDU5Niw1OTcsNTk4LDU5OSw2MDAsNjAxLDYwMiw2MDMsNjA0LDYwNSw2MDYsNjA3LDYwOCw2MDksNjEwLDYxMSw2MTIsNjEzLDYxNCw2MTUsNjE2LDYxNyw2MTgsNjE5LDYyMCw2MjEsNjIyLDYyMyw2MjQsNjI1LDYyNiw2MjcsNjI4LDYyOSw2MzAsNjMxLDYzMiw2MzMsNjM0LDYzNSw2MzYsNjM3LDYzOCw2MzksNjQwLDY0MSw2NDIsNjQzLDY0NCw2NDUsNjQ2LDY0Nyw2NDgsNjQ5LDY1MCw2NTEsNjUyLDY1Myw2NTQsNjU1LDY1Niw2NTcsNjU4LDY1OSw2NjAsNjYxLDY2Miw2NjMsNjY0LDY2NSw2NjYsNjY3LDY2OCw2NjksNjcwLDY3MSw2NzIsNjczLDY3NCw2NzUsNjc2LDY3Nyw2NzgsNjc5LDY4MCw2ODEsNjgyLDY4Myw2ODQsNjg1LDY4Niw2ODcsNjg4LDY4OSw2OTAsNjkxLDY5Miw2OTMsNjk0LDY5NSw2OTYsNjk3LDY5OCw2OTldfQ==",
@@ -1082,12 +1106,12 @@
      "rid-fixed"
     ],
     [
-     "content-encoding",
-     "gzip"
+     "vary",
+     "Origin, Accept-Encoding"
     ],
     [
-     "vary",
-     "Accept-Encoding"
+     "content-encoding",
+     "gzip"
     ]
    ],
    "body_b64": "H4sIAAAAAAAAA7NRTMlPLqksSFXIKMnNsbMpySzJSbUrsdGHMGwK7DJSc3LyFcrzi3JSbPQLRkVGRUZFRkVGRUZFRkVGRagsAgDkWPxmjwgAAA==",
@@ -1145,6 +1169,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "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",
@@ -1200,12 +1228,12 @@
      "rid-fixed"
     ],
     [
-     "content-encoding",
-     "gzip"
+     "vary",
+     "Origin, Accept-Encoding"
     ],
     [
-     "vary",
-     "Accept-Encoding"
+     "content-encoding",
+     "gzip"
     ]
    ],
    "body_b64": "H4sIAAAAAAAAA6tWSlSyMqzlqlZKUrIyquUCAMiyzp8QAAAA",
@@ -1255,6 +1283,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJhIjoxfQp7ImIiOjJ9Cg==",
@@ -1387,12 +1419,12 @@
      "rid-fixed"
     ],
     [
-     "content-encoding",
-     "gzip"
+     "vary",
+     "Origin, Accept-Encoding"
     ],
     [
-     "vary",
-     "Accept-Encoding"
+     "content-encoding",
+     "gzip"
     ]
    ],
    "body_b64": "H4sIAAAAAAAAA6uqGgWjYBSMglEw3AAAIFYhrdwFAAA=",
@@ -1442,6 +1474,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -1503,6 +1539,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "H4sIAAAAAAAAA+3BQQ0AAAgEoC4Xw2Ruzu7W8AFMOpUGAADeyx5LXdRywAsAAA==",
@@ -1564,6 +1604,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXk=",
@@ -1592,7 +1636,7 @@
     ],
     [
      "vary",
-     "Accept-Language"
+     "Accept-Language, Origin"
     ],
     [
      "content-type",
@@ -1657,7 +1701,7 @@
     ],
     [
      "vary",
-     "Accept-Language, Cookie, Authorization"
+     "Accept-Language, Cookie, Authorization, Origin"
     ],
     [
      "content-type",
@@ -1722,7 +1766,7 @@
     ],
     [
      "vary",
-     "Accept-Language, Cookie, Authorization"
+     "Accept-Language, Cookie, Authorization, Origin"
     ],
     [
      "content-type",
@@ -1787,7 +1831,7 @@
     ],
     [
      "vary",
-     "Accept-Language"
+     "Accept-Language, Origin"
     ],
     [
      "content-type",
@@ -1852,7 +1896,7 @@
     ],
     [
      "vary",
-     "Accept-Language, Cookie, Authorization"
+     "Accept-Language, Cookie, Authorization, Origin"
     ],
     [
      "content-type",
@@ -1917,7 +1961,7 @@
     ],
     [
      "vary",
-     "Accept-Language, Cookie, Authorization"
+     "Accept-Language, Cookie, Authorization, Origin"
     ],
     [
      "content-type",
@@ -1982,7 +2026,7 @@
     ],
     [
      "vary",
-     "Accept-Language"
+     "Accept-Language, Origin"
     ],
     [
      "content-type",
@@ -2047,7 +2091,7 @@
     ],
     [
      "vary",
-     "Accept-Language"
+     "Accept-Language, Origin"
     ],
     [
      "content-type",
@@ -2218,6 +2262,10 @@
     [
      "permissions-policy",
      "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvd24iOjF9",
@@ -2356,6 +2404,10 @@
     [
      "access-control-expose-headers",
      "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -2567,6 +2619,10 @@
     [
      "access-control-expose-headers",
      "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -2632,6 +2688,10 @@
     [
      "access-control-expose-headers",
      "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -2660,11 +2720,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -2713,11 +2773,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -2762,11 +2822,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -2807,11 +2867,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -2856,11 +2916,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -2905,11 +2965,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -2958,11 +3018,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -3117,6 +3177,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJyaWQtZml4ZWQifX0=",
@@ -3174,6 +3238,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJyaWQtZml4ZWQifX0=",
@@ -3709,11 +3777,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -3791,6 +3859,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJkIjoxfQ==",
@@ -3851,7 +3923,7 @@
     ],
     [
      "vary",
-     "Cookie, Authorization"
+     "Cookie, Authorization, Origin"
     ],
     [
      "x-request-id",
@@ -3913,6 +3985,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "PGh0bWw+bG9naW48L2h0bWw+",
@@ -3970,6 +4046,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "PGh0bWw+bW9kPC9odG1sPg==",
@@ -4030,7 +4110,7 @@
     ],
     [
      "vary",
-     "Cookie, Authorization"
+     "Cookie, Authorization, Origin"
     ],
     [
      "x-request-id",
@@ -4068,6 +4148,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -4101,6 +4185,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -4134,6 +4222,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -4220,6 +4312,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -4253,6 +4349,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -4318,6 +4418,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJyaWQtZml4ZWQifX0=",
@@ -4379,6 +4483,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "PGh0bWw+bG9naW48L2h0bWw+",
@@ -4436,9 +4544,384 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
+   "redis_after": {}
+  },
+  {
+   "name": "redirect_qmark",
+   "app": "harness",
+   "method": "GET",
+   "path": "/mods/a%3Fb?x=1",
+   "request_headers": [
+    [
+     "X-Request-ID",
+     "rid-fixed"
+    ],
+    [
+     "Host",
+     "api.aallyn.net"
+    ]
+   ],
+   "status": 301,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.aallyn.net/mods/a%3Fb?x=1"
+    ],
+    [
+     "x-request-id",
+     "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "",
+   "redis_after": {}
+  },
+  {
+   "name": "redirect_hash_backslash",
+   "app": "harness",
+   "method": "GET",
+   "path": "/mods/a%23b%5Cc%09d",
+   "request_headers": [
+    [
+     "X-Request-ID",
+     "rid-fixed"
+    ],
+    [
+     "Host",
+     "api.aallyn.net"
+    ]
+   ],
+   "status": 301,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.aallyn.net/mods/a%23b%5Ccd"
+    ],
+    [
+     "x-request-id",
+     "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "",
+   "redis_after": {}
+  },
+  {
+   "name": "redirect_bad_port",
+   "app": "harness",
+   "method": "GET",
+   "path": "/login",
+   "request_headers": [
+    [
+     "X-Request-ID",
+     "rid-fixed"
+    ],
+    [
+     "Host",
+     "api.aallyn.net:99999"
+    ]
+   ],
+   "status": 200,
+   "response_headers": [
+    [
+     "content-length",
+     "18"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "PGh0bWw+bG9naW48L2h0bWw+",
+   "redis_after": {}
+  },
+  {
+   "name": "redirect_zero_port",
+   "app": "harness",
+   "method": "GET",
+   "path": "/login",
+   "request_headers": [
+    [
+     "X-Request-ID",
+     "rid-fixed"
+    ],
+    [
+     "Host",
+     "api.aallyn.net:000443"
+    ]
+   ],
+   "status": 301,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.aallyn.net/login"
+    ],
+    [
+     "x-request-id",
+     "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "",
+   "redis_after": {}
+  },
+  {
+   "name": "redirect_empty_port",
+   "app": "harness",
+   "method": "GET",
+   "path": "/login",
+   "request_headers": [
+    [
+     "X-Request-ID",
+     "rid-fixed"
+    ],
+    [
+     "Host",
+     "api.aallyn.net:"
+    ]
+   ],
+   "status": 200,
+   "response_headers": [
+    [
+     "content-length",
+     "18"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "PGh0bWw+bG9naW48L2h0bWw+",
+   "redis_after": {}
+  },
+  {
+   "name": "redirect_userinfo",
+   "app": "harness",
+   "method": "GET",
+   "path": "/login",
+   "request_headers": [
+    [
+     "X-Request-ID",
+     "rid-fixed"
+    ],
+    [
+     "Host",
+     "u@api.aallyn.net"
+    ]
+   ],
+   "status": 200,
+   "response_headers": [
+    [
+     "content-length",
+     "18"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "PGh0bWw+bG9naW48L2h0bWw+",
+   "redis_after": {}
+  },
+  {
+   "name": "redirect_host_path",
+   "app": "harness",
+   "method": "GET",
+   "path": "/login",
+   "request_headers": [
+    [
+     "X-Request-ID",
+     "rid-fixed"
+    ],
+    [
+     "Host",
+     "api.aallyn.net/x"
+    ]
+   ],
+   "status": 200,
+   "response_headers": [
+    [
+     "content-length",
+     "18"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "PGh0bWw+bG9naW48L2h0bWw+",
    "redis_after": {}
   },
   {
@@ -4469,6 +4952,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDgzODg2MDgtYnl0ZSBsaW1pdCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJyaWQtZml4ZWQifX0=",
@@ -4587,6 +5074,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJjcmVhdGVkIjp0cnVlfQ==",
@@ -4648,6 +5139,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJjcmVhdGVkIjp0cnVlfQ==",
@@ -4681,6 +5176,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDgzODg2MDgtYnl0ZSBsaW1pdCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJyaWQtZml4ZWQifX0=",
@@ -4714,6 +5213,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDIwOTcxNTIwLWJ5dGUgbGltaXQiLCJkZXRhaWxzIjpudWxsLCJyZXF1ZXN0X2lkIjoicmlkLWZpeGVkIn19",
@@ -4771,6 +5274,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "e30=",
@@ -4804,6 +5311,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDEwNDg1NzYwMC1ieXRlIGxpbWl0IiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJpZC1maXhlZCJ9fQ==",
@@ -4837,6 +5348,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDIwOTcxNTIwLWJ5dGUgbGltaXQiLCJkZXRhaWxzIjpudWxsLCJyZXF1ZXN0X2lkIjoicmlkLWZpeGVkIn19",
@@ -4870,6 +5385,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDUzNjg3MDkxMi1ieXRlIGxpbWl0IiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJpZC1maXhlZCJ9fQ==",
@@ -4903,6 +5422,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDI1MTY1ODI0LWJ5dGUgbGltaXQiLCJkZXRhaWxzIjpudWxsLCJyZXF1ZXN0X2lkIjoicmlkLWZpeGVkIn19",
@@ -4936,6 +5459,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDY3MTA4ODY0LWJ5dGUgbGltaXQiLCJkZXRhaWxzIjpudWxsLCJyZXF1ZXN0X2lkIjoicmlkLWZpeGVkIn19",
@@ -4969,6 +5496,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDE2Nzc3MjE2MC1ieXRlIGxpbWl0IiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJpZC1maXhlZCJ9fQ==",
@@ -5071,6 +5602,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "PGh0bWw+ZW1iZWQ8L2h0bWw+",
@@ -5128,6 +5663,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "PGh0bWw+ZW1iZWQ8L2h0bWw+",
@@ -5181,6 +5720,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJyaWQtZml4ZWQifX0=",
@@ -5242,6 +5785,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "Lypqcyov",
@@ -5299,6 +5846,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "Lypqcyov",
@@ -5356,6 +5907,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "Lypqcyov",
@@ -5413,6 +5968,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "Lypqcyov",
@@ -5470,6 +6029,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "Lypqcyov",
@@ -5523,6 +6086,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -5578,12 +6145,12 @@
      "rid-fixed"
     ],
     [
-     "content-encoding",
-     "gzip"
+     "vary",
+     "Origin, Accept-Encoding"
     ],
     [
-     "vary",
-     "Accept-Encoding"
+     "content-encoding",
+     "gzip"
     ]
    ],
    "body_b64": "",
@@ -5641,6 +6208,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -5698,6 +6269,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -5933,7 +6508,7 @@
     ],
     [
      "vary",
-     "Cookie, Authorization"
+     "Cookie, Authorization, Origin"
     ],
     [
      "x-request-id",
@@ -6105,6 +6680,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJjcmVhdGVkIjp0cnVlfQ==",
@@ -6184,7 +6763,7 @@
     ],
     [
      "vary",
-     "Cookie, Authorization"
+     "Cookie, Authorization, Origin"
     ],
     [
      "x-request-id",
@@ -6254,7 +6833,7 @@
     ],
     [
      "vary",
-     "Cookie, Authorization"
+     "Cookie, Authorization, Origin"
     ],
     [
      "x-request-id",
@@ -6331,6 +6910,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "aGk=",
@@ -6399,6 +6982,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -6471,6 +7058,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJjcmVhdGVkIjp0cnVlfQ==",
@@ -6539,6 +7130,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJvayI6dHJ1ZX0=",
@@ -6601,6 +7196,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJjcmVhdGVkIjp0cnVlfQ==",
@@ -6663,6 +7262,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJjcmVhdGVkIjp0cnVlfQ==",
@@ -6733,7 +7336,7 @@
     ],
     [
      "vary",
-     "Cookie, Authorization"
+     "Cookie, Authorization, Origin"
     ],
     [
      "x-request-id",
@@ -6805,6 +7408,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "b2s=",
@@ -6872,6 +7479,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "b2s=",
@@ -6985,11 +7596,11 @@
    "response_headers": [
     [
      "vary",
-     "Origin"
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
     ],
     [
      "access-control-allow-methods",
-     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
     ],
     [
      "access-control-max-age",
@@ -7048,6 +7659,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiYmFkX3JlcXVlc3QiLCJtZXNzYWdlIjoiUmVxdWVzdCBib2R5IGV4Y2VlZHMgdGhlIDIwOTcxNTIwLWJ5dGUgbGltaXQiLCJkZXRhaWxzIjpudWxsLCJyZXF1ZXN0X2lkIjoicmlkLWZpeGVkIn19",
@@ -7082,6 +7697,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",
@@ -7140,6 +7759,10 @@
     [
      "x-request-id",
      "rid-fixed"
+    ],
+    [
+     "vary",
+     "Origin"
     ]
    ],
    "body_b64": "",

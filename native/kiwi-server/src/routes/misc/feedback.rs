@@ -307,10 +307,6 @@ pub async fn post_feedback(State(state): State<AppState>, req: Request) -> Respo
     let items = match form::parse_form(parts.headers.get(header::CONTENT_TYPE).map(|v| v.as_bytes()), &bytes) {
         Ok(items) => items,
         Err(FormError::Http(msg)) => return ApiError::http(StatusCode::BAD_REQUEST, Some(&msg)).into_response(),
-        Err(FormError::Parse) => {
-            return ApiError::http(StatusCode::BAD_REQUEST, Some("There was an error parsing the body"))
-                .into_response();
-        }
     };
     let f = match validate(&items) {
         Ok(f) => f,

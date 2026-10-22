@@ -1,5 +1,5 @@
 {
- "python": "3.11.9",
+ "python": "3.13.17",
  "env": {
   "APP_NAME": "Kiwi <API> \"\u00e9\" {x}",
   "API_URL": "https://api.example.test",

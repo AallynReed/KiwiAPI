@@ -1,6 +1,6 @@
 """Golden fixtures from pydantic and the real FastAPI app (run AFTER gen_stdlib.py,
 whose float/value/datetime corpus it reuses), from the repo root:
-    .venv/Scripts/python.exe native/kiwi-server/testdata/foundation/gen_app.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/kiwi-server/testdata/foundation/gen_app.py
 Writes app.json next to this file.
 
 `http` cases are raw ASGI calls into `app.main.app` itself (runtime_config cache

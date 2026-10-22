@@ -145,9 +145,6 @@ fn forms_match_python() {
         let ct = (!ctype.is_empty()).then_some(ctype.as_bytes());
         let (status, result) = match form::parse_form(ct, &body) {
             Err(form::FormError::Http(m)) => (400, json!({"code": "bad_request", "message": m, "details": null})),
-            Err(form::FormError::Parse) => {
-                (400, json!({"code": "bad_request", "message": "There was an error parsing the body", "details": null}))
-            }
             Ok(items) => match feedback::validate(&items) {
                 Err(errors) => {
                     let mut details: Vec<Value> = errors.iter().map(|e| e.to_value()).collect();
