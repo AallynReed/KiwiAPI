@@ -3,7 +3,7 @@
 
 use serde_json::Value;
 
-use super::{activity, pymath, status, text::Fonts};
+use super::{activity, board, pymath, status, text::Fonts};
 
 fn testdata(name: &str) -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata").join("og").join(name)
@@ -83,6 +83,51 @@ fn status_cards_match_pillow() {
     assert!(bytes.is_empty(), "same pixels, different PNG bytes: {bytes:?}");
 }
 
+#[test]
+fn board_cards_match_pillow() {
+    let fonts = fonts();
+    let lib = kiwi_pil::Library::new().unwrap();
+    let all = cases();
+    let (now, hhmm) = (all["now"].as_i64().unwrap(), all["hhmm"].as_str().unwrap());
+    let (mut failures, mut bytes) = (Vec::new(), Vec::new());
+    for b in all["boards"].as_array().unwrap() {
+        let name = b["name"].as_str().unwrap();
+        let img = board::draw_board(&lib, &fonts, &b["data"], now, hhmm).unwrap();
+        compare(name, &super::encode(&img), &format!("board_{name}.png"), &mut failures, &mut bytes);
+    }
+    assert!(failures.is_empty(), "{failures:#?}");
+    assert!(bytes.is_empty(), "same pixels, different PNG bytes: {bytes:?}");
+}
+
+#[test]
+fn announcements_match_pillow() {
+    let fonts = fonts();
+    let lib = kiwi_pil::Library::new().unwrap();
+    let all = cases();
+    let (now, hhmm) = (all["now"].as_i64().unwrap(), all["hhmm"].as_str().unwrap());
+    let (mut failures, mut bytes) = (Vec::new(), Vec::new());
+    for a in all["announcements"].as_array().unwrap() {
+        let kind = a["kind"].as_str().unwrap();
+        let src = &all["sources"][a["set"].as_str().unwrap()];
+        let mut data = serde_json::Map::new();
+        for s in board::sources(kind) {
+            data.insert((*s).to_owned(), src[*s].clone());
+        }
+        let (title, accent, lines) = board::announcement_content(kind, &Value::Object(data), now).unwrap();
+        let label = format!("{} {kind}", a["set"]);
+        assert_eq!(title, a["title"].as_str().unwrap(), "{label}");
+        assert_eq!(accent.map(Value::from).to_vec(), *a["accent"].as_array().unwrap(), "{label}");
+        let want: Vec<&str> = a["lines"].as_array().unwrap().iter().map(|l| l.as_str().unwrap()).collect();
+        assert_eq!(lines, want, "{label}");
+        if let Some(png) = a.get("png").and_then(Value::as_str) {
+            let img = board::draw_announcement(&lib, &fonts, &title, accent, &lines, hhmm).unwrap();
+            compare(&label, &super::encode(&img), png, &mut failures, &mut bytes);
+        }
+    }
+    assert!(failures.is_empty(), "{failures:#?}");
+    assert!(bytes.is_empty(), "same pixels, different PNG bytes: {bytes:?}");
+}
+
 /// A Python `repr(float)` (serde_json may misround 17-digit numbers).
 fn float(v: &Value) -> f64 {
     v.as_str().unwrap().parse().unwrap()
@@ -110,6 +155,22 @@ fn badge_svg_matches() {
         let svg = status::badge_svg("trove", row[0].as_str().unwrap(), row[1].as_str().unwrap());
         assert_eq!(svg, row[2].as_str().unwrap());
     }
+}
+
+#[test]
+fn replies() {
+    let ok = super::png_reply(Some(bytes::Bytes::from_static(b"png")), "public, max-age=600");
+    assert_eq!(ok.status(), 200);
+    assert_eq!(ok.headers()["content-type"], "image/png");
+    assert_eq!(ok.headers()["cache-control"], "public, max-age=600");
+    let failed = super::png_reply(None, "public, max-age=60");
+    assert_eq!(failed.status(), 302);
+    assert_eq!(failed.headers()["location"], "/static/assets/favicon.png");
+    assert!(failed.headers().get("content-type").is_none());
+    let uri = |s: &str| s.parse::<axum::http::Uri>().unwrap();
+    assert!(super::defers("/announce.png", &uri("/announce.png?kind=game_update")) || super::text::fonts().is_none());
+    assert!(super::defers("/board.png", &uri("/board.png?lang=fr")));
+    assert!(!super::defers("/embed/status.svg", &uri("/embed/status.svg?lang=fr")));
 }
 
 #[test]

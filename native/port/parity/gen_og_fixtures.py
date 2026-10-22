@@ -48,6 +48,142 @@ class _Clock:
 og.time = _Clock
 
 
+class _DT(og.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return og.datetime.fromtimestamp(NOW, tz)
+
+
+og.datetime = _DT
+
+
+def _merchant(active: bool, state, start: int, end: int) -> dict:
+    out = {"active": active, "starts_at": start, "ends_at": end, "seconds_remaining": max(0, end - NOW),
+           "schedule": []}
+    if state is not None:
+        out["state"] = state
+    return out
+
+
+def _slot(start: int, end: int, names: list) -> dict:
+    return {"starts_at": start, "ends_at": end,
+            "biomes": [{"name": n, "final_name": f, "icon": "x"} for n, f in names]}
+
+
+SOURCES = {
+    "a": {
+        "challenge": {"starts_at": NOW - 600, "ends_at": NOW + 1300, "active": True, "is_friday_window": False,
+                      "seconds_remaining": 1300, "name": "Rampage in the Sundered Uplands of Infinite Peril Forever",
+                      "type": "rampage", "captured_at": None},
+        "chaos": {"active": True, "starts_at": NOW - 86400, "ends_at": NOW + 5 * 86400 + 7300,
+                  "item": {"name": "Ultimate Shadow Hunter Style", "blueprint": None}},
+        "daily": {"current": {"name": "Gem Day", "normal_buffs": ["+50% Gem Dust", "+50% Gem Boxes", "x"]}},
+        "server": {"daily_reset_at": NOW + 3 * 3600 + 125, "weekly_reset_at": NOW + 4 * 86400 + 3 * 3600},
+        "biomes": {"current": _slot(NOW - 100, NOW + 2 * 3600 + 59, [("Desert", "Desert Frontier"),
+                                                                       ("Jungle", ""), ("Tundra", "Permafrost")]),
+                   "upcoming": []},
+        "wild_mana": {"current": _slot(NOW - 100, NOW + 6 * 86400, [("Fae Forest", "Fae Forest"),
+                                                                      ("Lunar Lagoon", "Lunar Lagoon")])},
+        "stampy": {"current": _slot(NOW - 100, NOW + 30 * 3600, [("Candoria", "Candoria")])},
+        "corruxion": _merchant(True, None, NOW - 3600, NOW + 2 * 3600 + 30),
+        "fluxion": _merchant(True, "Flux", NOW - 3600, NOW + 45 * 60),
+        "luxion": {"active": True, "current_window": {"starts_at": NOW - 60, "ends_at": NOW + 7000},
+                   "next_window": {"starts_at": NOW + 99999, "ends_at": NOW + 200000}, "ends_at": NOW + 10 ** 6},
+        "status": {"overall": "down", "checked_at": NOW - 30,
+                   "environments": {"eu": {"status": "online"}, "us": {"status": "down"}, "pts": None}},
+    },
+    "b": {
+        "challenge": {"starts_at": NOW - 4000, "ends_at": NOW - 400, "active": False, "is_friday_window": True,
+                      "seconds_remaining": 0, "name": None, "type": None, "captured_at": None},
+        "chaos": {"active": True, "starts_at": NOW - 86400, "ends_at": NOW + 86400, "item": None},
+        "daily": {"current": {}},
+        "server": {"daily_reset_at": NOW + 59, "weekly_reset_at": NOW - 5},
+        "biomes": {"current": _slot(NOW - 100, NOW + 2 * 60, []), "upcoming": []},
+        "wild_mana": {"current": None},
+        "stampy": {"current": None},
+        "corruxion": _merchant(False, None, NOW + 86400 * 3 + 7200, NOW + 86400 * 4),
+        "fluxion": _merchant(True, "away", NOW - 60, NOW + 60),
+        "luxion": {"active": False, "current_window": None, "next_window": None, "ends_at": None},
+        "status": None,
+    },
+    "c": {
+        "challenge": {"starts_at": NOW - 10, "ends_at": NOW + 1790, "active": True, "is_friday_window": True,
+                      "seconds_remaining": 1790, "name": "", "type": "collection"},
+        "chaos": {"active": True, "starts_at": NOW - 86400, "ends_at": None, "item": {"name": "Box"}},
+        "daily": {"current": {"name": "", "normal_buffs": []}},
+        "server": {"daily_reset_at": NOW + 86400 * 2, "weekly_reset_at": NOW + 1},
+        "biomes": {"current": None},
+        "wild_mana": {"current": _slot(NOW, NOW + 3600 * 23, [("", "")])},
+        "stampy": {"current": {"biomes": [], "ends_at": NOW + 10}},
+        "corruxion": _merchant(False, None, 0, 0),
+        "fluxion": _merchant(False, "away", NOW + 3599, NOW + 9000),
+        "luxion": {"active": True, "current_window": None, "next_window": {"starts_at": NOW + 3600 * 5},
+                   "ends_at": NOW + 10},
+        "status": {"overall": "online", "environments": {"eu": {"status": "online"}, "us": {"status": "online"},
+                                                          "pts": {"status": "maintenance"}}},
+    },
+}
+SOURCES["d"] = dict(SOURCES["c"], luxion={"active": True, "current_window": None, "next_window": None,
+                                          "ends_at": NOW + 86400 * 9}, status={"overall": "unknown"})
+
+KINDS = ["hourly_challenge", "challenge_collection", "challenge_rampage", "challenge_racing", "challenge_target",
+         "challenge_dungeon", "chaos_chest", "daily_bonuses", "longshade", "wild_mana", "stampy", "corruxion",
+         "fluxion", "luxion", "server_status", "weird_new_kind", "x", "ünïcode_straße"]
+
+
+def _patch_sources(src: dict) -> None:
+    import app.trove.captures as captures
+    import app.trove.chaos as chaos
+    import app.trove.luxion as luxion
+    import app.trove.rotations as rotations
+    import app.trove.server_time as server_time
+    import app.trove.status as status
+
+    async def _challenge():
+        return src["challenge"]
+
+    async def _chaos():
+        return src["chaos"]
+
+    async def _luxion():
+        return src["luxion"]
+
+    captures.get_current_challenge = _challenge
+    chaos.get_chaos_chest = _chaos
+    luxion.get_luxion = _luxion
+    server_time.daily_buffs = lambda: src["daily"]
+    server_time.server_time = lambda: src["server"]
+    server_time.corruxion = lambda: src["corruxion"]
+    server_time.fluxion = lambda: src["fluxion"]
+    rotations.biome_rotation = lambda: src["biomes"]
+    rotations.wild_mana = lambda: src["wild_mana"]
+    rotations.stampy = lambda: src["stampy"]
+    status.get_status = lambda: src["status"] if src["status"] is not None else {}
+
+
+def board_and_announce() -> tuple[list, list]:
+    import asyncio
+
+    boards = []
+    for name, src in SOURCES.items():
+        data = {"challenge": src["challenge"], "chaos": src["chaos"],
+                "biomes": (src["biomes"].get("current") or {}), "corruxion": src["corruxion"],
+                "fluxion": src["fluxion"], "server": src["server"], "status": src["status"]}
+        (OUT / f"board_{name}.png").write_bytes(og._draw_board(data))
+        boards.append({"name": name, "data": data})
+    anns = []
+    for name, src in SOURCES.items():
+        _patch_sources(src)
+        for kind in KINDS:
+            title, accent, lines = asyncio.run(og._announcement_content(kind))
+            row = {"set": name, "kind": kind, "title": title, "accent": list(accent), "lines": lines}
+            if kind in ("challenge_rampage", "luxion", "daily_bonuses", "weird_new_kind", "server_status"):
+                row["png"] = f"announce_{name}_{kind}.png"
+                (OUT / row["png"]).write_bytes(og._draw_announcement(title, accent, lines))
+            anns.append(row)
+    return boards, anns
+
+
 def _points(rng: random.Random, start: int, n: int, step: int, base: float, jitter: float) -> list[dict]:
     out = []
     t = start
@@ -141,7 +277,10 @@ def main() -> None:
     from app.site.router import _badge_svg
     badges = [[v, c, _badge_svg("trove", v, c)] for v, c in
               (("online", "#3fb950"), ("offline", "#f85149"), ("unknown", "#9aa4b2"))]
-    cases = {"now": NOW, "activity": acts, "status": stats, "hypot": hyp, "fixed2": fmts, "badges": badges}
+    boards, anns = board_and_announce()
+    cases = {"now": NOW, "hhmm": _DT.now(og.timezone.utc).strftime("%H:%M"), "activity": acts, "status": stats,
+             "hypot": hyp, "fixed2": fmts, "badges": badges, "sources": SOURCES, "boards": boards,
+             "announcements": anns}
     (OUT / "cases.json").write_text(json.dumps(cases, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{len(acts)} activity + {len(stats)} status cards written to {OUT}")
 

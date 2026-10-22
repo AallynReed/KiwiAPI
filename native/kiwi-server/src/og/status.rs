@@ -6,14 +6,13 @@ use axum::{
     http::{HeaderValue, header},
     response::{IntoResponse, Response},
 };
-use bytes::Bytes;
 use kiwi_pil::{Draw, ImageError, Library, Rgba};
 use serde_json::{Map, Value};
 
 use super::{
     H, SiteGate, W,
     activity::{BG, MUTE, TEXT, rgba},
-    cache_get, cache_put, encode, png_reply,
+    cache_get, cache_put, draw_blocking, png_reply,
     text::{Fonts, Text},
 };
 use crate::{error::ApiError, routes::trove_status, state::AppState};
@@ -191,11 +190,6 @@ pub fn draw(
     Ok(img)
 }
 
-/// `trove_status.get_status()`.
-async fn snapshot(state: &AppState) -> Value {
-    trove_status::shared_snapshot(state).await.unwrap_or_else(trove_status::unknown_snapshot)
-}
-
 /// `(await get_history(env, 30)).get("uptime")`, `None` on any failure.
 async fn uptime(state: &AppState, env: &'static str) -> Option<f64> {
     let rows = trove_status::load_segments(state, env).await.ok()?;
@@ -208,26 +202,14 @@ pub async fn og(_: SiteGate, State(state): State<AppState>) -> Response {
     if let Some(png) = cache_get(key, 45.0) {
         return png_reply(Some(png), "public, max-age=60");
     }
-    let payload = snapshot(&state).await;
+    let payload = super::data::status(&state).await;
     let uptimes = [uptime(&state, "eu").await, uptime(&state, "us").await, uptime(&state, "pts").await];
-    let png = render(payload, uptimes).await;
+    let now = trove_status::unix_now();
+    let png = draw_blocking("status OG image", move |lib, fonts| draw(lib, fonts, &payload, uptimes, now)).await;
     if let Some(png) = &png {
         cache_put(key, png.clone());
     }
     png_reply(png, "public, max-age=60")
-}
-
-async fn render(payload: Value, uptimes: [Option<f64>; 3]) -> Option<Bytes> {
-    let fonts = super::text::fonts()?;
-    let now = trove_status::unix_now();
-    tokio::task::spawn_blocking(move || {
-        let lib = Library::new().map_err(ImageError::from)?;
-        draw(&lib, fonts, &payload, uptimes, now).map(|img| encode(&img))
-    })
-    .await
-    .ok()?
-    .map_err(|e| tracing::error!("status OG image render failed: {e}"))
-    .ok()
 }
 
 /// `_badge_svg(label, value, color)`.
@@ -265,7 +247,7 @@ pub fn badge_svg(label: &str, value: &str, color: &str) -> String {
 
 /// `GET /embed/status.svg`.
 pub async fn badge(_: SiteGate, State(state): State<AppState>) -> Result<Response, ApiError> {
-    let snap = snapshot(&state).await;
+    let snap = super::data::status(&state).await;
     let overall = match snap.get("overall") {
         None => "unknown",
         Some(Value::String(s)) => s.as_str(),
