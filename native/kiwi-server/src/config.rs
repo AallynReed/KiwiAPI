@@ -331,9 +331,7 @@ const CAPTCHA_PROVIDERS: [&str; 2] = ["hcaptcha", "turnstile"];
 
 impl Settings {
     pub fn from_env() -> anyhow::Result<Self> {
-        Self::from_vars(
-            std::env::vars_os().filter_map(|(k, v)| Some((k.into_string().ok()?, v.into_string().ok()?))),
-        )
+        Self::from_vars(std::env::vars_os().filter_map(|(k, v)| Some((k.into_string().ok()?, v.into_string().ok()?))))
     }
 
     /// Build from explicit `(NAME, value)` pairs instead of the process env.

@@ -4,10 +4,10 @@
 
 use std::collections::HashMap;
 
-use axum::http::{header, request::Parts, HeaderMap, HeaderValue};
+use axum::http::{HeaderMap, HeaderValue, header, request::Parts};
 use chrono::{DateTime, Utc};
 
-use super::{pyutil::latin1, sessions::TokenPair, AuthSettings};
+use super::{AuthSettings, pyutil::latin1, sessions::TokenPair};
 
 pub const ACCESS_COOKIE: &str = "kiwi_site_access";
 pub const REFRESH_COOKIE: &str = "kiwi_site_refresh";

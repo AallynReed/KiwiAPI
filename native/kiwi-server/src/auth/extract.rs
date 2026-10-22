@@ -5,28 +5,28 @@ use std::{marker::PhantomData, ops::Deref};
 
 use axum::{
     extract::{FromRef, FromRequestParts, MatchedPath},
-    http::{request::Parts, HeaderMap},
+    http::{HeaderMap, request::Parts},
 };
-use mongodb::bson::{doc, oid::ObjectId, DateTime};
+use mongodb::bson::{DateTime, doc, oid::ObjectId};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
 use super::{
+    Rejection,
     client::client_ip,
     jwt::{self, Claims},
-    models::{ApiToken, SiteUser, User, API_TOKENS, SITE_USERS, USERS},
+    models::{API_TOKENS, ApiToken, SITE_USERS, SiteUser, USERS, User},
     pyutil::{eq_int, latin1, strip},
     scopes,
     sessions::SITE_TOKEN_KIND,
     site::site_credential,
     token_use::record_token_use,
     tokens::{hash_token, ip_allowed, verify_token_checksum},
-    Rejection,
 };
 use crate::{
-    ratelimit::{check_rate_limit, get_rate_limit, RateLimitInfo},
+    ratelimit::{RateLimitInfo, check_rate_limit, get_rate_limit},
     state::AppState,
-    usage::{fastapi_template, UsageSlot},
+    usage::{UsageSlot, fastapi_template},
 };
 
 /// `HTTPBearer(auto_error=False)`: the credentials of an `Authorization:

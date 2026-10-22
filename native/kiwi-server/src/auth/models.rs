@@ -1,7 +1,7 @@
 //! The Beanie documents auth reads and writes, field for field and in model
 //! order (Beanie writes optional fields as explicit nulls; so do these).
 
-use mongodb::bson::{oid::ObjectId, DateTime, Document};
+use mongodb::bson::{DateTime, Document, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 
 pub const USERS: &str = "users";

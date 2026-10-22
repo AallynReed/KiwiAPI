@@ -3,15 +3,14 @@
 //! `site_sessions` / `site_users`, access tokens carry `kind: "site"`).
 
 use chrono::{Duration, Utc};
-use mongodb::bson::{doc, oid::ObjectId, DateTime, Document};
+use mongodb::bson::{DateTime, Document, doc, oid::ObjectId};
 use serde::Serialize;
 
 use super::{
-    jwt,
-    models::{SessionRow, SESSIONS, SITE_SESSIONS, SITE_USERS, USERS},
+    Rejection, jwt,
+    models::{SESSIONS, SITE_SESSIONS, SITE_USERS, SessionRow, USERS},
     pyutil::bson_int,
     tokens::{generate_refresh_token, hash_token},
-    Rejection,
 };
 use crate::state::AppState;
 

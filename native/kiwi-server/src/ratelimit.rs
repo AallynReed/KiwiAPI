@@ -4,8 +4,8 @@
 
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
         LazyLock,
+        atomic::{AtomicU64, Ordering},
     },
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -15,7 +15,7 @@ use axum::{
     response::{IntoResponseParts, ResponseParts},
 };
 use mongodb::{
-    bson::{doc, DateTime, Document},
+    bson::{DateTime, Document, doc},
     options::ReturnDocument,
 };
 
@@ -104,11 +104,7 @@ fn next_seq() -> u64 {
 /// Python `str(float)` for an epoch timestamp (shortest round-trip repr).
 pub fn py_float_str(x: f64) -> String {
     let s = format!("{x}");
-    if s.contains('.') || s.contains('e') || s.contains("inf") || s.contains("NaN") {
-        s
-    } else {
-        format!("{s}.0")
-    }
+    if s.contains('.') || s.contains('e') || s.contains("inf") || s.contains("NaN") { s } else { format!("{s}.0") }
 }
 
 /// Header and Retry-After math of the Redis path, split out for tests:

@@ -194,7 +194,15 @@ pub fn duplicate_groups(data: &[u8]) -> Option<Vec<(i64, i32, i32)>> {
     let ext = be_i32(data, 15)?;
     let mut at = 19 + usize::try_from(ext).ok()?;
     // Postgres compares float8 with -0 = 0 and every NaN equal.
-    let canon = |s: f64| if s == 0.0 { 0u64 } else if s.is_nan() { f64::NAN.to_bits() } else { s.to_bits() };
+    let canon = |s: f64| {
+        if s == 0.0 {
+            0u64
+        } else if s.is_nan() {
+            f64::NAN.to_bits()
+        } else {
+            s.to_bits()
+        }
+    };
     let mut seen: FxHashMap<(i64, i32), FxHashSet<(i32, u64)>> = FxHashMap::default();
     loop {
         let fields = be_i16(data, at)?;
@@ -224,11 +232,8 @@ pub fn duplicate_groups(data: &[u8]) -> Option<Vec<(i64, i32, i32)>> {
         at += 12;
         seen.entry((player, board)).or_default().insert((rank, canon(score)));
     }
-    let mut out: Vec<(i64, i32, i32)> = seen
-        .into_iter()
-        .filter(|(_, v)| v.len() > 1)
-        .map(|((p, b), v)| (p, b, v.len() as i32))
-        .collect();
+    let mut out: Vec<(i64, i32, i32)> =
+        seen.into_iter().filter(|(_, v)| v.len() > 1).map(|((p, b), v)| (p, b, v.len() as i32)).collect();
     out.sort_unstable();
     Some(out)
 }

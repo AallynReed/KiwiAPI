@@ -5,11 +5,11 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex};
 
 use axum::{
+    Router,
     body::Body,
     http::{HeaderName, HeaderValue, Method, Request, StatusCode},
     response::Response,
-    routing::{on, MethodFilter},
-    Router,
+    routing::{MethodFilter, on},
 };
 use base64::Engine;
 use serde_json::Value;
@@ -77,10 +77,13 @@ fn routes(table: &Value) -> Router {
             filter = Some(filter.map_or(f, |x| x.or(f)));
         }
         let s = Arc::new(spec.clone());
-        r = r.route(spec["path"].as_str().unwrap(), on(filter.unwrap(), move || {
-            let s = s.clone();
-            async move { route_response(&s) }
-        }));
+        r = r.route(
+            spec["path"].as_str().unwrap(),
+            on(filter.unwrap(), move || {
+                let s = s.clone();
+                async move { route_response(&s) }
+            }),
+        );
     }
     r
 }
@@ -92,7 +95,8 @@ fn site_root() -> std::path::PathBuf {
 fn mw(constants: &Value) -> Arc<Mw> {
     let mut cfg = MwConfig::from_lookup(&|_| None);
     cfg.static_root = site_root();
-    let origins = constants["embed_origins"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect();
+    let origins =
+        constants["embed_origins"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect();
     Arc::new(Mw::new(
         cfg,
         Some(IdemStore::Memory(Mutex::new(HashMap::new()))),
@@ -102,7 +106,7 @@ fn mw(constants: &Value) -> Arc<Mw> {
 }
 
 fn app(table: &Value, mw: Arc<Mw>) -> Router {
-    let inner = wrap(routes(table), mw).fallback(|| async { (StatusCode::IM_A_TEAPOT, "proxied") });
+    let inner = wrap(routes(table), mw, None).fallback(|| async { (StatusCode::IM_A_TEAPOT, "proxied") });
     outer(inner)
 }
 
@@ -166,7 +170,11 @@ async fn python_fixtures() {
             got.sort();
             let untouched = status == 418
                 && body == b"proxied"
-                && got == [("content-length".into(), "7".into()), ("content-type".into(), "text/plain; charset=utf-8".into())];
+                && got
+                    == [
+                        ("content-length".into(), "7".into()),
+                        ("content-type".into(), "text/plain; charset=utf-8".into()),
+                    ];
             if !untouched {
                 failures.push(format!("{name}: expected the untouched fallback, got {status} {got:?}"));
             }
@@ -212,7 +220,13 @@ async fn python_fixtures() {
             failures.push(format!("{name}: {}", diffs.join("\n  ")));
         }
     }
-    assert!(failures.is_empty(), "{} of {} cases differ:\n{}", failures.len(), fx["cases"].as_array().unwrap().len(), failures.join("\n"));
+    assert!(
+        failures.is_empty(),
+        "{} of {} cases differ:\n{}",
+        failures.len(),
+        fx["cases"].as_array().unwrap().len(),
+        failures.join("\n")
+    );
 }
 
 fn case_response_headers(case: &Value) -> Vec<(String, String)> {
@@ -234,10 +248,8 @@ async fn raw_http(addr: std::net::SocketAddr, request: &str) -> (String, Vec<(St
     let head = String::from_utf8_lossy(&buf[..end]).into_owned();
     let mut lines = head.split("\r\n");
     let status = lines.next().unwrap().to_owned();
-    let headers = lines
-        .filter_map(|l| l.split_once(':'))
-        .map(|(k, v)| (k.trim().to_lowercase(), v.trim().to_owned()))
-        .collect();
+    let headers =
+        lines.filter_map(|l| l.split_once(':')).map(|(k, v)| (k.trim().to_lowercase(), v.trim().to_owned())).collect();
     (status, headers, buf.len() - end - 4)
 }
 
@@ -249,7 +261,8 @@ async fn wire_framing_matches_uvicorn() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
     tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
-    let get = |m: &str, p: &str, extra: &str| format!("{m} {p} HTTP/1.1\r\nHost: t\r\nConnection: close\r\n{extra}\r\n");
+    let get =
+        |m: &str, p: &str, extra: &str| format!("{m} {p} HTTP/1.1\r\nHost: t\r\nConnection: close\r\n{extra}\r\n");
     let has = |h: &[(String, String)], k: &str| h.iter().find(|(n, _)| n == k).map(|(_, v)| v.clone());
 
     let (st, h, body) = raw_http(addr, &get("HEAD", "/__mw/big", "")).await;
@@ -285,7 +298,8 @@ fn python_constants() {
     let c = &fx["constants"];
     assert_eq!(c["api_csp"], paths::API_CSP);
     assert_eq!(c["site_csp"], paths::SITE_CSP);
-    let origins: Vec<String> = c["embed_origins"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().into()).collect();
+    let origins: Vec<String> =
+        c["embed_origins"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().into()).collect();
     assert_eq!(c["embed_csp"], paths::embed_csp(&origins));
     assert_eq!(c["embed_csp_none"], paths::embed_csp(&[]));
     let mut hosts = config::api_side_hosts("https://api.aallyn.net", "https://trove.aallyn.net");

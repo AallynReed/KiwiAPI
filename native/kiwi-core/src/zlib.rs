@@ -117,7 +117,10 @@ mod tests {
         for (len, want) in [(17, Some(true)), (16, None), (18, None), (0, None)] {
             assert_eq!(inflate_exact(HELLO, &mut vec![0; len]), want, "{len}");
         }
-        assert_eq!(inflate_exact(&HELLO[..12], &mut vec![0; inflate(&HELLO[..12], usize::MAX).unwrap().data.len()]), Some(false));
+        assert_eq!(
+            inflate_exact(&HELLO[..12], &mut vec![0; inflate(&HELLO[..12], usize::MAX).unwrap().data.len()]),
+            Some(false)
+        );
     }
 
     #[test]

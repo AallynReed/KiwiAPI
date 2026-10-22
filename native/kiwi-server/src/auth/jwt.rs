@@ -1,9 +1,8 @@
 //! HS256 JWTs exactly as PyJWT 2.15 writes and checks them (zero leeway, iat/nbf/exp/aud/sub/jti rules).
 
 use base64::{
-    alphabet,
-    engine::{general_purpose::URL_SAFE_NO_PAD, DecodePaddingMode, GeneralPurpose, GeneralPurposeConfig},
-    Engine,
+    Engine, alphabet,
+    engine::{DecodePaddingMode, GeneralPurpose, GeneralPurposeConfig, general_purpose::URL_SAFE_NO_PAD},
 };
 use chrono::{DateTime, Utc};
 use hmac::{Hmac, KeyInit, Mac};

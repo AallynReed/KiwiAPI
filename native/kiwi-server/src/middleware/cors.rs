@@ -8,15 +8,15 @@ use std::sync::Arc;
 use axum::{
     body::Body,
     extract::{Request, State},
-    http::{header, HeaderMap, HeaderValue, Method, StatusCode},
+    http::{HeaderMap, HeaderValue, Method, StatusCode, header},
     middleware::Next,
     response::Response,
 };
 
+use super::Mw;
 use super::headers::{add_vary_header, set, set_static};
 use super::paths::is_public_asset;
 use super::pyurl::{first, header_value, scope_path};
-use super::Mw;
 
 const ALL_METHODS: [&str; 7] = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"];
 const EXPOSE: &str = "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition";

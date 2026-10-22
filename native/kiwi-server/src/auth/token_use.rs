@@ -3,7 +3,7 @@
 
 use std::sync::LazyLock;
 
-use mongodb::bson::{doc, oid::ObjectId, DateTime, Document};
+use mongodb::bson::{DateTime, Document, doc, oid::ObjectId};
 
 use super::{models::API_TOKENS, pyutil::bson_int};
 use crate::state::AppState;

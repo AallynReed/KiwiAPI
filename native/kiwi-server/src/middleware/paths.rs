@@ -3,16 +3,62 @@
 //! while it still runs).
 
 pub const PAGE_PATHS: [&str; 56] = [
-    "/", "/app", "/browse", "/documentation", "/commands", "/leaderboards", "/updates",
-    "/support", "/login", "/dashboard", "/market", "/store", "/codexes", "/codexes/crafting",
-    "/status", "/giveaways",
-    "/activity", "/class-activity", "/clubs", "/terms", "/privacy", "/accessibility", "/changelog", "/mods", "/modpacks",
-    "/server-time", "/swf-docs", "/calendar", "/streams", "/releases", "/classes",
-    "/star-chart", "/gem-simulator", "/gem-evaluator", "/gem-builds", "/calculators",
-    "/gems-guide", "/abilities", "/gem-abilities", "/guides", "/gem-tools", "/allies", "/fishing-guide", "/gear-guide",
-    "/loot-collector-guide", "/dressing-room", "/sound-studio", "/mod-workshop", "/tomes",
-    "/blueprint-editor", "/unlock-debug", "/unlock_debug",
-    "/search", "/zakros-ui-requests", "/zakros-ui-stats", "/community-sites",
+    "/",
+    "/app",
+    "/browse",
+    "/documentation",
+    "/commands",
+    "/leaderboards",
+    "/updates",
+    "/support",
+    "/login",
+    "/dashboard",
+    "/market",
+    "/store",
+    "/codexes",
+    "/codexes/crafting",
+    "/status",
+    "/giveaways",
+    "/activity",
+    "/class-activity",
+    "/clubs",
+    "/terms",
+    "/privacy",
+    "/accessibility",
+    "/changelog",
+    "/mods",
+    "/modpacks",
+    "/server-time",
+    "/swf-docs",
+    "/calendar",
+    "/streams",
+    "/releases",
+    "/classes",
+    "/star-chart",
+    "/gem-simulator",
+    "/gem-evaluator",
+    "/gem-builds",
+    "/calculators",
+    "/gems-guide",
+    "/abilities",
+    "/gem-abilities",
+    "/guides",
+    "/gem-tools",
+    "/allies",
+    "/fishing-guide",
+    "/gear-guide",
+    "/loot-collector-guide",
+    "/dressing-room",
+    "/sound-studio",
+    "/mod-workshop",
+    "/tomes",
+    "/blueprint-editor",
+    "/unlock-debug",
+    "/unlock_debug",
+    "/search",
+    "/zakros-ui-requests",
+    "/zakros-ui-stats",
+    "/community-sites",
 ];
 
 pub const PAGE_PREFIXES: [&str; 5] = ["/mods/", "/modpacks/", "/player/", "/drop/", "/swf-docs/"];
@@ -55,11 +101,8 @@ pub fn is_public_asset(path: &str) -> bool {
 
 /// `csp.embed_csp`: the site CSP with `frame-ancestors` swapped for the allowlist.
 pub fn embed_csp(origins: &[String]) -> String {
-    let base: Vec<&str> = SITE_CSP
-        .split(';')
-        .map(str::trim)
-        .filter(|d| !d.is_empty() && !d.starts_with("frame-ancestors"))
-        .collect();
+    let base: Vec<&str> =
+        SITE_CSP.split(';').map(str::trim).filter(|d| !d.is_empty() && !d.starts_with("frame-ancestors")).collect();
     let ancestors = if origins.is_empty() { "'none'".to_owned() } else { origins.join(" ") };
     format!("{}; frame-ancestors {ancestors}", base.join("; "))
 }

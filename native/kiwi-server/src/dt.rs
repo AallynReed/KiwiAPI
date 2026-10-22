@@ -14,10 +14,7 @@
 
 use std::fmt::Write;
 
-use chrono::{
-    DateTime, Datelike, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Offset, TimeZone,
-    Timelike, Utc,
-};
+use chrono::{DateTime, Datelike, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, Offset, TimeZone, Timelike, Utc};
 use mongodb::bson;
 
 fn push_naive(out: &mut String, dt: &NaiveDateTime, sep: char) {

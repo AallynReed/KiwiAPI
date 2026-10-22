@@ -86,8 +86,11 @@ fn parse(d: &[u8], header_size: usize, prop_count: u16, chars: bool) -> Option<P
 /// None when neither reading ends on `header_size` (Python reports why).
 pub fn header(d: &[u8], header_size: usize, prop_count: u16) -> Option<Header> {
     [false, true].into_iter().find_map(|chars| {
-        parse(d, header_size, prop_count, chars)
-            .map(|(properties, entries)| Header { properties, entries, repaired: chars })
+        parse(d, header_size, prop_count, chars).map(|(properties, entries)| Header {
+            properties,
+            entries,
+            repaired: chars,
+        })
     })
 }
 
@@ -180,13 +183,23 @@ pub fn base64(data: &[u8]) -> String {
     let mut chunks = data.chunks_exact(3);
     for c in &mut chunks {
         let n = (c[0] as u32) << 16 | (c[1] as u32) << 8 | c[2] as u32;
-        out.extend_from_slice(&[B64[(n >> 18) as usize], B64[(n >> 12 & 63) as usize], B64[(n >> 6 & 63) as usize], B64[(n & 63) as usize]]);
+        out.extend_from_slice(&[
+            B64[(n >> 18) as usize],
+            B64[(n >> 12 & 63) as usize],
+            B64[(n >> 6 & 63) as usize],
+            B64[(n & 63) as usize],
+        ]);
     }
     match *chunks.remainder() {
         [a] => out.extend_from_slice(&[B64[(a >> 2) as usize], B64[((a & 3) << 4) as usize], b'=', b'=']),
         [a, b] => {
             let n = (a as u32) << 8 | b as u32;
-            out.extend_from_slice(&[B64[(n >> 10) as usize], B64[(n >> 4 & 63) as usize], B64[((n & 15) << 2) as usize], b'=']);
+            out.extend_from_slice(&[
+                B64[(n >> 10) as usize],
+                B64[(n >> 4 & 63) as usize],
+                B64[((n & 15) << 2) as usize],
+                b'=',
+            ]);
         }
         _ => {}
     }

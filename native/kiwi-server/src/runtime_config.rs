@@ -211,10 +211,8 @@ pub fn spec(key: &str) -> Option<&'static Spec> {
 pub async fn get_setting(state: &AppState, key: &str) -> anyhow::Result<Value> {
     let spec = spec(key).ok_or_else(|| UnknownSetting(key.to_owned()))?;
     let now = Instant::now();
-    let hit = cache()
-        .get(spec.key)
-        .filter(|(_, at)| now.duration_since(*at) < CACHE_TTL)
-        .map(|(value, _)| value.clone());
+    let hit =
+        cache().get(spec.key).filter(|(_, at)| now.duration_since(*at) < CACHE_TTL).map(|(value, _)| value.clone());
     if let Some(value) = hit {
         return Ok(value);
     }

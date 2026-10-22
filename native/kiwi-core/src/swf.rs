@@ -157,7 +157,14 @@ pub fn shape_bitmap_fills(body: &[u8], version: u32) -> Option<Vec<(u16, Matrix)
 }
 
 /// `_decode_lossless` after inflation: RGBA pixels for formats 3, 4 and 5.
-pub fn lossless_pixels(fmt: u8, has_alpha: bool, width: usize, height: usize, colors: usize, data: &[u8]) -> Option<Vec<u8>> {
+pub fn lossless_pixels(
+    fmt: u8,
+    has_alpha: bool,
+    width: usize,
+    height: usize,
+    colors: usize,
+    data: &[u8],
+) -> Option<Vec<u8>> {
     let mut out = vec![0u8; width * height * 4];
     match fmt {
         3 => {

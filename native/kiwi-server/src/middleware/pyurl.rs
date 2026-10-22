@@ -162,7 +162,10 @@ mod tests {
         assert_eq!(url_path_query(&u), ("/mods/a".into(), "b?x=1".into()));
         let u: Uri = "/x%23y?q".parse().unwrap();
         assert_eq!(url_path_query(&u), ("/x".into(), String::new()));
-        assert_eq!(quote("https://t.net/mods/a b?x=%20&y=ü", ":/%#?=@[]!$&'()*+,;"), "https://t.net/mods/a%20b?x=%20&y=%C3%BC");
+        assert_eq!(
+            quote("https://t.net/mods/a b?x=%20&y=ü", ":/%#?=@[]!$&'()*+,;"),
+            "https://t.net/mods/a%20b?x=%20&y=%C3%BC"
+        );
         assert_eq!(py_int(" 1_000 "), Some(1000));
         assert_eq!(py_int("1__0"), None);
         assert_eq!(py_int("-5"), Some(-5));

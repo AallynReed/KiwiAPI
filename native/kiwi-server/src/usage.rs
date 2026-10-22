@@ -12,8 +12,8 @@ use axum::{
     response::Response,
 };
 use mongodb::{
-    bson::{oid::ObjectId, DateTime},
     Collection,
+    bson::{DateTime, oid::ObjectId},
 };
 use serde::Serialize;
 use tokio::sync::Notify;

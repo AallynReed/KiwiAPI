@@ -2022,7 +2022,9 @@ pub static REGISTRY: &[Spec] = &[
             contain at least one of these OR it sits in the gaming category (feeds_youtube_video_category_id). \
             This is the self-curated relevance model - tune it to widen/tighten what \
             counts as Trove. Leave blank to disable the signal gate.",
-        default: DefaultValue::Str("trovesaurus,gamigo,trion,geode,delve,paragon,mastery,cornerstone,chaos chest,shadow tower,club world,radiant,lunar lancer,candy barbarian,neon ninja,shadow hunter,dino tamer,boomeranger,dracolyte,vanguardian,chloromancer,fae trickster,pirate captain,tomb raiser,solarion,gunslinger"),
+        default: DefaultValue::Str(
+            "trovesaurus,gamigo,trion,geode,delve,paragon,mastery,cornerstone,chaos chest,shadow tower,club world,radiant,lunar lancer,candy barbarian,neon ninja,shadow hunter,dino tamer,boomeranger,dracolyte,vanguardian,chloromancer,fae trickster,pirate captain,tomb raiser,solarion,gunslinger",
+        ),
         ..Spec::BASE
     },
     Spec {

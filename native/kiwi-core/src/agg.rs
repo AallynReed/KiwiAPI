@@ -4,7 +4,7 @@
 
 use rustc_hash::FxHashMap;
 
-use crate::activity::{be_8, be_i16, be_i32, SIGNATURE};
+use crate::activity::{SIGNATURE, be_8, be_i16, be_i32};
 
 /// One `(player_id, board_uuid)` row of the aggregate.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -76,29 +76,35 @@ impl Agg {
     /// The ON CONFLICT rule; every `a.*` is the row before this capture.
     fn fold(&mut self, key: (i64, i32), x: i64, rank: i32, score: f64) {
         let Some(a) = self.rows.get(&key).copied() else {
-            self.rows.insert(key, Row {
-                best_rank: rank,
-                appearances: 1,
-                first_seen: x,
-                last_seen: x,
-                latest_rank: rank,
-                latest_score: score,
-                last_folded: x,
-                last_rise: None,
-            });
+            self.rows.insert(
+                key,
+                Row {
+                    best_rank: rank,
+                    appearances: 1,
+                    first_seen: x,
+                    last_seen: x,
+                    latest_rank: rank,
+                    latest_score: score,
+                    last_folded: x,
+                    last_rise: None,
+                },
+            );
             return;
         };
         let newer = x >= a.last_seen;
-        self.rows.insert(key, Row {
-            best_rank: a.best_rank.min(rank),
-            appearances: a.appearances + i64::from(x > a.last_folded),
-            first_seen: a.first_seen.min(x),
-            last_seen: a.last_seen.max(x),
-            latest_rank: if newer { rank } else { a.latest_rank },
-            latest_score: if newer { score } else { a.latest_score },
-            last_folded: a.last_folded.max(x),
-            last_rise: if x > a.last_seen && score > a.latest_score { Some(x) } else { a.last_rise },
-        });
+        self.rows.insert(
+            key,
+            Row {
+                best_rank: a.best_rank.min(rank),
+                appearances: a.appearances + i64::from(x > a.last_folded),
+                first_seen: a.first_seen.min(x),
+                last_seen: a.last_seen.max(x),
+                latest_rank: if newer { rank } else { a.latest_rank },
+                latest_score: if newer { score } else { a.latest_score },
+                last_folded: a.last_folded.max(x),
+                last_rise: if x > a.last_seen && score > a.latest_score { Some(x) } else { a.last_rise },
+            },
+        );
     }
 }
 

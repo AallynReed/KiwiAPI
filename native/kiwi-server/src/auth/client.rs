@@ -75,11 +75,7 @@ impl TrustedHosts {
 }
 
 fn max_prefix(ip: IpAddr) -> u8 {
-    if ip.is_ipv4() {
-        32
-    } else {
-        128
-    }
+    if ip.is_ipv4() { 32 } else { 128 }
 }
 
 fn bits(ip: IpAddr) -> u128 {
@@ -92,11 +88,7 @@ fn bits(ip: IpAddr) -> u128 {
 fn mask(ip: IpAddr, len: u8) -> u128 {
     let width = u32::from(max_prefix(ip));
     let full = if width == 32 { u128::from(u32::MAX) } else { u128::MAX };
-    if len == 0 {
-        0
-    } else {
-        full & !((1u128 << (width - u32::from(len))) - 1)
-    }
+    if len == 0 { 0 } else { full & !((1u128 << (width - u32::from(len))) - 1) }
 }
 
 /// `ip_network(strict=True)` rejects host bits set.
@@ -139,6 +131,9 @@ fn python_int_like(s: &str) -> bool {
 pub fn client_ip(parts: &Parts) -> Option<String> {
     if let Some(ClientIp(ip)) = parts.extensions.get::<ClientIp>() {
         return ip.clone();
+    }
+    if let Some(c) = parts.extensions.get::<crate::middleware::forwarded::ClientAddr>() {
+        return (!c.host.is_empty()).then(|| c.host.clone());
     }
     static TRUSTED: OnceLock<TrustedHosts> = OnceLock::new();
     let trusted = TRUSTED.get_or_init(|| TrustedHosts::parse(&super::auth_settings().forwarded_allow_ips));

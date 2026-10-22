@@ -435,7 +435,11 @@ impl<'a> Reader<'a> {
             };
             let (op, slot) = (k & 7, k >> 3);
             if op == 4 {
-                out.push(Y::Done((rr, 0), Rc::new(Val::List(chain.clone())), COUNT_PENALTY * (count - written).abs() as f64));
+                out.push(Y::Done(
+                    (rr, 0),
+                    Rc::new(Val::List(chain.clone())),
+                    COUNT_PENALTY * (count - written).abs() as f64,
+                ));
                 return Ok(());
             }
             if op == 0 {

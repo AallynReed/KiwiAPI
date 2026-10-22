@@ -4,14 +4,15 @@ use std::sync::LazyLock;
 
 use axum::http::{HeaderMap, HeaderValue};
 use chrono::{DateTime, Duration, TimeZone, Utc};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use super::{
-    client::{device_label, resolve_client, TrustedHosts},
+    AuthSettings,
+    client::{TrustedHosts, device_label, resolve_client},
     extract::bearer,
     jwt, passwords, scopes,
     sessions::TokenPair,
-    site, tokens, AuthSettings,
+    site, tokens,
 };
 use crate::{
     ratelimit::{self, fixed_window, py_float_str, redis_outcome},
@@ -93,7 +94,7 @@ fn email_token_purpose_is_checked() {
 
 #[test]
 fn argon2_hash_with_fixed_salt_matches_argon2_cffi() {
-    use base64::{engine::general_purpose::STANDARD, Engine};
+    use base64::{Engine, engine::general_purpose::STANDARD};
     let case = &arr("argon2_fixed")[0];
     let salt = STANDARD.decode(s(&case["salt_b64"])).unwrap();
     assert_eq!(passwords::hash_password_with_salt(s(&case["password"]), &salt), s(&case["hash"]));

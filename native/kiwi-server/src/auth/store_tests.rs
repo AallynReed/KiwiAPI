@@ -3,19 +3,19 @@
 //! `cargo test -p kiwi-server store_roundtrip -- --ignored`.
 
 use axum::{
+    Router,
     body::Body,
     http::{Request, StatusCode},
     middleware::from_fn_with_state,
     routing::get,
-    Router,
 };
-use mongodb::bson::{doc, oid::ObjectId, DateTime, Document};
+use mongodb::bson::{DateTime, Document, doc, oid::ObjectId};
 use tower::ServiceExt;
 
 use super::{
-    lockout, scopes,
+    CurrentSiteUser, CurrentUser, MasterIngest, Public, RequireScope, lockout, scopes,
     sessions::{self, Audience, RotateError},
-    tokens, CurrentSiteUser, CurrentUser, MasterIngest, Public, RequireScope,
+    tokens,
 };
 use crate::{config::Settings, ratelimit, state::AppState, usage};
 
@@ -63,13 +63,7 @@ async fn store_roundtrip() {
         .route("/misc", get(|_: RequireScope<{ scopes::MISC_READ }>| async { "ok" }))
         .route(
             "/public",
-            get(|p: Public<{ scopes::BTT_READ }>| async move {
-                if p.0.authenticated() {
-                    "tok"
-                } else {
-                    "anon"
-                }
-            }),
+            get(|p: Public<{ scopes::BTT_READ }>| async move { if p.0.authenticated() { "tok" } else { "anon" } }),
         )
         .route("/portal", get(|_: CurrentUser| async { "ok" }))
         .route("/site", get(|_: CurrentSiteUser| async { "ok" }))

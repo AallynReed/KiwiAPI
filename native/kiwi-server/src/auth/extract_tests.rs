@@ -3,17 +3,17 @@
 //! store access would surface as a 500.
 
 use axum::{
+    Router,
     body::Body,
     http::{Request, StatusCode},
     routing::get,
-    Router,
 };
 use chrono::{Duration, Utc};
 use http_body_util::BodyExt;
 use serde_json::Value;
 use tower::ServiceExt;
 
-use super::{jwt, scopes, CurrentSiteUser, CurrentUser, MasterIngest, OptionalSiteUser, RequireScope, TokenAuth};
+use super::{CurrentSiteUser, CurrentUser, MasterIngest, OptionalSiteUser, RequireScope, TokenAuth, jwt, scopes};
 use crate::{config::Settings, state::AppState};
 
 async fn state() -> AppState {
@@ -31,16 +31,7 @@ async fn app() -> Router {
         .route("/scoped", get(|_: RequireScope<{ scopes::STATS_READ }>| async { "ok" }))
         .route("/ingest", get(|_: MasterIngest| async { "ok" }))
         .route("/site", get(|_: CurrentSiteUser| async { "ok" }))
-        .route(
-            "/maybe",
-            get(|u: OptionalSiteUser| async move {
-                if u.0.is_some() {
-                    "user"
-                } else {
-                    "anon"
-                }
-            }),
-        )
+        .route("/maybe", get(|u: OptionalSiteUser| async move { if u.0.is_some() { "user" } else { "anon" } }))
         .with_state(state().await)
 }
 

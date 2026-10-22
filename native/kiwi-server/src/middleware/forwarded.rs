@@ -43,12 +43,8 @@ fn parse_net(s: &str) -> Option<(IpAddr, u8)> {
 
 fn in_net(ip: IpAddr, (net, len): (IpAddr, u8)) -> bool {
     match (ip, net) {
-        (IpAddr::V4(a), IpAddr::V4(n)) => {
-            len == 0 || (u32::from(a) ^ u32::from(n)) >> (32 - len as u32) == 0
-        }
-        (IpAddr::V6(a), IpAddr::V6(n)) => {
-            len == 0 || (u128::from(a) ^ u128::from(n)) >> (128 - len as u32) == 0
-        }
+        (IpAddr::V4(a), IpAddr::V4(n)) => len == 0 || (u32::from(a) ^ u32::from(n)) >> (32 - len as u32) == 0,
+        (IpAddr::V6(a), IpAddr::V6(n)) => len == 0 || (u128::from(a) ^ u128::from(n)) >> (128 - len as u32) == 0,
         _ => false,
     }
 }
@@ -129,9 +125,7 @@ fn parse_host_port(value: &str) -> String {
 
 pub fn trusted() -> &'static TrustedHosts {
     static T: OnceLock<TrustedHosts> = OnceLock::new();
-    T.get_or_init(|| {
-        TrustedHosts::parse(&std::env::var("FORWARDED_ALLOW_IPS").unwrap_or_else(|_| "127.0.0.1".into()))
-    })
+    T.get_or_init(|| TrustedHosts::parse(&std::env::var("FORWARDED_ALLOW_IPS").unwrap_or_else(|_| "127.0.0.1".into())))
 }
 
 /// The client and scheme uvicorn's ProxyHeadersMiddleware would put in scope.

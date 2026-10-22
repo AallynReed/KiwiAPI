@@ -14,16 +14,16 @@ use std::sync::{Arc, Mutex};
 use axum::{
     body::Body,
     extract::{Request, State},
-    http::{header, HeaderValue, Method, StatusCode},
+    http::{HeaderValue, Method, StatusCode, header},
     middleware::Next,
     response::Response,
 };
 use base64::Engine;
 use sha2::{Digest, Sha256};
 
+use super::Mw;
 use super::errors::envelope;
 use super::pyurl::{ascii_json_str, first, header_value, url_path};
-use super::Mw;
 
 const MAX_KEY_LEN: usize = 200;
 
@@ -65,7 +65,9 @@ impl IdemStore {
                 let mut conn = conn.clone();
                 Ok(redis::cmd("GET").arg(key).query_async(&mut conn).await?)
             }
-            IdemStore::Memory(m) => Ok(m.lock().map_err(|_| anyhow::anyhow!("poisoned"))?.get(key).map(|v| v.0.clone())),
+            IdemStore::Memory(m) => {
+                Ok(m.lock().map_err(|_| anyhow::anyhow!("poisoned"))?.get(key).map(|v| v.0.clone()))
+            }
         }
     }
 

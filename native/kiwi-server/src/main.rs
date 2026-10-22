@@ -1,6 +1,8 @@
 use std::net::SocketAddr;
 
-use kiwi_server::{config::Settings, routes, state::AppState};
+use std::time::Duration;
+
+use kiwi_server::{config::Settings, routes, state::AppState, usage};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -19,9 +21,23 @@ async fn main() -> anyhow::Result<()> {
 
     let listener = tokio::net::TcpListener::bind(bind).await?;
     tracing::info!("kiwi-server listening on {bind}");
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(shutdown())
-        .await?;
+    let (tx, rx) = tokio::sync::oneshot::channel::<()>();
+    let server = axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).with_graceful_shutdown(
+        async move {
+            shutdown().await;
+            let _ = tx.send(());
+        },
+    );
+    // Endless SSE streams would hold a graceful shutdown open; cut them off
+    // after 3s like uvicorn's --timeout-graceful-shutdown.
+    tokio::select! {
+        res = server => res?,
+        _ = async {
+            let _ = rx.await;
+            tokio::time::sleep(Duration::from_secs(3)).await;
+        } => tracing::warn!("graceful shutdown timed out"),
+    }
+    usage::shutdown().await;
     Ok(())
 }
 

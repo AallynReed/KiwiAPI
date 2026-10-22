@@ -19,6 +19,6 @@ pub fn app(state: AppState) -> Router {
     let proxy_all = std::env::var("KIWI_PROXY_ALL").is_ok_and(|v| matches!(v.trim(), "1" | "true" | "yes" | "on"));
     let routes = if proxy_all { Router::new() } else { ported() };
     let mw = Arc::new(middleware::Mw::from_state(&state));
-    let inner = middleware::wrap(routes, mw).fallback(proxy).with_state(state);
+    let inner = middleware::wrap(routes, mw, Some(state.clone())).fallback(proxy).with_state(state);
     middleware::outer(inner)
 }

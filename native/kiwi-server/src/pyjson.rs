@@ -15,7 +15,7 @@
 use std::{borrow::Cow, cell::Cell, fmt::Write};
 
 use axum::{
-    http::{header, HeaderValue},
+    http::{HeaderValue, header},
     response::{IntoResponse, Response},
 };
 use serde_json::{Map, Number, Value};
@@ -236,10 +236,7 @@ fn decode_bytes(b: &[u8]) -> Option<Cow<'_, str>> {
     }
     fn utf16(b: &[u8], be: bool) -> Option<Cow<'static, str>> {
         let u = units::<2>(b, be)?;
-        char::decode_utf16(u.into_iter().map(|x| x as u16))
-            .collect::<Result<String, _>>()
-            .ok()
-            .map(Cow::Owned)
+        char::decode_utf16(u.into_iter().map(|x| x as u16)).collect::<Result<String, _>>().ok().map(Cow::Owned)
     }
     fn utf32(b: &[u8], be: bool) -> Option<Cow<'static, str>> {
         units::<4>(b, be)?.into_iter().map(char::from_u32).collect::<Option<String>>().map(Cow::Owned)

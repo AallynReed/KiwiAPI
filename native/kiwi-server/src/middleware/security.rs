@@ -11,11 +11,13 @@ use axum::{extract::Request, extract::State, http::HeaderMap, middleware::Next, 
 use regex::Regex;
 use sha2::{Digest, Sha256};
 
+use super::Mw;
 use super::errors::envelope;
 use super::headers::{add_vary, set, setdefault};
-use super::paths::{embed_csp, is_page_path, is_public_asset, is_site_path, API_CSP, EMBED_PATH, PAGE_PREFIXES, SITE_CSP};
+use super::paths::{
+    API_CSP, EMBED_PATH, PAGE_PREFIXES, SITE_CSP, embed_csp, is_page_path, is_public_asset, is_site_path,
+};
 use super::pyurl::{first, py_int, query_param, url_path};
-use super::Mw;
 
 const FOREVER: &str = "public, max-age=31536000, immutable";
 const FONT_TTL: &str = "public, max-age=604800";
@@ -76,7 +78,8 @@ pub struct StaticVersions {
 
 impl StaticVersions {
     pub fn new(root: &Path) -> Self {
-        let root = std::fs::canonicalize(root).unwrap_or_else(|_| std::path::absolute(root).unwrap_or(root.to_path_buf()));
+        let root =
+            std::fs::canonicalize(root).unwrap_or_else(|_| std::path::absolute(root).unwrap_or(root.to_path_buf()));
         StaticVersions { root, cache: Mutex::new(HashMap::new()) }
     }
 

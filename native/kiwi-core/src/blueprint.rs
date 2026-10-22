@@ -190,10 +190,7 @@ pub fn decode_v34(data: &[u8], version: u32) -> Option<Decoded> {
         }
     }
     let size = [mx[0] - mn[0] + 1, mx[1] - mn[1] + 1, mx[2] - mn[2] + 1];
-    let voxels = raw
-        .into_iter()
-        .map(|v| Voxel { x: v.x - mn[0], y: v.y - mn[1], z: v.z - mn[2], ..v })
-        .collect();
+    let voxels = raw.into_iter().map(|v| Voxel { x: v.x - mn[0], y: v.y - mn[1], z: v.z - mn[2], ..v }).collect();
     Some(Decoded {
         version,
         size,
@@ -441,10 +438,7 @@ mod tests {
 
     #[test]
     fn v34_round_trip() {
-        let vox = [
-            InVoxel::new(0, 0, 0, 1, 2, 3, None, None),
-            InVoxel::new(2, 1, 0, 9, 8, 7, Some(3), Some(18)),
-        ];
+        let vox = [InVoxel::new(0, 0, 0, 1, 2, 3, None, None), InVoxel::new(2, 1, 0, 9, 8, 7, Some(3), Some(18))];
         let bytes = encode(&vox, 3, None, None, [-1, 0, 0], b"").unwrap();
         let d = decode_v34(&bytes, 3).unwrap();
         assert_eq!(d.size, [3, 2, 1]);

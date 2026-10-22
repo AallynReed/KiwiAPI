@@ -6,14 +6,14 @@ use std::sync::Arc;
 use axum::{
     body::Body,
     extract::{Request, State},
-    http::{header, HeaderValue, Method, StatusCode},
+    http::{HeaderValue, Method, StatusCode, header},
     middleware::Next,
     response::Response,
 };
 
+use super::Mw;
 use super::paths::is_site_page;
 use super::pyurl::{header_value, hostname, quote, url_path_query};
-use super::Mw;
 
 pub async fn api_host_redirect(State(mw): State<Arc<Mw>>, req: Request, next: Next) -> Response {
     if !matches!(*req.method(), Method::GET | Method::HEAD) {

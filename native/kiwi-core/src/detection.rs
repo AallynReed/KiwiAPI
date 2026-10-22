@@ -209,7 +209,8 @@ pub fn board_families(entries: &[Entry], min_size: usize, band_pct: f64, max_edi
     if groups.items.is_empty() {
         return Vec::new();
     }
-    let distinct = |idxs: &[usize]| idxs.iter().map(|&i| entries[i].name).collect::<std::collections::HashSet<_>>().len();
+    let distinct =
+        |idxs: &[usize]| idxs.iter().map(|&i| entries[i].name).collect::<std::collections::HashSet<_>>().len();
     let keys: Vec<String> = groups.items.iter().map(|(s, _)| s.to_string()).collect();
     let candidates: Vec<String> =
         groups.items.iter().filter(|(_, v)| distinct(v) >= 2).map(|(s, _)| s.to_string()).collect();
@@ -234,10 +235,8 @@ pub fn board_families(entries: &[Entry], min_size: usize, band_pct: f64, max_edi
 fn tighten(members: &BTreeSet<String>, adj: &Ordered<String, BTreeSet<String>>, min_density: f64) -> BTreeSet<String> {
     let mut mem = members.clone();
     while mem.len() > 2 {
-        let deg: Vec<(usize, &String)> = mem
-            .iter()
-            .map(|m| (adj.get(m).map_or(0, |n| n.iter().filter(|x| mem.contains(*x)).count()), m))
-            .collect();
+        let deg: Vec<(usize, &String)> =
+            mem.iter().map(|m| (adj.get(m).map_or(0, |n| n.iter().filter(|x| mem.contains(*x)).count()), m)).collect();
         let edges = deg.iter().map(|(d, _)| d).sum::<usize>() / 2;
         let possible = (mem.len() * (mem.len() - 1)) as f64 / 2.0;
         if possible <= 0.0 || edges as f64 / possible >= min_density {
@@ -284,12 +283,7 @@ fn tightened_components(
         let root = find_s(parent, node);
         comps.entry(root, BTreeSet::new).insert(node.clone());
     }
-    comps
-        .items
-        .into_iter()
-        .map(|(_, mem)| tighten(&mem, adj, min_density))
-        .filter(|m| m.len() >= min_group)
-        .collect()
+    comps.items.into_iter().map(|(_, mem)| tighten(&mem, adj, min_density)).filter(|m| m.len() >= min_group).collect()
 }
 
 /// One account's scores at capture slots, sorted by slot.

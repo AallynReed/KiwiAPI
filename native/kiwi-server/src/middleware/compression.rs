@@ -16,7 +16,7 @@ use std::task::{Context, Poll};
 use axum::{
     body::Body,
     extract::Request,
-    http::{header, HeaderMap, HeaderValue},
+    http::{HeaderMap, HeaderValue, header},
     middleware::Next,
     response::Response,
 };
@@ -64,10 +64,7 @@ fn is_compressible(res: &Response) -> bool {
     if h.get(header::CONTENT_RANGE).is_some_and(|v| !v.is_empty()) {
         return false;
     }
-    let media = h
-        .get(header::CONTENT_TYPE)
-        .map(|v| super::pyurl::latin1(v.as_bytes()))
-        .unwrap_or_default();
+    let media = h.get(header::CONTENT_TYPE).map(|v| super::pyurl::latin1(v.as_bytes())).unwrap_or_default();
     let media = media.split(';').next().unwrap_or("").trim().to_lowercase();
     if !COMPRESSIBLE.contains(&media.as_str()) {
         return false;

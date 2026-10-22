@@ -2,7 +2,7 @@
 
 use argon2::{Algorithm, Argon2, Params, Version};
 use axum::http::StatusCode;
-use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine};
+use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD};
 use sha1::{Digest, Sha1};
 
 use super::Rejection;

@@ -14,10 +14,10 @@
 //! - 422 validation bodies are built in [`crate::validation`].
 
 use axum::{
-    http::{header, HeaderMap, HeaderValue, Method, StatusCode},
+    http::{HeaderMap, HeaderValue, Method, StatusCode, header},
     response::{IntoResponse, Response},
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::{pyjson, request_id};
 
@@ -189,11 +189,7 @@ impl ApiError {
     /// else a 400.
     pub fn from_value_error(message: impl Into<String>) -> Self {
         let message = message.into();
-        if message.contains("already exists") {
-            ApiError::conflict(message)
-        } else {
-            ApiError::bad_request(message)
-        }
+        if message.contains("already exists") { ApiError::conflict(message) } else { ApiError::bad_request(message) }
     }
 
     /// The envelope body exactly as Python serializes it.

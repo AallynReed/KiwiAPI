@@ -71,7 +71,8 @@ fn parse_entries(raw: &str) -> Option<Vec<(i64, &str, f64)>> {
             continue;
         }
         let mut parts = chunk.split(';');
-        let (Some(rank_s), Some(player), Some(score_s), None) = (parts.next(), parts.next(), parts.next(), parts.next())
+        let (Some(rank_s), Some(player), Some(score_s), None) =
+            (parts.next(), parts.next(), parts.next(), parts.next())
         else {
             continue;
         };

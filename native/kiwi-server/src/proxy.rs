@@ -8,7 +8,7 @@ use std::net::SocketAddr;
 use axum::{
     body::Body,
     extract::{ConnectInfo, Request, State},
-    http::{header, HeaderName, HeaderValue, StatusCode, Uri},
+    http::{HeaderName, HeaderValue, StatusCode, Uri, header},
     response::{IntoResponse, Response},
 };
 

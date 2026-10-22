@@ -196,7 +196,11 @@ fn bp_encode<'py>(
 /// `wem.convert`: `(bytes, mime, extension)`, or None to let Python handle it.
 #[pyfunction]
 #[pyo3(signature = (raw, codebooks=None))]
-fn wem_convert<'py>(py: Python<'py>, raw: &[u8], codebooks: Option<&[u8]>) -> Option<(Bound<'py, PyBytes>, &'static str, &'static str)> {
+fn wem_convert<'py>(
+    py: Python<'py>,
+    raw: &[u8],
+    codebooks: Option<&[u8]>,
+) -> Option<(Bound<'py, PyBytes>, &'static str, &'static str)> {
     let c = py.detach(|| kiwi_core::audio::convert(raw, codebooks))?;
     Some((PyBytes::new(py, &c.bytes), c.mime, c.ext))
 }
@@ -235,7 +239,12 @@ fn swf_place_bits(data: &[u8], has_matrix: bool, has_cxform: bool) -> Option<(Op
     kiwi_core::swf::place_bits(data, has_matrix, has_cxform).map(|(m, n)| (m.map(matrix_tuple), n))
 }
 
-fn wire_value<'py>(py: Python<'py>, v: &wire::Val, obj_cls: &Bound<'py, PyAny>, rep_cls: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyAny>> {
+fn wire_value<'py>(
+    py: Python<'py>,
+    v: &wire::Val,
+    obj_cls: &Bound<'py, PyAny>,
+    rep_cls: &Bound<'py, PyAny>,
+) -> PyResult<Bound<'py, PyAny>> {
     stacker::maybe_grow(64 * 1024, 4 * 1024 * 1024, || {
         let conv = |x: &wire::Val| wire_value(py, x, obj_cls, rep_cls);
         Ok(match v {
@@ -317,7 +326,9 @@ fn wire_parse<'py>(
     let out = match parsed {
         wire::Outcome::Abort => return Ok(None),
         wire::Outcome::NoReading => ("none",).into_pyobject(py)?,
-        wire::Outcome::Parsed(wire::Prefab::Object(v)) => ("object", wire_value(py, &v, obj_cls, rep_cls)?).into_pyobject(py)?,
+        wire::Outcome::Parsed(wire::Prefab::Object(v)) => {
+            ("object", wire_value(py, &v, obj_cls, rep_cls)?).into_pyobject(py)?
+        }
         wire::Outcome::Parsed(wire::Prefab::Entity { type_id, components }) => {
             let comps = components
                 .iter()
@@ -387,12 +398,7 @@ fn det_board_families(
     Ok(Some(py.detach(|| detection::board_families(&rows, min_size, band_pct, max_edit))))
 }
 
-type History = (
-    Vec<(String, Vec<usize>)>,
-    Vec<(String, Vec<i64>)>,
-    Vec<detection::Group>,
-    Vec<Vec<String>>,
-);
+type History = (Vec<(String, Vec<usize>)>, Vec<(String, Vec<i64>)>, Vec<detection::Group>, Vec<Vec<String>>);
 
 /// `_cluster_history_signals`' CPU work: (active hours, board sets, per-board
 /// lockstep groups, schedule groups), or None for input Python must handle.
@@ -436,7 +442,15 @@ fn det_history(
         let (hours, on) = detection::history_features(&boards, min_gain);
         let groups = detection::comovement_groups(&boards, &p);
         let sched = if sched_min_hours > 0 {
-            detection::schedule_groups(&hours, sched_min_hours as usize, sched_min_sim, min_group, min_density, max_cell, anchors.len())
+            detection::schedule_groups(
+                &hours,
+                sched_min_hours as usize,
+                sched_min_sim,
+                min_group,
+                min_density,
+                max_cell,
+                anchors.len(),
+            )
         } else {
             Vec::new()
         };
@@ -586,8 +600,18 @@ impl AggBuilder {
             .rows
             .iter()
             .map(|(&(p, b), r)| {
-                (p, b, r.best_rank, r.appearances, r.first_seen, r.last_seen, r.latest_rank,
-                 r.latest_score, r.last_folded, r.last_rise)
+                (
+                    p,
+                    b,
+                    r.best_rank,
+                    r.appearances,
+                    r.first_seen,
+                    r.last_seen,
+                    r.latest_rank,
+                    r.latest_score,
+                    r.last_folded,
+                    r.last_rise,
+                )
             })
             .collect()
     }
@@ -601,7 +625,9 @@ fn abc_value<'py>(py: Python<'py>, v: &kiwi_core::abc::Val) -> PyResult<Bound<'p
         Val::Int(i) => i.into_pyobject(py)?.into_any(),
         Val::Float(f) => PyFloat::new(py, *f).into_any(),
         Val::Str(s) => PyString::new(py, s).into_any(),
-        Val::List(xs) => PyList::new(py, xs.iter().map(|x| abc_value(py, x)).collect::<PyResult<Vec<_>>>()?)?.into_any(),
+        Val::List(xs) => {
+            PyList::new(py, xs.iter().map(|x| abc_value(py, x)).collect::<PyResult<Vec<_>>>()?)?.into_any()
+        }
     })
 }
 
@@ -626,7 +652,13 @@ fn swf_static_arrays<'py>(py: Python<'py>, swf: &[u8]) -> PyResult<Option<Bound<
 /// the bytes object (no copy); any other size takes the normal path.
 #[pyfunction]
 #[pyo3(signature = (data, offset=0, strict=false, size_hint=None))]
-fn zlib_inflate<'py>(py: Python<'py>, data: &[u8], offset: usize, strict: bool, size_hint: Option<usize>) -> Option<Bound<'py, PyBytes>> {
+fn zlib_inflate<'py>(
+    py: Python<'py>,
+    data: &[u8],
+    offset: usize,
+    strict: bool,
+    size_hint: Option<usize>,
+) -> Option<Bound<'py, PyBytes>> {
     let input = data.get(offset..).unwrap_or(&[]);
     if let Some(n) = size_hint.filter(|&n| n > 0) {
         let exact = PyBytes::new_with(py, n, |buf| match py.detach(|| kiwi_core::zlib::inflate_exact(input, buf)) {
@@ -644,7 +676,13 @@ fn zlib_inflate<'py>(py: Python<'py>, data: &[u8], offset: usize, strict: bool, 
 /// `zlib.compress(data, level)`, or the `.tmod` stream (`chunk` + `sync`).
 #[pyfunction]
 #[pyo3(signature = (data, level, chunk=usize::MAX, sync=false))]
-fn zlib_deflate<'py>(py: Python<'py>, data: &[u8], level: u32, chunk: usize, sync: bool) -> Option<Bound<'py, PyBytes>> {
+fn zlib_deflate<'py>(
+    py: Python<'py>,
+    data: &[u8],
+    level: u32,
+    chunk: usize,
+    sync: bool,
+) -> Option<Bound<'py, PyBytes>> {
     let z = py.detach(|| kiwi_core::zlib::deflate(data, level, chunk, sync))?;
     Some(PyBytes::new(py, &z))
 }

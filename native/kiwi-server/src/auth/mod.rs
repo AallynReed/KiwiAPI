@@ -33,7 +33,7 @@ pub use extract::{
     AccessContext, AuthContext, CurrentSiteUser, CurrentUser, IngestAuth, MasterIngest, OptionalSiteUser, Public,
     PublicScope, PublicScopeSpec, RequireScope, Superuser, TokenAuth, TokenContext, VerifiedSiteUser,
 };
-pub use settings::{auth_settings, AuthSettings};
+pub use settings::{AuthSettings, auth_settings};
 
 /// An error envelope plus the headers Python's `APIError(headers=...)` carries
 /// (`WWW-Authenticate`, `Retry-After`, `X-RateLimit-*`).

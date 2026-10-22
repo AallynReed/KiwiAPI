@@ -27,11 +27,11 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use axum::{
-    extract::{ConnectInfo, DefaultBodyLimit, Request},
-    http::{header, HeaderValue},
-    middleware::{from_fn, from_fn_with_state, map_response, Next},
-    response::Response,
     Router,
+    extract::{ConnectInfo, DefaultBodyLimit, Request},
+    http::{HeaderValue, header},
+    middleware::{Next, from_fn, from_fn_with_state, map_response},
+    response::Response,
 };
 use tower::ServiceBuilder;
 
@@ -59,8 +59,9 @@ impl Mw {
     }
 
     pub fn from_state(state: &crate::state::AppState) -> Self {
-        let trusted =
-            forwarded::TrustedHosts::parse(&std::env::var("FORWARDED_ALLOW_IPS").unwrap_or_else(|_| "127.0.0.1".into()));
+        let trusted = forwarded::TrustedHosts::parse(
+            &std::env::var("FORWARDED_ALLOW_IPS").unwrap_or_else(|_| "127.0.0.1".into()),
+        );
         Mw::new(
             MwConfig::from_env(),
             state.inner.db.redis.clone().map(IdemStore::Redis),
@@ -74,7 +75,11 @@ impl Mw {
     }
 }
 
-async fn client_addr(axum::extract::State(mw): axum::extract::State<Arc<Mw>>, mut req: Request, next: Next) -> Response {
+async fn client_addr(
+    axum::extract::State(mw): axum::extract::State<Arc<Mw>>,
+    mut req: Request,
+    next: Next,
+) -> Response {
     let peer = req.extensions().get::<ConnectInfo<SocketAddr>>().map(|c| c.0);
     let client = forwarded::resolve(&mw.trusted, peer, req.headers());
     req.extensions_mut().insert(client);
@@ -127,7 +132,12 @@ async fn finish(mut res: Response) -> Response {
 }
 
 /// Apply the stack to the ported routes. Call before adding the fallback.
-pub fn wrap<S: Clone + Send + Sync + 'static>(ported: Router<S>, mw: Arc<Mw>) -> Router<S> {
+/// `usage` turns on API-token usage recording (Python's `add_usage_middleware`).
+pub fn wrap<S: Clone + Send + Sync + 'static>(
+    ported: Router<S>,
+    mw: Arc<Mw>,
+    usage: Option<crate::state::AppState>,
+) -> Router<S> {
     let stack = ServiceBuilder::new()
         .layer(from_fn(mark))
         .layer(from_fn_with_state(mw.clone(), client_addr))
@@ -138,6 +148,7 @@ pub fn wrap<S: Clone + Send + Sync + 'static>(ported: Router<S>, mw: Arc<Mw>) ->
         .layer(from_fn_with_state(mw.clone(), redirect::api_host_redirect))
         .layer(from_fn_with_state(mw.clone(), security::security))
         .layer(from_fn_with_state(mw, idempotency::idempotency))
+        .option_layer(usage.map(|state| from_fn_with_state(state, crate::usage::record)))
         .layer(from_fn(head::head_as_get))
         .layer(DefaultBodyLimit::disable());
     ported.method_not_allowed_fallback(errors::method_not_allowed).layer(stack)

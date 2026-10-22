@@ -4,15 +4,15 @@
 use std::sync::OnceLock;
 
 use axum::{
+    Router,
     body::Body,
     extract::Request,
     http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, Uri},
     response::{IntoResponse, Response},
     routing::{get, post},
-    Router,
 };
 use chrono::{DateTime, FixedOffset, Utc};
-use serde_json::{json, Map, Number, Value};
+use serde_json::{Map, Number, Value, json};
 use tower::ServiceExt;
 
 use crate::{
@@ -21,7 +21,9 @@ use crate::{
     pyfloat,
     pyjson::{self, LoadsError, PyJson, PydanticJson},
     request_id,
-    validation::{parse_qsl, py_repr_str, Checked, Fail, Field, FromBody, FromParams, Json, Model, Params, Path, Query},
+    validation::{
+        Checked, Fail, Field, FromBody, FromParams, Json, Model, Params, Path, Query, parse_qsl, py_repr_str,
+    },
 };
 
 fn load(cell: &'static OnceLock<Value>, text: &str) -> &'static Value {
@@ -96,7 +98,11 @@ fn report(what: &str, total: usize, bad: Vec<String>) {
     assert!(total > 0, "{what}: empty corpus");
     if !bad.is_empty() {
         let shown: Vec<_> = bad.iter().take(12).collect();
-        panic!("{what}: {} of {total} differ, e.g.\n{}", bad.len(), shown.iter().map(|s| s.as_str()).collect::<Vec<_>>().join("\n"));
+        panic!(
+            "{what}: {} of {total} differ, e.g.\n{}",
+            bad.len(),
+            shown.iter().map(|s| s.as_str()).collect::<Vec<_>>().join("\n")
+        );
     }
 }
 
@@ -326,11 +332,18 @@ fn error_codes_match_python() {
 #[tokio::test]
 async fn envelope_uses_the_scoped_request_id() {
     let e = ApiError::not_found("Token not found");
-    assert_eq!(e.body(), r#"{"error":{"code":"not_found","message":"Token not found","details":null,"request_id":"-"}}"#);
+    assert_eq!(
+        e.body(),
+        r#"{"error":{"code":"not_found","message":"Token not found","details":null,"request_id":"-"}}"#
+    );
     let body = request_id::scope("req_x".into(), async { e.body() }).await;
     assert!(body.ends_with(r#""request_id":"req_x"}}"#));
     let id = request_id::generate();
-    assert!(id.len() == 20 && id.starts_with("req_") && id[4..].bytes().all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase()));
+    assert!(
+        id.len() == 20
+            && id.starts_with("req_")
+            && id[4..].bytes().all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+    );
     assert_ne!(id, request_id::generate());
 }
 
@@ -347,8 +360,8 @@ async fn generated_request_id_is_forwarded_upstream() {
         .layer(axum::middleware::from_fn(request_id::middleware));
     let resp = router.oneshot(Request::get("/echo").body(Body::empty()).expect("req")).await.expect("resp");
     let rid = resp.headers()["x-request-id"].to_str().expect("ascii").to_owned();
-    let body: Value = serde_json::from_slice(&axum::body::to_bytes(resp.into_body(), usize::MAX).await.expect("body"))
-        .expect("json");
+    let body: Value =
+        serde_json::from_slice(&axum::body::to_bytes(resp.into_body(), usize::MAX).await.expect("body")).expect("json");
     assert_eq!(body, json!({"seen": rid, "current": rid}));
 }
 
@@ -540,7 +553,13 @@ async fn e_route(method: Method, uri: Uri, headers: HeaderMap, Path(Kind(kind)):
     let err = match kind.as_str() {
         "http404" => return error::http_exception(StatusCode::NOT_FOUND, None, &method, uri.path(), &headers),
         "http404d" => {
-            return error::http_exception(StatusCode::NOT_FOUND, Some("texture not found"), &method, uri.path(), &headers);
+            return error::http_exception(
+                StatusCode::NOT_FOUND,
+                Some("texture not found"),
+                &method,
+                uri.path(),
+                &headers,
+            );
         }
         "api404" => ApiError::not_found("The Mods Hub is currently disabled."),
         "http400" => http(400, Some("Bad thing \u{2615} \u{e9} \u{2028} \"q\"")),
@@ -712,7 +731,8 @@ fn real_router() -> Router {
     Router::new()
         .route(
             "/health",
-            get(|| async { PydanticJson(json!({"status": "ok"})) }).fallback(|| async { error::method_not_allowed("GET") }),
+            get(|| async { PydanticJson(json!({"status": "ok"})) })
+                .fallback(|| async { error::method_not_allowed("GET") }),
         )
         .route("/auth/login", post(|_: Json<Login>| async { unreachable_handler() }))
         .route("/auth/signup", post(|_: Json<Signup>| async { unreachable_handler() }))
@@ -757,7 +777,11 @@ async fn replay(router: Router, section: &str) {
             }
             want_body = want_body.replace(&String::from_utf8(want_rid.clone()).expect("ascii"), &ours);
         } else if rid != want_rid {
-            bad.push(format!("{name}: x-request-id {:?} want {:?}", String::from_utf8_lossy(&rid), String::from_utf8_lossy(&want_rid)));
+            bad.push(format!(
+                "{name}: x-request-id {:?} want {:?}",
+                String::from_utf8_lossy(&rid),
+                String::from_utf8_lossy(&want_rid)
+            ));
         }
         if status as u64 != case["status"].as_u64().expect("status") {
             bad.push(format!("{name}: status {status} want {}", case["status"]));
