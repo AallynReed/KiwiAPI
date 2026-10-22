@@ -29,6 +29,7 @@ pub mod renames;
 pub mod rotations;
 pub mod stats;
 pub mod status;
+pub mod store;
 pub mod swf;
 pub mod tmod;
 pub mod troveio;

@@ -10,6 +10,7 @@ pub mod leaf;
 pub mod misc;
 pub mod rotations;
 pub mod stats;
+pub mod store;
 pub mod trove_status;
 
 use std::{net::SocketAddr, sync::Arc};
@@ -55,6 +56,7 @@ async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next
         .merge(crate::lb_ingest::router())
         .merge(crate::cheaters::router())
         .merge(crate::market::router())
+        .merge(store::router())
 }
 
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`

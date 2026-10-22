@@ -1,0 +1,8 @@
+{
+ "mongo": [
+  {"collection": "store_products", "sort": ["code"], "mask": ["_id"]},
+  {"collection": "store_categories", "sort": ["index"], "mask": ["_id"]},
+  {"collection": "store_state", "sort": ["key"], "mask": ["_id"]},
+  {"collection": "ingest_log", "sort": ["endpoint", "auth_via", "success"], "mask": ["_id", "timestamp", "user_id"]}
+ ]
+}
