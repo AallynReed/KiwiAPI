@@ -11,6 +11,7 @@ pub mod gems;
 pub mod lbdump;
 pub mod leaf;
 pub mod renames;
+pub mod rotations;
 pub mod swf;
 pub mod tmod;
 pub mod troveio;

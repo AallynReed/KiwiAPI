@@ -4,6 +4,7 @@
 //! missing here is a 405, not a trip to Python.
 
 pub mod leaf;
+pub mod rotations;
 
 use std::sync::Arc;
 
@@ -13,7 +14,9 @@ use crate::{middleware, proxy::proxy, state::AppState};
 
 /// Routes answered in Rust.
 fn ported() -> Router<AppState> {
-    Router::new().merge(leaf::router())
+    Router::new()
+        .merge(leaf::router())
+        .merge(rotations::router())
 }
 
 pub fn app(state: AppState) -> Router {

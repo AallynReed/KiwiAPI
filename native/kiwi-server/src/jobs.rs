@@ -88,10 +88,11 @@ where
 }
 
 /// Start every loop this server owns. Called once from `main`.
-pub fn start(_state: &AppState) {
+pub fn start(state: &AppState) {
     for name in owned() {
         tracing::info!("running loop {name}");
     }
+    crate::routes::rotations::start_jobs(state);
 }
 
 #[cfg(test)]
