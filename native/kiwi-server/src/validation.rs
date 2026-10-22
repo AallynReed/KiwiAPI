@@ -642,9 +642,16 @@ pub struct IntC {
     lt: Option<Num>,
     ge: Option<Num>,
     gt: Option<Num>,
+    saturate: bool,
 }
 
 impl<'a> Typed<'a, IntC> {
+    /// A Python `int` past `i64` saturates instead of failing (pydantic takes
+    /// big ints; only for a value the caller clamps anyway).
+    pub fn saturating(mut self) -> Self {
+        self.c.saturate = true;
+        self
+    }
     pub fn ge(mut self, n: impl Into<Num>) -> Self {
         self.c.ge = Some(n.into());
         self
@@ -770,6 +777,9 @@ impl Coerce for IntC {
         }
         if let Some(n) = self.gt.filter(|&n| cmp_int(v, n) != Greater) {
             return Err(Fail::greater_than(n));
+        }
+        if self.saturate {
+            return Ok(v.clamp(i128::from(i64::MIN), i128::from(i64::MAX)) as i64);
         }
         i64::try_from(v).map_err(|_| Fail::int_parsing_size())
     }

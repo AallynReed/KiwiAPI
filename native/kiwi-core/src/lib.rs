@@ -2,6 +2,7 @@
 
 pub mod abc;
 pub mod activity;
+pub mod activity_calc;
 pub mod agg;
 pub mod audio;
 pub mod binfab;

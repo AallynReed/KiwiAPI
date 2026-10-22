@@ -2,6 +2,7 @@
 //! and proxies everything else to the Python app (`PY_UPSTREAM`) until nothing
 //! is left there. See `native/PORT_PLAN.md`.
 
+pub mod activity;
 pub mod auth;
 pub mod config;
 pub mod db;

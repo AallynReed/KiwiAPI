@@ -222,8 +222,12 @@ fn build(gd: &Gamedata) -> Clean<Index> {
     let raw = gd.load("classes.json");
     let mut classes: Vec<(Option<String>, Value)> = Vec::new();
     let mut at: HashMap<String, usize> = HashMap::new();
+    let mut names = HashMap::new();
     for c in items(raw.as_deref().unwrap_or(&json!([])))? {
         let (tech, cleaned) = clean_class(c, &fallback)?;
+        if let (Some(t), Some(n)) = (&tech, cleaned.get("name")) {
+            names.insert(t.clone(), n.clone());
+        }
         // A repeated key keeps its first position and takes the later value.
         match tech.as_ref().and_then(|t| at.get(t)) {
             Some(&i) => classes[i].1 = cleaned,
@@ -235,7 +239,6 @@ fn build(gd: &Gamedata) -> Clean<Index> {
             }
         }
     }
-    let names = classes.iter().filter_map(|(t, c)| Some((t.clone()?, c.get("name")?.clone()))).collect();
     let valid: Vec<(Option<String>, Option<Value>)> = classes.into_iter().map(|(t, c)| (t, validate(&c))).collect();
     let list = valid.iter().map(|(_, c)| c.clone()).collect::<Option<Vec<_>>>().map(|items| {
         let count = items.len();
@@ -255,6 +258,18 @@ pub fn list_body(gd: &Gamedata) -> Result<Bytes, ApiError> {
         Ok(idx) => idx.list.clone().ok_or_else(ApiError::internal),
         Err(Broken) => Err(ApiError::internal()),
     }
+}
+
+/// `(stats.class_name(i), stats.class_icon(i))` for a board class index; a
+/// 500 where `_classes_index()` raises.
+pub fn board_class(gd: &Gamedata, i: i64) -> Result<(Value, Value), ApiError> {
+    let idx = index(gd);
+    let Ok(idx) = idx.as_ref() else { return Err(ApiError::internal()) };
+    let tech = usize::try_from(i).ok().and_then(|i| kiwi_core::stats::BOARD_CLASS_ORDER.get(i));
+    Ok(match tech.and_then(|t| idx.names.get(*t).map(|n| (t, n))) {
+        Some((t, name)) => (name.clone(), Value::from(format!("/static/class-icons/{t}.png"))),
+        None => (Value::from(format!("Class {i}")), Value::Null),
+    })
 }
 
 /// `TroveClass(**class_by_tech_name(tech_name))` rendered, or the route's 404.

@@ -49,6 +49,7 @@ async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next
     }
     next.run(req).await
         .merge(lb_players::router())
+        .merge(crate::activity::router())
 }
 
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`

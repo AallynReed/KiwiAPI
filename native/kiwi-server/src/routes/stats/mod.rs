@@ -2,6 +2,9 @@
 //! tables, the classes, the Coefficient calculator and the player sigil.
 
 pub(crate) mod classes;
+
+pub use classes::board_class;
+
 #[cfg(test)]
 mod tests;
 
