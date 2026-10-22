@@ -11,6 +11,7 @@ pub mod btt;
 pub mod cheaters;
 pub mod detection;
 pub mod duplicates;
+pub mod email_validator;
 pub mod feeds;
 pub mod form;
 pub mod gems;

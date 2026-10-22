@@ -21,6 +21,7 @@ pub mod lb_warmer;
 pub mod lbread;
 pub mod market;
 pub mod middleware;
+pub mod portal;
 pub mod proxy;
 pub mod pyfloat;
 pub mod pyjson;

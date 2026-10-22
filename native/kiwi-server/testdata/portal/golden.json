@@ -1,0 +1,4151 @@
+{
+ "python": "3.13.17",
+ "env": {
+  "APP_NAME": "Kiwi <API> \"\u00e9\" & {x}",
+  "API_URL": "https://api.example.com",
+  "DEV_URL": "https://dev.example.com/a b?x=<1>",
+  "DOCS_URL": "https://docs.example.com/?a=1&b='2'",
+  "GITHUB_SECRET_SCANNING_KEYS_URL": "http://127.0.0.1:9/keys"
+ },
+ "http": [
+  {
+   "name": "signup_missing",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_000"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_000\"}}"
+  },
+  {
+   "name": "signup_null",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_001"
+    ]
+   ],
+   "body": "null",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_001\"}}"
+  },
+  {
+   "name": "signup_list",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_002"
+    ]
+   ],
+   "body": "[]",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "247",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[]}],\"request_id\":\"req_h_002\"}}"
+  },
+  {
+   "name": "signup_empty",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_003"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "267",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"email\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"password\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_h_003\"}}"
+  },
+  {
+   "name": "signup_bad",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_004"
+    ]
+   ],
+   "body": "{\"email\": \"bad\", \"password\": \"short\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "453",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"email\"],\"msg\":\"value is not a valid email address: An email address must have an @-sign.\",\"input\":\"bad\",\"ctx\":{\"reason\":\"An email address must have an @-sign.\"}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"password\"],\"msg\":\"String should have at least 8 characters\",\"input\":\"short\",\"ctx\":{\"min_length\":8}}],\"request_id\":\"req_h_004\"}}"
+  },
+  {
+   "name": "signup_types",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_005"
+    ]
+   ],
+   "body": "{\"email\": 5, \"password\": 5, \"display_name\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"captcha_token\": 1}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "630",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"email\"],\"msg\":\"Input should be a valid string\",\"input\":5},{\"type\":\"string_type\",\"loc\":[\"body\",\"password\"],\"msg\":\"Input should be a valid string\",\"input\":5},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"display_name\"],\"msg\":\"String should have at most 80 characters\",\"input\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ctx\":{\"max_length\":80}},{\"type\":\"string_type\",\"loc\":[\"body\",\"captcha_token\"],\"msg\":\"Input should be a valid string\",\"input\":1}],\"request_id\":\"req_h_005\"}}"
+  },
+  {
+   "name": "signup_badjson",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_006"
+    ]
+   ],
+   "body": "{\"email\":",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "224",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",9],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"req_h_006\"}}"
+  },
+  {
+   "name": "signup_text_ct",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "text/plain"
+    ],
+    [
+     "x-request-id",
+     "req_h_007"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "249",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"{}\"}],\"request_id\":\"req_h_007\"}}"
+  },
+  {
+   "name": "signup_special",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_008"
+    ]
+   ],
+   "body": "{\"email\": \"a@b.test\", \"password\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "820",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"email\"],\"msg\":\"value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.\",\"input\":\"a@b.test\",\"ctx\":{\"reason\":\"The part after the @-sign is a special-use or reserved name that cannot be used with email.\"}},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"password\"],\"msg\":\"String should have at most 256 characters\",\"input\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ctx\":{\"max_length\":256}}],\"request_id\":\"req_h_008\"}}"
+  },
+  {
+   "name": "signup_pretty_short",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_009"
+    ]
+   ],
+   "body": "{\"email\": \"Ann <a@b.co>\", \"password\": \"1234567\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "256",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"password\"],\"msg\":\"String should have at least 8 characters\",\"input\":\"1234567\",\"ctx\":{\"min_length\":8}}],\"request_id\":\"req_h_009\"}}"
+  },
+  {
+   "name": "signup_quoted",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_010"
+    ]
+   ],
+   "body": "{\"email\": \"\\\"q\\\"@b.com\", \"password\": \"12345678\", \"display_name\": null}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "355",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"email\"],\"msg\":\"value is not a valid email address: Quoting the part before the @-sign is not allowed here.\",\"input\":\"\\\"q\\\"@b.com\",\"ctx\":{\"reason\":\"Quoting the part before the @-sign is not allowed here.\"}}],\"request_id\":\"req_h_010\"}}"
+  },
+  {
+   "name": "signup_unicode_pw_short",
+   "method": "POST",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_011"
+    ]
+   ],
+   "body": "{\"email\": \"a@b.co\", \"password\": \"\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\\u00e9\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "263",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"password\"],\"msg\":\"String should have at least 8 characters\",\"input\":\"\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\",\"ctx\":{\"min_length\":8}}],\"request_id\":\"req_h_011\"}}"
+  },
+  {
+   "name": "login_empty",
+   "method": "POST",
+   "url": "/auth/login",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_012"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "267",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"email\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"password\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_h_012\"}}"
+  },
+  {
+   "name": "login_types",
+   "method": "POST",
+   "url": "/auth/login",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_013"
+    ]
+   ],
+   "body": "{\"email\": \"x@y\", \"password\": 1, \"captcha_token\": []}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "567",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"email\"],\"msg\":\"value is not a valid email address: The part after the @-sign is not valid. It should have a period.\",\"input\":\"x@y\",\"ctx\":{\"reason\":\"The part after the @-sign is not valid. It should have a period.\"}},{\"type\":\"string_type\",\"loc\":[\"body\",\"password\"],\"msg\":\"Input should be a valid string\",\"input\":1},{\"type\":\"string_type\",\"loc\":[\"body\",\"captcha_token\"],\"msg\":\"Input should be a valid string\",\"input\":[]}],\"request_id\":\"req_h_013\"}}"
+  },
+  {
+   "name": "forgot_empty",
+   "method": "POST",
+   "url": "/auth/forgot-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_014"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "188",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"email\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_h_014\"}}"
+  },
+  {
+   "name": "forgot_bad",
+   "method": "POST",
+   "url": "/auth/forgot-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_015"
+    ]
+   ],
+   "body": "{\"email\": \"nope\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "312",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"email\"],\"msg\":\"value is not a valid email address: An email address must have an @-sign.\",\"input\":\"nope\",\"ctx\":{\"reason\":\"An email address must have an @-sign.\"}}],\"request_id\":\"req_h_015\"}}"
+  },
+  {
+   "name": "resend_bad",
+   "method": "POST",
+   "url": "/auth/resend-verification",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_016"
+    ]
+   ],
+   "body": "{\"email\": \"a@b..c\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "340",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"email\"],\"msg\":\"value is not a valid email address: An email address cannot have two periods in a row.\",\"input\":\"a@b..c\",\"ctx\":{\"reason\":\"An email address cannot have two periods in a row.\"}}],\"request_id\":\"req_h_016\"}}"
+  },
+  {
+   "name": "resend_missing",
+   "method": "POST",
+   "url": "/auth/resend-verification",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_017"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_017\"}}"
+  },
+  {
+   "name": "reset_empty",
+   "method": "POST",
+   "url": "/auth/reset-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_018"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "271",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"token\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"new_password\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_h_018\"}}"
+  },
+  {
+   "name": "reset_types",
+   "method": "POST",
+   "url": "/auth/reset-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_019"
+    ]
+   ],
+   "body": "{\"token\": 1, \"new_password\": \"short\"}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "353",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"token\"],\"msg\":\"Input should be a valid string\",\"input\":1},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"new_password\"],\"msg\":\"String should have at least 8 characters\",\"input\":\"short\",\"ctx\":{\"min_length\":8}}],\"request_id\":\"req_h_019\"}}"
+  },
+  {
+   "name": "reset_bad_token",
+   "method": "POST",
+   "url": "/auth/reset-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_020"
+    ]
+   ],
+   "body": "{\"token\": \"nope\", \"new_password\": \"longenough\"}",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "127",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"This reset link is invalid or has expired.\",\"details\":null,\"request_id\":\"req_h_020\"}}"
+  },
+  {
+   "name": "reset_nosub",
+   "method": "POST",
+   "url": "/auth/reset-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_021"
+    ]
+   ],
+   "body": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicGFzc3dvcmRfcmVzZXQiLCJpYXQiOjE3OTI3MDk5MzYsImV4cCI6MjEwODA2OTkzNiwiZnAiOiJ4In0.eQnxcP-RVpSpyJnUvIvo0Ls2sdDBqctx96SMqU9H2W8\", \"new_password\": \"longenough\"}",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "127",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"This reset link is invalid or has expired.\",\"details\":null,\"request_id\":\"req_h_021\"}}"
+  },
+  {
+   "name": "reset_wrong_purpose",
+   "method": "POST",
+   "url": "/auth/reset-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_022"
+    ]
+   ],
+   "body": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWExYjJjM2Q0ZTVmNjA3MTgyOTNhNGIiLCJ0eXBlIjoicGFzc3dvcmRfcmVzZXQiLCJpYXQiOjE3OTI3MDk5MzYsImV4cCI6MjEwODA2OTkzNn0.OpsCWSlhlOcEpcTAGuTIJXQ5ZDBMmSSCYwBybYL0GPE\", \"new_password\": \"longenough\"}",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "127",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"This reset link is invalid or has expired.\",\"details\":null,\"request_id\":\"req_h_022\"}}"
+  },
+  {
+   "name": "refresh_empty",
+   "method": "POST",
+   "url": "/auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_023"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "196",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"refresh_token\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_h_023\"}}"
+  },
+  {
+   "name": "refresh_types",
+   "method": "POST",
+   "url": "/auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_024"
+    ]
+   ],
+   "body": "{\"refresh_token\": 5}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "215",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"refresh_token\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"req_h_024\"}}"
+  },
+  {
+   "name": "logout_missing",
+   "method": "POST",
+   "url": "/auth/logout",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_025"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "182",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_025\"}}"
+  },
+  {
+   "name": "logout_types",
+   "method": "POST",
+   "url": "/auth/logout",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_026"
+    ]
+   ],
+   "body": "{\"refresh_token\": 5}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "215",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"refresh_token\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"req_h_026\"}}"
+  },
+  {
+   "name": "logout_empty",
+   "method": "POST",
+   "url": "/auth/logout",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_027"
+    ]
+   ],
+   "body": "{}",
+   "status": 204,
+   "resp_headers": {
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": ""
+  },
+  {
+   "name": "logout_blank",
+   "method": "POST",
+   "url": "/auth/logout",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_028"
+    ]
+   ],
+   "body": "{\"refresh_token\": \"\"}",
+   "status": 204,
+   "resp_headers": {
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": ""
+  },
+  {
+   "name": "logout_null",
+   "method": "POST",
+   "url": "/auth/logout",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_029"
+    ]
+   ],
+   "body": "{\"refresh_token\": null}",
+   "status": 204,
+   "resp_headers": {
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": ""
+  },
+  {
+   "name": "exchange_empty",
+   "method": "POST",
+   "url": "/auth/oauth/exchange",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_030"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "187",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"code\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_h_030\"}}"
+  },
+  {
+   "name": "exchange_no_redis",
+   "method": "POST",
+   "url": "/auth/oauth/exchange",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_031"
+    ]
+   ],
+   "body": "{\"code\": \"abc\"}",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "117",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid or expired exchange code\",\"details\":null,\"request_id\":\"req_h_031\"}}"
+  },
+  {
+   "name": "me_noauth",
+   "method": "GET",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_032"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_032\"}}"
+  },
+  {
+   "name": "me_bad",
+   "method": "GET",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "authorization",
+     "Bearer garbage"
+    ],
+    [
+     "x-request-id",
+     "req_h_033"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "123",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_h_033\"}}"
+  },
+  {
+   "name": "me_basic",
+   "method": "GET",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "authorization",
+     "Basic abc"
+    ],
+    [
+     "x-request-id",
+     "req_h_034"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_034\"}}"
+  },
+  {
+   "name": "me_site",
+   "method": "GET",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "authorization",
+     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWExYjJjM2Q0ZTVmNjA3MTgyOTNhNGIiLCJ2ZXIiOjAsImlhdCI6MTc5MjcwOTkzNiwiZXhwIjoyMTA4MDY5OTM2LCJ0eXBlIjoiYWNjZXNzIiwia2luZCI6InNpdGUifQ.7Ufyq-N0A0d_VfgDV39XLVmTPY6a3vUtLQUlyQDhd8U"
+    ],
+    [
+     "x-request-id",
+     "req_h_035"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "111",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Wrong-audience token\",\"details\":null,\"request_id\":\"req_h_035\"}}"
+  },
+  {
+   "name": "me_expired",
+   "method": "GET",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "authorization",
+     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWExYjJjM2Q0ZTVmNjA3MTgyOTNhNGIiLCJ2ZXIiOjAsImlhdCI6MTAwMCwiZXhwIjoyMDAwLCJ0eXBlIjoiYWNjZXNzIn0.Jjd9s_JDN_8Y3QWOkA9A4919zQQIRJSq2a2zTm2netU"
+    ],
+    [
+     "x-request-id",
+     "req_h_036"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "123",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_h_036\"}}"
+  },
+  {
+   "name": "patch_me_noauth",
+   "method": "PATCH",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_037"
+    ]
+   ],
+   "body": "{}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_037\"}}"
+  },
+  {
+   "name": "patch_me_badjson_first",
+   "method": "PATCH",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_038"
+    ]
+   ],
+   "body": "{",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "258",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}],\"request_id\":\"req_h_038\"}}"
+  },
+  {
+   "name": "patch_me_noauth_invalid",
+   "method": "PATCH",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_039"
+    ]
+   ],
+   "body": "{\"display_name\": 5}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_039\"}}"
+  },
+  {
+   "name": "change_password_noauth",
+   "method": "POST",
+   "url": "/auth/change-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_040"
+    ]
+   ],
+   "body": "{}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_040\"}}"
+  },
+  {
+   "name": "change_password_badjson",
+   "method": "POST",
+   "url": "/auth/change-password",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_041"
+    ]
+   ],
+   "body": "[1,]",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "251",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",2],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Illegal trailing comma before end of array\"}}],\"request_id\":\"req_h_041\"}}"
+  },
+  {
+   "name": "change_email_noauth",
+   "method": "POST",
+   "url": "/auth/change-email",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_042"
+    ]
+   ],
+   "body": "{\"new_email\": \"bad\"}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_042\"}}"
+  },
+  {
+   "name": "logout_all_noauth",
+   "method": "POST",
+   "url": "/auth/logout-all",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_043"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_043\"}}"
+  },
+  {
+   "name": "sessions_noauth",
+   "method": "GET",
+   "url": "/auth/sessions",
+   "headers": [
+    [
+     "authorization",
+     "Bearer garbage"
+    ],
+    [
+     "x-request-id",
+     "req_h_044"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "123",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_h_044\"}}"
+  },
+  {
+   "name": "session_delete_noauth",
+   "method": "DELETE",
+   "url": "/auth/sessions/nope",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_045"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_045\"}}"
+  },
+  {
+   "name": "export_noauth",
+   "method": "GET",
+   "url": "/auth/me/export",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_046"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_046\"}}"
+  },
+  {
+   "name": "delete_account_noauth",
+   "method": "POST",
+   "url": "/auth/delete-account",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_047"
+    ]
+   ],
+   "body": "{\"confirm_email\": 1}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_047\"}}"
+  },
+  {
+   "name": "tokens_create_noauth",
+   "method": "POST",
+   "url": "/tokens",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_048"
+    ]
+   ],
+   "body": "{\"name\": \"\"}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_048\"}}"
+  },
+  {
+   "name": "tokens_create_badjson",
+   "method": "POST",
+   "url": "/tokens",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_049"
+    ]
+   ],
+   "body": "{]",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "258",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}],\"request_id\":\"req_h_049\"}}"
+  },
+  {
+   "name": "tokens_list_noauth",
+   "method": "GET",
+   "url": "/tokens",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_050"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_050\"}}"
+  },
+  {
+   "name": "tokens_activity_noauth",
+   "method": "GET",
+   "url": "/tokens/activity?days=0",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_051"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_051\"}}"
+  },
+  {
+   "name": "token_activity_noauth",
+   "method": "GET",
+   "url": "/tokens/nope/activity?days=x",
+   "headers": [
+    [
+     "authorization",
+     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWExYjJjM2Q0ZTVmNjA3MTgyOTNhNGIiLCJ2ZXIiOjAsImlhdCI6MTc5MjcwOTkzNiwiZXhwIjoyMTA4MDY5OTM2LCJ0eXBlIjoiYWNjZXNzIiwia2luZCI6InNpdGUifQ.7Ufyq-N0A0d_VfgDV39XLVmTPY6a3vUtLQUlyQDhd8U"
+    ],
+    [
+     "x-request-id",
+     "req_h_052"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "111",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Wrong-audience token\",\"details\":null,\"request_id\":\"req_h_052\"}}"
+  },
+  {
+   "name": "token_patch_noauth",
+   "method": "PATCH",
+   "url": "/tokens/nope",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_053"
+    ]
+   ],
+   "body": "{\"name\": \"\"}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_053\"}}"
+  },
+  {
+   "name": "token_patch_literal_noauth",
+   "method": "PATCH",
+   "url": "/tokens/activity",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_054"
+    ]
+   ],
+   "body": "{}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_054\"}}"
+  },
+  {
+   "name": "token_rotate_noauth",
+   "method": "POST",
+   "url": "/tokens/nope/rotate",
+   "headers": [
+    [
+     "authorization",
+     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWExYjJjM2Q0ZTVmNjA3MTgyOTNhNGIiLCJ2ZXIiOjAsImlhdCI6MTAwMCwiZXhwIjoyMDAwLCJ0eXBlIjoiYWNjZXNzIn0.Jjd9s_JDN_8Y3QWOkA9A4919zQQIRJSq2a2zTm2netU"
+    ],
+    [
+     "x-request-id",
+     "req_h_055"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "123",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'",
+    "cache-control": "private, no-store"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_h_055\"}}"
+  },
+  {
+   "name": "token_revoke_noauth",
+   "method": "POST",
+   "url": "/tokens/nope/revoke",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_056"
+    ]
+   ],
+   "body": "{}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-length": "114",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_h_056\"}}"
+  },
+  {
+   "name": "verify_email_no_token",
+   "method": "GET",
+   "url": "/auth/verify-email",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_057"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "191",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"query\",\"token\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_057\"}}"
+  },
+  {
+   "name": "verify_email_bad",
+   "method": "GET",
+   "url": "/auth/verify-email?token=nope",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_058"
+    ]
+   ],
+   "body": "",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "806",
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "<!doctype html><html><head><meta charset='utf-8'><title>Verification failed</title><style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{max-width:420px;padding:32px;border:1px solid #30363d;border-radius:12px;background:#161b22}h1{font-size:1.3rem;margin:0 0 12px}a,button{color:#58a6ff}input,button{font-size:1rem;padding:10px;width:100%;box-sizing:border-box;margin-top:8px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}button{cursor:pointer;background:#238636;color:#fff;border:0;margin-top:16px}</style></head><body><div class='card'><h1>Verification failed</h1><p>This link is invalid or has expired. Request a new one from the portal.</p></div></body></html>"
+  },
+  {
+   "name": "verify_email_nosub",
+   "method": "GET",
+   "url": "/auth/verify-email?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiZW1haWxfdmVyaWZ5IiwiaWF0IjoxNzkyNzA5OTM2LCJleHAiOjIxMDgwNjk5MzZ9.ZIrKn7dmoL4-Vk_19K-Od2Cxg2Lsz06i9750rez82w8",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_059"
+    ]
+   ],
+   "body": "",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "806",
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "<!doctype html><html><head><meta charset='utf-8'><title>Verification failed</title><style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{max-width:420px;padding:32px;border:1px solid #30363d;border-radius:12px;background:#161b22}h1{font-size:1.3rem;margin:0 0 12px}a,button{color:#58a6ff}input,button{font-size:1rem;padding:10px;width:100%;box-sizing:border-box;margin-top:8px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}button{cursor:pointer;background:#238636;color:#fff;border:0;margin-top:16px}</style></head><body><div class='card'><h1>Verification failed</h1><p>This link is invalid or has expired. Request a new one from the portal.</p></div></body></html>"
+  },
+  {
+   "name": "verify_email_wrong_purpose",
+   "method": "GET",
+   "url": "/auth/verify-email?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWExYjJjM2Q0ZTVmNjA3MTgyOTNhNGIiLCJ0eXBlIjoicGFzc3dvcmRfcmVzZXQiLCJpYXQiOjE3OTI3MDk5MzYsImV4cCI6MjEwODA2OTkzNn0.OpsCWSlhlOcEpcTAGuTIJXQ5ZDBMmSSCYwByaYL0GPE",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_060"
+    ]
+   ],
+   "body": "",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "806",
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "<!doctype html><html><head><meta charset='utf-8'><title>Verification failed</title><style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{max-width:420px;padding:32px;border:1px solid #30363d;border-radius:12px;background:#161b22}h1{font-size:1.3rem;margin:0 0 12px}a,button{color:#58a6ff}input,button{font-size:1rem;padding:10px;width:100%;box-sizing:border-box;margin-top:8px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}button{cursor:pointer;background:#238636;color:#fff;border:0;margin-top:16px}</style></head><body><div class='card'><h1>Verification failed</h1><p>This link is invalid or has expired. Request a new one from the portal.</p></div></body></html>"
+  },
+  {
+   "name": "verify_email_html_accept",
+   "method": "GET",
+   "url": "/auth/verify-email?token=x",
+   "headers": [
+    [
+     "accept",
+     "text/html"
+    ],
+    [
+     "x-request-id",
+     "req_h_061"
+    ]
+   ],
+   "body": "",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "806",
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "<!doctype html><html><head><meta charset='utf-8'><title>Verification failed</title><style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{max-width:420px;padding:32px;border:1px solid #30363d;border-radius:12px;background:#161b22}h1{font-size:1.3rem;margin:0 0 12px}a,button{color:#58a6ff}input,button{font-size:1rem;padding:10px;width:100%;box-sizing:border-box;margin-top:8px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}button{cursor:pointer;background:#238636;color:#fff;border:0;margin-top:16px}</style></head><body><div class='card'><h1>Verification failed</h1><p>This link is invalid or has expired. Request a new one from the portal.</p></div></body></html>"
+  },
+  {
+   "name": "verify_change_bad",
+   "method": "GET",
+   "url": "/auth/verify-email-change?token=a.b.c",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_062"
+    ]
+   ],
+   "body": "",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "770",
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "<!doctype html><html><head><meta charset='utf-8'><title>Link expired</title><style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{max-width:420px;padding:32px;border:1px solid #30363d;border-radius:12px;background:#161b22}h1{font-size:1.3rem;margin:0 0 12px}a,button{color:#58a6ff}input,button{font-size:1rem;padding:10px;width:100%;box-sizing:border-box;margin-top:8px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}button{cursor:pointer;background:#238636;color:#fff;border:0;margin-top:16px}</style></head><body><div class='card'><h1>Link expired</h1><p>This confirmation link is invalid or has expired.</p></div></body></html>"
+  },
+  {
+   "name": "verify_change_no_token",
+   "method": "GET",
+   "url": "/auth/verify-email-change",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_063"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "191",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"query\",\"token\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_063\"}}"
+  },
+  {
+   "name": "reset_form",
+   "method": "GET",
+   "url": "/auth/reset-password?token=%3Cscript%3E%22%27%26x",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_064"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "1712",
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "<!doctype html><html><head><meta charset='utf-8'><title>Set a new password</title><style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{max-width:420px;padding:32px;border:1px solid #30363d;border-radius:12px;background:#161b22}h1{font-size:1.3rem;margin:0 0 12px}a,button{color:#58a6ff}input,button{font-size:1rem;padding:10px;width:100%;box-sizing:border-box;margin-top:8px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}button{cursor:pointer;background:#238636;color:#fff;border:0;margin-top:16px}</style></head><body><div class='card'><h1>Set a new password</h1>\n        <input id=\"pw\" type=\"password\" placeholder=\"New password (min 8 chars)\" autocomplete=\"new-password\">\n        <input id=\"rtoken\" type=\"hidden\" value=\"&lt;script&gt;&quot;&#x27;&amp;x\">\n        <button onclick=\"submitReset()\">Reset password</button>\n        <p id=\"msg\" style=\"margin-top:12px\"></p>\n        <script>\n        const token = document.getElementById('rtoken').value;\n        async function submitReset() {\n          const pw = document.getElementById('pw').value;\n          const msg = document.getElementById('msg');\n          const r = await fetch('/auth/reset-password', {\n            method: 'POST', headers: {'Content-Type': 'application/json'},\n            body: JSON.stringify({token: token, new_password: pw})\n          });\n          const data = await r.json().catch(() => ({}));\n          msg.textContent = r.ok ? (data.message || 'Password reset.')\n            : ((data.error && data.error.message) || 'Reset failed.');\n        }\n        </script>\n        </div></body></html>"
+  },
+  {
+   "name": "reset_form_plain",
+   "method": "GET",
+   "url": "/auth/reset-password?token=abc.def",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_065"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "1687",
+    "content-type": "text/html; charset=utf-8",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "<!doctype html><html><head><meta charset='utf-8'><title>Set a new password</title><style>body{font-family:system-ui,sans-serif;background:#0d1117;color:#e6edf3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}.card{max-width:420px;padding:32px;border:1px solid #30363d;border-radius:12px;background:#161b22}h1{font-size:1.3rem;margin:0 0 12px}a,button{color:#58a6ff}input,button{font-size:1rem;padding:10px;width:100%;box-sizing:border-box;margin-top:8px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3}button{cursor:pointer;background:#238636;color:#fff;border:0;margin-top:16px}</style></head><body><div class='card'><h1>Set a new password</h1>\n        <input id=\"pw\" type=\"password\" placeholder=\"New password (min 8 chars)\" autocomplete=\"new-password\">\n        <input id=\"rtoken\" type=\"hidden\" value=\"abc.def\">\n        <button onclick=\"submitReset()\">Reset password</button>\n        <p id=\"msg\" style=\"margin-top:12px\"></p>\n        <script>\n        const token = document.getElementById('rtoken').value;\n        async function submitReset() {\n          const pw = document.getElementById('pw').value;\n          const msg = document.getElementById('msg');\n          const r = await fetch('/auth/reset-password', {\n            method: 'POST', headers: {'Content-Type': 'application/json'},\n            body: JSON.stringify({token: token, new_password: pw})\n          });\n          const data = await r.json().catch(() => ({}));\n          msg.textContent = r.ok ? (data.message || 'Password reset.')\n            : ((data.error && data.error.message) || 'Reset failed.');\n        }\n        </script>\n        </div></body></html>"
+  },
+  {
+   "name": "reset_form_no_token",
+   "method": "GET",
+   "url": "/auth/reset-password",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_066"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-length": "191",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"query\",\"token\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_h_066\"}}"
+  },
+  {
+   "name": "me_405",
+   "method": "DELETE",
+   "url": "/auth/me",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_067"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_067\"}}"
+  },
+  {
+   "name": "reset_405",
+   "method": "PUT",
+   "url": "/auth/reset-password",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_068"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_068\"}}"
+  },
+  {
+   "name": "tokens_405",
+   "method": "DELETE",
+   "url": "/tokens",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_069"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_069\"}}"
+  },
+  {
+   "name": "tokens_activity_405",
+   "method": "DELETE",
+   "url": "/tokens/activity",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_070"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_070\"}}"
+  },
+  {
+   "name": "token_405",
+   "method": "GET",
+   "url": "/tokens/abc",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_071"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "PATCH",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_071\"}}"
+  },
+  {
+   "name": "token_activity_405",
+   "method": "POST",
+   "url": "/tokens/abc/activity",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_072"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_072\"}}"
+  },
+  {
+   "name": "session_405",
+   "method": "GET",
+   "url": "/auth/sessions/x",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_073"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "DELETE",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_073\"}}"
+  },
+  {
+   "name": "sessions_405",
+   "method": "POST",
+   "url": "/auth/sessions",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_074"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_074\"}}"
+  },
+  {
+   "name": "scanning_405",
+   "method": "GET",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_075"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_075\"}}"
+  },
+  {
+   "name": "signup_405",
+   "method": "GET",
+   "url": "/auth/signup",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_076"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_076\"}}"
+  },
+  {
+   "name": "exchange_405",
+   "method": "GET",
+   "url": "/auth/oauth/exchange",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_077"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_077\"}}"
+  },
+  {
+   "name": "start_405",
+   "method": "POST",
+   "url": "/auth/oauth/github/start",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_078"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-length": "110",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_h_078\"}}"
+  },
+  {
+   "name": "oauth_start_off",
+   "method": "GET",
+   "url": "/auth/oauth/github/start",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_079"
+    ]
+   ],
+   "body": "",
+   "status": 404,
+   "resp_headers": {
+    "content-length": "115",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"GitHub sign-in is not configured\",\"details\":null,\"request_id\":\"req_h_079\"}}"
+  },
+  {
+   "name": "oauth_callback_off",
+   "method": "GET",
+   "url": "/auth/oauth/github/callback?code=a&state=b",
+   "headers": [
+    [
+     "x-request-id",
+     "req_h_080"
+    ]
+   ],
+   "body": "",
+   "status": 404,
+   "resp_headers": {
+    "content-length": "115",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"GitHub sign-in is not configured\",\"details\":null,\"request_id\":\"req_h_080\"}}"
+  },
+  {
+   "name": "scan_unsigned",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_h_081"
+    ]
+   ],
+   "body": "[]",
+   "status": 401,
+   "resp_headers": {
+    "content-length": "135",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or missing secret-scanning signature\",\"details\":null,\"request_id\":\"req_h_081\"}}"
+  },
+  {
+   "name": "scan_unknown_key",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "github-public-key-identifier",
+     "k1"
+    ],
+    [
+     "github-public-key-signature",
+     "AAAA"
+    ],
+    [
+     "x-request-id",
+     "req_h_082"
+    ]
+   ],
+   "body": "[]",
+   "status": 401,
+   "resp_headers": {
+    "content-length": "135",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or missing secret-scanning signature\",\"details\":null,\"request_id\":\"req_h_082\"}}"
+  }
+ ],
+ "scan": [
+  {
+   "name": "scan_not_json",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "x-request-id",
+     "req_s_000"
+    ]
+   ],
+   "body": "not json",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "102",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Body must be JSON\",\"details\":null,\"request_id\":\"req_s_000\"}}"
+  },
+  {
+   "name": "scan_object",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_s_001"
+    ]
+   ],
+   "body": "{\"a\": 1}",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "127",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Body must be a JSON array of token matches\",\"details\":null,\"request_id\":\"req_s_001\"}}"
+  },
+  {
+   "name": "scan_empty",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_s_002"
+    ]
+   ],
+   "body": "[]",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "2",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "[]"
+  },
+  {
+   "name": "scan_skipped",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_s_003"
+    ]
+   ],
+   "body": "[\"x\", 5, {\"token\": \"\"}, {\"token\": null}, {\"type\": \"t\"}, {\"token\": 0}, {\"token\": []}]",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "2",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "[]"
+  },
+  {
+   "name": "scan_bad_checksum",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_s_004"
+    ]
+   ],
+   "body": "[{\"token\": \"kiwi_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_zz\", \"type\": \"kiwi_api_token\"}, {\"token\": \"kiwi_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_zz\", \"type\": \"\"}, {\"token\": \"kiwi_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_zz\", \"type\": 7, \"url\": \"x\"}]",
+   "status": 200,
+   "resp_headers": {
+    "content-length": "357",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "[{\"token_raw\":\"kiwi_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_zz\",\"token_type\":\"kiwi_api_token\",\"label\":\"false_positive\"},{\"token_raw\":\"kiwi_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_zz\",\"token_type\":\"kiwi_api_token\",\"label\":\"false_positive\"},{\"token_raw\":\"kiwi_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_zz\",\"token_type\":\"7\",\"label\":\"false_positive\"}]"
+  },
+  {
+   "name": "scan_empty_body",
+   "method": "POST",
+   "url": "/secret-scanning/github",
+   "headers": [
+    [
+     "x-request-id",
+     "req_s_005"
+    ]
+   ],
+   "body": "",
+   "status": 400,
+   "resp_headers": {
+    "content-length": "102",
+    "content-type": "application/json",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Body must be JSON\",\"details\":null,\"request_id\":\"req_s_005\"}}"
+  }
+ ],
+ "oauth": [
+  {
+   "name": "oauth_start_no_redis",
+   "method": "GET",
+   "url": "/auth/oauth/github/start",
+   "headers": [
+    [
+     "x-request-id",
+     "req_o_000"
+    ]
+   ],
+   "body": "",
+   "status": 307,
+   "resp_headers": {
+    "content-length": "0",
+    "location": "https://dev.example.com/a%20b?x=%3C1%3E/#oauth_error=unavailable",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": ""
+  },
+  {
+   "name": "oauth_callback_missing",
+   "method": "GET",
+   "url": "/auth/oauth/github/callback",
+   "headers": [
+    [
+     "x-request-id",
+     "req_o_001"
+    ]
+   ],
+   "body": "",
+   "status": 307,
+   "resp_headers": {
+    "content-length": "0",
+    "location": "https://dev.example.com/a%20b?x=%3C1%3E/#oauth_error=missing",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": ""
+  },
+  {
+   "name": "oauth_callback_blank",
+   "method": "GET",
+   "url": "/auth/oauth/github/callback?code=&state=s",
+   "headers": [
+    [
+     "x-request-id",
+     "req_o_002"
+    ]
+   ],
+   "body": "",
+   "status": 307,
+   "resp_headers": {
+    "content-length": "0",
+    "location": "https://dev.example.com/a%20b?x=%3C1%3E/#oauth_error=missing",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": ""
+  },
+  {
+   "name": "oauth_callback_no_redis",
+   "method": "GET",
+   "url": "/auth/oauth/github/callback?code=c&state=s",
+   "headers": [
+    [
+     "x-request-id",
+     "req_o_003"
+    ]
+   ],
+   "body": "",
+   "status": 307,
+   "resp_headers": {
+    "content-length": "0",
+    "location": "https://dev.example.com/a%20b?x=%3C1%3E/#oauth_error=unavailable",
+    "content-security-policy": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+   },
+   "resp": ""
+  }
+ ],
+ "oauth_env": {
+  "GITHUB_CLIENT_ID": "gh id+/\u00e9",
+  "GITHUB_CLIENT_SECRET": "gh-secret"
+ },
+ "authorize_url": "https://github.com/login/oauth/authorize?client_id=gh+id%2B%2F%C3%A9&redirect_uri=https%3A%2F%2Fapi.example.com%2Fauth%2Foauth%2Fgithub%2Fcallback&scope=read%3Auser+user%3Aemail&state=St4te_-x&allow_signup=true",
+ "authorize_location": "https://github.com/login/oauth/authorize?client_id=gh+id%2B%2F%C3%A9&redirect_uri=https%3A%2F%2Fapi.example.com%2Fauth%2Foauth%2Fgithub%2Fcallback&scope=read%3Auser+user%3Aemail&state=St4te_-x&allow_signup=true",
+ "emails": [
+  {
+   "input": "a@b.com",
+   "ok": "a@b.com"
+  },
+  {
+   "input": "  A@B.COM ",
+   "ok": "A@b.com"
+  },
+  {
+   "input": "Support@X.io",
+   "ok": "support@x.io"
+  },
+  {
+   "input": "INFO@x.io",
+   "ok": "info@x.io"
+  },
+  {
+   "input": "x@test",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is not valid. It should have a period.",
+    "ctx": {
+     "reason": "The part after the @-sign is not valid. It should have a period."
+    }
+   }
+  },
+  {
+   "input": "x@a.local",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.",
+    "ctx": {
+     "reason": "The part after the @-sign is a special-use or reserved name that cannot be used with email."
+    }
+   }
+  },
+  {
+   "input": "x@sub.localhost",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.",
+    "ctx": {
+     "reason": "The part after the @-sign is a special-use or reserved name that cannot be used with email."
+    }
+   }
+  },
+  {
+   "input": "x@a.onion",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.",
+    "ctx": {
+     "reason": "The part after the @-sign is a special-use or reserved name that cannot be used with email."
+    }
+   }
+  },
+  {
+   "input": "x@in-addr.arpa",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.",
+    "ctx": {
+     "reason": "The part after the @-sign is a special-use or reserved name that cannot be used with email."
+    }
+   }
+  },
+  {
+   "input": "x@foo.invalid",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is a special-use or reserved name that cannot be used with email.",
+    "ctx": {
+     "reason": "The part after the @-sign is a special-use or reserved name that cannot be used with email."
+    }
+   }
+  },
+  {
+   "input": "<a@b.co>",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "Ann <a@b.co>",
+   "ok": "a@b.co"
+  },
+  {
+   "input": " Ann  Lee\t<a@b.co> ",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "\"Ann\" <a@b.co>",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "\"A \\\"q\\\"\" <a@b.co>",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "N <a@b.co> d",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: There can't be anything after the email address.",
+    "ctx": {
+     "reason": "There can't be anything after the email address."
+    }
+   }
+  },
+  {
+   "input": "N <a@b.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An open angle bracket at the start of the email address has to be followed by a close angle bracket at the end.",
+    "ctx": {
+     "reason": "An open angle bracket at the start of the email address has to be followed by a close angle bracket at the end."
+    }
+   }
+  },
+  {
+   "input": "<a@b.co> ",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "<a@b.co>>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign contains invalid characters: '>'.",
+    "ctx": {
+     "reason": "The part after the @-sign contains invalid characters: '>'."
+    }
+   }
+  },
+  {
+   "input": "a <b <c@d.co>>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: A display name and angle brackets around the email address are not permitted here.",
+    "ctx": {
+     "reason": "A display name and angle brackets around the email address are not permitted here."
+    }
+   }
+  },
+  {
+   "input": "N. Q <a@b.co>",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "x y <a@b.co> z",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: There can't be anything after the email address.",
+    "ctx": {
+     "reason": "There can't be anything after the email address."
+    }
+   }
+  },
+  {
+   "input": "\"q\"@b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Quoting the part before the @-sign is not allowed here.",
+    "ctx": {
+     "reason": "Quoting the part before the @-sign is not allowed here."
+    }
+   }
+  },
+  {
+   "input": "a b@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: SPACE.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: SPACE."
+    }
+   }
+  },
+  {
+   "input": "a@b..com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have two periods in a row.",
+    "ctx": {
+     "reason": "An email address cannot have two periods in a row."
+    }
+   }
+  },
+  {
+   "input": ".a@b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot start with a period.",
+    "ctx": {
+     "reason": "An email address cannot start with a period."
+    }
+   }
+  },
+  {
+   "input": "a.@b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have a period immediately before the @-sign.",
+    "ctx": {
+     "reason": "An email address cannot have a period immediately before the @-sign."
+    }
+   }
+  },
+  {
+   "input": "a..b@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have two periods in a row.",
+    "ctx": {
+     "reason": "An email address cannot have two periods in a row."
+    }
+   }
+  },
+  {
+   "input": "a@-b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have a hyphen immediately after the @-sign.",
+    "ctx": {
+     "reason": "An email address cannot have a hyphen immediately after the @-sign."
+    }
+   }
+  },
+  {
+   "input": "a@b-.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have a period and a hyphen next to each other.",
+    "ctx": {
+     "reason": "An email address cannot have a period and a hyphen next to each other."
+    }
+   }
+  },
+  {
+   "input": "a@b.-c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have a period and a hyphen next to each other.",
+    "ctx": {
+     "reason": "An email address cannot have a period and a hyphen next to each other."
+    }
+   }
+  },
+  {
+   "input": "a@b.c-.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have a period and a hyphen next to each other.",
+    "ctx": {
+     "reason": "An email address cannot have a period and a hyphen next to each other."
+    }
+   }
+  },
+  {
+   "input": "ab--c@ab--c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have two letters followed by two dashes immediately after the @-sign or after a period, except Punycode.",
+    "ctx": {
+     "reason": "An email address cannot have two letters followed by two dashes immediately after the @-sign or after a period, except Punycode."
+    }
+   }
+  },
+  {
+   "input": "a@ab--c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have two letters followed by two dashes immediately after the @-sign or after a period, except Punycode.",
+    "ctx": {
+     "reason": "An email address cannot have two letters followed by two dashes immediately after the @-sign or after a period, except Punycode."
+    }
+   }
+  },
+  {
+   "input": "a@Xn--c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is not valid IDNA (Invalid A-label).",
+    "ctx": {
+     "reason": "The part after the @-sign is not valid IDNA (Invalid A-label)."
+    }
+   }
+  },
+  {
+   "input": "a@1.2",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is not valid. It is not within a valid top-level domain.",
+    "ctx": {
+     "reason": "The part after the @-sign is not valid. It is not within a valid top-level domain."
+    }
+   }
+  },
+  {
+   "input": "a@b.c1",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is not valid. It is not within a valid top-level domain.",
+    "ctx": {
+     "reason": "The part after the @-sign is not valid. It is not within a valid top-level domain."
+    }
+   }
+  },
+  {
+   "input": "a\"b@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address must have an @-sign.",
+    "ctx": {
+     "reason": "An email address must have an @-sign."
+    }
+   }
+  },
+  {
+   "input": "a@b",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign is not valid. It should have a period.",
+    "ctx": {
+     "reason": "The part after the @-sign is not valid. It should have a period."
+    }
+   }
+  },
+  {
+   "input": "a\\b@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: \"\\\".",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: \"\\\"."
+    }
+   }
+  },
+  {
+   "input": "@b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: There must be something before the @-sign.",
+    "ctx": {
+     "reason": "There must be something before the @-sign."
+    }
+   }
+  },
+  {
+   "input": "a@",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: There must be something after the @-sign.",
+    "ctx": {
+     "reason": "There must be something after the @-sign."
+    }
+   }
+  },
+  {
+   "input": "abc",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address must have an @-sign.",
+    "ctx": {
+     "reason": "An email address must have an @-sign."
+    }
+   }
+  },
+  {
+   "input": "a\tb@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: U+0009.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: U+0009."
+    }
+   }
+  },
+  {
+   "input": "\"a b\"@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Quoting the part before the @-sign is not allowed here.",
+    "ctx": {
+     "reason": "Quoting the part before the @-sign is not allowed here."
+    }
+   }
+  },
+  {
+   "input": "\"a\\\"b\"@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Quoting the part before the @-sign is not allowed here.",
+    "ctx": {
+     "reason": "Quoting the part before the @-sign is not allowed here."
+    }
+   }
+  },
+  {
+   "input": "\"ab\"x@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Extra character(s) found after close quote: 'x'",
+    "ctx": {
+     "reason": "Extra character(s) found after close quote: 'x'"
+    }
+   }
+  },
+  {
+   "input": "\"ab\"\u0001x@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Extra character(s) found after close quote: U+0001, 'x'",
+    "ctx": {
+     "reason": "Extra character(s) found after close quote: U+0001, 'x'"
+    }
+   }
+  },
+  {
+   "input": "a@B.Com",
+   "ok": "a@b.com"
+  },
+  {
+   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address is too long (2 characters too many).",
+    "ctx": {
+     "reason": "The email address is too long (2 characters too many)."
+    }
+   }
+  },
+  {
+   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address is too long (1 character too many).",
+    "ctx": {
+     "reason": "The email address is too long (1 character too many)."
+    }
+   }
+  },
+  {
+   "input": "a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: After the @-sign, periods cannot be separated by so many characters (1 character too many).",
+    "ctx": {
+     "reason": "After the @-sign, periods cannot be separated by so many characters (1 character too many)."
+    }
+   }
+  },
+  {
+   "input": "a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.com",
+   "ok": "a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.com"
+  },
+  {
+   "input": "a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address is too long after the @-sign (55 characters too many).",
+    "ctx": {
+     "reason": "The email address is too long after the @-sign (55 characters too many)."
+    }
+   }
+  },
+  {
+   "input": "a@BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address is too long after the @-sign (55 bytes too many after IDNA encoding).",
+    "ctx": {
+     "reason": "The email address is too long after the @-sign (55 bytes too many after IDNA encoding)."
+    }
+   }
+  },
+  {
+   "input": "a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.c",
+   "ok": "a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.c"
+  },
+  {
+   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ab",
+   "ok": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.ab"
+  },
+  {
+   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Length must not exceed 2048 characters",
+    "ctx": {
+     "reason": "Length must not exceed 2048 characters"
+    }
+   }
+  },
+  {
+   "input": "a@b.com\n",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Carriage return and line feed characters are not allowed",
+    "ctx": {
+     "reason": "Carriage return and line feed characters are not allowed"
+    }
+   }
+  },
+  {
+   "input": "a@b.com\r",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Carriage return and line feed characters are not allowed",
+    "ctx": {
+     "reason": "Carriage return and line feed characters are not allowed"
+    }
+   }
+  },
+  {
+   "input": "a@b_c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign contains invalid characters: '_'.",
+    "ctx": {
+     "reason": "The part after the @-sign contains invalid characters: '_'."
+    }
+   }
+  },
+  {
+   "input": "a@b c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign contains invalid characters: SPACE.",
+    "ctx": {
+     "reason": "The part after the @-sign contains invalid characters: SPACE."
+    }
+   }
+  },
+  {
+   "input": "a@b.com.",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot end with a period.",
+    "ctx": {
+     "reason": "An email address cannot end with a period."
+    }
+   }
+  },
+  {
+   "input": "a@.b.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address cannot have a period immediately after the @-sign.",
+    "ctx": {
+     "reason": "An email address cannot have a period immediately after the @-sign."
+    }
+   }
+  },
+  {
+   "input": "a@b@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign contains invalid characters: '@'.",
+    "ctx": {
+     "reason": "The part after the @-sign contains invalid characters: '@'."
+    }
+   }
+  },
+  {
+   "input": "a!#$%&'*+-/=?^_`{|}~@b.co",
+   "ok": "a!#$%&'*+-/=?^_`{|}~@b.co"
+  },
+  {
+   "input": "a()@b.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: '(', ')'.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: '(', ')'."
+    }
+   }
+  },
+  {
+   "input": "a<@b.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An open angle bracket at the start of the email address has to be followed by a close angle bracket at the end.",
+    "ctx": {
+     "reason": "An open angle bracket at the start of the email address has to be followed by a close angle bracket at the end."
+    }
+   }
+  },
+  {
+   "input": "a>b@c.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: '>'.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: '>'."
+    }
+   }
+  },
+  {
+   "input": "a,b@c.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: ','.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: ','."
+    }
+   }
+  },
+  {
+   "input": "a;b@c.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: ';'.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: ';'."
+    }
+   }
+  },
+  {
+   "input": "a[@b.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: '['.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: '['."
+    }
+   }
+  },
+  {
+   "input": "\u007f@b.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: U+007F.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: U+007F."
+    }
+   }
+  },
+  {
+   "input": "a\u0000@b.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: U+0000.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: U+0000."
+    }
+   }
+  },
+  {
+   "input": "a @b.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: SPACE.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: SPACE."
+    }
+   }
+  },
+  {
+   "input": " <a b@c.co>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: SPACE.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: SPACE."
+    }
+   }
+  },
+  {
+   "input": "<a\u0001b@c.co>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The email address contains invalid characters before the @-sign: U+0001.",
+    "ctx": {
+     "reason": "The email address contains invalid characters before the @-sign: U+0001."
+    }
+   }
+  },
+  {
+   "input": "\u0001 <a@b.co>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The display name contains invalid characters when not quoted: U+0001.",
+    "ctx": {
+     "reason": "The display name contains invalid characters when not quoted: U+0001."
+    }
+   }
+  },
+  {
+   "input": "\"\u0001\" <a@b.co>",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "\"\u0001x\" <a@b.co>",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "a.b <c@d.co>",
+   "ok": "c@d.co"
+  },
+  {
+   "input": "a@b.co ",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "\u001ca@b.co\u001f",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "a@b.co\u000b",
+   "ok": "a@b.co"
+  },
+  {
+   "input": "a@\u000bb.co",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign contains invalid characters: U+000B.",
+    "ctx": {
+     "reason": "The part after the @-sign contains invalid characters: U+000B."
+    }
+   }
+  },
+  {
+   "input": "<>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address must have an @-sign.",
+    "ctx": {
+     "reason": "An email address must have an @-sign."
+    }
+   }
+  },
+  {
+   "input": "<a@b.co><c@d.co>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign contains invalid characters: '<', '>', '@'.",
+    "ctx": {
+     "reason": "The part after the @-sign contains invalid characters: '<', '>', '@'."
+    }
+   }
+  },
+  {
+   "input": "\"\" <a@b.co>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: A display name and angle brackets around the email address are not permitted here.",
+    "ctx": {
+     "reason": "A display name and angle brackets around the email address are not permitted here."
+    }
+   }
+  },
+  {
+   "input": "<\"q\"@b.co>",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Quoting the part before the @-sign is not allowed here.",
+    "ctx": {
+     "reason": "Quoting the part before the @-sign is not allowed here."
+    }
+   }
+  },
+  {
+   "input": "a@b.co.uk",
+   "ok": "a@b.co.uk"
+  },
+  {
+   "input": "a@B-C.CO.UK",
+   "ok": "a@b-c.co.uk"
+  },
+  {
+   "input": "a@b.c",
+   "ok": "a@b.c"
+  },
+  {
+   "input": "a@1b.c2d.ef",
+   "ok": "a@1b.c2d.ef"
+  },
+  {
+   "input": "",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address must have an @-sign.",
+    "ctx": {
+     "reason": "An email address must have an @-sign."
+    }
+   }
+  },
+  {
+   "input": " ",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address must have an @-sign.",
+    "ctx": {
+     "reason": "An email address must have an @-sign."
+    }
+   }
+  },
+  {
+   "input": "@",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: There must be something before the @-sign.",
+    "ctx": {
+     "reason": "There must be something before the @-sign."
+    }
+   }
+  },
+  {
+   "input": "a@b.com@",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: The part after the @-sign contains invalid characters: '@'.",
+    "ctx": {
+     "reason": "The part after the @-sign contains invalid characters: '@'."
+    }
+   }
+  },
+  {
+   "input": "\"a@b\"@c.com",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: Quoting the part before the @-sign is not allowed here.",
+    "ctx": {
+     "reason": "Quoting the part before the @-sign is not allowed here."
+    }
+   }
+  },
+  {
+   "input": "\"a",
+   "err": {
+    "type": "value_error",
+    "msg": "value is not a valid email address: An email address must have an @-sign.",
+    "ctx": {
+     "reason": "An email address must have an @-sign."
+    }
+   }
+  },
+  {
+   "input": "'a'@b.co",
+   "ok": "'a'@b.co"
+  },
+  {
+   "input": "a@b.coM",
+   "ok": "a@b.com"
+  },
+  {
+   "input": "Postmaster@B.co",
+   "ok": "postmaster@b.co"
+  },
+  {
+   "input": 5,
+   "err": {
+    "type": "string_type",
+    "msg": "Input should be a valid string",
+    "ctx": null
+   }
+  },
+  {
+   "input": null,
+   "err": {
+    "type": "string_type",
+    "msg": "Input should be a valid string",
+    "ctx": null
+   }
+  },
+  {
+   "input": true,
+   "err": {
+    "type": "string_type",
+    "msg": "Input should be a valid string",
+    "ctx": null
+   }
+  },
+  {
+   "input": [
+    "a@b.co"
+   ],
+   "err": {
+    "type": "string_type",
+    "msg": "Input should be a valid string",
+    "ctx": null
+   }
+  }
+ ],
+ "mail": [
+  {
+   "name": "verification",
+   "to": "user@example.com",
+   "subject": "Verify your Kiwi <API> \"\u00e9\" & {x} email",
+   "text": "Welcome to Kiwi <API> \"\u00e9\" & {x}.\n\nConfirm your email address to start creating API tokens.\n\nVerify my email: https://api.example.com/auth/verify-email?token=TOKEN\n\nThis link expires in 48 hours. If you didn't sign up, ignore this email.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">Confirm your email</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Welcome to Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}.</p><p style=\"margin:0 0 14px;\">Confirm your email address to start creating API tokens.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://api.example.com/auth/verify-email?token=TOKEN\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Verify my email</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://api.example.com/auth/verify-email?token=TOKEN</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">This link expires in 48 hours. If you didn&#39;t sign up, ignore this email.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "reset",
+   "to": "user@example.com",
+   "subject": "Reset your Kiwi <API> \"\u00e9\" & {x} password",
+   "text": "A password reset was requested for your Kiwi <API> \"\u00e9\" & {x} account.\n\nSet a new password: https://api.example.com/auth/reset-password?token=TOKEN\n\nThis link expires in 1 hour(s). If you didn't request this, ignore this email.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">Reset your password</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">A password reset was requested for your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://api.example.com/auth/reset-password?token=TOKEN\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Set a new password</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://api.example.com/auth/reset-password?token=TOKEN</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">This link expires in 1 hour(s). If you didn&#39;t request this, ignore this email.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "email_change",
+   "to": "new@example.com",
+   "subject": "Confirm your new Kiwi <API> \"\u00e9\" & {x} email",
+   "text": "Confirm your new email address for Kiwi <API> \"\u00e9\" & {x}.\n\nConfirm new email: https://api.example.com/auth/verify-email-change?token=TOKEN\n\nThis link expires in 48 hours. If you didn't request this, ignore it.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">Confirm your new email</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Confirm your new email address for Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://api.example.com/auth/verify-email-change?token=TOKEN\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Confirm new email</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://api.example.com/auth/verify-email-change?token=TOKEN</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">This link expires in 48 hours. If you didn&#39;t request this, ignore it.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "new_login",
+   "to": "user@example.com",
+   "subject": "New sign-in to your Kiwi <API> \"\u00e9\" & {x} account",
+   "text": "A new sign-in to your account was detected from a device we hadn't seen before.\n\nIP address: 203.0.113.7\n\nDevice: Chrome on Windows\n\nIf this wasn't you, secure your Kiwi <API> \"\u00e9\" & {x} account immediately - change your password and review your active sessions.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">New sign-in detected</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">A new sign-in to your account was detected from a device we hadn&#39;t seen before.</p><p style=\"margin:0 0 14px;\">IP address: 203.0.113.7</p><p style=\"margin:0 0 14px;\">Device: Chrome on Windows</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If this wasn&#39;t you, secure your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account immediately - change your password and review your active sessions.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "new_login_unknown",
+   "to": "user@example.com",
+   "subject": "New sign-in to your Kiwi <API> \"\u00e9\" & {x} account",
+   "text": "A new sign-in to your account was detected from a device we hadn't seen before.\n\nIP address: unknown\n\nDevice: unknown\n\nIf this wasn't you, secure your Kiwi <API> \"\u00e9\" & {x} account immediately - change your password and review your active sessions.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">New sign-in detected</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">A new sign-in to your account was detected from a device we hadn&#39;t seen before.</p><p style=\"margin:0 0 14px;\">IP address: unknown</p><p style=\"margin:0 0 14px;\">Device: unknown</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If this wasn&#39;t you, secure your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account immediately - change your password and review your active sessions.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "password_changed",
+   "to": "user@example.com",
+   "subject": "Your Kiwi <API> \"\u00e9\" & {x} password was changed",
+   "text": "Your account password was just changed, and all other sessions were signed out.\n\nIf this wasn't you, secure your Kiwi <API> \"\u00e9\" & {x} account immediately - change your password and review your active sessions.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">Password changed</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your account password was just changed, and all other sessions were signed out.</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If this wasn&#39;t you, secure your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account immediately - change your password and review your active sessions.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "token_created",
+   "to": "user@example.com",
+   "subject": "A new API token was created on your Kiwi <API> \"\u00e9\" & {x} account",
+   "text": "A new API token \"My \"token\" <&>\" (kiwi_AbCd1234\u2026) was just created.\n\nIf this wasn't you, secure your Kiwi <API> \"\u00e9\" & {x} account immediately - change your password and review your active sessions.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">New API token created</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">A new API token &#34;My &#34;token&#34; &lt;&amp;&gt;&#34; (kiwi_AbCd1234\u2026) was just created.</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If this wasn&#39;t you, secure your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account immediately - change your password and review your active sessions.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "token_expiring",
+   "to": "user@example.com",
+   "subject": "Your Kiwi <API> \"\u00e9\" & {x} API token expires in 3 day(s)",
+   "text": "Your Kiwi <API> \"\u00e9\" & {x} API token \"My \"token\" <&>\" (kiwi_AbCd1234\u2026) expires in 3 day(s).\n\nOnce it expires it will stop authenticating requests. Rotate or replace it from the developer portal.\n\nOpen the portal: https://dev.example.com/a b?x=<1>\n\nIf you no longer need this token, you can ignore this message.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">API token expiring</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} API token &#34;My &#34;token&#34; &lt;&amp;&gt;&#34; (kiwi_AbCd1234\u2026) expires in 3 day(s).</p><p style=\"margin:0 0 14px;\">Once it expires it will stop authenticating requests. Rotate or replace it from the developer portal.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Open the portal</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://dev.example.com/a b?x=&lt;1&gt;</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If you no longer need this token, you can ignore this message.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "token_expiring_today",
+   "to": "user@example.com",
+   "subject": "Your Kiwi <API> \"\u00e9\" & {x} API token expires today",
+   "text": "Your Kiwi <API> \"\u00e9\" & {x} API token \"My \"token\" <&>\" (kiwi_AbCd1234\u2026) expires today.\n\nOnce it expires it will stop authenticating requests. Rotate or replace it from the developer portal.\n\nOpen the portal: https://dev.example.com/a b?x=<1>\n\nIf you no longer need this token, you can ignore this message.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">API token expiring</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} API token &#34;My &#34;token&#34; &lt;&amp;&gt;&#34; (kiwi_AbCd1234\u2026) expires today.</p><p style=\"margin:0 0 14px;\">Once it expires it will stop authenticating requests. Rotate or replace it from the developer portal.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Open the portal</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://dev.example.com/a b?x=&lt;1&gt;</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If you no longer need this token, you can ignore this message.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "github_linked",
+   "to": "user@example.com",
+   "subject": "GitHub was linked to your Kiwi <API> \"\u00e9\" & {x} account",
+   "text": "A GitHub account was just linked to your account and can now be used to sign in.\n\nIf this wasn't you, secure your Kiwi <API> \"\u00e9\" & {x} account immediately - change your password and review your active sessions.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">GitHub account linked</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">A GitHub account was just linked to your account and can now be used to sign in.</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If this wasn&#39;t you, secure your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account immediately - change your password and review your active sessions.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "token_compromised",
+   "to": "user@example.com",
+   "subject": "An API token was auto-revoked on your Kiwi <API> \"\u00e9\" & {x} account",
+   "text": "Your API token \"My \"token\" <&>\" (kiwi_AbCd1234\u2026) was found exposed publicly (detected by secret scanning) and has been automatically revoked.\n\nCreate a replacement token and update wherever the old one was used. Never commit a token to source control.\n\nIf this wasn't you, secure your Kiwi <API> \"\u00e9\" & {x} account immediately - change your password and review your active sessions.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">API token exposed - auto-revoked</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your API token &#34;My &#34;token&#34; &lt;&amp;&gt;&#34; (kiwi_AbCd1234\u2026) was found exposed publicly (detected by secret scanning) and has been automatically revoked.</p><p style=\"margin:0 0 14px;\">Create a replacement token and update wherever the old one was used. Never commit a token to source control.</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If this wasn&#39;t you, secure your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account immediately - change your password and review your active sessions.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "email_changed_old",
+   "to": "old@example.com",
+   "subject": "Your Kiwi <API> \"\u00e9\" & {x} email address was changed",
+   "text": "The email address on your account was changed to a new one.\n\nNew address: new@example.com\n\nIf this wasn't you, secure your Kiwi <API> \"\u00e9\" & {x} account immediately - change your password and review your active sessions.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x}\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">Email address changed</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">The email address on your account was changed to a new one.</p><p style=\"margin:0 0 14px;\">New address: new@example.com</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If this wasn&#39;t you, secure your Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} account immediately - change your password and review your active sessions.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;\u00e9&#34; &amp; {x} \u00b7 <a href=\"https://dev.example.com/a b?x=&lt;1&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          \u00b7 <a href=\"https://docs.example.com/?a=1&amp;b=&#39;2&#39;\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  }
+ ],
+ "views": {
+  "tokens": [
+   {
+    "doc": {
+     "id": "65a1b2c3d4e5f60718293a41",
+     "user_id": "65a1b2c3d4e5f60718293a4b",
+     "name": "Bot \u2713",
+     "prefix": "kiwi_AbCd1234",
+     "hashed_token": "h1",
+     "scopes": 0,
+     "ip_salt": "s",
+     "allowed_ip_hashes": [
+      "a",
+      "b"
+     ],
+     "revoked": false,
+     "revoked_at": null,
+     "revoke_reason": null,
+     "expires_at": "2026-04-01T12:30:45.999000+00:00",
+     "expiry_warned": false,
+     "created_at": "2026-03-04T05:06:07.123000+00:00",
+     "last_used_at": "2026-03-05T00:00:00+00:00",
+     "rotated_at": null,
+     "request_count": 12
+    },
+    "public": "{\"id\":\"65a1b2c3d4e5f60718293a41\",\"name\":\"Bot \u2713\",\"prefix\":\"kiwi_AbCd1234\",\"scopes\":0,\"scope_names\":[],\"allowed_ip_count\":2,\"revoked\":false,\"revoked_at\":null,\"revoke_reason\":null,\"created_at\":\"2026-03-04T05:06:07.123000Z\",\"last_used_at\":\"2026-03-05T00:00:00Z\",\"rotated_at\":null,\"expires_at\":\"2026-04-01T12:30:45.999000Z\",\"request_count\":12}",
+    "created": "{\"id\":\"65a1b2c3d4e5f60718293a41\",\"name\":\"Bot \u2713\",\"prefix\":\"kiwi_AbCd1234\",\"scopes\":0,\"scope_names\":[],\"allowed_ip_count\":2,\"revoked\":false,\"revoked_at\":null,\"revoke_reason\":null,\"created_at\":\"2026-03-04T05:06:07.123000Z\",\"last_used_at\":\"2026-03-05T00:00:00Z\",\"rotated_at\":null,\"expires_at\":\"2026-04-01T12:30:45.999000Z\",\"request_count\":12,\"token\":\"kiwi_secret\"}"
+   },
+   {
+    "doc": {
+     "id": "65a1b2c3d4e5f60718293a42",
+     "user_id": "65a1b2c3d4e5f60718293a4b",
+     "name": "x",
+     "prefix": "kiwi_zz",
+     "hashed_token": "h2",
+     "scopes": 517,
+     "ip_salt": null,
+     "allowed_ip_hashes": [],
+     "revoked": true,
+     "revoked_at": "2026-03-05T00:00:00+00:00",
+     "revoke_reason": "Leaked \"oops\"",
+     "expires_at": null,
+     "expiry_warned": true,
+     "created_at": "2026-03-05T00:00:00+00:00",
+     "last_used_at": null,
+     "rotated_at": "2026-04-01T12:30:45.999000+00:00",
+     "request_count": 8589934592
+    },
+    "public": "{\"id\":\"65a1b2c3d4e5f60718293a42\",\"name\":\"x\",\"prefix\":\"kiwi_zz\",\"scopes\":517,\"scope_names\":[\"rotations:read\",\"stats:read\",\"leaderboards:read\"],\"allowed_ip_count\":0,\"revoked\":true,\"revoked_at\":\"2026-03-05T00:00:00Z\",\"revoke_reason\":\"Leaked \\\"oops\\\"\",\"created_at\":\"2026-03-05T00:00:00Z\",\"last_used_at\":null,\"rotated_at\":\"2026-04-01T12:30:45.999000Z\",\"expires_at\":null,\"request_count\":8589934592}",
+    "created": "{\"id\":\"65a1b2c3d4e5f60718293a42\",\"name\":\"x\",\"prefix\":\"kiwi_zz\",\"scopes\":517,\"scope_names\":[\"rotations:read\",\"stats:read\",\"leaderboards:read\"],\"allowed_ip_count\":0,\"revoked\":true,\"revoked_at\":\"2026-03-05T00:00:00Z\",\"revoke_reason\":\"Leaked \\\"oops\\\"\",\"created_at\":\"2026-03-05T00:00:00Z\",\"last_used_at\":null,\"rotated_at\":\"2026-04-01T12:30:45.999000Z\",\"expires_at\":null,\"request_count\":8589934592,\"token\":\"kiwi_secret\"}"
+   }
+  ],
+  "users": [
+   {
+    "doc": {
+     "created_at": "2026-03-04T05:06:07.123000+00:00",
+     "last_login_at": null,
+     "roles": [],
+     "display_name": null
+    },
+    "public": "{\"id\":\"65a1b2c3d4e5f60718293a4b\",\"email\":\"ann@example.com\",\"display_name\":null,\"is_active\":true,\"is_verified\":false,\"is_superuser\":false,\"roles\":[],\"created_at\":\"2026-03-04T05:06:07.123000Z\",\"last_login_at\":null}"
+   },
+   {
+    "doc": {
+     "created_at": "2026-03-04T05:06:07.123456+00:00",
+     "last_login_at": "2026-04-01T12:30:45.999000+00:00",
+     "roles": [
+      "mod",
+      "\u00fc"
+     ],
+     "display_name": "Ann \"<x>\"",
+     "is_superuser": true,
+     "is_verified": true,
+     "is_active": false
+    },
+    "public": "{\"id\":\"65a1b2c3d4e5f60718293a4b\",\"email\":\"ann@example.com\",\"display_name\":\"Ann \\\"<x>\\\"\",\"is_active\":false,\"is_verified\":true,\"is_superuser\":true,\"roles\":[\"mod\",\"\u00fc\"],\"created_at\":\"2026-03-04T05:06:07.123456Z\",\"last_login_at\":\"2026-04-01T12:30:45.999000Z\"}"
+   }
+  ]
+ },
+ "export": {
+  "exported_at": "2026-05-06T07:08:09.654321+00:00",
+  "user": {
+   "email": "ann@example.com",
+   "display_name": "Ann \u2713",
+   "roles": [
+    "r"
+   ],
+   "github_id": 12345,
+   "created_at": "2026-03-04T05:06:07.123000+00:00"
+  },
+  "tokens": [
+   {
+    "id": "65a1b2c3d4e5f60718293a41",
+    "user_id": "65a1b2c3d4e5f60718293a4b",
+    "name": "Bot \u2713",
+    "prefix": "kiwi_AbCd1234",
+    "hashed_token": "h1",
+    "scopes": 0,
+    "ip_salt": "s",
+    "allowed_ip_hashes": [
+     "a",
+     "b"
+    ],
+    "revoked": false,
+    "revoked_at": null,
+    "revoke_reason": null,
+    "expires_at": "2026-04-01T12:30:45.999000+00:00",
+    "expiry_warned": false,
+    "created_at": "2026-03-04T05:06:07.123000+00:00",
+    "last_used_at": "2026-03-05T00:00:00+00:00",
+    "rotated_at": null,
+    "request_count": 12
+   },
+   {
+    "id": "65a1b2c3d4e5f60718293a42",
+    "user_id": "65a1b2c3d4e5f60718293a4b",
+    "name": "x",
+    "prefix": "kiwi_zz",
+    "hashed_token": "h2",
+    "scopes": 517,
+    "ip_salt": null,
+    "allowed_ip_hashes": [],
+    "revoked": true,
+    "revoked_at": "2026-03-05T00:00:00+00:00",
+    "revoke_reason": "Leaked \"oops\"",
+    "expires_at": null,
+    "expiry_warned": true,
+    "created_at": "2026-03-05T00:00:00+00:00",
+    "last_used_at": null,
+    "rotated_at": "2026-04-01T12:30:45.999000+00:00",
+    "request_count": 8589934592
+   }
+  ],
+  "sessions": [
+   {
+    "id": "65a1b2c3d4e5f60718293a51",
+    "device": "Chrome on Windows",
+    "revoked": false,
+    "created_at": "2026-03-04T05:06:07.123000+00:00",
+    "last_used_at": "2026-03-05T00:00:00+00:00",
+    "expires_at": "2026-04-01T12:30:45.999000+00:00"
+   },
+   {
+    "id": "65a1b2c3d4e5f60718293a52",
+    "device": null,
+    "revoked": true,
+    "created_at": "2026-03-05T00:00:00+00:00",
+    "last_used_at": "2026-03-05T00:00:00+00:00",
+    "expires_at": "2026-04-01T12:30:45.999000+00:00"
+   }
+  ],
+  "usage": [
+   {
+    "method": "GET",
+    "route": "/v1/x/{id}",
+    "path": "/v1/x/1",
+    "status_code": 200,
+    "duration_ms": 12.5,
+    "created_at": "2026-03-04T05:06:07.123000+00:00"
+   },
+   {
+    "method": "POST",
+    "route": "/v1/y",
+    "path": "/v1/y",
+    "status_code": 429,
+    "duration_ms": 3,
+    "created_at": "2026-03-05T00:00:00+00:00"
+   },
+   {
+    "method": "GET",
+    "route": "/v1/z",
+    "path": "/v1/z?q=\u00e9",
+    "status_code": 500,
+    "duration_ms": 0.30000000000000004,
+    "created_at": "2026-04-01T12:30:45.999000+00:00"
+   }
+  ],
+  "body": "{\"exported_at\":\"2026-05-06T07:08:09.654321+00:00\",\"user\":{\"id\":\"65a1b2c3d4e5f60718293a4b\",\"email\":\"ann@example.com\",\"display_name\":\"Ann \u2713\",\"is_verified\":false,\"is_superuser\":false,\"roles\":[\"r\"],\"github_linked\":true,\"created_at\":\"2026-03-04T05:06:07.123000+00:00\",\"last_login_at\":null},\"api_tokens\":[{\"id\":\"65a1b2c3d4e5f60718293a41\",\"name\":\"Bot \u2713\",\"prefix\":\"kiwi_AbCd1234\",\"scopes\":0,\"allowed_ip_count\":2,\"revoked\":false,\"created_at\":\"2026-03-04T05:06:07.123000+00:00\",\"last_used_at\":\"2026-03-05T00:00:00+00:00\",\"expires_at\":\"2026-04-01T12:30:45.999000+00:00\",\"request_count\":12},{\"id\":\"65a1b2c3d4e5f60718293a42\",\"name\":\"x\",\"prefix\":\"kiwi_zz\",\"scopes\":517,\"allowed_ip_count\":0,\"revoked\":true,\"created_at\":\"2026-03-05T00:00:00+00:00\",\"last_used_at\":null,\"expires_at\":null,\"request_count\":8589934592}],\"sessions\":[{\"id\":\"65a1b2c3d4e5f60718293a51\",\"device\":\"Chrome on Windows\",\"revoked\":false,\"created_at\":\"2026-03-04T05:06:07.123000+00:00\",\"last_used_at\":\"2026-03-05T00:00:00+00:00\",\"expires_at\":\"2026-04-01T12:30:45.999000+00:00\"},{\"id\":\"65a1b2c3d4e5f60718293a52\",\"device\":null,\"revoked\":true,\"created_at\":\"2026-03-05T00:00:00+00:00\",\"last_used_at\":\"2026-03-05T00:00:00+00:00\",\"expires_at\":\"2026-04-01T12:30:45.999000+00:00\"}],\"usage_events\":[{\"method\":\"GET\",\"route\":\"/v1/x/{id}\",\"path\":\"/v1/x/1\",\"status_code\":200,\"duration_ms\":12.5,\"created_at\":\"2026-03-04T05:06:07.123000+00:00\"},{\"method\":\"POST\",\"route\":\"/v1/y\",\"path\":\"/v1/y\",\"status_code\":429,\"duration_ms\":3.0,\"created_at\":\"2026-03-05T00:00:00+00:00\"},{\"method\":\"GET\",\"route\":\"/v1/z\",\"path\":\"/v1/z?q=\u00e9\",\"status_code\":500,\"duration_ms\":0.30000000000000004,\"created_at\":\"2026-04-01T12:30:45.999000+00:00\"}]}",
+  "disposition": "attachment; filename=\"kiwi-export.json\""
+ },
+ "activity": [
+  {
+   "days": 7,
+   "totals": [],
+   "by_day": [],
+   "by_endpoint": [],
+   "out": "{\"window_days\":7,\"total_requests\":0,\"error_count\":0,\"rate_limited\":0,\"avg_duration_ms\":0.0,\"by_day\":[],\"by_endpoint\":[]}",
+   "pipelines": [
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2026-10-15 22:58:56.959350+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": null,
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "rate_limited": {
+        "$sum": {
+         "$cond": [
+          {
+           "$eq": [
+            "$status_code",
+            429
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     }
+    ],
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2026-10-15 22:58:56.959350+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": {
+        "$dateToString": {
+         "format": "%Y-%m-%d",
+         "date": "$created_at",
+         "timezone": "UTC"
+        }
+       },
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     },
+     {
+      "$sort": {
+       "_id": 1
+      }
+     }
+    ],
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2026-10-15 22:58:56.959350+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": {
+        "route": "$route",
+        "method": "$method"
+       },
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     },
+     {
+      "$sort": {
+       "count": -1
+      }
+     }
+    ]
+   ]
+  },
+  {
+   "days": 1,
+   "totals": [
+    {
+     "_id": null,
+     "count": 10,
+     "error_count": 3,
+     "rate_limited": 1,
+     "avg_duration_ms": 12.345
+    }
+   ],
+   "by_day": [
+    {
+     "_id": "2026-03-01",
+     "count": 4,
+     "error_count": 0,
+     "avg_duration_ms": 0.125
+    },
+    {
+     "_id": "2026-03-02",
+     "count": 6,
+     "error_count": 3,
+     "avg_duration_ms": 2.675
+    }
+   ],
+   "by_endpoint": [
+    {
+     "_id": {
+      "route": "/v1/a",
+      "method": "GET"
+     },
+     "count": 7,
+     "error_count": 1,
+     "avg_duration_ms": 1.005
+    },
+    {
+     "_id": {
+      "route": "/v1/b/{x}",
+      "method": "POST"
+     },
+     "count": 3,
+     "error_count": 2,
+     "avg_duration_ms": null
+    }
+   ],
+   "out": "{\"window_days\":1,\"total_requests\":10,\"error_count\":3,\"rate_limited\":1,\"avg_duration_ms\":12.35,\"by_day\":[{\"date\":\"2026-03-01\",\"count\":4,\"error_count\":0,\"avg_duration_ms\":0.12},{\"date\":\"2026-03-02\",\"count\":6,\"error_count\":3,\"avg_duration_ms\":2.67}],\"by_endpoint\":[{\"route\":\"/v1/a\",\"method\":\"GET\",\"count\":7,\"error_count\":1,\"avg_duration_ms\":1.0},{\"route\":\"/v1/b/{x}\",\"method\":\"POST\",\"count\":3,\"error_count\":2,\"avg_duration_ms\":0.0}]}",
+   "pipelines": [
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2026-10-21 22:58:56.959842+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": null,
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "rate_limited": {
+        "$sum": {
+         "$cond": [
+          {
+           "$eq": [
+            "$status_code",
+            429
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     }
+    ],
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2026-10-21 22:58:56.959842+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": {
+        "$dateToString": {
+         "format": "%Y-%m-%d",
+         "date": "$created_at",
+         "timezone": "UTC"
+        }
+       },
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     },
+     {
+      "$sort": {
+       "_id": 1
+      }
+     }
+    ],
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2026-10-21 22:58:56.959842+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": {
+        "route": "$route",
+        "method": "$method"
+       },
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     },
+     {
+      "$sort": {
+       "count": -1
+      }
+     }
+    ]
+   ]
+  },
+  {
+   "days": 365,
+   "totals": [
+    {
+     "_id": null,
+     "count": 1,
+     "error_count": 0,
+     "rate_limited": 0,
+     "avg_duration_ms": null
+    }
+   ],
+   "by_day": [
+    {
+     "_id": "2026-03-01",
+     "count": 1,
+     "error_count": 0,
+     "avg_duration_ms": 1e+16
+    }
+   ],
+   "by_endpoint": [
+    {
+     "_id": {
+      "route": "/v1/a",
+      "method": "GET"
+     },
+     "count": 1,
+     "error_count": 0,
+     "avg_duration_ms": 0.0
+    }
+   ],
+   "out": "{\"window_days\":365,\"total_requests\":1,\"error_count\":0,\"rate_limited\":0,\"avg_duration_ms\":0.0,\"by_day\":[{\"date\":\"2026-03-01\",\"count\":1,\"error_count\":0,\"avg_duration_ms\":1e+16}],\"by_endpoint\":[{\"route\":\"/v1/a\",\"method\":\"GET\",\"count\":1,\"error_count\":0,\"avg_duration_ms\":0.0}]}",
+   "pipelines": [
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2025-10-22 22:58:56.960612+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": null,
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "rate_limited": {
+        "$sum": {
+         "$cond": [
+          {
+           "$eq": [
+            "$status_code",
+            429
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     }
+    ],
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2025-10-22 22:58:56.960612+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": {
+        "$dateToString": {
+         "format": "%Y-%m-%d",
+         "date": "$created_at",
+         "timezone": "UTC"
+        }
+       },
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     },
+     {
+      "$sort": {
+       "_id": 1
+      }
+     }
+    ],
+    [
+     {
+      "$match": {
+       "user_id": "65a1b2c3d4e5f60718293a4b",
+       "created_at": {
+        "$gte": "2025-10-22 22:58:56.960612+00:00"
+       }
+      }
+     },
+     {
+      "$group": {
+       "_id": {
+        "route": "$route",
+        "method": "$method"
+       },
+       "count": {
+        "$sum": 1
+       },
+       "error_count": {
+        "$sum": {
+         "$cond": [
+          {
+           "$gte": [
+            "$status_code",
+            400
+           ]
+          },
+          1,
+          0
+         ]
+        }
+       },
+       "avg_duration_ms": {
+        "$avg": "$duration_ms"
+       }
+      }
+     },
+     {
+      "$sort": {
+       "count": -1
+      }
+     }
+    ]
+   ]
+  }
+ ],
+ "ips": [
+  {
+   "ips": [
+    "1.2.3.4"
+   ],
+   "hashes": [
+    "76bc73ea5d563802431c16a1501786d684f31e6069e059173f089c2444639c51"
+   ]
+  },
+  {
+   "ips": [
+    " 1.2.3.4 ",
+    "1.2.3.4",
+    "\t"
+   ],
+   "hashes": [
+    "76bc73ea5d563802431c16a1501786d684f31e6069e059173f089c2444639c51"
+   ]
+  },
+  {
+   "ips": [
+    "::1",
+    "0:0::1",
+    "0:0:0:0:0:0:0:1"
+   ],
+   "hashes": [
+    "3624afde04ac41c5f2794757ea5e65d38332e7d0b13d80e88f8431bdaf253337"
+   ]
+  },
+  {
+   "ips": [
+    "fe80::1%eth0"
+   ],
+   "hashes": [
+    "1ab45c65e7e404d93cb919854136bfa41877690aab4cc49ba4c522c352e6f943"
+   ]
+  },
+  {
+   "ips": [
+    "FE80::0001%Eth0"
+   ],
+   "hashes": [
+    "43b1d924c3b077f42ed16c9107b02baae4ef7b93424e2057d4d16eef2774d8a2"
+   ]
+  },
+  {
+   "ips": [
+    "fe80::1%"
+   ],
+   "error": "Invalid IP: fe80::1%"
+  },
+  {
+   "ips": [
+    "1.2.3.4%x"
+   ],
+   "error": "Invalid IP: 1.2.3.4%x"
+  },
+  {
+   "ips": [
+    "1.2.3.4/24"
+   ],
+   "error": "CIDR ranges aren't supported on token IP allowlists (hashes can't range-match); pin specific addresses instead."
+  },
+  {
+   "ips": [
+    "CIDR"
+   ],
+   "error": "'CIDR' does not appear to be an IPv4 or IPv6 address"
+  },
+  {
+   "ips": [
+    " CIDR?/"
+   ],
+   "error": "CIDR ranges aren't supported on token IP allowlists (hashes can't range-match); pin specific addresses instead."
+  },
+  {
+   "ips": [
+    "abc"
+   ],
+   "error": "Invalid IP: abc"
+  },
+  {
+   "ips": [
+    ""
+   ],
+   "hashes": []
+  },
+  {
+   "ips": [
+    "::ffff:1.2.3.4"
+   ],
+   "hashes": [
+    "93a99230f7d71a16a6be764131c0f2edba38cafaf0a4152d6cce985e30f30f83"
+   ]
+  },
+  {
+   "ips": [
+    "1.2.3.04"
+   ],
+   "error": "Invalid IP: 1.2.3.04"
+  },
+  {
+   "ips": [
+    "2001:DB8::1"
+   ],
+   "hashes": [
+    "385601db94dd7cc96bda6ad454ee01cec08926120858784119b454e1215baaac"
+   ]
+  },
+  {
+   "ips": [
+    "1.2.3.4",
+    "bad",
+    "5.6.7.8/8"
+   ],
+   "error": "Invalid IP: bad"
+  },
+  {
+   "ips": [
+    "256.1.1.1"
+   ],
+   "error": "Invalid IP: 256.1.1.1"
+  },
+  {
+   "ips": [
+    "::ffff:0102:0304"
+   ],
+   "hashes": [
+    "93a99230f7d71a16a6be764131c0f2edba38cafaf0a4152d6cce985e30f30f83"
+   ]
+  },
+  {
+   "ips": [
+    "2001:db8:0:0:1:0:0:1"
+   ],
+   "hashes": [
+    "6c13886bfd2d26eb602e44bc1fb83c0dcd0f660c22acebe06284bdf499f20ca2"
+   ]
+  },
+  {
+   "ips": [
+    "a%b%c"
+   ],
+   "error": "Invalid IP: a%b%c"
+  },
+  {
+   "ips": [],
+   "hashes": []
+  },
+  {
+   "ips": [
+    "\u00a01.2.3.4\u3000"
+   ],
+   "hashes": [
+    "76bc73ea5d563802431c16a1501786d684f31e6069e059173f089c2444639c51"
+   ]
+  }
+ ],
+ "signatures": {
+  "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+  "keys": [
+   {
+    "name": "p256",
+    "cases": [
+     {
+      "label": "ok",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MEQCIDwB44gnQsY6Yklre6CoxSwiY0mARzTvPRctjx3UCo7/AiBi88loSlAbP78DM/QV0i4Ukq1nVOjRzbVV3DPt0nxD3A==",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELQGvEGBKq5uvwgKRqm9ViXPH1p2t\nMPqJLUUvSiKVIP/fHQId/ogMbpHMniKqnTc0gQOdC9CABTzvLtVvrrjZlQ==\n-----END PUBLIC KEY-----\n",
+      "ok": true
+     },
+     {
+      "label": "tampered",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}] ",
+      "sig": "MEQCIDwB44gnQsY6Yklre6CoxSwiY0mARzTvPRctjx3UCo7/AiBi88loSlAbP78DM/QV0i4Ukq1nVOjRzbVV3DPt0nxD3A==",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELQGvEGBKq5uvwgKRqm9ViXPH1p2t\nMPqJLUUvSiKVIP/fHQId/ogMbpHMniKqnTc0gQOdC9CABTzvLtVvrrjZlQ==\n-----END PUBLIC KEY-----\n",
+      "ok": false
+     },
+     {
+      "label": "wrong_key",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MEQCIDwB44gnQsY6Yklre6CoxSwiY0mARzTvPRctjx3UCo7/AiBi88loSlAbP78DM/QV0i4Ukq1nVOjRzbVV3DPt0nxD3A==",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEpwN53mfJDyUwitq3L7ToTR1nda3i\nr6n2BhfH5txLYLcPtb0la2hPyXxn1oDQmMjpA4aPEHuwb36pKTCkveSsog==\n-----END PUBLIC KEY-----\n",
+      "ok": false
+     },
+     {
+      "label": "bad_b64",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MEQCIDwB44gnQsY6Yklre6CoxSwiY0mARzTvPRctjx3UCo7/AiBi88loSlAbP78DM/QV0i4Ukq1nVOjRzbVV3DPt0nxD3A",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELQGvEGBKq5uvwgKRqm9ViXPH1p2t\nMPqJLUUvSiKVIP/fHQId/ogMbpHMniKqnTc0gQOdC9CABTzvLtVvrrjZlQ==\n-----END PUBLIC KEY-----\n",
+      "ok": false
+     },
+     {
+      "label": "spaced_b64",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MEQCIDwB44 gnQsY6Yklre6CoxSwiY0mARzTvPRctjx3UCo7/AiBi88loSlAbP78DM/QV0i4Ukq1nVOjRzbVV3DPt0nxD3A==",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAELQGvEGBKq5uvwgKRqm9ViXPH1p2t\nMPqJLUUvSiKVIP/fHQId/ogMbpHMniKqnTc0gQOdC9CABTzvLtVvrrjZlQ==\n-----END PUBLIC KEY-----\n",
+      "ok": true
+     }
+    ]
+   },
+   {
+    "name": "p384",
+    "cases": [
+     {
+      "label": "ok",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MGYCMQDCXy6jjuTa2w84WpFVYhNm1X/Q+8Ahg+MG35UvJjoI1y8xQIyr4QmPa0Dwf4gJryECMQDcirdLMQ0ZNBnuUhX9RJ6+/kTJed1zZlyRJmiXx/vmnx2gKhTsxg6hawkttAfbT2Y=",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEa0OOxH0NkBn82TL0UIrBr62ULc/KORJT\nkmNGmQtrGUKQksvB0W5y4YAd60uYVR9MJqnO8NuR8jPuYnHGqgVzX5Q5CUJrxYzI\naaUsVNMMEMI1sWPdDy8yCIc7FFWpGQZK\n-----END PUBLIC KEY-----\n",
+      "ok": true
+     },
+     {
+      "label": "tampered",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}] ",
+      "sig": "MGYCMQDCXy6jjuTa2w84WpFVYhNm1X/Q+8Ahg+MG35UvJjoI1y8xQIyr4QmPa0Dwf4gJryECMQDcirdLMQ0ZNBnuUhX9RJ6+/kTJed1zZlyRJmiXx/vmnx2gKhTsxg6hawkttAfbT2Y=",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEa0OOxH0NkBn82TL0UIrBr62ULc/KORJT\nkmNGmQtrGUKQksvB0W5y4YAd60uYVR9MJqnO8NuR8jPuYnHGqgVzX5Q5CUJrxYzI\naaUsVNMMEMI1sWPdDy8yCIc7FFWpGQZK\n-----END PUBLIC KEY-----\n",
+      "ok": false
+     },
+     {
+      "label": "wrong_key",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MGYCMQDCXy6jjuTa2w84WpFVYhNm1X/Q+8Ahg+MG35UvJjoI1y8xQIyr4QmPa0Dwf4gJryECMQDcirdLMQ0ZNBnuUhX9RJ6+/kTJed1zZlyRJmiXx/vmnx2gKhTsxg6hawkttAfbT2Y=",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEVrvaZdG3u0VSbH7BzKIsQUMwPe97axJH\n+4UdO4ubswB8uqf8GkOwgbsEO7jkKCWlbloie9lbq1xqlm+PCU3ytTF4mZzBwqYz\n48RpWNb744bWosvlNkLafAKgKdOMSqNw\n-----END PUBLIC KEY-----\n",
+      "ok": false
+     },
+     {
+      "label": "bad_b64",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MGYCMQDCXy6jjuTa2w84WpFVYhNm1X/Q+8Ahg+MG35UvJjoI1y8xQIyr4QmPa0Dwf4gJryECMQDcirdLMQ0ZNBnuUhX9RJ6+/kTJed1zZlyRJmiXx/vmnx2gKhTsxg6hawkttAfbT2",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEa0OOxH0NkBn82TL0UIrBr62ULc/KORJT\nkmNGmQtrGUKQksvB0W5y4YAd60uYVR9MJqnO8NuR8jPuYnHGqgVzX5Q5CUJrxYzI\naaUsVNMMEMI1sWPdDy8yCIc7FFWpGQZK\n-----END PUBLIC KEY-----\n",
+      "ok": false
+     },
+     {
+      "label": "spaced_b64",
+      "body": "[{\"token\":\"kiwi_x\",\"type\":\"kiwi_api_token\",\"url\":\"https://github.com/x\"}]",
+      "sig": "MGYCMQDCXy 6jjuTa2w84WpFVYhNm1X/Q+8Ahg+MG35UvJjoI1y8xQIyr4QmPa0Dwf4gJryECMQDcirdLMQ0ZNBnuUhX9RJ6+/kTJed1zZlyRJmiXx/vmnx2gKhTsxg6hawkttAfbT2Y=",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEa0OOxH0NkBn82TL0UIrBr62ULc/KORJT\nkmNGmQtrGUKQksvB0W5y4YAd60uYVR9MJqnO8NuR8jPuYnHGqgVzX5Q5CUJrxYzI\naaUsVNMMEMI1sWPdDy8yCIc7FFWpGQZK\n-----END PUBLIC KEY-----\n",
+      "ok": true
+     }
+    ]
+   }
+  ],
+  "b64": [
+   {
+    "in": "",
+    "out": ""
+   },
+   {
+    "in": "QQ==",
+    "out": "41"
+   },
+   {
+    "in": "QQ",
+    "out": null
+   },
+   {
+    "in": "QUI=",
+    "out": "4142"
+   },
+   {
+    "in": "QUJD",
+    "out": "414243"
+   },
+   {
+    "in": "QUJDRA",
+    "out": null
+   },
+   {
+    "in": "Q",
+    "out": null
+   },
+   {
+    "in": "QQ==QUJD",
+    "out": null
+   },
+   {
+    "in": "Q Q = =",
+    "out": "41"
+   },
+   {
+    "in": "QQ=",
+    "out": null
+   },
+   {
+    "in": "Q=Q=",
+    "out": null
+   },
+   {
+    "in": "QUJD\n",
+    "out": "414243"
+   },
+   {
+    "in": "=QUJD",
+    "out": "414243"
+   },
+   {
+    "in": "QU*JD",
+    "out": "414243"
+   },
+   {
+    "in": "QUJ=D",
+    "out": "414243"
+   },
+   {
+    "in": "QUI==extra",
+    "out": "41421ec6dada"
+   },
+   {
+    "in": "QQ=QUJD",
+    "out": null
+   },
+   {
+    "in": "Q=Q==",
+    "out": "41"
+   },
+   {
+    "in": "QUI=QQ==",
+    "out": null
+   },
+   {
+    "in": "QUI=Q",
+    "out": "414210"
+   },
+   {
+    "in": "QUJD====",
+    "out": "414243"
+   },
+   {
+    "in": "QQ===",
+    "out": "41"
+   },
+   {
+    "in": "QQ=x=",
+    "out": "410c"
+   },
+   {
+    "in": "QQ= =",
+    "out": "41"
+   },
+   {
+    "in": "QQ==QQ==",
+    "out": "410410"
+   },
+   {
+    "in": "QQ==Q",
+    "out": null
+   },
+   {
+    "in": "=",
+    "out": ""
+   },
+   {
+    "in": "Q===",
+    "out": null
+   },
+   {
+    "in": "QUJD=QQ==",
+    "out": "41424341"
+   },
+   {
+    "in": "QQ=*=",
+    "out": "41"
+   },
+   {
+    "in": "Q\u0080Q==",
+    "out": null
+   },
+   {
+    "in": "QUJDRA==\n\n",
+    "out": "41424344"
+   },
+   {
+    "in": "QUJDRA=",
+    "out": null
+   }
+  ]
+ },
+ "models": {
+  "user": [
+   "email",
+   "hashed_password",
+   "display_name",
+   "is_active",
+   "is_verified",
+   "is_superuser",
+   "roles",
+   "token_version",
+   "github_id",
+   "email_bounced",
+   "created_at",
+   "updated_at",
+   "last_login_at"
+  ],
+  "session": [
+   "user_id",
+   "refresh_token_hash",
+   "device",
+   "created_at",
+   "last_used_at",
+   "expires_at",
+   "revoked"
+  ],
+  "api_token": [
+   "user_id",
+   "name",
+   "prefix",
+   "hashed_token",
+   "scopes",
+   "ip_salt",
+   "allowed_ip_hashes",
+   "revoked",
+   "revoked_at",
+   "revoke_reason",
+   "expires_at",
+   "expiry_warned",
+   "created_at",
+   "last_used_at",
+   "rotated_at",
+   "request_count"
+  ],
+  "outbox": [
+   "to",
+   "subject",
+   "text",
+   "html",
+   "status",
+   "attempts",
+   "last_error",
+   "next_attempt_at",
+   "claimed_at",
+   "created_at",
+   "sent_at"
+  ],
+  "usage_event": [
+   "user_id",
+   "token_id",
+   "method",
+   "route",
+   "path",
+   "status_code",
+   "duration_ms",
+   "created_at"
+  ]
+ }
+}

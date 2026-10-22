@@ -45,6 +45,7 @@ fn ported() -> Router<AppState> {
         .merge(crate::market::router())
         .merge(store::router())
         .merge(crate::events::router())
+        .merge(crate::portal::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's
@@ -54,6 +55,18 @@ async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next
     let defer = req.extensions().get::<MatchedPath>().is_some_and(|m| {
         crate::lbread::defers(m.as_str(), req.method(), req.uri().path()) || crate::events::defers(m.as_str())
     });
+}
+
+/// A param route can own only some values of its segment (Starlette's
+/// `{uuid:int}` next to literals Python still serves), and a body route some
+/// bodies (portal emails needing Unicode/IDNA): the rest go to Python after
+/// routing but before the ported stack has touched the request.
+async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: Next) -> Response {
+    let matched = req.extensions().get::<MatchedPath>().cloned();
+    let mut defer = matched.as_ref().is_some_and(|m| crate::lbread::defers(m.as_str(), req.method(), req.uri().path()));
+    if let Some(field) = matched.as_ref().and_then(|m| crate::portal::defer::email_field(m.as_str(), req.method())) {
+        (req, defer) = crate::portal::defer::inspect(req, field).await;
+    }
     if defer && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
         return proxy(State(state), ConnectInfo(peer), req).await;
     }
