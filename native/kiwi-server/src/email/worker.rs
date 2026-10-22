@@ -41,7 +41,7 @@ pub fn start(state: &AppState) {
 /// One wake of the loop: deliver due messages until none is left or the
 /// burst cap is hit.
 pub async fn run_once(state: &AppState) -> anyhow::Result<usize> {
-    let db = state.mongo();
+    let db = super::mongo(state)?;
     let mut processed = 0;
     while let Some(msg) = claim_next(db).await? {
         process_one(state, msg).await?;
@@ -125,7 +125,7 @@ async fn process_one(state: &AppState, mut msg: OutboxEmail) -> anyhow::Result<(
     let settings = state.settings();
     let outcome = mailer::deliver_email(settings, &msg.to, &msg.subject, &msg.text, msg.html.as_deref()).await?;
     let bounce = apply_outcome(&mut msg, &outcome, settings, dt::now());
-    let db = state.mongo();
+    let db = super::mongo(state)?;
     save(db, &msg).await?;
     match &outcome {
         Ok(()) => {}

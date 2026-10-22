@@ -65,7 +65,7 @@ pub fn inactive_filter(cutoff: DateTime<Utc>) -> Document {
 pub async fn auto_revoke_inactive_tokens(state: &AppState) -> anyhow::Result<u64> {
     let days = state.settings().token_inactivity_revoke_days;
     let query = inactive_filter(dt::now() - TimeDelta::days(days));
-    let tokens = state.mongo().collection::<Document>(API_TOKENS);
+    let tokens = email::mongo(state)?.collection::<Document>(API_TOKENS);
     let count = tokens.count_documents(query.clone()).await?;
     if count > 0 {
         let reason = format!("Auto-revoked: inactive for {days} days");
@@ -114,7 +114,7 @@ pub async fn warn_expiring_tokens(state: &AppState) -> anyhow::Result<usize> {
     if !settings.security_email_notifications {
         return Ok(0);
     }
-    let db = state.mongo();
+    let db = email::mongo(state)?;
     let now = dt::now();
     let horizon = now + TimeDelta::days(settings.token_expiry_warning_days);
     let query = doc! {
@@ -251,7 +251,7 @@ pub async fn daily_rate_limit_digest(state: &AppState) -> anyhow::Result<bool> {
     let hours = runtime_config::get_setting(state, "rate_limit_digest_window_hours").await?;
     let threshold = runtime_config::get_setting(state, "rate_limit_alert_threshold").await?;
     let window_us = hours_us(&hours).ok_or_else(|| anyhow::anyhow!("bad rate_limit_digest_window_hours {hours}"))?;
-    let db = state.mongo();
+    let db = email::mongo(state)?;
     let now = dt::now();
     if !digest_due(now, state_time(db, DIGEST_KEY).await?, window_us) {
         return Ok(false);

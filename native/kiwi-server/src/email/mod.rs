@@ -113,6 +113,11 @@ impl OutboxEmail {
     }
 }
 
+/// The database, or an error where Python's `get_db()` would raise.
+pub fn mongo(state: &AppState) -> anyhow::Result<&mongodb::Database> {
+    state.inner.db.mongo.as_ref().ok_or_else(|| anyhow::anyhow!("MONGO_URI not configured"))
+}
+
 pub fn brand(settings: &Settings) -> Brand<'_> {
     Brand { app_name: &settings.app_name, dev_url: &settings.dev_url, docs_url: &settings.docs_url }
 }
@@ -130,7 +135,7 @@ pub async fn queue_email(
         tracing::warn!("SMTP not configured - not queueing email to {to} ({subject})");
         return Ok(());
     }
-    let db = state.mongo();
+    let db = mongo(state)?;
     let bounced =
         db.collection::<Document>(USERS).find_one(doc! {"email": to.to_lowercase(), "email_bounced": true}).await?;
     if bounced.is_some() {
