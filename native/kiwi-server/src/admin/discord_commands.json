@@ -1,0 +1,520 @@
+[
+ {
+  "name": "status",
+  "type": 1,
+  "description": "Show live Trove server status (EU / US / PTS).",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "activity",
+  "type": 1,
+  "description": "Show the Trove player-activity trend with a chart.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ],
+  "options": [
+   {
+    "name": "period",
+    "description": "Time range (default: 7 days)",
+    "type": 3,
+    "required": false,
+    "choices": [
+     {
+      "name": "7 Days",
+      "value": "7d"
+     },
+     {
+      "name": "1 Month",
+      "value": "1m"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "chaos",
+  "type": 1,
+  "description": "Show this week's Chaos Chest featured item.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "servertime",
+  "type": 1,
+  "description": "Show the current Trove server time (UTC−11) and next resets.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "bonuses",
+  "type": 1,
+  "description": "Show today's daily bonus and this week's weekly bonus.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "hourly_challenge",
+  "type": 1,
+  "description": "Show the current and previous hourly challenge.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "longshade",
+  "type": 1,
+  "description": "Show the current Depth-15 delve biome rotation.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "giveaways",
+  "type": 1,
+  "description": "Show current, upcoming, and recently-ended giveaways.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "corruxion",
+  "type": 1,
+  "description": "Corruxion merchant - is it here now, or when does it arrive?",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "fluxion",
+  "type": 1,
+  "description": "Fluxion merchant - its voting/selling stage and timing.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "stampy",
+  "type": 1,
+  "description": "The Stampy event - current/next window and biome.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "wild_mana",
+  "type": 1,
+  "description": "The weekly Wild Mana biome rotation.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "trove_news",
+  "type": 1,
+  "description": "The latest Trove news.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "price",
+  "type": 1,
+  "description": "Show the marketplace price summary for an item.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ],
+  "options": [
+   {
+    "name": "item",
+    "description": "Item name (case-insensitive)",
+    "type": 3,
+    "required": true
+   }
+  ]
+ },
+ {
+  "name": "trove_uptime",
+  "type": 1,
+  "description": "Show Trove server uptime % per region (last 7 days).",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "gem",
+  "type": 1,
+  "description": "Evaluate a gem: quality %, Power Rank, and cost to perfect.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ],
+  "options": [
+   {
+    "name": "tier",
+    "description": "Gem tier",
+    "type": 4,
+    "required": true,
+    "choices": [
+     {
+      "name": "Radiant",
+      "value": 1
+     },
+     {
+      "name": "Stellar",
+      "value": 2
+     },
+     {
+      "name": "Crystal",
+      "value": 3
+     },
+     {
+      "name": "Mystic",
+      "value": 4
+     }
+    ]
+   },
+   {
+    "name": "type",
+    "description": "Lesser or Empowered",
+    "type": 4,
+    "required": true,
+    "choices": [
+     {
+      "name": "Lesser",
+      "value": 1
+     },
+     {
+      "name": "Empowered",
+      "value": 2
+     }
+    ]
+   },
+   {
+    "name": "level",
+    "description": "Gem level (1–30)",
+    "type": 4,
+    "required": true,
+    "min_value": 1,
+    "max_value": 30
+   },
+   {
+    "name": "stat1",
+    "description": "Stat 1 type",
+    "type": 4,
+    "required": true,
+    "choices": [
+     {
+      "name": "Physical Damage",
+      "value": 1
+     },
+     {
+      "name": "Magic Damage",
+      "value": 2
+     },
+     {
+      "name": "Critical Damage",
+      "value": 3
+     },
+     {
+      "name": "Critical Hit",
+      "value": 4
+     },
+     {
+      "name": "Max Health",
+      "value": 5
+     },
+     {
+      "name": "Max Health %",
+      "value": 6
+     },
+     {
+      "name": "Light",
+      "value": 7
+     },
+     {
+      "name": "Movement Speed",
+      "value": 8
+     },
+     {
+      "name": "Jump",
+      "value": 9
+     },
+     {
+      "name": "Health Regen",
+      "value": 10
+     }
+    ]
+   },
+   {
+    "name": "value1",
+    "description": "Stat 1 value (as shown in-game)",
+    "type": 10,
+    "required": true
+   },
+   {
+    "name": "stat2",
+    "description": "Stat 2 type",
+    "type": 4,
+    "required": true,
+    "choices": [
+     {
+      "name": "Physical Damage",
+      "value": 1
+     },
+     {
+      "name": "Magic Damage",
+      "value": 2
+     },
+     {
+      "name": "Critical Damage",
+      "value": 3
+     },
+     {
+      "name": "Critical Hit",
+      "value": 4
+     },
+     {
+      "name": "Max Health",
+      "value": 5
+     },
+     {
+      "name": "Max Health %",
+      "value": 6
+     },
+     {
+      "name": "Light",
+      "value": 7
+     },
+     {
+      "name": "Movement Speed",
+      "value": 8
+     },
+     {
+      "name": "Jump",
+      "value": 9
+     },
+     {
+      "name": "Health Regen",
+      "value": 10
+     }
+    ]
+   },
+   {
+    "name": "value2",
+    "description": "Stat 2 value (as shown in-game)",
+    "type": 10,
+    "required": true
+   },
+   {
+    "name": "stat3",
+    "description": "Stat 3 type",
+    "type": 4,
+    "required": true,
+    "choices": [
+     {
+      "name": "Physical Damage",
+      "value": 1
+     },
+     {
+      "name": "Magic Damage",
+      "value": 2
+     },
+     {
+      "name": "Critical Damage",
+      "value": 3
+     },
+     {
+      "name": "Critical Hit",
+      "value": 4
+     },
+     {
+      "name": "Max Health",
+      "value": 5
+     },
+     {
+      "name": "Max Health %",
+      "value": 6
+     },
+     {
+      "name": "Light",
+      "value": 7
+     },
+     {
+      "name": "Movement Speed",
+      "value": 8
+     },
+     {
+      "name": "Jump",
+      "value": 9
+     },
+     {
+      "name": "Health Regen",
+      "value": 10
+     }
+    ]
+   },
+   {
+    "name": "value3",
+    "description": "Stat 3 value (as shown in-game)",
+    "type": 10,
+    "required": true
+   }
+  ]
+ },
+ {
+  "name": "download",
+  "type": 1,
+  "description": "Download the latest Better Trove Tools (all platforms).",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "web",
+  "type": 1,
+  "description": "Use Better Trove Tools in your browser.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "change_log",
+  "type": 1,
+  "description": "Better Trove Tools changelog (recent changes).",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ },
+ {
+  "name": "ping",
+  "type": 1,
+  "description": "Check the Kiwi API is online and responsive.",
+  "integration_types": [
+   0,
+   1
+  ],
+  "contexts": [
+   0,
+   1,
+   2
+  ]
+ }
+]

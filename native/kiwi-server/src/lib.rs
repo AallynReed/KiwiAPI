@@ -3,6 +3,7 @@
 //! is left there. See `native/PORT_PLAN.md`.
 
 pub mod activity;
+pub mod admin;
 pub mod auth;
 pub mod cheaters;
 pub mod config;
