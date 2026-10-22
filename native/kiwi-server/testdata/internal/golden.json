@@ -1,0 +1,700 @@
+{
+ "env": {
+  "SECRET_KEY": "internal-fixture-secret",
+  "INTERNAL_KEY": "k3y-for-fixtures"
+ },
+ "now": "2026-10-22T11:00:00.123456+00:00",
+ "http": [
+  {
+   "name": "ingest_no_key",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_000",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": \"pv\", \"pid\": \"p-0001-aaaa\", \"route\": \"/mods/{handle}/{slug}\", \"path\": \"/mods/aallyn/thing \\u2713\", \"visitor_hash\": \"0123456789abcdef0123456789abcdef\", \"channel\": \"search\", \"source\": \"Google\", \"device\": \"mobile\", \"browser\": \"Chrome\", \"os\": \"Android\", \"lang\": \"en\", \"engaged_s\": 99, \"perf\": {\"ttfb\": 5}}, {\"pid\": \"p-0002-bbbb\", \"route\": \"/player/{name}\", \"path\": \"/player/x\", \"visitor_hash\": \"short\"}, {\"kind\": \"pv\", \"route\": \"\", \"path\": \"/x\", \"visitor_hash\": \"0123456789\"}, {\"kind\": \"pv\", \"route\": \"/r\", \"path\": \"/p\", \"visitor_hash\": \"01234567\"}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 40}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"ttfb\": 120, \"fcp\": 300, \"cls\": 25}}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 12}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"lcp\": 900, \"cls\": 10, \"fcp\": 0}}, {\"kind\": \"perf\", \"pid\": \"p-0003-cccc\"}, {\"kind\": \"end\", \"pid\": \"p-0003-cccc\", \"engaged_s\": 7}, {\"kind\": \"perf\", \"pid\": \"p-0004-dddd\", \"perf\": {\"dcl\": 1, \"load\": 2}}, {\"kind\": \"end\", \"pid\": \"\"}, {\"kind\": \"end\"}, {\"kind\": \"perf\", \"pid\": \"p-0005-eeee\", \"perf\": {}}]}",
+   "status": 404,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"Not found.\",\"details\":null,\"request_id\":\"req_internal_000\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_wrong_key",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_001",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "nope"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": \"pv\", \"pid\": \"p-0001-aaaa\", \"route\": \"/mods/{handle}/{slug}\", \"path\": \"/mods/aallyn/thing \\u2713\", \"visitor_hash\": \"0123456789abcdef0123456789abcdef\", \"channel\": \"search\", \"source\": \"Google\", \"device\": \"mobile\", \"browser\": \"Chrome\", \"os\": \"Android\", \"lang\": \"en\", \"engaged_s\": 99, \"perf\": {\"ttfb\": 5}}, {\"pid\": \"p-0002-bbbb\", \"route\": \"/player/{name}\", \"path\": \"/player/x\", \"visitor_hash\": \"short\"}, {\"kind\": \"pv\", \"route\": \"\", \"path\": \"/x\", \"visitor_hash\": \"0123456789\"}, {\"kind\": \"pv\", \"route\": \"/r\", \"path\": \"/p\", \"visitor_hash\": \"01234567\"}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 40}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"ttfb\": 120, \"fcp\": 300, \"cls\": 25}}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 12}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"lcp\": 900, \"cls\": 10, \"fcp\": 0}}, {\"kind\": \"perf\", \"pid\": \"p-0003-cccc\"}, {\"kind\": \"end\", \"pid\": \"p-0003-cccc\", \"engaged_s\": 7}, {\"kind\": \"perf\", \"pid\": \"p-0004-dddd\", \"perf\": {\"dcl\": 1, \"load\": 2}}, {\"kind\": \"end\", \"pid\": \"\"}, {\"kind\": \"end\"}, {\"kind\": \"perf\", \"pid\": \"p-0005-eeee\", \"perf\": {}}]}",
+   "status": 404,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"Not found.\",\"details\":null,\"request_id\":\"req_internal_001\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_non_ascii_key",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_002",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "kéy"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": \"pv\", \"pid\": \"p-0001-aaaa\", \"route\": \"/mods/{handle}/{slug}\", \"path\": \"/mods/aallyn/thing \\u2713\", \"visitor_hash\": \"0123456789abcdef0123456789abcdef\", \"channel\": \"search\", \"source\": \"Google\", \"device\": \"mobile\", \"browser\": \"Chrome\", \"os\": \"Android\", \"lang\": \"en\", \"engaged_s\": 99, \"perf\": {\"ttfb\": 5}}, {\"pid\": \"p-0002-bbbb\", \"route\": \"/player/{name}\", \"path\": \"/player/x\", \"visitor_hash\": \"short\"}, {\"kind\": \"pv\", \"route\": \"\", \"path\": \"/x\", \"visitor_hash\": \"0123456789\"}, {\"kind\": \"pv\", \"route\": \"/r\", \"path\": \"/p\", \"visitor_hash\": \"01234567\"}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 40}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"ttfb\": 120, \"fcp\": 300, \"cls\": 25}}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 12}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"lcp\": 900, \"cls\": 10, \"fcp\": 0}}, {\"kind\": \"perf\", \"pid\": \"p-0003-cccc\"}, {\"kind\": \"end\", \"pid\": \"p-0003-cccc\", \"engaged_s\": 7}, {\"kind\": \"perf\", \"pid\": \"p-0004-dddd\", \"perf\": {\"dcl\": 1, \"load\": 2}}, {\"kind\": \"end\", \"pid\": \"\"}, {\"kind\": \"end\"}, {\"kind\": \"perf\", \"pid\": \"p-0005-eeee\", \"perf\": {}}]}",
+   "status": 500,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error\",\"details\":null,\"request_id\":\"req_internal_002\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_ok",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_003",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": \"pv\", \"pid\": \"p-0001-aaaa\", \"route\": \"/mods/{handle}/{slug}\", \"path\": \"/mods/aallyn/thing \\u2713\", \"visitor_hash\": \"0123456789abcdef0123456789abcdef\", \"channel\": \"search\", \"source\": \"Google\", \"device\": \"mobile\", \"browser\": \"Chrome\", \"os\": \"Android\", \"lang\": \"en\", \"engaged_s\": 99, \"perf\": {\"ttfb\": 5}}, {\"pid\": \"p-0002-bbbb\", \"route\": \"/player/{name}\", \"path\": \"/player/x\", \"visitor_hash\": \"short\"}, {\"kind\": \"pv\", \"route\": \"\", \"path\": \"/x\", \"visitor_hash\": \"0123456789\"}, {\"kind\": \"pv\", \"route\": \"/r\", \"path\": \"/p\", \"visitor_hash\": \"01234567\"}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 40}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"ttfb\": 120, \"fcp\": 300, \"cls\": 25}}, {\"kind\": \"end\", \"pid\": \"p-0001-aaaa\", \"engaged_s\": 12}, {\"kind\": \"perf\", \"pid\": \"p-0001-aaaa\", \"perf\": {\"lcp\": 900, \"cls\": 10, \"fcp\": 0}}, {\"kind\": \"perf\", \"pid\": \"p-0003-cccc\"}, {\"kind\": \"end\", \"pid\": \"p-0003-cccc\", \"engaged_s\": 7}, {\"kind\": \"perf\", \"pid\": \"p-0004-dddd\", \"perf\": {\"dcl\": 1, \"load\": 2}}, {\"kind\": \"end\", \"pid\": \"\"}, {\"kind\": \"end\"}, {\"kind\": \"perf\", \"pid\": \"p-0005-eeee\", \"perf\": {}}]}",
+   "status": 202,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"accepted\":14}",
+   "inserted": [
+    {
+     "docs": [
+      {
+       "pid": "p-0001-aaaa",
+       "route": "/mods/{handle}/{slug}",
+       "path": "/mods/aallyn/thing ✓",
+       "visitor_hash": "0123456789abcdef0123456789abcdef",
+       "engaged_s": {
+        "$numberInt": "0"
+       },
+       "channel": "search",
+       "source": "Google",
+       "device": "mobile",
+       "browser": "Chrome",
+       "os": "Android",
+       "lang": "en",
+       "created_at": {
+        "$date": {
+         "$numberLong": "1792666800123"
+        }
+       },
+       "last_at": {
+        "$date": {
+         "$numberLong": "1792666800123"
+        }
+       }
+      },
+      {
+       "pid": null,
+       "route": "/r",
+       "path": "/p",
+       "visitor_hash": "01234567",
+       "engaged_s": {
+        "$numberInt": "0"
+       },
+       "channel": null,
+       "source": null,
+       "device": null,
+       "browser": null,
+       "os": null,
+       "lang": null,
+       "created_at": {
+        "$date": {
+         "$numberLong": "1792666800123"
+        }
+       },
+       "last_at": {
+        "$date": {
+         "$numberLong": "1792666800123"
+        }
+       }
+      }
+     ],
+     "ordered": false
+    }
+   ],
+   "updates": [
+    {
+     "ops": [
+      {
+       "filter": {
+        "pid": "p-0001-aaaa"
+       },
+       "update": {
+        "$set": {
+         "last_at": {
+          "$date": {
+           "$numberLong": "1792666800123"
+          }
+         },
+         "perf.ttfb": {
+          "$numberInt": "120"
+         },
+         "perf.fcp": {
+          "$numberInt": "0"
+         },
+         "perf.lcp": {
+          "$numberInt": "900"
+         }
+        },
+        "$max": {
+         "engaged_s": {
+          "$numberInt": "40"
+         },
+         "perf.cls": {
+          "$numberInt": "25"
+         }
+        }
+       }
+      },
+      {
+       "filter": {
+        "pid": "p-0003-cccc"
+       },
+       "update": {
+        "$set": {
+         "last_at": {
+          "$date": {
+           "$numberLong": "1792666800123"
+          }
+         }
+        },
+        "$max": {
+         "engaged_s": {
+          "$numberInt": "7"
+         }
+        }
+       }
+      },
+      {
+       "filter": {
+        "pid": "p-0004-dddd"
+       },
+       "update": {
+        "$set": {
+         "last_at": {
+          "$date": {
+           "$numberLong": "1792666800123"
+          }
+         },
+         "perf.dcl": {
+          "$numberInt": "1"
+         },
+         "perf.load": {
+          "$numberInt": "2"
+         }
+        }
+       }
+      },
+      {
+       "filter": {
+        "pid": "p-0005-eeee"
+       },
+       "update": {
+        "$set": {
+         "last_at": {
+          "$date": {
+           "$numberLong": "1792666800123"
+          }
+         }
+        }
+       }
+      }
+     ],
+     "ordered": false
+    }
+   ]
+  },
+  {
+   "name": "ingest_empty",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_004",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": []}",
+   "status": 202,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"accepted\":0}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_bad_no_key",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_005",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": \"click\"}]}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"literal_error\",\"loc\":[\"body\",\"events\",0,\"kind\"],\"msg\":\"Input should be 'pv', 'end' or 'perf'\",\"input\":\"click\",\"ctx\":{\"expected\":\"'pv', 'end' or 'perf'\"}}],\"request_id\":\"req_internal_005\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_missing_events",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_006",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"events\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_internal_006\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_no_body",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_007",
+   "headers": [
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_internal_007\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_bad_json",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_008",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": [",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",12],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"req_internal_008\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_not_list",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_009",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": {\"a\": 1}}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"list_type\",\"loc\":[\"body\",\"events\"],\"msg\":\"Input should be a valid list\",\"input\":{\"a\":1}}],\"request_id\":\"req_internal_009\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_too_many",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_010",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}]}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"too_long\",\"loc\":[\"body\",\"events\"],\"msg\":\"List should have at most 500 items after validation, not 501\",\"input\":[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}],\"ctx\":{\"field_type\":\"List\",\"max_length\":500,\"actual_length\":501}}],\"request_id\":\"req_internal_010\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_too_many_bad",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_011",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}, {\"kind\": 1}]}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"too_long\",\"loc\":[\"body\",\"events\"],\"msg\":\"List should have at most 500 items after validation, not 501\",\"input\":[{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1},{\"kind\":1}],\"ctx\":{\"field_type\":\"List\",\"max_length\":500,\"actual_length\":501}}],\"request_id\":\"req_internal_011\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_bad_fields",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_012",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": \"click\", \"pid\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\", \"route\": 5, \"engaged_s\": 86401, \"channel\": \"ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"perf\": {\"ttfb\": -1, \"cls\": 10001, \"lcp\": \"fast\", \"fcp\": 1.5}}, {\"perf\": \"nope\", \"engaged_s\": \"12\", \"visitor_hash\": null}, \"not an object\"]}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"literal_error\",\"loc\":[\"body\",\"events\",0,\"kind\"],\"msg\":\"Input should be 'pv', 'end' or 'perf'\",\"input\":\"click\",\"ctx\":{\"expected\":\"'pv', 'end' or 'perf'\"}},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"events\",0,\"pid\"],\"msg\":\"String should have at most 40 characters\",\"input\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"ctx\":{\"max_length\":40}},{\"type\":\"string_type\",\"loc\":[\"body\",\"events\",0,\"route\"],\"msg\":\"Input should be a valid string\",\"input\":5},{\"type\":\"less_than_equal\",\"loc\":[\"body\",\"events\",0,\"engaged_s\"],\"msg\":\"Input should be less than or equal to 86400\",\"input\":86401,\"ctx\":{\"le\":86400}},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"events\",0,\"channel\"],\"msg\":\"String should have at most 80 characters\",\"input\":\"ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"ctx\":{\"max_length\":80}},{\"type\":\"greater_than_equal\",\"loc\":[\"body\",\"events\",0,\"perf\",\"ttfb\"],\"msg\":\"Input should be greater than or equal to 0\",\"input\":-1,\"ctx\":{\"ge\":0}},{\"type\":\"int_from_float\",\"loc\":[\"body\",\"events\",0,\"perf\",\"fcp\"],\"msg\":\"Input should be a valid integer, got a number with a fractional part\",\"input\":1.5},{\"type\":\"int_parsing\",\"loc\":[\"body\",\"events\",0,\"perf\",\"lcp\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"fast\"},{\"type\":\"less_than_equal\",\"loc\":[\"body\",\"events\",0,\"perf\",\"cls\"],\"msg\":\"Input should be less than or equal to 10000\",\"input\":10001,\"ctx\":{\"le\":10000}},{\"type\":\"string_type\",\"loc\":[\"body\",\"events\",1,\"visitor_hash\"],\"msg\":\"Input should be a valid string\",\"input\":null},{\"type\":\"model_attributes_type\",\"loc\":[\"body\",\"events\",1,\"perf\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"nope\"},{\"type\":\"model_attributes_type\",\"loc\":[\"body\",\"events\",2],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"not an object\"}],\"request_id\":\"req_internal_012\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_extra_fields",
+   "method": "POST",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_013",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "{\"events\": [{\"kind\": \"end\", \"pid\": \"p-9\", \"engaged_s\": \"15\", \"unknown\": 1}], \"more\": true}",
+   "status": 202,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"accepted\":1}",
+   "inserted": [],
+   "updates": [
+    {
+     "ops": [
+      {
+       "filter": {
+        "pid": "p-9"
+       },
+       "update": {
+        "$set": {
+         "last_at": {
+          "$date": {
+           "$numberLong": "1792666800123"
+          }
+         }
+        },
+        "$max": {
+         "engaged_s": {
+          "$numberInt": "15"
+         }
+        }
+       }
+      }
+     ],
+     "ordered": false
+    }
+   ]
+  },
+  {
+   "name": "geo_no_key",
+   "method": "GET",
+   "url": "/internal/geo-maintenance",
+   "request_id": "req_internal_014",
+   "headers": [],
+   "body": "",
+   "status": 404,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"Not found.\",\"details\":null,\"request_id\":\"req_internal_014\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "geo_wrong_key",
+   "method": "GET",
+   "url": "/internal/geo-maintenance",
+   "request_id": "req_internal_015",
+   "headers": [
+    [
+     "x-internal-key",
+     "k3y-for-fixtures "
+    ]
+   ],
+   "body": "",
+   "status": 404,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"Not found.\",\"details\":null,\"request_id\":\"req_internal_015\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "geo_ok_default",
+   "method": "GET",
+   "url": "/internal/geo-maintenance",
+   "request_id": "req_internal_016",
+   "headers": [
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "",
+   "status": 200,
+   "resp_headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"countries\":[]}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "geo_wrong_method",
+   "method": "POST",
+   "url": "/internal/geo-maintenance",
+   "request_id": "req_internal_017",
+   "headers": [
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_internal_017\"}}",
+   "inserted": [],
+   "updates": []
+  },
+  {
+   "name": "ingest_wrong_method",
+   "method": "GET",
+   "url": "/internal/pageviews",
+   "request_id": "req_internal_018",
+   "headers": [
+    [
+     "x-internal-key",
+     "k3y-for-fixtures"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": [
+    [
+     "allow",
+     "POST"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_internal_018\"}}",
+   "inserted": [],
+   "updates": []
+  }
+ ],
+ "countries": [
+  [
+   "",
+   []
+  ],
+  [
+   " ",
+   []
+  ],
+  [
+   "zz",
+   [
+    "ZZ"
+   ]
+  ],
+  [
+   "ZZ, qq ,zz,,  ",
+   [
+    "QQ",
+    "ZZ"
+   ]
+  ],
+  [
+   "xa,XB , xa",
+   [
+    "XA",
+    "XB"
+   ]
+  ],
+  [
+   "  q1 , ,Q1",
+   [
+    "Q1"
+   ]
+  ]
+ ]
+}

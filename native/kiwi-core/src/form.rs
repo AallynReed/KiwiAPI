@@ -3,6 +3,8 @@
 //! (fed the whole body as one chunk), the urlencoded parser, and the
 //! `FormData` items they produce. Header and field bytes are Latin-1 text.
 
+use std::ops::Range;
+
 use crate::pystr::{is_space as py_isspace, strip as py_strip};
 
 pub fn latin1(b: &[u8]) -> String {
@@ -188,6 +190,7 @@ struct Part {
     data: Vec<u8>,
     file: Option<UploadFile>,
     headers: Pairs,
+    span: Option<Range<usize>>,
 }
 
 /// Starlette's `MultiPartParser` callbacks.
@@ -199,6 +202,8 @@ struct Builder<'a> {
     header_value: Vec<u8>,
     files: usize,
     fields: usize,
+    /// Locate file data in the body instead of copying it.
+    spans: Option<Vec<Option<Range<usize>>>>,
 }
 
 impl Builder<'_> {
@@ -206,8 +211,13 @@ impl Builder<'_> {
         self.part = Part::default();
     }
 
-    fn part_data(&mut self, d: &[u8]) -> Result<(), FormError> {
+    fn part_data(&mut self, d: &[u8], at: usize) -> Result<(), FormError> {
         if d.is_empty() {
+            return Ok(());
+        }
+        if self.spans.is_some() && self.part.file.is_some() {
+            let start = self.part.span.as_ref().map_or(at, |r| r.start);
+            self.part.span = Some(start..at + d.len());
             return Ok(());
         }
         match &mut self.part.file {
@@ -224,6 +234,9 @@ impl Builder<'_> {
 
     fn part_end(&mut self) {
         let part = std::mem::take(&mut self.part);
+        if let Some(spans) = &mut self.spans {
+            spans.push(part.file.as_ref().map(|_| part.span.clone().unwrap_or(0..0)));
+        }
         let value = match part.file {
             None => FormValue::Text(decode(&part.data, self.charset)),
             Some(f) => FormValue::File(f),
@@ -539,7 +552,7 @@ fn emit_data(data: &[u8], mark: &mut Option<usize>, end: isize, b: &mut Builder<
     if let Some(m) = mark.take()
         && end > m as isize
     {
-        b.part_data(&data[m..end as usize])?;
+        b.part_data(&data[m..end as usize], m)?;
     }
     Ok(())
 }
@@ -618,6 +631,34 @@ fn parse_urlencoded(body: &[u8]) -> Result<Vec<(String, FormValue)>, FormError> 
 
 /// `request.form()` for a body with this `Content-Type` header.
 pub fn parse_form(content_type: Option<&[u8]>, body: &[u8]) -> Result<Vec<(String, FormValue)>, FormError> {
+    parse(content_type, body, false).map(|(items, _)| items)
+}
+
+pub type SpannedItem = (String, FormValue, Option<Range<usize>>);
+
+/// [`parse_form`] for large bodies: a file part's `data` stays empty and its
+/// bytes are `body[range]` instead (`None` for text fields).
+pub fn parse_form_spans(content_type: Option<&[u8]>, body: &[u8]) -> Result<Vec<SpannedItem>, FormError> {
+    let (items, spans) = parse(content_type, body, true)?;
+    let mut spans = spans.into_iter();
+    Ok(items
+        .into_iter()
+        .map(|(k, v)| {
+            let span = match v {
+                FormValue::File(_) => spans.next().flatten().or(Some(0..0)),
+                FormValue::Text(_) => {
+                    spans.next();
+                    None
+                }
+            };
+            (k, v, span)
+        })
+        .collect())
+}
+
+type Parsed = (Vec<(String, FormValue)>, Vec<Option<Range<usize>>>);
+
+fn parse(content_type: Option<&[u8]>, body: &[u8], spans: bool) -> Result<Parsed, FormError> {
     let (ctype, options) = parse_options_header(content_type);
     if ctype == b"multipart/form-data" {
         let charset = option(&options, b"charset").map(latin1).unwrap_or_else(|| "utf-8".into());
@@ -634,13 +675,16 @@ pub fn parse_form(content_type: Option<&[u8]>, body: &[u8]) -> Result<Vec<(Strin
             header_value: Vec::new(),
             files: 0,
             fields: 0,
+            spans: spans.then(Vec::new),
         };
         run_multipart(body, boundary, &mut b)?;
-        Ok(b.items)
+        Ok((b.items, b.spans.unwrap_or_default()))
     } else if ctype == b"application/x-www-form-urlencoded" {
-        parse_urlencoded(body)
+        let items = parse_urlencoded(body)?;
+        let n = items.len();
+        Ok((items, vec![None; n]))
     } else {
-        Ok(Vec::new())
+        Ok((Vec::new(), Vec::new()))
     }
 }
 
@@ -680,6 +724,24 @@ mod tests {
             (f.filename.as_str(), f.content_type().as_deref(), f.data.as_slice()),
             ("a.png", Some("image/png"), &b"\x89PNG"[..])
         );
+    }
+
+    #[test]
+    fn multipart_spans() {
+        let body = b"--XyZ\r\nContent-Disposition: form-data; name=\"pin\"\r\n\r\n1234\r\n--XyZ\r\n\
+            Content-Disposition: form-data; name=\"file\"; filename=\"a.bin\"\r\n\r\n\x00\r\n--\r\n--XyZ\r\n\
+            Content-Disposition: form-data; name=\"empty\"; filename=\"\"\r\n\r\n\r\n--XyZ--\r\n";
+        let ct = Some(&b"multipart/form-data; boundary=XyZ"[..]);
+        let items = parse_form_spans(ct, body).unwrap();
+        assert_eq!(items[0].2, None);
+        let span = items[1].2.clone().unwrap();
+        assert_eq!(&body[span], b"\x00\r\n--");
+        let FormValue::File(f) = &items[1].1 else { panic!() };
+        assert!(f.data.is_empty());
+        assert_eq!(items[2].2, Some(0..0));
+        let copied = parse_form(ct, body).unwrap();
+        let FormValue::File(f) = &copied[1].1 else { panic!() };
+        assert_eq!(f.data, b"\x00\r\n--");
     }
 
     #[test]

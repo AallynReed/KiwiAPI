@@ -1,0 +1,10 @@
+{
+ "mongo": [
+  {"collection": "file_drops", "sort": ["label"], "mask": ["_id", "slug", "pin_hash", "expires_at", "created_at"]},
+  {"collection": "drop_uploads", "sort": ["filename", "size"], "mask": ["_id", "drop_id", "stored_name", "uploaded_at"]},
+  {"collection": "page_views", "sort": ["pid", "path"], "mask": ["_id", "created_at", "last_at"]}
+ ],
+ "redis": [
+  {"pattern": "rl:drop:parity-*", "mask_ttl": true, "mask_value": true}
+ ]
+}

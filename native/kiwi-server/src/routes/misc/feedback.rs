@@ -109,7 +109,7 @@ fn loc(name: &str) -> Vec<LocItem> {
 
 /// One `str` form field (the last value of the name): `None` when absent,
 /// empty or invalid.
-fn str_field(
+pub fn str_field(
     items: &[(String, FormValue)],
     name: &str,
     min: Option<usize>,

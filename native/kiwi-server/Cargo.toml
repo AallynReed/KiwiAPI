@@ -24,7 +24,10 @@ hyper = { version = "1.12.0", features = ["client", "http1"] }
 hyper-util = { version = "0.1.21", features = ["client-legacy", "http1", "tokio"] }
 idna = "1.1.0"
 kiwi-core = { version = "0.1.0", path = "../kiwi-core" }
+lettre = { version = "0.11.23", default-features = false, features = ["builder", "smtp-transport", "tokio1-rustls-tls"] }
 libz-sys = { version = "1.1.29", features = ["static"] }
+md-5 = "0.11.0"
+memmap2 = "0.9.11"
 mimalloc = "0.1.52"
 mongodb = "3.9.1"
 percent-encoding = "2.3.2"

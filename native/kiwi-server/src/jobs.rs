@@ -99,6 +99,8 @@ pub fn start(state: &AppState) {
     crate::events::start_jobs(state);
     crate::webhooks::start_jobs(state);
     crate::dm_subs::start_jobs(state);
+    crate::email::worker::start(state);
+    crate::maintenance::start(state);
 }
 
 #[cfg(test)]

@@ -1,0 +1,1599 @@
+{
+ "env": {
+  "SECRET_KEY": "drops-fixture-secret",
+  "APP_URL": "https://trove.example.test//"
+ },
+ "filenames": [
+  [
+   null,
+   "upload.bin"
+  ],
+  [
+   "",
+   "upload.bin"
+  ],
+  [
+   "  report.pdf  ",
+   "report.pdf"
+  ],
+  [
+   "C:\\Users\\me\\My File (1).PNG",
+   "My File (1).PNG"
+  ],
+  [
+   "../../etc/passwd",
+   "passwd"
+  ],
+  [
+   "..",
+   "upload.bin"
+  ],
+  [
+   " . ",
+   "upload.bin"
+  ],
+  [
+   "résumé ✓.pdf",
+   "r_sum_ _.pdf"
+  ],
+  [
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.bin",
+   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  [
+   "we!rd#name$.tar.gz",
+   "we_rd_name_.tar.gz"
+  ],
+  [
+   "[x] (y) - z.txt",
+   "[x] (y) - z.txt"
+  ],
+  [
+   "\\\\server\\share\\f.txt",
+   "f.txt"
+  ],
+  [
+   "dir/sub/",
+   "upload.bin"
+  ],
+  [
+   "日本語.txt",
+   "_.txt"
+  ]
+ ],
+ "ranges": [
+  {
+   "range": "bytes=0-9",
+   "ok": [
+    [
+     0,
+     10
+    ]
+   ]
+  },
+  {
+   "range": "bytes=-5",
+   "ok": [
+    [
+     295,
+     300
+    ]
+   ]
+  },
+  {
+   "range": "bytes=290-",
+   "ok": [
+    [
+     290,
+     300
+    ]
+   ]
+  },
+  {
+   "range": "bytes=0-1000",
+   "ok": [
+    [
+     0,
+     300
+    ]
+   ]
+  },
+  {
+   "range": "bytes=50-60, 0-9, 55-70",
+   "ok": [
+    [
+     0,
+     10
+    ],
+    [
+     50,
+     71
+    ]
+   ]
+  },
+  {
+   "range": "bytes",
+   "error": "MalformedRangeHeader",
+   "content": "Malformed range header."
+  },
+  {
+   "range": "items=0-1",
+   "error": "MalformedRangeHeader",
+   "content": "Only support bytes range"
+  },
+  {
+   "range": " BYTES = 0-1",
+   "ok": [
+    [
+     0,
+     2
+    ]
+   ]
+  },
+  {
+   "range": "bytes=x-y",
+   "error": "MalformedRangeHeader",
+   "content": "Range header: range must be requested"
+  },
+  {
+   "range": "bytes=300-",
+   "error": "RangeNotSatisfiable",
+   "content": null
+  },
+  {
+   "range": "bytes=5-1",
+   "error": "MalformedRangeHeader",
+   "content": "Range header: start must be less than end"
+  },
+  {
+   "range": "bytes=-",
+   "error": "MalformedRangeHeader",
+   "content": "Range header: range must be requested"
+  },
+  {
+   "range": "bytes=,,",
+   "error": "MalformedRangeHeader",
+   "content": "Range header: range must be requested"
+  },
+  {
+   "range": "bytes=--5",
+   "error": "RangeNotSatisfiable",
+   "content": null
+  },
+  {
+   "range": "bytes=1-2-3",
+   "error": "MalformedRangeHeader",
+   "content": "Range header: range must be requested"
+  },
+  {
+   "range": "bytes=0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1",
+   "ok": []
+  },
+  {
+   "range": "bytes=0-0,1-1,2-2",
+   "ok": [
+    [
+     0,
+     3
+    ]
+   ]
+  },
+  {
+   "range": "bytes= 3 - 4 ",
+   "ok": [
+    [
+     3,
+     5
+    ]
+   ]
+  },
+  {
+   "range": "bytes=-0",
+   "error": "RangeNotSatisfiable",
+   "content": null
+  },
+  {
+   "range": "bytes=-1000",
+   "ok": [
+    [
+     0,
+     300
+    ]
+   ]
+  }
+ ],
+ "stat_headers": [
+  {
+   "mtime": 1761130800.1234567,
+   "size": 300,
+   "etag": "\"e62c135021712259068e818204f9c547\"",
+   "last_modified": "Wed, 22 Oct 2025 11:00:00 GMT"
+  },
+  {
+   "mtime": 1761130800.0,
+   "size": 0,
+   "etag": "\"259b8199535d7c78d1f38ac4fffa877b\"",
+   "last_modified": "Wed, 22 Oct 2025 11:00:00 GMT"
+  },
+  {
+   "mtime": 1.5,
+   "size": 7,
+   "etag": "\"601f18c909b1edfcc65df75b24ef9e54\"",
+   "last_modified": "Thu, 01 Jan 1970 00:00:01 GMT"
+  },
+  {
+   "mtime": 1761130800.999999,
+   "size": 12345678,
+   "etag": "\"b259dddc75d24fe30b21c7c2f6fd33d4\"",
+   "last_modified": "Wed, 22 Oct 2025 11:00:00 GMT"
+  }
+ ],
+ "downloads": {
+  "mtime_ns": 1761130800123456700,
+  "data": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿtail-of-the-file-tail-of-the-file-!!!!!!!!!!",
+  "cases": [
+   {
+    "name": "plain",
+    "media_type": "application/octet-stream",
+    "filename": "my file (1).bin",
+    "headers": [],
+    "status": 200,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/octet-stream"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename*=utf-8''my%20file%20%281%29.bin"
+     ],
+     [
+      "content-length",
+      "300"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿtail-of-the-file-tail-of-the-file-!!!!!!!!!!"
+   },
+   {
+    "name": "text",
+    "media_type": "text/plain",
+    "filename": "notes.txt",
+    "headers": [],
+    "status": 200,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "text/plain; charset=utf-8"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"notes.txt\""
+     ],
+     [
+      "content-length",
+      "300"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿtail-of-the-file-tail-of-the-file-!!!!!!!!!!"
+   },
+   {
+    "name": "text_charset",
+    "media_type": "text/csv; charset=latin-1",
+    "filename": "a.csv",
+    "headers": [],
+    "status": 200,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "text/csv; charset=latin-1"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"a.csv\""
+     ],
+     [
+      "content-length",
+      "300"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿtail-of-the-file-tail-of-the-file-!!!!!!!!!!"
+   },
+   {
+    "name": "range",
+    "media_type": "application/pdf",
+    "filename": "doc.pdf",
+    "headers": [
+     [
+      "range",
+      "bytes=10-19"
+     ]
+    ],
+    "status": 206,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/pdf"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"doc.pdf\""
+     ],
+     [
+      "content-length",
+      "10"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ],
+     [
+      "content-range",
+      "bytes 10-19/300"
+     ]
+    ],
+    "body": "\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013"
+   },
+   {
+    "name": "suffix",
+    "media_type": "application/pdf",
+    "filename": "doc.pdf",
+    "headers": [
+     [
+      "range",
+      "bytes=-7"
+     ]
+    ],
+    "status": 206,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/pdf"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"doc.pdf\""
+     ],
+     [
+      "content-length",
+      "7"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ],
+     [
+      "content-range",
+      "bytes 293-299/300"
+     ]
+    ],
+    "body": "!!!!!!!"
+   },
+   {
+    "name": "open_end",
+    "media_type": "image/png",
+    "filename": "a.png",
+    "headers": [
+     [
+      "range",
+      "bytes=290-"
+     ]
+    ],
+    "status": 206,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "image/png"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"a.png\""
+     ],
+     [
+      "content-length",
+      "10"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ],
+     [
+      "content-range",
+      "bytes 290-299/300"
+     ]
+    ],
+    "body": "!!!!!!!!!!"
+   },
+   {
+    "name": "multi",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=0-1, 5-6, 6-9"
+     ]
+    ],
+    "status": 206,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "multipart/byteranges; boundary=BOUNDARY"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"m.bin\""
+     ],
+     [
+      "content-length",
+      "245"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "body": "--BOUNDARY\r\nContent-Type: application/octet-stream\r\nContent-Range: bytes 0-1/300\r\n\r\n\u0000\u0001\r\n--BOUNDARY\r\nContent-Type: application/octet-stream\r\nContent-Range: bytes 5-9/300\r\n\r\n\u0005\u0006\u0007\b\t\r\n--BOUNDARY--"
+   },
+   {
+    "name": "malformed",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "pages=1"
+     ]
+    ],
+    "status": 400,
+    "resp_headers": [
+     [
+      "content-length",
+      "24"
+     ],
+     [
+      "content-type",
+      "text/plain; charset=utf-8"
+     ]
+    ],
+    "body": "Only support bytes range"
+   },
+   {
+    "name": "unsatisfiable",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=999-"
+     ]
+    ],
+    "status": 416,
+    "resp_headers": [
+     [
+      "content-range",
+      "bytes */300"
+     ],
+     [
+      "content-length",
+      "0"
+     ],
+     [
+      "content-type",
+      "text/plain; charset=utf-8"
+     ]
+    ],
+    "body": ""
+   },
+   {
+    "name": "start_after_end",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=9-3"
+     ]
+    ],
+    "status": 400,
+    "resp_headers": [
+     [
+      "content-length",
+      "41"
+     ],
+     [
+      "content-type",
+      "text/plain; charset=utf-8"
+     ]
+    ],
+    "body": "Range header: start must be less than end"
+   },
+   {
+    "name": "if_range_etag",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=0-3"
+     ],
+     [
+      "if-range",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "status": 206,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/octet-stream"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"m.bin\""
+     ],
+     [
+      "content-length",
+      "4"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ],
+     [
+      "content-range",
+      "bytes 0-3/300"
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003"
+   },
+   {
+    "name": "if_range_date",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=0-3"
+     ],
+     [
+      "if-range",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ]
+    ],
+    "status": 206,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/octet-stream"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"m.bin\""
+     ],
+     [
+      "content-length",
+      "4"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ],
+     [
+      "content-range",
+      "bytes 0-3/300"
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003"
+   },
+   {
+    "name": "if_range_stale",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=0-3"
+     ],
+     [
+      "if-range",
+      "\"nope\""
+     ]
+    ],
+    "status": 200,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/octet-stream"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"m.bin\""
+     ],
+     [
+      "content-length",
+      "300"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿtail-of-the-file-tail-of-the-file-!!!!!!!!!!"
+   },
+   {
+    "name": "if_range_weak",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=0-3"
+     ],
+     [
+      "if-range",
+      "W/\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "status": 200,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/octet-stream"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"m.bin\""
+     ],
+     [
+      "content-length",
+      "300"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿtail-of-the-file-tail-of-the-file-!!!!!!!!!!"
+   },
+   {
+    "name": "too_many",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1,0-1"
+     ]
+    ],
+    "status": 200,
+    "resp_headers": [
+     [
+      "cache-control",
+      "no-store"
+     ],
+     [
+      "content-type",
+      "application/octet-stream"
+     ],
+     [
+      "accept-ranges",
+      "bytes"
+     ],
+     [
+      "content-disposition",
+      "attachment; filename=\"m.bin\""
+     ],
+     [
+      "content-length",
+      "300"
+     ],
+     [
+      "last-modified",
+      "Wed, 22 Oct 2025 11:00:00 GMT"
+     ],
+     [
+      "etag",
+      "\"e62c135021712259068e818204f9c547\""
+     ]
+    ],
+    "body": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿtail-of-the-file-tail-of-the-file-!!!!!!!!!!"
+   },
+   {
+    "name": "empty_ranges",
+    "media_type": "application/octet-stream",
+    "filename": "m.bin",
+    "headers": [
+     [
+      "range",
+      "bytes=,"
+     ]
+    ],
+    "status": 400,
+    "resp_headers": [
+     [
+      "content-length",
+      "37"
+     ],
+     [
+      "content-type",
+      "text/plain; charset=utf-8"
+     ]
+    ],
+    "body": "Range header: range must be requested"
+   }
+  ]
+ },
+ "views": {
+  "now": "2026-10-22T11:00:00.123456+00:00",
+  "cases": [
+   {
+    "drop": {
+     "_id": {
+      "$oid": "66f000000000000000000001"
+     },
+     "slug": "AbCdEfGhIjKlMnOp",
+     "label": "Logs ✓ \"x\"",
+     "pin_hash": "$argon2id$...",
+     "max_uploads": {
+      "$numberInt": "3"
+     },
+     "upload_count": {
+      "$numberInt": "1"
+     },
+     "max_file_bytes": {
+      "$numberInt": "268435456"
+     },
+     "expires_at": {
+      "$date": {
+       "$numberLong": "1792753200123"
+      }
+     },
+     "revoked": false,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792663200000"
+      }
+     }
+    },
+    "uploads": [
+     {
+      "_id": {
+       "$oid": "66f100000000000000000001"
+      },
+      "drop_id": {
+       "$oid": "66f000000000000000000001"
+      },
+      "filename": "a b.txt",
+      "stored_name": "0011223344556677-a b.txt",
+      "size": {
+       "$numberInt": "12"
+      },
+      "content_type": "text/plain",
+      "sha256": "abababababababababababababababababababababababababababababababab",
+      "note": "hi <there>",
+      "uploaded_at": {
+       "$date": {
+        "$numberLong": "1792665000005"
+       }
+      }
+     },
+     {
+      "_id": {
+       "$oid": "66f100000000000000000002"
+      },
+      "drop_id": {
+       "$oid": "66f000000000000000000001"
+      },
+      "filename": "upload.bin",
+      "stored_name": "8899aabbccddeeff-upload.bin",
+      "size": {
+       "$numberLong": "3000000000"
+      },
+      "content_type": null,
+      "sha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "note": null,
+      "uploaded_at": {
+       "$date": {
+        "$numberLong": "1792664400000"
+       }
+      }
+     }
+    ],
+    "view": "{\"id\":\"66f000000000000000000001\",\"slug\":\"AbCdEfGhIjKlMnOp\",\"url\":\"https://trove.example.test/drop/AbCdEfGhIjKlMnOp\",\"label\":\"Logs ✓ \\\"x\\\"\",\"max_uploads\":3,\"upload_count\":1,\"max_file_bytes\":268435456,\"expires_at\":\"2026-10-23T11:00:00.123000Z\",\"revoked\":false,\"open\":true,\"created_at\":\"2026-10-22T10:00:00Z\",\"uploads\":[{\"id\":\"66f100000000000000000001\",\"filename\":\"a b.txt\",\"size\":12,\"content_type\":\"text/plain\",\"sha256\":\"abababababababababababababababababababababababababababababababab\",\"note\":\"hi <there>\",\"uploaded_at\":\"2026-10-22T10:30:00.005000Z\"},{\"id\":\"66f100000000000000000002\",\"filename\":\"upload.bin\",\"size\":3000000000,\"content_type\":null,\"sha256\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"note\":null,\"uploaded_at\":\"2026-10-22T10:20:00Z\"}]}",
+    "public": "{\"label\":\"Logs ✓ \\\"x\\\"\",\"max_file_bytes\":268435456,\"uploads_left\":2,\"expires_at\":\"2026-10-23T11:00:00.123000Z\"}",
+    "uploads_view": [
+     "{\"id\":\"66f100000000000000000001\",\"filename\":\"a b.txt\",\"size\":12,\"content_type\":\"text/plain\",\"sha256\":\"abababababababababababababababababababababababababababababababab\",\"note\":\"hi <there>\",\"uploaded_at\":\"2026-10-22T10:30:00.005000Z\"}",
+     "{\"id\":\"66f100000000000000000002\",\"filename\":\"upload.bin\",\"size\":3000000000,\"content_type\":null,\"sha256\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"note\":null,\"uploaded_at\":\"2026-10-22T10:20:00Z\"}"
+    ],
+    "open": true
+   },
+   {
+    "drop": {
+     "_id": {
+      "$oid": "66f000000000000000000002"
+     },
+     "slug": "zzzzzzzzzzzzzzzz",
+     "label": "Logs ✓ \"x\"",
+     "pin_hash": "$argon2id$...",
+     "max_uploads": {
+      "$numberInt": "1"
+     },
+     "upload_count": {
+      "$numberInt": "0"
+     },
+     "max_file_bytes": {
+      "$numberInt": "268435456"
+     },
+     "expires_at": {
+      "$date": {
+       "$numberLong": "1792753200123"
+      }
+     },
+     "revoked": true,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792663200000"
+      }
+     }
+    },
+    "uploads": [],
+    "view": "{\"id\":\"66f000000000000000000002\",\"slug\":\"zzzzzzzzzzzzzzzz\",\"url\":\"https://trove.example.test/drop/zzzzzzzzzzzzzzzz\",\"label\":\"Logs ✓ \\\"x\\\"\",\"max_uploads\":1,\"upload_count\":0,\"max_file_bytes\":268435456,\"expires_at\":\"2026-10-23T11:00:00.123000Z\",\"revoked\":true,\"open\":false,\"created_at\":\"2026-10-22T10:00:00Z\",\"uploads\":[]}",
+    "public": "{\"label\":\"Logs ✓ \\\"x\\\"\",\"max_file_bytes\":268435456,\"uploads_left\":1,\"expires_at\":\"2026-10-23T11:00:00.123000Z\"}",
+    "uploads_view": [],
+    "open": false
+   },
+   {
+    "drop": {
+     "_id": {
+      "$oid": "66f000000000000000000003"
+     },
+     "slug": "expired",
+     "label": "Logs ✓ \"x\"",
+     "pin_hash": "$argon2id$...",
+     "max_uploads": {
+      "$numberInt": "3"
+     },
+     "upload_count": {
+      "$numberInt": "1"
+     },
+     "max_file_bytes": {
+      "$numberInt": "268435456"
+     },
+     "expires_at": {
+      "$date": {
+       "$numberLong": "1792666799123"
+      }
+     },
+     "revoked": false,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792663200000"
+      }
+     }
+    },
+    "uploads": [],
+    "view": "{\"id\":\"66f000000000000000000003\",\"slug\":\"expired\",\"url\":\"https://trove.example.test/drop/expired\",\"label\":\"Logs ✓ \\\"x\\\"\",\"max_uploads\":3,\"upload_count\":1,\"max_file_bytes\":268435456,\"expires_at\":\"2026-10-22T10:59:59.123000Z\",\"revoked\":false,\"open\":false,\"created_at\":\"2026-10-22T10:00:00Z\",\"uploads\":[]}",
+    "public": "{\"label\":\"Logs ✓ \\\"x\\\"\",\"max_file_bytes\":268435456,\"uploads_left\":2,\"expires_at\":\"2026-10-22T10:59:59.123000Z\"}",
+    "uploads_view": [],
+    "open": false
+   },
+   {
+    "drop": {
+     "_id": {
+      "$oid": "66f000000000000000000004"
+     },
+     "slug": "spent",
+     "label": "Logs ✓ \"x\"",
+     "pin_hash": "$argon2id$...",
+     "max_uploads": {
+      "$numberInt": "3"
+     },
+     "upload_count": {
+      "$numberInt": "5"
+     },
+     "max_file_bytes": {
+      "$numberInt": "268435456"
+     },
+     "expires_at": {
+      "$date": {
+       "$numberLong": "1792753200123"
+      }
+     },
+     "revoked": false,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792663200000"
+      }
+     }
+    },
+    "uploads": [],
+    "view": "{\"id\":\"66f000000000000000000004\",\"slug\":\"spent\",\"url\":\"https://trove.example.test/drop/spent\",\"label\":\"Logs ✓ \\\"x\\\"\",\"max_uploads\":3,\"upload_count\":5,\"max_file_bytes\":268435456,\"expires_at\":\"2026-10-23T11:00:00.123000Z\",\"revoked\":false,\"open\":false,\"created_at\":\"2026-10-22T10:00:00Z\",\"uploads\":[]}",
+    "public": "{\"label\":\"Logs ✓ \\\"x\\\"\",\"max_file_bytes\":268435456,\"uploads_left\":0,\"expires_at\":\"2026-10-23T11:00:00.123000Z\"}",
+    "uploads_view": [],
+    "open": false
+   },
+   {
+    "drop": {
+     "_id": {
+      "$oid": "66f000000000000000000005"
+     },
+     "slug": "justnow",
+     "label": "Logs ✓ \"x\"",
+     "pin_hash": "$argon2id$...",
+     "max_uploads": {
+      "$numberInt": "3"
+     },
+     "upload_count": {
+      "$numberInt": "1"
+     },
+     "max_file_bytes": {
+      "$numberInt": "268435456"
+     },
+     "expires_at": {
+      "$date": {
+       "$numberLong": "1792666800123"
+      }
+     },
+     "revoked": false,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1792663200000"
+      }
+     }
+    },
+    "uploads": [],
+    "view": "{\"id\":\"66f000000000000000000005\",\"slug\":\"justnow\",\"url\":\"https://trove.example.test/drop/justnow\",\"label\":\"Logs ✓ \\\"x\\\"\",\"max_uploads\":3,\"upload_count\":1,\"max_file_bytes\":268435456,\"expires_at\":\"2026-10-22T11:00:00.123000Z\",\"revoked\":false,\"open\":false,\"created_at\":\"2026-10-22T10:00:00Z\",\"uploads\":[]}",
+    "public": "{\"label\":\"Logs ✓ \\\"x\\\"\",\"max_file_bytes\":268435456,\"uploads_left\":2,\"expires_at\":\"2026-10-22T11:00:00.123000Z\"}",
+    "uploads_view": [],
+    "open": false
+   }
+  ],
+  "created": "{\"id\":\"66f000000000000000000001\",\"slug\":\"AbCdEfGhIjKlMnOp\",\"url\":\"https://trove.example.test/drop/AbCdEfGhIjKlMnOp\",\"label\":\"Logs ✓ \\\"x\\\"\",\"max_uploads\":3,\"upload_count\":1,\"max_file_bytes\":268435456,\"expires_at\":\"2026-10-23T11:00:00.123000Z\",\"revoked\":false,\"open\":true,\"created_at\":\"2026-10-22T10:00:00Z\",\"uploads\":[],\"pin\":\"0042\"}"
+ },
+ "http": [
+  {
+   "name": "verify_missing_pin",
+   "method": "POST",
+   "url": "/site/drops/abc/verify",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_000",
+   "body": "--XyZ\r\nContent-Disposition: form-data; name=\"other\"\r\n\r\nx\r\n--XyZ--\r\n",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "192"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_000\"}}"
+  },
+  {
+   "name": "verify_empty_pin",
+   "method": "POST",
+   "url": "/site/drops/abc/verify",
+   "content_type": "application/x-www-form-urlencoded",
+   "request_id": "req_drops_001",
+   "body": "pin=",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "192"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_001\"}}"
+  },
+  {
+   "name": "verify_json_body",
+   "method": "POST",
+   "url": "/site/drops/abc/verify",
+   "content_type": "application/json",
+   "request_id": "req_drops_002",
+   "body": "{\"pin\":\"1234\"}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "192"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_002\"}}"
+  },
+  {
+   "name": "verify_no_boundary",
+   "method": "POST",
+   "url": "/site/drops/abc/verify",
+   "content_type": "multipart/form-data",
+   "request_id": "req_drops_003",
+   "body": "--x\r\n",
+   "status": 400,
+   "resp_headers": [
+    [
+     "content-length",
+     "119"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Missing boundary in multipart.\",\"details\":null,\"request_id\":\"req_drops_003\"}}"
+  },
+  {
+   "name": "verify_garbage",
+   "method": "POST",
+   "url": "/site/drops/abc/verify",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_004",
+   "body": "garbage",
+   "status": 400,
+   "resp_headers": [
+    [
+     "content-length",
+     "112"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid multipart data.\",\"details\":null,\"request_id\":\"req_drops_004\"}}"
+  },
+  {
+   "name": "verify_pin_is_file",
+   "method": "POST",
+   "url": "/site/drops/abc/verify",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_005",
+   "body": "--XyZ\r\nContent-Disposition: form-data; name=\"pin\"; filename=\"pin.txt\"\r\nContent-Type: text/plain\r\n\r\n1234\n56\r\n--XyZ--\r\n",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "571"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Input should be a valid string\",\"input\":{\"filename\":\"pin.txt\",\"file\":{\"_file\":{\"53\":54},\"_max_size\":1048576,\"_rolled\":false,\"_TemporaryFileArgs\":{\"mode\":\"w+b\",\"buffering\":-1,\"suffix\":null,\"prefix\":null,\"encoding\":null,\"newline\":null,\"dir\":null,\"errors\":null}},\"size\":7,\"headers\":{\"content-disposition\":\"form-data; name=\\\"pin\\\"; filename=\\\"pin.txt\\\"\",\"content-type\":\"text/plain\"},\"_max_mem_size\":1048576}}],\"request_id\":\"req_drops_005\"}}"
+  },
+  {
+   "name": "upload_missing_all",
+   "method": "POST",
+   "url": "/site/drops/abc/upload",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_006",
+   "body": "--XyZ\r\nContent-Disposition: form-data; name=\"x\"\r\n\r\ny\r\n--XyZ--\r\n",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "269"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_006\"}}"
+  },
+  {
+   "name": "upload_no_body",
+   "method": "POST",
+   "url": "/site/drops/abc/upload",
+   "content_type": null,
+   "request_id": "req_drops_007",
+   "body": "",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "269"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_007\"}}"
+  },
+  {
+   "name": "upload_file_is_text",
+   "method": "POST",
+   "url": "/site/drops/abc/upload",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_008",
+   "body": "--XyZ\r\nContent-Disposition: form-data; name=\"pin\"\r\n\r\n1234\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\nnot a file\r\n--XyZ--\r\n",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "267"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"file\"],\"msg\":\"Value error, Expected UploadFile, received: <class 'str'>\",\"input\":\"not a file\",\"ctx\":{\"error\":{}}}],\"request_id\":\"req_drops_008\"}}"
+  },
+  {
+   "name": "upload_file_empty_text",
+   "method": "POST",
+   "url": "/site/drops/abc/upload",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_009",
+   "body": "--XyZ\r\nContent-Disposition: form-data; name=\"pin\"\r\n\r\n1234\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\n\r\n--XyZ--\r\n",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "193"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_009\"}}"
+  },
+  {
+   "name": "upload_missing_pin",
+   "method": "POST",
+   "url": "/site/drops/abc/upload",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_010",
+   "body": "--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.bin\"\r\n\r\n\u0000\u0001\r\n--XyZ--\r\n",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "192"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_010\"}}"
+  },
+  {
+   "name": "upload_note_file",
+   "method": "POST",
+   "url": "/site/drops/abc/upload",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_011",
+   "body": "--XyZ\r\nContent-Disposition: form-data; name=\"note\"; filename=\"n.txt\"\r\nContent-Type: text/plain\r\n\r\nn\r\n--XyZ--\r\n",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "715"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"string_type\",\"loc\":[\"body\",\"note\"],\"msg\":\"Input should be a valid string\",\"input\":{\"filename\":\"n.txt\",\"file\":{\"_file\":{},\"_max_size\":1048576,\"_rolled\":false,\"_TemporaryFileArgs\":{\"mode\":\"w+b\",\"buffering\":-1,\"suffix\":null,\"prefix\":null,\"encoding\":null,\"newline\":null,\"dir\":null,\"errors\":null}},\"size\":1,\"headers\":{\"content-disposition\":\"form-data; name=\\\"note\\\"; filename=\\\"n.txt\\\"\",\"content-type\":\"text/plain\"},\"_max_mem_size\":1048576}}],\"request_id\":\"req_drops_011\"}}"
+  },
+  {
+   "name": "upload_header_name_missing",
+   "method": "POST",
+   "url": "/site/drops/abc/upload",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "request_id": "req_drops_012",
+   "body": "--XyZ\r\nContent-Disposition: form-data\r\n\r\nx\r\n--XyZ--\r\n",
+   "status": 400,
+   "resp_headers": [
+    [
+     "content-length",
+     "152"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"The Content-Disposition header field \\\"name\\\" must be provided.\",\"details\":null,\"request_id\":\"req_drops_012\"}}"
+  },
+  {
+   "name": "create_empty",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_013",
+   "body": "{}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "266"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"label\"],\"msg\":\"Field required\",\"input\":{}},{\"type\":\"missing\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"req_drops_013\"}}"
+  },
+  {
+   "name": "create_bad_json",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_014",
+   "body": "{\"label\": ",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "229"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",10],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"req_drops_014\"}}"
+  },
+  {
+   "name": "create_no_body",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": null,
+   "request_id": "req_drops_015",
+   "body": "",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "186"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_drops_015\"}}"
+  },
+  {
+   "name": "create_not_object",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_016",
+   "body": "[1]",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "252"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[1]}],\"request_id\":\"req_drops_016\"}}"
+  },
+  {
+   "name": "create_bad_pin",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_017",
+   "body": "{\"label\": \"x\", \"pin\": \"12ab\"}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "244"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Value error, The PIN must be digits only.\",\"input\":\"12ab\",\"ctx\":{\"error\":{}}}],\"request_id\":\"req_drops_017\"}}"
+  },
+  {
+   "name": "create_short_pin_and_more",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_018",
+   "body": "{\"label\": \"\", \"pin\": \"12\", \"max_uploads\": 0, \"expires_in_hours\": 2161, \"max_file_mb\": \"abc\"}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "805"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"label\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"pin\"],\"msg\":\"String should have at least 4 characters\",\"input\":\"12\",\"ctx\":{\"min_length\":4}},{\"type\":\"greater_than_equal\",\"loc\":[\"body\",\"max_uploads\"],\"msg\":\"Input should be greater than or equal to 1\",\"input\":0,\"ctx\":{\"ge\":1}},{\"type\":\"less_than_equal\",\"loc\":[\"body\",\"expires_in_hours\"],\"msg\":\"Input should be less than or equal to 2160\",\"input\":2161,\"ctx\":{\"le\":2160}},{\"type\":\"int_parsing\",\"loc\":[\"body\",\"max_file_mb\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"abc\"}],\"request_id\":\"req_drops_018\"}}"
+  },
+  {
+   "name": "create_types",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_019",
+   "body": "{\"label\": 5, \"pin\": 1234, \"max_uploads\": 1.5, \"expires_in_hours\": true, \"max_file_mb\": \"12\"}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "451"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"label\"],\"msg\":\"Input should be a valid string\",\"input\":5},{\"type\":\"string_type\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Input should be a valid string\",\"input\":1234},{\"type\":\"int_from_float\",\"loc\":[\"body\",\"max_uploads\"],\"msg\":\"Input should be a valid integer, got a number with a fractional part\",\"input\":1.5}],\"request_id\":\"req_drops_019\"}}"
+  },
+  {
+   "name": "create_unicode_pin",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_020",
+   "body": "{\"label\": \"x\", \"pin\": \"Ù¡Ù¢Ù£Ù¤\"}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "248"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"pin\"],\"msg\":\"Value error, The PIN must be digits only.\",\"input\":\"١٢٣٤\",\"ctx\":{\"error\":{}}}],\"request_id\":\"req_drops_020\"}}"
+  },
+  {
+   "name": "create_long",
+   "method": "POST",
+   "url": "/admin/drops",
+   "content_type": "application/json",
+   "request_id": "req_drops_021",
+   "body": "{\"label\": \"Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©Ã©\", \"pin\": \"1234567890123\"}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "639"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_long\",\"loc\":[\"body\",\"label\"],\"msg\":\"String should have at most 120 characters\",\"input\":\"ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\",\"ctx\":{\"max_length\":120}},{\"type\":\"string_too_long\",\"loc\":[\"body\",\"pin\"],\"msg\":\"String should have at most 12 characters\",\"input\":\"1234567890123\",\"ctx\":{\"max_length\":12}}],\"request_id\":\"req_drops_021\"}}"
+  },
+  {
+   "name": "update_bad",
+   "method": "PATCH",
+   "url": "/admin/drops/66f000000000000000000001",
+   "content_type": "application/json",
+   "request_id": "req_drops_022",
+   "body": "{\"label\": \"\", \"max_uploads\": 101, \"extend_hours\": 0, \"revoked\": \"maybe\"}",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "652"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"label\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"less_than_equal\",\"loc\":[\"body\",\"max_uploads\"],\"msg\":\"Input should be less than or equal to 100\",\"input\":101,\"ctx\":{\"le\":100}},{\"type\":\"greater_than_equal\",\"loc\":[\"body\",\"extend_hours\"],\"msg\":\"Input should be greater than or equal to 1\",\"input\":0,\"ctx\":{\"ge\":1}},{\"type\":\"bool_parsing\",\"loc\":[\"body\",\"revoked\"],\"msg\":\"Input should be a valid boolean, unable to interpret input\",\"input\":\"maybe\"}],\"request_id\":\"req_drops_022\"}}"
+  },
+  {
+   "name": "update_valid_bad_id_500",
+   "method": "PATCH",
+   "url": "/admin/drops/x",
+   "content_type": "application/json",
+   "request_id": "req_drops_023",
+   "body": "{\"label\": null, \"revoked\": \"yes\", \"max_uploads\": \"7\"}",
+   "status": 500,
+   "resp_headers": [
+    [
+     "content-length",
+     "113"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"internal_error\",\"message\":\"Internal server error\",\"details\":null,\"request_id\":\"req_drops_023\"}}"
+  },
+  {
+   "name": "update_not_object",
+   "method": "PATCH",
+   "url": "/admin/drops/x",
+   "content_type": "application/json",
+   "request_id": "req_drops_024",
+   "body": "\"x\"",
+   "status": 422,
+   "resp_headers": [
+    [
+     "content-length",
+     "252"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"x\"}],\"request_id\":\"req_drops_024\"}}"
+  }
+ ]
+}

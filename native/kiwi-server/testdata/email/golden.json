@@ -1,0 +1,493 @@
+{
+ "env": {
+  "APP_NAME": "Kiwi <API> \"é\" & co",
+  "DEV_URL": "https://dev.example.test/?a=1&b=<2>",
+  "DOCS_URL": "https://docs.example.test",
+  "SECRET_KEY": "email-fixture-secret",
+  "SMTP_HOST": "smtp.example.test",
+  "RATE_LIMIT_ALERT_EMAIL": "Alerts@Example.test",
+  "TOKEN_INACTIVITY_REVOKE_DAYS": "182",
+  "EMAIL_RETRY_BASE_SECONDS": "60"
+ },
+ "render": [
+  {
+   "name": "plain",
+   "heading": "Hello",
+   "paragraphs": [
+    "One paragraph."
+   ],
+   "button": null,
+   "note": null,
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">Hello</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">One paragraph.</p>\n          \n          \n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "empty",
+   "heading": "",
+   "paragraphs": [],
+   "button": null,
+   "note": null,
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\"></h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          \n          \n          \n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "button_note",
+   "heading": "Head <&> \"q\"",
+   "paragraphs": [
+    "p1 'single' & <b>",
+    "p2 ✓ 🐉"
+   ],
+   "button": {
+    "label": "Go <now>",
+    "url": "https://x.test/?a=1&b=\"2\""
+   },
+   "note": "Note & <stuff>",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">Head &lt;&amp;&gt; &#34;q&#34;</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">p1 &#39;single&#39; &amp; &lt;b&gt;</p><p style=\"margin:0 0 14px;\">p2 ✓ 🐉</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://x.test/?a=1&amp;b=&#34;2&#34;\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Go &lt;now&gt;</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://x.test/?a=1&amp;b=&#34;2&#34;</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">Note &amp; &lt;stuff&gt;</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "name": "empty_note",
+   "heading": "H",
+   "paragraphs": [
+    "x"
+   ],
+   "button": {
+    "label": "L",
+    "url": "u"
+   },
+   "note": "",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">H</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">x</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"u\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">L</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>u</p>\n          \n          \n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  }
+ ],
+ "notices": [
+  {
+   "days_left": -1,
+   "token_name": "My \"bot\" <token>",
+   "prefix": "kiwi_ab12cd34",
+   "to": "owner@example.test",
+   "subject": "Your Kiwi <API> \"é\" & co API token expires today",
+   "text": "Your Kiwi <API> \"é\" & co API token \"My \"bot\" <token>\" (kiwi_ab12cd34…) expires today.\n\nOnce it expires it will stop authenticating requests. Rotate or replace it from the developer portal.\n\nOpen the portal: https://dev.example.test/?a=1&b=<2>\n\nIf you no longer need this token, you can ignore this message.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">API token expiring</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your Kiwi &lt;API&gt; &#34;é&#34; &amp; co API token &#34;My &#34;bot&#34; &lt;token&gt;&#34; (kiwi_ab12cd34…) expires today.</p><p style=\"margin:0 0 14px;\">Once it expires it will stop authenticating requests. Rotate or replace it from the developer portal.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Open the portal</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://dev.example.test/?a=1&amp;b=&lt;2&gt;</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If you no longer need this token, you can ignore this message.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "days_left": 0,
+   "token_name": "My \"bot\" <token>",
+   "prefix": "kiwi_ab12cd34",
+   "to": "owner@example.test",
+   "subject": "Your Kiwi <API> \"é\" & co API token expires today",
+   "text": "Your Kiwi <API> \"é\" & co API token \"My \"bot\" <token>\" (kiwi_ab12cd34…) expires today.\n\nOnce it expires it will stop authenticating requests. Rotate or replace it from the developer portal.\n\nOpen the portal: https://dev.example.test/?a=1&b=<2>\n\nIf you no longer need this token, you can ignore this message.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">API token expiring</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your Kiwi &lt;API&gt; &#34;é&#34; &amp; co API token &#34;My &#34;bot&#34; &lt;token&gt;&#34; (kiwi_ab12cd34…) expires today.</p><p style=\"margin:0 0 14px;\">Once it expires it will stop authenticating requests. Rotate or replace it from the developer portal.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Open the portal</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://dev.example.test/?a=1&amp;b=&lt;2&gt;</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If you no longer need this token, you can ignore this message.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "days_left": 1,
+   "token_name": "My \"bot\" <token>",
+   "prefix": "kiwi_ab12cd34",
+   "to": "owner@example.test",
+   "subject": "Your Kiwi <API> \"é\" & co API token expires in 1 day(s)",
+   "text": "Your Kiwi <API> \"é\" & co API token \"My \"bot\" <token>\" (kiwi_ab12cd34…) expires in 1 day(s).\n\nOnce it expires it will stop authenticating requests. Rotate or replace it from the developer portal.\n\nOpen the portal: https://dev.example.test/?a=1&b=<2>\n\nIf you no longer need this token, you can ignore this message.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">API token expiring</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your Kiwi &lt;API&gt; &#34;é&#34; &amp; co API token &#34;My &#34;bot&#34; &lt;token&gt;&#34; (kiwi_ab12cd34…) expires in 1 day(s).</p><p style=\"margin:0 0 14px;\">Once it expires it will stop authenticating requests. Rotate or replace it from the developer portal.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Open the portal</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://dev.example.test/?a=1&amp;b=&lt;2&gt;</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If you no longer need this token, you can ignore this message.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  },
+  {
+   "days_left": 6,
+   "token_name": "My \"bot\" <token>",
+   "prefix": "kiwi_ab12cd34",
+   "to": "owner@example.test",
+   "subject": "Your Kiwi <API> \"é\" & co API token expires in 6 day(s)",
+   "text": "Your Kiwi <API> \"é\" & co API token \"My \"bot\" <token>\" (kiwi_ab12cd34…) expires in 6 day(s).\n\nOnce it expires it will stop authenticating requests. Rotate or replace it from the developer portal.\n\nOpen the portal: https://dev.example.test/?a=1&b=<2>\n\nIf you no longer need this token, you can ignore this message.",
+   "html": "<!doctype html>\n<html lang=\"en\">\n<body style=\"margin:0;padding:0;background:#0d1117;\n  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;\">\n  <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n    style=\"background:#0d1117;padding:28px 0;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"max-width:520px;background:#161b22;border:1px solid #232a33;border-radius:14px;\">\n        <tr><td style=\"padding:26px 30px 8px;\">\n          <div style=\"font-size:1.25rem;font-weight:700;color:#e6edf3;\">\n            <span style=\"color:#58a6ff;\">&#9670;</span> Kiwi &lt;API&gt; &#34;é&#34; &amp; co\n          </div>\n        </td></tr>\n        <tr><td style=\"padding:8px 30px 4px;\">\n          <h1 style=\"margin:0 0 6px;font-size:1.3rem;color:#e6edf3;\">API token expiring</h1>\n        </td></tr>\n        <tr><td style=\"padding:4px 30px 8px;color:#c2ccd6;line-height:1.6;font-size:.97rem;\">\n          <p style=\"margin:0 0 14px;\">Your Kiwi &lt;API&gt; &#34;é&#34; &amp; co API token &#34;My &#34;bot&#34; &lt;token&gt;&#34; (kiwi_ab12cd34…) expires in 6 day(s).</p><p style=\"margin:0 0 14px;\">Once it expires it will stop authenticating requests. Rotate or replace it from the developer portal.</p>\n          \n          <p style=\"margin:22px 0;\">\n            <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"display:inline-block;background:#238636;color:#fff;\n              text-decoration:none;padding:11px 20px;border-radius:8px;font-weight:600;\">Open the portal</a>\n          </p>\n          <p style=\"margin:0 0 14px;color:#8b949e;font-size:.85rem;word-break:break-all;\">\n            Or paste this link into your browser:<br>https://dev.example.test/?a=1&amp;b=&lt;2&gt;</p>\n          \n          <p style=\"margin:14px 0 0;color:#8b949e;font-size:.85rem;\">If you no longer need this token, you can ignore this message.</p>\n        </td></tr>\n        <tr><td style=\"padding:18px 30px 26px;border-top:1px solid #232a33;color:#6e7681;font-size:.8rem;\">\n          Kiwi &lt;API&gt; &#34;é&#34; &amp; co · <a href=\"https://dev.example.test/?a=1&amp;b=&lt;2&gt;\" style=\"color:#58a6ff;\">Developer portal</a>\n          · <a href=\"https://docs.example.test\" style=\"color:#58a6ff;\">Docs</a>\n        </td></tr>\n      </table>\n    </td></tr>\n  </table>\n</body>\n</html>"
+  }
+ ],
+ "digests": [
+  {
+   "hours": 24,
+   "threshold": 20,
+   "last": null,
+   "rows": [
+    {
+     "_id": "65b000000000000000000001",
+     "count": 1234567,
+     "user_id": "65a000000000000000000001"
+    },
+    {
+     "_id": "65b000000000000000000002",
+     "count": 15,
+     "user_id": "65a000000000000000000002"
+    },
+    {
+     "_id": "65b000000000000000000003",
+     "count": 3,
+     "user_id": "65a000000000000000000001"
+    },
+    {
+     "_id": null,
+     "count": 2,
+     "user_id": null
+    }
+   ],
+   "users": {
+    "65a000000000000000000001": "a&b@example.test",
+    "65a000000000000000000002": "<x>@example.test"
+   },
+   "tokens": {
+    "65b000000000000000000001": [
+     "Bot \"one\" & <two>",
+     "kiwi_aaaa'1"
+    ],
+    "65b000000000000000000002": [
+     "Second",
+     "kiwi_bbbb"
+    ]
+   },
+   "sent": true,
+   "marked": true,
+   "pipeline": [
+    {
+     "$match": {
+      "created_at": {
+       "$gte": {
+        "$date": {
+         "$numberLong": "1792580400123"
+        }
+       }
+      },
+      "status_code": {
+       "$numberInt": "429"
+      }
+     }
+    },
+    {
+     "$group": {
+      "_id": "$token_id",
+      "count": {
+       "$sum": {
+        "$numberInt": "1"
+       }
+      },
+      "user_id": {
+       "$first": "$user_id"
+      }
+     }
+    },
+    {
+     "$sort": {
+      "count": {
+       "$numberInt": "-1"
+      }
+     }
+    },
+    {
+     "$limit": {
+      "$numberInt": "50"
+     }
+    }
+   ],
+   "mail": {
+    "to": "Alerts@Example.test",
+    "subject": "Kiwi <API> \"é\" & co - rate-limit digest (1234587 hits / 24h)",
+    "text": "1234587 rate-limit hits (429s) in the last 24h across 4 token(s).\n\n  hits  account  -  token\n1234567  a&b@example.test  -  Bot \"one\" & <two> (kiwi_aaaa'1…)\n    15  <x>@example.test  -  Second (kiwi_bbbb…)\n     3  a&b@example.test  -  (deleted token) (…)\n     2  unknown  -  (deleted token) (…)",
+    "html": "<p><b>1234587</b> rate-limit hits (429s) in the last 24h across 4 token(s).</p><table cellpadding='6' style='border-collapse:collapse'><tr><th align='right'>Hits</th><th align='left'>Account</th><th align='left'>Token</th></tr><tr><td align='right'>1234567</td><td>a&amp;b@example.test</td><td>Bot &quot;one&quot; &amp; &lt;two&gt; <code>kiwi_aaaa&#x27;1…</code></td></tr><tr><td align='right'>15</td><td>&lt;x&gt;@example.test</td><td>Second <code>kiwi_bbbb…</code></td></tr><tr><td align='right'>3</td><td>a&amp;b@example.test</td><td>(deleted token) <code>…</code></td></tr><tr><td align='right'>2</td><td>unknown</td><td>(deleted token) <code>…</code></td></tr></table>"
+   }
+  },
+  {
+   "hours": 24,
+   "threshold": 2000000,
+   "last": null,
+   "rows": [
+    {
+     "_id": "65b000000000000000000001",
+     "count": 1234567,
+     "user_id": "65a000000000000000000001"
+    },
+    {
+     "_id": "65b000000000000000000002",
+     "count": 15,
+     "user_id": "65a000000000000000000002"
+    },
+    {
+     "_id": "65b000000000000000000003",
+     "count": 3,
+     "user_id": "65a000000000000000000001"
+    },
+    {
+     "_id": null,
+     "count": 2,
+     "user_id": null
+    }
+   ],
+   "users": {
+    "65a000000000000000000001": "a&b@example.test",
+    "65a000000000000000000002": "<x>@example.test"
+   },
+   "tokens": {
+    "65b000000000000000000001": [
+     "Bot \"one\" & <two>",
+     "kiwi_aaaa'1"
+    ],
+    "65b000000000000000000002": [
+     "Second",
+     "kiwi_bbbb"
+    ]
+   },
+   "sent": false,
+   "marked": true,
+   "pipeline": [
+    {
+     "$match": {
+      "created_at": {
+       "$gte": {
+        "$date": {
+         "$numberLong": "1792580400123"
+        }
+       }
+      },
+      "status_code": {
+       "$numberInt": "429"
+      }
+     }
+    },
+    {
+     "$group": {
+      "_id": "$token_id",
+      "count": {
+       "$sum": {
+        "$numberInt": "1"
+       }
+      },
+      "user_id": {
+       "$first": "$user_id"
+      }
+     }
+    },
+    {
+     "$sort": {
+      "count": {
+       "$numberInt": "-1"
+      }
+     }
+    },
+    {
+     "$limit": {
+      "$numberInt": "50"
+     }
+    }
+   ],
+   "mail": null
+  },
+  {
+   "hours": 6,
+   "threshold": 1,
+   "last": "2026-10-22T05:36:00.123456+00:00",
+   "rows": [
+    {
+     "_id": "65b000000000000000000001",
+     "count": 1234567,
+     "user_id": "65a000000000000000000001"
+    }
+   ],
+   "users": {
+    "65a000000000000000000001": "a&b@example.test",
+    "65a000000000000000000002": "<x>@example.test"
+   },
+   "tokens": {
+    "65b000000000000000000001": [
+     "Bot \"one\" & <two>",
+     "kiwi_aaaa'1"
+    ],
+    "65b000000000000000000002": [
+     "Second",
+     "kiwi_bbbb"
+    ]
+   },
+   "sent": true,
+   "marked": true,
+   "pipeline": [
+    {
+     "$match": {
+      "created_at": {
+       "$gte": {
+        "$date": {
+         "$numberLong": "1792645200123"
+        }
+       }
+      },
+      "status_code": {
+       "$numberInt": "429"
+      }
+     }
+    },
+    {
+     "$group": {
+      "_id": "$token_id",
+      "count": {
+       "$sum": {
+        "$numberInt": "1"
+       }
+      },
+      "user_id": {
+       "$first": "$user_id"
+      }
+     }
+    },
+    {
+     "$sort": {
+      "count": {
+       "$numberInt": "-1"
+      }
+     }
+    },
+    {
+     "$limit": {
+      "$numberInt": "50"
+     }
+    }
+   ],
+   "mail": {
+    "to": "Alerts@Example.test",
+    "subject": "Kiwi <API> \"é\" & co - rate-limit digest (1234567 hits / 6h)",
+    "text": "1234567 rate-limit hits (429s) in the last 6h across 1 token(s).\n\n  hits  account  -  token\n1234567  a&b@example.test  -  Bot \"one\" & <two> (kiwi_aaaa'1…)",
+    "html": "<p><b>1234567</b> rate-limit hits (429s) in the last 6h across 1 token(s).</p><table cellpadding='6' style='border-collapse:collapse'><tr><th align='right'>Hits</th><th align='left'>Account</th><th align='left'>Token</th></tr><tr><td align='right'>1234567</td><td>a&amp;b@example.test</td><td>Bot &quot;one&quot; &amp; &lt;two&gt; <code>kiwi_aaaa&#x27;1…</code></td></tr></table>"
+   }
+  },
+  {
+   "hours": 6,
+   "threshold": 1,
+   "last": "2026-10-22T05:36:01.123456+00:00",
+   "rows": [
+    {
+     "_id": "65b000000000000000000001",
+     "count": 1234567,
+     "user_id": "65a000000000000000000001"
+    }
+   ],
+   "users": {
+    "65a000000000000000000001": "a&b@example.test",
+    "65a000000000000000000002": "<x>@example.test"
+   },
+   "tokens": {
+    "65b000000000000000000001": [
+     "Bot \"one\" & <two>",
+     "kiwi_aaaa'1"
+    ],
+    "65b000000000000000000002": [
+     "Second",
+     "kiwi_bbbb"
+    ]
+   },
+   "sent": false,
+   "marked": false,
+   "pipeline": null,
+   "mail": null
+  },
+  {
+   "hours": 1,
+   "threshold": 0,
+   "last": null,
+   "rows": [],
+   "users": {},
+   "tokens": {},
+   "sent": true,
+   "marked": true,
+   "pipeline": [
+    {
+     "$match": {
+      "created_at": {
+       "$gte": {
+        "$date": {
+         "$numberLong": "1792663200123"
+        }
+       }
+      },
+      "status_code": {
+       "$numberInt": "429"
+      }
+     }
+    },
+    {
+     "$group": {
+      "_id": "$token_id",
+      "count": {
+       "$sum": {
+        "$numberInt": "1"
+       }
+      },
+      "user_id": {
+       "$first": "$user_id"
+      }
+     }
+    },
+    {
+     "$sort": {
+      "count": {
+       "$numberInt": "-1"
+      }
+     }
+    },
+    {
+     "$limit": {
+      "$numberInt": "50"
+     }
+    }
+   ],
+   "mail": {
+    "to": "Alerts@Example.test",
+    "subject": "Kiwi <API> \"é\" & co - rate-limit digest (0 hits / 1h)",
+    "text": "0 rate-limit hits (429s) in the last 1h across 0 token(s).\n\n  hits  account  -  token\n",
+    "html": "<p><b>0</b> rate-limit hits (429s) in the last 1h across 0 token(s).</p><table cellpadding='6' style='border-collapse:collapse'><tr><th align='right'>Hits</th><th align='left'>Account</th><th align='left'>Token</th></tr></table>"
+   }
+  }
+ ],
+ "outbox_keys": [
+  "to",
+  "subject",
+  "text",
+  "html",
+  "status",
+  "attempts",
+  "last_error",
+  "next_attempt_at",
+  "claimed_at",
+  "created_at",
+  "sent_at"
+ ],
+ "backoff": [
+  [
+   1,
+   60.0
+  ],
+  [
+   2,
+   120.0
+  ],
+  [
+   3,
+   240.0
+  ],
+  [
+   4,
+   480.0
+  ],
+  [
+   5,
+   960.0
+  ]
+ ],
+ "times09": [
+  [
+   3600000000,
+   3240000000
+  ],
+  [
+   21600000000,
+   19440000000
+  ],
+  [
+   86400000000,
+   77760000000
+  ],
+  [
+   604800000000,
+   544320000000
+  ],
+  [
+   2592000000000,
+   2332800000000
+  ]
+ ]
+}
