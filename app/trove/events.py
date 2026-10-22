@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.core.database import upsert_by
 from app.core.http import fetch
 from app.core.refresher import PeriodicRefresher
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 from app.trove.models import TroveEvent
 
@@ -74,6 +75,8 @@ _refresher = PeriodicRefresher(
 
 
 def start_events_refresher() -> None:
+    if rust_owns("trove_events"):
+        return
     _refresher.start()
 
 

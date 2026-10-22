@@ -8,6 +8,7 @@ import asyncio
 import logging
 
 from app.core.queue_worker import LoopTask
+from app.core.rust_owns import rust_owns
 from app.giveaways import service
 
 logger = logging.getLogger("kiwi.giveaways")
@@ -37,6 +38,8 @@ _task = LoopTask(_loop)
 
 
 def start_giveaway_worker() -> None:
+    if rust_owns("giveaways"):
+        return
     _task.start()
 
 

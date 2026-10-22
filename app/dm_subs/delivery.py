@@ -24,6 +24,7 @@ from app.core.delivery_health import record_delivery
 from app.core.features import DM_SUBS_FLAG, is_enabled
 from app.core.queue_worker import RedisListConsumer, enqueue_or_inline
 from app.core.redis import get_redis
+from app.core.rust_owns import rust_owns
 from app.dm_subs import embeds
 from app.dm_subs.models import (
     MARKET_NOTIFY_COOLDOWN,
@@ -172,6 +173,8 @@ _worker = RedisListConsumer(
 
 
 def start_dm_delivery() -> None:
+    if rust_owns("dm_subs"):
+        return
     _worker.start()
 
 

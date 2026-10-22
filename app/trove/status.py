@@ -67,6 +67,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.redis import get_redis
+from app.core.rust_owns import rust_owns
 
 logger = logging.getLogger("kiwi.trove.status")
 
@@ -629,6 +630,8 @@ async def _loop() -> None:
 
 def start_status_prober() -> None:
     global _task
+    if rust_owns("status_prober"):
+        return
     if _task is None:
         _task = asyncio.create_task(_loop())
 

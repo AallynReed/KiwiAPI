@@ -16,6 +16,7 @@ from urllib.parse import quote
 from app.core.config import settings
 from app.core.http import fetch
 from app.core.refresher import PeriodicRefresher
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 from app.trove import server_time
 from app.trove.models import FeedCache
@@ -204,6 +205,8 @@ _refresher = PeriodicRefresher(
 
 
 def start_chaos_refresher() -> None:
+    if rust_owns("chaos"):
+        return
     _refresher.start()
 
 

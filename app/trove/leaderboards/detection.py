@@ -54,6 +54,7 @@ import statistics
 import time
 from datetime import UTC, datetime, timedelta
 
+from app.core.rust_owns import rust_owns
 from app.trove.leaderboards import service as lb_service
 
 logger = logging.getLogger(__name__)
@@ -583,6 +584,8 @@ def start_leaderboards_warmer() -> None:
     """Kick off the background warmer if it isn't already running.
     Idempotent - safe to call multiple times."""
     global _warmup_task
+    if rust_owns("leaderboards_warmer"):
+        return
     if _warmup_task is not None and not _warmup_task.done():
         return
     _warmup_task = asyncio.create_task(_warmup_loop(), name="leaderboards-warmer")

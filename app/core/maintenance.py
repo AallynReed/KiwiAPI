@@ -10,6 +10,7 @@ from app.auth.models import User
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.email_outbox import queue_email
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 from app.tokens.models import ApiToken
 from app.usage.models import UsageEvent
@@ -191,6 +192,8 @@ async def daily_rate_limit_digest() -> bool:
 
 async def maintenance_loop() -> None:
     """Run the daily sweeps (auto-revoke + rate-limit digest). Cancelled on shutdown."""
+    if rust_owns("maintenance"):
+        return
     while True:
         try:
             await auto_revoke_inactive_tokens()

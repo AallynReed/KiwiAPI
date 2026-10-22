@@ -11,6 +11,7 @@ Started/stopped from the app lifespan alongside the event bus.
 import asyncio
 import logging
 
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 from app.events import bus
 from app.events.sources import SCHEDULED_SOURCES
@@ -53,6 +54,8 @@ async def _run_source(source) -> None:
 
 def start_event_scheduler() -> None:
     global _tasks
+    if rust_owns("event_scheduler"):
+        return
     if _tasks:
         return
     _tasks = [asyncio.create_task(_run_source(s)) for s in SCHEDULED_SOURCES]

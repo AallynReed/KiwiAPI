@@ -22,6 +22,7 @@ import httpx
 from app.core.config import settings
 from app.core.http import KIWI_UA, fetch
 from app.core.refresher import PeriodicRefresher
+from app.core.rust_owns import rust_owns
 from app.core.utils import iso, utcnow
 from app.mod_stats.models import ModStatsSnapshot
 from app.trove.mods_hub.models import ModProject, ModRelease
@@ -180,6 +181,8 @@ _refresher = PeriodicRefresher(
 
 
 def start_mod_stats_refresher() -> None:
+    if rust_owns("mod_stats"):
+        return
     _refresher.start()
 
 

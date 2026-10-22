@@ -30,6 +30,7 @@ from app.core.delivery_health import record_delivery
 from app.core.features import WEBHOOKS_FLAG, is_enabled
 from app.core.queue_worker import RedisListConsumer, enqueue_or_inline
 from app.core.redis import get_redis
+from app.core.rust_owns import rust_owns
 from app.webhooks import embeds
 from app.webhooks.models import (
     MAX_CONSECUTIVE_FAILURES,
@@ -184,6 +185,8 @@ _worker = RedisListConsumer(
 
 
 def start_webhook_delivery() -> None:
+    if rust_owns("webhooks"):
+        return
     _worker.start()
 
 

@@ -10,6 +10,8 @@ from typing import Generic, TypeVar
 
 from beanie import Document
 
+from app.core.rust_owns import rust_owns
+
 T = TypeVar("T", bound=Document)
 
 _FLUSH_INTERVAL_SECONDS = 3.0
@@ -29,7 +31,10 @@ class BufferedRecorder(Generic[T]):
         flush_at: int = _FLUSH_AT,
         flush_interval_seconds: float = _FLUSH_INTERVAL_SECONDS,
         max_buffer: int = _MAX_BUFFER,
+        loop: str | None = None,
     ) -> None:
+        self._loop_name = loop
+        self._owned_elsewhere = False  # RUST_OWNS: record() drops everything
         self._document = document
         self._logger = logger
         self._label = label
@@ -43,6 +48,8 @@ class BufferedRecorder(Generic[T]):
 
     def record(self, event: T) -> None:
         """Queue an event (cheap, non-blocking). Started-or-not, never raises."""
+        if self._owned_elsewhere:
+            return
         if self._task is None:
             # Recorder not running (e.g. unit context) - best-effort direct write.
             # Hold a reference until done, else the task can be GC'd mid-flight.
@@ -85,6 +92,9 @@ class BufferedRecorder(Generic[T]):
             await self._flush()
 
     def start(self) -> None:
+        if self._loop_name is not None and rust_owns(self._loop_name):
+            self._owned_elsewhere = True
+            return
         if self._task is None:
             self._task = asyncio.create_task(self._loop())
 

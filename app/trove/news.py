@@ -18,6 +18,7 @@ from app.core.database import upsert_by
 from app.core.http import fetch
 from app.core.pagination import paginate
 from app.core.refresher import PeriodicRefresher
+from app.core.rust_owns import rust_owns
 from app.trove.models import TroveNews
 
 logger = logging.getLogger("kiwi.trove.news")
@@ -163,6 +164,8 @@ _refresher = PeriodicRefresher(
 
 
 def start_news_refresher() -> None:
+    if rust_owns("news"):
+        return
     _refresher.start()
 
 

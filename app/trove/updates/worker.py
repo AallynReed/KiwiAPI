@@ -18,6 +18,7 @@ import httpx
 
 from app.core.config import settings
 from app.core.redis import get_redis
+from app.core.rust_owns import rust_owns
 from app.trove.codexes.indexer import ensure_indexed as ensure_codex_indexed
 from app.trove.decode.runner import ensure_built as ensure_gamedata_built
 from app.trove.updates.cas import ContentStore
@@ -153,6 +154,8 @@ async def _loop() -> None:
 
 def start_update_archiver() -> None:
     global _task
+    if rust_owns("update_archiver"):
+        return
     if not settings.trove_update_enabled:
         logger.info("updates: archiver disabled (set TROVE_UPDATE_ENABLED=true to run)")
         return

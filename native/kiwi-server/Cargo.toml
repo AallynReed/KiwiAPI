@@ -17,6 +17,7 @@ hyper-util = { version = "0.1.21", features = ["client-legacy", "http1", "tokio"
 kiwi-core = { version = "0.1.0", path = "../kiwi-core" }
 mimalloc = "0.1.52"
 mongodb = "3.9.1"
+regex = "1.13.1"
 redis = { version = "1.7.1", features = ["tokio-comp", "connection-manager"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }

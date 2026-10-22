@@ -8,6 +8,7 @@ pub mod dt;
 pub mod error;
 #[cfg(test)]
 mod foundation_golden;
+pub mod features;
 pub mod proxy;
 pub mod pyfloat;
 pub mod pyjson;

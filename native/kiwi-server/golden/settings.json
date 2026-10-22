@@ -1,0 +1,830 @@
+{
+ "defaults": {
+  "app_name": "Kiwi API",
+  "debug": false,
+  "max_request_body_bytes": 8388608,
+  "mods_max_request_body_bytes": 20971520,
+  "mods_hub_enabled": true,
+  "mods_store_dir": "data/mods",
+  "mods_hub_max_file_bytes": 20971520,
+  "mods_image_max_bytes": 5242880,
+  "mods_hub_max_files_per_commit": 500,
+  "mods_git_max_body_bytes": 104857600,
+  "embed_upload_max_bytes": 8388608,
+  "leaderboards_max_request_body_bytes": 20971520,
+  "market_max_request_body_bytes": 20971520,
+  "ocr_max_request_body_bytes": 12582912,
+  "ffdec_jar": "/opt/ffdec/ffdec.jar",
+  "ffdec_java": "java",
+  "ffdec_max_heap_mb": 768,
+  "ffdec_timeout": 120,
+  "ffdec_file_timeout": 60,
+  "ffdec_method_timeout": 15,
+  "ffdec_max_swf_bytes": 25165824,
+  "ffdec_max_source_bytes": 12582912,
+  "ffdec_max_scripts": 4000,
+  "ffdec_max_concurrent": 2,
+  "leaderboards_hot_retention_days": 3,
+  "leaderboards_pg_tier_after_days": 7,
+  "leaderboards_anon_retention_days": 7,
+  "leaderboards_archive_query_threshold_days": 3,
+  "leaderboards_archive_rate_limit_max": 10,
+  "leaderboards_archive_rate_limit_window_seconds": 60,
+  "cheaters_z_threshold": 5.0,
+  "cheaters_velocity_multiplier": 10.0,
+  "cheaters_min_board_size": 20,
+  "cheaters_cache_ttl_seconds": 1800,
+  "cheaters_excluded_board_uuids": "",
+  "cheaters_elite_cohort_pct": 0.05,
+  "cheaters_cluster_min_size": 3,
+  "cheaters_cluster_score_band_pct": 0.02,
+  "cheaters_cluster_max_edit_distance": 2,
+  "cheaters_cluster_size_full": 8,
+  "cheaters_cluster_excluded_board_uuids": "",
+  "cheaters_comovement_candidate_top_n": 400,
+  "cheaters_comovement_min_hourly_gain": 1.0,
+  "cheaters_comovement_gain_percentile": 0.9,
+  "cheaters_comovement_gain_tolerance_pct": 0.05,
+  "cheaters_comovement_min_matching_hours": 3,
+  "cheaters_comovement_min_match_ratio": 0.7,
+  "cheaters_comovement_min_density": 0.6,
+  "cheaters_comovement_min_group_size": 2,
+  "cheaters_comovement_max_cell_accounts": 40,
+  "cheaters_comovement_recompute_seconds": 3600,
+  "cheaters_schedule_min_active_hours": 6,
+  "cheaters_schedule_min_similarity": 0.8,
+  "cheaters_fusion_corroboration_bonus": 0.06,
+  "cheaters_footprint_min_jaccard": 0.6,
+  "cheaters_weekly_uptime_fraction": 0.85,
+  "renames_max_gap_seconds": 27000,
+  "renames_min_boards": 2,
+  "renames_score_drift_pct": 0.02,
+  "renames_min_score": 1000.0,
+  "renames_min_confidence": 0.5,
+  "renames_excluded_board_uuids": "",
+  "renames_cache_ttl_seconds": 300,
+  "duplicates_lookback_days": 7,
+  "duplicates_min_boards": 1,
+  "duplicates_frozen_min_captures": 4,
+  "duplicates_max_names": 500,
+  "duplicates_cache_ttl_seconds": 300,
+  "last_played_excluded_board_uuids": "",
+  "capture_completeness_enabled": true,
+  "capture_max_missing_boards": 1,
+  "capture_collapse_frac": 0.5,
+  "capture_min_prev_boards": 20,
+  "class_activity_power_rank_threshold": 25000,
+  "class_activity_effort_threshold": 50,
+  "class_activity_xp_threshold": 2000000,
+  "market_archive_rate_limit_max": 10,
+  "market_archive_rate_limit_window_seconds": 60,
+  "sound_studio_max_request_body_bytes": 33554432,
+  "mod_workshop_max_request_body_bytes": 33554432,
+  "unlock_debug_max_request_body_bytes": 167772160,
+  "drops_max_request_body_bytes": 536870912,
+  "drops_store_dir": "data/drops",
+  "custom_art_workspace": "data/custom-art",
+  "custom_art_remote": "data/troveui.git",
+  "custom_art_lib_remote": "https://github.com/AallynReed/KiwiZUI.git",
+  "custom_art_env_file": "data/troveui.env",
+  "custom_art_branch": "live-us",
+  "custom_art_poll_seconds": 15,
+  "custom_art_image_max_bytes": 3145728,
+  "custom_art_steam_user": "",
+  "mod_stats_handle": "aallyn",
+  "site_master_handle": "aallyn",
+  "site_root": "site",
+  "api_url": "https://api.aallyn.net",
+  "dev_url": "https://dev.aallyn.net",
+  "docs_url": "https://docs.aallyn.net",
+  "app_url": "https://trove.aallyn.net",
+  "asset_base_url": "",
+  "internal_api_url": "http://api:8000",
+  "internal_key": "",
+  "geoip_dir": "data/geoip",
+  "mongo_uri": "mongodb://localhost:27016",
+  "mongo_db": "kiwi",
+  "redis_url": null,
+  "postgres_dsn": null,
+  "postgres_pool_min": 2,
+  "postgres_pool_max": 10,
+  "secret_key": "CHANGE_ME_insecure_dev_secret_do_not_use_in_production",
+  "jwt_algorithm": "HS256",
+  "access_token_expire_minutes": 15,
+  "refresh_token_expire_days": 30,
+  "github_client_id": null,
+  "github_client_secret": null,
+  "discord_client_id": null,
+  "discord_client_secret": null,
+  "discord_public_key": null,
+  "discord_bot_token": null,
+  "bot_members_intent": true,
+  "discord_install_url": null,
+  "api_token_prefix": "kiwi",
+  "token_creation_daily_limit": 3,
+  "token_inactivity_revoke_days": 182,
+  "token_touch_interval_seconds": 60,
+  "idempotency_lock_seconds": 60,
+  "idempotency_result_seconds": 86400,
+  "token_expiry_warning_days": 7,
+  "captcha_provider": "turnstile",
+  "captcha_secret": null,
+  "captcha_sitekey": null,
+  "signup_rate_limit_max": 5,
+  "signup_rate_limit_window_seconds": 3600,
+  "login_rate_limit_max": 10,
+  "login_rate_limit_window_seconds": 300,
+  "api_rate_limit_max": 120,
+  "api_rate_limit_window_seconds": 60,
+  "public_anon_rate_limit_max": 30,
+  "public_anon_rate_limit_window_seconds": 60,
+  "codexes_rate_limit_multiplier": 5,
+  "bilibili_image_rate_limit_multiplier": 10,
+  "updates_file_rate_limit_multiplier": 20,
+  "mods_rate_limit_multiplier": 8,
+  "mods_asset_rate_limit_multiplier": 30,
+  "ingest_cooldown_max": 1,
+  "ingest_cooldown_window_seconds": 300,
+  "password_min_length": 8,
+  "require_verified_for_login": true,
+  "login_max_attempts": 5,
+  "login_attempt_window_seconds": 900,
+  "login_lockout_seconds": 900,
+  "password_breach_check": true,
+  "disposable_email_check": true,
+  "security_email_notifications": true,
+  "admin_email": null,
+  "admin_password": null,
+  "usage_retention_days": 30,
+  "pageview_tracking_enabled": true,
+  "pageview_retention_days": 90,
+  "smtp_host": null,
+  "smtp_port": 25,
+  "smtp_username": null,
+  "smtp_password": null,
+  "smtp_starttls": false,
+  "smtp_ssl": false,
+  "mail_from": "no-reply@aallyn.net",
+  "mail_from_name": "Kiwi",
+  "email_verification_expire_hours": 48,
+  "password_reset_expire_hours": 1,
+  "forgot_password_rate_limit_max": 5,
+  "forgot_password_rate_limit_window_seconds": 3600,
+  "email_worker_poll_seconds": 10,
+  "email_max_attempts": 5,
+  "email_retry_base_seconds": 60,
+  "email_outbox_retention_days": 30,
+  "github_secret_scanning_verify": true,
+  "github_secret_scanning_keys_url": "https://api.github.com/meta/public_keys/secret_scanning",
+  "require_verified_for_tokens": true,
+  "trove_news_feed_url": "https://trovegame.com/feed",
+  "trove_news_refresh_seconds": 1800,
+  "twitch_client_id": null,
+  "twitch_client_secret": null,
+  "yt_api_key": null,
+  "twitch_game_id": "412756",
+  "trove_feeds_refresh_seconds": 300,
+  "btt_releases_repo": "AallynReed/BetterTroveTools",
+  "btt_releases_refresh_seconds": 1800,
+  "btt_releases_token": null,
+  "site_source_repo": "AallynReed/KiwiAPI",
+  "trove_delve_source_url": "",
+  "trove_delve_source_referer": "",
+  "trove_chaos_chest_url": "https://trovesaurus.com/api/chaos-chest",
+  "trove_chaos_refresh_seconds": 1800,
+  "trove_events_feed_url": "https://trovesaurus.com/calendar/feed",
+  "trove_events_refresh_seconds": 900,
+  "trove_events_history_days": 365,
+  "steam_web_api_key": "",
+  "steam_workshop_refresh_seconds": 21600,
+  "events_channel": "kiwi:events",
+  "events_heartbeat_seconds": 20,
+  "events_watch_seconds": 30,
+  "events_max_connections": 1000,
+  "webhooks_queue": "kiwi:webhooks:queue",
+  "dm_subs_queue": "kiwi:dmsubs:queue",
+  "trove_update_enabled": false,
+  "trove_update_base_url": "http://trove-update.dyn.triongames.com",
+  "trove_update_prefix": "/kiwi-live-client-patch/",
+  "trove_update_store_dir": "data/updates",
+  "gamedata_dir": "",
+  "pkfx_dev_vfx_dir": "",
+  "trove_update_probe_seconds": 1200,
+  "trove_update_concurrency": 6,
+  "trove_render_branch": "live-us",
+  "trove_local_game_dir": "",
+  "trove_render_cache_ttl": 86400,
+  "backlog_enabled": true,
+  "backlog_dir": "/data/backlog",
+  "backlog_retention_days": 0,
+  "trove_status_auth_url": "https://auth.trionworlds.com/auth/v1_2",
+  "trove_status_probe_interval_seconds": 60,
+  "trove_status_timeout_seconds": 8.0,
+  "trove_status_probe_attempts": 3,
+  "trove_status_probe_retry_delay_seconds": 2.0,
+  "trove_status_local_check_enabled": true,
+  "trove_status_local_check_hosts": "1.1.1.1:443,9.9.9.9:443,8.8.8.8:443",
+  "trove_status_local_check_timeout_seconds": 4.0,
+  "trove_status_eu_host": "ams-c12-b05.ams.triongames.com",
+  "trove_status_eu_port": 6560,
+  "trove_status_us_host": "dal-c35-b05.dal.triongames.com",
+  "trove_status_us_port": 6560,
+  "trove_status_pts_host": "auth-pcpts01.trovegame.com",
+  "trove_status_pts_port": 6560,
+  "trove_status_game_deep_probe": true,
+  "trove_status_game_random_opener": true,
+  "trove_status_eu_hello_hex": "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7c06bb098626e23accfb",
+  "trove_status_us_hello_hex": "20000000003df232536bcb1518164c4685392572b843d0bcbb71be7c06bb098626e23accfb",
+  "trove_status_pts_hello_hex": "",
+  "trove_status_game_hold_seconds": 1.5,
+  "rate_limit_alert_email": "aallyn@aallyn.net",
+  "rate_limit_alert_threshold": 20,
+  "rate_limit_digest_window_hours": 24,
+  "cors_origins": [
+   "https://docs.aallyn.net",
+   "https://dev.aallyn.net",
+   "http://localhost:25468",
+   "http://127.0.0.1:25468",
+   "http://localhost:15546",
+   "http://127.0.0.1:15546"
+  ],
+  "cors_origin_regex": "https://([a-z0-9-]+\\.)?aallyn\\.net|http://(localhost|127\\.0\\.0\\.1)(:\\d+)?",
+  "github_oauth_enabled": false,
+  "discord_oauth_enabled": false,
+  "discord_install_link": null,
+  "postgres_enabled": false,
+  "email_enabled": false,
+  "asset_url": "https://trove.aallyn.net"
+ },
+ "cases": [
+  {
+   "env": {
+    "API_RATE_LIMIT_MAX": "77"
+   },
+   "changed": {
+    "api_rate_limit_max": 77
+   }
+  },
+  {
+   "env": {
+    "debug": "yes"
+   },
+   "changed": {
+    "debug": true
+   }
+  },
+  {
+   "env": {
+    "Debug": "On"
+   },
+   "changed": {
+    "debug": true
+   }
+  },
+  {
+   "env": {
+    "DEBUG": "T"
+   },
+   "changed": {
+    "debug": true
+   }
+  },
+  {
+   "env": {
+    "DEBUG": "0"
+   },
+   "changed": {}
+  },
+  {
+   "env": {
+    "DEBUG": "2"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "DEBUG": " true"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "DEBUG": ""
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": " 1_000 "
+   },
+   "changed": {
+    "max_request_body_bytes": 1000
+   }
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "5.0"
+   },
+   "changed": {
+    "max_request_body_bytes": 5
+   }
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "+5.000"
+   },
+   "changed": {
+    "max_request_body_bytes": 5
+   }
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "-007"
+   },
+   "changed": {
+    "max_request_body_bytes": -7
+   }
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "5.5"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "5."
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "1e3"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "1__0"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": ""
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "1_000.0"
+   },
+   "changed": {
+    "max_request_body_bytes": 1000
+   }
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "-0.0"
+   },
+   "changed": {
+    "max_request_body_bytes": 0
+   }
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": ".0"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "+1_2"
+   },
+   "changed": {
+    "max_request_body_bytes": 12
+   }
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "1_"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "٣"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "MAX_REQUEST_BODY_BYTES": "\t42\n"
+   },
+   "changed": {
+    "max_request_body_bytes": 42
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "4"
+   },
+   "changed": {
+    "cheaters_z_threshold": 4.0
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "1_0.5"
+   },
+   "changed": {
+    "cheaters_z_threshold": 10.5
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "_1.5"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "+.5"
+   },
+   "changed": {
+    "cheaters_z_threshold": 0.5
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "1E3"
+   },
+   "changed": {
+    "cheaters_z_threshold": 1000.0
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "-0"
+   },
+   "changed": {
+    "cheaters_z_threshold": -0.0
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "inf"
+   },
+   "changed": {
+    "cheaters_z_threshold": {
+     "$float": "inf"
+    }
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "NaN"
+   },
+   "changed": {
+    "cheaters_z_threshold": {
+     "$float": "nan"
+    }
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "1e400"
+   },
+   "changed": {
+    "cheaters_z_threshold": {
+     "$float": "inf"
+    }
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "1e-5"
+   },
+   "changed": {
+    "cheaters_z_threshold": 1e-05
+   }
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": " 2_5.5 "
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "5."
+   },
+   "changed": {}
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": "abc"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "CHEATERS_Z_THRESHOLD": ""
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "REDIS_URL": ""
+   },
+   "changed": {
+    "redis_url": ""
+   }
+  },
+  {
+   "env": {
+    "REDIS_URL": "redis://redis:6379/0"
+   },
+   "changed": {
+    "redis_url": "redis://redis:6379/0"
+   }
+  },
+  {
+   "env": {
+    "POSTGRES_DSN": "postgresql://x"
+   },
+   "changed": {
+    "postgres_dsn": "postgresql://x",
+    "postgres_enabled": true
+   }
+  },
+  {
+   "env": {
+    "POSTGRES_DSN": ""
+   },
+   "changed": {
+    "postgres_dsn": ""
+   }
+  },
+  {
+   "env": {
+    "GITHUB_CLIENT_ID": "a"
+   },
+   "changed": {
+    "github_client_id": "a"
+   }
+  },
+  {
+   "env": {
+    "GITHUB_CLIENT_ID": "a",
+    "GITHUB_CLIENT_SECRET": "b"
+   },
+   "changed": {
+    "github_client_id": "a",
+    "github_client_secret": "b",
+    "github_oauth_enabled": true
+   }
+  },
+  {
+   "env": {
+    "GITHUB_CLIENT_ID": "a",
+    "GITHUB_CLIENT_SECRET": ""
+   },
+   "changed": {
+    "github_client_id": "a",
+    "github_client_secret": ""
+   }
+  },
+  {
+   "env": {
+    "DISCORD_CLIENT_ID": "123"
+   },
+   "changed": {
+    "discord_client_id": "123",
+    "discord_install_link": "https://discord.com/oauth2/authorize?client_id=123"
+   }
+  },
+  {
+   "env": {
+    "DISCORD_CLIENT_ID": "123",
+    "DISCORD_CLIENT_SECRET": "s"
+   },
+   "changed": {
+    "discord_client_id": "123",
+    "discord_client_secret": "s",
+    "discord_oauth_enabled": true,
+    "discord_install_link": "https://discord.com/oauth2/authorize?client_id=123"
+   }
+  },
+  {
+   "env": {
+    "DISCORD_CLIENT_ID": "123",
+    "DISCORD_INSTALL_URL": "https://install.test/x"
+   },
+   "changed": {
+    "discord_client_id": "123",
+    "discord_install_url": "https://install.test/x",
+    "discord_install_link": "https://install.test/x"
+   }
+  },
+  {
+   "env": {
+    "DISCORD_CLIENT_ID": "123",
+    "DISCORD_INSTALL_URL": ""
+   },
+   "changed": {
+    "discord_client_id": "123",
+    "discord_install_url": "",
+    "discord_install_link": "https://discord.com/oauth2/authorize?client_id=123"
+   }
+  },
+  {
+   "env": {
+    "DISCORD_CLIENT_ID": "",
+    "DISCORD_INSTALL_URL": ""
+   },
+   "changed": {
+    "discord_client_id": "",
+    "discord_install_url": ""
+   }
+  },
+  {
+   "env": {
+    "SMTP_HOST": "mail"
+   },
+   "changed": {
+    "smtp_host": "mail",
+    "email_enabled": true
+   }
+  },
+  {
+   "env": {
+    "SMTP_HOST": ""
+   },
+   "changed": {
+    "smtp_host": ""
+   }
+  },
+  {
+   "env": {
+    "ASSET_BASE_URL": "https://api.aallyn.net/"
+   },
+   "changed": {
+    "asset_base_url": "https://api.aallyn.net/",
+    "asset_url": "https://api.aallyn.net"
+   }
+  },
+  {
+   "env": {
+    "APP_URL": "https://x.test//"
+   },
+   "changed": {
+    "app_url": "https://x.test//",
+    "asset_url": "https://x.test"
+   }
+  },
+  {
+   "env": {
+    "APP_URL": "",
+    "ASSET_BASE_URL": ""
+   },
+   "changed": {
+    "app_url": "",
+    "asset_url": ""
+   }
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": "[\"https://a.test\", \"http://b.test:1\"]"
+   },
+   "changed": {
+    "cors_origins": [
+     "https://a.test",
+     "http://b.test:1"
+    ]
+   }
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": "[]"
+   },
+   "changed": {
+    "cors_origins": []
+   }
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": "https://a.test"
+   },
+   "error": "SettingsError"
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": "[1]"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": "\"x\""
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": "{\"a\": 1}"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": ""
+   },
+   "error": "SettingsError"
+  },
+  {
+   "env": {
+    "CORS_ORIGINS": " [ \"x\" ] "
+   },
+   "changed": {
+    "cors_origins": [
+     "x"
+    ]
+   }
+  },
+  {
+   "env": {
+    "CAPTCHA_PROVIDER": "hcaptcha"
+   },
+   "changed": {
+    "captcha_provider": "hcaptcha"
+   }
+  },
+  {
+   "env": {
+    "CAPTCHA_PROVIDER": "HCAPTCHA"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "CAPTCHA_PROVIDER": "recaptcha"
+   },
+   "error": "ValidationError"
+  },
+  {
+   "env": {
+    "RATE_LIMIT_ALERT_EMAIL": ""
+   },
+   "changed": {
+    "rate_limit_alert_email": ""
+   }
+  },
+  {
+   "env": {
+    "TROVE_STATUS_TIMEOUT_SECONDS": "8"
+   },
+   "changed": {}
+  },
+  {
+   "env": {
+    "BACKLOG_RETENTION_DAYS": "-1"
+   },
+   "changed": {
+    "backlog_retention_days": -1
+   }
+  },
+  {
+   "env": {
+    "UNKNOWN_THING": "x"
+   },
+   "changed": {}
+  },
+  {
+   "env": {
+    "SECRET_KEY": "  spaced  "
+   },
+   "changed": {
+    "secret_key": "  spaced  "
+   }
+  },
+  {
+   "env": {
+    "APP_NAME": "Kïwi ✓"
+   },
+   "changed": {
+    "app_name": "Kïwi ✓"
+   }
+  },
+  {
+   "env": {
+    "MODS_HUB_ENABLED": "false",
+    "TROVE_UPDATE_ENABLED": "on"
+   },
+   "changed": {
+    "mods_hub_enabled": false,
+    "trove_update_enabled": true
+   }
+  }
+ ]
+}

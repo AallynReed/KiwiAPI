@@ -32,6 +32,7 @@ from app.admin import runtime_config
 from app.core.config import settings
 from app.core.database import upsert_by
 from app.core.refresher import PeriodicRefresher
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 from app.trove.models import FeedCache
 
@@ -451,6 +452,8 @@ _refresher = PeriodicRefresher(
 
 
 def start_feeds_refresher() -> None:
+    if rust_owns("feeds"):
+        return
     _refresher.start()
 
 

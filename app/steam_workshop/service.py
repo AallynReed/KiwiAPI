@@ -6,6 +6,7 @@ from app.btt_blocklist import service as btt_blocklist
 from app.core.config import settings
 from app.core.http import KIWI_UA
 from app.core.refresher import PeriodicRefresher
+from app.core.rust_owns import rust_owns
 from app.core.utils import iso, utcnow
 from app.steam_workshop.models import SteamWorkshopItem
 
@@ -123,6 +124,8 @@ _refresher = PeriodicRefresher(
 
 
 def start_steam_workshop_refresher() -> None:
+    if rust_owns("steam_workshop"):
+        return
     _refresher.start()
 
 

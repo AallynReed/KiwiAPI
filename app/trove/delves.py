@@ -18,6 +18,7 @@ import httpx
 from app.core import features
 from app.core.config import settings
 from app.core.refresher import PeriodicRefresher
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 from app.trove.models import DelveRotation
 
@@ -170,6 +171,8 @@ _refresher = PeriodicRefresher(
 
 
 def start_delve_refresher() -> None:
+    if rust_owns("delves"):
+        return
     if not settings.trove_delve_source_url:
         logger.info("delves: no source URL configured (set TROVE_DELVE_SOURCE_URL) - refresher off")
         return

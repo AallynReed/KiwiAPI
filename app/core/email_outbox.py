@@ -20,6 +20,7 @@ from pymongo import ASCENDING, IndexModel, ReturnDocument
 from app.auth.models import User
 from app.core.config import settings
 from app.core.mailer import EmailDeliveryError, deliver_email
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 
 # NOTE: get_db is imported lazily inside _claim_next to avoid an import cycle
@@ -166,6 +167,8 @@ async def _worker_loop() -> None:
 
 def start_email_worker() -> None:
     global _worker_task
+    if rust_owns("email_outbox"):
+        return
     if _worker_task is None:
         _worker_task = asyncio.create_task(_worker_loop())
 

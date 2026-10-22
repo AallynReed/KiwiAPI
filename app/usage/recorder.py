@@ -7,4 +7,4 @@ from app.usage.models import UsageEvent
 
 logger = logging.getLogger("kiwi.usage")
 
-recorder: BufferedRecorder[UsageEvent] = BufferedRecorder(UsageEvent, logger, "usage")
+recorder: BufferedRecorder[UsageEvent] = BufferedRecorder(UsageEvent, logger, "usage", loop="usage")

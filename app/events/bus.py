@@ -24,6 +24,7 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.core.redis import get_redis
+from app.core.rust_owns import rust_owns
 from app.core.utils import utcnow
 
 logger = logging.getLogger("kiwi.events")
@@ -231,9 +232,9 @@ async def _watch() -> None:
 
 def start_event_bus() -> None:
     global _listener, _watcher
-    if _listener is None:
+    if _listener is None and not rust_owns("event_listener"):
         _listener = asyncio.create_task(_listen())
-    if _watcher is None:
+    if _watcher is None and not rust_owns("event_watch"):
         _watcher = asyncio.create_task(_watch())
 
 
