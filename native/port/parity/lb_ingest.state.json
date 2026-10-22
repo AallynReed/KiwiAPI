@@ -1,0 +1,20 @@
+{
+ "mongo": [
+  {"collection": "ingest_log", "sort": ["timestamp"], "mask": ["_id", "timestamp", "user_id"]}
+ ],
+ "postgres": [
+  {"table": "board", "order_by": "uuid"},
+  {"table": "board_contest", "order_by": "board_uuid, anchor"},
+  {"table": "player", "order_by": "id"},
+  {"table": "entry", "order_by": "anchor, board_uuid, rank, player_id, score"},
+  {"table": "player_board_agg", "order_by": "player_id, board_uuid"},
+  {"table": "player_duplicate", "order_by": "name_lower"},
+  {"table": "activity_estimate", "order_by": "window_end"},
+  {"table": "player_rename", "order_by": "id"}
+ ],
+ "redis": [
+  {"pattern": "events:sig:*", "mask_ttl": true},
+  {"pattern": "lb:cache:*", "mask_ttl": true},
+  {"pattern": "lb:reingest:*", "mask_ttl": true}
+ ]
+}

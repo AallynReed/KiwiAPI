@@ -89,9 +89,56 @@ pub fn deflate(input: &[u8], level: u32, chunk: usize, sync: bool) -> Option<Vec
     Some(out)
 }
 
+/// What `gzip.open(path, "wb", compresslevel=level).write(data)` leaves on
+/// disk: the header names `basename(path)` (minus `.gz`, if Latin-1).
+pub fn gzip_file(data: &[u8], level: u32, basename: &str, mtime: u32) -> Option<Vec<u8>> {
+    let fname: Option<Vec<u8>> = basename.chars().map(|c| u8::try_from(c as u32).ok()).collect();
+    let fname = fname.map(|f| f.strip_suffix(b".gz").map(<[u8]>::to_vec).unwrap_or(f)).unwrap_or_default();
+    let mut out = vec![0x1f, 0x8b, 8, if fname.is_empty() { 0 } else { 8 }];
+    out.extend_from_slice(&mtime.to_le_bytes());
+    out.push(match level {
+        9 => 2,
+        1 => 4,
+        _ => 0,
+    });
+    out.push(255);
+    if !fname.is_empty() {
+        out.extend_from_slice(&fname);
+        out.push(0);
+    }
+    let mut c = Compress::new(Compression::new(level), false);
+    out.reserve(data.len() / 3 + 64);
+    loop {
+        if out.capacity() - out.len() < 1 << 16 {
+            out.reserve(1 << 20);
+        }
+        let consumed = c.total_in() as usize;
+        if c.compress_vec(&data[consumed..], &mut out, FlushCompress::Finish).ok()? == Status::StreamEnd {
+            break;
+        }
+    }
+    let mut crc = flate2::Crc::new();
+    crc.update(data);
+    out.extend_from_slice(&crc.sum().to_le_bytes());
+    out.extend_from_slice(&(data.len() as u32).to_le_bytes());
+    Some(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gzip_file_round_trips() {
+        let data = b"N$C$1 = A$B##1;x;1\n".repeat(1000);
+        let gz = gzip_file(&data, 6, ".1700000000.cfg.gz.tmp", 7).unwrap();
+        assert_eq!(&gz[..10], &[0x1f, 0x8b, 8, 8, 7, 0, 0, 0, 0, 255]);
+        assert_eq!(&gz[10..33], b".1700000000.cfg.gz.tmp\0");
+        let mut d = flate2::read::GzDecoder::new(&gz[..]);
+        let mut back = Vec::new();
+        std::io::Read::read_to_end(&mut d, &mut back).unwrap();
+        assert_eq!(back, data);
+    }
 
     // zlib.compress(b"hello hello hello")
     const HELLO: &[u8] = &[120, 156, 203, 72, 205, 201, 201, 87, 200, 64, 144, 0, 58, 46, 6, 125];
