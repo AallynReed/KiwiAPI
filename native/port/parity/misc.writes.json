@@ -1,0 +1,618 @@
+[
+ {
+  "name": "convert_naive_utc",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_trove",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30",
+   "timezone": "trove"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_dst_gap",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-03-08T02:30",
+   "timezone": "America/New_York"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_dst_fold",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-11-01T01:30",
+   "timezone": "America/New_York"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_lisbon_fold",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-10-25T01:30:59.999",
+   "timezone": "Europe/Lisbon"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_sydney",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-04-05 02:30",
+   "timezone": "Australia/Sydney"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_aware_ignores_tz",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30+05:30",
+   "timezone": "Nowhere/Zone"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_week_date",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-W23-5T10",
+   "timezone": "Asia/Tokyo"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_basic_format",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "20260605T143015,5Z"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_other_iana",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "1985-06-05T14:30",
+   "timezone": "Pacific/Chatham"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_lmt",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "1850-01-01T00:00",
+   "timezone": "Europe/Paris"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_unix",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": 1717596600,
+   "datetime": "garbage",
+   "timezone": "nope"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_unix_string",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": "1717596600"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_unix_negative",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": -2208988800
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_unix_far_future",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": 253402261199
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_unix_float_int",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": 1717596600.0
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_gzip",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": 0
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ],
+  "headers": {
+   "Accept-Encoding": "gzip"
+  }
+ },
+ {
+  "name": "convert_err_invalid",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "not a date"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_invalid_repr",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "it's 2026é​"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_month",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-13-01"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_day",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-02-29T00:00"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_hour24",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T24:00"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_offset",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30+24:00"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_empty_fraction",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30:00.+01:00"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_subsecond_offset",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30:00+00:00:00.5"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_unknown_tz",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30",
+   "timezone": "Nowhere/Zone"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_tz_case",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30",
+   "timezone": "utc"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_tz_dir",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30",
+   "timezone": "America"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_tz_dots",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": "2026-06-05T14:30",
+   "timezone": "../etc/passwd"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_neither",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {},
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_empty_datetime",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": ""
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_out_of_range_500",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": 253402300799
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_err_before_year1_500",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": -62135596800
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_422_types",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "datetime": 5,
+   "timezone": null,
+   "unix": 1.5
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_422_unix_text",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": "soon"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_422_list_body",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": [
+   1,
+   2
+  ],
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "convert_422_missing_body",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": "",
+  "headers": {
+   "Content-Type": "application/json"
+  }
+ },
+ {
+  "name": "convert_422_malformed",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": "{\"unix\": ",
+  "headers": {
+   "Content-Type": "application/json"
+  }
+ },
+ {
+  "name": "convert_422_text_body",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": "unix=1",
+  "headers": {
+   "Content-Type": "text/plain"
+  }
+ },
+ {
+  "name": "convert_422_no_content_type",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": "{\"unix\": 1}",
+  "headers": {}
+ },
+ {
+  "name": "convert_bad_token_401",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": {
+   "unix": 0
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ],
+  "headers": {
+   "Authorization": "Bearer nope"
+  }
+ },
+ {
+  "name": "convert_malformed_beats_token",
+  "method": "POST",
+  "path": "/v1/misc/time/convert",
+  "body": "{\"unix\"",
+  "headers": {
+   "Content-Type": "application/json",
+   "Authorization": "Bearer nope"
+  }
+ },
+ {
+  "name": "feedback_422_missing_message",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImNvbnRhY3QiDQoNCngNCi0ta2l3aVBhcml0eS0tDQo=",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_422_short_and_long",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCmhleQ0KLS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImNvbnRhY3QiDQoNCmNjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjYw0KLS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImFwcF92ZXJzaW9uIg0KDQp2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dg0KLS1raXdpUGFyaXR5LS0NCg==",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_422_file_as_message",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiOyBmaWxlbmFtZT0iYS5wbmciDQpDb250ZW50LVR5cGU6IGltYWdlL3BuZw0KDQp4Cg0KLS1raXdpUGFyaXR5LS0NCg==",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_422_string_attachment",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCmhlbGxvIHdvcmxkDQotLWtpd2lQYXJpdHkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYXR0YWNobWVudHMiDQoNCm5vcGUNCi0ta2l3aVBhcml0eS0tDQo=",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_422_json_body",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "eyJtZXNzYWdlIjogImhlbGxvIHdvcmxkIn0=",
+  "headers": {
+   "Content-Type": "application/json"
+  }
+ },
+ {
+  "name": "feedback_422_wrong_case_ctype",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCmhlbGxvIHdvcmxkDQotLWtpd2lQYXJpdHktLQ0K",
+  "headers": {
+   "Content-Type": "Multipart/Form-Data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_400_no_boundary",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "eA==",
+  "headers": {
+   "Content-Type": "multipart/form-data"
+  }
+ },
+ {
+  "name": "feedback_400_no_name",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGENCg0KYWJjDQotLWtpd2lQYXJpdHktLQ0K",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_400_garbage",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "Z2FyYmFnZQ==",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_400_category",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCmhlbGxvIHdvcmxkDQotLWtpd2lQYXJpdHkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iY2F0ZWdvcnkiDQoNCnNwYW0NCi0ta2l3aVBhcml0eS0tDQo=",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_ok_urlencoded",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "bWVzc2FnZT1oZWxsbytmcm9tK3RoZStwYXJpdHkrcnVuJmNhdGVnb3J5PWdlbmVyYWw=",
+  "headers": {
+   "Content-Type": "application/x-www-form-urlencoded",
+   "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"
+  },
+  "mask": [
+   "received_at"
+  ]
+ },
+ {
+  "name": "feedback_ok_attachments",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCiAgaMOpbGxvIHBhcml0eSAgDQotLWtpd2lQYXJpdHkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iY29udGFjdCINCg0KIG1lIA0KLS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImNhdGVnb3J5Ig0KDQpidWcNCi0ta2l3aVBhcml0eQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJhcHBfdmVyc2lvbiINCg0KMjAyNi4wNi4wNw0KLS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImF0dGFjaG1lbnRzIjsgZmlsZW5hbWU9IkM6XHNob3RzXGEgYi5QTkciDQpDb250ZW50LVR5cGU6IGltYWdlL3BuZw0KDQqJUE5HDQoaCgAAAA1JSERSAAAAAQAAAAEIBgAAAB8VxIkNCi0ta2l3aVBhcml0eQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJhdHRhY2htZW50cyI7IGZpbGVuYW1lPSIiDQpDb250ZW50LVR5cGU6IGltYWdlL2dpZg0KDQoNCi0ta2l3aVBhcml0eS0tDQo=",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity",
+   "User-Agent": "BetterTroveTools/2026.06.07 (Android 14; Pixel 8)"
+  },
+  "mask": [
+   "received_at"
+  ]
+ },
+ {
+  "name": "feedback_400_unsupported_type",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCmhlbGxvIHdvcmxkDQotLWtpd2lQYXJpdHkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYXR0YWNobWVudHMiOyBmaWxlbmFtZT0iIg0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9vY3RldC1zdHJlYW0NCg0KDQotLWtpd2lQYXJpdHktLQ0K",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_400_too_many",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCmhlbGxvIHdvcmxkDQotLWtpd2lQYXJpdHkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYXR0YWNobWVudHMiOyBmaWxlbmFtZT0iMC5wbmciDQpDb250ZW50LVR5cGU6IGltYWdlL3BuZw0KDQqJUE5HDQoaCgAAAA1JSERSAAAAAQAAAAEIBgAAAB8VxIkNCi0ta2l3aVBhcml0eQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJhdHRhY2htZW50cyI7IGZpbGVuYW1lPSIxLnBuZyINCkNvbnRlbnQtVHlwZTogaW1hZ2UvcG5nDQoNColQTkcNChoKAAAADUlIRFIAAAABAAAAAQgGAAAAHxXEiQ0KLS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImF0dGFjaG1lbnRzIjsgZmlsZW5hbWU9IjIucG5nIg0KQ29udGVudC1UeXBlOiBpbWFnZS9wbmcNCg0KiVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJDQotLWtpd2lQYXJpdHkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYXR0YWNobWVudHMiOyBmaWxlbmFtZT0iMy5wbmciDQpDb250ZW50LVR5cGU6IGltYWdlL3BuZw0KDQqJUE5HDQoaCgAAAA1JSERSAAAAAQAAAAEIBgAAAB8VxIkNCi0ta2l3aVBhcml0eQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJhdHRhY2htZW50cyI7IGZpbGVuYW1lPSI0LnBuZyINCkNvbnRlbnQtVHlwZTogaW1hZ2UvcG5nDQoNColQTkcNChoKAAAADUlIRFIAAAABAAAAAQgGAAAAHxXEiQ0KLS1raXdpUGFyaXR5LS0NCg==",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ },
+ {
+  "name": "feedback_400_whitespace_message",
+  "method": "POST",
+  "path": "/v1/misc/feedback",
+  "body_b64": "LS1raXdpUGFyaXR5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCiAgHCAgwqAgDQotLWtpd2lQYXJpdHktLQ0K",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParity"
+  }
+ }
+]

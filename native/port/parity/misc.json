@@ -1,0 +1,219 @@
+[
+ {
+  "name": "software",
+  "path": "/v1/misc/software",
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "software_gzip_cors",
+  "path": "/v1/misc/software",
+  "headers": {
+   "Accept-Encoding": "gzip",
+   "Origin": "https://docs.aallyn.net"
+  }
+ },
+ {
+  "name": "software_head",
+  "method": "HEAD",
+  "path": "/v1/misc/software"
+ },
+ {
+  "name": "software_query_ignored",
+  "path": "/v1/misc/software?x=1&x=2"
+ },
+ {
+  "name": "software_bad_token",
+  "path": "/v1/misc/software",
+  "headers": {
+   "Authorization": "Bearer not-a-token"
+  },
+  "compare_headers": [
+   "www-authenticate"
+  ]
+ },
+ {
+  "name": "software_wrong_scheme",
+  "path": "/v1/misc/software",
+  "headers": {
+   "Authorization": "Basic abc"
+  }
+ },
+ {
+  "name": "timezones",
+  "path": "/v1/misc/timezones",
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "timezones_gzip",
+  "path": "/v1/misc/timezones",
+  "headers": {
+   "Accept-Encoding": "gzip"
+  }
+ },
+ {
+  "name": "time_now",
+  "path": "/v1/misc/time/now",
+  "mask": [
+   "unix",
+   "zones[0].datetime",
+   "zones[0].date",
+   "zones[0].time",
+   "zones[1].datetime",
+   "zones[1].date",
+   "zones[1].time",
+   "zones[2].datetime",
+   "zones[2].date",
+   "zones[2].time",
+   "zones[3].datetime",
+   "zones[3].date",
+   "zones[3].time",
+   "zones[4].datetime",
+   "zones[4].date",
+   "zones[4].time",
+   "zones[5].datetime",
+   "zones[5].date",
+   "zones[5].time",
+   "zones[6].datetime",
+   "zones[6].date",
+   "zones[6].time",
+   "zones[7].datetime",
+   "zones[7].date",
+   "zones[7].time",
+   "zones[8].datetime",
+   "zones[8].date",
+   "zones[8].time",
+   "zones[9].datetime",
+   "zones[9].date",
+   "zones[9].time",
+   "zones[10].datetime",
+   "zones[10].date",
+   "zones[10].time"
+  ],
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "time_now_gzip",
+  "path": "/v1/misc/time/now",
+  "headers": {
+   "Accept-Encoding": "gzip"
+  },
+  "mask": [
+   "unix",
+   "zones[0].datetime",
+   "zones[0].date",
+   "zones[0].time",
+   "zones[1].datetime",
+   "zones[1].date",
+   "zones[1].time",
+   "zones[2].datetime",
+   "zones[2].date",
+   "zones[2].time",
+   "zones[3].datetime",
+   "zones[3].date",
+   "zones[3].time",
+   "zones[4].datetime",
+   "zones[4].date",
+   "zones[4].time",
+   "zones[5].datetime",
+   "zones[5].date",
+   "zones[5].time",
+   "zones[6].datetime",
+   "zones[6].date",
+   "zones[6].time",
+   "zones[7].datetime",
+   "zones[7].date",
+   "zones[7].time",
+   "zones[8].datetime",
+   "zones[8].date",
+   "zones[8].time",
+   "zones[9].datetime",
+   "zones[9].date",
+   "zones[9].time",
+   "zones[10].datetime",
+   "zones[10].date",
+   "zones[10].time"
+  ]
+ },
+ {
+  "name": "time_now_head",
+  "method": "HEAD",
+  "path": "/v1/misc/time/now"
+ },
+ {
+  "name": "interest_items",
+  "path": "/v1/misc/interest-items",
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "interest_items_gzip",
+  "path": "/v1/misc/interest-items",
+  "headers": {
+   "Accept-Encoding": "gzip",
+   "Origin": "https://docs.aallyn.net"
+  }
+ },
+ {
+  "name": "interest_items_bad_token",
+  "path": "/v1/misc/interest-items",
+  "headers": {
+   "Authorization": "Bearer kiwi_bad"
+  }
+ },
+ {
+  "name": "convert_get_405",
+  "path": "/v1/misc/time/convert",
+  "compare_headers": [
+   "allow"
+  ]
+ },
+ {
+  "name": "convert_head_405",
+  "method": "HEAD",
+  "path": "/v1/misc/time/convert",
+  "compare_headers": [
+   "allow"
+  ]
+ },
+ {
+  "name": "feedback_get_405",
+  "path": "/v1/misc/feedback",
+  "compare_headers": [
+   "allow"
+  ]
+ },
+ {
+  "name": "convert_preflight",
+  "method": "OPTIONS",
+  "path": "/v1/misc/time/convert",
+  "headers": {
+   "Origin": "https://docs.aallyn.net",
+   "Access-Control-Request-Method": "POST",
+   "Access-Control-Request-Headers": "content-type"
+  }
+ },
+ {
+  "name": "feedback_preflight",
+  "method": "OPTIONS",
+  "path": "/v1/misc/feedback",
+  "headers": {
+   "Origin": "https://aallyn.net",
+   "Access-Control-Request-Method": "POST"
+  }
+ },
+ {
+  "name": "software_options_plain",
+  "method": "OPTIONS",
+  "path": "/v1/misc/software",
+  "compare_headers": [
+   "allow"
+  ]
+ }
+]

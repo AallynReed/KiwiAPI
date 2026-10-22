@@ -4,6 +4,7 @@
 //! missing here is a 405, not a trip to Python.
 
 pub mod leaf;
+pub mod misc;
 pub mod rotations;
 pub mod stats;
 
@@ -39,6 +40,7 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
     }
     next.run(req).await
     Router::new().merge(crate::gems::router())
+    Router::new().merge(misc::router())
 }
 
 pub fn app(state: AppState) -> Router {
