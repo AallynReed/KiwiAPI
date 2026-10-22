@@ -1,0 +1,2240 @@
+{
+ "env": {
+  "SECRET_KEY": "site-auth-fixture-secret",
+  "APP_URL": "https://trove.example.test",
+  "API_URL": "https://api.example.test",
+  "DISCORD_CLIENT_ID": "",
+  "DISCORD_CLIENT_SECRET": ""
+ },
+ "emails": [
+  {
+   "in": "user@example.com",
+   "out": "user@example.com"
+  },
+  {
+   "in": "User.Name+tag@Example.COM",
+   "out": "user.name+tag@example.com"
+  },
+  {
+   "in": "  spaced@example.com  ",
+   "out": "spaced@example.com"
+  },
+  {
+   "in": "a@b.co",
+   "out": "a@b.co"
+  },
+  {
+   "in": "no-at-sign",
+   "out": null
+  },
+  {
+   "in": "@example.com",
+   "out": null
+  },
+  {
+   "in": "user@",
+   "out": null
+  },
+  {
+   "in": "user@localhost",
+   "out": null
+  },
+  {
+   "in": "user@test",
+   "out": null
+  },
+  {
+   "in": "user@foo.test",
+   "out": null
+  },
+  {
+   "in": "user@foo.local",
+   "out": null
+  },
+  {
+   "in": "user@x.invalid",
+   "out": null
+  },
+  {
+   "in": "user@x.onion",
+   "out": null
+  },
+  {
+   "in": "user@10.arpa",
+   "out": null
+  },
+  {
+   "in": "user@example.123",
+   "out": null
+  },
+  {
+   "in": "user@-example.com",
+   "out": null
+  },
+  {
+   "in": "user@example-.com",
+   "out": null
+  },
+  {
+   "in": "user@ex--ample.com",
+   "out": null
+  },
+  {
+   "in": "user@xn--bcher-kva.example",
+   "out": "user@bücher.example"
+  },
+  {
+   "in": "user@XN--BCHER-KVA.example",
+   "out": "user@bücher.example"
+  },
+  {
+   "in": "user@xn--.example",
+   "out": null
+  },
+  {
+   "in": "user@xn--zz.example",
+   "out": null
+  },
+  {
+   "in": "user@ab--cd.example",
+   "out": null
+  },
+  {
+   "in": "user@exa_mple.com",
+   "out": null
+  },
+  {
+   "in": "user..dots@example.com",
+   "out": null
+  },
+  {
+   "in": ".lead@example.com",
+   "out": null
+  },
+  {
+   "in": "trail.@example.com",
+   "out": null
+  },
+  {
+   "in": "us\"er@example.com",
+   "out": null
+  },
+  {
+   "in": "\"quoted\"@example.com",
+   "out": null
+  },
+  {
+   "in": "\"a b\"@example.com",
+   "out": null
+  },
+  {
+   "in": "user@[1.2.3.4]",
+   "out": null
+  },
+  {
+   "in": "user@[IPv6:::1]",
+   "out": null
+  },
+  {
+   "in": "John Doe <john@example.com>",
+   "out": "john@example.com"
+  },
+  {
+   "in": "<john@example.com>",
+   "out": "john@example.com"
+  },
+  {
+   "in": "\"John\" <john@example.com>",
+   "out": "john@example.com"
+  },
+  {
+   "in": "John <john@example.com",
+   "out": null
+  },
+  {
+   "in": "Jo.hn <john@example.com>",
+   "out": "john@example.com"
+  },
+  {
+   "in": "\"J\" x <john@example.com>",
+   "out": null
+  },
+  {
+   "in": "a <b <c@example.com>",
+   "out": null
+  },
+  {
+   "in": "x\"y\" <p@example.com>",
+   "out": null
+  },
+  {
+   "in": "\"a\" <b> \"c\" <d@example.com>",
+   "out": "d@example.com"
+  },
+  {
+   "in": "info@Example.com",
+   "out": "info@example.com"
+  },
+  {
+   "in": "POSTMASTER@example.com",
+   "out": "postmaster@example.com"
+  },
+  {
+   "in": "josé@example.com",
+   "out": "josé@example.com"
+  },
+  {
+   "in": "josé@example.com",
+   "out": "josé@example.com"
+  },
+  {
+   "in": "user@bücher.example",
+   "out": "user@bücher.example"
+  },
+  {
+   "in": "user@BÜCHER.example",
+   "out": "user@bücher.example"
+  },
+  {
+   "in": "user@ｅｘａｍｐｌｅ.com",
+   "out": "user@example.com"
+  },
+  {
+   "in": "user@example。com",
+   "out": "user@example.com"
+  },
+  {
+   "in": "用户@例子.广告",
+   "out": "用户@例子.广告"
+  },
+  {
+   "in": "user@exa mple.com",
+   "out": null
+  },
+  {
+   "in": "us er@example.com",
+   "out": null
+  },
+  {
+   "in": "user@example.com.",
+   "out": null
+  },
+  {
+   "in": "user@.example.com",
+   "out": null
+  },
+  {
+   "in": "user@example..com",
+   "out": null
+  },
+  {
+   "in": "user@@example.com",
+   "out": null
+  },
+  {
+   "in": "a@b@example.com",
+   "out": null
+  },
+  {
+   "in": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+   "out": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com"
+  },
+  {
+   "in": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+   "out": null
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com",
+   "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com"
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com",
+   "out": null
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@abcd.com",
+   "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@abcd.com"
+  },
+  {
+   "in": "user@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com",
+   "out": null
+  },
+  {
+   "in": "user@ex­ample.com",
+   "out": null
+  },
+  {
+   "in": "user@ex​ample.com",
+   "out": null
+  },
+  {
+   "in": "́user@example.com",
+   "out": null
+  },
+  {
+   "in": "user@⒈.com",
+   "out": null
+  },
+  {
+   "in": "user @example.com",
+   "out": null
+  },
+  {
+   "in": "user @example.com",
+   "out": null
+  },
+  {
+   "in": "us\ter@example.com",
+   "out": null
+  },
+  {
+   "in": "user@exa\tmple.com",
+   "out": null
+  },
+  {
+   "in": "üser@exämple.com",
+   "out": "üser@exämple.com"
+  },
+  {
+   "in": "user@xn--nxasmq6b.com",
+   "out": "user@βόλοσ.com"
+  },
+  {
+   "in": "user@ab.c1",
+   "out": null
+  },
+  {
+   "in": "user@1.2.3.4",
+   "out": null
+  },
+  {
+   "in": "a+b=c@ex.am-ple.io",
+   "out": "a+b=c@ex.am-ple.io"
+  },
+  {
+   "in": "{}|~`!#$%&'*/=?^_@example.com",
+   "out": "{}|~`!#$%&'*/=?^_@example.com"
+  },
+  {
+   "in": "user@a.b-.c",
+   "out": null
+  },
+  {
+   "in": "user@a.-b.c",
+   "out": null
+  },
+  {
+   "in": "<>",
+   "out": null
+  },
+  {
+   "in": "<a@b.co>x",
+   "out": null
+  },
+  {
+   "in": "name <>",
+   "out": null
+  },
+  {
+   "in": "user@例え.テスト",
+   "out": "user@例え.テスト"
+  },
+  {
+   "in": "user@☃.net",
+   "out": null
+  },
+  {
+   "in": "user@😀.com",
+   "out": null
+  },
+  {
+   "in": "Ⅻ@example.com",
+   "out": "ⅻ@example.com"
+  },
+  {
+   "in": "  <a@b.co>  ",
+   "out": "a@b.co"
+  },
+  {
+   "in": "\"a\"b\" <x@y.co>",
+   "out": "x@y.co"
+  },
+  {
+   "in": "a b c <x@y.co>",
+   "out": "x@y.co"
+  },
+  {
+   "in": "a\tb <x@y.co>",
+   "out": "x@y.co"
+  },
+  {
+   "in": "é <x@y.co>",
+   "out": "x@y.co"
+  },
+  {
+   "in": "á <x@y.co>",
+   "out": null
+  },
+  {
+   "in": "x@y.co <z@w.co>",
+   "out": null
+  },
+  {
+   "in": "<<a@b.co>>",
+   "out": null
+  },
+  {
+   "in": "\"\" <a@b.co>",
+   "out": null
+  },
+  {
+   "in": "\"a\" <a@b.co>",
+   "out": "a@b.co"
+  },
+  {
+   "in": "\"a\"  <a@b.co>",
+   "out": "a@b.co"
+  },
+  {
+   "in": "a.b <c@d.co>",
+   "out": "c@d.co"
+  },
+  {
+   "in": "a_b+c <c@d.co>",
+   "out": "c@d.co"
+  },
+  {
+   "in": "²x <c@d.co>",
+   "out": "c@d.co"
+  },
+  {
+   "in": "user@Bücher.Example",
+   "out": "user@bücher.example"
+  },
+  {
+   "in": "user@xn--ls8h.la",
+   "out": null
+  },
+  {
+   "in": "user@münchen.de",
+   "out": "user@münchen.de"
+  },
+  {
+   "in": "user@ﬁ.com",
+   "out": "user@fi.com"
+  },
+  {
+   "in": "user@ß.com",
+   "out": "user@ß.com"
+  },
+  {
+   "in": "user@ς.com",
+   "out": "user@ς.com"
+  },
+  {
+   "in": "user@a‍.com",
+   "out": null
+  },
+  {
+   "in": "user@ab́.com",
+   "out": "user@ab́.com"
+  },
+  {
+   "in": "user@١٢٣.com",
+   "out": null
+  },
+  {
+   "in": "user@a.xn--mgbh0fb",
+   "out": "user@a.مثال"
+  },
+  {
+   "in": "😀@example.com",
+   "out": "😀@example.com"
+  },
+  {
+   "in": "a‍b@example.com",
+   "out": null
+  },
+  {
+   "in": "éx@Example.com",
+   "out": "éx@example.com"
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com",
+   "out": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com"
+  },
+  {
+   "in": "user@xn--a.com",
+   "out": null
+  },
+  {
+   "in": "user@xn--bcher-kva.xn--a",
+   "out": null
+  },
+  {
+   "in": "user@a·l.com",
+   "out": null
+  },
+  {
+   "in": "user@l·l.com",
+   "out": "user@l·l.com"
+  },
+  {
+   "in": "user@͵α.com",
+   "out": "user@͵α.com"
+  },
+  {
+   "in": "user@a・.com",
+   "out": null
+  },
+  {
+   "in": "user@ア・.com",
+   "out": "user@ア・.com"
+  },
+  {
+   "in": "user@xn---bbk.com",
+   "out": null
+  },
+  {
+   "in": "user@EXAMPLE.CO.UK",
+   "out": "user@example.co.uk"
+  },
+  {
+   "in": "user@sub-domain.example.museum",
+   "out": "user@sub-domain.example.museum"
+  },
+  {
+   "in": "a@b.c-d",
+   "out": "a@b.c-d"
+  },
+  {
+   "in": "a@1b.com",
+   "out": "a@1b.com"
+  },
+  {
+   "in": "user@x。y．com",
+   "out": "user@x.y.com"
+  },
+  {
+   "in": "user@exa․mple.com",
+   "out": null
+  },
+  {
+   "in": "user@ex．ample.com",
+   "out": "user@ex.ample.com"
+  },
+  {
+   "in": "user@ab‐cd.com",
+   "out": null
+  },
+  {
+   "in": "Abuse@example.com",
+   "out": "abuse@example.com"
+  },
+  {
+   "in": "user@aא.com",
+   "out": null
+  },
+  {
+   "in": "user@אב.com",
+   "out": "user@אב.com"
+  },
+  {
+   "in": "user@א.a.com",
+   "out": "user@א.a.com"
+  }
+ ],
+ "safe_next": [
+  {
+   "in": null,
+   "out": ""
+  },
+  {
+   "in": "",
+   "out": ""
+  },
+  {
+   "in": "/",
+   "out": "/"
+  },
+  {
+   "in": "/mods",
+   "out": "/mods"
+  },
+  {
+   "in": "/mods?x=1#frag",
+   "out": "/mods?x=1#frag"
+  },
+  {
+   "in": "mods",
+   "out": ""
+  },
+  {
+   "in": "//evil.com",
+   "out": ""
+  },
+  {
+   "in": "///evil.com",
+   "out": "/evil.com"
+  },
+  {
+   "in": "////evil.com",
+   "out": "////evil.com"
+  },
+  {
+   "in": "/\\evil.com",
+   "out": ""
+  },
+  {
+   "in": "\\\\evil.com",
+   "out": ""
+  },
+  {
+   "in": "https://evil.com/x",
+   "out": ""
+  },
+  {
+   "in": "javascript:alert(1)",
+   "out": ""
+  },
+  {
+   "in": "/a b",
+   "out": "/a b"
+  },
+  {
+   "in": "/é?q=ü#ß",
+   "out": "/é?q=ü#ß"
+  },
+  {
+   "in": "  /lead",
+   "out": "/lead"
+  },
+  {
+   "in": "\t/tab",
+   "out": "/tab"
+  },
+  {
+   "in": "/x\ty",
+   "out": "/xy"
+  },
+  {
+   "in": "/x\ny",
+   "out": "/xy"
+  },
+  {
+   "in": "//[::1]/x",
+   "out": ""
+  },
+  {
+   "in": "//[evil/x",
+   "error": "Invalid IPv6 URL"
+  },
+  {
+   "in": "//ev]il/x",
+   "error": "Invalid IPv6 URL"
+  },
+  {
+   "in": "//[1.2.3.4]/x",
+   "error": "An IPv4 address cannot be in brackets"
+  },
+  {
+   "in": "//[v1.x]/x",
+   "out": ""
+  },
+  {
+   "in": "//[vz]/x",
+   "error": "IPvFuture address is invalid"
+  },
+  {
+   "in": "//a@[::1]:80/x",
+   "out": ""
+  },
+  {
+   "in": "//a[b]@host/x",
+   "error": "'host' does not appear to be an IPv4 or IPv6 address"
+  },
+  {
+   "in": "//[::1]x/x",
+   "error": "Invalid IPv6 URL"
+  },
+  {
+   "in": "//x[::1]/x",
+   "error": "Invalid IPv6 URL"
+  },
+  {
+   "in": "//℀/x",
+   "error": "netloc '℀' contains invalid characters under NFKC normalization"
+  },
+  {
+   "in": "//exé.com/x",
+   "out": ""
+  },
+  {
+   "in": "/?only=query",
+   "out": "/?only=query"
+  },
+  {
+   "in": "/#only",
+   "out": "/#only"
+  },
+  {
+   "in": "?q",
+   "out": ""
+  },
+  {
+   "in": "#f",
+   "out": ""
+  },
+  {
+   "in": "/path?",
+   "out": "/path"
+  },
+  {
+   "in": "/path#",
+   "out": "/path"
+  },
+  {
+   "in": "/path?#",
+   "out": "/path"
+  },
+  {
+   "in": "C:/x",
+   "out": ""
+  },
+  {
+   "in": "c:\\x",
+   "out": ""
+  },
+  {
+   "in": "1:/x",
+   "out": ""
+  },
+  {
+   "in": "/a:b",
+   "out": "/a:b"
+  },
+  {
+   "in": "a/b:c",
+   "out": ""
+  },
+  {
+   "in": "//[fe80::1%25eth0]/x",
+   "out": ""
+  },
+  {
+   "in": "//[fe80::1%]/x",
+   "error": "'fe80::1%' does not appear to be an IPv4 or IPv6 address"
+  },
+  {
+   "in": "\u0000/x",
+   "out": "/x"
+  },
+  {
+   "in": " ",
+   "out": ""
+  },
+  {
+   "in": "/%2F%2Fevil.com",
+   "out": "/%2F%2Fevil.com"
+  },
+  {
+   "in": "/x?next=//evil",
+   "out": "/x?next=//evil"
+  },
+  {
+   "in": "　/x",
+   "out": ""
+  }
+ ],
+ "emit": [
+  {
+   "mode": "web",
+   "ok": "CODE_abc-_1",
+   "error": null,
+   "next": "",
+   "status": 307,
+   "headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.example.test/login#discord=CODE_abc-_1"
+    ]
+   ],
+   "body": ""
+  },
+  {
+   "mode": "web",
+   "ok": null,
+   "error": "state",
+   "next": "",
+   "status": 307,
+   "headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.example.test/login#oauth_error=state"
+    ]
+   ],
+   "body": ""
+  },
+  {
+   "mode": "web",
+   "ok": null,
+   "error": "missing",
+   "next": "/mods/x?a=1&b=2",
+   "status": 307,
+   "headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.example.test/login?next=/mods/x%3Fa%3D1%26b%3D2#oauth_error=missing"
+    ]
+   ],
+   "body": ""
+  },
+  {
+   "mode": "web",
+   "ok": "C",
+   "error": null,
+   "next": "/é ü/x?q=1#frag",
+   "status": 307,
+   "headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.example.test/login?next=/%C3%A9%20%C3%BC/x%3Fq%3D1%23frag#discord=C"
+    ]
+   ],
+   "body": ""
+  },
+  {
+   "mode": "web",
+   "ok": null,
+   "error": "discord",
+   "next": "/a%2Fb'\"<>",
+   "status": 307,
+   "headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.example.test/login?next=/a%252Fb%27%22%3C%3E#oauth_error=discord"
+    ]
+   ],
+   "body": ""
+  },
+  {
+   "mode": "app",
+   "ok": "CODE",
+   "error": null,
+   "next": "/x",
+   "status": 200,
+   "headers": [
+    [
+     "content-length",
+     "1122"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ]
+   ],
+   "body": "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Better Trove Tools — Sign in</title>\n<style>\n  html,body{height:100%;margin:0}\n  body{display:flex;align-items:center;justify-content:center;background:#0f1216;\n       color:#e8edf2;font-family:'Segoe UI',system-ui,sans-serif}\n  .card{text-align:center;max-width:420px;padding:40px 32px;background:#171b21;\n        border:1px solid #232a33;border-radius:16px}\n  h1{font-size:20px;margin:0 0 8px}\n  p{color:#9aa7b4;margin:0 0 20px;line-height:1.5}\n  a.btn{display:inline-block;background:#5ec6ff;color:#06202b;text-decoration:none;\n        font-weight:600;padding:11px 22px;border-radius:10px}\n</style></head>\n<body>\n  <div class=\"card\">\n    <h1>Returning to Better Trove Tools…</h1>\n    <p>You're signed in. If the app didn't come back to the front,\n       use the button below. You can close this tab.</p>\n    <a class=\"btn\" href=\"btt://auth/discord?code=CODE\">Open Better Trove Tools</a>\n  </div>\n  <script>location.replace(\"btt://auth/discord?code=CODE\");</script>\n</body></html>"
+  },
+  {
+   "mode": "app",
+   "ok": null,
+   "error": "inactive",
+   "next": "",
+   "status": 200,
+   "headers": [
+    [
+     "content-length",
+     "1132"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ]
+   ],
+   "body": "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Better Trove Tools — Sign in</title>\n<style>\n  html,body{height:100%;margin:0}\n  body{display:flex;align-items:center;justify-content:center;background:#0f1216;\n       color:#e8edf2;font-family:'Segoe UI',system-ui,sans-serif}\n  .card{text-align:center;max-width:420px;padding:40px 32px;background:#171b21;\n        border:1px solid #232a33;border-radius:16px}\n  h1{font-size:20px;margin:0 0 8px}\n  p{color:#9aa7b4;margin:0 0 20px;line-height:1.5}\n  a.btn{display:inline-block;background:#5ec6ff;color:#06202b;text-decoration:none;\n        font-weight:600;padding:11px 22px;border-radius:10px}\n</style></head>\n<body>\n  <div class=\"card\">\n    <h1>Returning to Better Trove Tools…</h1>\n    <p>You're signed in. If the app didn't come back to the front,\n       use the button below. You can close this tab.</p>\n    <a class=\"btn\" href=\"btt://auth/discord?error=inactive\">Open Better Trove Tools</a>\n  </div>\n  <script>location.replace(\"btt://auth/discord?error=inactive\");</script>\n</body></html>"
+  },
+  {
+   "mode": "app",
+   "ok": null,
+   "error": "unavailable",
+   "next": "",
+   "status": 200,
+   "headers": [
+    [
+     "content-length",
+     "1138"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ]
+   ],
+   "body": "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Better Trove Tools — Sign in</title>\n<style>\n  html,body{height:100%;margin:0}\n  body{display:flex;align-items:center;justify-content:center;background:#0f1216;\n       color:#e8edf2;font-family:'Segoe UI',system-ui,sans-serif}\n  .card{text-align:center;max-width:420px;padding:40px 32px;background:#171b21;\n        border:1px solid #232a33;border-radius:16px}\n  h1{font-size:20px;margin:0 0 8px}\n  p{color:#9aa7b4;margin:0 0 20px;line-height:1.5}\n  a.btn{display:inline-block;background:#5ec6ff;color:#06202b;text-decoration:none;\n        font-weight:600;padding:11px 22px;border-radius:10px}\n</style></head>\n<body>\n  <div class=\"card\">\n    <h1>Returning to Better Trove Tools…</h1>\n    <p>You're signed in. If the app didn't come back to the front,\n       use the button below. You can close this tab.</p>\n    <a class=\"btn\" href=\"btt://auth/discord?error=unavailable\">Open Better Trove Tools</a>\n  </div>\n  <script>location.replace(\"btt://auth/discord?error=unavailable\");</script>\n</body></html>"
+  },
+  {
+   "mode": "other",
+   "ok": "C",
+   "error": null,
+   "next": "/z",
+   "status": 307,
+   "headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.example.test/login?next=/z#discord=C"
+    ]
+   ],
+   "body": ""
+  }
+ ],
+ "usernames": [
+  {
+   "in": "abc",
+   "out": "abc"
+  },
+  {
+   "in": "ABC",
+   "out": "abc"
+  },
+  {
+   "in": " abc ",
+   "out": "abc"
+  },
+  {
+   "in": "ab",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "aaaaaaaaaaaaaaaaaaaaaaaa",
+   "out": "aaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  {
+   "in": "aaaaaaaaaaaaaaaaaaaaaaaaa",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "a.b",
+   "out": "a.b"
+  },
+  {
+   "in": ".ab",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "ab.",
+   "out": "ab."
+  },
+  {
+   "in": "a..b",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "a_b.c9",
+   "out": "a_b.c9"
+  },
+  {
+   "in": "admin",
+   "status": 409,
+   "code": "bad_request",
+   "message": "That username is reserved."
+  },
+  {
+   "in": "Admin",
+   "status": 409,
+   "code": "bad_request",
+   "message": "That username is reserved."
+  },
+  {
+   "in": "stray",
+   "status": 409,
+   "code": "bad_request",
+   "message": "That username is reserved."
+  },
+  {
+   "in": "kiwi",
+   "status": 409,
+   "code": "bad_request",
+   "message": "That username is reserved."
+  },
+  {
+   "in": "null",
+   "status": 409,
+   "code": "bad_request",
+   "message": "That username is reserved."
+  },
+  {
+   "in": "abc!",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "ab c",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "abc\n",
+   "out": "abc"
+  },
+  {
+   "in": "Kbc",
+   "out": "kbc"
+  },
+  {
+   "in": "ábc",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "abİ",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  },
+  {
+   "in": "  ",
+   "status": 400,
+   "code": "bad_request",
+   "message": "Username must be 3-24 characters using lowercase letters, numbers, underscores or periods - a period can't start it or repeat (\"..\")."
+  }
+ ],
+ "unique_username": [
+  {
+   "in": "Kiwi",
+   "out": "kiwi"
+  },
+  {
+   "in": "kiwi.user",
+   "out": "kiwi.user"
+  },
+  {
+   "in": "..lead",
+   "out": "lead"
+  },
+  {
+   "in": "a..b...c",
+   "out": "a.b.c"
+  },
+  {
+   "in": "ab",
+   "out": "abkiwi"
+  },
+  {
+   "in": "a",
+   "out": "akiwi"
+  },
+  {
+   "in": "",
+   "out": "kiwi"
+  },
+  {
+   "in": null,
+   "out": "kiwi"
+  },
+  {
+   "in": "Ünïcödé",
+   "out": "ncd"
+  },
+  {
+   "in": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "out": "xxxxxxxxxxxxxxxxxxxx"
+  },
+  {
+   "in": "under_score-dash",
+   "out": "under_scoredash"
+  },
+  {
+   "in": "İstanbul",
+   "out": "istanbul"
+  },
+  {
+   "in": "ΣΑΣ",
+   "out": "kiwi"
+  },
+  {
+   "in": "...",
+   "out": "kiwi"
+  },
+  {
+   "in": ".a.",
+   "out": "a.kiwi"
+  },
+  {
+   "in": "UPPER.Case_9",
+   "out": "upper.case_9"
+  },
+  {
+   "in": "日本語",
+   "out": "kiwi"
+  },
+  {
+   "in": "ab..",
+   "out": "ab."
+  }
+ ],
+ "token_ttl": [
+  {
+   "in": 604800,
+   "out": 604800
+  },
+  {
+   "in": 3600,
+   "out": 3600
+  },
+  {
+   "in": 30,
+   "out": 60
+  },
+  {
+   "in": 0,
+   "out": 604800
+  },
+  {
+   "in": -5,
+   "out": 60
+  },
+  {
+   "in": 1000000000,
+   "out": 604800
+  },
+  {
+   "in": "3600",
+   "out": 3600
+  },
+  {
+   "in": " 42 ",
+   "out": 60
+  },
+  {
+   "in": "1_000",
+   "out": 1000
+  },
+  {
+   "in": "1.5",
+   "out": 604800
+  },
+  {
+   "in": null,
+   "out": 604800
+  },
+  {
+   "in": 1.9,
+   "out": 60
+  },
+  {
+   "in": true,
+   "out": 60
+  },
+  {
+   "in": [],
+   "out": 604800
+  },
+  {
+   "in": "abc",
+   "out": 604800
+  }
+ ],
+ "public": [
+  {
+   "user": {
+    "username": "kiwi",
+    "discord_id": 123456789012345678,
+    "discord_avatar": "abc123",
+    "created_at": "2026-03-04 05:06:07.123000+00:00"
+   },
+   "public": "{\"id\":\"65a1b2c3d4e5f60718293a4b\",\"username\":\"kiwi\",\"discord_handle\":\"kiwi\",\"notify_email\":null,\"display_name\":null,\"avatar_url\":\"https://cdn.discordapp.com/avatars/123456789012345678/abc123.png?size=128\",\"is_active\":true,\"is_verified\":false,\"claimed_trove_name\":null,\"claimed_trove_display\":null,\"claimed_at\":null,\"claim_verified\":false,\"claim_verified_at\":null,\"claim_baseline_board_count\":0,\"created_at\":\"2026-03-04T05:06:07.123000Z\",\"last_login_at\":null}"
+  },
+  {
+   "user": {
+    "username": "kiwi",
+    "discord_handle": "Kiwi.Live",
+    "discord_id": 123456789012345678,
+    "discord_avatar": "a_anim",
+    "display_name": "Kíwi \"Q\"",
+    "notify_email": "k@example.com",
+    "claimed_trove_name": "kiwi",
+    "claimed_trove_display": "Kiwi",
+    "claimed_at": "2026-03-04 05:06:07.123000+00:00",
+    "claim_verified": true,
+    "claim_verified_at": "2026-03-05 00:00:00+00:00",
+    "claim_baseline": {
+     "1": 2.0,
+     "33": 5.5
+    },
+    "created_at": "2026-03-04 05:06:07.123000+00:00",
+    "last_login_at": "2026-03-05 00:00:00+00:00"
+   },
+   "public": "{\"id\":\"65a1b2c3d4e5f60718293a4b\",\"username\":\"kiwi\",\"discord_handle\":\"Kiwi.Live\",\"notify_email\":\"k@example.com\",\"display_name\":\"Kíwi \\\"Q\\\"\",\"avatar_url\":\"https://cdn.discordapp.com/avatars/123456789012345678/a_anim.gif?size=128\",\"is_active\":true,\"is_verified\":false,\"claimed_trove_name\":\"kiwi\",\"claimed_trove_display\":\"Kiwi\",\"claimed_at\":\"2026-03-04T05:06:07.123000Z\",\"claim_verified\":true,\"claim_verified_at\":\"2026-03-05T00:00:00Z\",\"claim_baseline_board_count\":2,\"created_at\":\"2026-03-04T05:06:07.123000Z\",\"last_login_at\":\"2026-03-05T00:00:00Z\"}"
+  },
+  {
+   "user": {
+    "username": "nobody",
+    "discord_id": null,
+    "created_at": "2026-03-05 00:00:00+00:00",
+    "is_verified": true
+   },
+   "public": "{\"id\":\"65a1b2c3d4e5f60718293a4b\",\"username\":\"nobody\",\"discord_handle\":\"nobody\",\"notify_email\":null,\"display_name\":null,\"avatar_url\":null,\"is_active\":true,\"is_verified\":true,\"claimed_trove_name\":null,\"claimed_trove_display\":null,\"claimed_at\":null,\"claim_verified\":false,\"claim_verified_at\":null,\"claim_baseline_board_count\":0,\"created_at\":\"2026-03-05T00:00:00Z\",\"last_login_at\":null}"
+  },
+  {
+   "user": {
+    "username": "zero",
+    "discord_id": 20971520,
+    "discord_avatar": "",
+    "created_at": "2026-03-05 00:00:00+00:00"
+   },
+   "public": "{\"id\":\"65a1b2c3d4e5f60718293a4b\",\"username\":\"zero\",\"discord_handle\":\"zero\",\"notify_email\":null,\"display_name\":null,\"avatar_url\":\"https://cdn.discordapp.com/embed/avatars/5.png\",\"is_active\":true,\"is_verified\":false,\"claimed_trove_name\":null,\"claimed_trove_display\":null,\"claimed_at\":null,\"claim_verified\":false,\"claim_verified_at\":null,\"claim_baseline_board_count\":0,\"created_at\":\"2026-03-05T00:00:00Z\",\"last_login_at\":null}"
+  }
+ ],
+ "dto": [
+  "{\"id\": \"65a1b2c3d4e5f60718293a4c\", \"site_user_id\": \"65a1b2c3d4e5f60718293a4b\", \"current_username\": \"kiwi\", \"requested_username\": \"kiwi2\", \"status\": \"pending\", \"reason\": \"\", \"created_at\": \"2026-03-04T05:06:07.123000+00:00\", \"resolved_at\": null}",
+  "{\"id\": \"65a1b2c3d4e5f60718293a4d\", \"site_user_id\": \"65a1b2c3d4e5f60718293a4b\", \"current_username\": \"kiwi\", \"requested_username\": \"k3\", \"status\": \"rejected\", \"reason\": \"no\", \"created_at\": \"2026-03-05T00:00:00+00:00\", \"resolved_at\": \"2026-03-04T05:06:07.123000+00:00\"}"
+ ],
+ "http": [
+  {
+   "name": "me_noauth",
+   "method": "GET",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_000"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_000\"}}"
+  },
+  {
+   "name": "me_badtoken",
+   "method": "GET",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "authorization",
+     "Bearer not.a.jwt"
+    ],
+    [
+     "x-request-id",
+     "req_sa_001"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_sa_001\"}}"
+  },
+  {
+   "name": "me_cookie_no_origin",
+   "method": "GET",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "cookie",
+     "kiwi_site_access=x.y.z"
+    ],
+    [
+     "x-request-id",
+     "req_sa_002"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_002\"}}"
+  },
+  {
+   "name": "me_cookie_bad_origin",
+   "method": "GET",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "cookie",
+     "kiwi_site_access=x.y.z"
+    ],
+    [
+     "origin",
+     "https://evil.example"
+    ],
+    [
+     "x-request-id",
+     "req_sa_003"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_003\"}}"
+  },
+  {
+   "name": "me_cookie_ok_origin",
+   "method": "GET",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "cookie",
+     "kiwi_site_access=x.y.z"
+    ],
+    [
+     "origin",
+     "https://trove.example.test"
+    ],
+    [
+     "x-request-id",
+     "req_sa_004"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired session token\",\"details\":null,\"request_id\":\"req_sa_004\"}}"
+  },
+  {
+   "name": "patch_me_noauth_badbody",
+   "method": "PATCH",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_005"
+    ]
+   ],
+   "body": "{\"display_name\": 5}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_005\"}}"
+  },
+  {
+   "name": "patch_me_badjson",
+   "method": "PATCH",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_006"
+    ]
+   ],
+   "body": "{\"display_name\": ",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",17],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"req_sa_006\"}}"
+  },
+  {
+   "name": "claim_noauth",
+   "method": "POST",
+   "url": "/v1/site-auth/me/claim-trove-name",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_007"
+    ]
+   ],
+   "body": "{\"trove_name\": \"\"}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_007\"}}"
+  },
+  {
+   "name": "unclaim_noauth",
+   "method": "DELETE",
+   "url": "/v1/site-auth/me/claim-trove-name",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_008"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_008\"}}"
+  },
+  {
+   "name": "ureq_get_noauth",
+   "method": "GET",
+   "url": "/v1/site-auth/me/username-request",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_009"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_009\"}}"
+  },
+  {
+   "name": "ureq_post_noauth",
+   "method": "POST",
+   "url": "/v1/site-auth/me/username-request",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_010"
+    ]
+   ],
+   "body": "{\"username\": \"ab\"}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_010\"}}"
+  },
+  {
+   "name": "ureq_post_badjson",
+   "method": "POST",
+   "url": "/v1/site-auth/me/username-request",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_011"
+    ]
+   ],
+   "body": "[1,",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",3],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting value\"}}],\"request_id\":\"req_sa_011\"}}"
+  },
+  {
+   "name": "ureq_delete_noauth",
+   "method": "DELETE",
+   "url": "/v1/site-auth/me/username-request",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_012"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_012\"}}"
+  },
+  {
+   "name": "verify_noauth",
+   "method": "POST",
+   "url": "/v1/site-auth/me/verify-trove-claim",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_013"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_013\"}}"
+  },
+  {
+   "name": "stats_noauth",
+   "method": "GET",
+   "url": "/v1/site-auth/me/trove-stats",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_014"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_014\"}}"
+  },
+  {
+   "name": "sessions_noauth",
+   "method": "GET",
+   "url": "/v1/site-auth/sessions",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_015"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_015\"}}"
+  },
+  {
+   "name": "session_delete_noauth_badid",
+   "method": "DELETE",
+   "url": "/v1/site-auth/sessions/nope",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_016"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_016\"}}"
+  },
+  {
+   "name": "logout_all_noauth",
+   "method": "POST",
+   "url": "/v1/site-auth/logout-all",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_017"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_017\"}}"
+  },
+  {
+   "name": "export_noauth",
+   "method": "GET",
+   "url": "/v1/site-auth/me/export",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_018"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_018\"}}"
+  },
+  {
+   "name": "delete_noauth",
+   "method": "POST",
+   "url": "/v1/site-auth/me/delete",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_019"
+    ]
+   ],
+   "body": "{\"confirm_username\": \"x\"}",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_019\"}}"
+  },
+  {
+   "name": "delete_badjson",
+   "method": "POST",
+   "url": "/v1/site-auth/me/delete",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_020"
+    ]
+   ],
+   "body": "{,}",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}],\"request_id\":\"req_sa_020\"}}"
+  },
+  {
+   "name": "refresh_none",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_021"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired refresh token\",\"details\":null,\"request_id\":\"req_sa_021\"}}"
+  },
+  {
+   "name": "refresh_empty_obj",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_022"
+    ]
+   ],
+   "body": "{}",
+   "status": 401,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired refresh token\",\"details\":null,\"request_id\":\"req_sa_022\"}}"
+  },
+  {
+   "name": "refresh_null",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_023"
+    ]
+   ],
+   "body": "null",
+   "status": 401,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired refresh token\",\"details\":null,\"request_id\":\"req_sa_023\"}}"
+  },
+  {
+   "name": "refresh_empty_str",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_024"
+    ]
+   ],
+   "body": "{\"refresh_token\": \"\"}",
+   "status": 401,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Invalid or expired refresh token\",\"details\":null,\"request_id\":\"req_sa_024\"}}"
+  },
+  {
+   "name": "refresh_bad_type",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_025"
+    ]
+   ],
+   "body": "{\"refresh_token\": 5}",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"refresh_token\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"req_sa_025\"}}"
+  },
+  {
+   "name": "refresh_list",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_026"
+    ]
+   ],
+   "body": "[]",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[]}],\"request_id\":\"req_sa_026\"}}"
+  },
+  {
+   "name": "refresh_text",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "text/plain"
+    ],
+    [
+     "x-request-id",
+     "req_sa_027"
+    ]
+   ],
+   "body": "x",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"x\"}],\"request_id\":\"req_sa_027\"}}"
+  },
+  {
+   "name": "refresh_badjson",
+   "method": "POST",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_028"
+    ]
+   ],
+   "body": "{",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}],\"request_id\":\"req_sa_028\"}}"
+  },
+  {
+   "name": "logout_bad_type",
+   "method": "POST",
+   "url": "/v1/site-auth/logout",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_029"
+    ]
+   ],
+   "body": "{\"refresh_token\": []}",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"refresh_token\"],\"msg\":\"Input should be a valid string\",\"input\":[]}],\"request_id\":\"req_sa_029\"}}"
+  },
+  {
+   "name": "exchange_missing",
+   "method": "POST",
+   "url": "/v1/site-auth/oauth/exchange",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_030"
+    ]
+   ],
+   "body": "",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_sa_030\"}}"
+  },
+  {
+   "name": "exchange_bad",
+   "method": "POST",
+   "url": "/v1/site-auth/oauth/exchange",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_031"
+    ]
+   ],
+   "body": "{\"code\": 1}",
+   "status": 422,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"code\"],\"msg\":\"Input should be a valid string\",\"input\":1}],\"request_id\":\"req_sa_031\"}}"
+  },
+  {
+   "name": "exchange_no_redis",
+   "method": "POST",
+   "url": "/v1/site-auth/oauth/exchange",
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "req_sa_032"
+    ]
+   ],
+   "body": "{\"code\": \"abc\"}",
+   "status": 400,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid or expired exchange code\",\"details\":null,\"request_id\":\"req_sa_032\"}}"
+  },
+  {
+   "name": "start_disabled",
+   "method": "GET",
+   "url": "/v1/site-auth/oauth/discord/start?client=app&next=/x",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_033"
+    ]
+   ],
+   "body": "",
+   "status": 404,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"Discord sign-in is not configured\",\"details\":null,\"request_id\":\"req_sa_033\"}}"
+  },
+  {
+   "name": "callback_disabled",
+   "method": "GET",
+   "url": "/v1/site-auth/oauth/discord/callback?code=a&state=b",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_034"
+    ]
+   ],
+   "body": "",
+   "status": 404,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_found\",\"message\":\"Discord sign-in is not configured\",\"details\":null,\"request_id\":\"req_sa_034\"}}"
+  },
+  {
+   "name": "me_405",
+   "method": "PUT",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_035"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_035\"}}"
+  },
+  {
+   "name": "sessions_405",
+   "method": "POST",
+   "url": "/v1/site-auth/sessions",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_036"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_036\"}}"
+  },
+  {
+   "name": "refresh_405",
+   "method": "GET",
+   "url": "/v1/site-auth/refresh",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_037"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_037\"}}"
+  },
+  {
+   "name": "exchange_405",
+   "method": "GET",
+   "url": "/v1/site-auth/oauth/exchange",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_038"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_038\"}}"
+  },
+  {
+   "name": "export_405",
+   "method": "POST",
+   "url": "/v1/site-auth/me/export",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_039"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_039\"}}"
+  },
+  {
+   "name": "claim_405",
+   "method": "GET",
+   "url": "/v1/site-auth/me/claim-trove-name",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_040"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "POST",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_040\"}}"
+  },
+  {
+   "name": "ureq_405",
+   "method": "PUT",
+   "url": "/v1/site-auth/me/username-request",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_041"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_041\"}}"
+  },
+  {
+   "name": "session_405",
+   "method": "GET",
+   "url": "/v1/site-auth/sessions/abc",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_042"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "DELETE",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_042\"}}"
+  },
+  {
+   "name": "start_405",
+   "method": "POST",
+   "url": "/v1/site-auth/oauth/discord/start",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_043"
+    ]
+   ],
+   "body": "",
+   "status": 405,
+   "resp_headers": {
+    "allow": "GET",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"req_sa_043\"}}"
+  },
+  {
+   "name": "logout_no_token",
+   "method": "POST",
+   "url": "/v1/site-auth/logout",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_044"
+    ]
+   ],
+   "body": "",
+   "status": 204,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [
+    "kiwi_site_access=\"\"; Domain=.example.test; expires=Thu, 22 Oct 2026 23:16:22 GMT; HttpOnly; Max-Age=0; Path=/; SameSite=lax; Secure",
+    "kiwi_site_refresh=\"\"; Domain=.example.test; expires=Thu, 22 Oct 2026 23:16:22 GMT; HttpOnly; Max-Age=0; Path=/v1/site-auth; SameSite=lax; Secure",
+    "kiwi_site_session=\"\"; Domain=.example.test; expires=Thu, 22 Oct 2026 23:16:22 GMT; Max-Age=0; Path=/; SameSite=lax; Secure"
+   ],
+   "resp": ""
+  },
+  {
+   "name": "logout_empty_cookie",
+   "method": "POST",
+   "url": "/v1/site-auth/logout",
+   "headers": [
+    [
+     "cookie",
+     "kiwi_site_refresh="
+    ],
+    [
+     "x-request-id",
+     "req_sa_045"
+    ]
+   ],
+   "body": "",
+   "status": 204,
+   "resp_headers": {
+    "content-type": "application/json"
+   },
+   "set_cookie": [
+    "kiwi_site_access=\"\"; Domain=.example.test; expires=Thu, 22 Oct 2026 23:16:22 GMT; HttpOnly; Max-Age=0; Path=/; SameSite=lax; Secure",
+    "kiwi_site_refresh=\"\"; Domain=.example.test; expires=Thu, 22 Oct 2026 23:16:22 GMT; HttpOnly; Max-Age=0; Path=/v1/site-auth; SameSite=lax; Secure",
+    "kiwi_site_session=\"\"; Domain=.example.test; expires=Thu, 22 Oct 2026 23:16:22 GMT; Max-Age=0; Path=/; SameSite=lax; Secure"
+   ],
+   "resp": ""
+  },
+  {
+   "name": "verify_wrong_kind_jwt",
+   "method": "POST",
+   "url": "/v1/site-auth/me/verify-trove-claim",
+   "headers": [
+    [
+     "authorization",
+     "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWExYjJjM2Q0ZTVmNjA3MTgyOTNhNGIiLCJ2ZXIiOjAsImlhdCI6MTc5MjcxMDk4MiwiZXhwIjoxNzkyNzExODgyLCJ0eXBlIjoiYWNjZXNzIn0.JSnXk8e4FloaoolHgk_INDu2v3jr56rS9ZCImZrx-xs"
+    ],
+    [
+     "x-request-id",
+     "req_sa_046"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json",
+    "cache-control": "private, no-store"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Wrong-audience token\",\"details\":null,\"request_id\":\"req_sa_046\"}}"
+  },
+  {
+   "name": "me_head_noauth",
+   "method": "HEAD",
+   "url": "/v1/site-auth/me",
+   "headers": [
+    [
+     "x-request-id",
+     "req_sa_047"
+    ]
+   ],
+   "body": "",
+   "status": 401,
+   "resp_headers": {
+    "www-authenticate": "Bearer",
+    "content-type": "application/json"
+   },
+   "set_cookie": [],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_sa_047\"}}"
+  }
+ ]
+}

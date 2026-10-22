@@ -1,0 +1,28 @@
+{
+ "mongo": [
+  {"collection": "site_users", "filter": {"is_deleted": {"$ne": true}}, "sort": ["_id"], "mask": ["updated_at", "claimed_at"]},
+  {"collection": "site_users", "filter": {"is_deleted": true}, "sort": ["_id"], "mask": ["username", "updated_at"]},
+  {"collection": "site_sessions", "sort": ["_id"], "mask": ["refresh_token_hash", "last_used_at"]},
+  {"collection": "username_change_requests", "sort": ["site_user_id", "requested_username"], "mask": ["_id", "created_at"]},
+  {"collection": "mod_projects", "filter": {"owner_id": {"$oid": "65b000000000000000000003"}}, "sort": ["slug"],
+   "mask": ["owner_username", "owner_handle"]},
+  {"collection": "mod_projects", "filter": {"owner_id": {"$ne": {"$oid": "65b000000000000000000003"}}}, "sort": ["slug"]},
+  {"collection": "modpack_projects", "filter": {"owner_id": {"$oid": "65b000000000000000000003"}}, "sort": ["slug"],
+   "mask": ["owner_username", "owner_handle"]},
+  {"collection": "modpack_projects", "filter": {"owner_id": {"$ne": {"$oid": "65b000000000000000000003"}}}, "sort": ["slug"]},
+  {"collection": "giveaways", "sort": ["_id"], "mask": ["winner_username"]},
+  {"collection": "giveaway_entries", "sort": ["_id"]},
+  {"collection": "mod_stars", "sort": ["_id"]},
+  {"collection": "modpack_stars", "sort": ["_id"]},
+  {"collection": "mod_profiles", "sort": ["_id"]},
+  {"collection": "mod_git_tokens", "sort": ["_id"]},
+  {"collection": "mod_claim_requests", "sort": ["_id"]},
+  {"collection": "dm_subscriptions", "sort": ["_id"]},
+  {"collection": "site_webhooks", "sort": ["_id"]},
+  {"collection": "image_designs", "sort": ["_id"]},
+  {"collection": "email_outbox", "sort": ["_id"]}
+ ],
+ "redis": [
+  {"pattern": "site_*"}
+ ]
+}

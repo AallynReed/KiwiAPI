@@ -10,7 +10,7 @@ use super::{
 };
 use crate::{error::ApiResult, pyjson};
 
-fn site_row(r: &HistRow) -> Map<String, Value> {
+pub(crate) fn site_row(r: &HistRow) -> Map<String, Value> {
     let mut m = Map::new();
     m.insert("player_name".into(), r.row.player_name.clone().into());
     m.insert("rank".into(), r.row.rank.into());
@@ -233,6 +233,11 @@ fn points(points: &[(kiwi_core::lbplayers::Point, bool)]) -> Vec<Value> {
 
 /// `GET /site/leaderboards/players/{name}/series`.
 pub fn site_series(s: &Series) -> String {
+    pyjson::dumps(&site_series_value(s))
+}
+
+/// The `player_history_series` dict.
+pub(crate) fn site_series_value(s: &Series) -> Value {
     let mut m = json!({
         "player_name": s.player_name,
         "canonical_name": s.canonical_name,
@@ -265,7 +270,7 @@ pub fn site_series(s: &Series) -> String {
             map.insert("series".into(), series.into());
         }
     }
-    pyjson::dumps(&m)
+    m
 }
 
 /// `PlayerHistorySeriesResponse`.

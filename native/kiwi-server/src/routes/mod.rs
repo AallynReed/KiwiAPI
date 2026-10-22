@@ -46,6 +46,7 @@ fn ported() -> Router<AppState> {
         .merge(store::router())
         .merge(crate::events::router())
         .merge(crate::portal::router())
+        .merge(crate::site_auth::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's

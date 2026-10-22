@@ -46,4 +46,5 @@ tower = "0.5.3"
 tower-http = { version = "0.7.1", features = ["trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+unicode-normalization = "0.1.26"
 webpki-roots = "1.0.10"
