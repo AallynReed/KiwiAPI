@@ -13,6 +13,8 @@ venv/
 
 # Local Mongo data folder (bind mount target)
 data/
+# Small request bodies the parity specs send (body_file)
+!native/port/parity/data/
 
 # Game-file version archive - content-addressed blob store (bind mount target, many GB)
 .game_updates/

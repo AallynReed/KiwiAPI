@@ -3,8 +3,9 @@
 Runs inside api-py (PYTHONPATH=/app). `mint` prints shell exports for
 KIWI_PARITY_TOKEN (all scopes) and KIWI_PARITY_TOKEN_NO_GEMS (every scope but
 gems:read), both owned by the admin account and expiring in a day, plus
-KIWI_PARITY_JWT, a 12h portal access token for the same account. `revoke`
-deletes every token named "parity run".
+KIWI_PARITY_JWT, a 12h portal access token for the same account, and
+KIWI_PARITY_ADMIN_ID, that account's id. `revoke` deletes every token named
+"parity run".
 """
 
 import asyncio
@@ -44,6 +45,7 @@ async def main(action: str) -> None:
         print(f"export {var}={full}")
     jwt = create_access_token(str(admin.id), admin.token_version, expires_delta=timedelta(hours=12))
     print(f"export KIWI_PARITY_JWT={jwt}")
+    print(f"export KIWI_PARITY_ADMIN_ID={admin.id}")
 
 
 if __name__ == "__main__":

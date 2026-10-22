@@ -1,0 +1,24 @@
+[
+ {"name": "supporters_before", "path": "/v1/misc/supporters"},
+ {"name": "supporter_add", "method": "POST", "path": "/admin/supporters", "body": {"name": " ParityTwin "},
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
+  "mask": ["created_at"], "capture": {"SUPPORTER": "name", "ADDED_BY": "added_by"}},
+ {"name": "supporter_add_duplicate", "method": "POST", "path": "/admin/supporters", "body": {"name": "${SUPPORTER}"},
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "added_by_is_admin", "path": "/admin/users/${ADDED_BY}",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}, "mask": ["last_used_at"]},
+ {"name": "supporter_remove", "method": "DELETE", "path": "/admin/supporters/${SUPPORTER}",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "supporter_remove_again", "method": "DELETE", "path": "/admin/supporters/${SUPPORTER}",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "supporter_add_kept", "method": "POST", "path": "/admin/supporters", "body": {"name": "Parity Kept"},
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}, "mask": ["created_at"]},
+ {"name": "supporters_after", "path": "/v1/misc/supporters"},
+
+ {"name": "vote_voxel_up", "method": "POST", "path": "/site/design-feedback", "body": {"design": "voxel", "vote": "up"}},
+ {"name": "vote_classic_dark_down", "method": "POST", "path": "/site/design-feedback",
+  "body": {"design": "classic", "theme": "dark", "vote": "down"}},
+ {"name": "vote_voxel_up_again", "method": "POST", "path": "/site/design-feedback", "body": {"design": "voxel", "vote": "up"}},
+ {"name": "vote_invalid", "method": "POST", "path": "/site/design-feedback", "body": {"design": "neon", "vote": "up"}},
+ {"name": "feedback_summary", "path": "/admin/design-feedback?days=1", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}}
+]

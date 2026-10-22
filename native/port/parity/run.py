@@ -18,13 +18,23 @@ SPEC.json is a list of requests:
     ]
 
 Per request: ``method`` (default GET), ``path`` (with query), ``headers`` (object,
-or list of [name, value] pairs to repeat a header; ``${NAME}`` in a value is
-the environment variable, e.g. a token), ``body`` (a string is sent as
-UTF-8, anything else as JSON) or ``body_b64``, ``compare_headers`` (extra
-headers to compare), ``ignore_headers``, ``mask`` (JSON fields replaced before
-comparing; the bodies are then compared re-serialized instead of byte for
-byte), ``allow_diff`` (``status``, ``body`` or ``header:<name>``: reported but
-not failing) with a ``reason``.
+or list of [name, value] pairs to repeat a header), ``body`` (a string is sent
+as UTF-8, anything else as JSON), ``body_b64`` or ``body_file`` (raw bytes of
+a file, path relative to the spec; these two get Content-Type application/json
+unless the request sets one), ``compare_headers`` (extra headers to compare),
+``ignore_headers``, ``mask`` (JSON fields replaced before comparing; the
+bodies are then compared re-serialized instead of byte for byte),
+``allow_diff`` (``status``, ``body``, ``capture`` or ``header:<name>``:
+reported but not failing) with a ``reason``, and ``capture``.
+
+``${NAME}`` in the path, a header value or a ``body`` string (also strings
+inside a JSON body) expands per target: first what ``capture`` took from that
+target's earlier replies, then its ``--env-a``/``--env-b`` file, then the
+environment, else empty. ``"capture": {"HOOK_ID": "items[0].id"}`` stores a
+field of each target's JSON reply (strings as is, anything else as JSON), so a
+later ``"path": "/v1/webhooks/${HOOK_ID}"`` addresses the object each stack
+created. Env files hold ``export NAME=value`` lines (parity_tokens.py output).
+``--header 'Name: value'`` is sent with every request that does not set it.
 
 Compared: the status, the headers content-type, cache-control, vary, location,
 set-cookie, content-encoding and every access-control-*, and the body bytes. A
@@ -82,25 +92,66 @@ class Reply:
 _ENV = re.compile(r"\$\{(\w+)\}")
 
 
-def _request_headers(spec: dict) -> list[tuple[str, str]]:
+def load_env_file(path: str) -> dict[str, str]:
+    out = {}
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("export "):
+                line = line[7:].lstrip()
+            name, sep, value = line.partition("=")
+            if not sep or not re.fullmatch(r"\w+", name):
+                continue
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+                value = value[1:-1]
+            out[name] = value
+    return out
+
+
+class Target:
+    def __init__(self, label: str, base: str, env_file: str | None = None):
+        self.label = label
+        self.base = base
+        self.vars = load_env_file(env_file) if env_file else {}
+
+    def expand(self, text: str) -> str:
+        return _ENV.sub(lambda m: self.vars.get(m.group(1), os.environ.get(m.group(1), "")), text)
+
+
+def _expand_json(value, expand):
+    if isinstance(value, str):
+        return expand(value)
+    if isinstance(value, list):
+        return [_expand_json(v, expand) for v in value]
+    if isinstance(value, dict):
+        return {k: _expand_json(v, expand) for k, v in value.items()}
+    return value
+
+
+def _request_headers(spec: dict, target: Target, defaults=()) -> list[tuple[str, str]]:
     h = spec.get("headers") or {}
-    pairs = h.items() if isinstance(h, dict) else h
-    return [(k, _ENV.sub(lambda m: os.environ.get(m.group(1), ""), str(v))) for k, v in pairs]
+    pairs = list(h.items() if isinstance(h, dict) else h)
+    named = {str(k).lower() for k, _ in pairs}
+    pairs += [(k, v) for k, v in defaults if k.lower() not in named]
+    return [(k, target.expand(str(v))) for k, v in pairs]
 
 
-def _request_body(spec: dict) -> bytes | None:
+def _request_body(spec: dict, target: Target, spec_dir: str = ".") -> bytes | None:
     if "body_b64" in spec:
         return base64.b64decode(spec["body_b64"])
+    if "body_file" in spec:
+        with open(os.path.join(spec_dir, spec["body_file"]), "rb") as f:
+            return f.read()
     if "body" not in spec:
         return None
-    body = spec["body"]
+    body = _expand_json(spec["body"], target.expand)
     return body.encode() if isinstance(body, str) else json.dumps(body).encode()
 
 
-def send(base: str, spec: dict, rid: str, timeout: float) -> Reply:
+def send(target: Target, spec: dict, rid: str, timeout: float, defaults=(), spec_dir: str = ".") -> Reply:
     method = spec.get("method", "GET").upper()
-    headers = _request_headers(spec)
-    body = _request_body(spec)
+    headers = _request_headers(spec, target, defaults)
+    body = _request_body(spec, target, spec_dir)
     lower = {k.lower() for k, _ in headers}
     if body is not None and "content-type" not in lower and not isinstance(spec.get("body"), str):
         headers.append(("Content-Type", "application/json"))
@@ -108,11 +159,11 @@ def send(base: str, spec: dict, rid: str, timeout: float) -> Reply:
         headers.append(("X-Request-ID", rid))
     if body is not None and "content-length" not in lower:
         headers.append(("Content-Length", str(len(body))))
-    url = urllib.parse.urlsplit(base)
+    url = urllib.parse.urlsplit(target.base)
     conn_cls = http.client.HTTPSConnection if url.scheme == "https" else http.client.HTTPConnection
     conn = conn_cls(url.netloc, timeout=timeout)
     try:
-        conn.putrequest(method, url.path.rstrip("/") + spec["path"], skip_host="host" in lower,
+        conn.putrequest(method, url.path.rstrip("/") + target.expand(spec["path"]), skip_host="host" in lower,
                         skip_accept_encoding=True)
         for k, v in headers:
             conn.putheader(k, v)
@@ -128,21 +179,38 @@ def send(base: str, spec: dict, rid: str, timeout: float) -> Reply:
 _PATH_TOKEN = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
 
 
-def _mask(doc, path: str):
-    parts = [(m.group(1), m.group(2)) for m in _PATH_TOKEN.finditer(path)]
-    node = doc
-    for i, (key, idx) in enumerate(parts):
-        last = i == len(parts) - 1
+def _locate(doc, path: str):
+    """(container, key) of the field at ``path``, or None when it is absent."""
+    node, hit = doc, None
+    for m in _PATH_TOKEN.finditer(path):
+        key, idx = m.group(1), m.group(2)
         if key is not None and isinstance(node, dict) and key in node:
-            if last:
-                node[key] = "<masked>"
-            node = node[key]
+            hit = (node, key)
         elif idx is not None and isinstance(node, list) and int(idx) < len(node):
-            if last:
-                node[int(idx)] = "<masked>"
-            node = node[int(idx)]
+            hit = (node, int(idx))
         else:
-            return
+            return None
+        node = hit[0][hit[1]]
+    return hit
+
+
+def _mask(doc, path: str):
+    hit = _locate(doc, path)
+    if hit is not None:
+        hit[0][hit[1]] = "<masked>"
+
+
+def capture(spec: dict, reply: Reply, target: Target) -> list[tuple[str, str]]:
+    problems = []
+    doc = _json(reply.decoded()) if spec.get("capture") else None
+    for name, path in (spec.get("capture") or {}).items():
+        hit = _locate(doc, path)
+        if hit is None:
+            problems.append(("capture", f"capture {name}: no {path} in {target.label}'s reply"))
+            continue
+        value = hit[0][hit[1]]
+        target.vars[name] = value if isinstance(value, str) else json.dumps(value)
+    return problems
 
 
 def _json(data: bytes):
@@ -238,16 +306,32 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--raw", action="store_true", help="also compare encoded (gzip) body bytes")
     ap.add_argument("--allow-writes", action="store_true", help="permit methods other than GET/HEAD/OPTIONS")
     ap.add_argument("--quiet", action="store_true", help="print only differences and the summary")
+    ap.add_argument("--env-a", metavar="FILE", help="${NAME} values for target A (export NAME=value lines)")
+    ap.add_argument("--env-b", metavar="FILE", help="${NAME} values for target B")
+    ap.add_argument("--header", action="append", default=[], metavar="'NAME: VALUE'",
+                    help="send with every request that does not set it (repeatable)")
     args = ap.parse_args(argv)
 
     try:
         with open(args.spec, encoding="utf-8") as f:
             specs = json.load(f)
+        target_a = Target("A", args.base_a, args.env_a)
+        target_b = Target("B", args.base_b, args.env_b)
     except (OSError, ValueError) as e:
-        print(f"cannot read spec: {e}", file=sys.stderr)
+        print(f"cannot read spec or env file: {e}", file=sys.stderr)
         return 2
     if not isinstance(specs, list):
         print("spec must be a JSON list", file=sys.stderr)
+        return 2
+    defaults = [tuple(p.strip() for p in h.split(":", 1)) for h in args.header]
+    if any(len(d) != 2 or not d[0] for d in defaults):
+        print("--header takes 'Name: value'", file=sys.stderr)
+        return 2
+    spec_dir = os.path.dirname(os.path.abspath(args.spec))
+    missing = [s["body_file"] for s in specs if "body_file" in s
+               and not os.path.isfile(os.path.join(spec_dir, s["body_file"]))]
+    if missing:
+        print(f"body_file not found: {', '.join(missing)}", file=sys.stderr)
         return 2
     unsafe = [s for s in specs if s.get("method", "GET").upper() not in SAFE_METHODS]
     if unsafe and not args.allow_writes:
@@ -262,9 +346,9 @@ def main(argv: list[str] | None = None) -> int:
             continue
         ran += 1
         rid = f"parity-{n}"
-        a = send(args.base_a, spec, rid, args.timeout)
-        b = send(args.base_b, spec, rid, args.timeout)
-        diffs = compare(spec, a, b, args.raw)
+        a = send(target_a, spec, rid, args.timeout, defaults, spec_dir)
+        b = send(target_b, spec, rid, args.timeout, defaults, spec_dir)
+        diffs = compare(spec, a, b, args.raw) + capture(spec, a, target_a) + capture(spec, b, target_b)
         accepted = set(spec.get("allow_diff", []))
         hard = [d for d in diffs if d[0] not in accepted]
         soft = [d for d in diffs if d[0] in accepted]
