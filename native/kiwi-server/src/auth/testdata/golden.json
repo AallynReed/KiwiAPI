@@ -1,0 +1,1420 @@
+{
+ "secret": "CHANGE_ME_insecure_dev_secret_do_not_use_in_production",
+ "fixed_now": 1792672496.789123,
+ "jwt_encode": [
+  {
+   "kind": "access",
+   "sub": "65f0a1b2c3d4e5f601234567",
+   "ver": 0,
+   "sid": null,
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjAsImlhdCI6MTc5MjY3MjQ5NiwiZXhwIjoxNzkyNjczMzk2LCJ0eXBlIjoiYWNjZXNzIn0.MJHYHOctXma37ADbFQqLEXP99cpuyM29RvIVLWE2q5s"
+  },
+  {
+   "kind": "site",
+   "sub": "65f0a1b2c3d4e5f601234567",
+   "ver": 0,
+   "sid": null,
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjAsImlhdCI6MTc5MjY3MjQ5NiwiZXhwIjoxNzkyNjczMzk2LCJ0eXBlIjoiYWNjZXNzIiwia2luZCI6InNpdGUifQ.YDmUguaAHm17eKfPh1fLeabJ5Y-l2sBNEFuphDh0OgU"
+  },
+  {
+   "kind": "access",
+   "sub": "65f0a1b2c3d4e5f601234567",
+   "ver": 7,
+   "sid": "6718a0b1c2d3e4f5a6b7c8d9",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjcsImlhdCI6MTc5MjY3MjQ5NiwiZXhwIjoxNzkyNjczMzk2LCJ0eXBlIjoiYWNjZXNzIiwic2lkIjoiNjcxOGEwYjFjMmQzZTRmNWE2YjdjOGQ5In0.5GVX2hJpgioe9a3T2NH9DbdqEQgvG96DcHcCWa2geLE"
+  },
+  {
+   "kind": "site",
+   "sub": "65f0a1b2c3d4e5f601234567",
+   "ver": 7,
+   "sid": "6718a0b1c2d3e4f5a6b7c8d9",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjcsImlhdCI6MTc5MjY3MjQ5NiwiZXhwIjoxNzkyNjczMzk2LCJ0eXBlIjoiYWNjZXNzIiwia2luZCI6InNpdGUiLCJzaWQiOiI2NzE4YTBiMWMyZDNlNGY1YTZiN2M4ZDkifQ.tc4vWi4CyE0b21mCJxzMgxvJG6sfVXAUp_2nV3Rldts"
+  },
+  {
+   "kind": "email",
+   "sub": "65f0a1b2c3d4e5f601234567",
+   "purpose": "password_reset",
+   "seconds": 3600,
+   "extra": {
+    "fp": "0123456789abcdef"
+   },
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ0eXBlIjoicGFzc3dvcmRfcmVzZXQiLCJpYXQiOjE3OTI2NzI0OTYsImV4cCI6MTc5MjY3NjA5NiwiZnAiOiIwMTIzNDU2Nzg5YWJjZGVmIn0.t1LhRXUWWrGA9M9GyJMN3b_J0YHfP67F_xKg64n9Ui4"
+  },
+  {
+   "kind": "email",
+   "sub": "65f0a1b2c3d4e5f601234567",
+   "purpose": "email_change",
+   "seconds": 172800,
+   "extra": {
+    "new": "\u00fcser@ex\u00e4mple.com",
+    "fp": "ffff"
+   },
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ0eXBlIjoiZW1haWxfY2hhbmdlIiwiaWF0IjoxNzkyNjcyNDk2LCJleHAiOjE3OTI4NDUyOTYsIm5ldyI6Ilx1MDBmY3NlckBleFx1MDBlNG1wbGUuY29tIiwiZnAiOiJmZmZmIn0.K6uegIfhVFCnsp7SMr8-7o3RcTTPJYAvdIytqExZ4AE"
+  }
+ ],
+ "jwt_decode": [
+  {
+   "name": "ok",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.iGihaU9wJSh1zyLoxCKeB31QJD3HOsco81yCLDeUSvY",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access"
+   }
+  },
+  {
+   "name": "ok_no_typ",
+   "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.O_ZHk2sIFbD0OZmFGFlPeEqS1mK0nmHqI7RnRTu0Myg",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access"
+   }
+  },
+  {
+   "name": "expired",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxMDAwMDAwMDAwLCJ0eXBlIjoiYWNjZXNzIn0.ljEpk_M8SAwOqhyEh__8JS5mN7Y_9bDjPbTsDaEZnJg",
+   "ok": false
+  },
+  {
+   "name": "iat_future",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6NDEwMjQ0NDgwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.XPtjOTznQHDoNsCOQLUi_M076M8UUisTTNqp998_zf0",
+   "ok": false
+  },
+  {
+   "name": "iat_float",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMC43NSwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.164IdLpDvRUgM8C9cdYKYQcBj4X-YC-d0jFU_SyOwII",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000.75,
+    "exp": 4102444800,
+    "type": "access"
+   }
+  },
+  {
+   "name": "iat_str_int",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6IjE3MDAwMDAwMDAiLCJleHAiOjQxMDI0NDQ4MDAsInR5cGUiOiJhY2Nlc3MifQ.P7bOt8FOI4x6RSOmrYaeN6lRgwxXVsPPKaHrjiHpxME",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": "1700000000",
+    "exp": 4102444800,
+    "type": "access"
+   }
+  },
+  {
+   "name": "iat_str_bad",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6ImFiYyIsImV4cCI6NDEwMjQ0NDgwMCwidHlwZSI6ImFjY2VzcyJ9.NhJwvKdGmenoBxIJLom68-3AIvTa6vG2cmGn1UiE4_M",
+   "ok": false
+  },
+  {
+   "name": "iat_null",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6bnVsbCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.8lqex6Y-6QL1riuumuOAkqIWw2uPc8uFWnTeQAZWsMM",
+   "ok": false
+  },
+  {
+   "name": "exp_true",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjp0cnVlLCJ0eXBlIjoiYWNjZXNzIn0.p01sYBaBO5wkefjoXe1V6RnT-WahzIfdealGhUBceXs",
+   "ok": false
+  },
+  {
+   "name": "exp_str_far",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoiNDEwMjQ0NDgwMCIsInR5cGUiOiJhY2Nlc3MifQ.fnCZpV2JGpj7etksU6wDlFKcHf8q-PMpgbr6fBWlY0w",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": "4102444800",
+    "type": "access"
+   }
+  },
+  {
+   "name": "no_exp",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwidHlwZSI6ImFjY2VzcyJ9.oGx3Yl6BHVAkz3T9J_8x4_hp7udhrMyMf2Oz7szCiIc",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "type": "access"
+   }
+  },
+  {
+   "name": "nbf_future",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIiwibmJmIjo0MTAyNDQ0ODAwfQ.C0pmm9GTMhoz75D7gO7rk0hHqBfbIxgEnBCJU7szVnI",
+   "ok": false
+  },
+  {
+   "name": "nbf_past",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIiwibmJmIjoxMDAwMDAwMDAwfQ.h7Gz0TH-MB_4tGMGvVfM2jjewnYQNjg18h1CuJYf8F8",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access",
+    "nbf": 1000000000
+   }
+  },
+  {
+   "name": "aud_set",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIiwiYXVkIjoieCJ9.39-L7UYIHWtlTYGHtHhatDcwr3Y7D5j0j832HtOgOY4",
+   "ok": false
+  },
+  {
+   "name": "aud_empty",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIiwiYXVkIjoiIn0.ecirZBqRhEJy-80m0pAZxMOHgU_DAdVraCfy5CkKBhc",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access",
+    "aud": ""
+   }
+  },
+  {
+   "name": "sub_int",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjUsInZlciI6MSwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjQxMDI0NDQ4MDAsInR5cGUiOiJhY2Nlc3MifQ.lGnkEl6nb9lGPwLhmjBY0VUswlPrC0UIA6P1ooO9bw8",
+   "ok": false
+  },
+  {
+   "name": "jti_int",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIiwianRpIjo1fQ.JAMs_aidqANXaV4CNwO_pIjdG_65TZRibQFTiyWxRNA",
+   "ok": false
+  },
+  {
+   "name": "jti_str",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIiwianRpIjoieCJ9.1xtqFfXGnVa4qW7AfyKg6ttRlM7yLxU9eCjXLQ2i6LE",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access",
+    "jti": "x"
+   }
+  },
+  {
+   "name": "iss_any",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIiwiaXNzIjo1fQ.hJqzDie7HuS9cQHWNqWFmTzsz96VACaePLHuwCandvM",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access",
+    "iss": 5
+   }
+  },
+  {
+   "name": "alg_hs512",
+   "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.ER7G3nJWsySagKtPvi7HYrN_a2iQdpFLFVyK5KXm3Ow",
+   "ok": false
+  },
+  {
+   "name": "alg_none",
+   "token": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.",
+   "ok": false
+  },
+  {
+   "name": "no_alg",
+   "token": "eyJ0eXAiOiJKV1QifQ.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.y6M0hnb0NztDRd40Z8_Cc-8bKxebxI2ydhIGU4xNDFU",
+   "ok": false
+  },
+  {
+   "name": "wrong_key",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.Gu4VmmRzg1MVD0fmInTNX0NlNCTLKK_y9s_1ID2AmZ4",
+   "ok": false
+  },
+  {
+   "name": "kid_int",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6MX0.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.H3fEr2E0YSPjCNVT0ONVEWz31jF76bajbhkCL0r6SvU",
+   "ok": false
+  },
+  {
+   "name": "kid_str",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImEifQ.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.4qxKGWASHXfS9JWNMT1NM513Xp6gqlN1d4X-rJUzKeM",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access"
+   }
+  },
+  {
+   "name": "crit_b64_true",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImI2NCI6dHJ1ZSwiY3JpdCI6WyJiNjQiXX0.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.z3ZOWzdbbX1C0dHYZAn1kMuZgI2ZnkoI8TCk7VX0P2g",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access"
+   }
+  },
+  {
+   "name": "crit_other",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImNyaXQiOlsiZXhwIl19.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.IM-Cz75rArZjxwm-4GLc3HZN1w3X7WiAUf6VQqwUZt4",
+   "ok": false
+  },
+  {
+   "name": "header_list",
+   "token": "WzFd.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.S8cbPP-8PaF8Mw5zi1EiHGGREFZUQ0gmrXbCKbxb_-A",
+   "ok": false
+  },
+  {
+   "name": "payload_list",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.WzEsMl0.QG3pejwMqn4VqmwkqE3KhJspYud2iBcuNTipuKyMmoI",
+   "ok": false
+  },
+  {
+   "name": "sig_pad",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0.iGihaU9wJSh1zyLoxCKeB31QJD3HOsco81yCLDeUSvY=",
+   "ok": true,
+   "payload": {
+    "sub": "65f0a1b2c3d4e5f601234567",
+    "ver": 1,
+    "iat": 1700000000,
+    "exp": 4102444800,
+    "type": "access"
+   }
+  },
+  {
+   "name": "two_segments",
+   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NWYwYTFiMmMzZDRlNWY2MDEyMzQ1NjciLCJ2ZXIiOjEsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjo0MTAyNDQ0ODAwLCJ0eXBlIjoiYWNjZXNzIn0",
+   "ok": false
+  },
+  {
+   "name": "garbage",
+   "token": "not-a-jwt",
+   "ok": false
+  },
+  {
+   "name": "empty",
+   "token": "",
+   "ok": false
+  }
+ ],
+ "argon2_fixed": [
+  {
+   "password": "hunter2hunter2",
+   "salt_b64": "AAECAwQFBgcICQoLDA0ODw==",
+   "hash": "$argon2id$v=19$m=65536,t=3,p=4$AAECAwQFBgcICQoLDA0ODw$iTahnszBFobrZJpgDHcQXDlYQNA5fsa3WoOeHltq7Hs"
+  },
+  {
+   "password": "p\u00e4ssw\u00f6rd \ud83d\ude00",
+   "salt_b64": "AAECAwQFBgcICQoLDA0ODw==",
+   "hash": "$argon2id$v=19$m=65536,t=3,p=4$AAECAwQFBgcICQoLDA0ODw$NpjojgMM0UdSWZTvzvQwOvujrExDmJFPVisBfnl2qU8"
+  },
+  {
+   "password": "",
+   "salt_b64": "AAECAwQFBgcICQoLDA0ODw==",
+   "hash": "$argon2id$v=19$m=65536,t=3,p=4$AAECAwQFBgcICQoLDA0ODw$rUoXjmsHhqSPm7NEPfg/drgixv2sFagCd0g/2EVRrFI"
+  }
+ ],
+ "argon2_verify": [
+  {
+   "password": "correct horse",
+   "hash": "$argon2id$v=19$m=65536,t=3,p=4$Hp9HbuK/JJLBRz8/Gn0O3g$Q6zsv5OVtSfyvt1dP1EZangxHy367b0+xTMOBMnE7hg",
+   "ok": true,
+   "wrong_ok": false
+  },
+  {
+   "password": "cheap-pw",
+   "hash": "$argon2i$v=19$m=1024,t=1,p=2$c2FsdHNhbHRzYWx0$m/tvGx8L8AVzrP07RdBb7eOXtbbxMWyW",
+   "type": "i",
+   "ok": true,
+   "wrong_ok": false
+  },
+  {
+   "password": "cheap-pw",
+   "hash": "$argon2d$v=19$m=1024,t=1,p=2$c2FsdHNhbHRzYWx0$bajBHESN+fN/onHsGfFu0z2kQoLBcbf3",
+   "type": "d",
+   "ok": true,
+   "wrong_ok": false
+  },
+  {
+   "password": "cheap-pw",
+   "hash": "$argon2id$v=19$m=1024,t=1,p=2$c2FsdHNhbHRzYWx0$NOb9erEJTeGMWqZwWkU0t1/QoMvQMsur",
+   "type": "id",
+   "ok": true,
+   "wrong_ok": false
+  },
+  {
+   "password": "cheap-pw",
+   "hash": "$argon2id$v=16$m=1024,t=1,p=2$c2FsdHNhbHRzYWx0$l5lSfzZ71CGc4r631QRHsu20pbBfW9PY",
+   "type": "id-v16",
+   "ok": true,
+   "wrong_ok": false
+  }
+ ],
+ "argon2_default_prefix": "$argon2id$v=19$m=65536,t=3,p=4",
+ "b62": [
+  {
+   "n": 0,
+   "s": "a"
+  },
+  {
+   "n": 1,
+   "s": "b"
+  },
+  {
+   "n": 61,
+   "s": "9"
+  },
+  {
+   "n": 62,
+   "s": "ba"
+  },
+  {
+   "n": 3843,
+   "s": "99"
+  },
+  {
+   "n": 3844,
+   "s": "baa"
+  },
+  {
+   "n": 4294967295,
+   "s": "eQPpmd"
+  }
+ ],
+ "checksums": [
+  {
+   "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "checksum": "eCrnIQ"
+  },
+  {
+   "body": "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+   "checksum": "elnI4A"
+  },
+  {
+   "body": "0123456789abcdefghijklmnopqrstuvwxyzABCDEFG",
+   "checksum": "dcvjt6"
+  },
+  {
+   "body": "kQ9kQ9kQ9kQ9kQ9kQ9kQ9kQ9kQ9kQ9kQ9kQ9kQ9kQ9z",
+   "checksum": "bIYcZt"
+  }
+ ],
+ "generated_tokens": [
+  {
+   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
+   "hash": "b2cb015f33458e65ae84860c610e48655ef00235cb4c4a98ae97b3b0cd1786ac",
+   "prefix": "kiwi_NqPrUwOV"
+  },
+  {
+   "token": "kiwi_t6y1qXgjHAeV8MAvzIuVec5LYTuv0z1Pddbl5etgU05_b9SOD6",
+   "hash": "c316e5488d6f742b672dd7e4803d2890c00c1e3e91b58783fd3fa9b64ac1fd27",
+   "prefix": "kiwi_t6y1qXgj"
+  },
+  {
+   "token": "kiwi_rSXFGft10Pv7QHTmNOZiGgbP6MdnfM9eialqXZin2VI_ccrRIg",
+   "hash": "92fab21ea6c2ea15a85a14c4dda9f1bba3efd14002cf4949207c79f8078de835",
+   "prefix": "kiwi_rSXFGft1"
+  },
+  {
+   "token": "kiwi_IeBORyzcDjVx9EdmlcQuczdCvM9kUn09cwwwiUNIzvf_dInIHQ",
+   "hash": "7213f61a57c1d41518ef75fa8dd4246ffa744c575a875b30b861e82828569ae1",
+   "prefix": "kiwi_IeBORyzc"
+  },
+  {
+   "token": "kiwi_4wxuxKAMiOGAHGIUD9uvjC4CjLMzyEld05T0qmuBHqq_cxcraO",
+   "hash": "c71b1fbdbb3d982bec95e99e18df982c50d308c6aa22551a2fbaea39b4600b5a",
+   "prefix": "kiwi_4wxuxKAM"
+  }
+ ],
+ "checksum_verify": [
+  {
+   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
+   "result": true
+  },
+  {
+   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91SA",
+   "result": false
+  },
+  {
+   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_1234567",
+   "result": null
+  },
+  {
+   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh_abc",
+   "result": null
+  },
+  {
+   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_",
+   "result": null
+  },
+  {
+   "token": "other_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
+   "result": null
+  },
+  {
+   "token": "legacy-token-123",
+   "result": null
+  },
+  {
+   "token": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7\n",
+   "result": true
+  },
+  {
+   "token": "",
+   "result": null
+  }
+ ],
+ "sha256": [
+  {
+   "in": "",
+   "hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "in": "abc",
+   "hex": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+  },
+  {
+   "in": "kiwi_NqPrUwOVSWkLSfPfk9FP0PSlVa09QFi4TW8qNSP8oh3_f91S7",
+   "hex": "b2cb015f33458e65ae84860c610e48655ef00235cb4c4a98ae97b3b0cd1786ac"
+  },
+  {
+   "in": "\u00e9t\u00e9",
+   "hex": "bd010c64132bf5cae8aea89f6762515727dcf68a5dd1de813c87f50a16c4513c"
+  }
+ ],
+ "fingerprint": [
+  {
+   "in": "$argon2id$v=19$m=65536,t=3,p=4$abc$def",
+   "fp": "972d5df93b3bd8c8"
+  },
+  {
+   "in": "user@example.com",
+   "fp": "b4c9a289323b21a0"
+  }
+ ],
+ "scope_catalog_json": "[{\"key\":\"rotations:read\",\"bit\":1,\"resource\":\"rotations\",\"description\":\"Read rotation/timer data - server time, bonuses, merchants, biomes\"},{\"key\":\"feeds:read\",\"bit\":2,\"resource\":\"feeds\",\"description\":\"Read relayed feeds - Trove news, Twitch/YouTube/Bilibili\"},{\"key\":\"stats:read\",\"bit\":4,\"resource\":\"stats\",\"description\":\"Read raw game-stat data - stat tables (power rank / magic find / light) and classes\"},{\"key\":\"gems:read\",\"bit\":8,\"resource\":\"gems\",\"description\":\"Use the gem tools - simulator (generate/augment), evaluator, and build optimizer\"},{\"key\":\"misc:read\",\"bit\":16,\"resource\":\"misc\",\"description\":\"Misc tools - third-party modding software list and the time converter\"},{\"key\":\"mods:read\",\"bit\":32,\"resource\":\"mods\",\"description\":\"Mod tools - decompile a .tmod file and build a .tmod from files\"},{\"key\":\"updates:read\",\"bit\":64,\"resource\":\"updates\",\"description\":\"Browse archived game files - versions, directory structure, and single-file download\"},{\"key\":\"codexes:read\",\"bit\":128,\"resource\":\"codexes\",\"description\":\"Read parsed game codexes - collectibles, styles, recipes and items, the relationships between them, badge requirements and progression trees\"},{\"key\":\"btt:read\",\"bit\":256,\"resource\":\"btt\",\"description\":\"Read BetterTroveTools releases - latest version per platform and channel\"},{\"key\":\"leaderboards:read\",\"bit\":512,\"resource\":\"leaderboards\",\"description\":\"Read Trove in-game leaderboards - boards, entries, timestamps\"},{\"key\":\"market:read\",\"bit\":1024,\"resource\":\"market\",\"description\":\"Read Trove marketplace listings - listings, items, interest list, price history\"},{\"key\":\"activity:read\",\"bit\":2048,\"resource\":\"activity\",\"description\":\"Read Trove player-activity estimates - live active-player count and multi-period trend series\"},{\"key\":\"giveaways:read\",\"bit\":4096,\"resource\":\"giveaways\",\"description\":\"Read public giveaways - ongoing draws, prizes, entry counts\"},{\"key\":\"events:read\",\"bit\":8192,\"resource\":\"events\",\"description\":\"Subscribe to the live event stream (SSE) - real-time challenge + chaos-chest push updates\"},{\"key\":\"ocr:read\",\"bit\":16384,\"resource\":\"ocr\",\"description\":\"Read character stats from a screenshot - self-hosted OCR of the in-game stat sheet\"},{\"key\":\"store:read\",\"bit\":32768,\"resource\":\"store\",\"description\":\"Read the in-game Kiwi Store catalog - categories, products, prices, deals, loot odds\"},{\"key\":\"mods:write\",\"bit\":65536,\"resource\":\"mods\",\"description\":\"Manage Mods Hub projects for creators who connected their account to yours - create mods, cut and publish releases, edit metadata, images and visibility\"}]",
+ "scope_masks": [
+  {
+   "mask": 0,
+   "valid": true,
+   "decode": [],
+   "grants": {
+    "rotations:read": true,
+    "feeds:read": true,
+    "stats:read": true,
+    "gems:read": true,
+    "misc:read": true,
+    "mods:read": true,
+    "updates:read": true,
+    "codexes:read": true,
+    "btt:read": true,
+    "leaderboards:read": true,
+    "market:read": true,
+    "activity:read": true,
+    "giveaways:read": true,
+    "events:read": true,
+    "ocr:read": true,
+    "store:read": true,
+    "mods:write": true,
+    "nope:read": true
+   }
+  },
+  {
+   "mask": 1,
+   "valid": true,
+   "decode": [
+    "rotations:read"
+   ],
+   "grants": {
+    "rotations:read": true,
+    "feeds:read": false,
+    "stats:read": false,
+    "gems:read": false,
+    "misc:read": false,
+    "mods:read": false,
+    "updates:read": false,
+    "codexes:read": false,
+    "btt:read": false,
+    "leaderboards:read": false,
+    "market:read": false,
+    "activity:read": false,
+    "giveaways:read": false,
+    "events:read": false,
+    "ocr:read": false,
+    "store:read": false,
+    "mods:write": false,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": 4,
+   "valid": true,
+   "decode": [
+    "stats:read"
+   ],
+   "grants": {
+    "rotations:read": false,
+    "feeds:read": false,
+    "stats:read": true,
+    "gems:read": false,
+    "misc:read": false,
+    "mods:read": false,
+    "updates:read": false,
+    "codexes:read": false,
+    "btt:read": false,
+    "leaderboards:read": false,
+    "market:read": false,
+    "activity:read": false,
+    "giveaways:read": false,
+    "events:read": false,
+    "ocr:read": false,
+    "store:read": false,
+    "mods:write": false,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": 5,
+   "valid": true,
+   "decode": [
+    "rotations:read",
+    "stats:read"
+   ],
+   "grants": {
+    "rotations:read": true,
+    "feeds:read": false,
+    "stats:read": true,
+    "gems:read": false,
+    "misc:read": false,
+    "mods:read": false,
+    "updates:read": false,
+    "codexes:read": false,
+    "btt:read": false,
+    "leaderboards:read": false,
+    "market:read": false,
+    "activity:read": false,
+    "giveaways:read": false,
+    "events:read": false,
+    "ocr:read": false,
+    "store:read": false,
+    "mods:write": false,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": 65536,
+   "valid": true,
+   "decode": [
+    "mods:write"
+   ],
+   "grants": {
+    "rotations:read": false,
+    "feeds:read": false,
+    "stats:read": false,
+    "gems:read": false,
+    "misc:read": false,
+    "mods:read": false,
+    "updates:read": false,
+    "codexes:read": false,
+    "btt:read": false,
+    "leaderboards:read": false,
+    "market:read": false,
+    "activity:read": false,
+    "giveaways:read": false,
+    "events:read": false,
+    "ocr:read": false,
+    "store:read": false,
+    "mods:write": true,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": 131071,
+   "valid": true,
+   "decode": [
+    "rotations:read",
+    "feeds:read",
+    "stats:read",
+    "gems:read",
+    "misc:read",
+    "mods:read",
+    "updates:read",
+    "codexes:read",
+    "btt:read",
+    "leaderboards:read",
+    "market:read",
+    "activity:read",
+    "giveaways:read",
+    "events:read",
+    "ocr:read",
+    "store:read",
+    "mods:write"
+   ],
+   "grants": {
+    "rotations:read": true,
+    "feeds:read": true,
+    "stats:read": true,
+    "gems:read": true,
+    "misc:read": true,
+    "mods:read": true,
+    "updates:read": true,
+    "codexes:read": true,
+    "btt:read": true,
+    "leaderboards:read": true,
+    "market:read": true,
+    "activity:read": true,
+    "giveaways:read": true,
+    "events:read": true,
+    "ocr:read": true,
+    "store:read": true,
+    "mods:write": true,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": 131072,
+   "valid": false,
+   "decode": [],
+   "grants": {
+    "rotations:read": false,
+    "feeds:read": false,
+    "stats:read": false,
+    "gems:read": false,
+    "misc:read": false,
+    "mods:read": false,
+    "updates:read": false,
+    "codexes:read": false,
+    "btt:read": false,
+    "leaderboards:read": false,
+    "market:read": false,
+    "activity:read": false,
+    "giveaways:read": false,
+    "events:read": false,
+    "ocr:read": false,
+    "store:read": false,
+    "mods:write": false,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": 131073,
+   "valid": false,
+   "decode": [
+    "rotations:read"
+   ],
+   "grants": {
+    "rotations:read": true,
+    "feeds:read": false,
+    "stats:read": false,
+    "gems:read": false,
+    "misc:read": false,
+    "mods:read": false,
+    "updates:read": false,
+    "codexes:read": false,
+    "btt:read": false,
+    "leaderboards:read": false,
+    "market:read": false,
+    "activity:read": false,
+    "giveaways:read": false,
+    "events:read": false,
+    "ocr:read": false,
+    "store:read": false,
+    "mods:write": false,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": -1,
+   "valid": false,
+   "decode": null,
+   "grants": {
+    "rotations:read": true,
+    "feeds:read": true,
+    "stats:read": true,
+    "gems:read": true,
+    "misc:read": true,
+    "mods:read": true,
+    "updates:read": true,
+    "codexes:read": true,
+    "btt:read": true,
+    "leaderboards:read": true,
+    "market:read": true,
+    "activity:read": true,
+    "giveaways:read": true,
+    "events:read": true,
+    "ocr:read": true,
+    "store:read": true,
+    "mods:write": true,
+    "nope:read": false
+   }
+  },
+  {
+   "mask": 1099511627776,
+   "valid": false,
+   "decode": [],
+   "grants": {
+    "rotations:read": false,
+    "feeds:read": false,
+    "stats:read": false,
+    "gems:read": false,
+    "misc:read": false,
+    "mods:read": false,
+    "updates:read": false,
+    "codexes:read": false,
+    "btt:read": false,
+    "leaderboards:read": false,
+    "market:read": false,
+    "activity:read": false,
+    "giveaways:read": false,
+    "events:read": false,
+    "ocr:read": false,
+    "store:read": false,
+    "mods:write": false,
+    "nope:read": false
+   }
+  }
+ ],
+ "normalize_ip": [
+  {
+   "in": "1.2.3.4",
+   "out": "1.2.3.4"
+  },
+  {
+   "in": " 10.0.0.1 ",
+   "out": "10.0.0.1"
+  },
+  {
+   "in": "0:0:0:0:0:0:0:1",
+   "out": "::1"
+  },
+  {
+   "in": "2001:db8:0:0:1:0:0:1",
+   "out": "2001:db8::1:0:0:1"
+  },
+  {
+   "in": "2001:0db8:0000:0000:0000:ff00:0042:8329",
+   "out": "2001:db8::ff00:42:8329"
+  },
+  {
+   "in": "1:0:0:0:0:0:0:8",
+   "out": "1::8"
+  },
+  {
+   "in": "::",
+   "out": "::"
+  },
+  {
+   "in": "1:2:3:4:5:6:7:0",
+   "out": "1:2:3:4:5:6:7:0"
+  },
+  {
+   "in": "fe80::1:0:0:0",
+   "out": "fe80::1:0:0:0"
+  },
+  {
+   "in": "::1.2.3.4",
+   "out": "::102:304"
+  },
+  {
+   "in": "0:0:0:0:0:1:2:3",
+   "out": "::1:2:3"
+  },
+  {
+   "in": "1.2.3.4/32",
+   "out": null
+  },
+  {
+   "in": "01.2.3.4",
+   "out": null
+  },
+  {
+   "in": "not-an-ip",
+   "out": null
+  },
+  {
+   "in": "",
+   "out": null
+  },
+  {
+   "in": "FE80::ABCD",
+   "out": "fe80::abcd"
+  }
+ ],
+ "ip_hash": [
+  {
+   "salt": "c2FsdHlzYWx0eXNhbHR5cw",
+   "ip": "1.2.3.4",
+   "hex": "2571ea02fe2edc8783dabb97fe79a504f9d8ab2eb4d9b2eedb039da4ba2caf76"
+  },
+  {
+   "salt": "c2FsdHlzYWx0eXNhbHR5cw",
+   "ip": "::1",
+   "hex": "6198b7121dff43d02f63749421d17b09b6ffa9e6a43c46b8c719bd81c1dcc32b"
+  }
+ ],
+ "ip_allowed": [
+  {
+   "client": "1.2.3.4",
+   "salt": "c2FsdHlzYWx0eXNhbHR5cw",
+   "allowed": [
+    "2571ea02fe2edc8783dabb97fe79a504f9d8ab2eb4d9b2eedb039da4ba2caf76"
+   ],
+   "ok": true
+  },
+  {
+   "client": " 1.2.3.4",
+   "salt": "c2FsdHlzYWx0eXNhbHR5cw",
+   "allowed": [
+    "2571ea02fe2edc8783dabb97fe79a504f9d8ab2eb4d9b2eedb039da4ba2caf76"
+   ],
+   "ok": true
+  },
+  {
+   "client": "1.2.3.5",
+   "salt": "c2FsdHlzYWx0eXNhbHR5cw",
+   "allowed": [
+    "2571ea02fe2edc8783dabb97fe79a504f9d8ab2eb4d9b2eedb039da4ba2caf76"
+   ],
+   "ok": false
+  },
+  {
+   "client": "1.2.3.4",
+   "salt": null,
+   "allowed": [
+    "2571ea02fe2edc8783dabb97fe79a504f9d8ab2eb4d9b2eedb039da4ba2caf76"
+   ],
+   "ok": false
+  },
+  {
+   "client": "",
+   "salt": "c2FsdHlzYWx0eXNhbHR5cw",
+   "allowed": [
+    "2571ea02fe2edc8783dabb97fe79a504f9d8ab2eb4d9b2eedb039da4ba2caf76"
+   ],
+   "ok": false
+  },
+  {
+   "client": "junk",
+   "salt": "c2FsdHlzYWx0eXNhbHR5cw",
+   "allowed": [
+    "2571ea02fe2edc8783dabb97fe79a504f9d8ab2eb4d9b2eedb039da4ba2caf76"
+   ],
+   "ok": false
+  }
+ ],
+ "device_label": [
+  {
+   "ua": null,
+   "label": null
+  },
+  {
+   "ua": "",
+   "label": null
+  },
+  {
+   "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36 Edg/130.0",
+   "label": "Edge on Windows"
+  },
+  {
+   "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+   "label": "Safari on macOS"
+  },
+  {
+   "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120 Mobile",
+   "label": "Chrome on iOS"
+  },
+  {
+   "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:120.0) Gecko/20100101 Firefox/120.0",
+   "label": "Firefox on Linux"
+  },
+  {
+   "ua": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36 OPR/80",
+   "label": "Opera on Android"
+  },
+  {
+   "ua": "curl/8.4.0",
+   "label": "Browser"
+  },
+  {
+   "ua": "BetterTroveTools/2.0 (Windows)",
+   "label": "Browser on Windows"
+  }
+ ],
+ "bearer": [
+  {
+   "header": "Bearer abc",
+   "cred": "abc"
+  },
+  {
+   "header": "bearer abc",
+   "cred": "abc"
+  },
+  {
+   "header": "BEARER  abc  ",
+   "cred": "abc"
+  },
+  {
+   "header": "Bearer",
+   "cred": null
+  },
+  {
+   "header": "Bearer ",
+   "cred": null
+  },
+  {
+   "header": "Basic abc",
+   "cred": null
+  },
+  {
+   "header": "Token abc",
+   "cred": null
+  },
+  {
+   "header": " Bearer abc",
+   "cred": null
+  },
+  {
+   "header": "Bearer a b",
+   "cred": "a b"
+  },
+  {
+   "header": "Bearer\tabc",
+   "cred": null
+  },
+  {
+   "header": "Bearer \u000babc\f",
+   "cred": "abc"
+  },
+  {
+   "header": "Bearer abc\u001f",
+   "cred": "abc"
+  },
+  {
+   "header": "",
+   "cred": null
+  }
+ ],
+ "cookies": [
+  {
+   "app_url": "https://trove.aallyn.net",
+   "api_url": "https://api.aallyn.net",
+   "debug": false,
+   "set": [
+    "kiwi_site_access=aaa.bbb.ccc; Domain=.aallyn.net; HttpOnly; Max-Age=900; Path=/; SameSite=lax; Secure",
+    "kiwi_site_refresh=r-_efresh; Domain=.aallyn.net; HttpOnly; Max-Age=2592000; Path=/v1/site-auth; SameSite=lax; Secure",
+    "kiwi_site_session=1; Domain=.aallyn.net; Max-Age=2592000; Path=/; SameSite=lax; Secure"
+   ],
+   "clear_now": 1761136496.25,
+   "clear": [
+    "kiwi_site_access=\"\"; Domain=.aallyn.net; expires=Wed, 22 Oct 2025 12:34:56 GMT; HttpOnly; Max-Age=0; Path=/; SameSite=lax; Secure",
+    "kiwi_site_refresh=\"\"; Domain=.aallyn.net; expires=Wed, 22 Oct 2025 12:34:56 GMT; HttpOnly; Max-Age=0; Path=/v1/site-auth; SameSite=lax; Secure",
+    "kiwi_site_session=\"\"; Domain=.aallyn.net; expires=Wed, 22 Oct 2025 12:34:56 GMT; Max-Age=0; Path=/; SameSite=lax; Secure"
+   ],
+   "allowed": [
+    {
+     "origin": null,
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": null,
+     "sec_fetch_site": "same-origin",
+     "ok": true
+    },
+    {
+     "origin": null,
+     "sec_fetch_site": "same-site",
+     "ok": false
+    },
+    {
+     "origin": "https://trove.aallyn.net",
+     "sec_fetch_site": null,
+     "ok": true
+    },
+    {
+     "origin": "https://api.aallyn.net",
+     "sec_fetch_site": null,
+     "ok": true
+    },
+    {
+     "origin": "https://docs.aallyn.net",
+     "sec_fetch_site": "same-origin",
+     "ok": false
+    },
+    {
+     "origin": "http://localhost:8913",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "http://127.0.0.1:8913",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "http://localhost:8000",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "",
+     "sec_fetch_site": "same-origin",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "app_url": "http://localhost:8913",
+   "api_url": "http://localhost:8000",
+   "debug": true,
+   "set": [
+    "kiwi_site_access=aaa.bbb.ccc; HttpOnly; Max-Age=900; Path=/; SameSite=lax",
+    "kiwi_site_refresh=r-_efresh; HttpOnly; Max-Age=2592000; Path=/v1/site-auth; SameSite=lax",
+    "kiwi_site_session=1; Max-Age=2592000; Path=/; SameSite=lax"
+   ],
+   "clear_now": 1761136496.25,
+   "clear": [
+    "kiwi_site_access=\"\"; expires=Wed, 22 Oct 2025 12:34:56 GMT; HttpOnly; Max-Age=0; Path=/; SameSite=lax",
+    "kiwi_site_refresh=\"\"; expires=Wed, 22 Oct 2025 12:34:56 GMT; HttpOnly; Max-Age=0; Path=/v1/site-auth; SameSite=lax",
+    "kiwi_site_session=\"\"; expires=Wed, 22 Oct 2025 12:34:56 GMT; Max-Age=0; Path=/; SameSite=lax"
+   ],
+   "allowed": [
+    {
+     "origin": null,
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": null,
+     "sec_fetch_site": "same-origin",
+     "ok": true
+    },
+    {
+     "origin": null,
+     "sec_fetch_site": "same-site",
+     "ok": false
+    },
+    {
+     "origin": "https://trove.aallyn.net",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "https://api.aallyn.net",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "https://docs.aallyn.net",
+     "sec_fetch_site": "same-origin",
+     "ok": false
+    },
+    {
+     "origin": "http://localhost:8913",
+     "sec_fetch_site": null,
+     "ok": true
+    },
+    {
+     "origin": "http://127.0.0.1:8913",
+     "sec_fetch_site": null,
+     "ok": true
+    },
+    {
+     "origin": "http://localhost:8000",
+     "sec_fetch_site": null,
+     "ok": true
+    },
+    {
+     "origin": "",
+     "sec_fetch_site": "same-origin",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "app_url": "https://aallyn.net",
+   "api_url": "https://api.aallyn.net",
+   "debug": false,
+   "set": [
+    "kiwi_site_access=aaa.bbb.ccc; HttpOnly; Max-Age=900; Path=/; SameSite=lax; Secure",
+    "kiwi_site_refresh=r-_efresh; HttpOnly; Max-Age=2592000; Path=/v1/site-auth; SameSite=lax; Secure",
+    "kiwi_site_session=1; Max-Age=2592000; Path=/; SameSite=lax; Secure"
+   ],
+   "clear_now": 1761136496.25,
+   "clear": [
+    "kiwi_site_access=\"\"; expires=Wed, 22 Oct 2025 12:34:56 GMT; HttpOnly; Max-Age=0; Path=/; SameSite=lax; Secure",
+    "kiwi_site_refresh=\"\"; expires=Wed, 22 Oct 2025 12:34:56 GMT; HttpOnly; Max-Age=0; Path=/v1/site-auth; SameSite=lax; Secure",
+    "kiwi_site_session=\"\"; expires=Wed, 22 Oct 2025 12:34:56 GMT; Max-Age=0; Path=/; SameSite=lax; Secure"
+   ],
+   "allowed": [
+    {
+     "origin": null,
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": null,
+     "sec_fetch_site": "same-origin",
+     "ok": true
+    },
+    {
+     "origin": null,
+     "sec_fetch_site": "same-site",
+     "ok": false
+    },
+    {
+     "origin": "https://trove.aallyn.net",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "https://api.aallyn.net",
+     "sec_fetch_site": null,
+     "ok": true
+    },
+    {
+     "origin": "https://docs.aallyn.net",
+     "sec_fetch_site": "same-origin",
+     "ok": false
+    },
+    {
+     "origin": "http://localhost:8913",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "http://127.0.0.1:8913",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "http://localhost:8000",
+     "sec_fetch_site": null,
+     "ok": false
+    },
+    {
+     "origin": "",
+     "sec_fetch_site": "same-origin",
+     "ok": true
+    }
+   ]
+  }
+ ],
+ "client_ip": [
+  {
+   "trusted": "127.0.0.1",
+   "peer": "127.0.0.1",
+   "xff": "1.2.3.4",
+   "client": "1.2.3.4"
+  },
+  {
+   "trusted": "127.0.0.1",
+   "peer": "10.0.0.5",
+   "xff": "1.2.3.4",
+   "client": "10.0.0.5"
+  },
+  {
+   "trusted": "127.0.0.1",
+   "peer": "127.0.0.1",
+   "xff": "9.9.9.9, 1.2.3.4",
+   "client": "1.2.3.4"
+  },
+  {
+   "trusted": "127.0.0.1,10.0.0.0/8",
+   "peer": "10.1.1.1",
+   "xff": "5.5.5.5, 10.2.2.2",
+   "client": "5.5.5.5"
+  },
+  {
+   "trusted": "127.0.0.1",
+   "peer": "127.0.0.1",
+   "xff": "127.0.0.1",
+   "client": "127.0.0.1"
+  },
+  {
+   "trusted": "*",
+   "peer": "8.8.8.8",
+   "xff": "7.7.7.7, 6.6.6.6",
+   "client": "7.7.7.7"
+  },
+  {
+   "trusted": "127.0.0.1",
+   "peer": "127.0.0.1",
+   "xff": "1.2.3.4:5678",
+   "client": "1.2.3.4"
+  },
+  {
+   "trusted": "127.0.0.1",
+   "peer": "127.0.0.1",
+   "xff": "[::1]:80",
+   "client": "::1"
+  },
+  {
+   "trusted": "127.0.0.1",
+   "peer": "127.0.0.1",
+   "xff": "",
+   "client": "127.0.0.1"
+  },
+  {
+   "trusted": "127.0.0.1",
+   "peer": "127.0.0.1",
+   "xff": null,
+   "client": "127.0.0.1"
+  },
+  {
+   "trusted": "172.16.0.0/12",
+   "peer": "172.18.0.3",
+   "xff": "203.0.113.9",
+   "client": "203.0.113.9"
+  }
+ ],
+ "ratelimit_redis": [
+  {
+   "now": 1761136496.123456,
+   "window": 60,
+   "limit": 120,
+   "count": 5,
+   "later": 0.0021,
+   "headers": {
+    "X-RateLimit-Limit": "120",
+    "X-RateLimit-Remaining": "115",
+    "X-RateLimit-Reset": "1761136556"
+   },
+   "retry_after": "59",
+   "member": "1761136496.123456:7",
+   "now_str": "1761136496.123456"
+  },
+  {
+   "now": 1761136496.999999,
+   "window": 60,
+   "limit": 30,
+   "count": 31,
+   "later": 0.0005,
+   "headers": {
+    "X-RateLimit-Limit": "30",
+    "X-RateLimit-Remaining": "0",
+    "X-RateLimit-Reset": "1761136556"
+   },
+   "retry_after": "59",
+   "member": "1761136496.999999:7",
+   "now_str": "1761136496.999999"
+  },
+  {
+   "now": 1761136400.0,
+   "window": 3600,
+   "limit": 5,
+   "count": 6,
+   "later": 0.25,
+   "headers": {
+    "X-RateLimit-Limit": "5",
+    "X-RateLimit-Remaining": "0",
+    "X-RateLimit-Reset": "1761140000"
+   },
+   "retry_after": "3599",
+   "member": "1761136400.000000:7",
+   "now_str": "1761136400.0"
+  },
+  {
+   "now": 1761136496.5,
+   "window": 1,
+   "limit": 1,
+   "count": 2,
+   "later": 0.9,
+   "headers": {
+    "X-RateLimit-Limit": "1",
+    "X-RateLimit-Remaining": "0",
+    "X-RateLimit-Reset": "1761136497"
+   },
+   "retry_after": "1",
+   "member": "1761136496.500000:7",
+   "now_str": "1761136496.5"
+  }
+ ],
+ "ratelimit_mongo": [
+  {
+   "now": 1761136496.123456,
+   "window": 60,
+   "bucket_suffix": "1761136440",
+   "reset": 1761136500,
+   "retry_after": 3
+  },
+  {
+   "now": 1761136499.999,
+   "window": 3600,
+   "bucket_suffix": "1761134400",
+   "reset": 1761138000,
+   "retry_after": 1500
+  },
+  {
+   "now": 1761136440.0,
+   "window": 300,
+   "bucket_suffix": "1761136200",
+   "reset": 1761136500,
+   "retry_after": 60
+  }
+ ],
+ "lua_sliding_window": "\nlocal key = KEYS[1]\nlocal now = tonumber(ARGV[1])\nlocal window = tonumber(ARGV[2])\nlocal limit = tonumber(ARGV[3])\nlocal member = ARGV[4]\nredis.call('ZREMRANGEBYSCORE', key, 0, now - window)\nredis.call('ZADD', key, now, member)\nlocal count = redis.call('ZCARD', key)\nredis.call('PEXPIRE', key, math.ceil(window * 1000))\nif count > limit then\n  -- This request is over budget; don't let it count against future windows.\n  redis.call('ZREM', key, member)\nend\nreturn count\n",
+ "lua_token_flush": "\nlocal pending = KEYS[1]\nlocal gate = KEYS[2]\nlocal interval = tonumber(ARGV[1])\nlocal n = redis.call('INCR', pending)\nlocal claimed = redis.call('SET', gate, '1', 'NX', 'EX', interval)\nif claimed then\n  redis.call('SET', pending, '0')\n  redis.call('EXPIRE', pending, interval * 4)\n  return n\nend\nreturn -1\n",
+ "round2": [
+  {
+   "in": 0.125,
+   "out": 0.12
+  },
+  {
+   "in": 0.375,
+   "out": 0.38
+  },
+  {
+   "in": 2.675,
+   "out": 2.67
+  },
+  {
+   "in": 1.005,
+   "out": 1.0
+  },
+  {
+   "in": 12.3456,
+   "out": 12.35
+  },
+  {
+   "in": 0.0,
+   "out": 0.0
+  },
+  {
+   "in": 1e-07,
+   "out": 0.0
+  },
+  {
+   "in": 99999.995,
+   "out": 99999.99
+  },
+  {
+   "in": 3.14159,
+   "out": 3.14
+  },
+  {
+   "in": 0.005,
+   "out": 0.01
+  },
+  {
+   "in": 0.015,
+   "out": 0.01
+  }
+ ]
+}
