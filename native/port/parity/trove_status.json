@@ -1,0 +1,28 @@
+[
+ {"name": "status_current_bad_token", "path": "/v1/misc/trove-status", "headers": {"Authorization": "Bearer kiwi_not_a_real_token"}},
+ {"name": "history_bad_token", "path": "/v1/misc/trove-status/history?env=eu", "headers": {"Authorization": "Bearer nope"}},
+ {"name": "status_current_slash", "path": "/v1/misc/trove-status/"},
+ {"name": "status_current_preflight", "method": "OPTIONS", "path": "/v1/misc/trove-status",
+  "headers": {"Origin": "https://docs.aallyn.net", "Access-Control-Request-Method": "GET", "Access-Control-Request-Headers": "authorization"}},
+
+ {"name": "status_current", "path": "/v1/misc/trove-status", "compare_headers": ["x-ratelimit-limit"],
+  "mask": ["checked_at", "auth.latency_ms", "environments.eu.game.latency_ms", "environments.us.game.latency_ms", "environments.pts.game.latency_ms"]},
+ {"name": "status_current_gzip_cors", "path": "/v1/misc/trove-status?x=1",
+  "headers": {"Accept-Encoding": "gzip", "Origin": "https://docs.aallyn.net"},
+  "mask": ["checked_at", "auth.latency_ms", "environments.eu.game.latency_ms", "environments.us.game.latency_ms", "environments.pts.game.latency_ms"]},
+ {"name": "status_current_site_cookie", "path": "/v1/misc/trove-status", "headers": {"Cookie": "kiwi_site_access=x"},
+  "mask": ["checked_at", "auth.latency_ms", "environments.eu.game.latency_ms", "environments.us.game.latency_ms", "environments.pts.game.latency_ms"]},
+ {"name": "status_current_head", "method": "HEAD", "path": "/v1/misc/trove-status"},
+
+ {"name": "history_default", "path": "/v1/misc/trove-status/history", "compare_headers": ["x-ratelimit-limit"]},
+ {"name": "history_pts", "path": "/v1/misc/trove-status/history?env=pts"},
+ {"name": "history_live_90d_gzip", "path": "/v1/misc/trove-status/history?env=live&days=90", "headers": {"Accept-Encoding": "gzip"}},
+ {"name": "history_repeated_env", "path": "/v1/misc/trove-status/history?env=live&env=pts&days=+5"},
+ {"name": "history_head", "method": "HEAD", "path": "/v1/misc/trove-status/history?days=1"},
+
+ {"name": "history_env_eu_422", "path": "/v1/misc/trove-status/history?env=eu"},
+ {"name": "history_days_0_422", "path": "/v1/misc/trove-status/history?days=0"},
+ {"name": "history_days_abc_422", "path": "/v1/misc/trove-status/history?days=abc"},
+ {"name": "history_days_empty_422", "path": "/v1/misc/trove-status/history?days="},
+ {"name": "history_two_errors_422_gzip", "path": "/v1/misc/trove-status/history?days=0&env=eu", "headers": {"Accept-Encoding": "gzip"}}
+]

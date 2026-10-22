@@ -17,6 +17,7 @@ pub mod pystr;
 pub mod renames;
 pub mod rotations;
 pub mod stats;
+pub mod status;
 pub mod swf;
 pub mod tmod;
 pub mod troveio;

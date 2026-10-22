@@ -1350,10 +1350,12 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-postgres",
+ "tokio-rustls",
  "tower",
  "tower-http 0.7.1",
  "tracing",
  "tracing-subscriber",
+ "webpki-roots",
 ]
 
 [[package]]

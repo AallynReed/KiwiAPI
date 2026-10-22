@@ -7,6 +7,7 @@ pub mod leaf;
 pub mod misc;
 pub mod rotations;
 pub mod stats;
+pub mod trove_status;
 
 use std::sync::Arc;
 use std::{net::SocketAddr, sync::Arc};
@@ -41,6 +42,7 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
     next.run(req).await
     Router::new().merge(crate::gems::router())
     Router::new().merge(misc::router())
+    Router::new().merge(trove_status::router())
 }
 
 pub fn app(state: AppState) -> Router {
