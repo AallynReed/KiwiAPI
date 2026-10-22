@@ -6,6 +6,7 @@ pub mod agg;
 pub mod audio;
 pub mod binfab;
 pub mod blueprint;
+pub mod btt;
 pub mod detection;
 pub mod form;
 pub mod gems;

@@ -93,6 +93,7 @@ pub fn start(state: &AppState) {
         tracing::info!("running loop {name}");
     }
     crate::routes::rotations::start_jobs(state);
+    crate::routes::btt::start_jobs(state);
 }
 
 #[cfg(test)]

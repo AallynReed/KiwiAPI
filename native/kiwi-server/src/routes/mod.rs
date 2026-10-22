@@ -3,6 +3,7 @@
 //! Python app. Port a path with every method Python serves on it: a method
 //! missing here is a 405, not a trip to Python.
 
+pub mod btt;
 pub mod leaf;
 pub mod misc;
 pub mod rotations;
@@ -43,6 +44,7 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
     Router::new().merge(crate::gems::router())
     Router::new().merge(misc::router())
     Router::new().merge(trove_status::router())
+    Router::new().merge(btt::router())
 }
 
 pub fn app(state: AppState) -> Router {
