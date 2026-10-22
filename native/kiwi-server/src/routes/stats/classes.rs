@@ -206,6 +206,8 @@ fn validate(cleaned: &Value) -> Option<Value> {
 struct Index {
     classes: Vec<(Option<String>, Option<Bytes>)>,
     list: Option<Bytes>,
+    /// tech_name -> the cleaned `name` (`stats.class_name`'s value).
+    names: HashMap<String, Value>,
 }
 
 fn build(gd: &Gamedata) -> Clean<Index> {
@@ -233,13 +235,14 @@ fn build(gd: &Gamedata) -> Clean<Index> {
             }
         }
     }
+    let names = classes.iter().filter_map(|(t, c)| Some((t.clone()?, c.get("name")?.clone()))).collect();
     let valid: Vec<(Option<String>, Option<Value>)> = classes.into_iter().map(|(t, c)| (t, validate(&c))).collect();
     let list = valid.iter().map(|(_, c)| c.clone()).collect::<Option<Vec<_>>>().map(|items| {
         let count = items.len();
         Bytes::from(pyjson::pydantic(&json!({"items": items, "count": count})))
     });
     let classes = valid.into_iter().map(|(t, c)| (t, c.map(|v| Bytes::from(pyjson::pydantic(&v))))).collect();
-    Ok(Index { classes, list })
+    Ok(Index { classes, list, names })
 }
 
 fn index(gd: &Gamedata) -> Arc<Clean<Index>> {
@@ -261,5 +264,14 @@ pub fn class_body(gd: &Gamedata, tech_name: &str) -> Result<Bytes, ApiError> {
     match idx.classes.iter().find(|(t, _)| t.as_deref() == Some(tech_name)) {
         Some((_, class)) => class.clone().ok_or_else(ApiError::internal),
         None => Err(ApiError::not_found(format!("No class with tech_name '{tech_name}'"))),
+    }
+}
+
+/// The `name` of the class `tech_name` in `_classes_index()` (what
+/// `stats.class_name` reads), `Err` where building the index raises.
+pub fn class_display_name(gd: &Gamedata, tech_name: &str) -> Result<Option<Value>, ApiError> {
+    match index(gd).as_ref() {
+        Ok(idx) => Ok(idx.names.get(tech_name).cloned()),
+        Err(Broken) => Err(ApiError::internal()),
     }
 }

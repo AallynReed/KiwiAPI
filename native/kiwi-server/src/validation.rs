@@ -705,7 +705,7 @@ fn parse_py_int(s: &str) -> Option<i128> {
 
 /// pydantic-core `str_as_int`: trimmed, `int()` syntax, or a decimal whose
 /// fraction is all zeros (`"1.0"`, not `"1."`).
-fn str_as_int(s: &str) -> Result<i128, Fail> {
+pub fn str_as_int(s: &str) -> Result<i128, Fail> {
     let t = s.trim();
     if t.len() > 4300 {
         return Err(Fail::int_parsing_size());

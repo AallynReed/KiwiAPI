@@ -4,6 +4,7 @@
 //! missing here is a 405, not a trip to Python.
 
 pub mod btt;
+pub mod lb_players;
 pub mod leaf;
 pub mod misc;
 pub mod rotations;
@@ -47,14 +48,16 @@ async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next
         return proxy(State(state), ConnectInfo(peer), req).await;
     }
     next.run(req).await
+        .merge(lb_players::router())
 }
 
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`
 /// once decoded, which can change the route or trigger a slash redirect)
-/// always goes to Python.
+/// always goes to Python. So does an empty segment (`//`): axum binds it to a
+/// `{param}`, Starlette's `[^/]+` never does.
 async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) -> Response {
     let raw = req.uri().path();
-    if (raw.contains("%2F") || raw.contains("%2f"))
+    if (raw.contains("%2F") || raw.contains("%2f") || raw.contains("//"))
         && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>()
     {
         return proxy(State(state), ConnectInfo(peer), req).await;

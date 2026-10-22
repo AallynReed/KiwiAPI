@@ -1,7 +1,7 @@
 //! `/v1/stats/*` (`app/trove/router.py` + `app/trove/stats.py`): the stat
 //! tables, the classes, the Coefficient calculator and the player sigil.
 
-mod classes;
+pub(crate) mod classes;
 #[cfg(test)]
 mod tests;
 
