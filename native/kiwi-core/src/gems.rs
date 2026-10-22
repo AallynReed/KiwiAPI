@@ -1,5 +1,39 @@
 //! The gem build ranking loop of `app/trove/gems/builds.py`
-//! (`GemOptimizerEngine.calculate_builds`), float for float.
+//! (`GemOptimizerEngine.calculate_builds`), float for float, and in the
+//! submodules the rest of `app/trove/gems/`.
+
+pub mod builds;
+pub mod catalog;
+pub mod evaluator;
+pub mod model;
+pub mod pynum;
+pub mod pyrandom;
+pub mod upgrades;
+
+/// The Python exception a gem function raises, with its `str()`.
+#[derive(Clone, Debug, PartialEq)]
+pub enum GemError {
+    /// `ValueError`, including an invalid enum value.
+    Value(String),
+    /// `GemEvaluatorError` (a `ValueError` the routes report without a prefix).
+    Evaluator(String),
+    ZeroDivision(String),
+    Index(String),
+    /// Anything the routes leave unhandled (a 500).
+    Unhandled(String),
+}
+
+impl GemError {
+    pub fn message(&self) -> &str {
+        match self {
+            GemError::Value(m)
+            | GemError::Evaluator(m)
+            | GemError::ZeroDivision(m)
+            | GemError::Index(m)
+            | GemError::Unhandled(m) => m,
+        }
+    }
+}
 
 /// `[(base, per boost)]` for the first, second and third stat lines, Empowered then Lesser.
 pub struct GemLines {

@@ -38,6 +38,7 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
         return proxy(State(state), ConnectInfo(peer), req).await;
     }
     next.run(req).await
+    Router::new().merge(crate::gems::router())
 }
 
 pub fn app(state: AppState) -> Router {

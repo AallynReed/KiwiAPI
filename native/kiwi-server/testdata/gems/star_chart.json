@@ -1,0 +1,1087 @@
+[
+{
+"code": "",
+"stats": {},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 0
+},
+{
+"code": "SC:",
+"stats": {},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 0
+},
+{
+"code": "SC:AAAA",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 3.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 1
+},
+{
+"code": "v2:Zz9-_w",
+"stats": {
+"Lasermancy": {
+"flat": 100.0,
+"pct": 0.0
+},
+"Jump": {
+"flat": 10.0,
+"pct": 0.0
+},
+"Health Regen": {
+"flat": 475.0,
+"pct": 0.0
+},
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 14.0
+},
+"Flask Capacity": {
+"flat": 1.0,
+"pct": 0.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 9.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 8
+},
+{
+"code": "SC:c|ca|ca0|ca0a|ca0a0|pz|q1",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Critical Hit": {
+"flat": 6.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 4
+},
+{
+"code": "SC:ca0a0|ga1b",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Critical Hit": {
+"flat": 6.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 4
+},
+{
+"code": "Y29tYmF0LmE=",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 3.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 1
+},
+{
+"code": "not base64!!",
+"stats": {},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 0
+},
+{
+"code": "SC:A",
+"stats": {},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 0
+},
+{
+"code": "SC:AB=C",
+"stats": {},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 0
+},
+{
+"code": "été",
+"stats": {},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 0
+},
+{
+"code": "  SC:CA0A0  ",
+"stats": {},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 0
+},
+{
+"code": "SC:bkdtdmM7OUFLGBdmPFBO",
+"stats": {
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 55.0
+},
+"Critical Hit": {
+"flat": 10.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Outgoing Damage": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 9.0
+},
+"Flask Capacity": {
+"flat": 8.0,
+"pct": 0.0
+},
+"Jump": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 24.0
+},
+"Health Regen Bonus": {
+"flat": 0.0,
+"pct": 14.0
+},
+"Energy Regen Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Lasermancy": {
+"flat": 445.0,
+"pct": 0.0
+},
+"Magic Find": {
+"flat": 50.0,
+"pct": 0.0
+},
+"Damage Reduction": {
+"flat": 0.0,
+"pct": -5.0
+},
+"Attack Speed": {
+"flat": 20.0,
+"pct": 0.0
+},
+"Health Regen": {
+"flat": 300.0,
+"pct": 0.0
+},
+"Movement Speed": {
+"flat": 5.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": true,
+"name": "Bounty Hunt",
+"physical": 15.0,
+"magic": 15.0
+},
+"paths_count": 43
+},
+{
+"code": "SC:DDkmEgtE",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 33.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 8.0
+},
+"Lasermancy": {
+"flat": 400.0,
+"pct": 0.0
+},
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 30.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Jump": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Critical Damage": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Outgoing Damage": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Flask Capacity": {
+"flat": 1.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 23
+},
+{
+"code": "SC:UQVMMjlTXk5yFE8BakMIBwQYHnUDOyk",
+"stats": {
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 84.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 28.0
+},
+"Critical Hit": {
+"flat": 38.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 22.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 17.0
+},
+"Jump": {
+"flat": 30.0,
+"pct": 0.0
+},
+"Stability": {
+"flat": 200.0,
+"pct": 0.0
+},
+"Outgoing Damage": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Health Regen": {
+"flat": 175.0,
+"pct": 0.0
+},
+"Flask Capacity": {
+"flat": 10.0,
+"pct": 0.0
+},
+"Attack Speed": {
+"flat": 50.0,
+"pct": 0.0
+},
+"Magic Find": {
+"flat": 50.0,
+"pct": 0.0
+},
+"Lasermancy": {
+"flat": 445.0,
+"pct": 0.0
+},
+"Health Regen Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Energy Regen Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Movement Speed": {
+"flat": 5.0,
+"pct": 0.0
+},
+"Critical Damage": {
+"flat": 16.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 57
+},
+{
+"code": "SC:S2sZQh1RJT8AVAo6UyM0",
+"stats": {
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 64.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Critical Hit": {
+"flat": 16.0,
+"pct": 0.0
+},
+"Jump": {
+"flat": 20.0,
+"pct": 0.0
+},
+"Stability": {
+"flat": 50.0,
+"pct": 0.0
+},
+"Health Regen": {
+"flat": 875.0,
+"pct": 0.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 9.0
+},
+"Flask Capacity": {
+"flat": 7.0,
+"pct": 0.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 27.0
+},
+"Lasermancy": {
+"flat": 345.0,
+"pct": 0.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed": {
+"flat": 20.0,
+"pct": 0.0
+},
+"Critical Damage": {
+"flat": 11.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 41
+},
+{
+"code": "SC:d2sKWiAoYR1BJAMISGINM2wl",
+"stats": {
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 64.0
+},
+"Movement Speed": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Damage Reduction": {
+"flat": 0.0,
+"pct": -4.0
+},
+"Critical Hit": {
+"flat": 37.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Light": {
+"flat": 50.0,
+"pct": 0.0
+},
+"Health Regen": {
+"flat": 875.0,
+"pct": 0.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 12.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 11.0
+},
+"Flask Capacity": {
+"flat": 4.0,
+"pct": 0.0
+},
+"Jump": {
+"flat": 20.0,
+"pct": 0.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 17.0
+},
+"Critical Damage": {
+"flat": 11.0,
+"pct": 0.0
+},
+"Lasermancy": {
+"flat": 300.0,
+"pct": 0.0
+},
+"Stability": {
+"flat": 100.0,
+"pct": 0.0
+},
+"Attack Speed": {
+"flat": 15.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 60
+},
+{
+"code": "SC:CAJsVwAbGnZ0BjwwWg",
+"stats": {
+"Movement Speed": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Critical Hit": {
+"flat": 21.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Stability": {
+"flat": 175.0,
+"pct": 0.0
+},
+"Crafting Speed": {
+"flat": 30.0,
+"pct": 0.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 9.0
+},
+"Flask Capacity": {
+"flat": 2.0,
+"pct": 0.0
+},
+"Critical Damage": {
+"flat": 6.0,
+"pct": 0.0
+},
+"Jump": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Lasermancy": {
+"flat": 180.0,
+"pct": 0.0
+},
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 10.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 12.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 33
+},
+{
+"code": "SC:NQlIUBljViIrCycqAQ",
+"stats": {
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 40.0
+},
+"Critical Damage": {
+"flat": 31.0,
+"pct": 0.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 27.0
+},
+"Random Flask Emblem": {
+"flat": 6.0,
+"pct": 0.0
+},
+"Attack Speed": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Jump": {
+"flat": 20.0,
+"pct": 0.0
+},
+"Stability": {
+"flat": 50.0,
+"pct": 0.0
+},
+"Health Regen": {
+"flat": 400.0,
+"pct": 0.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Flask Capacity": {
+"flat": 2.0,
+"pct": 0.0
+},
+"Damage Reduction": {
+"flat": 0.0,
+"pct": -15.0
+},
+"Lasermancy": {
+"flat": 380.0,
+"pct": 0.0
+},
+"Health Regen Bonus": {
+"flat": 0.0,
+"pct": 8.0
+},
+"Critical Hit": {
+"flat": 12.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 43
+},
+{
+"code": "SC:YXYPER9aDAEHO2Y-Flc",
+"stats": {
+"Movement Speed": {
+"flat": 10.0,
+"pct": 0.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 28.0
+},
+"Critical Hit": {
+"flat": 21.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 22.0
+},
+"Damage Reduction": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 12.0
+},
+"Flask Capacity": {
+"flat": 5.0,
+"pct": 0.0
+},
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 5.0
+},
+"Jump": {
+"flat": 20.0,
+"pct": 0.0
+},
+"Health Regen Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Energy Regen Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Stability": {
+"flat": 100.0,
+"pct": 0.0
+},
+"Attack Speed": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Lasermancy": {
+"flat": 100.0,
+"pct": 0.0
+},
+"Health Regen": {
+"flat": 300.0,
+"pct": 0.0
+},
+"Critical Damage": {
+"flat": 6.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 45
+},
+{
+"code": "SC:GDlBXWIQNVIxDjIbACJuZksm",
+"stats": {
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 70.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 42.0
+},
+"Attack Speed": {
+"flat": 35.0,
+"pct": 0.0
+},
+"Critical Damage": {
+"flat": 36.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Stability": {
+"flat": 75.0,
+"pct": 0.0
+},
+"Outgoing Damage": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 12.0
+},
+"Health Regen": {
+"flat": 700.0,
+"pct": 0.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 18.0
+},
+"Flask Capacity": {
+"flat": 6.0,
+"pct": 0.0
+},
+"Jump": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Damage Reduction": {
+"flat": 0.0,
+"pct": 8.0
+},
+"Lasermancy": {
+"flat": 445.0,
+"pct": 0.0
+},
+"Movement Speed": {
+"flat": 10.0,
+"pct": 0.0
+},
+"Critical Hit": {
+"flat": 6.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": true,
+"name": "Bounty Hunt",
+"physical": 15.0,
+"magic": 15.0
+},
+"paths_count": 58
+},
+{
+"code": "SC:Gg",
+"stats": {
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 9.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 5
+},
+{
+"code": "SC:Mm1NUkkM",
+"stats": {
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 30.0
+},
+"Flask Capacity": {
+"flat": 2.0,
+"pct": 0.0
+},
+"Critical Hit": {
+"flat": 6.0,
+"pct": 0.0
+},
+"Critical Damage": {
+"flat": 6.0,
+"pct": 0.0
+},
+"Lasermancy": {
+"flat": 345.0,
+"pct": 0.0
+},
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 6.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Experience Gain Bonus": {
+"flat": 0.0,
+"pct": 5.0
+},
+"Attack Speed": {
+"flat": 20.0,
+"pct": 0.0
+},
+"Jump": {
+"flat": 15.0,
+"pct": 0.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 9.0
+},
+"Movement Speed": {
+"flat": 5.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": true,
+"name": "Bounty Hunt Boon",
+"physical": 10.0,
+"magic": 10.0
+},
+"paths_count": 24
+},
+{
+"code": "SC:Ehs",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 33.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 9.0
+},
+"Stability": {
+"flat": 75.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 13
+},
+{
+"code": "Y29tYmF0LmIuMC5hLjEuYi4xLmIuMSRjb21iYXQuYS4wJHB2ZS5hLjAuYi4xJGdhdGhlcmluZy5iLjAuYi4wLmIuMC5iLjIkZ2F0aGVyaW5nLmEuMC5hJHB2ZS5iLjAuYS4wLmEuMSRjb21iYXQuYi4xLmEuMCRnYXRoZXJpbmcuYS4wLmI=",
+"stats": {
+"Damage Reduction": {
+"flat": 0.0,
+"pct": 8.0
+},
+"Flask Capacity": {
+"flat": 1.0,
+"pct": 0.0
+},
+"Maximum Health Bonus": {
+"flat": 0.0,
+"pct": 5.0
+},
+"Jump": {
+"flat": 5.0,
+"pct": 0.0
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 15.0
+},
+"Magic Find": {
+"flat": 50.0,
+"pct": 0.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 10.0
+},
+"Lasermancy": {
+"flat": 80.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 8
+},
+{
+"code": "Y29tYmF0LmEuMC5iJGNvbWJhdC5hLjEuYQ==",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 3.0
+},
+"Critical Hit": {
+"flat": 6.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 2
+},
+{
+"code": "Z2F0aGVyaW5nLmIuMC5iLjAuYi4wLmIuMCRwdmUuYS4wJGNvbWJhdC5iLjAuYS4xLmIuMS5iJGNvbWJhdC5hLjA=",
+"stats": {
+"Flask Capacity": {
+"flat": 3.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 4
+},
+{
+"code": "Z2F0aGVyaW5nLmEuMC5hLjAuYS4xJGdhdGhlcmluZy5iLjAuYi4wLmMkZ2F0aGVyaW5nLmEuMC5iLjAuYyRjb21iYXQuYS4xLmEuMC5iLjEkZ2F0aGVyaW5nLmIuMC5iLjAuYi4wLmIuMC5hJGdhdGhlcmluZy5iLjA=",
+"stats": {
+"Physical Damage Bonus": {
+"flat": 0.0,
+"pct": 11.0
+},
+"Flask Capacity": {
+"flat": 1.0,
+"pct": 0.0
+},
+"Magic Find Bonus": {
+"flat": 0.0,
+"pct": 8.88
+},
+"Magic Damage Bonus": {
+"flat": 0.0,
+"pct": 15.0
+}
+},
+"bounty_hunt": {
+"available": false,
+"name": null,
+"physical": 0.0,
+"magic": 0.0
+},
+"paths_count": 6
+},
+{
+"code": "SC:bQ==",
+"stats": {
+"Movement Speed": {
+"flat": 5.0,
+"pct": 0.0
+},
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 9.0
+}
+},
+"bounty_hunt": {
+"available": true,
+"name": "Bounty Hunt Boon",
+"physical": 10.0,
+"magic": 10.0
+},
+"paths_count": 5
+},
+{
+"code": "SC:bg==",
+"stats": {
+"Attack Speed Bonus": {
+"flat": 0.0,
+"pct": 9.0
+},
+"Movement Speed": {
+"flat": 5.0,
+"pct": 0.0
+}
+},
+"bounty_hunt": {
+"available": true,
+"name": "Bounty Hunt",
+"physical": 15.0,
+"magic": 15.0
+},
+"paths_count": 6
+}
+]

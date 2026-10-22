@@ -9,6 +9,7 @@ pub mod dt;
 pub mod error;
 pub mod features;
 pub mod gamedata;
+pub mod gems;
 pub mod jobs;
 pub mod middleware;
 pub mod proxy;
