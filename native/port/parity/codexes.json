@@ -1,112 +1,474 @@
 [
- {"name": "v1_types", "path": "/v1/codexes/types", "compare_headers": ["x-ratelimit-limit"]},
- {"name": "v1_types_pts", "path": "/v1/codexes/types?branch=pts"},
- {"name": "v1_types_bad_branch", "path": "/v1/codexes/types?branch=live-eu"},
- {"name": "v1_types_token", "path": "/v1/codexes/types", "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"},
-  "compare_headers": ["x-ratelimit-limit"]},
- {"name": "v1_types_bad_token", "path": "/v1/codexes/types", "headers": {"Authorization": "Bearer kiwi_notatoken"}},
- {"name": "v1_types_post_405", "method": "POST", "path": "/v1/codexes/types", "compare_headers": ["allow"]},
- {"name": "v1_types_head", "method": "HEAD", "path": "/v1/codexes/types"},
- {"name": "v1_types_gzip", "path": "/v1/codexes/types", "headers": {"Accept-Encoding": "gzip"}},
- {"name": "v1_search", "path": "/v1/codexes/search?q=dragon&limit=25"},
- {"name": "v1_search_type_sort", "path": "/v1/codexes/search?type=mount&sort=-mastery&limit=40&offset=10"},
- {"name": "v1_search_stat_value", "path": "/v1/codexes/search?stat=MagicFind&sort=-stat_value&limit=30"},
- {"name": "v1_search_stat_key", "path": "/v1/codexes/search?stat=%24Stat_MovementSpeed&sort=stat_value&limit=30"},
- {"name": "v1_search_stat_sort_no_stat", "path": "/v1/codexes/search?sort=-stat_value&limit=10"},
- {"name": "v1_search_tradable", "path": "/v1/codexes/search?tradable=true&type=item&sort=-indexed_at&limit=20"},
- {"name": "v1_search_category", "path": "/v1/codexes/search?type=dragon&category=Dragon&sort=-power_rank"},
- {"name": "v1_search_like_escape", "path": "/v1/codexes/search?q=50%25_off&limit=5"},
- {"name": "v1_search_unicode", "path": "/v1/codexes/search?q=%C3%BC&limit=5"},
- {"name": "v1_search_ability", "path": "/v1/codexes/search?ability=abilities/equipment/onhit_heal&limit=10"},
- {"name": "v1_search_empty_q", "path": "/v1/codexes/search?q=&type=recipe&limit=3"},
- {"name": "v1_search_bad_type", "path": "/v1/codexes/search?type=dragons"},
- {"name": "v1_search_empty_type", "path": "/v1/codexes/search?type="},
- {"name": "v1_search_bad_sort", "path": "/v1/codexes/search?sort=price"},
- {"name": "v1_search_422", "path": "/v1/codexes/search?limit=0&offset=-1&tradable=maybe"},
- {"name": "v1_search_bad_branch_first", "path": "/v1/codexes/search?branch=x&type=nope&sort=nope"},
- {"name": "v1_links_out", "path": "/v1/codexes/links?path=prefabs/recipes/recipe_abilities_discovery_barrier.binfab"},
- {"name": "v1_links_in", "path": "/v1/codexes/links?path=prefabs/item/crafting/flux.binfab&direction=in&rel=ingredient&limit=50"},
- {"name": "v1_links_unlocks", "path": "/v1/codexes/links?path=prefabs/collections/boat/galleon_ark.binfab&rel=unlocks"},
- {"name": "v1_links_member", "path": "/v1/codexes/links?path=prefabs/collections/mount/dragon_amperium.binfab&rel=member_of"},
- {"name": "v1_links_bad_direction", "path": "/v1/codexes/links?path=x&direction=sideways"},
- {"name": "v1_links_bad_rel", "path": "/v1/codexes/links?path=x&rel=awards"},
- {"name": "v1_links_missing_path", "path": "/v1/codexes/links?limit=501"},
- {"name": "v1_stats", "path": "/v1/codexes/stats?stat=MagicFind"},
- {"name": "v1_stats_typed", "path": "/v1/codexes/stats?stat=%24Stat_MovementSpeed&type=mount&limit=7&offset=5"},
- {"name": "v1_stats_bonus", "path": "/v1/codexes/stats?stat=CriticalHitDamageBonus&limit=200"},
- {"name": "v1_stats_missing", "path": "/v1/codexes/stats"},
- {"name": "v1_stats_bad_type", "path": "/v1/codexes/stats?stat=Jump&type=nope"},
- {"name": "v1_requirements", "path": "/v1/codexes/requirements?collection=collections/badge/AllGemStats_bronze"},
- {"name": "v1_requirements_blocks", "path": "/v1/codexes/requirements?collection=collections/badge/blocks_silver"},
- {"name": "v1_requirements_none", "path": "/v1/codexes/requirements?collection=nope"},
- {"name": "v1_requirements_missing", "path": "/v1/codexes/requirements"},
- {"name": "v1_upgrades", "path": "/v1/codexes/upgrades"},
- {"name": "v1_upgrade_barrier", "path": "/v1/codexes/upgrades/barrier"},
- {"name": "v1_upgrade_prestige", "path": "/v1/codexes/upgrades/prestige_bard"},
- {"name": "v1_upgrade_missing", "path": "/v1/codexes/upgrades/nope"},
- {"name": "v1_upgrade_categories_name", "path": "/v1/codexes/upgrades/categories"},
- {"name": "v1_entries_mount", "path": "/v1/codexes/mount"},
- {"name": "v1_entries_dragon", "path": "/v1/codexes/dragon?sort=-power_rank&limit=200"},
- {"name": "v1_entries_recipe_search", "path": "/v1/codexes/recipe?search=wings&sort=mastery"},
- {"name": "v1_entries_style", "path": "/v1/codexes/style?category=Hat&limit=30"},
- {"name": "v1_entries_companion", "path": "/v1/codexes/item?search=companion&limit=20"},
- {"name": "v1_entries_stat", "path": "/v1/codexes/boat?stat=MagicFind&sort=-stat_value"},
- {"name": "v1_entries_encoded_type", "path": "/v1/codexes/%6Dount?limit=3"},
- {"name": "v1_entries_bad_type", "path": "/v1/codexes/mounts"},
- {"name": "v1_entries_422", "path": "/v1/codexes/mount?limit=201"},
- {"name": "v1_categories", "path": "/v1/codexes/mount/categories"},
- {"name": "v1_categories_bad", "path": "/v1/codexes/types/categories"},
- {"name": "v1_stat_keys", "path": "/v1/codexes/mount/stat-keys"},
- {"name": "v1_stat_keys_pts", "path": "/v1/codexes/ally/stat-keys?branch=pts"},
- {"name": "v1_abilities", "path": "/v1/codexes/ally/abilities"},
- {"name": "v1_abilities_flask", "path": "/v1/codexes/flask/abilities"},
- {"name": "v1_entry", "path": "/v1/codexes/dragon/entry?path=prefabs/collections/mount/dragon_amperium.binfab"},
- {"name": "v1_entry_recipe", "path": "/v1/codexes/recipe/entry?path=prefabs/recipes/recipe_item_wings_lunacy.binfab"},
- {"name": "v1_entry_wrong_type", "path": "/v1/codexes/mount/entry?path=prefabs/collections/mount/dragon_amperium.binfab"},
- {"name": "v1_entry_missing_path", "path": "/v1/codexes/mount/entry"},
- {"name": "v1_render_stays_python", "path": "/v1/codexes/render?blueprint=nope_not_a_blueprint&dim=64"},
- {"name": "v1_render_encoded", "path": "/v1/codexes/rend%65r?blueprint=nope_not_a_blueprint"},
- {"name": "v1_trailing_slash", "path": "/v1/codexes/mount/"},
-
- {"name": "site_types", "path": "/site/codexes/types"},
- {"name": "site_types_bad_branch", "path": "/site/codexes/types?branch=nope"},
- {"name": "site_types_post_405", "method": "POST", "path": "/site/codexes/types", "compare_headers": ["allow"]},
- {"name": "site_categories", "path": "/site/codexes/categories?type=mount"},
- {"name": "site_categories_all", "path": "/site/codexes/categories"},
- {"name": "site_categories_bad", "path": "/site/codexes/categories?type=nope"},
- {"name": "site_stat_keys", "path": "/site/codexes/stat-keys?type=boat"},
- {"name": "site_stat_keys_all", "path": "/site/codexes/stat-keys?branch=pts"},
- {"name": "site_abilities", "path": "/site/codexes/abilities?type=ally"},
- {"name": "site_search", "path": "/site/codexes/search?q=dragon"},
- {"name": "site_search_stat_raw", "path": "/site/codexes/search?stat=%24Stat_MagicFind&sort=-stat_value&limit=50"},
- {"name": "site_search_bare_stat", "path": "/site/codexes/search?stat=MagicFind&limit=5"},
- {"name": "site_search_gzip", "path": "/site/codexes/search?type=recipe&limit=200", "headers": {"Accept-Encoding": "gzip"}},
- {"name": "site_search_bad_sort", "path": "/site/codexes/search?sort=price"},
- {"name": "site_search_422", "path": "/site/codexes/search?limit=201&tradable=perhaps"},
- {"name": "site_entry", "path": "/site/codexes/entry?type=dragon&path=prefabs/collections/mount/dragon_amperium.binfab"},
- {"name": "site_entry_missing", "path": "/site/codexes/entry?type=mount&path=prefabs/nope.binfab"},
- {"name": "site_entry_422", "path": "/site/codexes/entry"},
- {"name": "site_entry_bad_type", "path": "/site/codexes/entry?type=nope&path=x"},
- {"name": "site_related_recipe", "path": "/site/codexes/related?path=prefabs/recipes/recipe_abilities_discovery_barrier.binfab"},
- {"name": "site_related_item", "path": "/site/codexes/related?path=prefabs/item/crafting/ore_uncommon.binfab"},
- {"name": "site_related_badge", "path": "/site/codexes/related?path=prefabs/collections/badge/AllGemStats_bronze.binfab"},
- {"name": "site_related_nothing", "path": "/site/codexes/related?path=prefabs/nope.binfab"},
- {"name": "site_related_422", "path": "/site/codexes/related"},
- {"name": "site_upgrades", "path": "/site/codexes/upgrades"},
- {"name": "site_upgrades_system", "path": "/site/codexes/upgrades?system=barrier"},
- {"name": "site_upgrades_empty_system", "path": "/site/codexes/upgrades?system="},
- {"name": "site_upgrades_missing", "path": "/site/codexes/upgrades?system=nope"},
- {"name": "site_crafting", "path": "/site/codexes/crafting?path=prefabs/recipes/recipe_item_wings_lunacy.binfab"},
- {"name": "site_crafting_barrier", "path": "/site/codexes/crafting?path=prefabs/recipes/recipe_abilities_discovery_barrier.binfab"},
- {"name": "site_crafting_missing", "path": "/site/codexes/crafting?path=prefabs/nope.binfab"},
- {"name": "site_crafting_html_404", "path": "/site/codexes/crafting?path=prefabs/nope.binfab", "headers": {"Accept": "text/html"}},
- {"name": "site_render_stays_python", "path": "/site/codexes/render?blueprint=nope_not_a_blueprint"},
-
- {"name": "admin_status", "path": "/admin/codexes/status", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
-  "mask": ["rebuild"]},
- {"name": "admin_status_pts", "path": "/admin/codexes/status?branch=pts", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
-  "mask": ["rebuild"]},
- {"name": "admin_status_bad", "path": "/admin/codexes/status?branch=nope", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
- {"name": "admin_status_noauth", "path": "/admin/codexes/status"},
- {"name": "admin_rebuild_get_405", "path": "/admin/codexes/rebuild", "compare_headers": ["allow"]}
+ {
+  "name": "v1_types",
+  "path": "/v1/codexes/types",
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "v1_types_pts",
+  "path": "/v1/codexes/types?branch=pts"
+ },
+ {
+  "name": "v1_types_bad_branch",
+  "path": "/v1/codexes/types?branch=live-eu"
+ },
+ {
+  "name": "v1_types_token",
+  "path": "/v1/codexes/types",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit"
+  ]
+ },
+ {
+  "name": "v1_types_bad_token",
+  "path": "/v1/codexes/types",
+  "headers": {
+   "Authorization": "Bearer kiwi_notatoken"
+  }
+ },
+ {
+  "name": "v1_types_post_405",
+  "method": "POST",
+  "path": "/v1/codexes/types",
+  "compare_headers": [
+   "allow"
+  ]
+ },
+ {
+  "name": "v1_types_head",
+  "method": "HEAD",
+  "path": "/v1/codexes/types"
+ },
+ {
+  "name": "v1_types_gzip",
+  "path": "/v1/codexes/types",
+  "headers": {
+   "Accept-Encoding": "gzip"
+  }
+ },
+ {
+  "name": "v1_search",
+  "path": "/v1/codexes/search?q=dragon&limit=25"
+ },
+ {
+  "name": "v1_search_type_sort",
+  "path": "/v1/codexes/search?type=mount&sort=-mastery&limit=40&offset=10"
+ },
+ {
+  "name": "v1_search_stat_value",
+  "path": "/v1/codexes/search?stat=MagicFind&sort=-stat_value&limit=30"
+ },
+ {
+  "name": "v1_search_stat_key",
+  "path": "/v1/codexes/search?stat=%24Stat_MovementSpeed&sort=stat_value&limit=30"
+ },
+ {
+  "name": "v1_search_stat_sort_no_stat",
+  "path": "/v1/codexes/search?sort=-stat_value&limit=10"
+ },
+ {
+  "name": "v1_search_tradable",
+  "path": "/v1/codexes/search?tradable=true&type=item&sort=-indexed_at&limit=20"
+ },
+ {
+  "name": "v1_search_category",
+  "path": "/v1/codexes/search?type=dragon&category=Dragon&sort=-power_rank"
+ },
+ {
+  "name": "v1_search_like_escape",
+  "path": "/v1/codexes/search?q=50%25_off&limit=5"
+ },
+ {
+  "name": "v1_search_unicode",
+  "path": "/v1/codexes/search?q=%C3%BC&limit=5"
+ },
+ {
+  "name": "v1_search_ability",
+  "path": "/v1/codexes/search?ability=abilities/equipment/onhit_heal&limit=10"
+ },
+ {
+  "name": "v1_search_empty_q",
+  "path": "/v1/codexes/search?q=&type=recipe&limit=3"
+ },
+ {
+  "name": "v1_search_bad_type",
+  "path": "/v1/codexes/search?type=dragons"
+ },
+ {
+  "name": "v1_search_empty_type",
+  "path": "/v1/codexes/search?type="
+ },
+ {
+  "name": "v1_search_bad_sort",
+  "path": "/v1/codexes/search?sort=price"
+ },
+ {
+  "name": "v1_search_422",
+  "path": "/v1/codexes/search?limit=0&offset=-1&tradable=maybe"
+ },
+ {
+  "name": "v1_search_bad_branch_first",
+  "path": "/v1/codexes/search?branch=x&type=nope&sort=nope"
+ },
+ {
+  "name": "v1_links_out",
+  "path": "/v1/codexes/links?path=prefabs/recipes/recipe_abilities_discovery_barrier.binfab"
+ },
+ {
+  "name": "v1_links_in",
+  "path": "/v1/codexes/links?path=prefabs/item/crafting/flux.binfab&direction=in&rel=ingredient&limit=50",
+  "allow_diff": [
+   "body"
+  ],
+  "reason": "rows tie on ORDER BY l.rel, l.ord; Python's own order changes between calls"
+ },
+ {
+  "name": "v1_links_unlocks",
+  "path": "/v1/codexes/links?path=prefabs/collections/boat/galleon_ark.binfab&rel=unlocks"
+ },
+ {
+  "name": "v1_links_member",
+  "path": "/v1/codexes/links?path=prefabs/collections/mount/dragon_amperium.binfab&rel=member_of"
+ },
+ {
+  "name": "v1_links_bad_direction",
+  "path": "/v1/codexes/links?path=x&direction=sideways"
+ },
+ {
+  "name": "v1_links_bad_rel",
+  "path": "/v1/codexes/links?path=x&rel=awards"
+ },
+ {
+  "name": "v1_links_missing_path",
+  "path": "/v1/codexes/links?limit=501"
+ },
+ {
+  "name": "v1_stats",
+  "path": "/v1/codexes/stats?stat=MagicFind"
+ },
+ {
+  "name": "v1_stats_typed",
+  "path": "/v1/codexes/stats?stat=%24Stat_MovementSpeed&type=mount&limit=7&offset=5"
+ },
+ {
+  "name": "v1_stats_bonus",
+  "path": "/v1/codexes/stats?stat=CriticalHitDamageBonus&limit=200"
+ },
+ {
+  "name": "v1_stats_missing",
+  "path": "/v1/codexes/stats"
+ },
+ {
+  "name": "v1_stats_bad_type",
+  "path": "/v1/codexes/stats?stat=Jump&type=nope"
+ },
+ {
+  "name": "v1_requirements",
+  "path": "/v1/codexes/requirements?collection=collections/badge/AllGemStats_bronze"
+ },
+ {
+  "name": "v1_requirements_blocks",
+  "path": "/v1/codexes/requirements?collection=collections/badge/blocks_silver"
+ },
+ {
+  "name": "v1_requirements_none",
+  "path": "/v1/codexes/requirements?collection=nope"
+ },
+ {
+  "name": "v1_requirements_missing",
+  "path": "/v1/codexes/requirements"
+ },
+ {
+  "name": "v1_upgrades",
+  "path": "/v1/codexes/upgrades"
+ },
+ {
+  "name": "v1_upgrade_barrier",
+  "path": "/v1/codexes/upgrades/barrier"
+ },
+ {
+  "name": "v1_upgrade_prestige",
+  "path": "/v1/codexes/upgrades/prestige_bard"
+ },
+ {
+  "name": "v1_upgrade_missing",
+  "path": "/v1/codexes/upgrades/nope"
+ },
+ {
+  "name": "v1_upgrade_categories_name",
+  "path": "/v1/codexes/upgrades/categories"
+ },
+ {
+  "name": "v1_entries_mount",
+  "path": "/v1/codexes/mount"
+ },
+ {
+  "name": "v1_entries_dragon",
+  "path": "/v1/codexes/dragon?sort=-power_rank&limit=200"
+ },
+ {
+  "name": "v1_entries_recipe_search",
+  "path": "/v1/codexes/recipe?search=wings&sort=mastery"
+ },
+ {
+  "name": "v1_entries_style",
+  "path": "/v1/codexes/style?category=Hat&limit=30"
+ },
+ {
+  "name": "v1_entries_companion",
+  "path": "/v1/codexes/item?search=companion&limit=20"
+ },
+ {
+  "name": "v1_entries_stat",
+  "path": "/v1/codexes/boat?stat=MagicFind&sort=-stat_value"
+ },
+ {
+  "name": "v1_entries_encoded_type",
+  "path": "/v1/codexes/%6Dount?limit=3"
+ },
+ {
+  "name": "v1_entries_bad_type",
+  "path": "/v1/codexes/mounts"
+ },
+ {
+  "name": "v1_entries_422",
+  "path": "/v1/codexes/mount?limit=201"
+ },
+ {
+  "name": "v1_categories",
+  "path": "/v1/codexes/mount/categories"
+ },
+ {
+  "name": "v1_categories_bad",
+  "path": "/v1/codexes/types/categories"
+ },
+ {
+  "name": "v1_stat_keys",
+  "path": "/v1/codexes/mount/stat-keys"
+ },
+ {
+  "name": "v1_stat_keys_pts",
+  "path": "/v1/codexes/ally/stat-keys?branch=pts"
+ },
+ {
+  "name": "v1_abilities",
+  "path": "/v1/codexes/ally/abilities"
+ },
+ {
+  "name": "v1_abilities_flask",
+  "path": "/v1/codexes/flask/abilities"
+ },
+ {
+  "name": "v1_entry",
+  "path": "/v1/codexes/dragon/entry?path=prefabs/collections/mount/dragon_amperium.binfab"
+ },
+ {
+  "name": "v1_entry_recipe",
+  "path": "/v1/codexes/recipe/entry?path=prefabs/recipes/recipe_item_wings_lunacy.binfab"
+ },
+ {
+  "name": "v1_entry_wrong_type",
+  "path": "/v1/codexes/mount/entry?path=prefabs/collections/mount/dragon_amperium.binfab"
+ },
+ {
+  "name": "v1_entry_missing_path",
+  "path": "/v1/codexes/mount/entry"
+ },
+ {
+  "name": "v1_render_stays_python",
+  "path": "/v1/codexes/render?blueprint=nope_not_a_blueprint&dim=64"
+ },
+ {
+  "name": "v1_render_encoded",
+  "path": "/v1/codexes/rend%65r?blueprint=nope_not_a_blueprint"
+ },
+ {
+  "name": "v1_trailing_slash",
+  "path": "/v1/codexes/mount/"
+ },
+ {
+  "name": "site_types",
+  "path": "/site/codexes/types"
+ },
+ {
+  "name": "site_types_bad_branch",
+  "path": "/site/codexes/types?branch=nope"
+ },
+ {
+  "name": "site_types_post_405",
+  "method": "POST",
+  "path": "/site/codexes/types",
+  "compare_headers": [
+   "allow"
+  ]
+ },
+ {
+  "name": "site_categories",
+  "path": "/site/codexes/categories?type=mount"
+ },
+ {
+  "name": "site_categories_all",
+  "path": "/site/codexes/categories"
+ },
+ {
+  "name": "site_categories_bad",
+  "path": "/site/codexes/categories?type=nope"
+ },
+ {
+  "name": "site_stat_keys",
+  "path": "/site/codexes/stat-keys?type=boat"
+ },
+ {
+  "name": "site_stat_keys_all",
+  "path": "/site/codexes/stat-keys?branch=pts"
+ },
+ {
+  "name": "site_abilities",
+  "path": "/site/codexes/abilities?type=ally"
+ },
+ {
+  "name": "site_search",
+  "path": "/site/codexes/search?q=dragon"
+ },
+ {
+  "name": "site_search_stat_raw",
+  "path": "/site/codexes/search?stat=%24Stat_MagicFind&sort=-stat_value&limit=50"
+ },
+ {
+  "name": "site_search_bare_stat",
+  "path": "/site/codexes/search?stat=MagicFind&limit=5"
+ },
+ {
+  "name": "site_search_gzip",
+  "path": "/site/codexes/search?type=recipe&limit=200",
+  "headers": {
+   "Accept-Encoding": "gzip"
+  }
+ },
+ {
+  "name": "site_search_bad_sort",
+  "path": "/site/codexes/search?sort=price"
+ },
+ {
+  "name": "site_search_422",
+  "path": "/site/codexes/search?limit=201&tradable=perhaps"
+ },
+ {
+  "name": "site_entry",
+  "path": "/site/codexes/entry?type=dragon&path=prefabs/collections/mount/dragon_amperium.binfab"
+ },
+ {
+  "name": "site_entry_missing",
+  "path": "/site/codexes/entry?type=mount&path=prefabs/nope.binfab"
+ },
+ {
+  "name": "site_entry_422",
+  "path": "/site/codexes/entry"
+ },
+ {
+  "name": "site_entry_bad_type",
+  "path": "/site/codexes/entry?type=nope&path=x"
+ },
+ {
+  "name": "site_related_recipe",
+  "path": "/site/codexes/related?path=prefabs/recipes/recipe_abilities_discovery_barrier.binfab"
+ },
+ {
+  "name": "site_related_item",
+  "path": "/site/codexes/related?path=prefabs/item/crafting/ore_uncommon.binfab"
+ },
+ {
+  "name": "site_related_badge",
+  "path": "/site/codexes/related?path=prefabs/collections/badge/AllGemStats_bronze.binfab"
+ },
+ {
+  "name": "site_related_nothing",
+  "path": "/site/codexes/related?path=prefabs/nope.binfab"
+ },
+ {
+  "name": "site_related_422",
+  "path": "/site/codexes/related"
+ },
+ {
+  "name": "site_upgrades",
+  "path": "/site/codexes/upgrades"
+ },
+ {
+  "name": "site_upgrades_system",
+  "path": "/site/codexes/upgrades?system=barrier"
+ },
+ {
+  "name": "site_upgrades_empty_system",
+  "path": "/site/codexes/upgrades?system="
+ },
+ {
+  "name": "site_upgrades_missing",
+  "path": "/site/codexes/upgrades?system=nope"
+ },
+ {
+  "name": "site_crafting",
+  "path": "/site/codexes/crafting?path=prefabs/recipes/recipe_item_wings_lunacy.binfab"
+ },
+ {
+  "name": "site_crafting_barrier",
+  "path": "/site/codexes/crafting?path=prefabs/recipes/recipe_abilities_discovery_barrier.binfab"
+ },
+ {
+  "name": "site_crafting_missing",
+  "path": "/site/codexes/crafting?path=prefabs/nope.binfab"
+ },
+ {
+  "name": "site_crafting_html_404",
+  "path": "/site/codexes/crafting?path=prefabs/nope.binfab",
+  "headers": {
+   "Accept": "text/html"
+  }
+ },
+ {
+  "name": "site_render_stays_python",
+  "path": "/site/codexes/render?blueprint=nope_not_a_blueprint"
+ },
+ {
+  "name": "admin_status",
+  "path": "/admin/codexes/status",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "mask": [
+   "rebuild"
+  ]
+ },
+ {
+  "name": "admin_status_pts",
+  "path": "/admin/codexes/status?branch=pts",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "mask": [
+   "rebuild"
+  ]
+ },
+ {
+  "name": "admin_status_bad",
+  "path": "/admin/codexes/status?branch=nope",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  }
+ },
+ {
+  "name": "admin_status_noauth",
+  "path": "/admin/codexes/status"
+ },
+ {
+  "name": "admin_rebuild_get_405",
+  "path": "/admin/codexes/rebuild",
+  "compare_headers": [
+   "allow"
+  ]
+ }
 ]
