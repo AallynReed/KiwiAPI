@@ -45,9 +45,8 @@ pub fn password_min_length() -> usize {
     })
 }
 
-/// An `EmailStr` field: the normalized address, or `None` when only Python
-/// can judge it (such bodies are sent to Python before routing).
-pub fn email_field(f: Field<'_>) -> Option<String> {
+/// An `EmailStr` field: the normalized address.
+pub fn email_field(f: Field<'_>) -> String {
     f.custom(|input| {
         let s = match input {
             Input::Json(Value::String(s)) => s.as_str(),
@@ -55,19 +54,14 @@ pub fn email_field(f: Field<'_>) -> Option<String> {
             _ => return Err(Fail::string_type()),
         };
         match email_validator::validate(s) {
-            Email::Valid(e) => Ok(Some(e)),
+            Email::Valid(e) => Ok(e),
             Email::Invalid(reason) => {
                 Err(Fail::new("value_error", format!("value is not a valid email address: {reason}"))
                     .with_ctx("reason", reason))
             }
-            Email::Unsupported => Ok(None),
         }
     })
     .required()
-}
-
-fn email_or_500(e: Option<String>) -> Result<String, Rejection> {
-    e.ok_or_else(|| Rejection::internal("email needs Unicode handling but was not deferred"))
 }
 
 fn password_field(m: &mut Model<'_>, name: &str) -> String {
@@ -168,7 +162,7 @@ pub fn reset_form_body(token: &str) -> String {
 // --- request bodies ------------------------------------------------------------------
 
 pub struct Signup {
-    pub email: Option<String>,
+    pub email: String,
     pub password: String,
     pub display_name: Option<String>,
     pub captcha_token: Option<String>,
@@ -189,7 +183,7 @@ impl FromBody for Signup {
 }
 
 pub struct Login {
-    pub email: Option<String>,
+    pub email: String,
     pub password: String,
     pub captcha_token: Option<String>,
 }
@@ -209,7 +203,7 @@ impl FromBody for Login {
 
 /// `ForgotPasswordRequest` / `ResendVerificationRequest`.
 pub struct EmailBody {
-    pub email: Option<String>,
+    pub email: String,
     pub captcha_token: Option<String>,
 }
 
@@ -269,7 +263,7 @@ impl FromBody for ChangePassword {
 }
 
 pub struct ChangeEmail {
-    pub new_email: Option<String>,
+    pub new_email: String,
     pub password: String,
 }
 
@@ -323,7 +317,7 @@ async fn signup_run(state: &AppState, parts: &axum::http::request::Parts, body: 
     if !verify_captcha(s, body.captcha_token.as_deref(), Some(&ip)).await? {
         return Err(captcha_failed());
     }
-    let email = email_or_500(body.email)?.to_lowercase();
+    let email = body.email.to_lowercase();
     if s.disposable_email_check && is_disposable(&email) {
         return Err(Rejection::new(
             StatusCode::BAD_REQUEST,
@@ -371,7 +365,7 @@ pub async fn login(State(state): State<AppState>, req: Request) -> Response {
 async fn login_run(state: &AppState, parts: &axum::http::request::Parts, body: Login) -> Result<Response, Rejection> {
     let s = state.settings();
     let ip = ip_of(parts);
-    let email = email_or_500(body.email)?.to_lowercase();
+    let email = body.email.to_lowercase();
     let (max, window) = get_rate_limit(state, "login_rate_limit").await;
     check_rate_limit(state, &format!("login:{ip}"), max, window).await?;
     if !verify_captcha(s, body.captcha_token.as_deref(), Some(&ip)).await? {
@@ -490,7 +484,7 @@ pub async fn resend_verification(State(state): State<AppState>, req: Request) ->
     };
     let run = async {
         check_rate_limit(&state, &format!("resend:{}", ip_of(&parts)), 5, 3600).await?;
-        let email = email_or_500(body.email)?.to_lowercase();
+        let email = body.email.to_lowercase();
         if let Some(user) = user_by_email(&state, &email).await?
             && user.is_active
             && !user.is_verified
@@ -539,7 +533,7 @@ pub async fn change_email(State(state): State<AppState>, req: Request) -> Respon
         if !verify_password(body.password, &user.hashed_password).await? {
             return Err(Rejection::new(StatusCode::UNAUTHORIZED, "invalid_credentials", "Password is incorrect"));
         }
-        let new_email = email_or_500(body.new_email)?.to_lowercase();
+        let new_email = body.new_email.to_lowercase();
         if new_email == user.email {
             return Err(bad_request("That is already your email address"));
         }
@@ -613,7 +607,7 @@ pub async fn forgot_password(State(state): State<AppState>, req: Request) -> Res
         if !verify_captcha(s, body.captcha_token.as_deref(), Some(&ip)).await? {
             return Err(captcha_failed());
         }
-        let email = email_or_500(body.email)?.to_lowercase();
+        let email = body.email.to_lowercase();
         if let Some(user) = user_by_email(&state, &email).await?
             && user.is_active
         {

@@ -1,18 +1,15 @@
 //! Image Studio (`app/images`): the Dashboard CRUD under `/v1/images` (feature
 //! gate, then the site session), the upload, the live preview and the public
 //! `/site/images/{id}.png` render Discord fetches.
-//!
-//! A design whose image blobs are not PNGs Rust decodes like Pillow (JPEG,
-//! WebP, GIF, 16-bit greyscale) renders in Python, as does any render while
-//! DejaVu is not on disk (`inspect`).
 
 pub mod contexts;
 pub mod model;
+pub mod pil;
 pub mod render;
 pub mod service;
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 
 use axum::{
     Router,
@@ -20,7 +17,7 @@ use axum::{
     extract::{FromRequestParts, Request, State},
     http::{HeaderValue, Method, StatusCode, header, request::Parts},
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::{any, get, post},
 };
 use kiwi_core::form::{self, FormError, FormValue};
 use serde_json::{Value, json};
@@ -53,7 +50,7 @@ pub fn router() -> Router<AppState> {
             post(preview).get(get_design).put(update_design).delete(delete_design).fallback(post_only),
         )
         .route("/v1/images/{design_id}", get(get_design).put(update_design).delete(delete_design).fallback(get_only))
-        .route(PNG_ROUTE, get(render_png).fallback(get_only))
+        .route(PNG_ROUTE, any(png_route))
 }
 
 /// `{design_id}` as Starlette decodes it.
@@ -227,6 +224,23 @@ fn png_design_id(uri: &axum::http::Uri) -> Option<String> {
     (!id.is_empty() && !file.contains('/')).then(|| id.to_owned())
 }
 
+/// Starlette's `/site/images/{design_id}.png`: any other file name is an
+/// unmatched route, whatever the method.
+async fn png_route(State(state): State<AppState>, req: Request) -> Response {
+    if png_design_id(req.uri()).is_none() {
+        return crate::error::not_found(req.method(), req.uri().path(), req.headers());
+    }
+    if !matches!(*req.method(), Method::GET | Method::HEAD) {
+        return method_not_allowed("GET");
+    }
+    let (mut parts, body) = req.into_parts();
+    let gate = match RequireFeature::<ImageStudio>::from_request_parts(&mut parts, &state).await {
+        Ok(g) => g,
+        Err(r) => return r.into_response(),
+    };
+    render_png(State(state), gate, Request::from_parts(parts, body)).await
+}
+
 async fn render_png(State(state): State<AppState>, _: RequireFeature<ImageStudio>, req: Request) -> Response {
     let (parts, _) = req.into_parts();
     let mut p = Params::new(Vec::new(), parts.uri.query(), &parts.headers);
@@ -243,53 +257,4 @@ async fn render_png(State(state): State<AppState>, _: RequireFeature<ImageStudio
         Ok(None) => ApiError::not_found("Image not found.").into_response(),
         Err(e) => e.into_response(),
     }
-}
-
-/// For `routes::defer_to_python`: the two render routes, when Python must draw.
-pub fn defer_kind(matched: &str, method: &Method) -> Option<&'static str> {
-    match matched {
-        PNG_ROUTE => Some("png"),
-        "/v1/images/preview" if method == Method::POST => Some("preview"),
-        _ => None,
-    }
-}
-
-async fn blobs_renderable(state: &AppState, shas: &[String]) -> bool {
-    for sha in shas {
-        if !service::blob_renderable(state, sha).await {
-            return false;
-        }
-    }
-    true
-}
-
-/// Whether Python must answer this render; the request comes back intact.
-pub async fn inspect(state: &AppState, req: Request, kind: &str) -> (Request, bool) {
-    if kind == "png" {
-        let Some(id) = png_design_id(req.uri()) else { return (req, true) };
-        if !matches!(*req.method(), Method::GET | Method::HEAD) {
-            return (req, false);
-        }
-        if crate::og::text::fonts().is_none() {
-            return (req, true);
-        }
-        let defer = match service::design_blobs(state, &id).await {
-            Some(shas) => !blobs_renderable(state, &shas).await,
-            None => false,
-        };
-        return (req, defer);
-    }
-    const MAX_INSPECT: usize = 8 << 20;
-    if crate::og::text::fonts().is_none() {
-        return (req, true);
-    }
-    let (parts, body) = req.into_parts();
-    let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap_or_default();
-    let mut defer = false;
-    if bytes.len() <= MAX_INSPECT
-        && let Ok(v @ Value::Object(_)) = crate::pyjson::loads(&bytes)
-    {
-        defer = !blobs_renderable(state, &service::design_body_blobs(&v)).await;
-    }
-    (Request::from_parts(parts, Body::from(bytes)), defer)
 }

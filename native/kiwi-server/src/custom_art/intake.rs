@@ -2,9 +2,8 @@
 //! form's settings and the tokenless, login-free request intake.
 
 use axum::{
-    body::Body,
     extract::{Request, State},
-    http::{HeaderValue, Method, StatusCode, header},
+    http::{HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
 use kiwi_core::{
@@ -125,17 +124,16 @@ pub fn validate_form(items: &[(String, FormValue)]) -> Result<ArtForm, Vec<Error
     Ok(ArtForm { kind: kind.unwrap_or_default(), name, email, note, captcha_token, pfp, banner })
 }
 
-/// `clean_email`; `Ok(None)` for an address only Python can judge.
-pub fn clean_email(email: &str) -> Result<Option<String>, ApiError> {
+/// `clean_email`.
+pub fn clean_email(email: &str) -> Result<String, ApiError> {
     match email_validator::validate_direct(pystr::strip(email)) {
         Email::Valid(address) if is_disposable(&address) => Err(ApiError::new(
             StatusCode::BAD_REQUEST,
             ErrorCode::DisposableEmail,
             "Use an address you'll still have in a few days - the answer goes there.",
         )),
-        Email::Valid(address) => Ok(Some(address)),
+        Email::Valid(address) => Ok(address),
         Email::Invalid(_) => Err(super::validation("That email address doesn't look right.")),
-        Email::Unsupported => Ok(None),
     }
 }
 
@@ -157,10 +155,7 @@ pub fn check(
     limit: i64,
 ) -> Result<Checked, ApiError> {
     let name = clean_name(name)?;
-    let Some(email) = clean_email(email)? else {
-        tracing::error!("custom art: an address that needs Unicode reached the Rust handler");
-        return Err(ApiError::internal());
-    };
+    let email = clean_email(email)?;
     let files: Vec<(&str, Vec<u8>)> = files.into_iter().filter(|(_, d)| !d.is_empty()).collect();
     if files.is_empty() {
         return Err(super::validation(if kind == "player" {
@@ -297,34 +292,4 @@ pub async fn submit_request(State(state): State<AppState>, req: Request) -> Resp
         Ok(()) => (StatusCode::ACCEPTED, PydanticJson(json!({"status": "received"}))).into_response(),
         Err(r) => r.into_response(),
     }
-}
-
-/// Whether the defer hook reads this request's body first.
-pub fn inspects(matched: &str, method: &Method) -> bool {
-    matched == "/site/custom-art" && method == Method::POST
-}
-
-/// Whether the form's address needs the Unicode/IDNA rules only Python has.
-pub fn needs_python(content_type: Option<&[u8]>, body: &[u8]) -> bool {
-    let Ok(items) = form::parse_form(content_type, body) else { return false };
-    matches!(last(&items, "email"), Some(FormValue::Text(t)) if email_validator::needs_unicode(t))
-}
-
-/// Reads the body (when the body cap would let it through) and says whether
-/// Python must answer; the request comes back with its body restored.
-pub async fn inspect(state: &AppState, req: Request) -> (Request, bool) {
-    let cap = state.settings().max_request_body_bytes;
-    let too_big = req
-        .headers()
-        .get(header::CONTENT_LENGTH)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.trim().parse::<i64>().ok())
-        .is_some_and(|n| n > cap);
-    if too_big {
-        return (req, false);
-    }
-    let (parts, body) = req.into_parts();
-    let bytes = axum::body::to_bytes(body, usize::MAX).await.unwrap_or_default();
-    let defer = needs_python(parts.headers.get(header::CONTENT_TYPE).map(|v| v.as_bytes()), &bytes);
-    (Request::from_parts(parts, Body::from(bytes)), defer)
 }

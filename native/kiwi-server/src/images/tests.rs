@@ -178,3 +178,34 @@ fn kinds_resolve_from_announcement_keys() {
     assert_eq!(contexts::kind("game_update"), Some("game_update"));
     assert!(!contexts::is_bindable("nope"));
 }
+
+/// Replays native/port/parity/gen_pil_open_fixtures.py.
+pub(crate) fn pil_cases() -> Vec<Value> {
+    let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata/images/pil.json");
+    serde_json::from_slice(&std::fs::read(p).unwrap()).unwrap()
+}
+
+#[test]
+fn pil_open_matches_pillow() {
+    use sha2::{Digest, Sha256};
+    let mut bad = Vec::new();
+    for case in pil_cases() {
+        let name = case["name"].as_str().unwrap();
+        let data = b64(&case["data"]);
+        let want = &case["open"];
+        let Some(got) = super::pil::open(&data) else {
+            bad.push(format!("{name}: did not open"));
+            continue;
+        };
+        let size = [got.width as u64, got.height as u64];
+        let frames = super::pil::n_frames(&data, got.format).map(|n| n as u64);
+        if serde_json::json!(size) != want["size"] || Ok(want["frames"].as_u64().unwrap()) != frames {
+            bad.push(format!("{name}: size {size:?} frames {frames:?}, want {} {}", want["size"], want["frames"]));
+        }
+        if hex::encode(Sha256::digest(&got.rgba)) != want["rgba"].as_str().unwrap() {
+            bad.push(format!("{name}: RGBA differs"));
+        }
+    }
+    assert!(bad.is_empty(), "{}", bad.join("
+"));
+}

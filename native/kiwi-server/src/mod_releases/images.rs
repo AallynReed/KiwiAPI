@@ -1,11 +1,11 @@
 //! `get_image(sha, width)` behind `/v1/mods/hub/image/{sha}` and
-//! `/site/mods/image/{sha}`: the stored image, or a width variant already
-//! recorded in `mod_images.variants`. A width that still has to be rendered
-//! goes to Python (see `defers`).
+//! `/site/mods/image/{sha}`: the stored image, or a WebP width variant
+//! (`store.render_thumbnail`), rendered once and recorded in
+//! `mod_images.variants`.
 
 use axum::{
     extract::State,
-    http::{HeaderValue, StatusCode, Uri, header},
+    http::{HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
 use mongodb::bson::{Bson, Document, doc};
@@ -14,8 +14,10 @@ use super::{ModsAsset, SiteMods, access, read::blob};
 use crate::{
     error::ApiError,
     features::{ModsHub, RequireFeature},
+    images::pil::{self, Format},
+    media::{self, pil as mpil},
     state::AppState,
-    validation::{FromParams, Params, Path, parse_qsl, str_as_int},
+    validation::{FromParams, Params, Path},
 };
 
 pub const COLLECTION: &str = "mod_images";
@@ -67,7 +69,6 @@ fn parse_asset(d: &Document) -> Result<Asset, ApiError> {
 enum Got {
     Image(Vec<u8>, String),
     Missing,
-    Render,
 }
 
 async fn lookup(state: &AppState, sha: &str, width: Option<i64>) -> Result<Got, ApiError> {
@@ -80,24 +81,77 @@ async fn lookup(state: &AppState, sha: &str, width: Option<i64>) -> Result<Got, 
         return Ok(Got::Image(cached, "image/webp".into()));
     }
     let Some(data) = blob(state, sha).await? else { return Ok(Got::Missing) };
-    if width.is_none() {
-        return Ok(Got::Image(data, asset.content_type));
-    }
-    Ok(Got::Render)
+    let Some(w) = width else { return Ok(Got::Image(data, asset.content_type)) };
+    let (src, width) = (data.clone(), w as usize);
+    let thumb = tokio::task::spawn_blocking(move || render_thumbnail(&src, width))
+        .await
+        .map_err(access::internal)?
+        .map_err(|()| access::internal("render_thumbnail raised"))?;
+    let Some(thumb) = thumb else { return Ok(Got::Image(data, asset.content_type)) };
+    let store = media::mods_store(state);
+    let stored = thumb.clone();
+    let (thumb_sha, _) = tokio::task::spawn_blocking(move || store.put(&stored))
+        .await
+        .map_err(access::internal)?
+        .map_err(access::internal)?;
+    let id = d.get("_id").cloned().unwrap_or(Bson::Null);
+    let db = state.inner.db.mongo.as_ref().ok_or_else(|| access::internal("MONGO_URI not configured"))?;
+    db.collection::<Document>(COLLECTION)
+        .update_one(doc! {"_id": id}, doc! {"$set": {format!("variants.{w}"): thumb_sha}})
+        .await
+        .map_err(access::internal)?;
+    Ok(Got::Image(thumb, "image/webp".into()))
 }
 
-/// For `routes::defer_to_python`: the request would render a new variant.
-pub async fn defers(state: &AppState, uri: &Uri) -> bool {
-    let Some(raw) = uri.path().rsplit('/').next() else { return false };
-    let sha = percent_encoding::percent_decode_str(raw).decode_utf8_lossy().into_owned();
-    let pairs = uri.query().map(parse_qsl).unwrap_or_default();
-    let Some((_, w)) = pairs.iter().rev().find(|(k, _)| k == "w") else { return false };
-    let Ok(w) = str_as_int(w) else { return false };
-    let Ok(w) = i64::try_from(w) else { return false };
-    if !THUMB_WIDTHS.contains(&w) {
-        return false;
+/// `store.render_thumbnail(data, width)`: a WebP no wider than `width`, or
+/// `None` to serve the original; `Err` where Python raises.
+pub fn render_thumbnail(data: &[u8], width: usize) -> Result<Option<Vec<u8>>, ()> {
+    let Some(img) = pil::open(data) else { return Ok(None) };
+    let resize = img.width > width;
+    if pil::n_frames(data, img.format)? > 1 || (!resize && img.format == Format::Webp) {
+        return Ok(None);
     }
-    matches!(lookup(state, &sha, Some(w)).await, Ok(Got::Render))
+    let (w, h) = if resize {
+        let h = (img.height as f64 * width as f64 / img.width as f64).round_ties_even() as usize;
+        (width, h.max(1))
+    } else {
+        (img.width, img.height)
+    };
+    let pixels = if !resize {
+        img.rgba
+    } else if img.has_alpha {
+        resize_straight_alpha(&img.rgba, img.width, img.height, w, h)
+    } else {
+        let mut rgb = img.rgba;
+        for px in rgb.chunks_exact_mut(4) {
+            px[3] = 255;
+        }
+        mpil::resample::lanczos(&rgb, img.width, img.height, w, h, [0.0, 0.0, img.width as f32, img.height as f32])
+    };
+    let Some(out) = pil::webp_encode(&pixels, w, h, img.has_alpha, 82.0, 4) else { return Ok(None) };
+    Ok((resize || out.len() < data.len() * 3 / 4).then_some(out))
+}
+
+/// `_resize_straight_alpha`: numpy's float32 premultiply, Pillow's own RGBA
+/// LANCZOS (which premultiplies again), then the float32 un-premultiply.
+fn resize_straight_alpha(rgba: &[u8], iw: usize, ih: usize, w: usize, h: usize) -> Vec<u8> {
+    let mut arr = rgba.to_vec();
+    for px in arr.chunks_exact_mut(4) {
+        let q = f32::from(px[3]) / 255.0;
+        for c in &mut px[..3] {
+            *c = (f32::from(*c) * q) as u8;
+        }
+    }
+    mpil::premultiply(&mut arr);
+    let mut small = mpil::resample::lanczos(&arr, iw, ih, w, h, [0.0, 0.0, iw as f32, ih as f32]);
+    mpil::unpremultiply(&mut small);
+    for px in small.chunks_exact_mut(4) {
+        let a = f32::from(px[3]);
+        for c in &mut px[..3] {
+            *c = if a > 0.0 { ((f32::from(*c) * 255.0) / a).clamp(0.0, 255.0) as u8 } else { 0 };
+        }
+    }
+    small
 }
 
 fn reply(got: Got) -> Response {
@@ -112,7 +166,7 @@ fn reply(got: Got) -> Response {
             ([(header::CONTENT_TYPE, ct), (header::CACHE_CONTROL, HeaderValue::from_static(IMMUTABLE))], data)
                 .into_response()
         }
-        Got::Missing | Got::Render => ApiError::internal().into_response(),
+        Got::Missing => ApiError::internal().into_response(),
     }
 }
 

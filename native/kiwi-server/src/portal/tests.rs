@@ -156,7 +156,7 @@ fn authorize_url_matches_urlencode() {
     assert_eq!(resp.headers()["location"], s(&golden()["authorize_location"]));
 }
 
-struct EmailBody(Option<String>);
+struct EmailBody(String);
 
 impl FromBody for EmailBody {
     fn from_body(body: Field<'_>) -> Option<Self> {
@@ -167,23 +167,18 @@ impl FromBody for EmailBody {
 #[test]
 fn email_str() {
     let mut bad = Vec::new();
-    let mut unsupported = 0;
     for case in arr(golden(), "emails") {
         let body = json!({ "email": case["input"] });
         let mut v = Validator::default();
         let got = EmailBody::from_body(Field::new(&mut v, vec!["body".into()], Input::Json(&body)));
         let label = case["input"].to_string();
         match (case.get("ok"), v.errors.first()) {
-            (Some(want), None) => match got.and_then(|b| b.0) {
+            (Some(want), None) => match got.map(|b| b.0) {
                 Some(e) if e == s(want) => {}
-                Some(e) => bad.push(format!("{label}: got {e} want {want}")),
-                None => unsupported += 1,
+                e => bad.push(format!("{label}: got {e:?} want {want}")),
             },
             (Some(want), Some(e)) => bad.push(format!("{label}: error {} want {want}", e.msg)),
-            (None, None) => match got.and_then(|b| b.0) {
-                None => unsupported += 1,
-                Some(e) => bad.push(format!("{label}: got {e} want {}", case["err"])),
-            },
+            (None, None) => bad.push(format!("{label}: got {:?} want {}", got.map(|b| b.0), case["err"])),
             (None, Some(e)) => {
                 let item = e.to_value();
                 let want = &case["err"];
@@ -195,7 +190,6 @@ fn email_str() {
         }
     }
     assert!(bad.is_empty(), "{} differ:\n{}", bad.len(), bad.join("\n"));
-    assert!(unsupported <= 2, "{unsupported} inputs fell back to Python");
 }
 
 fn fake_user() -> User {
@@ -487,26 +481,6 @@ fn document_field_order() {
     assert_eq!(json!(outbox), m["outbox"]);
 }
 
-#[test]
-fn defer_only_unicode_emails() {
-    let mut h = HeaderMap::new();
-    h.insert("content-type", HeaderValue::from_static("application/json"));
-    let defer = |body: &str, field| super::defer::needs_python(&h, body.as_bytes(), field);
-    assert!(defer(r#"{"email": "é@x.io"}"#, "email"));
-    assert!(defer(r#"{"email": "a@é.io", "password": 1}"#, "email"));
-    assert!(defer(r#"{"new_email": "a@xn--bcher-kva.de"}"#, "new_email"));
-    assert!(defer(r#"{"confirm_email": "a@[1.2.3.4]"}"#, "confirm_email"));
-    assert!(!defer(r#"{"email": "a@x.io", "password": "é"}"#, "email"));
-    assert!(!defer(r#"{"email": 5}"#, "email"));
-    assert!(!defer(r#"{"email": "é"#, "email"));
-    assert!(!defer(r#"["é"]"#, "email"));
-    let mut text = HeaderMap::new();
-    text.insert("content-type", HeaderValue::from_static("text/plain"));
-    assert!(!super::defer::needs_python(&text, r#"{"email": "é@x.io"}"#.as_bytes(), "email"));
-    assert_eq!(super::defer::email_field("/auth/login", &Method::POST), Some("email"));
-    assert_eq!(super::defer::email_field("/auth/login", &Method::GET), None);
-}
-
 /// A stand-in for api-py that answers `py` and keeps each raw request.
 async fn upstream() -> (std::net::SocketAddr, Arc<std::sync::Mutex<Vec<String>>>) {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -544,7 +518,7 @@ async fn upstream() -> (std::net::SocketAddr, Arc<std::sync::Mutex<Vec<String>>>
 }
 
 #[tokio::test]
-async fn unicode_emails_reach_python_with_their_body() {
+async fn unicode_emails_stay_in_rust() {
     let (addr, seen) = upstream().await;
     let settings = Settings::from_vars([("PY_UPSTREAM", format!("http://{addr}"))]).unwrap();
     let client = Client::builder(TokioExecutor::new()).build_http();
@@ -566,19 +540,11 @@ async fn unicode_emails_reach_python_with_their_body() {
             (status, axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap())
         }
     };
-    let body = r#"{"email": "Ünï@example.com", "password": "x"}"#;
-    let (status, reply) = send("/auth/signup", body).await;
-    assert_eq!((status, &reply[..]), (StatusCode::CREATED, &b"py"[..]));
-    let raw = seen.lock().unwrap().last().cloned().unwrap();
-    assert!(raw.starts_with("POST /auth/signup HTTP/1.1"), "{raw}");
-    assert!(raw.ends_with(body), "{raw}");
-
+    let (status, _) = send("/auth/signup", r#"{"email": "Ünï@example.com", "password": "x"}"#).await;
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     let (status, _) = send("/auth/delete-account", r#"{"confirm_email": "a@xn--bcher-kva.de"}"#).await;
-    assert_eq!(status, StatusCode::CREATED);
-    let before = seen.lock().unwrap().len();
-    let (status, _) = send("/auth/signup", r#"{"email": "a@b.co", "password": "x"}"#).await;
+    assert_ne!(status, StatusCode::CREATED);
+    let (status, _) = send("/auth/signup", r#"{"email": "a@[1.2.3.4]", "password": "x"}"#).await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
-    let (status, _) = send("/auth/signup", r#"{"email": "é"#).await;
-    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
-    assert_eq!(seen.lock().unwrap().len(), before, "ASCII bodies reached Python");
+    assert!(seen.lock().unwrap().is_empty(), "a Unicode email reached Python");
 }

@@ -1,11 +1,11 @@
 //! `app/images/render.py`: a design drawn to a PNG exactly as Pillow 13 draws
-//! it. Only PNG blobs are decoded here (see `mod.rs`: anything else defers).
+//! it, its image blobs opened as Pillow opens them (`super::pil`).
 
 use std::{collections::HashMap, sync::LazyLock};
 
 use chrono::{DateTime, Utc};
 use kiwi_core::pystr::strip;
-use kiwi_pil::{Draw, ImageError, Ink, Library, Mask, Rgba, decode, draw::textbbox, ops};
+use kiwi_pil::{Draw, ImageError, Ink, Library, Mask, Rgba, draw::textbbox, ops};
 use regex::{Captures, Regex};
 use serde_json::{Map, Value};
 
@@ -152,9 +152,14 @@ fn py_min(a: f64, b: f64) -> f64 {
     if b < a { b } else { a }
 }
 
-/// `Image.open(BytesIO(data)).convert("RGBA")`, for the formats Rust opens.
+/// `Image.open(BytesIO(data)).convert("RGBA")`.
 fn open(data: &[u8]) -> Option<Rgba> {
-    decode::png_to_rgba(data).ok()
+    let img = super::pil::open(data)?;
+    let mut out = Rgba::new(img.width, img.height, [0, 0, 0, 0]);
+    for (dst, src) in out.data.iter_mut().zip(img.rgba.chunks_exact(4)) {
+        *dst = [src[0], src[1], src[2], src[3]];
+    }
+    Some(out)
 }
 
 fn draw_background(img: &mut Rgba, bg: &Background, blobs: &HashMap<String, Vec<u8>>) {

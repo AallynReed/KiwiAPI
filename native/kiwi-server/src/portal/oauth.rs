@@ -213,7 +213,6 @@ fn gh_get<'a>(v: &'a Value, key: &str) -> Result<Option<&'a Value>, Rejection> {
 fn normalize(email: &str) -> Result<String, Rejection> {
     match email_validator::validate(email) {
         Email::Valid(e) => Ok(e),
-        Email::Unsupported => Ok(email.to_owned()),
         Email::Invalid(reason) => Err(Rejection::internal(format!("GitHub email rejected: {reason}"))),
     }
 }

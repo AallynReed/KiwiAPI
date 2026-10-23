@@ -293,23 +293,6 @@ async fn load_blobs(state: &AppState, shas: &[String]) -> HashMap<String, Vec<u8
     out
 }
 
-/// Whether a blob is something [`render`] reads like Pillow: absent, or a PNG
-/// Rust converts. Reads only the header.
-pub async fn blob_renderable(state: &AppState, sha: &str) -> bool {
-    use tokio::io::AsyncReadExt;
-    let Some(path) = blob_path(&state.settings().mods_store_dir, sha) else { return false };
-    let Ok(mut f) = tokio::fs::File::open(&path).await else { return true };
-    let mut head = [0u8; 33];
-    let mut n = 0;
-    while n < head.len() {
-        match f.read(&mut head[n..]).await {
-            Ok(0) | Err(_) => break,
-            Ok(k) => n += k,
-        }
-    }
-    n == 0 || kiwi_pil::decode::png_supported(&head[..n])
-}
-
 static CACHE: LazyLock<Mutex<HashMap<String, (f64, Bytes)>>> = LazyLock::new(Default::default);
 const CACHE_TTL: f64 = 60.0;
 const CACHE_MAX: usize = 256;
@@ -393,34 +376,4 @@ pub async fn preview(state: &AppState, body: DesignBody, kind: Option<&str>) -> 
         None => Ctx::new(),
     };
     draw_png(state, body.background, body.layers, (body.width, body.height), ctx).await
-}
-
-/// The image blobs a design document refers to (for the defer check).
-pub async fn design_blobs(state: &AppState, design_id: &str) -> Option<Vec<String>> {
-    let d = load(state, design_id).await.ok().flatten()?;
-    Some(blob_shas(&d.background, &d.layers))
-}
-
-pub fn design_body_blobs(v: &Value) -> Vec<String> {
-    let s = |v: Option<&Value>| match v {
-        Some(Value::String(s)) if !s.is_empty() => Some(s.clone()),
-        _ => None,
-    };
-    let mut out = Vec::new();
-    if let Some(bg) = v.get("background")
-        && bg.get("type").and_then(Value::as_str) == Some("image")
-        && let Some(sha) = s(bg.get("image_sha"))
-    {
-        out.push(sha);
-    }
-    if let Some(Value::Array(layers)) = v.get("layers") {
-        for l in layers {
-            if l.get("type").and_then(Value::as_str) == Some("image")
-                && let Some(sha) = s(l.get("image_sha"))
-            {
-                out.push(sha);
-            }
-        }
-    }
-    out
 }

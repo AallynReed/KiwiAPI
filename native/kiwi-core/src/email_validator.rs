@@ -1,8 +1,6 @@
 //! pydantic's `EmailStr` (`pydantic.networks.validate_email` over
-//! email-validator 2.3.0, `check_deliverability=False`) for ASCII input.
-//! Non-ASCII input, Punycode labels and bracketed domain literals need
-//! Unicode/IDNA/ipaddress tables this port does not carry: they are reported
-//! as [`Email::Unsupported`] so the caller can hand the request to Python.
+//! email-validator 2.3.0, `check_deliverability=False`) with idna 3.20 and
+//! Python 3.13's Unicode 15.1 tables, messages included.
 
 use std::sync::LazyLock;
 
@@ -10,13 +8,22 @@ use regex::Regex;
 
 use crate::pystr;
 
+#[rustfmt::skip]
+#[path = "email_table.rs"]
+mod table;
+#[path = "email_idna.rs"]
+mod idna;
+#[path = "email_unidata.rs"]
+mod unidata;
+
+use unidata::{category, decomposes_to_dot, nfc_str};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Email {
     /// The normalized address (`ValidatedEmail.normalized`).
     Valid(String),
     /// The reason pydantic puts in `value is not a valid email address: {reason}`.
     Invalid(String),
-    Unsupported,
 }
 
 pub const MAX_EMAIL_LENGTH: usize = 2048;
@@ -42,103 +49,125 @@ const CASE_INSENSITIVE_MAILBOX_NAMES: [&str; 15] = [
 ];
 const SPECIAL_USE_DOMAIN_NAMES: [&str; 6] = ["arpa", "invalid", "local", "localhost", "onion", "test"];
 
-/// Inputs [`validate`] cannot judge exactly.
-pub fn needs_unicode(value: &str) -> bool {
-    !value.is_ascii() || value.to_ascii_lowercase().contains("xn--") || value.contains('[')
-}
-
 static PRETTY: LazyLock<Regex> = LazyLock::new(|| {
-    let s = r"[\t\n\x0B\x0C\r\x1C-\x1F ]";
-    let name = r"[A-Za-z0-9_.!#$%&'*+\-/=?^_`{|}~]";
+    let s = r"[\t\n\x0B\x0C\r\x1C-\x1F \x{85}\x{A0}\x{1680}\x{2000}-\x{200A}\x{2028}\x{2029}\x{202F}\x{205F}\x{3000}]";
+    let mut word = String::new();
+    for &(lo, hi) in table::WORD {
+        word.push_str(&format!(r"\x{{{lo:X}}}-\x{{{hi:X}}}"));
+    }
+    let name = format!(r"[{word}.!#$%&'*+\-/=?^_`{{|}}~]");
     let unquoted = format!(r"((?:{name}+{s}+)*{name}+)");
-    let quoted = r#""((?:[^"\n]|")+)""#;
-    Regex::new(&format!(r"\A{s}*(?:{unquoted}|{quoted})?{s}*<([^\n]+)>{s}*\z")).expect("pretty email regex")
+    let quoted = r#""((?:[^"]|")+)""#;
+    regex::RegexBuilder::new(&format!(r"\A{s}*(?:{unquoted}|{quoted})?{s}*<(.+)>{s}*\z"))
+        .size_limit(64 << 20)
+        .build()
+        .expect("pretty email regex")
 });
 
+/// `pydantic.networks.validate_email(value)`.
 pub fn validate(value: &str) -> Email {
-    if needs_unicode(value) {
-        return Email::Unsupported;
-    }
-    match validate_ascii(value) {
-        Ok(email) => Email::Valid(email),
-        Err(reason) => Email::Invalid(reason),
-    }
+    let r = (|| {
+        if value.chars().count() > MAX_EMAIL_LENGTH {
+            return Err(format!("Length must not exceed {MAX_EMAIL_LENGTH} characters"));
+        }
+        if value.contains('\r') || value.contains('\n') {
+            return Err("Carriage return and line feed characters are not allowed".into());
+        }
+        let mut email = value;
+        if let Some(c) = PRETTY.captures(value) {
+            email = c.get(3).map_or(value, |m| m.as_str());
+        }
+        validate_email(pystr::strip(email))
+    })();
+    r.map_or_else(Email::Invalid, Email::Valid)
 }
 
 /// `email_validator.validate_email(value, check_deliverability=False)` called
 /// directly: no pydantic wrapper, so no display-name unwrapping or length cap.
 pub fn validate_direct(value: &str) -> Email {
-    if needs_unicode(value) {
-        return Email::Unsupported;
-    }
-    match validate_email(value) {
-        Ok(email) => Email::Valid(email),
-        Err(reason) => Email::Invalid(reason),
-    }
+    validate_email(value).map_or_else(Email::Invalid, Email::Valid)
 }
 
 type R<T> = Result<T, String>;
 
-fn validate_ascii(value: &str) -> R<String> {
-    if value.chars().count() > MAX_EMAIL_LENGTH {
-        return Err(format!("Length must not exceed {MAX_EMAIL_LENGTH} characters"));
-    }
-    if value.contains('\r') || value.contains('\n') {
-        return Err("Carriage return and line feed characters are not allowed".into());
-    }
-    let mut email = value;
-    if let Some(c) = PRETTY.captures(value) {
-        email = c.get(3).map_or(value, |m| m.as_str());
-    }
-    validate_email(pystr::strip(email))
+fn cps(s: &str) -> Vec<u32> {
+    s.chars().map(u32::from).collect()
 }
 
 fn is_atext(c: char) -> bool {
     c.is_ascii_alphanumeric() || "_!#$%&'*+-/=?^`{|}~".contains(c)
 }
 
-/// `safe_character_display` for an ASCII character.
+fn is_atext_intl(c: char) -> bool {
+    is_atext(c) || c >= '\u{80}'
+}
+
+fn is_hostname_intl(c: char) -> bool {
+    c.is_ascii_alphanumeric() || c == '-' || c == '.' || c >= '\u{80}'
+}
+
+fn lnps(cat: &str) -> bool {
+    matches!(cat.as_bytes()[0], b'L' | b'N' | b'P' | b'S')
+}
+
+/// `safe_character_display`.
 fn safe_display(c: char) -> String {
     if c == '\\' {
         return "\"\\\"".into();
     }
-    if c.is_ascii_graphic() {
+    let n = u32::from(c);
+    if lnps(category(n)) {
         return pystr::repr(&c.to_string());
     }
-    if c == ' ' {
-        return "SPACE".into();
+    match unidata::name(n) {
+        Some(name) => name.into(),
+        None if n < 0xFFFF => format!("U+{n:04X}"),
+        None => format!("U+{n:08X}"),
     }
-    format!("U+{:04X}", c as u32)
 }
 
-fn sorted_join(mut items: Vec<String>) -> String {
+/// `", ".join(sorted({safe_character_display(c) for c in s if bad(c)}))`.
+fn bad_set(s: &str, bad: impl Fn(char) -> bool) -> String {
+    let mut items: Vec<String> = s.chars().filter(|&c| bad(c)).map(safe_display).collect();
     items.sort();
     items.dedup();
     items.join(", ")
 }
 
-fn bad_set(s: &str, bad: impl Fn(char) -> bool) -> Vec<String> {
-    s.chars().filter(|&c| bad(c)).map(safe_display).collect()
-}
-
 fn check_unsafe_chars(s: &str, allow_space: bool) -> R<()> {
-    let mut bad: Vec<char> = s.chars().filter(|&c| !c.is_ascii_graphic() && !(c == ' ' && allow_space)).collect();
+    let mut bad: Vec<char> = Vec::new();
+    for (i, c) in s.chars().enumerate() {
+        let cat = category(u32::from(c));
+        let unsafe_ = match cat.as_bytes()[0] {
+            b'L' | b'N' | b'P' | b'S' => false,
+            b'M' => i == 0,
+            _ if cat == "Zs" => !allow_space,
+            _ => true,
+        };
+        if unsafe_ {
+            bad.push(c);
+        }
+    }
     if bad.is_empty() {
         return Ok(());
     }
-    bad.sort();
+    bad.sort_unstable();
     bad.dedup();
     let shown: Vec<String> = bad.into_iter().map(safe_display).collect();
     Err(format!("The email address contains unsafe characters: {}.", shown.join(", ")))
 }
 
-fn split_at_unquoted(text: &str, specials: &[char]) -> R<(String, String)> {
+/// `split_string_at_unquoted_special`.
+fn split_at_unquoted<'a>(text: &'a str, specials: &[char]) -> R<(&'a str, &'a str)> {
+    let chars: Vec<(usize, char)> = text.char_indices().collect();
     let (mut inside_quote, mut escaped) = (false, false);
-    let mut left = String::new();
-    let mut found = false;
-    for c in text.chars() {
+    let mut end = text.len();
+    for (k, &(i, c)) in chars.iter().enumerate() {
+        let combines = !c.is_ascii() || chars.get(k + 1).is_some_and(|&(_, n)| !n.is_ascii());
+        if combines && nfc_str(&text[i..]).chars().next() != Some(c) {
+            continue;
+        }
         if inside_quote {
-            left.push(c);
             if c == '\\' && !escaped {
                 escaped = true;
             } else if c == '"' && !escaped {
@@ -148,20 +177,25 @@ fn split_at_unquoted(text: &str, specials: &[char]) -> R<(String, String)> {
                 escaped = false;
             }
         } else if c == '"' {
-            left.push(c);
             inside_quote = true;
         } else if specials.contains(&c) {
-            found = true;
+            end = i;
             break;
-        } else {
-            left.push(c);
         }
     }
-    if !found {
+    if end == text.len() {
+        if text.contains('＠') {
+            return Err("The email address has the \"full-width\" at-sign (@) character instead of a regular at-sign."
+                .into());
+        }
+        if text.contains('﹫') {
+            return Err(
+                "The email address has the \"small commercial at\" character instead of a regular at-sign.".into()
+            );
+        }
         return Err("An email address must have an @-sign.".into());
     }
-    let right = text[left.len()..].to_owned();
-    Ok((left, right))
+    Ok((&text[..end], &text[end..]))
 }
 
 fn unquote(text: &str) -> R<(String, bool)> {
@@ -202,17 +236,14 @@ struct Split {
 
 fn split_email(email: &str) -> R<Split> {
     let (left, right) = split_at_unquoted(email, &['@', '<'])?;
-    let (display_name, mut local, mut domain);
+    let (display_name, local, mut domain);
     if right.starts_with('<') {
         let left = left.trim_end_matches(pystr::is_space);
         let (name, name_quoted) = unquote(left)?;
         if !name_quoted {
             let bad = bad_set(&name, |c| (!(is_atext(c) || c == '.') && c != ' ') || c == '.');
             if !bad.is_empty() {
-                return Err(format!(
-                    "The display name contains invalid characters when not quoted: {}.",
-                    sorted_join(bad)
-                ));
+                return Err(format!("The display name contains invalid characters when not quoted: {bad}."));
             }
         }
         check_unsafe_chars(&name, true)?;
@@ -224,22 +255,22 @@ fn split_email(email: &str) -> R<Split> {
             return Err("There can't be anything after the email address.".into());
         }
         let addr_spec = right[1..].trim_end_matches('>');
-        (local, domain) = split_at_unquoted(addr_spec, &['@'])?;
+        let (l, d) = split_at_unquoted(addr_spec, &['@'])?;
+        (local, domain) = (l, d);
         display_name = Some(name);
     } else {
         display_name = None;
         (local, domain) = (left, right);
     }
     if let Some(d) = domain.strip_prefix('@') {
-        domain = d.to_owned();
+        domain = d;
     }
-    let quoted;
-    (local, quoted) = unquote(&local)?;
-    Ok(Split { display_name, local, domain, quoted })
+    let (local, quoted) = unquote(local)?;
+    Ok(Split { display_name, local, domain: domain.to_owned(), quoted })
 }
 
-fn dot_atom(s: &str) -> bool {
-    !s.is_empty() && s.split('.').all(|p| !p.is_empty() && p.chars().all(is_atext))
+fn dot_atom(s: &str, atext: fn(char) -> bool) -> bool {
+    !s.is_empty() && s.split('.').all(|p| !p.is_empty() && p.chars().all(atext))
 }
 
 fn check_dot_atom(label: &str, start: &str, end: &str, hostname: bool) -> R<()> {
@@ -267,24 +298,45 @@ fn check_dot_atom(label: &str, start: &str, end: &str, hostname: bool) -> R<()> 
     Ok(())
 }
 
-/// `validate_email_local_part` (ASCII, `allow_smtputf8`, not strict).
-fn local_part(local: &str, quoted: bool) -> R<String> {
+struct Local {
+    local: String,
+    ascii: Option<String>,
+}
+
+/// `validate_email_local_part` (`allow_smtputf8`, not strict).
+fn local_part(local: &str, quoted: bool) -> R<Local> {
     if local.is_empty() {
         return Err("There must be something before the @-sign.".into());
     }
-    if dot_atom(local) {
-        return Ok(local.to_owned());
+    if dot_atom(local, is_atext) {
+        return Ok(Local { local: local.to_owned(), ascii: Some(local.to_owned()) });
     }
-    if quoted {
-        let bad = bad_set(local, |c| !(' '..='~').contains(&c));
+    let (is_quoted, smtputf8);
+    if dot_atom(local, is_atext_intl) {
+        (is_quoted, smtputf8) = (false, true);
+    } else if quoted {
+        let bad = bad_set(local, |c| !(' '..='~').contains(&c) && c < '\u{80}');
         if !bad.is_empty() {
-            return Err(format!(
-                "The email address contains invalid characters in quotes before the @-sign: {}.",
-                sorted_join(bad)
-            ));
+            return Err(format!("The email address contains invalid characters in quotes before the @-sign: {bad}."));
         }
-        check_unsafe_chars(local, true)?;
-        let mut out = String::from('"');
+        (is_quoted, smtputf8) = (true, local.chars().any(|c| !(' '..='~').contains(&c)));
+    } else {
+        let bad = bad_set(local, |c| !(is_atext_intl(c) || c == '.'));
+        if !bad.is_empty() {
+            return Err(format!("The email address contains invalid characters before the @-sign: {bad}."));
+        }
+        check_dot_atom(
+            local,
+            "An email address cannot start with a {}.",
+            "An email address cannot have a {} immediately before the @-sign.",
+            false,
+        )?;
+        return Err("The email address contains invalid characters before the @-sign.".into());
+    }
+    check_unsafe_chars(local, is_quoted)?;
+    let mut out = local.to_owned();
+    if is_quoted {
+        out = String::from('"');
         for c in local.chars() {
             if c == '"' || c == '\\' {
                 out.push('\\');
@@ -292,19 +344,9 @@ fn local_part(local: &str, quoted: bool) -> R<String> {
             out.push(c);
         }
         out.push('"');
-        return Ok(out);
     }
-    let bad = bad_set(local, |c| !(is_atext(c) || c == '.'));
-    if !bad.is_empty() {
-        return Err(format!("The email address contains invalid characters before the @-sign: {}.", sorted_join(bad)));
-    }
-    check_dot_atom(
-        local,
-        "An email address cannot start with a {}.",
-        "An email address cannot have a {} immediately before the @-sign.",
-        false,
-    )?;
-    Err("The email address contains invalid characters before the @-sign.".into())
+    let ascii = (!smtputf8).then(|| out.clone());
+    Ok(Local { local: out, ascii })
 }
 
 fn length_reason(len: usize, limit: usize) -> String {
@@ -312,13 +354,59 @@ fn length_reason(len: usize, limit: usize) -> String {
     format!("({diff} character{} too many)", if diff > 1 { "s" } else { "" })
 }
 
-/// `validate_email_domain_name` (ASCII, not a test environment, globally deliverable).
-fn domain_name(original: &str) -> R<String> {
-    let bad = bad_set(original, |c| !(c.is_ascii_alphanumeric() || c == '-' || c == '.'));
-    if !bad.is_empty() {
-        return Err(format!("The part after the @-sign contains invalid characters: {}.", sorted_join(bad)));
+/// `uts46_valid_char`.
+fn uts46_valid_char(ch: char) -> bool {
+    let c = u32::from(ch);
+    if (0x80..=0x9f).contains(&c) {
+        return false;
     }
-    let domain = original.to_ascii_lowercase();
+    if ((0x2010..=0x2060).contains(&c) && !(0x2024..=0x2026).contains(&c) && !(0x2028..=0x202E).contains(&c))
+        || matches!(c, 0xAD | 0x2064 | 0xFF0E)
+        || (0x200B..=0x200D).contains(&c)
+        || (0x1BCA0..=0x1BCA3).contains(&c)
+    {
+        return true;
+    }
+    if matches!(category(c), "Cf" | "Cn" | "Co" | "Cs" | "Zs" | "Zl" | "Zp") {
+        return false;
+    }
+    !decomposes_to_dot(c)
+}
+
+fn hostname_label(l: &str) -> bool {
+    let b = l.as_bytes();
+    !b.is_empty()
+        && b.iter().all(|c| c.is_ascii_alphanumeric() || *c == b'-')
+        && b[0] != b'-'
+        && b[b.len() - 1] != b'-'
+}
+
+fn dot_atom_hostname(s: &str) -> bool {
+    s.split('.').all(hostname_label)
+}
+
+/// `validate_email_domain_name` (not a test environment, globally deliverable):
+/// the ASCII and the internationalized domain.
+fn domain_name(original: &str) -> R<(String, String)> {
+    let bad = bad_set(original, |c| !is_hostname_intl(c));
+    if !bad.is_empty() {
+        return Err(format!("The part after the @-sign contains invalid characters: {bad}."));
+    }
+    check_unsafe_chars(original, false)?;
+    let bad = bad_set(original, |c| !uts46_valid_char(c));
+    if !bad.is_empty() {
+        return Err(format!("The part after the @-sign contains invalid characters: {bad}."));
+    }
+    let domain = match idna::uts46_remap(&cps(original)) {
+        Ok(d) => unidata::to_string(&d),
+        Err(e) => return Err(format!("The part after the @-sign contains invalid characters ({}).", e.0)),
+    };
+    let bad = bad_set(&domain, |c| !is_hostname_intl(c));
+    if !bad.is_empty() {
+        return Err(format!(
+            "The part after the @-sign contains invalid characters after Unicode normalization: {bad}."
+        ));
+    }
     check_dot_atom(
         &domain,
         "An email address cannot have a {} immediately after the @-sign.",
@@ -326,25 +414,41 @@ fn domain_name(original: &str) -> R<String> {
         true,
     )?;
     for label in domain.split('.') {
-        let b = label.as_bytes();
-        if b.len() >= 4 && &b[2..4] == b"--" && !b[..2].eq_ignore_ascii_case(b"xn") {
+        let c: Vec<char> = label.chars().take(4).collect();
+        if c.len() == 4 && c[2] == '-' && c[3] == '-' && !(matches!(c[0], 'x' | 'X') && matches!(c[1], 'n' | 'N')) {
             return Err("An email address cannot have two letters followed by two dashes immediately after the @-sign or after a period, except Punycode.".into());
         }
     }
-    if domain.len() > DOMAIN_MAX_LENGTH {
-        if domain == original {
+    let ascii_domain = if dot_atom_hostname(&domain) {
+        domain.clone()
+    } else {
+        let mut labels = Vec::new();
+        for label in domain.split('.') {
+            match idna::alabel(&cps(label)) {
+                Ok(a) => labels.push(String::from_utf8_lossy(&a).into_owned()),
+                Err(e) => return Err(format!("The part after the @-sign is invalid ({}).", e.0)),
+            }
+        }
+        let a = labels.join(".");
+        if !dot_atom_hostname(&a) {
+            return Err("The email address contains invalid characters after the @-sign after IDNA encoding.".into());
+        }
+        a
+    };
+    if ascii_domain.len() > DOMAIN_MAX_LENGTH {
+        if ascii_domain == original {
             return Err(format!(
                 "The email address is too long after the @-sign {}.",
-                length_reason(domain.len(), DOMAIN_MAX_LENGTH)
+                length_reason(ascii_domain.len(), DOMAIN_MAX_LENGTH)
             ));
         }
-        let diff = domain.len() - DOMAIN_MAX_LENGTH;
+        let diff = ascii_domain.len() - DOMAIN_MAX_LENGTH;
         let s = if diff == 1 { "" } else { "s" };
         return Err(format!(
             "The email address is too long after the @-sign ({diff} byte{s} too many after IDNA encoding)."
         ));
     }
-    for label in domain.split('.') {
+    for label in ascii_domain.split('.') {
         if label.len() > DNS_LABEL_LENGTH_LIMIT {
             return Err(format!(
                 "After the @-sign, periods cannot be separated by so many characters {}.",
@@ -352,50 +456,251 @@ fn domain_name(original: &str) -> R<String> {
             ));
         }
     }
-    if !domain.contains('.') {
+    if !ascii_domain.contains('.') {
         return Err("The part after the @-sign is not valid. It should have a period.".into());
     }
-    if !domain.ends_with(|c: char| c.is_ascii_alphabetic()) {
+    if !ascii_domain.ends_with(|c: char| c.is_ascii_alphabetic()) {
         return Err("The part after the @-sign is not valid. It is not within a valid top-level domain.".into());
     }
     for d in SPECIAL_USE_DOMAIN_NAMES {
-        if domain == d || domain.ends_with(&format!(".{d}")) {
+        if ascii_domain == d || ascii_domain.ends_with(&format!(".{d}")) {
             return Err(
                 "The part after the @-sign is a special-use or reserved name that cannot be used with email.".into()
             );
         }
     }
-    Ok(domain)
+    let i18n = match idna::decode(&cps(&ascii_domain)) {
+        Ok(d) => d,
+        Err(e) => return Err(format!("The part after the @-sign is not valid IDNA ({}).", e.0)),
+    };
+    let domain_i18n = unidata::to_string(&i18n);
+    let bad = bad_set(&domain_i18n, |c| !is_hostname_intl(c));
+    if !bad.is_empty() {
+        return Err(format!("The part after the @-sign contains invalid characters: {bad}."));
+    }
+    check_unsafe_chars(&domain_i18n, false)?;
+    if let Err(e) = idna::encode(&i18n) {
+        return Err(format!(
+            "The part after the @-sign became invalid after normalizing to international characters ({}).",
+            e.0
+        ));
+    }
+    Ok((ascii_domain, domain_i18n))
+}
+
+/// `ipaddress.IPv4Address(s)`'s `AddressValueError` text, `Ok` when it parses.
+fn ipv4(s: &str) -> R<u32> {
+    if s.is_empty() {
+        return Err("Address cannot be empty".into());
+    }
+    let octets: Vec<&str> = s.split('.').collect();
+    if octets.len() != 4 {
+        return Err(format!("Expected 4 octets in {}", pystr::repr(s)));
+    }
+    let mut out = 0u32;
+    for o in octets {
+        let v = (|| {
+            if o.is_empty() {
+                return Err("Empty octet not permitted".to_owned());
+            }
+            if !o.bytes().all(|b| b.is_ascii_digit()) {
+                return Err(format!("Only decimal digits permitted in {}", pystr::repr(o)));
+            }
+            if o.len() > 3 {
+                return Err(format!("At most 3 characters permitted in {}", pystr::repr(o)));
+            }
+            if o != "0" && o.starts_with('0') {
+                return Err(format!("Leading zeros are not permitted in {}", pystr::repr(o)));
+            }
+            let n: u32 = o.parse().unwrap_or(0);
+            if n > 255 {
+                return Err(format!("Octet {n} (> 255) not permitted"));
+            }
+            Ok(n)
+        })()
+        .map_err(|e| format!("{e} in {}", pystr::repr(s)))?;
+        out = out << 8 | v;
+    }
+    Ok(out)
+}
+
+/// `ipaddress.IPv6Address(s)`'s `AddressValueError` text.
+fn ipv6(address: &str) -> R<()> {
+    if address.contains('/') {
+        return Err(format!("Unexpected '/' in {}", pystr::repr(address)));
+    }
+    let s = match address.split_once('%') {
+        None => address,
+        Some((a, scope)) if !scope.is_empty() && !scope.contains('%') => a,
+        Some(_) => return Err(format!("Invalid IPv6 address: \"{}\"", pystr::repr(address))),
+    };
+    if s.is_empty() {
+        return Err("Address cannot be empty".into());
+    }
+    let n = s.chars().count();
+    if n > 45 {
+        let mut shorten = s.to_owned();
+        if n > 100 {
+            let head: String = s.chars().take(45).collect();
+            let tail: String = s.chars().skip(n - 45).collect();
+            shorten = format!("{head}({} chars elided){tail}", n - 90);
+        }
+        return Err(format!("At most 45 characters expected in {}", pystr::repr(&shorten)));
+    }
+    let mut parts: Vec<String> = s.splitn(10, ':').map(str::to_owned).collect();
+    if parts.len() < 3 {
+        return Err(format!("At least 3 parts expected in {}", pystr::repr(s)));
+    }
+    if parts.last().is_some_and(|p| p.contains('.')) {
+        let v4 = parts.pop().unwrap_or_default();
+        let ip = ipv4(&v4).map_err(|e| format!("{e} in {}", pystr::repr(s)))?;
+        parts.push(format!("{:x}", (ip >> 16) & 0xFFFF));
+        parts.push(format!("{:x}", ip & 0xFFFF));
+    }
+    if parts.len() > 9 {
+        return Err(format!("At most 8 colons permitted in {}", pystr::repr(s)));
+    }
+    let mut skip = None;
+    for (i, p) in parts.iter().enumerate().take(parts.len() - 1).skip(1) {
+        if p.is_empty() {
+            if skip.is_some() {
+                return Err(format!("At most one '::' permitted in {}", pystr::repr(s)));
+            }
+            skip = Some(i);
+        }
+    }
+    let lead = || format!("Leading ':' only permitted as part of '::' in {}", pystr::repr(s));
+    let trail = || format!("Trailing ':' only permitted as part of '::' in {}", pystr::repr(s));
+    let (hi, lo) = if let Some(k) = skip {
+        let (mut hi, mut lo) = (k, parts.len() - k - 1);
+        if parts[0].is_empty() {
+            hi -= 1;
+            if hi != 0 {
+                return Err(lead());
+            }
+        }
+        if parts[parts.len() - 1].is_empty() {
+            lo -= 1;
+            if lo != 0 {
+                return Err(trail());
+            }
+        }
+        if 8 < hi + lo + 1 {
+            return Err(format!("Expected at most 7 other parts with '::' in {}", pystr::repr(s)));
+        }
+        (hi, lo)
+    } else {
+        if parts.len() != 8 {
+            return Err(format!("Exactly 8 parts expected without '::' in {}", pystr::repr(s)));
+        }
+        if parts[0].is_empty() {
+            return Err(lead());
+        }
+        if parts[7].is_empty() {
+            return Err(trail());
+        }
+        (8, 0)
+    };
+    let hextets = parts[..hi].iter().chain(parts[parts.len() - lo..].iter());
+    for h in hextets {
+        if !h.chars().all(|c| c.is_ascii_hexdigit()) {
+            return Err(format!("Only hex digits permitted in {} in {}", pystr::repr(h), pystr::repr(s)));
+        }
+        if h.chars().count() > 4 {
+            return Err(format!("At most 4 characters permitted in {} in {}", pystr::repr(h), pystr::repr(s)));
+        }
+    }
+    Ok(())
+}
+
+/// `validate_email_domain_literal`; `Ok` when it parses.
+fn domain_literal(lit: &str) -> R<()> {
+    let digits = lit.strip_suffix('\n').unwrap_or(lit);
+    if !digits.is_empty() && digits.chars().all(|c| c.is_ascii_digit() || c == '.') {
+        return ipv4(lit).map(|_| ()).map_err(|e| {
+            format!(
+                "The address in brackets after the @-sign is not valid: It is not an IPv4 address ({e}) or is missing an address literal tag."
+            )
+        });
+    }
+    if let Some(v6) = lit.strip_prefix("IPv6:") {
+        return ipv6(v6).map_err(|e| format!("The IPv6 address in brackets after the @-sign is not valid ({e})."));
+    }
+    if !lit.contains(':') {
+        return Err(
+            "The part after the @-sign in brackets is not an IPv4 address and has no address literal tag.".into()
+        );
+    }
+    let bad = bad_set(lit, |c| !('\u{21}'..='\u{FA}').contains(&c));
+    if !bad.is_empty() {
+        return Err(format!("The part after the @-sign contains invalid characters in brackets: {bad}."));
+    }
+    Err("The part after the @-sign contains an invalid address literal tag in brackets.".into())
+}
+
+/// `validate_email_length`.
+fn check_length(addr: &str, reason: Option<&str>) -> R<()> {
+    let chars = addr.chars().count();
+    let bytes = addr.len();
+    if bytes <= EMAIL_MAX_LENGTH {
+        return Ok(());
+    }
+    let diff = bytes - EMAIL_MAX_LENGTH;
+    let s = if diff > 1 { "s" } else { "" };
+    let reason = match reason {
+        None if chars == bytes => length_reason(chars, EMAIL_MAX_LENGTH),
+        None => {
+            let mbpc = addr.chars().map(char::len_utf8).max().unwrap_or(1);
+            let mchars = (diff / mbpc).max(1);
+            if mchars == diff {
+                format!("({diff} character{s} too many)")
+            } else {
+                format!("({mchars}-{diff} character{s} too many)")
+            }
+        }
+        Some(r) => format!("{r} ({diff} byte{s} too many)"),
+    };
+    Err(format!("The email address is too long {reason}."))
 }
 
 fn validate_email(email: &str) -> R<String> {
     let split = split_email(email)?;
-    let original = format!("{}@{}", split.local, split.domain);
-    let mut local = local_part(&split.local, split.quoted)?;
+    let original = if split.quoted {
+        format!("\"{}\"@{}", split.local, split.domain)
+    } else {
+        format!("{}@{}", split.local, split.domain)
+    };
+    let mut info = local_part(&split.local, split.quoted)?;
+    let normalized_local = nfc_str(&info.local);
+    if normalized_local != info.local {
+        if let Err(e) = local_part(&normalized_local, split.quoted) {
+            return Err(format!("After Unicode normalization: {e}"));
+        }
+        info.local = normalized_local;
+    }
     if split.quoted {
         return Err("Quoting the part before the @-sign is not allowed here.".into());
     }
-    if CASE_INSENSITIVE_MAILBOX_NAMES.contains(&local.to_ascii_lowercase().as_str()) {
-        local = local.to_ascii_lowercase();
+    if let Some(a) = &info.ascii
+        && CASE_INSENSITIVE_MAILBOX_NAMES.contains(&a.to_ascii_lowercase().as_str())
+    {
+        info.ascii = Some(a.to_ascii_lowercase());
+        info.local = info.local.to_lowercase();
     }
     if split.domain.is_empty() {
         return Err("There must be something after the @-sign.".into());
     }
-    let domain = domain_name(&split.domain)?;
-    let normalized = format!("{local}@{domain}");
-    if original.len() > EMAIL_MAX_LENGTH {
-        return Err(format!("The email address is too long {}.", length_reason(original.len(), EMAIL_MAX_LENGTH)));
-    }
-    for (addr, why) in [
-        (&normalized, "after normalization"),
-        (&normalized, "when the part after the @-sign is converted to IDNA ASCII"),
-    ] {
-        if addr.len() > EMAIL_MAX_LENGTH {
-            let diff = addr.len() - EMAIL_MAX_LENGTH;
-            let s = if diff > 1 { "s" } else { "" };
-            return Err(format!("The email address is too long {why} ({diff} byte{s} too many)."));
-        }
-    }
+    let (ascii_domain, domain) = if split.domain.starts_with('[') && split.domain.ends_with(']') {
+        domain_literal(&split.domain[1..split.domain.len() - 1])?;
+        return Err("A bracketed IP address after the @-sign is not allowed here.".into());
+    } else {
+        domain_name(&split.domain)?
+    };
+    let normalized = format!("{}@{domain}", info.local);
+    let ascii_form = format!("{}@{ascii_domain}", info.ascii.as_deref().unwrap_or(&info.local));
+    check_length(&original, None)?;
+    check_length(&normalized, Some("after normalization"))?;
+    check_length(&ascii_form, Some("when the part after the @-sign is converted to IDNA ASCII"))?;
     if split.display_name.is_some() {
         return Err("A display name and angle brackets around the email address are not permitted here.".into());
     }
@@ -403,21 +708,4 @@ fn validate_email(email: &str) -> R<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn basics() {
-        assert_eq!(validate("Foo@Example.COM"), Email::Valid("Foo@example.com".into()));
-        assert_eq!(validate("Support@x.io"), Email::Valid("support@x.io".into()));
-        assert_eq!(validate("Ann <a@b.co>"), Email::Valid("a@b.co".into()));
-        assert_eq!(
-            validate("a@b.test"),
-            Email::Invalid(
-                "The part after the @-sign is a special-use or reserved name that cannot be used with email.".into()
-            )
-        );
-        assert_eq!(validate("é@x.com"), Email::Unsupported);
-        assert_eq!(validate("a@xn--bcher-kva.de"), Email::Unsupported);
-    }
-}
+mod tests;

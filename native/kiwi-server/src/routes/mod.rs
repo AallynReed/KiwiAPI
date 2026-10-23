@@ -110,6 +110,20 @@ async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: 
     if !defer && let Some(kind) = matched.as_ref().and_then(|m| crate::images::defer_kind(m.as_str(), req.method())) {
         (req, defer) = crate::images::inspect(&state, req, kind).await;
     }
+/// A param route can own only some values of its segment (Starlette's
+/// `{uuid:int}` next to literals Python still serves): the rest go to Python
+/// after routing but before the ported stack has touched the request.
+async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next) -> Response {
+    let matched = req.extensions().get::<MatchedPath>().cloned();
+    let defer = matched.as_ref().is_some_and(|m| {
+        let m = m.as_str();
+        crate::lbread::defers(m, req.method(), req.uri().path())
+            || crate::events::defers(m)
+            || crate::codexes::defers(m, req.uri())
+            || crate::mods_catalog::defers(m, req.uri())
+            || crate::mods_git::defers(m, req.uri())
+            || crate::discord::defers(m, req.uri().path())
+    });
     if defer && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
         return proxy(State(state), ConnectInfo(peer), req).await;
     }

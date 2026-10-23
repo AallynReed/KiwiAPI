@@ -127,7 +127,7 @@ pub async fn export(State(state): State<AppState>, CurrentUser(user): CurrentUse
     run.await.unwrap_or_else(IntoResponse::into_response)
 }
 
-pub struct DeleteAccount(pub Option<String>);
+pub struct DeleteAccount(pub String);
 
 impl FromBody for DeleteAccount {
     fn from_body(body: Field<'_>) -> Option<Self> {
@@ -142,8 +142,6 @@ pub async fn delete_account(State(state): State<AppState>, req: Request) -> Resp
             Err(r) => return r,
         };
     let run = async {
-        let confirm =
-            confirm.ok_or_else(|| Rejection::internal("email needs Unicode handling but was not deferred"))?;
         if confirm.to_lowercase() != user.email.to_lowercase() {
             return Err(Rejection::new(
                 StatusCode::BAD_REQUEST,

@@ -81,11 +81,6 @@ pub fn router() -> Router<AppState> {
         .route("/site/mods/releases/{release_id}/audio/sound", get(read::site_audio_sound).fallback(get_only))
 }
 
-/// For `routes::defer_to_python`: an image width that still has to be rendered.
-pub async fn defers(state: &AppState, matched: &str, uri: &axum::http::Uri) -> bool {
-    matches!(matched, "/v1/mods/hub/image/{sha}" | "/site/mods/image/{sha}") && images::defers(state, uri).await
-}
-
 /// `public_scope("mods:read", rate_multiplier=settings.mods_rate_limit_multiplier, bucket="mods:browse")`.
 pub struct ModsPub(pub AccessContext);
 

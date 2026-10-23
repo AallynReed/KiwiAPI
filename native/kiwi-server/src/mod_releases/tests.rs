@@ -394,3 +394,22 @@ fn upload_forms_match_fastapi() {
         }
     }
 }
+
+#[test]
+fn thumbnails_match_pillow() {
+    let mut bad = Vec::new();
+    for case in crate::images::tests::pil_cases() {
+        let name = case["name"].as_str().unwrap();
+        let data = b64(&case["data"]);
+        for (w, want) in case["thumbs"].as_object().unwrap() {
+            let got = super::images::render_thumbnail(&data, w.parse().unwrap()).expect("raised");
+            let got = got.map(|t| (t.len() as u64, hex::encode(Sha256::digest(&t))));
+            let want = want.as_object().map(|o| (o["len"].as_u64().unwrap(), o["sha"].as_str().unwrap().to_owned()));
+            if got != want {
+                bad.push(format!("{name} w={w}: got {got:?} want {want:?}"));
+            }
+        }
+    }
+    assert!(bad.is_empty(), "{}", bad.join("
+"));
+}

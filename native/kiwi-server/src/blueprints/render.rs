@@ -1,11 +1,11 @@
 //! `/v1/codexes/render` and `/site/codexes/render` (`render/service.py`): a
 //! blueprint resolved from the update archive (or a local install), drawn and
-//! cached in Redis as base64 PNG. A `?prefab=` creature is served here only
-//! once Python has assembled and cached it.
+//! cached in Redis as base64 PNG, or a `?prefab=` creature assembled from its
+//! rig (`render_creature_cached`).
 
 use axum::{
     extract::{FromRequestParts, Request, State},
-    http::{HeaderValue, StatusCode, Uri, header, request::Parts},
+    http::{HeaderValue, StatusCode, header, request::Parts},
     response::{IntoResponse, Response},
 };
 use base64::Engine;
@@ -52,30 +52,6 @@ async fn redis_get(state: &AppState, key: &str) -> Option<Option<String>> {
 async fn cached_png(state: &AppState, key: &str) -> Option<Vec<u8>> {
     let v = redis_get(state, key).await.flatten().filter(|s| !s.is_empty())?;
     B64.decode(v.as_bytes()).ok()
-}
-
-/// The last value of a query parameter.
-fn query_last(uri: &Uri, name: &str) -> Option<String> {
-    form_urlencoded::parse(uri.query()?.as_bytes()).filter(|(k, _)| k == name).map(|(_, v)| v.into_owned()).last()
-}
-
-/// `routes::defer_to_python`: a non-empty `prefab` whose creature PNG isn't in
-/// Redis yet goes to Python, which assembles it; anything Rust would reject
-/// first (bad branch or `dim`) stays here.
-pub async fn creature_uncached(state: &AppState, uri: &Uri, default_dim: i64) -> bool {
-    let Some(prefab) = query_last(uri, "prefab").filter(|p| !p.is_empty()) else { return false };
-    let branch = query_last(uri, "branch").unwrap_or_else(|| "live-us".into());
-    if !BRANCHES.contains(&branch.as_str()) {
-        return false;
-    }
-    let dim = match query_last(uri, "dim") {
-        None => default_dim,
-        Some(d) => match crate::validation::str_as_int(&d) {
-            Ok(v) if (32..=512).contains(&v) => v as i64,
-            _ => return false,
-        },
-    };
-    cached_png(state, &creature_key(&branch, &prefab, dim)).await.is_none()
 }
 
 struct RenderQuery {
@@ -294,10 +270,10 @@ fn png_response(png: Vec<u8>) -> Response {
     res
 }
 
-/// The creature PNG when Python has cached a non-empty one.
-async fn creature(state: &AppState, q: &RenderQuery) -> Option<Vec<u8>> {
-    let prefab = q.prefab.as_deref().filter(|p| !p.is_empty())?;
-    cached_png(state, &creature_key(&q.branch, prefab, q.dim)).await.filter(|p| !p.is_empty())
+/// The assembled creature for a non-empty `prefab`, when it has one.
+async fn creature(state: &AppState, q: &RenderQuery) -> Result<Option<Vec<u8>>, Response> {
+    let Some(prefab) = q.prefab.as_deref().filter(|p| !p.is_empty()) else { return Ok(None) };
+    Ok(crate::creature::creature_png(state, prefab, q.dim, &q.branch).await?.filter(|p| !p.is_empty()))
 }
 
 /// `GET /v1/codexes/render`.
@@ -318,8 +294,10 @@ pub async fn v1_render(State(state): State<AppState>, req: Request) -> Response 
         return ApiError::not_found(format!("Unknown branch '{}' (known: {})", q.branch, BRANCHES.join(", ")))
             .into_response();
     }
-    if let Some(png) = creature(&state, &q).await {
-        return png_response(png);
+    match creature(&state, &q).await {
+        Ok(Some(png)) => return png_response(png),
+        Ok(None) => {}
+        Err(r) => return r,
     }
     match blueprint_png(&state, &q.blueprint, q.dim, &q.branch).await {
         Ok(Some(png)) => png_response(png),
@@ -353,8 +331,10 @@ pub async fn site_render(State(state): State<AppState>, req: Request) -> Respons
         let detail = format!("Unknown branch '{}' (known: {})", q.branch, BRANCHES.join(", "));
         return http(&parts, StatusCode::NOT_FOUND, detail);
     }
-    if let Some(png) = creature(&state, &q).await {
-        return png_response(png);
+    match creature(&state, &q).await {
+        Ok(Some(png)) => return png_response(png),
+        Ok(None) => {}
+        Err(r) => return r,
     }
     match blueprint_png(&state, &q.blueprint, q.dim, &q.branch).await {
         Ok(Some(png)) => png_response(png),

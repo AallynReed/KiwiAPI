@@ -44,15 +44,6 @@ pub fn router() -> Router<AppState> {
         .route("/site/render/brdf-map.png", get(files::brdf_map))
 }
 
-/// For `routes::defer_to_python`: a creature render Rust can't draw yet.
-pub async fn defers(state: &AppState, matched: &str, uri: &axum::http::Uri) -> bool {
-    match matched {
-        "/v1/codexes/render" => render::creature_uncached(state, uri, 256).await,
-        "/site/codexes/render" => render::creature_uncached(state, uri, 160).await,
-        _ => false,
-    }
-}
-
 /// `_resolve_feature_flags` for these paths: every site flag is read, then a
 /// disabled feature's path is the framework 404.
 pub struct SiteGate;

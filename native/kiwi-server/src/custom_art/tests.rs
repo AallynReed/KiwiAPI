@@ -15,7 +15,7 @@ use axum::{
 };
 use base64::Engine;
 use hyper_util::{client::legacy::Client, rt::TokioExecutor};
-use kiwi_core::email_validator;
+
 use mongodb::bson::{Bson, Document};
 use serde_json::Value;
 use tower::ServiceExt;
@@ -113,8 +113,7 @@ fn emails() {
     for pair in arr(golden(), "emails") {
         let (input, want) = (s(&pair[0]), &pair[1]);
         match intake::clean_email(input) {
-            Ok(Some(a)) => assert_eq!(a, s(&want["ok"]), "{input:?}"),
-            Ok(None) => assert!(email_validator::needs_unicode(input), "{input:?} deferred without needing Unicode"),
+            Ok(a) => assert_eq!(a, s(&want["ok"]), "{input:?}"),
             Err(e) => expect_err(want, &e, input),
         }
     }
@@ -306,16 +305,6 @@ async fn admin_bodies() {
         }
     }
     assert!(bad.is_empty(), "{}", bad.join("\n"));
-}
-
-#[test]
-fn defers_only_unicode_addresses() {
-    let ct = Some(&b"application/x-www-form-urlencoded"[..]);
-    assert!(intake::needs_python(ct, "kind=player&name=x&email=jos%C3%A9%40x.io".as_bytes()));
-    assert!(intake::needs_python(ct, b"email=a%40xn--bcher-kva.de"));
-    assert!(!intake::needs_python(ct, b"kind=player&name=%C3%A9&email=a%40x.io"));
-    assert!(!intake::needs_python(ct, b"email=a%40x.io&email2=%C3%A9"));
-    assert!(!intake::needs_python(Some(&b"multipart/form-data; boundary=XyZ"[..]), b"garbage"));
 }
 
 #[test]

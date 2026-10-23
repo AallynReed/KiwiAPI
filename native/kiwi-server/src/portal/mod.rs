@@ -1,12 +1,10 @@
 //! The Dev Portal: accounts and sessions (`app/auth`), API token management
 //! (`app/tokens`) and the GitHub secret-scanning partner webhook
-//! (`app/scanning`). Bodies whose email needs Unicode/IDNA handling go to
-//! Python before routing ([`defer`]).
+//! (`app/scanning`).
 
 pub mod account;
 pub mod activity;
 pub mod checks;
-pub mod defer;
 pub mod emails;
 pub mod gdpr;
 pub mod oauth;
