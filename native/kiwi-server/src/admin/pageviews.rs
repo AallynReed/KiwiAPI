@@ -121,7 +121,7 @@ pub fn window(days: i64, now: DateTime<Utc>) -> Window {
     Window { since, until: now, hourly: false, labels }
 }
 
-fn bucket(field: &str, hourly: bool) -> Document {
+pub(crate) fn bucket(field: &str, hourly: bool) -> Document {
     let fmt = if hourly { "%Y-%m-%dT%H:00" } else { "%Y-%m-%d" };
     doc! {"$dateToString": {"date": format!("${field}"), "format": fmt, "timezone": "UTC"}}
 }
@@ -595,12 +595,12 @@ type SinceMemo = Option<(Instant, Option<DateTime<Utc>>)>;
 static SINCE: Mutex<SinceMemo> = Mutex::new(None);
 static HEAVY: Semaphore = Semaphore::const_new(3);
 
-fn memo_get(key: &str) -> Option<Value> {
+pub(crate) fn memo_get(key: &str) -> Option<Value> {
     let memo = MEMO.lock().unwrap_or_else(|e| e.into_inner());
     memo.get(key).filter(|(exp, _)| *exp > Instant::now()).map(|(_, v)| v.clone())
 }
 
-fn memo_put(key: String, ttl: u64, v: &Value) {
+pub(crate) fn memo_put(key: String, ttl: u64, v: &Value) {
     let mut memo = MEMO.lock().unwrap_or_else(|e| e.into_inner());
     let now = Instant::now();
     memo.insert(key, (now + StdDuration::from_secs(ttl), v.clone()));
@@ -609,7 +609,7 @@ fn memo_put(key: String, ttl: u64, v: &Value) {
     }
 }
 
-async fn run(state: &AppState, pipeline: Vec<Document>) -> Result<Option<Document>, ApiError> {
+pub(crate) async fn run(state: &AppState, pipeline: Vec<Document>) -> Result<Option<Document>, ApiError> {
     let _permit = HEAVY.acquire().await.map_err(internal)?;
     let docs: Vec<Document> = coll(state, PAGE_VIEWS)
         .aggregate(pipeline)
@@ -623,7 +623,7 @@ async fn run(state: &AppState, pipeline: Vec<Document>) -> Result<Option<Documen
 }
 
 /// `tracking_since()`: the oldest tracked view, cached 300s.
-async fn tracking_since(state: &AppState) -> Result<Option<DateTime<Utc>>, ApiError> {
+pub(crate) async fn tracking_since(state: &AppState) -> Result<Option<DateTime<Utc>>, ApiError> {
     if let Some((exp, v)) = *SINCE.lock().unwrap_or_else(|e| e.into_inner())
         && exp > Instant::now()
     {
