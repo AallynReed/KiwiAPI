@@ -4,7 +4,7 @@
 //! `/v1/mods/hub/releases/*` and `/site/mods/releases/*`, the `mod_release`
 //! event, and `/v1/mods/hub/image/{sha}` + `/site/mods/image/{sha}`.
 //!
-//! Left in Python: `.../assembled` (the creature assembler), rendering a
+//! `.../assembled` is `crate::creature`. Left in Python: rendering a
 //! thumbnail width nobody has asked for yet (the Pillow WebP encode; a
 //! recorded width is served here), and cutting a release from a commit, whose
 //! path shares its GET with the catalog (`write::create` is ready for it).

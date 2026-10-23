@@ -1,11 +1,10 @@
-//! The embeddable viewer's own surface (`app/embed`): the `/embed/viewer`
-//! page, the framing allowlist the website reads, and the partner `.tmod`
-//! upload API. All ride `feature_embed_viewer_enabled`.
-//!
-//! The `/site/embed/*` data endpoints (manifest, blueprint, assembled, VFX,
-//! backdrop, audio) are shells over the Mods Hub, rig assembly, the payload
-//! cache and the audio indexer, and stay in Python until those are ported.
+//! The embeddable viewer (`app/embed`): the `/embed/viewer` page, the
+//! framing allowlist the website reads, the partner `.tmod` upload API and
+//! the `/site/embed/*` data the page fetches. All ride
+//! `feature_embed_viewer_enabled`.
 
+pub mod backdrop;
+pub mod data;
 pub mod tmod;
 
 #[cfg(test)]
@@ -42,6 +41,14 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/embed/viewer", get(viewer).fallback(get_only))
         .route("/site/embed/allowed-origins", get(allowed_origins).fallback(get_only))
+        .route("/site/embed/manifest", get(data::manifest_route).fallback(get_only))
+        .route("/site/embed/blueprint", get(data::blueprint_route).fallback(get_only))
+        .route("/site/embed/assembled", get(data::assembled_route).fallback(get_only))
+        .route("/site/embed/vfx/manifest", get(data::vfx_manifest_route).fallback(get_only))
+        .route("/site/embed/vfx/backdrop", get(data::backdrop_route).fallback(get_only))
+        .route("/site/embed/vfx/asset", get(data::vfx_asset_route).fallback(get_only))
+        .route("/site/embed/audio/bank", get(data::audio_bank_route).fallback(get_only))
+        .route("/site/embed/audio/sound", get(data::audio_sound_route).fallback(get_only))
         .route("/v1/embed/tmod", post(upload).fallback(|| async { method_not_allowed("POST") }))
         .route("/v1/embed/tmod/{token}", get(upload_status).fallback(get_only))
 }

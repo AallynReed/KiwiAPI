@@ -80,3 +80,28 @@ pub fn render_thumbnail(raw: &[u8], dim: usize) -> Result<Vec<u8>, Fault> {
     let rgba = raster::render(&cells, dim, true).ok_or_else(|| Fault::Blueprint("no voxels to render".into()))?;
     Ok(pillow::contain_square(rgba, dim))
 }
+
+pub const CATALOG_AZ: f64 = 40.0;
+pub const CATALOG_EL: f64 = 29.7;
+
+/// `render_voxels_png(voxels, dim, {"az", "el"})` up to the PNG encode, over
+/// baked rig cells (`assembly._bake`): the RGBA pixels, `None` when empty.
+pub fn render_baked(cells: &crate::rig::Cells, dim: usize, az: f64, el: f64) -> Option<Vec<u8>> {
+    const KINDS: [&str; 4] = ["S", "G", "E", "GE"];
+    let rendered: Vec<Rendered> = cells
+        .iter()
+        .map(|&((x, y, z), (r, g, b, kind, level, spec))| Rendered {
+            x,
+            y,
+            z,
+            r,
+            g,
+            b,
+            kind: KINDS.iter().position(|k| *k == kind).unwrap_or(0) as u8,
+            level,
+            spec,
+        })
+        .collect();
+    let rgba = raster::render_at(&rendered, dim, true, az, el)?;
+    Some(pillow::contain_square(rgba, dim))
+}

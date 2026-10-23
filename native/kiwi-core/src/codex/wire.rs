@@ -167,6 +167,17 @@ pub fn decode_identity(data: &[u8]) -> PyResult<Option<Identity>> {
     }))
 }
 
+/// `decode_identity(data)["flags"].get(field)`.
+pub fn identity_flag(data: &[u8], field: u128) -> PyResult<Option<i128>> {
+    let blocks = marker_blocks(data)?;
+    let Some(first) = blocks.first() else { return Ok(None) };
+    let mut ident = first;
+    if ident.s(1).is_none_or(str::is_empty) {
+        ident = blocks.iter().find(|b| b.s(1).is_some_and(|s| s.starts_with('$'))).unwrap_or(ident);
+    }
+    Ok(ident.v(field))
+}
+
 /// A harvested string with its framing: offset, field, text, payload start, length.
 #[derive(Clone, Debug)]
 pub struct Field {

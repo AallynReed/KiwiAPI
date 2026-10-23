@@ -13,6 +13,7 @@ pub mod btt;
 pub mod cheaters;
 pub mod codex;
 pub mod detection;
+pub mod dressing;
 pub mod drops;
 pub mod duplicates;
 pub mod email_validator;

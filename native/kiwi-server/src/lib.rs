@@ -10,6 +10,7 @@ pub mod blueprints;
 pub mod cheaters;
 pub mod codexes;
 pub mod config;
+pub mod creature;
 pub mod custom_art;
 pub mod db;
 pub mod decode;

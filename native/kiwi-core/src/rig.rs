@@ -607,6 +607,8 @@ pub struct RigMap {
     pub by_stem: HashMap<String, Vec<String>>,
     pub head_scale: HashMap<String, f64>,
     pub mesh_scale: HashMap<(String, String), f64>,
+    /// `creatures` keys in insertion order.
+    pub order: Vec<String>,
 }
 
 /// `prefab_stem(prefab)`.
@@ -646,6 +648,7 @@ impl RigMap {
             m.owner.entry(blueprint.clone()).or_insert_with(|| prefab.clone());
             if !m.creatures.contains_key(prefab) {
                 m.creatures.insert(prefab.clone(), (skeleton.clone(), Vec::new()));
+                m.order.push(prefab.clone());
                 m.by_path.insert(prefab.replace('\\', "/").to_lowercase(), prefab.clone());
                 m.by_stem.entry(prefab_stem(prefab).to_lowercase()).or_default().push(prefab.clone());
                 m.head_scale.insert(prefab.clone(), *head);

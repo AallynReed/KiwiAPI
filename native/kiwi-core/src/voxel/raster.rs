@@ -37,8 +37,8 @@ struct Camera {
 }
 
 impl Camera {
-    fn new(dim: usize) -> Self {
-        let (a, e) = (AZ.to_radians(), EL.to_radians());
+    fn new(dim: usize, az: f64, el: f64) -> Self {
+        let (a, e) = (az.to_radians(), el.to_radians());
         let dir = [e.cos() * a.sin(), e.sin(), e.cos() * a.cos()];
         let eye = [dir[0] * DIST, dir[1] * DIST, dir[2] * DIST];
         let f = unit(sub([0.0; 3], eye));
@@ -157,11 +157,16 @@ fn opaque(kind: u8) -> bool {
 /// `render_voxels(voxels, dim, {"fit": "tight"} if tight)`: `(dim, dim, 4)` RGBA.
 /// `cells` is the dict in insertion order; `None` for an empty model.
 pub fn render(cells: &[Rendered], dim: usize, tight: bool) -> Option<Vec<u8>> {
+    render_at(cells, dim, tight, AZ, EL)
+}
+
+/// `render` with the camera's `az`/`el` overridden.
+pub fn render_at(cells: &[Rendered], dim: usize, tight: bool, az: f64, el: f64) -> Option<Vec<u8>> {
     if cells.is_empty() {
         return None;
     }
     let h = dim * SS;
-    let cam = Camera::new(dim);
+    let cam = Camera::new(dim, az, el);
     let (mut mn, mut mx) = ([f64::INFINITY; 3], [f64::NEG_INFINITY; 3]);
     for c in cells {
         for (k, v) in [c.x, c.y, c.z].into_iter().enumerate() {

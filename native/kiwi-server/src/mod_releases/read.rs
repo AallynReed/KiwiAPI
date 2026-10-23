@@ -229,7 +229,7 @@ async fn blueprint(state: &AppState, r: &Doc, path: &str, fmt: Fmt) -> Result<ca
 }
 
 /// `pack_blueprint(raw, path)` with `_decode_blueprint_payload`'s mapping.
-fn pack_blueprint(raw: &[u8], path: &str) -> Result<Map<String, Value>, ApiError> {
+pub fn pack_blueprint(raw: &[u8], path: &str) -> Result<Map<String, Value>, ApiError> {
     use kiwi_core::voxel::PackError;
     let bad = |status: StatusCode, msg: String| ApiError::new(status, ErrorCode::BadRequest, msg);
     match kiwi_core::voxel::pack(raw, path, kiwi_core::voxel::RENDER_VOXEL_CAP) {
@@ -481,7 +481,7 @@ pub fn bank_files(t: &artifact::Tmod, path: &str) -> Option<BankFiles> {
 }
 
 /// `tmod_bank_index(tmod_bytes, path)`.
-async fn bank_index(state: &AppState, data: Vec<u8>, path: &str) -> Result<Value, ApiError> {
+pub async fn bank_index(state: &AppState, data: Vec<u8>, path: &str) -> Result<Value, ApiError> {
     let p = path.to_owned();
     let got = blocking(move || -> Result<Option<BankFiles>, ApiError> {
         let t = artifact::read(&data, true).map_err(|_| ApiError::bad_request("That file isn't a readable .tmod."))?;
@@ -529,6 +529,16 @@ async fn sound(
 ) -> Result<(Vec<u8>, String, String, String), ApiError> {
     let data = tmod_or_404(state, r).await?;
     let payload = bank_index(state, data, path).await?;
+    sound_from_index(state, &payload, id, raw).await
+}
+
+/// `sound_from_index(payload, id, raw)`: `(bytes, media type, filename, etag)`.
+pub async fn sound_from_index(
+    state: &AppState,
+    payload: &Value,
+    id: i64,
+    raw: bool,
+) -> Result<(Vec<u8>, String, String, String), ApiError> {
     let sounds = payload.get("sounds").and_then(Value::as_array).cloned().unwrap_or_default();
     let found = sounds.iter().find(|s| match s.get("id") {
         Some(Value::Bool(b)) => i64::from(*b) == id,
@@ -679,7 +689,7 @@ fn fmt_of(s: &str) -> Fmt {
     if s == "bin" { Fmt::Bin } else { Fmt::Json }
 }
 
-fn sound_reply(headers: &HeaderMap, r: Result<(Vec<u8>, String, String, String), ApiError>) -> Response {
+pub fn sound_reply(headers: &HeaderMap, r: Result<(Vec<u8>, String, String, String), ApiError>) -> Response {
     let (data, media_type, filename, etag) = match r {
         Ok(v) => v,
         Err(e) => return e.into_response(),

@@ -26,7 +26,7 @@ const DEPSET_MAX: usize = 256;
 
 pub type Index = Vec<(String, Vec<u8>)>;
 
-fn index_get<'a>(index: &'a Index, bn: &str) -> Option<&'a Vec<u8>> {
+pub fn index_get<'a>(index: &'a Index, bn: &str) -> Option<&'a Vec<u8>> {
     index.iter().find(|(k, _)| k == bn).map(|(_, v)| v)
 }
 
@@ -150,7 +150,7 @@ fn dev_index(root: &str) -> HashMap<String, PathBuf> {
 }
 
 /// `_game_vfx_resolver()`.
-struct Resolver {
+pub struct Resolver {
     fmap: FileMap,
     dev: HashMap<String, PathBuf>,
 }
@@ -161,25 +161,25 @@ pub enum Where {
 }
 
 impl Resolver {
-    async fn new(state: &AppState) -> Result<Resolver, ApiError> {
+    pub async fn new(state: &AppState) -> Result<Resolver, ApiError> {
         let fmap = game_file_map(state, LIVE_BRANCH).await?;
         let root = state.settings().pkfx_dev_vfx_dir.clone();
         let dev = tokio::task::spawn_blocking(move || dev_index(&root)).await.map_err(internal)?;
         Ok(Resolver { fmap, dev })
     }
 
-    fn available(&self) -> bool {
+    pub fn available(&self) -> bool {
         !self.fmap.is_empty() || !self.dev.is_empty()
     }
 
-    fn lookup(&self, bn: &str) -> Option<Where> {
+    pub fn lookup(&self, bn: &str) -> Option<Where> {
         if let Some(p) = self.fmap.get(bn) {
             return Some(Where::Game(p.clone()));
         }
         self.dev.get(bn).map(|p| Where::Dev(p.clone()))
     }
 
-    async fn read(&self, state: &AppState, w: Where) -> Result<Option<Vec<u8>>, ApiError> {
+    pub async fn read(&self, state: &AppState, w: Where) -> Result<Option<Vec<u8>>, ApiError> {
         match w {
             Where::Dev(p) => tokio::task::spawn_blocking(move || std::fs::read(p))
                 .await
@@ -234,7 +234,7 @@ async fn release_depset(state: &AppState, index: &Index, res: &Resolver) -> Resu
 type DepCache = (HashMap<String, Arc<HashSet<String>>>, VecDeque<String>);
 static DEPSETS: LazyLock<Mutex<DepCache>> = LazyLock::new(Default::default);
 
-fn remember(sha: &str, deps: Arc<HashSet<String>>) {
+pub fn remember(sha: &str, deps: Arc<HashSet<String>>) {
     let Ok(mut c) = DEPSETS.lock() else { return };
     if c.0.contains_key(sha) {
         return;
@@ -248,7 +248,7 @@ fn remember(sha: &str, deps: Arc<HashSet<String>>) {
     }
 }
 
-fn cached(sha: &str) -> Option<Arc<HashSet<String>>> {
+pub fn cached(sha: &str) -> Option<Arc<HashSet<String>>> {
     DEPSETS.lock().ok()?.0.get(sha).cloned()
 }
 
