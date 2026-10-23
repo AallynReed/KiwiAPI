@@ -208,10 +208,28 @@ pub async fn iteration<D: Driver>(d: &D, first_pass: bool) -> f64 {
     next_sleep(ttl, d.now() - start, resumed)
 }
 
+/// The warmer's widest fan-out (the co-movement loads).
+const WARMER_PG_MAX: usize = 8;
+
+/// The state a pass runs on: its own Postgres connections, so it never queues
+/// behind request traffic on the shared pool (each Python worker had a pool of
+/// its own), planning every statement for its actual parameters as asyncpg's
+/// short-lived statement cache did.
+fn warmer_state(state: &AppState) -> AppState {
+    match crate::db::pg_pool(WARMER_PG_MAX, Some("-c plan_cache_mode=force_custom_plan")) {
+        Ok(Some(pool)) => state.with_pg(pool),
+        Ok(None) => state.clone(),
+        Err(e) => {
+            tracing::warn!("leaderboards warmer: own Postgres pool unavailable, sharing the app's: {e:#}");
+            state.clone()
+        }
+    }
+}
+
 /// The loop: a short boot delay, then a pass every TTL or as soon as
 /// [`super::trigger`] wakes it.
 pub async fn run(state: AppState) {
-    let warm = Warm(state);
+    let warm = Warm(warmer_state(&state));
     tokio::time::sleep(Duration::from_secs(2)).await;
     let mut first_pass = true;
     loop {

@@ -37,4 +37,11 @@ impl AppState {
     pub fn pg(&self) -> &deadpool_postgres::Pool {
         self.inner.db.pg.as_ref().expect("POSTGRES_DSN not configured")
     }
+
+    /// The same state over another Postgres pool.
+    pub fn with_pg(&self, pg: deadpool_postgres::Pool) -> AppState {
+        let i = &self.inner;
+        let db = Db { pg: Some(pg), ..i.db.clone() };
+        AppState { inner: Arc::new(Inner { settings: i.settings.clone(), db, upstream: i.upstream.clone() }) }
+    }
 }

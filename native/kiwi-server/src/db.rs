@@ -31,15 +31,24 @@ impl Db {
             }
             None => None,
         };
-        let pg = match env("POSTGRES_DSN") {
-            Some(dsn) => {
-                let cfg: tokio_postgres::Config = dsn.parse().context("POSTGRES_DSN")?;
-                let max = env("POSTGRES_POOL_MAX").and_then(|v| v.parse().ok()).unwrap_or(10);
-                let mgr = deadpool_postgres::Manager::new(cfg, tokio_postgres::NoTls);
-                Some(deadpool_postgres::Pool::builder(mgr).max_size(max).build().context("pg pool")?)
-            }
-            None => None,
-        };
+        let max = env("POSTGRES_POOL_MAX").and_then(|v| v.parse().ok()).unwrap_or(10);
+        let pg = pg_pool(max, None)?;
         Ok(Db { mongo, redis, pg })
     }
+}
+
+/// A pool of up to `max` connections to `POSTGRES_DSN`, `None` when unset;
+/// `options` is appended to the DSN's startup options (`-c name=value`).
+pub fn pg_pool(max: usize, options: Option<&str>) -> anyhow::Result<Option<deadpool_postgres::Pool>> {
+    let Some(dsn) = env("POSTGRES_DSN") else { return Ok(None) };
+    let mut cfg: tokio_postgres::Config = dsn.parse().context("POSTGRES_DSN")?;
+    if let Some(extra) = options {
+        let joined = match cfg.get_options() {
+            Some(own) => format!("{own} {extra}"),
+            None => extra.to_owned(),
+        };
+        cfg.options(joined);
+    }
+    let mgr = deadpool_postgres::Manager::new(cfg, tokio_postgres::NoTls);
+    Ok(Some(deadpool_postgres::Pool::builder(mgr).max_size(max).build().context("pg pool")?))
 }
