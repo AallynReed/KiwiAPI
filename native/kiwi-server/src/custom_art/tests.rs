@@ -427,9 +427,12 @@ async fn worker_steps_against_real_repos() {
     vcs(&["init", "-b", "master", "seed"], &t);
     std::fs::write(seed.join("custom_art.py"), PLACE_SCRIPT).unwrap();
     for m in super::MODS {
-        std::fs::create_dir_all(seed.join(m)).unwrap();
+        std::fs::create_dir_all(seed.join(m).join("art")).unwrap();
+        std::fs::write(seed.join(m).join("art").join(".keep"), "").unwrap();
         std::fs::write(seed.join(m).join("build.py"), "PROPS = {\"modVersion\":  \"1.0.0\"}\n").unwrap();
     }
+    std::fs::create_dir_all(seed.join("originals")).unwrap();
+    std::fs::write(seed.join("originals").join(".keep"), "").unwrap();
     vcs(&["add", "-A"], &seed);
     vcs(&["commit", "-m", "seed"], &seed);
     vcs(&["push", &t.join("troveui.git").to_string_lossy(), "master"], &seed);
@@ -494,12 +497,10 @@ async fn worker_steps_against_real_repos() {
     assert!(run.lines.iter().any(|l| l == "$ git reset --hard FETCH_HEAD"));
     let missing = builder::Builder { python: "kiwi-no-such-interpreter".into(), ..b };
     match missing.place(&tree, &reqs, &mut run).await {
-        Err(builder::Fail::Other(e)) => {
-            assert!(
-                e.starts_with("FileNotFoundError: [Errno 2] ") && e.ends_with(": 'kiwi-no-such-interpreter'"),
-                "{e}"
-            )
+        Err(builder::Fail::Other(e)) if cfg!(unix) => {
+            assert_eq!(e, "FileNotFoundError: [Errno 2] No such file or directory: 'kiwi-no-such-interpreter'")
         }
+        Err(builder::Fail::Other(e)) => assert!(e.starts_with("FileNotFoundError: "), "{e}"),
         other => panic!("{other:?}"),
     }
     let _ = std::fs::remove_dir_all(&t);
