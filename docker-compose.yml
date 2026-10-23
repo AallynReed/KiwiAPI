@@ -358,7 +358,7 @@ services:
     volumes:
       - ./app:/app/app
       - ./.gamedata:/data/gamedata:ro
-    command: ["sh", "-c", "if [ \"$KIWI_BOT\" = rust ]; then exec kiwi-bot; fi; exec python -m app.bot.runner"]
+    command: ["sh", "-c", "if [ \"$$KIWI_BOT\" = rust ]; then exec kiwi-bot; fi; exec python -m app.bot.runner"]
     mem_limit: 512m
     logging:
       driver: json-file
