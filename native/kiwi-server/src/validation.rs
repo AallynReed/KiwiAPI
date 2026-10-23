@@ -858,16 +858,17 @@ impl Coerce for FloatC {
                 return Err(Fail::multiple_of(Num::Float(m)));
             }
         }
-        if let Some(n) = self.le.filter(|&n| f > n) {
+        // NaN fails every bound, as in pydantic-core.
+        if let Some(n) = self.le.filter(|&n| f.is_nan() || f > n) {
             return Err(Fail::less_than_equal(Num::Float(n)));
         }
-        if let Some(n) = self.lt.filter(|&n| f >= n) {
+        if let Some(n) = self.lt.filter(|&n| f.is_nan() || f >= n) {
             return Err(Fail::less_than(Num::Float(n)));
         }
-        if let Some(n) = self.ge.filter(|&n| f < n) {
+        if let Some(n) = self.ge.filter(|&n| f.is_nan() || f < n) {
             return Err(Fail::greater_than_equal(Num::Float(n)));
         }
-        if let Some(n) = self.gt.filter(|&n| f <= n) {
+        if let Some(n) = self.gt.filter(|&n| f.is_nan() || f <= n) {
             return Err(Fail::greater_than(Num::Float(n)));
         }
         Ok(f)
