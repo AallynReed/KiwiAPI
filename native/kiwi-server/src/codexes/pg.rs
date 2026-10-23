@@ -1,6 +1,9 @@
 //! asyncpg as the codex code uses it: arguments encoded for the type Postgres
 //! inferred, `jsonb` through `json.dumps`/`json.loads`, `timestamptz` as an
-//! aware UTC datetime.
+//! aware UTC datetime, and reads through a per-connection prepared statement
+//! cache, so Postgres plans them as it plans asyncpg's (custom plans for the
+//! first five runs, then possibly the generic one), which decides the order
+//! of rows an ORDER BY leaves tied.
 
 use std::error::Error;
 
@@ -228,8 +231,9 @@ fn params(args: &[P]) -> Vec<&(dyn ToSql + Sync)> {
 }
 
 /// `con.fetch`.
-pub async fn fetch(client: &impl GenericClient, sql: &str, args: &[P]) -> anyhow::Result<Vec<Row>> {
-    let rows = client.query(sql, &params(args)).await?;
+pub async fn fetch(client: &impl deadpool_postgres::GenericClient, sql: &str, args: &[P]) -> anyhow::Result<Vec<Row>> {
+    let stmt = client.prepare_cached(sql).await?;
+    let rows = client.query(&stmt, &params(args)).await?;
     rows.iter()
         .map(|r| {
             let cols = r.columns().iter().enumerate().map(|(i, c)| Ok((c.name().to_owned(), cell(r, i)?)));
@@ -240,12 +244,16 @@ pub async fn fetch(client: &impl GenericClient, sql: &str, args: &[P]) -> anyhow
 }
 
 /// `con.fetchrow`.
-pub async fn fetchrow(client: &impl GenericClient, sql: &str, args: &[P]) -> anyhow::Result<Option<Row>> {
+pub async fn fetchrow(
+    client: &impl deadpool_postgres::GenericClient,
+    sql: &str,
+    args: &[P],
+) -> anyhow::Result<Option<Row>> {
     Ok(fetch(client, sql, args).await?.into_iter().next())
 }
 
 /// `con.fetchval`.
-pub async fn fetchval(client: &impl GenericClient, sql: &str, args: &[P]) -> anyhow::Result<Cell> {
+pub async fn fetchval(client: &impl deadpool_postgres::GenericClient, sql: &str, args: &[P]) -> anyhow::Result<Cell> {
     Ok(fetchrow(client, sql, args).await?.map_or(Cell::Null, |r| r.first().clone()))
 }
 

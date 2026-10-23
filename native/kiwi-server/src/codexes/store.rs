@@ -225,7 +225,7 @@ pub async fn query_entries(
         sort = DEFAULT_SORT;
     }
     let c = client(pool).await?;
-    let total = pg::fetchval(&**c, &format!("SELECT count(*) FROM codex_entry WHERE {wh}"), &count_args).await?;
+    let total = pg::fetchval(&c, &format!("SELECT count(*) FROM codex_entry WHERE {wh}"), &count_args).await?;
     let n = args.len();
     args.push(P::Int(limit));
     args.push(P::Int(offset));
@@ -236,7 +236,7 @@ pub async fn query_entries(
         n + 1,
         n + 2
     );
-    let rows = pg::fetch(&**c, &sql, &args).await?;
+    let rows = pg::fetch(&c, &sql, &args).await?;
     Ok((rows, total.int().unwrap_or(0)))
 }
 
@@ -256,7 +256,7 @@ pub async fn stat_keys(pool: &Pool, branch: &str, codex_type: Option<&str>) -> a
     let sql = format!(
         "SELECT s.stat_key AS stat, max(s.stat_name) AS stat_name,        count(DISTINCT s.path) AS count FROM codex_stat s JOIN codex_entry e ON e.branch = s.branch AND e.path = s.path WHERE {wh} GROUP BY s.stat_key ORDER BY lower(coalesce(nullif(max(s.stat_name), ''), s.stat_key)), s.stat_key"
     );
-    pg::fetch(&**client(pool).await?, &sql, &args).await
+    pg::fetch(&client(pool).await?, &sql, &args).await
 }
 
 /// `ability_refs`.
@@ -265,13 +265,13 @@ pub async fn ability_refs(pool: &Pool, branch: &str, codex_type: Option<&str>) -
     let sql = format!(
         "SELECT a.ref, max(a.name) AS name, max(a.description) AS description,        count(DISTINCT a.path) AS count FROM codex_ability a JOIN codex_entry e ON e.branch = a.branch AND e.path = a.path WHERE {wh} GROUP BY a.ref ORDER BY count DESC, a.ref"
     );
-    pg::fetch(&**client(pool).await?, &sql, &args).await
+    pg::fetch(&client(pool).await?, &sql, &args).await
 }
 
 /// `all_recipes`.
 pub async fn all_recipes(pool: &Pool, branch: &str) -> anyhow::Result<Vec<Row>> {
     pg::fetch(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT path, name, category, data FROM codex_entry WHERE branch = $1 AND codex_type = 'recipe'",
         &[P::text(branch)],
     )
@@ -281,7 +281,7 @@ pub async fn all_recipes(pool: &Pool, branch: &str) -> anyhow::Result<Vec<Row>> 
 /// `type_counts`: `(type, count)`.
 pub async fn type_counts(pool: &Pool, branch: &str) -> anyhow::Result<Vec<(String, i64)>> {
     let rows = pg::fetch(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT codex_type AS type, count(*) AS count FROM codex_entry WHERE branch = $1 GROUP BY codex_type ORDER BY codex_type",
         &[P::text(branch)],
     )
@@ -298,7 +298,7 @@ pub async fn list_categories(
     let (wh, args) = type_scope(branch, codex_type, &["branch = $1", "category <> ''"], "codex_type");
     let sql =
         format!("SELECT category, count(*) AS count FROM codex_entry WHERE {wh} GROUP BY category ORDER BY category");
-    let rows = pg::fetch(&**client(pool).await?, &sql, &args).await?;
+    let rows = pg::fetch(&client(pool).await?, &sql, &args).await?;
     Ok(rows.iter().map(|r| (r.text("category"), r.get("count").int().unwrap_or(0))).collect())
 }
 
@@ -308,7 +308,7 @@ pub async fn get_entry(pool: &Pool, branch: &str, codex_type: &str, path: &str) 
         "SELECT {} FROM codex_entry WHERE branch = $1 AND codex_type = $2 AND path = $3",
         SELECT_COLS.join(", ")
     );
-    pg::fetchrow(&**client(pool).await?, &sql, &[P::text(branch), P::text(codex_type), P::text(path)]).await
+    pg::fetchrow(&client(pool).await?, &sql, &[P::text(branch), P::text(codex_type), P::text(path)]).await
 }
 
 /// `links_for`.
@@ -333,7 +333,7 @@ pub async fn links_for(
         conds.join(" AND "),
         args.len()
     );
-    pg::fetch(&**client(pool).await?, &sql, &args).await
+    pg::fetch(&client(pool).await?, &sql, &args).await
 }
 
 /// `entries_with_stat`: best row per entry, strongest first, sliced in Rust.
@@ -354,13 +354,13 @@ pub async fn entries_with_stat(
     let wh = conds.join(" AND ");
     let c = client(pool).await?;
     let total = pg::fetchval(
-        &**c,
+        &c,
         &format!("SELECT count(DISTINCT s.path) FROM codex_stat s JOIN codex_entry e ON e.branch = s.branch AND e.path = s.path WHERE {wh}"),
         &args,
     )
     .await?;
     let mut rows = pg::fetch(
-        &**c,
+        &c,
         &format!(
             "SELECT DISTINCT ON (s.path) s.path, s.stat_key, s.stat_name, s.value,        s.is_percent, s.slot_key, e.codex_type, e.name, e.category, e.blueprint FROM codex_stat s JOIN codex_entry e ON e.branch = s.branch AND e.path = s.path WHERE {wh} ORDER BY s.path, s.value DESC NULLS LAST"
         ),
@@ -383,7 +383,7 @@ pub async fn entries_with_stat(
 /// `requirements_for`: the whole ladder of the badge `collection` belongs to.
 pub async fn requirements_for(pool: &Pool, branch: &str, collection: &str) -> anyhow::Result<Vec<Row>> {
     pg::fetch(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT rank, rank_name, badge_id, collection, completion_kind,        requirement_key, label, amount, difficulty, status, context FROM codex_requirement WHERE branch = $1 AND badge_id = (    SELECT badge_id FROM codex_requirement     WHERE branch = $1 AND collection = $2 LIMIT 1) ORDER BY rank",
         &[P::text(branch), P::text(collection)],
     )
@@ -393,7 +393,7 @@ pub async fn requirements_for(pool: &Pool, branch: &str, collection: &str) -> an
 /// `upgrade_system` (no `effects` column, as in Python).
 pub async fn upgrade_system(pool: &Pool, branch: &str, system_key: &str) -> anyhow::Result<Vec<Row>> {
     pg::fetch(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT system_kind, system_key, node_key, rank, source_path, costs, requires FROM codex_upgrade WHERE branch = $1 AND system_key = $2 ORDER BY rank NULLS LAST, node_key",
         &[P::text(branch), P::text(system_key)],
     )
@@ -403,7 +403,7 @@ pub async fn upgrade_system(pool: &Pool, branch: &str, system_key: &str) -> anyh
 /// `upgrade_systems`.
 pub async fn upgrade_systems(pool: &Pool, branch: &str) -> anyhow::Result<Vec<Row>> {
     pg::fetch(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT system_kind, system_key, count(*) AS nodes FROM codex_upgrade WHERE branch = $1 GROUP BY system_kind, system_key ORDER BY system_kind, system_key",
         &[P::text(branch)],
     )
@@ -413,7 +413,7 @@ pub async fn upgrade_systems(pool: &Pool, branch: &str) -> anyhow::Result<Vec<Ro
 /// `meta_signature`: `(parser_version, updated_at)`, `(0, None)` without a row.
 pub async fn meta_signature(pool: &Pool, branch: &str) -> anyhow::Result<(i64, Option<DateTime<Utc>>)> {
     let row = pg::fetchrow(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT parser_version, updated_at FROM codex_meta WHERE branch = $1",
         &[P::text(branch)],
     )
@@ -431,12 +431,12 @@ pub async fn meta_signature(pool: &Pool, branch: &str) -> anyhow::Result<(i64, O
 }
 
 async fn int_val(pool: &Pool, sql: &str, branch: &str) -> anyhow::Result<i64> {
-    Ok(pg::fetchval(&**client(pool).await?, sql, &[P::text(branch)]).await?.int().unwrap_or(0))
+    Ok(pg::fetchval(&client(pool).await?, sql, &[P::text(branch)]).await?.int().unwrap_or(0))
 }
 
 pub async fn has_any(pool: &Pool, branch: &str) -> anyhow::Result<bool> {
     let v = pg::fetchval(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT EXISTS (SELECT 1 FROM codex_entry WHERE branch = $1)",
         &[P::text(branch)],
     )
@@ -466,7 +466,7 @@ pub async fn load_rig_bindings(
     branch: &str,
 ) -> anyhow::Result<Vec<(String, String, String, String, f64, f64)>> {
     let rows = pg::fetch(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT prefab, blueprint, skeleton, ap_key, mesh_scale, head_scale FROM rig_binding WHERE branch = $1 ORDER BY prefab, blueprint",
         &[P::text(branch)],
     )
@@ -493,7 +493,7 @@ pub async fn load_rig_bindings(
 /// `child_counts`.
 pub async fn child_counts(pool: &Pool, branch: &str) -> anyhow::Result<Map<String, Value>> {
     let row = pg::fetchrow(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT (SELECT count(*) FROM codex_entry WHERE branch = $1) AS entries,        (SELECT count(*) FROM codex_stat WHERE branch = $1) AS stats,        (SELECT count(*) FROM codex_ability WHERE branch = $1) AS abilities,        (SELECT count(*) FROM codex_link WHERE branch = $1) AS links,        (SELECT count(*) FROM codex_requirement WHERE branch = $1) AS requirements,        (SELECT count(*) FROM codex_upgrade WHERE branch = $1) AS upgrades",
         &[P::text(branch)],
     )
@@ -702,7 +702,7 @@ pub async fn delete_entries(pool: &Pool, branch: &str, paths: &[String]) -> anyh
 /// `existing_shas`: path -> content sha.
 pub async fn existing_shas(pool: &Pool, branch: &str) -> anyhow::Result<HashMap<String, String>> {
     let rows = pg::fetch(
-        &**client(pool).await?,
+        &client(pool).await?,
         "SELECT path, content_sha256 FROM codex_entry WHERE branch = $1",
         &[P::text(branch)],
     )

@@ -142,7 +142,7 @@ async fn reads_and_index() {
     assert_eq!(store::get_rig_version(&pool, "pts").await.unwrap(), indexer::RIG_PARSER_VERSION);
     let client = pool.get().await.unwrap();
     let data = pg::fetchval(
-        &**client,
+        &client,
         "SELECT data FROM codex_entry WHERE branch = 'pts' AND path = 'prefabs/recipes/recipe_item_wings_lunacy.binfab'",
         &[],
     )
@@ -150,7 +150,7 @@ async fn reads_and_index() {
     .unwrap();
     assert_eq!(data.json()["recipe"]["mastery_source"], json!("prefab"));
     let stale = pg::fetchval(
-        &**client,
+        &client,
         "SELECT count(*) FROM codex_stat WHERE branch = 'pts' AND path = 'prefabs/item/gone.binfab'",
         &[],
     )
