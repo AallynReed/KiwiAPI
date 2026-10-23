@@ -1,20 +1,28 @@
 //! `/v1/rotations/*` from `app/trove/router.py`: deterministic timers and the
-//! bot-captured reads, tokenless under `rotations:read`. The three capture
-//! inserts publish to the events bus, so they stay in Python for now.
+//! bot-captured reads, tokenless under `rotations:read`, and the three
+//! master-only capture inserts (`inserts`).
 
 pub mod bodies;
 pub mod chaos;
 pub mod delves;
 pub mod gamedata;
 pub mod http;
+pub mod inserts;
 pub mod store;
 
+#[cfg(test)]
+mod inserts_tests;
 #[cfg(test)]
 mod store_tests;
 #[cfg(test)]
 mod tests;
 
-use axum::{Router, extract::State, response::IntoResponse, routing::get};
+use axum::{
+    Router,
+    extract::State,
+    response::IntoResponse,
+    routing::{get, post},
+};
 use kiwi_core::rotations as rot;
 use serde_json::Value;
 
@@ -40,11 +48,14 @@ pub fn router() -> Router<AppState> {
         .route("/v1/rotations/corruxion", get(corruxion))
         .route("/v1/rotations/fluxion", get(fluxion))
         .route("/v1/rotations/luxion", get(luxion))
+        .route(inserts::LUXION_PATH, post(inserts::luxion_insert))
         .route("/v1/rotations/luxion/history", get(luxion_history))
         .route("/v1/rotations/gardening", get(gardening))
         .route("/v1/rotations/chaos-chest", get(chaos_chest))
+        .route(inserts::CHAOS_PATH, post(inserts::chaos_insert))
         .route("/v1/rotations/chaos-chest/history", get(chaos_history))
         .route("/v1/rotations/challenge/current", get(challenge_current))
+        .route(inserts::CHALLENGE_PATH, post(inserts::challenge_insert))
         .route("/v1/rotations/challenge/history", get(challenge_history))
         .route("/v1/rotations/calendar", get(calendar))
         .route("/v1/rotations/delves/weeks", get(delve_weeks))

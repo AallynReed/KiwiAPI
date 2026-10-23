@@ -110,30 +110,14 @@ pub async fn reset_cache(state: &AppState) -> i64 {
     })
 }
 
-/// `bus.publish(type, signature, data)`'s Redis side: the compare-and-set on
-/// `events:sig:<type>` and the channel message. `leaderboard` is neither a
-/// webhook nor a DM-subscription type, so nothing else is queued.
+/// The channel message `bus.publish` sends.
 pub fn event_payload(kind: &str, data: Value, ts: i64) -> String {
     pyjson::dumps_spaced(&json!({"type": kind, "data": data, "ts": ts}))
 }
 
+/// `bus.publish(type, signature, data)` on the events bus.
 pub async fn publish_event(state: &AppState, kind: &str, signature: &str, data: Value) -> bool {
-    let Some(mut con) = state.inner.db.redis.clone() else { return false };
-    let payload = event_payload(kind, data, chrono::Utc::now().timestamp());
-    let res: redis::RedisResult<bool> = async {
-        let prev: Option<String> =
-            redis::cmd("SET").arg(format!("events:sig:{kind}")).arg(signature).arg("GET").query_async(&mut con).await?;
-        if prev.as_deref() == Some(signature) {
-            return Ok(false);
-        }
-        redis::cmd("PUBLISH").arg(&state.settings().events_channel).arg(payload).query_async::<()>(&mut con).await?;
-        Ok(true)
-    }
-    .await;
-    res.unwrap_or_else(|e| {
-        tracing::warn!("event publish failed ({kind}): {e}");
-        false
-    })
+    crate::events::publish(state, kind, signature, data).await
 }
 
 /// `detection.trigger_warmer()`. While Python owns the warmer it lives in a

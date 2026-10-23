@@ -1,15 +1,17 @@
 //! The market scope: `/v1/market` reads and reset (`app/trove/router.py`),
 //! the `/site/market/*` proxies and analytics and `/site/tomes`
 //! (`app/site/router.py`), and the master interest-list and category admin
-//! (`app/admin/router.py`). `POST /v1/market/insert` stays in Python: it
-//! publishes to the events bus.
+//! (`app/admin/router.py`), and the scraper's `POST /v1/market/insert`.
 
 pub mod admin;
+pub mod insert;
 pub mod pg;
 pub mod reads;
 pub mod store;
 pub mod tomes;
 
+#[cfg(test)]
+mod insert_tests;
 #[cfg(test)]
 mod store_tests;
 #[cfg(test)]
@@ -36,6 +38,7 @@ pub fn router() -> Router<AppState> {
         .route("/v1/market/listings", get(reads::v1_listings))
         .route("/v1/market/items", get(reads::v1_items))
         .route("/v1/market/items/{name}/summary", get(reads::v1_summary))
+        .route(insert::PATH, post(insert::insert))
         .route("/v1/market/reset", post(reads::v1_reset))
         .route("/site/market/items", get(reads::site_items))
         .route("/site/market/item-images", get(reads::site_item_images))

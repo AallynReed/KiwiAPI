@@ -1,6 +1,6 @@
-//! The status prober loop of `app/trove/status.py`. Written but not started:
-//! Python's loop also publishes `server_status` on the events bus after every
-//! probe, so it moves to Rust (`RUST_OWNS=status_prober`) with that wave.
+//! The status prober loop of `app/trove/status.py` (`RUST_OWNS=status_prober`):
+//! probe, record transitions, mirror the snapshot to Redis for every other
+//! process, then publish `server_status` on the events bus.
 
 use std::{
     future::Future,
@@ -45,7 +45,7 @@ pub fn current() -> Option<Value> {
     CURRENT.read().ok().and_then(|s| s.clone())
 }
 
-/// Spawns the loop when this server owns it. Not called from `jobs::start` yet.
+/// Spawns the loop when this server owns it.
 pub fn start(state: &AppState) {
     jobs::spawn(state, LOOP, run);
 }
@@ -58,7 +58,9 @@ async fn run(state: AppState) {
                 let s = |env: &str| r.pointer(&format!("/environments/{env}/status")).cloned().unwrap_or_default();
                 let auth = r.pointer("/auth/online").cloned().unwrap_or_default();
                 tracing::info!("trove status: eu={} us={} pts={} (auth={auth})", s("eu"), s("us"), s("pts"));
-                // Python publishes the `server_status` event here.
+                if let Err(e) = crate::events::publish_type(&state, "server_status").await {
+                    tracing::warn!("trove status: event publish failed: {e:#}");
+                }
             }
             Err(e) => tracing::warn!("trove status probe failed: {e:#}"),
         }

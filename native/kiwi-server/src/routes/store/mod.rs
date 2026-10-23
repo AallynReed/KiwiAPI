@@ -1,12 +1,13 @@
 //! The store catalog: `store_router` of `app/trove/router.py` (reads behind
-//! `store:read`, the master reset) and the `/site/store/*` proxies of
-//! `app/site/router.py`. `POST /v1/store/insert` stays in Python because it
-//! publishes to the events bus; the parser and ingest rules it needs are
-//! ported in `kiwi_core::store`.
+//! `store:read`, the master insert and reset) and the `/site/store/*` proxies
+//! of `app/site/router.py`.
 
+pub mod insert;
 pub mod model;
 pub mod service;
 
+#[cfg(test)]
+mod insert_tests;
 #[cfg(test)]
 mod store_tests;
 #[cfg(test)]
@@ -53,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/v1/store/categories", get(v1_categories))
         .route("/v1/store/timeline", get(v1_timeline))
         .route("/v1/store/products/{code}", get(v1_product))
+        .route(insert::PATH, post(insert::insert))
         .route("/v1/store/reset", post(v1_reset))
         .route("/site/store/products", get(site_products))
         .route("/site/store/categories", get(site_categories))

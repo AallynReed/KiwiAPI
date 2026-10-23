@@ -1,0 +1,605 @@
+{
+ "python": "3.13.17",
+ "feeds": [
+  {
+   "xml": "<rss xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:media=\"http://search.yahoo.com/mrss/\"><channel><item><link> https://a/1 </link><title> A &amp;amp; B </title><dc:creator> Ann </dc:creator><description>&lt;p&gt;Hi &amp;amp; bye&lt;/p&gt;</description><category> One </category><category>  </category><category>Two &amp;amp; Three</category><pubDate>Tue, 20 Oct 2026 15:37:59 -0000</pubDate><media:content url=\"\"/><media:thumbnail url=\"https://img/t.png\"/></item></channel></rss>",
+   "items": [
+    {
+     "url": "https://a/1",
+     "title": "A & B",
+     "author": "Ann",
+     "summary": "Hi & bye",
+     "category": "One",
+     "categories": [
+      "One",
+      "Two & Three"
+     ],
+     "image": "https://img/t.png",
+     "published_at": 1792510679
+    }
+   ]
+  },
+  {
+   "xml": "<rss xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:media=\"http://search.yahoo.com/mrss/\"><channel><item><title>no link</title></item><item><link></link></item><item><link>x<!-- c -->y<![CDATA[<z>]]><b>inner</b>tail</link><pubDate>garbage</pubDate></item></channel><channel><item><link>second-channel</link><media:content url='u1'/><media:content url='u2'/></item></channel></rss>",
+   "items": [
+    {
+     "url": "xy<z>",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "second-channel",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": "u1",
+     "published_at": null
+    }
+   ]
+  },
+  {
+   "xml": "<rss xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:media=\"http://search.yahoo.com/mrss/\"><channel><item><link>l</link><description><![CDATA[<p>Big word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word </p>]]></description><pubDate>1 Jan 0001 00:30:00 +0100</pubDate></item></channel></rss>",
+   "items": [
+    {
+     "url": "l",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "Big word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word...",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": 978305400
+    }
+   ]
+  },
+  {
+   "xml": "<rss><channel><item><link>u0</link></item><item><link>u1</link></item><item><link>u2</link></item><item><link>u3</link></item><item><link>u4</link></item><item><link>u5</link></item><item><link>u6</link></item><item><link>u7</link></item><item><link>u8</link></item><item><link>u9</link></item><item><link>u10</link></item><item><link>u11</link></item><item><link>u12</link></item><item><link>u13</link></item><item><link>u14</link></item><item><link>u15</link></item><item><link>u16</link></item><item><link>u17</link></item><item><link>u18</link></item><item><link>u19</link></item><item><link>u20</link></item><item><link>u21</link></item><item><link>u22</link></item><item><link>u23</link></item><item><link>u24</link></item><item><link>u25</link></item><item><link>u26</link></item><item><link>u27</link></item><item><link>u28</link></item><item><link>u29</link></item><item><link>u30</link></item><item><link>u31</link></item><item><link>u32</link></item><item><link>u33</link></item><item><link>u34</link></item></channel></rss>",
+   "items": [
+    {
+     "url": "u0",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u1",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u2",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u3",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u4",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u5",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u6",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u7",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u8",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u9",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u10",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u11",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u12",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u13",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u14",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u15",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u16",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u17",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u18",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u19",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u20",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u21",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u22",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u23",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u24",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u25",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u26",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u27",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u28",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "url": "u29",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    }
+   ]
+  },
+  {
+   "xml": "<rss xmlns=\"urn:x\"><channel><item><link>ns-default</link></item></channel></rss>",
+   "items": []
+  },
+  {
+   "xml": "<!DOCTYPE rss [<!ENTITY t \"Trove\">]><rss><channel><item><link>e</link><title>&t;!</title><pubDate>31 Dec 9999 23:00:00 -0200</pubDate></item></channel></rss>",
+   "error": "OverflowError"
+  },
+  {
+   "xml": "<rss><channel><item><link>bad</link><title>&nbsp;</title></item></channel></rss>",
+   "error": "ParseError"
+  },
+  {
+   "xml": "<rss><channel><item><link>a\r\nb</link><dc:creator xmlns:dc='urn:other'>x</dc:creator></item></channel></rss>",
+   "items": [
+    {
+     "url": "a\nb",
+     "title": "",
+     "author": "Team Trove",
+     "summary": "",
+     "category": "News",
+     "categories": [],
+     "image": null,
+     "published_at": null
+    }
+   ]
+  },
+  {
+   "xml": "not xml at all",
+   "error": "ParseError"
+  }
+ ],
+ "dates": [
+  [
+   "Tue, 20 Oct 2026 15:37:59 -0000",
+   {
+    "naive": "2026-10-20T15:37:59"
+   }
+  ],
+  [
+   "Tue, 20 Oct -5 15:37:59 +0000",
+   {
+    "ok": 972056579
+   }
+  ],
+  [
+   "Tue, 20 Oct 68 15:37:59 +0000",
+   {
+    "ok": 3117973079
+   }
+  ],
+  [
+   "Tue, 20 Oct 69 15:37:59 +0000",
+   {
+    "ok": -6250921
+   }
+  ],
+  [
+   "Tue, 20 Oct 2026 15:37:59 +2400",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "Tue, 20 Oct 2026 15:37:59 +2359",
+   {
+    "ok": 1792424339
+   }
+  ],
+  [
+   "Tue, 20 Oct 2026 15:37:59 +0099",
+   {
+    "ok": 1792504739
+   }
+  ],
+  [
+   "Tue, 20 Oct 2026 15:37:59 -9999999999999999999999",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "Tue, 20 Oct 2026 15:37:59 +",
+   {
+    "naive": "2026-10-20T15:37:59"
+   }
+  ],
+  [
+   "Tue, 20 Oct 2026 15:37:59+0100",
+   {
+    "ok": 1792507079
+   }
+  ],
+  [
+   "Tue, 20 Oct 2026 15:37:59-0100",
+   {
+    "ok": 1792514279
+   }
+  ],
+  [
+   "2026 Oct 20 15:37:59 +0000",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "20 Oct 15:37:59 2026 +0000",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "Tuesday, 20 Oct 2026 15:37:59 +0000",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "mon 20 Oct 2026 15:37:59 +0000",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "20 Oct, 2026, 15:37:59, +0000",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "20 Oct 2026, 15:37:59 +0000",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "20-Oct-2026 15:37:59 +0000",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "20 Oct 2026 15:37:59 +0000 extra words",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "29 Feb 2024 00:00:00 +0000",
+   {
+    "ok": 1709164800
+   }
+  ],
+  [
+   "29 Feb 2023 00:00:00 +0000",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "1 Jan 0 00:00:00 +0000",
+   {
+    "ok": 946684800
+   }
+  ],
+  [
+   "1 Jan 10000 00:00:00 +0000",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "٢٠ Oct 2026 15:37:59 +0000",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "20 OCT 2026 15:37:59 gmt",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "20 Oct 2026 15:37:59 z",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "20 Oct 2026 15:37 +0000",
+   {
+    "ok": 1792510620
+   }
+  ],
+  [
+   "20 Oct 2026 15 +0000",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "20 Oct 2026 15:37:59:01 +0000",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "20 Oct 2026 15.37 +0000",
+   {
+    "ok": 1792510620
+   }
+  ],
+  [
+   "20 Oct 2026 15.37.59.1 +0000",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "   ",
+   {
+    "error": "ValueError"
+   }
+  ],
+  [
+   "20　Oct 2026 15:37:59 +0000",
+   {
+    "ok": 1792510679
+   }
+  ],
+  [
+   "20 Oct 2026 -1:37:59 +0000",
+   {
+    "error": "ValueError"
+   }
+  ]
+ ]
+}

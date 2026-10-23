@@ -1,7 +1,8 @@
 //! `app/events/bus.py`: publish an event exactly once across every process
 //! (the `SET events:sig:{type} sig GET` compare-and-set), fan it out over the
-//! Redis channel and into the webhook and DM-subscription queues, and hand
-//! channel messages to this process's SSE streams.
+//! Redis channel and into the webhook and DM-subscription queues (through
+//! their own `enqueue`, the one queue writer), and hand channel messages to
+//! this process's SSE streams.
 
 use std::{
     collections::HashMap,
@@ -17,12 +18,8 @@ use serde_json::{Value, json};
 use tokio::sync::mpsc;
 
 use super::sources::{SOURCES, Source};
-use crate::{features, pyjson, state::AppState};
+use crate::{pyjson, state::AppState};
 
-/// `WEBHOOK_EVENT_TYPES` (`app/webhooks/models.py`).
-pub const WEBHOOK_EVENT_TYPES: [&str; 3] = ["challenge", "mod_release", "game_update"];
-/// `_BUS_EVENTS` (`app/dm_subs/delivery.py`).
-pub const DM_EVENT_TYPES: [&str; 4] = ["challenge", "corruxion", "fluxion", "game_update"];
 const QUEUE_SIZE: usize = 64;
 
 pub type Event = Arc<Value>;
@@ -95,8 +92,9 @@ pub async fn publish(state: &AppState, kind: &str, signature: &str, data: Value)
             }
             sigs.insert(kind.to_owned(), signature.to_owned());
         }
-        broadcast_local(Arc::new(payload));
-        tracing::debug!("no Redis: webhook and DM deliveries for {kind} are not made inline");
+        let payload = Arc::new(payload);
+        broadcast_local(payload.clone());
+        fan_out(state, &payload).await;
         return true;
     };
     let text = pyjson::dumps_spaced(&payload);
@@ -112,20 +110,7 @@ pub async fn publish(state: &AppState, kind: &str, signature: &str, data: Value)
     .await;
     match emitted {
         Ok(true) => {
-            let s = state.settings();
-            enqueue(
-                state,
-                &mut con,
-                kind,
-                &text,
-                &WEBHOOK_EVENT_TYPES,
-                features::WEBHOOKS_FLAG,
-                &s.webhooks_queue,
-                "webhook",
-            )
-            .await;
-            enqueue(state, &mut con, kind, &text, &DM_EVENT_TYPES, features::DM_SUBS_FLAG, &s.dm_subs_queue, "dm-sub")
-                .await;
+            fan_out(state, &payload).await;
             true
         }
         Ok(false) => false,
@@ -136,33 +121,11 @@ pub async fn publish(state: &AppState, kind: &str, signature: &str, data: Value)
     }
 }
 
-/// `enqueue_or_inline` with Redis: `LPUSH` the published JSON when the type is
-/// deliverable and the feature is on.
-#[allow(clippy::too_many_arguments)]
-async fn enqueue(
-    state: &AppState,
-    con: &mut redis::aio::ConnectionManager,
-    kind: &str,
-    text: &str,
-    types: &[&str],
-    flag: &str,
-    queue: &str,
-    log_name: &str,
-) {
-    if !types.contains(&kind) {
-        return;
-    }
-    match features::is_enabled(state, flag).await {
-        Ok(true) => {}
-        Ok(false) => return,
-        Err(e) => {
-            tracing::warn!("{log_name} fan-out failed: {e:#}");
-            return;
-        }
-    }
-    if let Err(e) = redis::cmd("LPUSH").arg(queue).arg(text).query_async::<()>(con).await {
-        tracing::warn!("{log_name} enqueue failed: {e}");
-    }
+/// `_fanout_webhooks` + `_fanout_dm_subs`: each feature's own `enqueue`
+/// (LPUSH of the published JSON, or inline delivery without Redis).
+async fn fan_out(state: &AppState, payload: &Value) {
+    crate::webhooks::enqueue(state, payload).await;
+    crate::dm_subs::enqueue(state, payload).await;
 }
 
 /// `publish_source`: the source's current state, if its signature changed.

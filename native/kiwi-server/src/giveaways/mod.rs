@@ -3,9 +3,8 @@
 //! site-user routes and the tokenless `giveaways:read` lists (both behind
 //! `feature_giveaways_enabled`, checked before auth like `_GIVEAWAYS_GATE`).
 //!
-//! The auto-open/draw worker is ported ([`spawn_worker`]) but not started:
-//! every tick ends with `bus.publish_type("giveaways")`, which waits for the
-//! events bus.
+//! The auto-open/draw worker ([`spawn_worker`], `RUST_OWNS=giveaways`) ends
+//! every tick with the events bus' `publish_type("giveaways")`.
 
 pub mod body;
 pub mod model;

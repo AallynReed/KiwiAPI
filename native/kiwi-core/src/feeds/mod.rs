@@ -3,6 +3,7 @@
 //! BeautifulSoup tree the Bilibili scrape reads, and the scrape's card fields.
 
 pub mod bilibili;
+pub mod news;
 pub mod py;
 pub mod soup;
 pub mod tables;

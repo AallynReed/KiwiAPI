@@ -159,7 +159,7 @@ pub fn map_to_doc(m: &Map<String, Value>) -> Result<Document, Invalid> {
 
 // --- Luxion -------------------------------------------------------------------
 
-fn luxion_doc(d: &Document) -> Out<LuxionDoc> {
+pub fn luxion_doc(d: &Document) -> Out<LuxionDoc> {
     Ok(LuxionDoc {
         started_at: int(d, "started_at")?,
         first_seen_at: datetime(d, "first_seen_at")?,
@@ -205,7 +205,7 @@ pub struct ChaosCapture {
     pub captured_at: DateTime<Utc>,
 }
 
-fn chaos_doc(d: &Document) -> Out<ChaosCapture> {
+pub fn chaos_doc(d: &Document) -> Out<ChaosCapture> {
     Ok(ChaosCapture {
         week_anchor: int(d, "week_anchor")?,
         name: string(d, "name")?,
@@ -246,7 +246,7 @@ pub async fn chaos_feed(db: &Database) -> Res<Option<(Option<Map<String, Value>>
 
 // --- challenge ----------------------------------------------------------------
 
-fn challenge_doc(d: &Document) -> Out<ChallengeDoc> {
+pub fn challenge_doc(d: &Document) -> Out<ChallengeDoc> {
     Ok(ChallengeDoc {
         window_anchor: int(d, "window_anchor")?,
         window_ends_at: int(d, "window_ends_at")?,

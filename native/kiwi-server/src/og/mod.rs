@@ -96,7 +96,8 @@ impl FromRequestParts<AppState> for SiteGate {
         }
         let path = parts.uri.path();
         let blocked = (!player && (path == "/activity" || path.starts_with("/activity/")))
-            || (!status && (path == "/status" || path.starts_with("/status/")));
+            || (!status
+                && (path == "/status" || path.starts_with("/status/") || path.starts_with("/site/trove-status")));
         if blocked {
             return Err(error::http_exception(StatusCode::NOT_FOUND, None, &parts.method, path, &parts.headers));
         }

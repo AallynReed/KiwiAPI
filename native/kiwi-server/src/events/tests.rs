@@ -228,10 +228,10 @@ fn publish_writes_what_python_writes() {
         let data = pyjson::loads(case["data"].as_str().unwrap().as_bytes()).unwrap();
         let text = dumps(&bus::envelope(kind, data, ts));
         let mut want = vec![serde_json::json!(["PUBLISH", names.events_channel, text])];
-        if bus::WEBHOOK_EVENT_TYPES.contains(&kind) && case["webhooks"].as_bool().unwrap() {
+        if crate::webhooks::model::EVENT_TYPES.contains(&kind) && case["webhooks"].as_bool().unwrap() {
             want.push(serde_json::json!(["LPUSH", names.webhooks_queue, text]));
         }
-        if bus::DM_EVENT_TYPES.contains(&kind) && case["dm"].as_bool().unwrap() {
+        if crate::dm_subs::model::BUS_EVENTS.contains(&kind) && case["dm"].as_bool().unwrap() {
             want.push(serde_json::json!(["LPUSH", names.dm_subs_queue, text]));
         }
         assert_eq!(&calls[1..], &want[..], "{kind}");

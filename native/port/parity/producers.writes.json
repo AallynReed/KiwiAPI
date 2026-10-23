@@ -1,0 +1,592 @@
+[
+ {
+  "name": "challenge_noauth",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {},
+  "body": {
+   "name": "Cursed Vale"
+  }
+ },
+ {
+  "name": "challenge_bad_json",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "application/json"
+  },
+  "body": "{bad"
+ },
+ {
+  "name": "challenge_bad_json_noauth",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Content-Type": "application/json"
+  },
+  "body": "{bad"
+ },
+ {
+  "name": "challenge_missing_body",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  }
+ },
+ {
+  "name": "challenge_name_int",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": 5
+  }
+ },
+ {
+  "name": "challenge_name_list",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": [
+    "x"
+   ],
+   "extra": 1
+  }
+ },
+ {
+  "name": "challenge_text_body",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "text/plain"
+  },
+  "body": "name=x"
+ },
+ {
+  "name": "challenge_blank",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": " 　 "
+  }
+ },
+ {
+  "name": "challenge_none",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": " NONE "
+  }
+ },
+ {
+  "name": "challenge_new",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": "  Cursed Vale "
+  }
+ },
+ {
+  "name": "challenge_again",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": "RAMPAGE ALERT!"
+  }
+ },
+ {
+  "name": "challenge_token",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit",
+   "x-ratelimit-remaining"
+  ],
+  "body": {
+   "name": "Collection Challenge"
+  }
+ },
+ {
+  "name": "challenge_token_cooldown",
+  "method": "POST",
+  "path": "/v1/rotations/challenge/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}"
+  },
+  "compare_headers": [
+   "x-ratelimit-limit",
+   "x-ratelimit-remaining"
+  ],
+  "body": {
+   "name": "Racing Challenge"
+  }
+ },
+ {
+  "name": "challenge_current",
+  "path": "/v1/rotations/challenge/current",
+  "mask": [
+   "seconds_remaining",
+   "active",
+   "captured_at"
+  ]
+ },
+ {
+  "name": "challenge_history",
+  "path": "/v1/rotations/challenge/history",
+  "mask": [
+   "items.captured_at"
+  ]
+ },
+ {
+  "name": "chaos_noauth",
+  "method": "POST",
+  "path": "/v1/rotations/chaos-chest/insert",
+  "headers": {},
+  "body": {
+   "name": "x"
+  }
+ },
+ {
+  "name": "chaos_empty",
+  "method": "POST",
+  "path": "/v1/rotations/chaos-chest/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": ""
+  }
+ },
+ {
+  "name": "chaos_missing_name",
+  "method": "POST",
+  "path": "/v1/rotations/chaos-chest/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "nam": "x"
+  }
+ },
+ {
+  "name": "chaos_new",
+  "method": "POST",
+  "path": "/v1/rotations/chaos-chest/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": " Parity Chest "
+  }
+ },
+ {
+  "name": "chaos_again",
+  "method": "POST",
+  "path": "/v1/rotations/chaos-chest/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "name": "Ünïcode \"Chest\""
+  }
+ },
+ {
+  "name": "chaos_history",
+  "path": "/v1/rotations/chaos-chest/history",
+  "mask": [
+   "items.captured_at"
+  ]
+ },
+ {
+  "name": "luxion_noauth",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {}
+ },
+ {
+  "name": "luxion_bad_active",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "active": "maybe"
+  }
+ },
+ {
+  "name": "luxion_null_active",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "active": null
+  }
+ },
+ {
+  "name": "luxion_list_body",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": []
+ },
+ {
+  "name": "luxion_close_nothing",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "active": false
+  }
+ },
+ {
+  "name": "luxion_open",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  }
+ },
+ {
+  "name": "luxion_refresh",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {}
+ },
+ {
+  "name": "luxion_refresh_yes",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "active": "yes",
+   "other": [
+    1
+   ]
+  }
+ },
+ {
+  "name": "luxion_close",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "active": 0
+  }
+ },
+ {
+  "name": "luxion_reopen_same_day",
+  "method": "POST",
+  "path": "/v1/rotations/luxion/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}"
+  },
+  "body": {
+   "active": true
+  }
+ },
+ {
+  "name": "luxion_current",
+  "path": "/v1/rotations/luxion",
+  "mask": [
+   "starts_at",
+   "ends_at",
+   "seconds_remaining",
+   "first_seen_at",
+   "last_seen_at",
+   "schedule",
+   "active",
+   "state"
+  ]
+ },
+ {
+  "name": "luxion_history",
+  "path": "/v1/rotations/luxion/history",
+  "mask": [
+   "items.started_at",
+   "items.ends_at",
+   "items.first_seen_at",
+   "items.last_seen_at",
+   "items.ended_at"
+  ]
+ },
+ {
+  "name": "market_noauth",
+  "method": "POST",
+  "path": "/v1/market/insert",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQo2ZjFjMWIyZS0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7R2xpbTs7OTk5OzE1MDAwMDAKNmYxYzFiMmUtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzE7MQo3YTJkMmMzZi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7IFBsYXNtaXVtIDtNYXRlcmlhbDszOzEwCjhiM2UzZDRhLTNjNGQtMTFlZi05YTdiLTAyNDJhYzEyMDAwMjtHbGltOzs3OzEwMAo5YzRmNGU1Yi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7VW50cmFja2VkOzsxOzUKYmU2MTZhN2QtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzA7MTAwDQotLWtpd2lQYXJpdHlCb3VuZGFyeS0tDQo="
+ },
+ {
+  "name": "market_bad_multipart",
+  "method": "POST",
+  "path": "/v1/market/insert",
+  "body": "garbage",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  }
+ },
+ {
+  "name": "market_no_file",
+  "method": "POST",
+  "path": "/v1/market/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZHVtcCI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQp4DQotLWtpd2lQYXJpdHlCb3VuZGFyeS0tDQo="
+ },
+ {
+  "name": "market_text_file",
+  "method": "POST",
+  "path": "/v1/market/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSINCg0KeA0KLS1raXdpUGFyaXR5Qm91bmRhcnktLQ0K"
+ },
+ {
+  "name": "market_empty_file",
+  "method": "POST",
+  "path": "/v1/market/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQoNCi0ta2l3aVBhcml0eUJvdW5kYXJ5LS0NCg=="
+ },
+ {
+  "name": "market_bad_timestamp",
+  "method": "POST",
+  "path": "/v1/market/insert?timestamp=abc",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQo2ZjFjMWIyZS0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7R2xpbTs7OTk5OzE1MDAwMDAKNmYxYzFiMmUtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzE7MQo3YTJkMmMzZi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7IFBsYXNtaXVtIDtNYXRlcmlhbDszOzEwCjhiM2UzZDRhLTNjNGQtMTFlZi05YTdiLTAyNDJhYzEyMDAwMjtHbGltOzs3OzEwMAo5YzRmNGU1Yi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7VW50cmFja2VkOzsxOzUKYmU2MTZhN2QtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzA7MTAwDQotLWtpd2lQYXJpdHlCb3VuZGFyeS0tDQo="
+ },
+ {
+  "name": "market_dump",
+  "method": "POST",
+  "path": "/v1/market/insert?timestamp=1792500000",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQo2ZjFjMWIyZS0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7R2xpbTs7OTk5OzE1MDAwMDAKNmYxYzFiMmUtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzE7MQo3YTJkMmMzZi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7IFBsYXNtaXVtIDtNYXRlcmlhbDszOzEwCjhiM2UzZDRhLTNjNGQtMTFlZi05YTdiLTAyNDJhYzEyMDAwMjtHbGltOzs3OzEwMAo5YzRmNGU1Yi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7VW50cmFja2VkOzsxOzUKYmU2MTZhN2QtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzA7MTAwDQotLWtpd2lQYXJpdHlCb3VuZGFyeS0tDQo="
+ },
+ {
+  "name": "market_dump_again",
+  "method": "POST",
+  "path": "/v1/market/insert?timestamp=1792500600",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQo4YjNlM2Q0YS0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7R2xpbTs7NzsxMDAKZDA4MzhjOWYtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO1BsYXNtaXVtOzsxOzT//iBicm9rZW4gdXRmLTgNCi0ta2l3aVBhcml0eUJvdW5kYXJ5LS0NCg=="
+ },
+ {
+  "name": "market_garbage",
+  "method": "POST",
+  "path": "/v1/market/insert?timestamp=1792500700",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpubyBsaXN0aW5ncyBoZXJlDQotLWtpd2lQYXJpdHlCb3VuZGFyeS0tDQo="
+ },
+ {
+  "name": "market_token",
+  "method": "POST",
+  "path": "/v1/market/insert?timestamp=1792501200",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQo2ZjFjMWIyZS0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7R2xpbTs7OTk5OzE1MDAwMDAKNmYxYzFiMmUtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzE7MQo3YTJkMmMzZi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7IFBsYXNtaXVtIDtNYXRlcmlhbDszOzEwCjhiM2UzZDRhLTNjNGQtMTFlZi05YTdiLTAyNDJhYzEyMDAwMjtHbGltOzs3OzEwMAo5YzRmNGU1Yi0zYzRkLTExZWYtOWE3Yi0wMjQyYWMxMjAwMDI7VW50cmFja2VkOzsxOzUKYmU2MTZhN2QtM2M0ZC0xMWVmLTlhN2ItMDI0MmFjMTIwMDAyO0dsaW07OzA7MTAwDQotLWtpd2lQYXJpdHlCb3VuZGFyeS0tDQo=",
+  "compare_headers": [
+   "x-ratelimit-limit",
+   "x-ratelimit-remaining"
+  ]
+ },
+ {
+  "name": "market_listings",
+  "path": "/v1/market/listings?hide_expired=false&sort=%2Bprice_each&limit=100",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}"
+  },
+  "mask": [
+   "items.expired"
+  ]
+ },
+ {
+  "name": "store_noauth",
+  "method": "POST",
+  "path": "/v1/store/insert",
+  "headers": {
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpba2l3aXN0b3JlLnN3Zl0KY2F0JDA9JTI0U3RvcmVfVGFiX0ZlYXR1cmVkO3VpJTJGaWNvbi5kZHM7YSxiCmNhdCQyPVBhY2tzOztjCnByb2QkYT1hO3Byb2R1Y3Q7JTI0UGFjayUyMEE7OzA7MDswOztUV0M6MTAwOjE6MDpTYWxlXzI1fFRXUDoyNTAwLjU6MDowOjs7OzM2MDAuOTs7Ozs7Q29tbW9uJTIwNTAlMjU7CnByb2QkYj1iO3N0YXJ0ZXI7OzswOzA7MDs7OyVFMiU4MiVBQzQuOTk6RVVSOjs7Ozs7Ozs7MApwcm9kJGM9YztwYXRyb247OzswOzA7MDs7VFdDOjMwMDoxOjMwMDo7Ozs7Ozs7OzsyCm1ldGEkdGl0bGU9JTI0U3RvcmUlMjBUaXRsZQpkb25lID0gdHJ1ZQ0KLS1raXdpUGFyaXR5Qm91bmRhcnktLQ0K"
+ },
+ {
+  "name": "store_no_data",
+  "method": "POST",
+  "path": "/v1/store/insert",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpib290ID0gMQojIG5vdGhpbmcKDQotLWtpd2lQYXJpdHlCb3VuZGFyeS0tDQo="
+ },
+ {
+  "name": "store_bad_timestamp",
+  "method": "POST",
+  "path": "/v1/store/insert?timestamp=1.5",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpba2l3aXN0b3JlLnN3Zl0KY2F0JDA9JTI0U3RvcmVfVGFiX0ZlYXR1cmVkO3VpJTJGaWNvbi5kZHM7YSxiCmNhdCQyPVBhY2tzOztjCnByb2QkYT1hO3Byb2R1Y3Q7JTI0UGFjayUyMEE7OzA7MDswOztUV0M6MTAwOjE6MDpTYWxlXzI1fFRXUDoyNTAwLjU6MDowOjs7OzM2MDAuOTs7Ozs7Q29tbW9uJTIwNTAlMjU7CnByb2QkYj1iO3N0YXJ0ZXI7OzswOzA7MDs7OyVFMiU4MiVBQzQuOTk6RVVSOjs7Ozs7Ozs7MApwcm9kJGM9YztwYXRyb247OzswOzA7MDs7VFdDOjMwMDoxOjMwMDo7Ozs7Ozs7OzsyCm1ldGEkdGl0bGU9JTI0U3RvcmUlMjBUaXRsZQpkb25lID0gdHJ1ZQ0KLS1raXdpUGFyaXR5Qm91bmRhcnktLQ0K"
+ },
+ {
+  "name": "store_dump",
+  "method": "POST",
+  "path": "/v1/store/insert?timestamp=1792400000",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpba2l3aXN0b3JlLnN3Zl0KY2F0JDA9JTI0U3RvcmVfVGFiX0ZlYXR1cmVkO3VpJTJGaWNvbi5kZHM7YSxiCmNhdCQyPVBhY2tzOztjCnByb2QkYT1hO3Byb2R1Y3Q7JTI0UGFjayUyMEE7OzA7MDswOztUV0M6MTAwOjE6MDpTYWxlXzI1fFRXUDoyNTAwLjU6MDowOjs7OzM2MDAuOTs7Ozs7Q29tbW9uJTIwNTAlMjU7CnByb2QkYj1iO3N0YXJ0ZXI7OzswOzA7MDs7OyVFMiU4MiVBQzQuOTk6RVVSOjs7Ozs7Ozs7MApwcm9kJGM9YztwYXRyb247OzswOzA7MDs7VFdDOjMwMDoxOjMwMDo7Ozs7Ozs7OzsyCm1ldGEkdGl0bGU9JTI0U3RvcmUlMjBUaXRsZQpkb25lID0gdHJ1ZQ0KLS1raXdpUGFyaXR5Qm91bmRhcnktLQ0K"
+ },
+ {
+  "name": "store_dump_next_day",
+  "method": "POST",
+  "path": "/v1/store/insert?timestamp=1792486400",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpjYXQkMD0lMjRTdG9yZV9UYWJfRmVhdHVyZWQ7O2IsYQpwcm9kJGE9YTtwcm9kdWN0OyUyNFBhY2slMjBBOzswOzA7MDs7VFdDOjgwOjE6MDpTYWxlXzI1fFRXUDoyNTAwLjU6MDowOjs7Ozs7Ozs7Owpwcm9kJGI9YjtzdGFydGVyOzs7MDswOzA7OzslRTIlODIlQUM1Ljk5OkVVUjo7Ozs7Ozs7OzANCi0ta2l3aVBhcml0eUJvdW5kYXJ5LS0NCg=="
+ },
+ {
+  "name": "store_nan_deal",
+  "method": "POST",
+  "path": "/v1/store/insert?timestamp=1792572800",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_JWT}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpwcm9kJGM9YztwYXRyb247OzswOzA7MDs7VFdDOjMwMDoxOjMwMDo7Ozs7Ozs7OzsKcHJvZCRkPWQ7cHJvZHVjdDs7OzA7MDswOzs7OztuYW47Ozs7OzsKcHJvZCRlPWU7cHJvZHVjdDs7OzA7MDswOzs7Ozs7Ozs7OzsNCi0ta2l3aVBhcml0eUJvdW5kYXJ5LS0NCg=="
+ },
+ {
+  "name": "store_token",
+  "method": "POST",
+  "path": "/v1/store/insert?timestamp=1792572900",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}",
+   "Content-Type": "multipart/form-data; boundary=kiwiParityBoundary"
+  },
+  "body_b64": "LS1raXdpUGFyaXR5Qm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZSI7IGZpbGVuYW1lPSJkdW1wLmNmZyINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpjYXQkMD0lMjRTdG9yZV9UYWJfRmVhdHVyZWQ7O2IsYQpwcm9kJGE9YTtwcm9kdWN0OyUyNFBhY2slMjBBOzswOzA7MDs7VFdDOjgwOjE6MDpTYWxlXzI1fFRXUDoyNTAwLjU6MDowOjs7Ozs7Ozs7Owpwcm9kJGI9YjtzdGFydGVyOzs7MDswOzA7OzslRTIlODIlQUM1Ljk5OkVVUjo7Ozs7Ozs7OzANCi0ta2l3aVBhcml0eUJvdW5kYXJ5LS0NCg==",
+  "compare_headers": [
+   "x-ratelimit-limit",
+   "x-ratelimit-remaining"
+  ]
+ },
+ {
+  "name": "store_products",
+  "path": "/v1/store/products?active=false&limit=100",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}"
+  }
+ },
+ {
+  "name": "store_product_a",
+  "path": "/v1/store/products/a",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}"
+  },
+  "mask": [
+   "records.gap_days"
+  ]
+ },
+ {
+  "name": "store_categories",
+  "path": "/v1/store/categories",
+  "headers": {
+   "Authorization": "Bearer ${KIWI_PARITY_TOKEN}"
+  }
+ },
+ {
+  "name": "giveaways_ongoing",
+  "path": "/v1/giveaways/ongoing",
+  "sleep": 1
+ },
+ {
+  "name": "giveaways_ended",
+  "path": "/v1/giveaways/ended"
+ },
+ {
+  "name": "site_status",
+  "path": "/site/trove-status"
+ },
+ {
+  "name": "site_status_history",
+  "path": "/site/trove-status/history?env=pts&days=3",
+  "mask": [
+   "window_start",
+   "window_end"
+  ]
+ },
+ {
+  "name": "site_status_history_bad",
+  "path": "/site/trove-status/history?days=abc"
+ },
+ {
+  "name": "site_status_history_odd",
+  "path": "/site/trove-status/history?env=weird&days=-4",
+  "mask": [
+   "window_start",
+   "window_end"
+  ]
+ }
+]

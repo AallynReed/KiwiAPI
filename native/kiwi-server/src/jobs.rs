@@ -97,6 +97,10 @@ pub fn start(state: &AppState) {
     crate::feeds::spawn_loops(state);
     crate::lb_warmer::start(state);
     crate::events::start_jobs(state);
+    crate::routes::trove_status::prober::start(state);
+    crate::giveaways::spawn_worker(state, |st| async move {
+        crate::events::publish_type(&st, "giveaways").await.map(|_| ())
+    });
     crate::webhooks::start_jobs(state);
     crate::dm_subs::start_jobs(state);
     crate::email::worker::start(state);

@@ -1,0 +1,660 @@
+{
+ "python": "3.13.17",
+ "daily_reset": [
+  [
+   1792666799999999,
+   1792580400
+  ],
+  [
+   1792666800000000,
+   1792666800
+  ],
+  [
+   1792713599999999,
+   1792666800
+  ],
+  [
+   1767225600000000,
+   1767178800
+  ],
+  [
+   -46800000000,
+   -46800
+  ],
+  [
+   -46860000000,
+   -133200
+  ]
+ ],
+ "luxion_live": [
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": false,
+   "now": 1760958000,
+   "live": true
+  },
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": false,
+   "now": 1761562799,
+   "live": true
+  },
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": false,
+   "now": 1761562800,
+   "live": false
+  },
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": false,
+   "now": 1760957990,
+   "live": true
+  },
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": true,
+   "now": 1760958000,
+   "live": false
+  },
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": true,
+   "now": 1761562799,
+   "live": false
+  },
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": true,
+   "now": 1761562800,
+   "live": false
+  },
+  {
+   "started_at": 1760958000,
+   "first_seen_ms": 1792499415250,
+   "ended": true,
+   "now": 1760957990,
+   "live": false
+  }
+ ],
+ "documents": {
+  "chaos": {
+   "week_anchor": {
+    "$numberInt": "1792576800"
+   },
+   "name": "Chest",
+   "captured_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   }
+  },
+  "chaos_big": {
+   "week_anchor": {
+    "$numberLong": "3000000000"
+   },
+   "name": "Chest",
+   "captured_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   }
+  },
+  "challenge": {
+   "window_anchor": {
+    "$numberInt": "1792576800"
+   },
+   "window_ends_at": {
+    "$numberInt": "1792578000"
+   },
+   "name": "Cursed Vale",
+   "is_friday_window": true,
+   "captured_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   }
+  },
+  "luxion_open": {
+   "started_at": {
+    "$numberInt": "1792576800"
+   },
+   "first_seen_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   },
+   "last_seen_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   },
+   "ended_at": null
+  },
+  "luxion_closed": {
+   "_id": {
+    "$oid": "65f0c0ffee0000000000abcd"
+   },
+   "started_at": {
+    "$numberInt": "1792576800"
+   },
+   "first_seen_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   },
+   "last_seen_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   },
+   "ended_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   }
+  },
+  "news": {
+   "url": "https://trovegame.com/x",
+   "title": "T",
+   "author": "Team Trove",
+   "summary": "S",
+   "category": "News",
+   "categories": [
+    "News",
+    "Events"
+   ],
+   "image": null,
+   "published_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   },
+   "first_seen_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   },
+   "updated_at": {
+    "$date": {
+     "$numberLong": "1792666800123"
+    }
+   }
+  },
+  "log_market": {
+   "parsed": {
+    "$numberInt": "0"
+   },
+   "imported": {
+    "$numberInt": "0"
+   },
+   "ignored_not_in_list": {
+    "$numberInt": "0"
+   },
+   "last_seen": null,
+   "bytes": {
+    "$numberInt": "12"
+   }
+  },
+  "log_luxion": {
+   "started_at": {
+    "$numberInt": "0"
+   },
+   "active": false,
+   "refreshed": true
+  }
+ },
+ "market": [
+  {
+   "timestamp": null,
+   "text": "bad line\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;999;1500000\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;1;1\n7a2d2c3f-3c4d-11ef-9a7b-0242ac120002; Plasmium ;Material;3;10\n8b3e3d4a-3c4d-11ef-9a7b-0242ac120002;Glim;;7;100\n9c4f4e5b-3c4d-11ef-9a7b-0242ac120002;Untracked;;1;5\nad505f6c-3c4d-11ef-9a7b-0242ac120002;Plasmium;;2;9\nbe616a7d-3c4d-11ef-9a7b-0242ac120002;Glim;;0;100\ncf727b8e-3c4d-11ef-9a7b-0242ac120002;Glim;;5;60000000",
+   "summary": {
+    "parsed": 5,
+    "imported": 4,
+    "ignored_not_in_list": 1,
+    "last_seen": 1792576800
+   },
+   "rows": [
+    [
+     "6f1c1b2e-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     999,
+     1500000,
+     1501.502,
+     1720348874,
+     1792576800
+    ],
+    [
+     "7a2d2c3f-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     "Material",
+     3,
+     10,
+     3.333,
+     1720348893,
+     1792576800
+    ],
+    [
+     "8b3e3d4a-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     7,
+     100,
+     14.286,
+     1720348921,
+     1792576800
+    ],
+    [
+     "ad505f6c-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     null,
+     2,
+     9,
+     4.5,
+     1720348978,
+     1792576800
+    ]
+   ],
+   "cheapest": [
+    [
+     "Glim",
+     14.286
+    ],
+    [
+     "Plasmium",
+     3.333
+    ]
+   ]
+  },
+  {
+   "timestamp": null,
+   "text": "nothing here",
+   "summary": {
+    "parsed": 0,
+    "imported": 0,
+    "ignored_not_in_list": 0,
+    "last_seen": null
+   },
+   "rows": null,
+   "cheapest": null
+  },
+  {
+   "timestamp": 0,
+   "text": "bad line\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;999;1500000\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;1;1\n7a2d2c3f-3c4d-11ef-9a7b-0242ac120002; Plasmium ;Material;3;10\n8b3e3d4a-3c4d-11ef-9a7b-0242ac120002;Glim;;7;100\n9c4f4e5b-3c4d-11ef-9a7b-0242ac120002;Untracked;;1;5\nad505f6c-3c4d-11ef-9a7b-0242ac120002;Plasmium;;2;9\nbe616a7d-3c4d-11ef-9a7b-0242ac120002;Glim;;0;100\ncf727b8e-3c4d-11ef-9a7b-0242ac120002;Glim;;5;60000000",
+   "summary": {
+    "parsed": 5,
+    "imported": 4,
+    "ignored_not_in_list": 1,
+    "last_seen": 1792576800
+   },
+   "rows": [
+    [
+     "6f1c1b2e-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     999,
+     1500000,
+     1501.502,
+     1720348874,
+     1792576800
+    ],
+    [
+     "7a2d2c3f-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     "Material",
+     3,
+     10,
+     3.333,
+     1720348893,
+     1792576800
+    ],
+    [
+     "8b3e3d4a-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     7,
+     100,
+     14.286,
+     1720348921,
+     1792576800
+    ],
+    [
+     "ad505f6c-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     null,
+     2,
+     9,
+     4.5,
+     1720348978,
+     1792576800
+    ]
+   ],
+   "cheapest": [
+    [
+     "Glim",
+     14.286
+    ],
+    [
+     "Plasmium",
+     3.333
+    ]
+   ]
+  },
+  {
+   "timestamp": 0,
+   "text": "nothing here",
+   "summary": {
+    "parsed": 0,
+    "imported": 0,
+    "ignored_not_in_list": 0,
+    "last_seen": null
+   },
+   "rows": null,
+   "cheapest": null
+  },
+  {
+   "timestamp": -5,
+   "text": "bad line\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;999;1500000\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;1;1\n7a2d2c3f-3c4d-11ef-9a7b-0242ac120002; Plasmium ;Material;3;10\n8b3e3d4a-3c4d-11ef-9a7b-0242ac120002;Glim;;7;100\n9c4f4e5b-3c4d-11ef-9a7b-0242ac120002;Untracked;;1;5\nad505f6c-3c4d-11ef-9a7b-0242ac120002;Plasmium;;2;9\nbe616a7d-3c4d-11ef-9a7b-0242ac120002;Glim;;0;100\ncf727b8e-3c4d-11ef-9a7b-0242ac120002;Glim;;5;60000000",
+   "summary": {
+    "parsed": 5,
+    "imported": 4,
+    "ignored_not_in_list": 1,
+    "last_seen": 1792576800
+   },
+   "rows": [
+    [
+     "6f1c1b2e-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     999,
+     1500000,
+     1501.502,
+     1720348874,
+     1792576800
+    ],
+    [
+     "7a2d2c3f-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     "Material",
+     3,
+     10,
+     3.333,
+     1720348893,
+     1792576800
+    ],
+    [
+     "8b3e3d4a-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     7,
+     100,
+     14.286,
+     1720348921,
+     1792576800
+    ],
+    [
+     "ad505f6c-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     null,
+     2,
+     9,
+     4.5,
+     1720348978,
+     1792576800
+    ]
+   ],
+   "cheapest": [
+    [
+     "Glim",
+     14.286
+    ],
+    [
+     "Plasmium",
+     3.333
+    ]
+   ]
+  },
+  {
+   "timestamp": -5,
+   "text": "nothing here",
+   "summary": {
+    "parsed": 0,
+    "imported": 0,
+    "ignored_not_in_list": 0,
+    "last_seen": null
+   },
+   "rows": null,
+   "cheapest": null
+  },
+  {
+   "timestamp": 1700000000,
+   "text": "bad line\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;999;1500000\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;1;1\n7a2d2c3f-3c4d-11ef-9a7b-0242ac120002; Plasmium ;Material;3;10\n8b3e3d4a-3c4d-11ef-9a7b-0242ac120002;Glim;;7;100\n9c4f4e5b-3c4d-11ef-9a7b-0242ac120002;Untracked;;1;5\nad505f6c-3c4d-11ef-9a7b-0242ac120002;Plasmium;;2;9\nbe616a7d-3c4d-11ef-9a7b-0242ac120002;Glim;;0;100\ncf727b8e-3c4d-11ef-9a7b-0242ac120002;Glim;;5;60000000",
+   "summary": {
+    "parsed": 5,
+    "imported": 4,
+    "ignored_not_in_list": 1,
+    "last_seen": 1700000000
+   },
+   "rows": [
+    [
+     "6f1c1b2e-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     999,
+     1500000,
+     1501.502,
+     1720348874,
+     1700000000
+    ],
+    [
+     "7a2d2c3f-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     "Material",
+     3,
+     10,
+     3.333,
+     1720348893,
+     1700000000
+    ],
+    [
+     "8b3e3d4a-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     7,
+     100,
+     14.286,
+     1720348921,
+     1700000000
+    ],
+    [
+     "ad505f6c-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     null,
+     2,
+     9,
+     4.5,
+     1720348978,
+     1700000000
+    ]
+   ],
+   "cheapest": [
+    [
+     "Glim",
+     14.286
+    ],
+    [
+     "Plasmium",
+     3.333
+    ]
+   ]
+  },
+  {
+   "timestamp": 1700000000,
+   "text": "nothing here",
+   "summary": {
+    "parsed": 0,
+    "imported": 0,
+    "ignored_not_in_list": 0,
+    "last_seen": null
+   },
+   "rows": null,
+   "cheapest": null
+  },
+  {
+   "timestamp": 1792577100,
+   "text": "bad line\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;999;1500000\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;1;1\n7a2d2c3f-3c4d-11ef-9a7b-0242ac120002; Plasmium ;Material;3;10\n8b3e3d4a-3c4d-11ef-9a7b-0242ac120002;Glim;;7;100\n9c4f4e5b-3c4d-11ef-9a7b-0242ac120002;Untracked;;1;5\nad505f6c-3c4d-11ef-9a7b-0242ac120002;Plasmium;;2;9\nbe616a7d-3c4d-11ef-9a7b-0242ac120002;Glim;;0;100\ncf727b8e-3c4d-11ef-9a7b-0242ac120002;Glim;;5;60000000",
+   "summary": {
+    "parsed": 5,
+    "imported": 4,
+    "ignored_not_in_list": 1,
+    "last_seen": 1792577100
+   },
+   "rows": [
+    [
+     "6f1c1b2e-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     999,
+     1500000,
+     1501.502,
+     1720348874,
+     1792577100
+    ],
+    [
+     "7a2d2c3f-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     "Material",
+     3,
+     10,
+     3.333,
+     1720348893,
+     1792577100
+    ],
+    [
+     "8b3e3d4a-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     7,
+     100,
+     14.286,
+     1720348921,
+     1792577100
+    ],
+    [
+     "ad505f6c-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     null,
+     2,
+     9,
+     4.5,
+     1720348978,
+     1792577100
+    ]
+   ],
+   "cheapest": [
+    [
+     "Glim",
+     14.286
+    ],
+    [
+     "Plasmium",
+     3.333
+    ]
+   ]
+  },
+  {
+   "timestamp": 1792577100,
+   "text": "nothing here",
+   "summary": {
+    "parsed": 0,
+    "imported": 0,
+    "ignored_not_in_list": 0,
+    "last_seen": null
+   },
+   "rows": null,
+   "cheapest": null
+  },
+  {
+   "timestamp": 1792577101,
+   "text": "bad line\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;999;1500000\n6f1c1b2e-3c4d-11ef-9a7b-0242ac120002;Glim;;1;1\n7a2d2c3f-3c4d-11ef-9a7b-0242ac120002; Plasmium ;Material;3;10\n8b3e3d4a-3c4d-11ef-9a7b-0242ac120002;Glim;;7;100\n9c4f4e5b-3c4d-11ef-9a7b-0242ac120002;Untracked;;1;5\nad505f6c-3c4d-11ef-9a7b-0242ac120002;Plasmium;;2;9\nbe616a7d-3c4d-11ef-9a7b-0242ac120002;Glim;;0;100\ncf727b8e-3c4d-11ef-9a7b-0242ac120002;Glim;;5;60000000",
+   "summary": {
+    "parsed": 5,
+    "imported": 4,
+    "ignored_not_in_list": 1,
+    "last_seen": 1792576800
+   },
+   "rows": [
+    [
+     "6f1c1b2e-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     999,
+     1500000,
+     1501.502,
+     1720348874,
+     1792576800
+    ],
+    [
+     "7a2d2c3f-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     "Material",
+     3,
+     10,
+     3.333,
+     1720348893,
+     1792576800
+    ],
+    [
+     "8b3e3d4a-3c4d-11ef-9a7b-0242ac120002",
+     "Glim",
+     null,
+     7,
+     100,
+     14.286,
+     1720348921,
+     1792576800
+    ],
+    [
+     "ad505f6c-3c4d-11ef-9a7b-0242ac120002",
+     "Plasmium",
+     null,
+     2,
+     9,
+     4.5,
+     1720348978,
+     1792576800
+    ]
+   ],
+   "cheapest": [
+    [
+     "Glim",
+     14.286
+    ],
+    [
+     "Plasmium",
+     3.333
+    ]
+   ]
+  },
+  {
+   "timestamp": 1792577101,
+   "text": "nothing here",
+   "summary": {
+    "parsed": 0,
+    "imported": 0,
+    "ignored_not_in_list": 0,
+    "last_seen": null
+   },
+   "rows": null,
+   "cheapest": null
+  }
+ ]
+}

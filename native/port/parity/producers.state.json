@@ -1,0 +1,26 @@
+{
+ "mongo": [
+  {"collection": "challenge_captures", "sort": ["window_anchor"], "mask": ["_id", "captured_at"]},
+  {"collection": "chaos_chest_captures", "sort": ["week_anchor"], "mask": ["_id", "captured_at"]},
+  {"collection": "luxion_appearances", "sort": ["started_at"], "mask": ["_id", "first_seen_at", "last_seen_at", "ended_at"]},
+  {"collection": "ingest_log", "sort": ["endpoint", "success", "auth_via"], "mask": ["_id", "timestamp", "user_id"]},
+  {"collection": "store_products", "sort": ["code"], "mask": ["_id"]},
+  {"collection": "store_categories", "sort": ["index"], "mask": ["_id"]},
+  {"collection": "store_state", "mask": ["_id"]},
+  {"collection": "giveaways", "sort": ["title"], "mask": ["updated_at", "drawn_at"]},
+  {"collection": "prize_codes", "sort": ["code"], "mask": ["awarded_at"]},
+  {"collection": "email_outbox", "sort": ["to"], "mask": ["_id", "created_at", "next_attempt_at"]}
+ ],
+ "postgres": [
+  {"table": "market_listing", "order_by": "id"}
+ ],
+ "redis": [
+  {"pattern": "events:sig:c*"},
+  {"pattern": "events:sig:market"},
+  {"pattern": "events:sig:store"},
+  {"pattern": "events:sig:giveaways"},
+  {"pattern": "events:sig:luxion", "mask_value": true},
+  {"pattern": "kiwi:webhooks:queue", "mask_value": true},
+  {"pattern": "kiwi:dmsubs:queue", "mask_value": true}
+ ]
+}

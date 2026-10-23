@@ -1,10 +1,12 @@
-//! `GET /v1/misc/trove-status` and `/history` (`app/trove/status.py`, `app/trove/router.py`).
+//! `GET /v1/misc/trove-status` and `/history` (`app/trove/status.py`, `app/trove/router.py`),
+//! their `/site` twins ([`site`]) and the prober loop ([`prober`]).
 //!
 //! The current status is the prober snapshot `get_status_shared` reads: this
 //! process's prober when it runs here, else the Redis mirror every Python
 //! prober writes, else the "unknown" shell.
 
 pub mod prober;
+pub mod site;
 #[cfg(test)]
 mod tests;
 
@@ -34,7 +36,11 @@ pub const COLLECTION: &str = "trove_status_events";
 const OVERALL: [&str; 4] = ["online", "maintenance", "down", "unknown"];
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/v1/misc/trove-status", get(current)).route("/v1/misc/trove-status/history", get(history))
+    Router::new()
+        .route("/v1/misc/trove-status", get(current))
+        .route("/v1/misc/trove-status/history", get(history))
+        .route("/site/trove-status", get(site::current))
+        .route("/site/trove-status/history", get(site::history))
 }
 
 fn cached(cache_control: &'static str, body: Value) -> Response {

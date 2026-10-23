@@ -326,6 +326,8 @@ pub struct Model {
     pub stamp: Option<&'static str>,
 }
 
+pub const NEWS_MODEL: Model =
+    Model { coll: NEWS, fields: &NEWS_FIELDS, defaults: &["first_seen_at", "updated_at"], stamp: Some("updated_at") };
 pub const EVENT_MODEL: Model = Model {
     coll: EVENTS,
     fields: &EVENT_FIELDS,
