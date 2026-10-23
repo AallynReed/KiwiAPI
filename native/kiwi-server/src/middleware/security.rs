@@ -127,7 +127,12 @@ pub struct EmbedOrigins {
 pub enum EmbedSource {
     Setting(crate::state::AppState),
     Fixed(Vec<String>),
+    /// The website container: the raw allowlist read from the api.
+    Remote(RemoteOrigins),
 }
+
+pub type RemoteOrigins =
+    Arc<dyn Fn() -> std::pin::Pin<Box<dyn std::future::Future<Output = String> + Send>> + Send + Sync>;
 
 const EMBED_TTL_SECS: u64 = 30;
 
@@ -137,23 +142,28 @@ impl EmbedOrigins {
     }
 
     pub async fn get(&self) -> Vec<String> {
-        let state = match &self.source {
-            EmbedSource::Fixed(v) => return v.clone(),
-            EmbedSource::Setting(state) => state,
-        };
+        if let EmbedSource::Fixed(v) = &self.source {
+            return v.clone();
+        }
         let mut cache = self.cache.lock().await;
         if let Some((at, v)) = cache.as_ref()
             && at.elapsed().as_secs_f64() <= EMBED_TTL_SECS as f64
         {
             return v.clone();
         }
-        let raw = match crate::runtime_config::get_setting(state, "embed.allowed_origins").await {
-            Ok(serde_json::Value::String(s)) => s,
-            Ok(serde_json::Value::Null) | Ok(serde_json::Value::Bool(false)) => String::new(),
-            Ok(other) => other.to_string(),
-            Err(e) => {
-                tracing::warn!("embed: allowlist unreadable ({e}) - framing denied until it returns");
-                String::new()
+        let raw = match &self.source {
+            EmbedSource::Fixed(_) => String::new(),
+            EmbedSource::Remote(fetch) => fetch().await,
+            EmbedSource::Setting(state) => {
+                match crate::runtime_config::get_setting(state, "embed.allowed_origins").await {
+                    Ok(serde_json::Value::String(s)) => s,
+                    Ok(serde_json::Value::Null) | Ok(serde_json::Value::Bool(false)) => String::new(),
+                    Ok(other) => other.to_string(),
+                    Err(e) => {
+                        tracing::warn!("embed: allowlist unreadable ({e}) - framing denied until it returns");
+                        String::new()
+                    }
+                }
             }
         };
         let parsed = parse_origins(&raw);

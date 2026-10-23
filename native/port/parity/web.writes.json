@@ -1,0 +1,15 @@
+[
+ {"name": "beacon_pv", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/130.0 Safari/537.36", "Origin": "https://trove.aallyn.net", "Content-Type": "text/plain"}, "body": "{\"t\": \"pv\", \"id\": \"parity-pv-0001\", \"u\": \"https://trove.aallyn.net/mods/alice/zeta?utm_source=Discord&utm_medium=cpc\", \"r\": \"\", \"w\": 1280, \"tp\": 0, \"l\": \"de\"}"},
+ {"name": "beacon_pv_mobile", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36", "Origin": "https://trove.aallyn.net"}, "body": "{\"t\": \"pv\", \"id\": \"parity-pv-0002\", \"u\": \"https://www.trove.aallyn.net/player/Some%20One\", \"r\": \"https://www.google.co.uk/\", \"w\": \"390\", \"tp\": 5}"},
+ {"name": "beacon_pv_swf", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) Version/17.0 Safari/605.1.15"}, "body": "{\"t\": \"pv\", \"id\": \"parity-pv-0003\", \"u\": \"https://trove.aallyn.net/swf-docs/atlas\", \"r\": \"https://trove.aallyn.net/swf-docs\", \"tp\": 5, \"l\": \"zh-CN\"}"},
+ {"name": "beacon_pv_not_page", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0"}, "body": "{\"t\": \"pv\", \"id\": \"parity-pv-0004\", \"u\": \"https://trove.aallyn.net/static/x.css\"}"},
+ {"name": "beacon_pv_bot", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}, "body": "{\"t\": \"pv\", \"id\": \"parity-pv-0005\", \"u\": \"https://trove.aallyn.net/terms\"}"},
+ {"name": "beacon_pv_foreign_origin", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0", "Origin": "https://evil.example"}, "body": "{\"t\": \"pv\", \"id\": \"parity-pv-0006\", \"u\": \"https://trove.aallyn.net/terms\"}"},
+ {"name": "beacon_bad_json", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0"}, "body": "{nope"},
+ {"name": "beacon_perf", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0"}, "body": "{\"t\": \"perf\", \"id\": \"parity-pv-0001\", \"ttfb\": 120.7, \"fcp\": 300, \"lcp\": 900, \"dcl\": \"x\", \"load\": 999999}"},
+ {"name": "beacon_cls", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0"}, "body": "{\"t\": \"cls\", \"id\": \"parity-pv-0001\", \"c\": 37}"},
+ {"name": "beacon_end", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0"}, "body": "{\"t\": \"end\", \"id\": \"parity-pv-0002\", \"s\": \"123\"}"},
+ {"name": "beacon_too_big", "method": "POST", "path": "/s", "headers": {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Firefox/131.0", "Content-Length": "99999999"}, "body": "{}"},
+ {"name": "beacon_get", "method": "GET", "path": "/s", "compare_headers": ["allow"]},
+ {"name": "flushed", "sleep": 7, "method": "GET", "path": "/health"}
+]

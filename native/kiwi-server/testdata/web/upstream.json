@@ -1,0 +1,920 @@
+{
+ "on": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": true,
+   "market_enabled": true,
+   "store_enabled": true,
+   "leaderboards_enabled": true,
+   "player_activity_enabled": true,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": true,
+   "codexes_enabled": true,
+   "server_status_enabled": true,
+   "giveaways_enabled": true,
+   "commands_enabled": true,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": true,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": true,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": true,
+   "gems_guide_enabled": true,
+   "abilities_enabled": true,
+   "guides_enabled": true,
+   "allies_enabled": true,
+   "gem_tools_enabled": true,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": true,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": true,
+   "unlock_debug_enabled": true,
+   "file_drops_enabled": true,
+   "community_sites_enabled": true,
+   "cheater_detection_enabled": true,
+   "alt_clusters_enabled": true,
+   "renames_enabled": true,
+   "duplicates_enabled": true
+  },
+  "/v1/misc/supporters": {
+   "supporters": [
+    "Zed",
+    "Ann <b>bold</b>",
+    "O'Neil"
+   ]
+  },
+  "/site/clubs": {
+   "items": [
+    {
+     "name": "Kiwi Club",
+     "rank": 1,
+     "description": "A \"club\" & more",
+     "discord_url": "https://discord.gg/x",
+     "website_url": null,
+     "avatar_url": null,
+     "banner_url": "https://cdn.example/b.png"
+    },
+    {
+     "name": "",
+     "rank": null,
+     "description": "",
+     "discord_url": null,
+     "website_url": "https://ex.example",
+     "avatar_url": "https://cdn.example/a.png",
+     "banner_url": null
+    },
+    {
+     "name": "émeraude",
+     "rank": 12
+    }
+   ]
+  },
+  "/site/mods/projects?limit=100&offset=0": {
+   "items": [
+    {
+     "handle": "alice",
+     "slug": "zeta-mod",
+     "title": "Zeta Mod",
+     "updated_at": "2026-10-01T10:00:00Z"
+    },
+    {
+     "handle": "bob",
+     "slug": "alpha",
+     "title": "\"Alpha\" & <Friends>",
+     "updated_at": null
+    },
+    {
+     "handle": "carol",
+     "slug": "ümlaut",
+     "title": "— Über",
+     "updated_at": "2026-09-01T00:00:00+00:00"
+    },
+    {
+     "handle": "",
+     "slug": "nohandle",
+     "title": "No handle"
+    },
+    {
+     "handle": "dave",
+     "slug": "untitled",
+     "title": ""
+    }
+   ],
+   "total": 5
+  },
+  "/site/modpacks/projects?limit=100&offset=0": {
+   "items": [
+    {
+     "handle": "erin",
+     "slug": "pack-0",
+     "title": "Pack 000"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-1",
+     "title": "Pack 001"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-2",
+     "title": "Pack 002"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-3",
+     "title": "Pack 003"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-4",
+     "title": "Pack 004"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-5",
+     "title": "Pack 005"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-6",
+     "title": "Pack 006"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-7",
+     "title": "Pack 007"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-8",
+     "title": "Pack 008"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-9",
+     "title": "Pack 009"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-10",
+     "title": "Pack 010"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-11",
+     "title": "Pack 011"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-12",
+     "title": "Pack 012"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-13",
+     "title": "Pack 013"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-14",
+     "title": "Pack 014"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-15",
+     "title": "Pack 015"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-16",
+     "title": "Pack 016"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-17",
+     "title": "Pack 017"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-18",
+     "title": "Pack 018"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-19",
+     "title": "Pack 019"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-20",
+     "title": "Pack 020"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-21",
+     "title": "Pack 021"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-22",
+     "title": "Pack 022"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-23",
+     "title": "Pack 023"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-24",
+     "title": "Pack 024"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-25",
+     "title": "Pack 025"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-26",
+     "title": "Pack 026"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-27",
+     "title": "Pack 027"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-28",
+     "title": "Pack 028"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-29",
+     "title": "Pack 029"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-30",
+     "title": "Pack 030"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-31",
+     "title": "Pack 031"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-32",
+     "title": "Pack 032"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-33",
+     "title": "Pack 033"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-34",
+     "title": "Pack 034"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-35",
+     "title": "Pack 035"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-36",
+     "title": "Pack 036"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-37",
+     "title": "Pack 037"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-38",
+     "title": "Pack 038"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-39",
+     "title": "Pack 039"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-40",
+     "title": "Pack 040"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-41",
+     "title": "Pack 041"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-42",
+     "title": "Pack 042"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-43",
+     "title": "Pack 043"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-44",
+     "title": "Pack 044"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-45",
+     "title": "Pack 045"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-46",
+     "title": "Pack 046"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-47",
+     "title": "Pack 047"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-48",
+     "title": "Pack 048"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-49",
+     "title": "Pack 049"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-50",
+     "title": "Pack 050"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-51",
+     "title": "Pack 051"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-52",
+     "title": "Pack 052"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-53",
+     "title": "Pack 053"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-54",
+     "title": "Pack 054"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-55",
+     "title": "Pack 055"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-56",
+     "title": "Pack 056"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-57",
+     "title": "Pack 057"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-58",
+     "title": "Pack 058"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-59",
+     "title": "Pack 059"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-60",
+     "title": "Pack 060"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-61",
+     "title": "Pack 061"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-62",
+     "title": "Pack 062"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-63",
+     "title": "Pack 063"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-64",
+     "title": "Pack 064"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-65",
+     "title": "Pack 065"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-66",
+     "title": "Pack 066"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-67",
+     "title": "Pack 067"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-68",
+     "title": "Pack 068"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-69",
+     "title": "Pack 069"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-70",
+     "title": "Pack 070"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-71",
+     "title": "Pack 071"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-72",
+     "title": "Pack 072"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-73",
+     "title": "Pack 073"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-74",
+     "title": "Pack 074"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-75",
+     "title": "Pack 075"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-76",
+     "title": "Pack 076"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-77",
+     "title": "Pack 077"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-78",
+     "title": "Pack 078"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-79",
+     "title": "Pack 079"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-80",
+     "title": "Pack 080"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-81",
+     "title": "Pack 081"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-82",
+     "title": "Pack 082"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-83",
+     "title": "Pack 083"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-84",
+     "title": "Pack 084"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-85",
+     "title": "Pack 085"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-86",
+     "title": "Pack 086"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-87",
+     "title": "Pack 087"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-88",
+     "title": "Pack 088"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-89",
+     "title": "Pack 089"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-90",
+     "title": "Pack 090"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-91",
+     "title": "Pack 091"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-92",
+     "title": "Pack 092"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-93",
+     "title": "Pack 093"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-94",
+     "title": "Pack 094"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-95",
+     "title": "Pack 095"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-96",
+     "title": "Pack 096"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-97",
+     "title": "Pack 097"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-98",
+     "title": "Pack 098"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-99",
+     "title": "Pack 099"
+    }
+   ],
+   "total": 130
+  },
+  "/site/modpacks/projects?limit=100&offset=100": {
+   "items": [
+    {
+     "handle": "erin",
+     "slug": "pack-100",
+     "title": "Pack 100"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-101",
+     "title": "Pack 101"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-102",
+     "title": "Pack 102"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-103",
+     "title": "Pack 103"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-104",
+     "title": "Pack 104"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-105",
+     "title": "Pack 105"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-106",
+     "title": "Pack 106"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-107",
+     "title": "Pack 107"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-108",
+     "title": "Pack 108"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-109",
+     "title": "Pack 109"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-110",
+     "title": "Pack 110"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-111",
+     "title": "Pack 111"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-112",
+     "title": "Pack 112"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-113",
+     "title": "Pack 113"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-114",
+     "title": "Pack 114"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-115",
+     "title": "Pack 115"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-116",
+     "title": "Pack 116"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-117",
+     "title": "Pack 117"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-118",
+     "title": "Pack 118"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-119",
+     "title": "Pack 119"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-120",
+     "title": "Pack 120"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-121",
+     "title": "Pack 121"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-122",
+     "title": "Pack 122"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-123",
+     "title": "Pack 123"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-124",
+     "title": "Pack 124"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-125",
+     "title": "Pack 125"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-126",
+     "title": "Pack 126"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-127",
+     "title": "Pack 127"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-128",
+     "title": "Pack 128"
+    },
+    {
+     "handle": "erin",
+     "slug": "pack-129",
+     "title": "Pack 129"
+    }
+   ],
+   "total": 130
+  },
+  "/site/mods/modders": {
+   "items": [
+    {
+     "handle": "alice",
+     "updated_at": "2026-10-02"
+    },
+    {
+     "handle": "bob"
+    },
+    {
+     "handle": ""
+    }
+   ]
+  },
+  "/site/embed/allowed-origins": {
+   "origins": [
+    "https://partner.example",
+    "https://bad/path",
+    "http://*.ok.example:8080"
+   ]
+  },
+  "/internal/geo-maintenance": {
+   "countries": []
+  }
+ },
+ "off": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": false,
+   "market_enabled": true,
+   "store_enabled": true,
+   "leaderboards_enabled": false,
+   "player_activity_enabled": false,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": true,
+   "codexes_enabled": false,
+   "server_status_enabled": false,
+   "giveaways_enabled": true,
+   "commands_enabled": true,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": true,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": true,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": false,
+   "gems_guide_enabled": false,
+   "abilities_enabled": false,
+   "guides_enabled": false,
+   "allies_enabled": true,
+   "gem_tools_enabled": false,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": false,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": false,
+   "unlock_debug_enabled": false,
+   "file_drops_enabled": false,
+   "community_sites_enabled": false,
+   "cheater_detection_enabled": true,
+   "alt_clusters_enabled": true,
+   "renames_enabled": true,
+   "duplicates_enabled": true,
+   "extra_flag": false
+  },
+  "/site/mods/modders": {
+   "items": [
+    {
+     "handle": "alice"
+    }
+   ]
+  },
+  "/internal/geo-maintenance": {
+   "countries": []
+  }
+ },
+ "down": {},
+ "geo": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": true,
+   "market_enabled": true,
+   "store_enabled": true,
+   "leaderboards_enabled": true,
+   "player_activity_enabled": true,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": true,
+   "codexes_enabled": true,
+   "server_status_enabled": true,
+   "giveaways_enabled": true,
+   "commands_enabled": true,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": true,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": true,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": true,
+   "gems_guide_enabled": true,
+   "abilities_enabled": true,
+   "guides_enabled": true,
+   "allies_enabled": true,
+   "gem_tools_enabled": true,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": true,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": true,
+   "unlock_debug_enabled": true,
+   "file_drops_enabled": true,
+   "community_sites_enabled": true,
+   "cheater_detection_enabled": true,
+   "alt_clusters_enabled": true,
+   "renames_enabled": true,
+   "duplicates_enabled": true
+  },
+  "/internal/geo-maintenance": {
+   "countries": [
+    "ZZ",
+    5
+   ]
+  }
+ }
+}

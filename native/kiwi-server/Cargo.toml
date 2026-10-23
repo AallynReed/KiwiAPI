@@ -10,6 +10,7 @@ axum = "0.8.9"
 base64 = "0.22.1"
 bytes = "1.12.1"
 chrono = { version = "0.4.45", features = ["serde"] }
+comrak = { version = "0.57.0", default-features = false }
 crc32fast = "1.5.0"
 deadpool-postgres = "0.14.2"
 dotenvy = "0.15.7"
@@ -32,10 +33,12 @@ kiwi-pil = { version = "0.1.0", path = "../kiwi-pil" }
 kiwi-zlib = { version = "0.1.0", path = "../kiwi-zlib" }
 lettre = { version = "0.11.23", default-features = false, features = ["builder", "smtp-transport", "tokio1-rustls-tls"] }
 lzma-rust2 = { version = "0.23.0", default-features = false, features = ["std"] }
+maxminddb = "0.27.0"
 md-5 = "0.11.0"
 memchr = "2.8.3"
 memmap2 = "0.9.11"
 mimalloc = "0.1.52"
+minijinja = { version = "2.24.0", default-features = false, features = ["builtins", "macros", "multi_template", "serde", "std_collections", "adjacent_loop_items", "preserve_order"] }
 mongodb = "3.9.1"
 mozjpeg-sys = { version = "2.2.3", default-features = false, features = ["arith_dec", "unwinding"] }
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic"] }

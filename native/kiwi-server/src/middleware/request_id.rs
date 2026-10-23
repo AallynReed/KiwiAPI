@@ -34,7 +34,9 @@ pub async fn request_context(req: Request, next: Next) -> Response {
         Ok(res) if res.extensions().get::<crate::error::Unhandled>().is_none() => res,
         _ => {
             tracing::error!(rid = %rid, "Unhandled error on {method} {path}");
-            envelope_with(&rid, 500, "internal_error", "Internal server error")
+            let mut res = envelope_with(&rid, 500, "internal_error", "Internal server error");
+            res.extensions_mut().insert(crate::request_id::SelfWritten);
+            res
         }
     };
     res.headers_mut().insert("x-request-id", value);

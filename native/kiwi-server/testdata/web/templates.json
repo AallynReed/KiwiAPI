@@ -1,0 +1,89 @@
+{
+ "context": {
+  "s": "a<b>&\"'/c",
+  "n": null,
+  "t": true,
+  "f": false,
+  "i": 42,
+  "x": 1.5,
+  "big": 1e+16,
+  "small": 1e-05,
+  "neg": -0.0,
+  "lst": [
+   "a",
+   1,
+   null,
+   2.5,
+   true
+  ],
+  "d": {
+   "k": "v",
+   "n": [
+    1,
+    {
+     "z": null
+    }
+   ]
+  },
+  "path": "/mods/a b",
+  "e": "",
+  "uni": "ü€😀",
+  "name": "émile",
+  "items_d": {
+   "items": [
+    1,
+    2
+   ]
+  }
+ },
+ "cases": [
+  {
+   "src": "{{ s }}|{{ n }}|{{ t }}|{{ f }}|{{ i }}|{{ x }}|{{ big }}|{{ small }}|{{ neg }}",
+   "out": "a&lt;b&gt;&amp;&#34;&#39;/c|None|True|False|42|1.5|1e+16|1e-05|-0.0"
+  },
+  {
+   "src": "{{ lst }}|{{ d }}|{{ undefined_thing }}|{{ uni }}",
+   "out": "[&#39;a&#39;, 1, None, 2.5, True]|{&#39;k&#39;: &#39;v&#39;, &#39;n&#39;: [1, {&#39;z&#39;: None}]}||ü€😀"
+  },
+  {
+   "src": "{{ s | safe }}|{{ lst | join(', ') }}|{{ lst | join }}|{{ lst | length }}|{{ s | length }}",
+   "out": "a<b>&\"'/c|a, 1, None, 2.5, True|a1None2.5True|5|9"
+  },
+  {
+   "src": "{{ undefined_thing | default('dflt') }}|{{ n | default('x') }}|{{ e | default('y', true) }}",
+   "out": "dflt|None|y"
+  },
+  {
+   "src": "{{ d | tojson }}|{{ s | tojson }}|{{ lst | tojson }}|{{ uni | tojson }}",
+   "out": "{\"k\": \"v\", \"n\": [1, {\"z\": null}]}|\"a\\u003cb\\u003e\\u0026\\\"\\u0027/c\"|[\"a\", 1, null, 2.5, true]|\"\\u00fc\\u20ac\\ud83d\\ude00\""
+  },
+  {
+   "src": "{{ path | urlencode }}|{{ uni | urlencode }}|{{ {'a b': 'c&d'} | urlencode }}",
+   "out": "/mods/a%20b|%C3%BC%E2%82%AC%F0%9F%98%80|a+b=c%26d"
+  },
+  {
+   "src": "{{ name | upper }}|{{ (name or '?')[0] | upper }}|{{ (e or '?')[0] | upper }}",
+   "out": "ÉMILE|É|?"
+  },
+  {
+   "src": "{{ 'x' if path.startswith('/mods/') else 'y' }}|{{ path.startswith(('/a', '/mods')) }}",
+   "out": "x|True"
+  },
+  {
+   "src": "{% for k, v in d.items() %}{{ k }}={{ v }};{% endfor %}|{{ items_d['items'] }}",
+   "out": "k=v;n=[1, {&#39;z&#39;: None}];|[1, 2]"
+  },
+  {
+   "src": "{{ 'checked' if t not in ('light', 'dark') else '' }}|{{ s | replace('a', '<') }}",
+   "out": "checked|&lt;&lt;b&gt;&amp;&#34;&#39;/c"
+  },
+  {
+   "src": "{%- if n %}A{% else %}B{% endif -%}\n  {{ i }}  \n{% set q = i %}{{ q }}\n",
+   "out": "B42  \n42"
+  },
+  {
+   "src": "{{ ['#7a', '#e7'][1 % 2] }}|{% for z in lst %}{{ loop.index0 }}{% endfor %}",
+   "out": "#e7|01234"
+  }
+ ]
+}

@@ -75,7 +75,7 @@ async fn run(State(state): State<AppState>, _: Superuser, Args(q): Args<RunQuery
     Ok(PydanticJson(json!({"started": true, "message": message})))
 }
 
-const PUBLIC: [&str; 3] = ["pvp.json", "gem_upgrades.json", "gear.json"];
+pub const PUBLIC: [&str; 3] = ["pvp.json", "gem_upgrades.json", "gear.json"];
 
 /// The web container's routes (`app/web/main.py`); not mounted on the API host.
 pub fn web_router() -> Router<AppState> {

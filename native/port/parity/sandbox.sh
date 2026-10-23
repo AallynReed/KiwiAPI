@@ -129,7 +129,10 @@ ROOT=$(cd "$HERE/../../.." && pwd -P)
 RS_IMG=${RS_IMG:-$IMG}
 CLIENT_IP=${CLIENT_IP:-203.0.113.7}
 RUNNER=kp-twin
-TWIN=(kp-twin kp-b-rs kp-b-py kp-a-py kp-b-pg kp-b-redis kp-b-mongo kp-a-pg kp-a-redis kp-a-mongo)
+TWIN=(kp-twin kp-b-web kp-b-web-py kp-a-web kp-b-rs kp-b-py kp-a-py kp-b-pg kp-b-redis kp-b-mongo kp-a-pg kp-a-redis kp-a-mongo)
+# An area with an AREA.web marker also gets the website pair and its writes go
+# there: A = web-py over A's api-py, B = kiwi-web + web-py over B's kiwi-server.
+WEB_CONTAINERS=(kp-a-web kp-b-web-py kp-b-web)
 # Same hostnames as production compose, resolved inside each stack's own network.
 TWIN_ENV=(
   -e MONGO_URI=mongodb://mongo:27017/kiwi -e MONGO_DB=kiwi
@@ -161,6 +164,27 @@ twin_wait() {
   retry probe http://kp-a-py:8000/health
   retry probe http://kp-b-py:8000/health
   retry probe http://kp-b-rs:8000/health
+  if docker inspect kp-b-web >/dev/null 2>&1; then
+    retry probe http://kp-a-web:8000/health
+    retry probe http://kp-b-web:8000/health
+  fi
+}
+
+is_web() {
+  [ -f "$HERE/$(area "$1").web" ]
+}
+
+twin_web() {
+  local web=(uvicorn app.web.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'
+             --timeout-keep-alive 120)
+  docker run -d --name kp-a-web --network kiwi-parity-a --memory 512m "${TWIN_ENV[@]}" "${AREA_ENV[@]}" \
+    -e INTERNAL_API_URL=http://api-py:8000 "${TWIN_MOUNTS[@]}" "$IMG" "${web[@]}" >/dev/null
+  docker run -d --name kp-b-web-py --network kiwi-parity-b --network-alias web-py --memory 512m \
+    "${TWIN_ENV[@]}" "${AREA_ENV[@]}" -e INTERNAL_API_URL=http://kp-b-rs:8000 "${TWIN_MOUNTS[@]}" "$IMG" \
+    "${web[@]}" >/dev/null
+  docker run -d --name kp-b-web --network kiwi-parity-b --memory 512m "${TWIN_ENV[@]}" "${AREA_ENV[@]}" \
+    -e INTERNAL_API_URL=http://kp-b-rs:8000 -e KIWI_BIND=0.0.0.0:8000 -e PY_WEB_UPSTREAM=http://web-py:8000 \
+    -e FORWARDED_ALLOW_IPS='*' "${TWIN_MOUNTS[@]}" "$RS_IMG" kiwi-web >/dev/null
 }
 
 twin_stores() {
@@ -228,6 +252,7 @@ twin_up() {
   docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" "${AREA_ENV[@]}" -e RUST_OWNS="${RS_OWNS:-$moved}" \
     -e KIWI_BIND=0.0.0.0:8000 -e PY_UPSTREAM=http://api-py:8000 -e FORWARDED_ALLOW_IPS='*' \
     "${TWIN_MOUNTS[@]}" "$RS_IMG" kiwi-server >/dev/null
+  if [ -n "${2:-}" ] && is_web "$2"; then twin_web; fi
   twin_wait
   echo "twin up; next: $0 twin-seed AREA"
 }
@@ -270,6 +295,7 @@ twin_seed() {
     docker exec -d "$RUNNER" python -m http.server 8099 --bind 0.0.0.0 --directory "/parity/data/${a}_cdn"
   fi
   docker restart kp-a-py kp-b-py kp-b-rs >/dev/null
+  if docker inspect kp-b-web >/dev/null 2>&1; then docker restart "${WEB_CONTAINERS[@]}" >/dev/null; fi
   twin_wait
   echo "seeded $a; tokens: docker exec $RUNNER cat /tmp/a.env"
 }
@@ -283,7 +309,7 @@ twin_run() {
     echo "######## $f"
     docker exec "$RUNNER" python "/parity/run.py" --allow-writes --env-a /tmp/a.env --env-b /tmp/b.env \
       --header "Host: kiwi-parity" --header "X-Forwarded-For: $CLIENT_IP" \
-      "$f" http://kp-a-py:8000 http://kp-b-rs:8000 || rc=1
+      "$f" $(if is_web "$spec"; then echo http://kp-a-web:8000 http://kp-b-web:8000; else echo http://kp-a-py:8000 http://kp-b-rs:8000; fi) || rc=1
   done
   return $rc
 }

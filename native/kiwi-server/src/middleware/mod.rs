@@ -75,7 +75,7 @@ impl Mw {
     }
 }
 
-async fn client_addr(
+pub(crate) async fn client_addr(
     axum::extract::State(mw): axum::extract::State<Arc<Mw>>,
     mut req: Request,
     next: Next,
@@ -93,7 +93,7 @@ struct Touched {
     method_not_allowed: bool,
 }
 
-async fn mark(req: Request, next: Next) -> Response {
+pub(crate) async fn mark(req: Request, next: Next) -> Response {
     let mut res = next.run(req).await;
     let touched = Touched {
         had_allow: res.headers().contains_key(header::ALLOW),

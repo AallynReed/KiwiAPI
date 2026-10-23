@@ -75,6 +75,31 @@ x-api-environment: &api-environment
   # Background loops kiwi-server runs instead of Python (app/core/rust_owns.py).
   RUST_OWNS: ${RUST_OWNS:-}
 
+# Shared by web (kiwi-web) and web-py (the Python website behind it).
+x-web-environment: &web-environment
+  # Read-side data from the api over the compose network. Deliberately NO
+  # Mongo/Redis/Postgres/SECRET_KEY: the website has no DB and issues no tokens.
+  INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+  GAMEDATA_DIR: /data/gamedata
+  # Signs the page-view beacon to the api's internal ingest (and salts the
+  # cookieless visitor hash, which is why it matches the api's value).
+  INTERNAL_KEY: ${INTERNAL_KEY:-}
+  # IP-to-country database for the regional maintenance gate (downloaded monthly).
+  GEOIP_DIR: /data/geoip
+  # Discord OAuth toggle. The website performs no token exchange (the /login
+  # button links to the api's OAuth start endpoint); it needs these only so
+  # settings.discord_oauth_enabled is true and the sign-in button renders
+  # instead of the "temporarily unavailable" fallback. Same values as the api.
+  DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+  DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+
+x-web-volumes: &web-volumes
+  - ./app:/app/app
+  # Templates + static + ~20 MB of screenshots (same bind mount the api uses).
+  - ./site:/app/site:ro
+  - ./.gamedata:/data/gamedata:ro
+  - ./.geoip:/data/geoip
+
 x-api-volumes: &api-volumes
   # Bind-mount the source so host edits are picked up (api-py runs it; api has it
   # for `docker compose exec api python ...`).
@@ -346,40 +371,49 @@ services:
   # browse/clubs/support first paint, feature-flag gating, the sitemap); in the
   # browser, the page JS calls api.aallyn.net directly for /site/* + /v1/* data.
   # See app/web/. Reverse-proxied: trove.aallyn.net -> host :15547 -> container :8000.
+  # kiwi-web (native/kiwi-server, bin kiwi-web) answers the pages ported to Rust and
+  # proxies the rest to web-py, the way api fronts api-py. KIWI_WEB_PROXY_ALL=1 in
+  # .env sends every website request to Python again.
   web:
     image: trove-app:latest   # built by the api service (same image, different command)
     restart: unless-stopped
     ports:
       - "${BIND_ADDR:-127.0.0.1}:15547:8000"
     environment:
-      # Read-side data from the api over the compose network. Deliberately NO
-      # Mongo/Redis/Postgres/SECRET_KEY: the website has no DB and issues no tokens.
-      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
-      GAMEDATA_DIR: /data/gamedata
-      # Signs the page-view beacon to the api's internal ingest (and salts the
-      # cookieless visitor hash, which is why it matches the api's value).
-      INTERNAL_KEY: ${INTERNAL_KEY:-}
-      # IP-to-country database for the regional maintenance gate (downloaded monthly).
-      GEOIP_DIR: /data/geoip
-      # Discord OAuth toggle. The website performs no token exchange (the /login
-      # button links to the api's OAuth start endpoint); it needs these only so
-      # settings.discord_oauth_enabled is true and the sign-in button renders
-      # instead of the "temporarily unavailable" fallback. Same values as the api.
-      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
-      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+      <<: *web-environment
+      KIWI_BIND: 0.0.0.0:8000
+      PY_WEB_UPSTREAM: http://web-py:8000
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+      KIWI_PROXY_ALL: ${KIWI_WEB_PROXY_ALL:-}
+      RUST_LOG: ${RUST_LOG:-info}
     depends_on:
       # Soft dep (started, not healthy), like the bot - internal_get fails
       # gracefully (fail-open flags, generic OG) if the api is briefly down.
       api:
         condition: service_started
-    volumes:
-      - ./app:/app/app
-      # Templates + static + ~20 MB of screenshots (same bind mount the api uses).
-      - ./site:/app/site:ro
-      - ./.gamedata:/data/gamedata:ro
-      - ./.geoip:/data/geoip
+      web-py:
+        condition: service_started
+    volumes: *web-volumes
+    command: ["kiwi-web"]
+    stop_grace_period: 5s
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # The Python website, now behind kiwi-web. No published port: only web reaches it.
+  # --forwarded-allow-ips "*": its only peer is kiwi-web, which REPLACES
+  # X-Forwarded-For with the one client it resolved. Safe only while unpublished.
+  web-py:
+    image: trove-app:latest   # built by the api service (same image, different command)
+    restart: unless-stopped
+    environment: *web-environment
+    depends_on:
+      api:
+        condition: service_started
+    volumes: *web-volumes
     command: ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "${FORWARDED_ALLOW_IPS:-127.0.0.1}"]
+              "--proxy-headers", "--forwarded-allow-ips", "*", "--timeout-keep-alive", "120"]
     mem_limit: 512m
     logging:
       driver: json-file

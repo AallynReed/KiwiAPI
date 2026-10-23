@@ -33,6 +33,11 @@ tokio::task_local! {
     static REQUEST_ID: String;
 }
 
+/// Marks the 500 the request-id layer writes itself (a plain response in
+/// Python, not one streamed through `BaseHTTPMiddleware`).
+#[derive(Clone, Copy, Debug)]
+pub struct SelfWritten;
+
 /// The current request's id, or `"-"` outside a request.
 pub fn current() -> String {
     REQUEST_ID.try_with(Clone::clone).unwrap_or_else(|_| "-".to_owned())

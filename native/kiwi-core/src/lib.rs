@@ -47,6 +47,7 @@ pub mod troveio;
 pub mod update_archive;
 pub mod updates;
 pub mod voxel;
+pub mod web;
 pub mod wire;
 pub mod workshop;
 pub mod zipread;

@@ -72,6 +72,7 @@ pub mod tools;
 pub mod updates;
 pub mod usage;
 pub mod validation;
+pub mod web;
 pub mod webhooks;
 pub mod workshop;
 

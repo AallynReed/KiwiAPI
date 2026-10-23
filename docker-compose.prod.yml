@@ -3,16 +3,17 @@
 #
 # Runs the Python app with several uvicorn workers. Code still comes from the
 # ./app bind mount (synced), so a deploy = sync + recreate; for fully immutable
-# deploys, bake the image instead. kiwi-server (api) needs no override: it is one
-# multi-threaded process.
+# deploys, bake the image instead. kiwi-server (api) and kiwi-web (web) need no
+# override: each is one multi-threaded process.
 services:
   api-py:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
               "--proxy-headers", "--forwarded-allow-ips", "*", "--workers", "${API_WORKERS:-8}",
               "--timeout-keep-alive", "120", "--timeout-graceful-shutdown", "3"]
 
-  # Website (presentation only) - a few workers is plenty; it does no heavy CPU,
-  # just template rendering + thin internal_get fan-out to the api.
-  web:
+  # Python website behind kiwi-web (presentation only) - a few workers is plenty;
+  # it does no heavy CPU, just template rendering + thin internal_get fan-out.
+  web-py:
     command: ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000",
-              "--proxy-headers", "--forwarded-allow-ips", "${FORWARDED_ALLOW_IPS:-127.0.0.1}", "--workers", "${WEB_WORKERS:-4}"]
+              "--proxy-headers", "--forwarded-allow-ips", "*", "--workers", "${WEB_WORKERS:-4}",
+              "--timeout-keep-alive", "120"]

@@ -57,6 +57,11 @@ pub fn dumps_compact_ascii(value: &Value) -> String {
     render(value, COMPACT_ASCII)
 }
 
+/// `json.dumps(value, ensure_ascii=False)`: spaced separators, text kept.
+pub fn dumps_spaced_unicode(value: &Value) -> String {
+    render(value, Style { ascii: false, ..SPACED })
+}
+
 /// pydantic-core `dump_json` of an already-built value.
 pub fn pydantic(value: &Value) -> String {
     render(value, PYDANTIC)
