@@ -369,8 +369,8 @@ fn gif(b: &[u8]) -> Option<(u32, u32)> {
             while sub_block(&mut r).is_some_and(|b| !b.is_empty()) {}
         } else if s == b"," {
             let d = r.read(9);
-            let (x0, y0) = (le16(&d, 0)?, le16(&d, 2)?);
-            let (x1, y1) = (x0 + le16(&d, 4)?, y0 + le16(&d, 6)?);
+            let (x0, y0) = (le16(d, 0)?, le16(d, 2)?);
+            let (x1, y1) = (x0 + le16(d, 4)?, y0 + le16(d, 6)?);
             if x1 > w || y1 > h {
                 let grown = (x1.max(w), y1.max(h));
                 if !bomb_ok(grown) {
