@@ -332,7 +332,10 @@
    "last_seen_at",
    "schedule",
    "active",
-   "state"
+   "state",
+   "merchant_open",
+   "current_window",
+   "next_window"
   ]
  },
  {

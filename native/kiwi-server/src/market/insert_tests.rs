@@ -46,6 +46,42 @@ fn insert_dump_matches_python() {
     }
 }
 
+/// An upload through form parsing, parameter validation and the empty-file
+/// check, as `(status, body)` under the case's request id.
+async fn upload_reply(case: &Value) -> Option<(u16, String)> {
+    use axum::http::{HeaderMap, StatusCode, header};
+    use kiwi_core::form::{FormError, parse_form};
+
+    use super::insert::{EMPTY_UPLOAD, validate_upload};
+    use crate::error::ApiError;
+
+    let body: Vec<u8> = case["body"].as_str().unwrap().chars().map(|c| c as u8).collect();
+    let ctype = case["content_type"].as_str().unwrap();
+    let mut headers = HeaderMap::new();
+    headers.insert(header::CONTENT_TYPE, ctype.parse().unwrap());
+    let url = case["url"].as_str().unwrap();
+    let query = url.split_once('?').map(|(_, q)| q);
+    let err = match parse_form(Some(ctype.as_bytes()), &body) {
+        Err(FormError::Http(msg)) => ApiError::http(StatusCode::BAD_REQUEST, Some(&msg)),
+        Ok(items) => match validate_upload(query, &headers, items, url.starts_with("/v1/market")) {
+            Err(e) => e.into(),
+            Ok((file, _)) if file.is_empty() => ApiError::bad_request(EMPTY_UPLOAD),
+            Ok(_) => return None,
+        },
+    };
+    let rid = case["request_id"].as_str().unwrap().to_owned();
+    let status = err.status.as_u16();
+    Some((status, crate::request_id::scope(rid, async move { err.body() }).await))
+}
+
+#[tokio::test]
+async fn upload_errors_match_fastapi() {
+    for case in golden()["http"]["upload"].as_array().unwrap() {
+        let want = (case["status"].as_u64().unwrap() as u16, case["response"].as_str().unwrap().to_owned());
+        assert_eq!(upload_reply(case).await, Some(want), "{case}");
+    }
+}
+
 #[test]
 fn log_summary_matches_beanie() {
     let s = Summary { parsed: 0, imported: 0, ignored: 0, last_seen: None };

@@ -135,6 +135,143 @@ def market() -> list:
     return out
 
 
+async def call(app, method: str, url: str, headers: list, body: bytes):
+    import urllib.parse
+    path, _, qs = url.partition("?")
+    scope = {
+        "type": "http", "asgi": {"version": "3.0"}, "http_version": "1.1", "method": method,
+        "scheme": "http", "path": urllib.parse.unquote(path), "raw_path": path.encode(),
+        "query_string": qs.encode(), "root_path": "",
+        "headers": [(b"host", b"testserver")] + headers + [(b"content-length", str(len(body)).encode())],
+        "client": ("127.0.0.1", 50000), "server": ("testserver", 80),
+    }
+    done = asyncio.Event()
+    pending = [{"type": "http.request", "body": body, "more_body": False}]
+    sent = []
+
+    async def receive():
+        if pending:
+            return pending.pop(0)
+        await done.wait()
+        return {"type": "http.disconnect"}
+
+    async def send(message):
+        sent.append(message)
+        if message["type"] == "http.response.body" and not message.get("more_body"):
+            done.set()
+
+    await app(scope, receive, send)
+    start = next(m for m in sent if m["type"] == "http.response.start")
+    raw = b"".join(m.get("body", b"") for m in sent if m["type"] == "http.response.body")
+    return start["status"], raw
+
+
+B = "XyZkiwi"
+MP = f"multipart/form-data; boundary={B}"
+
+
+def multipart(parts) -> bytes:
+    out = b""
+    for name, filename, data in parts:
+        disp = f'Content-Disposition: form-data; name="{name}"' + (f'; filename="{filename}"' if filename else "")
+        out += f"--{B}\r\n{disp}\r\n\r\n".encode() + data + b"\r\n"
+    return out + f"--{B}--\r\n".encode()
+
+
+JSON = "application/json"
+CAPTURE_BODIES = [
+    (JSON, b'{"name": 5}'), (JSON, b"{}"), (JSON, b"[]"), (JSON, b'"x"'), (JSON, b"null"), (None, b""),
+    ("text/plain", b"name=x"), (JSON, b"{bad"), (JSON, b'{"name": " none "}'), (JSON, b'{"name": "\\u3000"}'),
+    (JSON, b'{"name": null}'), ("application/vnd.x+json", b'{"name": ["a"]}'), (None, b'{"name": "x"}'),
+]
+LUXION_BODIES = [
+    (JSON, b'{"active": "maybe"}'), (JSON, b'{"active": null}'), (JSON, b"[]"), (JSON, b'"x"'),
+    (JSON, b'{"active": 2}'), ("text/plain", b"x"), (JSON, b"{bad"), (JSON, b'{"active": 1.5}'),
+]
+UPLOADS = [
+    ("", MP, multipart([("dump", None, b"x")])),
+    ("", MP, multipart([("file", None, b"x")])),
+    ("", MP, multipart([("file", None, b"")])),
+    ("", MP, multipart([("file", "a.cfg", b"")])),
+    ("?timestamp=abc", MP, multipart([("file", "a.cfg", b"x")])),
+    ("?timestamp=1.5&timestamp=2", MP, multipart([("file", None, b"x")])),
+    ("?timestamp=", MP, multipart([("file", "a.cfg", b"")])),
+    ("", MP, b"garbage"),
+    ("", "multipart/form-data", b"--x\r\n"),
+    ("", JSON, b'{"file": "x"}'),
+]
+
+
+async def http_cases() -> dict:
+    import types
+
+    from app.core.dependencies import IngestAuth, require_master_ingest
+    from app.core.features import require_market_enabled, require_store_enabled
+    from app.main import app
+    from app.trove import router as trove_router
+
+    user = types.SimpleNamespace(id=ObjectId("65f0c0ffee0000000000abcd"), email="m@x", is_superuser=True)
+    app.dependency_overrides[require_master_ingest] = lambda: IngestAuth(user=user, token=None)
+    app.dependency_overrides[require_market_enabled] = lambda: None
+    app.dependency_overrides[require_store_enabled] = lambda: None
+
+    async def nothing(*a, **k):
+        return None
+
+    async def unreachable(*a, **k):
+        raise AssertionError("only invalid requests are replayed")
+
+    trove_router.ingest_log.record = nothing
+    for name in ("publish_challenge", "publish_chaos", "publish_luxion"):
+        setattr(trove_router.events_bus, name, nothing)
+    for name in ("insert_challenge", "insert_chaos_chest", "insert_luxion"):
+        setattr(trove_router.captures, name, unreachable)
+
+    async def challenge(name, **k):
+        name = name.strip()
+        if not name or name.lower() == "none":
+            raise ValueError("challenge name is empty or 'none'")
+        raise AssertionError("valid")
+
+    async def chaos(name, **k):
+        if not name.strip():
+            raise ValueError("name is empty")
+        raise AssertionError("valid")
+
+    trove_router.captures.insert_challenge = challenge
+    trove_router.captures.insert_chaos_chest = chaos
+    trove_router.market_service.insert_dump = unreachable
+    trove_router.store_service.insert_dump = unreachable
+
+    out: dict = {"capture": [], "luxion": [], "upload": []}
+    n = 0
+
+    async def go(section, url, ctype, body, extra=None):
+        nonlocal n
+        n += 1
+        rid = f"parity-prod-{n:03d}"
+        headers = [(b"x-request-id", rid.encode())] + ([(b"content-type", ctype.encode())] if ctype else [])
+        try:
+            status, raw = await call(app, "POST", url, headers, body)
+        except AssertionError:
+            return
+        if status == 500:
+            return
+        out[section].append({"url": url, "content_type": ctype, "body": body.decode("latin-1"), "request_id": rid,
+                             "status": status, "response": raw.decode("utf-8"), **(extra or {})})
+
+    for path in ("/v1/rotations/challenge/insert", "/v1/rotations/chaos-chest/insert"):
+        for ctype, body in CAPTURE_BODIES:
+            await go("capture", path, ctype, body)
+    for ctype, body in LUXION_BODIES:
+        await go("luxion", "/v1/rotations/luxion/insert", ctype, body)
+    for path in ("/v1/market/insert", "/v1/store/insert"):
+        for query, ctype, body in UPLOADS:
+            await go("upload", path + query, ctype, body)
+    app.dependency_overrides.clear()
+    return out
+
+
 def main() -> None:
     probe = datetime(2026, 1, 1)
     assert probe.astimezone(UTC).replace(tzinfo=None) == probe, "run with TZ=UTC0 (the container's zone)"
@@ -144,6 +281,7 @@ def main() -> None:
         "luxion_live": luxion_live(),
         "documents": documents(),
         "market": market(),
+        "http": asyncio.run(http_cases()),
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")

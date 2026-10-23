@@ -123,7 +123,7 @@ pub fn chaos_fields(week_anchor: i64, name: &str, captured_at: DateTime<Utc>) ->
 }
 
 /// `captures.insert_chaos_chest`: `(week_anchor, was_new)`.
-async fn insert_chaos(db: &Database, name: &str, now_us: i64) -> Result<(i64, bool), ApiError> {
+pub(crate) async fn insert_chaos(db: &Database, name: &str, now_us: i64) -> Result<(i64, bool), ApiError> {
     let week_anchor = rot::chaos_chest_window(now_us).0;
     let captured_at = dt::now();
     let c = coll(db, store::CHAOS);
@@ -175,7 +175,7 @@ pub fn challenge_name_ok(name: &str) -> bool {
 }
 
 /// `captures.insert_challenge`: `(window_anchor, was_new)`.
-async fn insert_challenge(db: &Database, name: &str, now_us: i64) -> Result<(i64, bool), ApiError> {
+pub(crate) async fn insert_challenge(db: &Database, name: &str, now_us: i64) -> Result<(i64, bool), ApiError> {
     let window = rot::challenge_window(now_us);
     let captured_at = dt::now();
     let c = coll(db, store::CHALLENGE);
@@ -268,7 +268,11 @@ pub fn luxion_fields(d: &LuxionDoc) -> Document {
 
 /// `captures.insert_luxion`: `(started_at of the run, was_new)`, `None` for a
 /// no-op close.
-async fn insert_luxion(db: &Database, active: bool, real: DateTime<Utc>) -> Result<(Option<i64>, bool), ApiError> {
+pub(crate) async fn insert_luxion(
+    db: &Database,
+    active: bool,
+    real: DateTime<Utc>,
+) -> Result<(Option<i64>, bool), ApiError> {
     let now_us = real.timestamp_micros();
     let anchor = current_daily_reset(now_us);
     let c = coll(db, store::LUXION);

@@ -656,5 +656,437 @@
    "rows": null,
    "cheapest": null
   }
- ]
+ ],
+ "http": {
+  "capture": [
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "{\"name\": 5}",
+    "request_id": "parity-prod-001",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"parity-prod-001\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "{}",
+    "request_id": "parity-prod-002",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"name\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"parity-prod-002\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "[]",
+    "request_id": "parity-prod-003",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[]}],\"request_id\":\"parity-prod-003\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "\"x\"",
+    "request_id": "parity-prod-004",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"x\"}],\"request_id\":\"parity-prod-004\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "null",
+    "request_id": "parity-prod-005",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-005\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": null,
+    "body": "",
+    "request_id": "parity-prod-006",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-006\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "text/plain",
+    "body": "name=x",
+    "request_id": "parity-prod-007",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"name=x\"}],\"request_id\":\"parity-prod-007\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "{bad",
+    "request_id": "parity-prod-008",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}],\"request_id\":\"parity-prod-008\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "{\"name\": \" none \"}",
+    "request_id": "parity-prod-009",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"challenge name is empty or 'none'\",\"details\":null,\"request_id\":\"parity-prod-009\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "{\"name\": \"\\u3000\"}",
+    "request_id": "parity-prod-010",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"challenge name is empty or 'none'\",\"details\":null,\"request_id\":\"parity-prod-010\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/json",
+    "body": "{\"name\": null}",
+    "request_id": "parity-prod-011",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":null}],\"request_id\":\"parity-prod-011\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": "application/vnd.x+json",
+    "body": "{\"name\": [\"a\"]}",
+    "request_id": "parity-prod-012",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":[\"a\"]}],\"request_id\":\"parity-prod-012\"}}"
+   },
+   {
+    "url": "/v1/rotations/challenge/insert",
+    "content_type": null,
+    "body": "{\"name\": \"x\"}",
+    "request_id": "parity-prod-013",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"{\\\"name\\\": \\\"x\\\"}\"}],\"request_id\":\"parity-prod-013\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "{\"name\": 5}",
+    "request_id": "parity-prod-014",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":5}],\"request_id\":\"parity-prod-014\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "{}",
+    "request_id": "parity-prod-015",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"name\"],\"msg\":\"Field required\",\"input\":{}}],\"request_id\":\"parity-prod-015\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "[]",
+    "request_id": "parity-prod-016",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[]}],\"request_id\":\"parity-prod-016\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "\"x\"",
+    "request_id": "parity-prod-017",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"x\"}],\"request_id\":\"parity-prod-017\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "null",
+    "request_id": "parity-prod-018",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-018\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": null,
+    "body": "",
+    "request_id": "parity-prod-019",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-019\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "text/plain",
+    "body": "name=x",
+    "request_id": "parity-prod-020",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"name=x\"}],\"request_id\":\"parity-prod-020\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "{bad",
+    "request_id": "parity-prod-021",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}],\"request_id\":\"parity-prod-021\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "{\"name\": \"\\u3000\"}",
+    "request_id": "parity-prod-023",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"name is empty\",\"details\":null,\"request_id\":\"parity-prod-023\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/json",
+    "body": "{\"name\": null}",
+    "request_id": "parity-prod-024",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":null}],\"request_id\":\"parity-prod-024\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": "application/vnd.x+json",
+    "body": "{\"name\": [\"a\"]}",
+    "request_id": "parity-prod-025",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"name\"],\"msg\":\"Input should be a valid string\",\"input\":[\"a\"]}],\"request_id\":\"parity-prod-025\"}}"
+   },
+   {
+    "url": "/v1/rotations/chaos-chest/insert",
+    "content_type": null,
+    "body": "{\"name\": \"x\"}",
+    "request_id": "parity-prod-026",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"{\\\"name\\\": \\\"x\\\"}\"}],\"request_id\":\"parity-prod-026\"}}"
+   }
+  ],
+  "luxion": [
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "application/json",
+    "body": "{\"active\": \"maybe\"}",
+    "request_id": "parity-prod-027",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"bool_parsing\",\"loc\":[\"body\",\"active\"],\"msg\":\"Input should be a valid boolean, unable to interpret input\",\"input\":\"maybe\"}],\"request_id\":\"parity-prod-027\"}}"
+   },
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "application/json",
+    "body": "{\"active\": null}",
+    "request_id": "parity-prod-028",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"bool_type\",\"loc\":[\"body\",\"active\"],\"msg\":\"Input should be a valid boolean\",\"input\":null}],\"request_id\":\"parity-prod-028\"}}"
+   },
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "application/json",
+    "body": "[]",
+    "request_id": "parity-prod-029",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":[]}],\"request_id\":\"parity-prod-029\"}}"
+   },
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "application/json",
+    "body": "\"x\"",
+    "request_id": "parity-prod-030",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"x\"}],\"request_id\":\"parity-prod-030\"}}"
+   },
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "application/json",
+    "body": "{\"active\": 2}",
+    "request_id": "parity-prod-031",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"bool_parsing\",\"loc\":[\"body\",\"active\"],\"msg\":\"Input should be a valid boolean, unable to interpret input\",\"input\":2}],\"request_id\":\"parity-prod-031\"}}"
+   },
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "text/plain",
+    "body": "x",
+    "request_id": "parity-prod-032",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"model_attributes_type\",\"loc\":[\"body\"],\"msg\":\"Input should be a valid dictionary or object to extract fields from\",\"input\":\"x\"}],\"request_id\":\"parity-prod-032\"}}"
+   },
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "application/json",
+    "body": "{bad",
+    "request_id": "parity-prod-033",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":{},\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}],\"request_id\":\"parity-prod-033\"}}"
+   },
+   {
+    "url": "/v1/rotations/luxion/insert",
+    "content_type": "application/json",
+    "body": "{\"active\": 1.5}",
+    "request_id": "parity-prod-034",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"bool_type\",\"loc\":[\"body\",\"active\"],\"msg\":\"Input should be a valid boolean\",\"input\":1.5}],\"request_id\":\"parity-prod-034\"}}"
+   }
+  ],
+  "upload": [
+   {
+    "url": "/v1/market/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"dump\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-035",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-035\"}}"
+   },
+   {
+    "url": "/v1/market/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-036",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"file\"],\"msg\":\"Value error, Expected UploadFile, received: <class 'str'>\",\"input\":\"x\",\"ctx\":{\"error\":{}}}],\"request_id\":\"parity-prod-036\"}}"
+   },
+   {
+    "url": "/v1/market/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\n\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-037",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-037\"}}"
+   },
+   {
+    "url": "/v1/market/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.cfg\"\r\n\r\n\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-038",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Empty upload - POST the raw cfg text as a multipart 'file' field.\",\"details\":null,\"request_id\":\"parity-prod-038\"}}"
+   },
+   {
+    "url": "/v1/market/insert?timestamp=abc",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.cfg\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-039",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"timestamp\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"abc\"}],\"request_id\":\"parity-prod-039\"}}"
+   },
+   {
+    "url": "/v1/market/insert?timestamp=1.5&timestamp=2",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-040",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"file\"],\"msg\":\"Value error, Expected UploadFile, received: <class 'str'>\",\"input\":\"x\",\"ctx\":{\"error\":{}}}],\"request_id\":\"parity-prod-040\"}}"
+   },
+   {
+    "url": "/v1/market/insert?timestamp=",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.cfg\"\r\n\r\n\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-041",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"timestamp\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"\"}],\"request_id\":\"parity-prod-041\"}}"
+   },
+   {
+    "url": "/v1/market/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "garbage",
+    "request_id": "parity-prod-042",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid multipart data.\",\"details\":null,\"request_id\":\"parity-prod-042\"}}"
+   },
+   {
+    "url": "/v1/market/insert",
+    "content_type": "multipart/form-data",
+    "body": "--x\r\n",
+    "request_id": "parity-prod-043",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Missing boundary in multipart.\",\"details\":null,\"request_id\":\"parity-prod-043\"}}"
+   },
+   {
+    "url": "/v1/market/insert",
+    "content_type": "application/json",
+    "body": "{\"file\": \"x\"}",
+    "request_id": "parity-prod-044",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-044\"}}"
+   },
+   {
+    "url": "/v1/store/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"dump\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-045",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-045\"}}"
+   },
+   {
+    "url": "/v1/store/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-046",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"file\"],\"msg\":\"Value error, Expected UploadFile, received: <class 'str'>\",\"input\":\"x\",\"ctx\":{\"error\":{}}}],\"request_id\":\"parity-prod-046\"}}"
+   },
+   {
+    "url": "/v1/store/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\n\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-047",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-047\"}}"
+   },
+   {
+    "url": "/v1/store/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.cfg\"\r\n\r\n\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-048",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Empty upload - POST the raw cfg text as a multipart 'file' field.\",\"details\":null,\"request_id\":\"parity-prod-048\"}}"
+   },
+   {
+    "url": "/v1/store/insert?timestamp=abc",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.cfg\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-049",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"timestamp\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"abc\"}],\"request_id\":\"parity-prod-049\"}}"
+   },
+   {
+    "url": "/v1/store/insert?timestamp=1.5&timestamp=2",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\nx\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-050",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"file\"],\"msg\":\"Value error, Expected UploadFile, received: <class 'str'>\",\"input\":\"x\",\"ctx\":{\"error\":{}}}],\"request_id\":\"parity-prod-050\"}}"
+   },
+   {
+    "url": "/v1/store/insert?timestamp=",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "--XyZkiwi\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.cfg\"\r\n\r\n\r\n--XyZkiwi--\r\n",
+    "request_id": "parity-prod-051",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"timestamp\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"\"}],\"request_id\":\"parity-prod-051\"}}"
+   },
+   {
+    "url": "/v1/store/insert",
+    "content_type": "multipart/form-data; boundary=XyZkiwi",
+    "body": "garbage",
+    "request_id": "parity-prod-052",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid multipart data.\",\"details\":null,\"request_id\":\"parity-prod-052\"}}"
+   },
+   {
+    "url": "/v1/store/insert",
+    "content_type": "multipart/form-data",
+    "body": "--x\r\n",
+    "request_id": "parity-prod-053",
+    "status": 400,
+    "response": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Missing boundary in multipart.\",\"details\":null,\"request_id\":\"parity-prod-053\"}}"
+   },
+   {
+    "url": "/v1/store/insert",
+    "content_type": "application/json",
+    "body": "{\"file\": \"x\"}",
+    "request_id": "parity-prod-054",
+    "status": 422,
+    "response": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"parity-prod-054\"}}"
+   }
+  ]
+ }
 }
