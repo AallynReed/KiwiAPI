@@ -38,6 +38,7 @@ from beanie.odm.utils import init as beanie_init  # noqa: E402
 from bson import ObjectId  # noqa: E402
 from bson.json_util import CANONICAL_JSON_OPTIONS  # noqa: E402
 from bson.json_util import dumps as ext_dumps  # noqa: E402
+from fastapi import File, Form, UploadFile  # noqa: E402
 from pymongo import AsyncMongoClient  # noqa: E402
 
 from app.core.config import settings  # noqa: E402
@@ -415,7 +416,77 @@ async def vfx_section():
                                                      ["a/b.DDS", "x.png", "y.pkfx", "z.fbx", "noext", "d.ir/x"]]}
 
 
-async def main() -> None:
+def forms_section():
+    """The upload and attach-config routes' multipart parameters, as FastAPI validates them."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from app.core.errors import register_error_handlers
+
+    app = FastAPI()
+    register_error_handlers(app)
+
+    @app.post("/up")
+    async def up(tag: str = Form(...), title: str = Form(default=""), changelog: str = Form(default=""),
+                 status: str = Form(default="published"), branch: str = Form(default=""),
+                 silent: bool = Form(default=False), file: UploadFile = File(...),
+                 config: UploadFile | None = File(default=None)):
+        data = await file.read()
+        cfg = await config.read() if config is not None else None
+        return {"tag": tag, "title": title, "changelog": changelog, "status": status, "branch": branch,
+                "silent": silent, "filename": file.filename, "size": len(data),
+                "config": None if cfg is None else len(cfg)}
+
+    @app.post("/cfg")
+    async def cfg(file: UploadFile = File(...)):
+        return {"size": len(await file.read())}
+
+    def part(name, value, filename=None, ctype=None):
+        h = b'Content-Disposition: form-data; name="' + name + b'"'
+        if filename is not None:
+            h += b'; filename="' + filename + b'"'
+        h += b"\r\n"
+        if ctype is not None:
+            h += b"Content-Type: " + ctype + b"\r\n"
+        return h + b"\r\n" + value + b"\r\n"
+
+    def mp(*parts):
+        return b"".join(b"--XyZ\r\n" + p for p in parts) + b"--XyZ--\r\n"
+
+    ct = "multipart/form-data; boundary=XyZ"
+    f = part(b"file", b"TMODDATA", b"m.tmod", b"application/octet-stream")
+    up_cases = [
+        (mp(part(b"tag", b" v1 "), part(b"title", b"T"), part(b"changelog", b"c\n"), part(b"status", b"draft"),
+            part(b"branch", b"alt"), part(b"silent", b"true"), f, part(b"config", b"[x]\n", b"c.cfg", b"text/plain")), ct),
+        (mp(part(b"title", b"x")), ct), (mp(part(b"tag", b""), f), ct), (mp(part(b"tag", b"v"), part(b"file", b"text")), ct),
+        (mp(part(b"tag", b"v"), f, part(b"config", b"text")), ct), (mp(part(b"tag", b"v"), part(b"silent", b"maybe"), f), ct),
+        (mp(part(b"tag", b"v"), part(b"silent", b"ab\ncd\n", b"s.bin"), f), ct),
+        (mp(part(b"tag", b"x\n", b"t.txt", b"text/plain"), f), ct), (mp(part(b"tag", b"v"), part(b"silent", b""), f), ct),
+        (mp(part(b"tag", b"first"), part(b"tag", b"second"), f), ct),
+        (mp(part(b"tag", b"v"), part(b"file", b"", b"")), ct), (mp(part(b"tag", b"v"), part(b"silent", b"off"), f), ct),
+        (mp(part(b"tag", b"v"), part(b"silent", b"1"), f, part(b"config", b"", b"e.cfg")), ct),
+        (mp(part(b"tag", b"v"), part(b"status", b""), part(b"branch", b""), f), ct),
+        (b'{"tag": "v"}', "application/json"), (b"tag=v&file=x", "application/x-www-form-urlencoded"),
+        (b"garbage", ct),
+    ]
+    cfg_cases = [(mp(part(b"file", b"[x]\nk=v\n", b"c.cfg", b"text/plain")), ct), (mp(part(b"other", b"x")), ct),
+                 (mp(part(b"file", b"text")), ct), (mp(part(b"file", b"")), ct)]
+    client = TestClient(app, raise_server_exceptions=False)
+    out = {}
+    for route, cases in (("up", up_cases), ("cfg", cfg_cases)):
+        rows = []
+        for body, ctype in cases:
+            r = client.post("/" + route, content=body, headers={"content-type": ctype})
+            data = r.json()
+            if r.status_code != 200:
+                err = data["error"]
+                data = {"code": err["code"], "message": err["message"], "details": err["details"]}
+            rows.append({"ctype": ctype, "body": body.decode("latin-1"), "status": r.status_code, "result": data})
+        out[route] = rows
+    return out
+
+
+async def main(forms) -> None:
     async def no_server(self):
         self._database_major_version = 7
         self._existing_collections = []
@@ -434,6 +505,7 @@ async def main() -> None:
         "event": event_section(),
         "rig": await rig_section(),
         "vfx": await vfx_section(),
+        "forms": forms,
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -441,4 +513,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(forms_section()))

@@ -731,7 +731,7 @@
  "zips": [
   {
    "name": "plain",
-   "b64": "UEsDBBQAAAAIAMokV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMokV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMokV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMokV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyiRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyiRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADKJFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyiRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsOpL8O8LnR4dFBLBQYAAAAABAAEANYAAADDAAAAAAA=",
+   "b64": "UEsDBBQAAAAIAMlUV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMlUV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMlUV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMlUV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyVRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyVRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADJVFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyVRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsOpL8O8LnR4dFBLBQYAAAAABAAEANYAAADDAAAAAAA=",
    "is_zipfile": true,
    "entries": [
     [
@@ -754,7 +754,7 @@
   },
   {
    "name": "cp437",
-   "b64": "UEsDBBQAAAgIAMokV12vd9JiAwAAAAEAAAAIAAAAeMKAeS50eHSrAgBQSwECFAAUAAAACADKJFddr3fSYgMAAAABAAAACAAAAAAAAAAAAAAAgAEAAAAAeMKAeS50eHRQSwUGAAAAAAEAAQA2AAAAKQAAAAAA",
+   "b64": "UEsDBBQAAAgIAMlUV12vd9JiAwAAAAEAAAAIAAAAeMKAeS50eHSrAgBQSwECFAAUAAAACADJVFddr3fSYgMAAAABAAAACAAAAAAAAAAAAAAAgAEAAAAAeMKAeS50eHRQSwUGAAAAAAEAAQA2AAAAKQAAAAAA",
    "is_zipfile": true,
    "entries": [
     [
@@ -765,7 +765,7 @@
   },
   {
    "name": "comment",
-   "b64": "UEsDBBQAAAAIAMokV13Sowh4AwAAAAEAAAAFAAAAbi50eHTLAwBQSwECFAAUAAAACADKJFdd0qMIeAMAAAABAAAABQAAAAAAAAAAAAAAgAEAAAAAbi50eHRQSwUGAAAAAAEAAQAzAAAAJgAAAAkAYSBjb21tZW50",
+   "b64": "UEsDBBQAAAAIAMlUV13Sowh4AwAAAAEAAAAFAAAAbi50eHTLAwBQSwECFAAUAAAACADJVFdd0qMIeAMAAAABAAAABQAAAAAAAAAAAAAAgAEAAAAAbi50eHRQSwUGAAAAAAEAAQAzAAAAJgAAAAkAYSBjb21tZW50",
    "is_zipfile": true,
    "entries": [
     [
@@ -800,13 +800,13 @@
   },
   {
    "name": "truncated",
-   "b64": "UEsDBBQAAAAIAMokV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMokV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMokV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMokV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyiRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyiRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADKJFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyiRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsM=",
+   "b64": "UEsDBBQAAAAIAMlUV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMlUV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMlUV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMlUV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyVRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyVRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADJVFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyVRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsM=",
    "is_zipfile": false,
    "entries": "bad"
   },
   {
    "name": "prefixed",
-   "b64": "UFJFRklYUEsDBBQAAAAIAMokV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMokV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMokV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMokV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyiRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyiRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADKJFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyiRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsOpL8O8LnR4dFBLBQYAAAAABAAEANYAAADDAAAAAAA=",
+   "b64": "UFJFRklYUEsDBBQAAAAIAMlUV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMlUV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMlUV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMlUV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyVRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyVRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADJVFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyVRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsOpL8O8LnR4dFBLBQYAAAAABAAEANYAAADDAAAAAAA=",
    "is_zipfile": true,
    "entries": [
     [
@@ -829,7 +829,7 @@
   },
   {
    "name": "newer",
-   "b64": "UEsDBBQAAAAIAMokV12EO2RrAwAAAAEAAAAFAAAAdi50eHQrAwBQSwECFABAAAAACADKJFddhDtkawMAAAABAAAABQAAAAAAAAAAAAAAgAEAAAAAdi50eHRQSwUGAAAAAAEAAQAzAAAAJgAAAAAA",
+   "b64": "UEsDBBQAAAAIAMlUV12EO2RrAwAAAAEAAAAFAAAAdi50eHQrAwBQSwECFABAAAAACADJVFddhDtkawMAAAABAAAABQAAAAAAAAAAAAAAgAEAAAAAdi50eHRQSwUGAAAAAAEAAQAzAAAAJgAAAAAA",
    "is_zipfile": true,
    "entries": "unhandled"
   }
@@ -2878,6 +2878,445 @@
     "d.ir/x",
     "application/octet-stream"
    ]
+  ]
+ },
+ "forms": {
+  "up": [
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\n v1 \r\n--XyZ\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\nT\r\n--XyZ\r\nContent-Disposition: form-data; name=\"changelog\"\r\n\r\nc\n\r\n--XyZ\r\nContent-Disposition: form-data; name=\"status\"\r\n\r\ndraft\r\n--XyZ\r\nContent-Disposition: form-data; name=\"branch\"\r\n\r\nalt\r\n--XyZ\r\nContent-Disposition: form-data; name=\"silent\"\r\n\r\ntrue\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ\r\nContent-Disposition: form-data; name=\"config\"; filename=\"c.cfg\"\r\nContent-Type: text/plain\r\n\r\n[x]\n\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "tag": " v1 ",
+     "title": "T",
+     "changelog": "c\n",
+     "status": "draft",
+     "branch": "alt",
+     "silent": true,
+     "filename": "m.tmod",
+     "size": 8,
+     "config": 4
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\nx\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "tag"
+       ],
+       "msg": "Field required",
+       "input": null
+      },
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "file"
+       ],
+       "msg": "Field required",
+       "input": null
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\n\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "tag"
+       ],
+       "msg": "Field required",
+       "input": null
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\ntext\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "file"
+       ],
+       "msg": "Value error, Expected UploadFile, received: <class 'str'>",
+       "input": "text",
+       "ctx": {
+        "error": {}
+       }
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ\r\nContent-Disposition: form-data; name=\"config\"\r\n\r\ntext\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "config"
+       ],
+       "msg": "Value error, Expected UploadFile, received: <class 'str'>",
+       "input": "text",
+       "ctx": {
+        "error": {}
+       }
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"silent\"\r\n\r\nmaybe\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "bool_parsing",
+       "loc": [
+        "body",
+        "silent"
+       ],
+       "msg": "Input should be a valid boolean, unable to interpret input",
+       "input": "maybe"
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"silent\"; filename=\"s.bin\"\r\n\r\nab\ncd\n\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "bool_type",
+       "loc": [
+        "body",
+        "silent"
+       ],
+       "msg": "Input should be a valid boolean",
+       "input": {
+        "filename": "s.bin",
+        "file": {
+         "_file": {},
+         "_max_size": 1048576,
+         "_rolled": false,
+         "_TemporaryFileArgs": {
+          "mode": "w+b",
+          "buffering": -1,
+          "suffix": null,
+          "prefix": null,
+          "encoding": null,
+          "newline": null,
+          "dir": null,
+          "errors": null
+         }
+        },
+        "size": 6,
+        "headers": {
+         "content-disposition": "form-data; name=\"silent\"; filename=\"s.bin\""
+        },
+        "_max_mem_size": 1048576
+       }
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"; filename=\"t.txt\"\r\nContent-Type: text/plain\r\n\r\nx\n\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "string_type",
+       "loc": [
+        "body",
+        "tag"
+       ],
+       "msg": "Input should be a valid string",
+       "input": {
+        "filename": "t.txt",
+        "file": {
+         "120": 10
+        },
+        "size": 2,
+        "headers": {
+         "content-disposition": "form-data; name=\"tag\"; filename=\"t.txt\"",
+         "content-type": "text/plain"
+        },
+        "_max_mem_size": 1048576
+       }
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"silent\"\r\n\r\n\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "tag": "v",
+     "title": "",
+     "changelog": "",
+     "status": "published",
+     "branch": "",
+     "silent": false,
+     "filename": "m.tmod",
+     "size": 8,
+     "config": null
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nfirst\r\n--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nsecond\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "tag": "second",
+     "title": "",
+     "changelog": "",
+     "status": "published",
+     "branch": "",
+     "silent": false,
+     "filename": "m.tmod",
+     "size": 8,
+     "config": null
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\"\r\n\r\n\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "tag": "v",
+     "title": "",
+     "changelog": "",
+     "status": "published",
+     "branch": "",
+     "silent": false,
+     "filename": "",
+     "size": 0,
+     "config": null
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"silent\"\r\n\r\noff\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "tag": "v",
+     "title": "",
+     "changelog": "",
+     "status": "published",
+     "branch": "",
+     "silent": false,
+     "filename": "m.tmod",
+     "size": 8,
+     "config": null
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"silent\"\r\n\r\n1\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ\r\nContent-Disposition: form-data; name=\"config\"; filename=\"e.cfg\"\r\n\r\n\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "tag": "v",
+     "title": "",
+     "changelog": "",
+     "status": "published",
+     "branch": "",
+     "silent": true,
+     "filename": "m.tmod",
+     "size": 8,
+     "config": 0
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"tag\"\r\n\r\nv\r\n--XyZ\r\nContent-Disposition: form-data; name=\"status\"\r\n\r\n\r\n--XyZ\r\nContent-Disposition: form-data; name=\"branch\"\r\n\r\n\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"m.tmod\"\r\nContent-Type: application/octet-stream\r\n\r\nTMODDATA\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "tag": "v",
+     "title": "",
+     "changelog": "",
+     "status": "published",
+     "branch": "",
+     "silent": false,
+     "filename": "m.tmod",
+     "size": 8,
+     "config": null
+    }
+   },
+   {
+    "ctype": "application/json",
+    "body": "{\"tag\": \"v\"}",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "tag"
+       ],
+       "msg": "Field required",
+       "input": null
+      },
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "file"
+       ],
+       "msg": "Field required",
+       "input": null
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "application/x-www-form-urlencoded",
+    "body": "tag=v&file=x",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "file"
+       ],
+       "msg": "Value error, Expected UploadFile, received: <class 'str'>",
+       "input": "x",
+       "ctx": {
+        "error": {}
+       }
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "garbage",
+    "status": 400,
+    "result": {
+     "code": "bad_request",
+     "message": "Invalid multipart data.",
+     "details": null
+    }
+   }
+  ],
+  "cfg": [
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"c.cfg\"\r\nContent-Type: text/plain\r\n\r\n[x]\nk=v\n\r\n--XyZ--\r\n",
+    "status": 200,
+    "result": {
+     "size": 8
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"other\"\r\n\r\nx\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "file"
+       ],
+       "msg": "Field required",
+       "input": null
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\ntext\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "value_error",
+       "loc": [
+        "body",
+        "file"
+       ],
+       "msg": "Value error, Expected UploadFile, received: <class 'str'>",
+       "input": "text",
+       "ctx": {
+        "error": {}
+       }
+      }
+     ]
+    }
+   },
+   {
+    "ctype": "multipart/form-data; boundary=XyZ",
+    "body": "--XyZ\r\nContent-Disposition: form-data; name=\"file\"\r\n\r\n\r\n--XyZ--\r\n",
+    "status": 422,
+    "result": {
+     "code": "validation_error",
+     "message": "Request validation failed",
+     "details": [
+      {
+       "type": "missing",
+       "loc": [
+        "body",
+        "file"
+       ],
+       "msg": "Field required",
+       "input": null
+      }
+     ]
+    }
+   }
   ]
  }
 }

@@ -356,3 +356,41 @@ fn compilable_paths_follow_trove_layout() {
     assert!(!artifact::is_compilable("ui/notes.TXT"));
     assert!(artifact::is_compilable("ui/noext"));
 }
+
+#[test]
+fn upload_forms_match_fastapi() {
+    let latin1 = |s: &str| s.chars().map(|c| c as u32 as u8).collect::<Vec<u8>>();
+    for (route, rows) in g("forms").as_object().expect("forms") {
+        for (n, row) in rows.as_array().expect("rows").iter().enumerate() {
+            let ctype = row["ctype"].as_str().unwrap_or_default();
+            let body = latin1(row["body"].as_str().unwrap_or_default());
+            let got = match kiwi_core::form::parse_form(Some(ctype.as_bytes()), &body) {
+                Err(kiwi_core::form::FormError::Http(m)) => {
+                    (400, json!({"code": "bad_request", "message": m, "details": null}))
+                }
+                Ok(items) => {
+                    let checked = if route == "up" {
+                        write::upload_form(&items).map(|u| {
+                            json!({"tag": u.tag, "title": u.title, "changelog": u.changelog, "status": u.status,
+                                   "branch": u.branch, "silent": u.silent, "filename": u.file.filename,
+                                   "size": u.file.data.len(), "config": u.config.map(|c| c.data.len())})
+                        })
+                    } else {
+                        write::config_form(&items).map(|d| json!({"size": d.len()}))
+                    };
+                    match checked {
+                        Ok(v) => (200, v),
+                        Err(e) => {
+                            let details: Vec<Value> = e.0.iter().map(|i| i.to_value()).collect();
+                            (
+                                422,
+                                json!({"code": "validation_error", "message": "Request validation failed", "details": details}),
+                            )
+                        }
+                    }
+                }
+            };
+            assert_eq!(got, (row["status"].as_i64().unwrap_or(0), row["result"].clone()), "{route} case {n}");
+        }
+    }
+}

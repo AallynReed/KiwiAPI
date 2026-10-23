@@ -623,18 +623,18 @@ pub async fn create(State(s): State<AppState>, req: Request) -> Response {
 
 // --- upload ----------------------------------------------------------------
 
-struct UploadForm {
-    tag: String,
-    title: String,
-    changelog: String,
-    status: String,
-    branch: String,
-    silent: bool,
-    file: form::UploadFile,
-    config: Option<form::UploadFile>,
+pub(super) struct UploadForm {
+    pub tag: String,
+    pub title: String,
+    pub changelog: String,
+    pub status: String,
+    pub branch: String,
+    pub silent: bool,
+    pub file: form::UploadFile,
+    pub config: Option<form::UploadFile>,
 }
 
-fn upload_form(items: &[(String, FormValue)]) -> Result<UploadForm, ValidationError> {
+pub(super) fn upload_form(items: &[(String, FormValue)]) -> Result<UploadForm, ValidationError> {
     let mut v = Validator::default();
     let tag = form_str(&mut v, items, "tag", None);
     let title = form_str(&mut v, items, "title", Some(""));
@@ -801,6 +801,13 @@ async fn attach(
     Ok(with_changed(&release, true))
 }
 
+/// The config route's `file: UploadFile = File(...)`.
+pub(super) fn config_form(items: &[(String, FormValue)]) -> Result<Vec<u8>, ValidationError> {
+    let mut v = Validator::default();
+    let file = form_file(&mut v, items, "file", true);
+    v.finish(file.map(|f| f.data).unwrap_or_default())
+}
+
 /// `POST /v1/mods/hub/releases/{release_id}/config`.
 pub async fn attach_config(State(s): State<AppState>, req: Request) -> Response {
     let (mut parts, body) = req.into_parts();
@@ -816,13 +823,11 @@ pub async fn attach_config(State(s): State<AppState>, req: Request) -> Response 
         Ok(Path(r)) => r,
         Err(e) => return e.into_response(),
     };
-    let mut v = Validator::default();
-    let file = form_file(&mut v, &items, "file", true);
-    if let Err(e) = v.finish(()) {
-        return ApiError::from(e).into_response();
-    }
+    let data = match config_form(&items) {
+        Ok(d) => d,
+        Err(e) => return ApiError::from(e).into_response(),
+    };
     drop(items);
-    let data = file.map(|f| f.data).unwrap_or_default();
     let r = async {
         let (release, project) = release_and_project(&s, &id).await?;
         attach(&s, release, &project, &wu.user, data).await
