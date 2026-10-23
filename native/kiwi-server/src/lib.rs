@@ -42,6 +42,7 @@ pub mod mods_catalog;
 pub mod mods_creators;
 pub mod mods_git;
 pub mod mods_issues;
+pub mod mods_moderation;
 pub mod mods_write_auth;
 pub mod ocr;
 pub mod og;

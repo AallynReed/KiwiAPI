@@ -381,7 +381,7 @@ pub fn status_message(status: u16, reason: &str, location: Option<&str>, url: &s
 }
 
 /// `str(exc)` of the httpx transport error a failed request becomes.
-fn transport_message(err: &reqwest::Error) -> String {
+pub fn transport_message(err: &reqwest::Error) -> String {
     if err.is_timeout() {
         return String::new();
     }
