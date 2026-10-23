@@ -1,0 +1,585 @@
+{
+ "on": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": true,
+   "market_enabled": true,
+   "store_enabled": true,
+   "leaderboards_enabled": true,
+   "player_activity_enabled": true,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": true,
+   "codexes_enabled": true,
+   "server_status_enabled": true,
+   "giveaways_enabled": true,
+   "commands_enabled": true,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": true,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": true,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": true,
+   "gems_guide_enabled": true,
+   "abilities_enabled": true,
+   "guides_enabled": true,
+   "allies_enabled": true,
+   "gem_tools_enabled": true,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": true,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": true,
+   "unlock_debug_enabled": true,
+   "file_drops_enabled": true,
+   "community_sites_enabled": true,
+   "cheater_detection_enabled": true,
+   "alt_clusters_enabled": true,
+   "renames_enabled": true,
+   "duplicates_enabled": true
+  },
+  "/site/embed/allowed-origins": {
+   "origins": [
+    "https://partner.example"
+   ]
+  },
+  "/internal/geo-maintenance": {
+   "countries": []
+  },
+  "/site/mods/projects?sort=recent&limit=24": {
+   "items": [
+    {
+     "handle": "alice",
+     "slug": "zeta-mod",
+     "title": "Zakros UI - Chat",
+     "summary": "A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+     "author": "Alice A",
+     "owner_username": "alice",
+     "owner_avatar_url": "https://cdn.example/a.png",
+     "tags": [
+      "ui",
+      5,
+      "chat",
+      null,
+      "qol",
+      "extra"
+     ],
+     "download_count": 1234567,
+     "star_count": 12.5
+    },
+    {
+     "handle": "bob",
+     "slug": "alpha",
+     "title": "\"Alpha\" & <Friends>",
+     "summary": null,
+     "owner_username": "bob",
+     "download_count": null,
+     "star_count": 0
+    },
+    {
+     "handle": "carol",
+     "slug": "ümlaut",
+     "title": "",
+     "summary": "short　text\u001cend",
+     "download_count": 1e+16,
+     "star_count": -3.25,
+     "tags": "notalist"
+    },
+    {
+     "handle": "",
+     "slug": "nohandle",
+     "title": "No handle"
+    },
+    {
+     "handle": "dave",
+     "slug": null,
+     "title": "No slug"
+    },
+    {
+     "handle": "erin",
+     "slug": "floaty",
+     "title": "Floaty",
+     "download_count": 0.5,
+     "star_count": true,
+     "author": "",
+     "owner_username": "erin_o"
+    },
+    "not a dict"
+   ],
+   "total": 77
+  },
+  "/site/modpacks/projects?limit=24": {
+   "items": [
+    {
+     "handle": "erin",
+     "slug": "pack-1",
+     "title": "Pack <One>",
+     "summary": "Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle Bundle ",
+     "owner_username": "erin",
+     "download_count": 9001
+    },
+    {
+     "handle": "frank",
+     "slug": "pack-2",
+     "title": null,
+     "summary": "",
+     "download_count": 2.75
+    },
+    {
+     "handle": "",
+     "slug": "pack-3"
+    }
+   ],
+   "total": "3"
+  },
+  "/site/codexes/types": {
+   "items": [
+    {
+     "type": "ally",
+     "count": 1200
+    },
+    {
+     "type": "mount",
+     "count": 2.5
+    },
+    {
+     "type": "",
+     "count": 4
+    },
+    {
+     "type": "fish"
+    }
+   ]
+  },
+  "/site/codexes/search?sort=name&limit=24": {
+   "items": [
+    {
+     "name": "Ancient Hero",
+     "type": "ally",
+     "category": "Pet"
+    },
+    {
+     "name": "Bat <Wing>",
+     "type": "mount",
+     "category": null
+    },
+    {
+     "name": "",
+     "type": "x"
+    },
+    {
+     "name": "Cod"
+    }
+   ],
+   "total": 9876
+  },
+  "/site/market/items": {
+   "items": [
+    "Flux",
+    "Gem Box",
+    7,
+    null,
+    "Ünique"
+   ]
+  },
+  "/site/market/listings?limit=24&sort=-last_seen": {
+   "items": [
+    {
+     "name": "Flux",
+     "price_each": 1234.5,
+     "stack": 999,
+     "price": 1233265.5,
+     "last_seen": 1760000000
+    },
+    {
+     "name": "Gem Box",
+     "price_each": 0.125,
+     "stack": true,
+     "price": "12",
+     "last_seen": "2026-10-01T10:00:00Z"
+    },
+    {
+     "name": "Naive",
+     "price_each": -7,
+     "stack": null,
+     "price": 1e+16,
+     "last_seen": "2026-10-01T10:00:00"
+    },
+    {
+     "name": "Date only",
+     "price_each": 2.999,
+     "stack": 1.0,
+     "price": 0,
+     "last_seen": "2026-10-01"
+    },
+    {
+     "name": "Bad date",
+     "price_each": 1000000.004,
+     "last_seen": "yesterday"
+    },
+    {
+     "name": "Float ts",
+     "price_each": 12.345,
+     "last_seen": 1760000000.9
+    },
+    {
+     "name": "",
+     "price_each": 1
+    }
+   ]
+  },
+  "/site/store/categories": {
+   "items": [
+    {
+     "label": "$StoreCategory_Mounts"
+    },
+    {
+     "name": "StoreCategory_Allies"
+    },
+    {
+     "label": "$Plain"
+    },
+    {
+     "label": "",
+     "name": ""
+    },
+    {
+     "name": "Raw"
+    }
+   ]
+  },
+  "/site/store/products?limit=24&active=true": {
+   "items": [
+    {
+     "name": "Starter Pack",
+     "price_string": "$9.99",
+     "kind": "pack"
+    },
+    {
+     "code": "CODE_ONLY",
+     "price_string": null
+    },
+    {
+     "name": "",
+     "code": ""
+    }
+   ],
+   "total": 3
+  },
+  "/site/mods/projects/alice/zeta-mod": {
+   "handle": "alice",
+   "slug": "zeta-mod",
+   "title": "Zakros UI - Chat",
+   "summary": "  Better chat. ",
+   "description": "A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+   "owner_username": "alice",
+   "author": "Alice A",
+   "owner_avatar_url": "https://cdn.example/a b.png",
+   "banner_sha": "abc/def 1",
+   "preview_shas": [
+    "p1",
+    "p2"
+   ],
+   "source_visible": true,
+   "is_stray": false,
+   "tags": [
+    "ui",
+    "chat",
+    3,
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g"
+   ],
+   "download_count": 4321,
+   "star_count": 7,
+   "created_at": "2026-01-02T03:04:05Z",
+   "updated_at": "2026-10-01T10:00:00.123456+02:00",
+   "last_release_at": null,
+   "releases": [
+    {
+     "id": "draft1",
+     "status": "draft",
+     "title": "Draft"
+    },
+    {
+     "id": 42,
+     "tag": "v1.2",
+     "title": "",
+     "published_at": 1760000000,
+     "changelog": "Fixed <things>.",
+     "tmod_filename": "Zakros UI - Chat.tmod",
+     "tmod_size": 3456789
+    },
+    {
+     "id": "r2",
+     "tag": "v1.1",
+     "published_at": "2026-05-05",
+     "changelog": null,
+     "status": "published"
+    },
+    "junk",
+    {
+     "tag": "v1.0",
+     "published_at": "not a date"
+    }
+   ]
+  },
+  "/site/mods/profile/alice": {
+   "username": "alice",
+   "display_name": "Alice <A>",
+   "tagline": "",
+   "readme": "A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+   "avatar_url": "https://cdn.example/av.png",
+   "banner_url": null,
+   "website_url": "https://alice.example",
+   "joined_at": "2025-12-01T00:00:00Z",
+   "mods": [
+    {
+     "handle": "alice",
+     "slug": "zeta-mod",
+     "title": "Zakros UI - Chat",
+     "download_count": 99
+    },
+    {
+     "handle": "alice",
+     "slug": "other",
+     "title": "Other Thing",
+     "download_count": 500
+    },
+    {
+     "handle": "alice",
+     "slug": "nameplate",
+     "title": "Zakros UI - Nameplate",
+     "download_count": 10
+    },
+    {
+     "handle": "alice",
+     "slug": "frames",
+     "title": "Zakros UI - Frames",
+     "download_count": 20.5
+    },
+    {
+     "handle": "alice",
+     "slug": "notitle",
+     "title": null,
+     "download_count": null
+    },
+    {
+     "handle": "alice",
+     "slug": "big",
+     "title": "Big",
+     "download_count": 100000
+    },
+    {
+     "handle": "alice",
+     "slug": "m7",
+     "title": "M7"
+    },
+    {
+     "handle": "alice",
+     "slug": "m8",
+     "title": "M8"
+    },
+    {
+     "handle": "alice",
+     "slug": "m9",
+     "title": "M9",
+     "download_count": 1
+    },
+    {
+     "handle": "alice",
+     "slug": "m10",
+     "title": "M10",
+     "download_count": 2
+    },
+    {
+     "handle": null,
+     "slug": "nohandle",
+     "title": "x"
+    }
+   ]
+  },
+  "/site/mods/projects/bob/plain": {
+   "slug": "plain",
+   "title": null,
+   "summary": "",
+   "description": "<p>Only <i>html</i> here</p>",
+   "owner_username": "",
+   "preview_shas": [
+    "prev-sha"
+   ],
+   "download_count": true,
+   "updated_at": "2026-02-03T04:05:06Z",
+   "releases": null
+  },
+  "/site/mods/profile/bob": {
+   "username": "bob",
+   "display_name": null,
+   "tagline": "  Bob makes mods  ",
+   "readme": null,
+   "banner_url": "https://cdn.example/bb.png",
+   "mods": "x"
+  },
+  "/site/mods/projects/carol/%C3%BCmlaut": {
+   "slug": "ümlaut",
+   "title": "Ümlaut ünïcode",
+   "summary": "",
+   "description": "",
+   "owner_username": "carol",
+   "is_stray": true,
+   "owner_avatar_url": "http://insecure.example/a.png",
+   "download_count": 3.0,
+   "last_release_at": "2026-03-03"
+  },
+  "/site/mods/projects/dan/empty": {},
+  "/site/mods/profile/dan": {},
+  "/site/mods/projects/eve/x%20y%22%3C": {
+   "title": "Eve's <mod>",
+   "owner_username": "eve",
+   "summary": "",
+   "description": "",
+   "preview_shas": "sha-string",
+   "download_count": 5,
+   "releases": [
+    {
+     "id": 0,
+     "tag": "t0"
+    }
+   ]
+  },
+  "/site/modpacks/projects/erin/pack-1": {
+   "handle": "erin",
+   "slug": "pack-1",
+   "title": "Pack <One>",
+   "summary": "",
+   "description": "A **bold** [link](https://x.example) and ![img](https://i.example/p.png) <b>tag</b>\n\n# Heading `code` ~strike~ | pipe > quote_under word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+   "owner_username": "erin",
+   "download_count": 12,
+   "updated_at": "2026-09-09T09:09:09+00:00",
+   "banner_sha": null,
+   "preview_shas": [
+    "prev0"
+   ],
+   "variants": [
+    {
+     "label": "Full",
+     "mods": [
+      {
+       "handle": "alice",
+       "slug": "zeta-mod",
+       "title": "Zakros UI - Chat",
+       "author": "Alice"
+      },
+      {
+       "handle": "bob",
+       "slug": "alpha",
+       "title": null
+      },
+      {
+       "title": "Loose file",
+       "author": "?"
+      },
+      {
+       "title": "Loose file 2"
+      },
+      "junk"
+     ]
+    },
+    {
+     "name": "Lite",
+     "mods": [
+      {
+       "handle": "alice",
+       "slug": "zeta-mod",
+       "title": "dupe"
+      },
+      {
+       "handle": "carol",
+       "slug": "c",
+       "title": "",
+       "author": null
+      }
+     ]
+    },
+    {
+     "mods": "nope"
+    }
+   ]
+  },
+  "/site/modpacks/projects/frank/bare": {
+   "title": "",
+   "slug": "bare",
+   "owner_username": null,
+   "banner_sha": "bsha",
+   "summary": "  Frank's pack  "
+  }
+ },
+ "off": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": false,
+   "market_enabled": false,
+   "store_enabled": false,
+   "leaderboards_enabled": true,
+   "player_activity_enabled": true,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": true,
+   "codexes_enabled": false,
+   "server_status_enabled": true,
+   "giveaways_enabled": true,
+   "commands_enabled": false,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": true,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": false,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": true,
+   "gems_guide_enabled": true,
+   "abilities_enabled": false,
+   "guides_enabled": true,
+   "allies_enabled": false,
+   "gem_tools_enabled": true,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": true,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": true,
+   "unlock_debug_enabled": true,
+   "file_drops_enabled": true,
+   "community_sites_enabled": true,
+   "cheater_detection_enabled": true,
+   "alt_clusters_enabled": true,
+   "renames_enabled": true,
+   "duplicates_enabled": true
+  },
+  "/internal/geo-maintenance": {
+   "countries": []
+  }
+ },
+ "down": {}
+}

@@ -8,6 +8,7 @@
 //! Stack, outer to inner: client address -> static gzip -> request id ->
 //! security -> regional maintenance gate -> HEAD as GET -> route.
 
+pub mod catalog;
 pub mod flags;
 pub mod geo;
 pub mod gzip;
@@ -17,10 +18,13 @@ pub mod meta;
 pub mod nav;
 pub mod pages;
 pub mod pageviews;
+pub mod reference;
 pub mod static_files;
 pub mod swf_docs;
 pub mod templates;
 
+#[cfg(test)]
+mod catalog_tests;
 #[cfg(test)]
 mod tests;
 
@@ -63,6 +67,7 @@ pub struct Web {
     pub maintenance_page: Arc<str>,
     pub sitemap: tokio::sync::Mutex<Option<(Instant, String)>>,
     pub static_root: PathBuf,
+    pub ssr: catalog::SsrCache,
 }
 
 impl Web {
@@ -90,6 +95,7 @@ impl Web {
             maintenance_page: page.into(),
             sitemap: tokio::sync::Mutex::new(None),
             static_root: site_root.join("static"),
+            ssr: catalog::SsrCache::default(),
             api,
             settings: settings.clone(),
         }
@@ -145,6 +151,7 @@ fn ported(web: Arc<Web>) -> Router<AppState> {
     Router::new()
         .merge(pages::router())
         .merge(live::router())
+        .merge(catalog::router())
         .route("/robots.txt", get(meta::robots))
         .route("/BingSiteAuth.xml", get(meta::bing))
         .route("/sitemap.xml", get(meta::sitemap))

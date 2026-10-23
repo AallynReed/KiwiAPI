@@ -1,0 +1,5003 @@
+{
+ "sets": [
+  {
+   "name": "rich",
+   "files": {
+    "classes.json": [
+     {
+      "name": "Knight",
+      "qualified_name": "knight",
+      "shorts": [
+       "KN",
+       "K"
+      ],
+      "damage_type": "Physical",
+      "weapons": [
+       "Sword"
+      ],
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "value": 100,
+        "percentage": false
+       },
+       {
+        "name": "Critical Hit",
+        "value": 12.5,
+        "percentage": true
+       },
+       {
+        "name": "Attack Speed",
+        "value": null
+       },
+       {
+        "name": "Mystery",
+        "value": "x"
+       },
+       {
+        "name": "Flag",
+        "value": true
+       },
+       {
+        "name": "Big",
+        "value": 1234567.891
+       },
+       {
+        "name": "Regen",
+        "value": 0.6,
+        "percentage": true
+       }
+      ],
+      "bonuses": [
+       {
+        "name": "Physical Damage",
+        "value": 0,
+        "percentage": true
+       },
+       {
+        "name": "Health",
+        "value": 5
+       },
+       {
+        "name": "Speed",
+        "value": -2.5
+       },
+       {
+        "name": "Fly",
+        "value": 7,
+        "absolute": true
+       },
+       {
+        "name": "",
+        "value": 3
+       }
+      ],
+      "levels": {
+       "10": [
+        {
+         "name": "Physical Damage",
+         "value": 10
+        }
+       ],
+       "2": [
+        {
+         "name": "Regen",
+         "value": 0.1,
+         "percentage": true
+        },
+        {
+         "name": "Regen",
+         "value": 0.2
+        },
+        {
+         "name": "Regen",
+         "value": 0.3
+        }
+       ],
+       "3": [
+        {
+         "name": "Critical Hit",
+         "value": 0.25
+        },
+        {
+         "name": "Physical Damage",
+         "value": 1.5
+        }
+       ],
+       "30": [
+        {
+         "name": "Big",
+         "value": 0.001
+        },
+        {
+         "name": "Critical Hit",
+         "value": null
+        }
+       ]
+      },
+      "subclass": {
+       "name": "Iron Will",
+       "description": "Tough.",
+       "level": {
+        "20": [
+         {
+          "name": "Armor",
+          "value": 5
+         }
+        ],
+        "1": [
+         {
+          "name": "",
+          "value": 0
+         },
+         {
+          "name": "  ",
+          "value": 0
+         }
+        ],
+        "5": [
+         {
+          "name": " Padded ",
+          "value": 0
+         },
+         {
+          "name": "",
+          "value": 2.5,
+          "percentage": true
+         }
+        ]
+       }
+      },
+      "abilities": [
+       {
+        "name": "Slash",
+        "description": "Cuts.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Hit",
+          "multiplier": 3.5,
+          "base": 50
+         },
+         {
+          "name": "Zero",
+          "multiplier": 0,
+          "base": 0
+         },
+         {
+          "name": "Flat",
+          "base": 12.25
+         },
+         {
+          "name": "Int",
+          "multiplier": 2
+         },
+         {
+          "name": "Tiny",
+          "multiplier": 1e-06
+         }
+        ]
+       },
+       {
+        "name": "Old",
+        "description": "Gone.",
+        "active": false,
+        "stages": []
+       },
+       {
+        "name": "",
+        "description": ""
+       },
+       {
+        "name": "",
+        "description": "Desc only",
+        "type": "Passive",
+        "active": 0
+       }
+      ]
+     },
+     {
+      "name": "Dupe",
+      "qualified_name": "dupe",
+      "damage_type": null
+     },
+     {
+      "name": "Ice Sage",
+      "qualified_name": "icemage",
+      "damage_type": "Magic",
+      "abilities": []
+     },
+     {
+      "name": "Dupe Two",
+      "qualified_name": "dupe",
+      "damage_type": "magic",
+      "levels": {}
+     }
+    ],
+    "class_abilities.json": [
+     {
+      "name": "Ice Sage",
+      "abilities": [
+       {
+        "name": "Frost",
+        "description": "Cold.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Shard",
+          "multiplier": 1.25,
+          "base": 0,
+          "prefab": "abilities/icemage/shard"
+         }
+        ],
+        "stats": [
+         {
+          "name": "Movement Speed",
+          "op": "Add",
+          "value": -20,
+          "prefab": "abilities/icemage/slow"
+         },
+         {
+          "name": "Attack Speed",
+          "op": "MultiplySum",
+          "value": 15,
+          "prefab": "abilities/icemage/haste_big"
+         }
+        ]
+       },
+       {
+        "name": "Legacy Bolt",
+        "active": false,
+        "description": "Old bolt."
+       }
+      ]
+     },
+     {
+      "name": "Knight",
+      "abilities": [
+       {
+        "name": "Slash",
+        "type": "Active",
+        "description": "Cuts."
+       }
+      ]
+     },
+     {
+      "name": "",
+      "abilities": [
+       {
+        "name": "Orphan",
+        "description": "No owner"
+       }
+      ]
+     }
+    ],
+    "gem_abilities.json": [
+     {
+      "element": "Air",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Air Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       110,
+       111
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": [
+       {
+        "name": "Smash",
+        "multiplier": 2.5,
+        "base": 10,
+        "prefab": "abilities/a/smash"
+       }
+      ]
+     },
+     {
+      "element": "Fire",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Fire Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       112,
+       110
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       },
+       {
+        "name": "Damage",
+        "op": "MultiplySum",
+        "value": 20,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "mastery",
+      "name": "Masterful",
+      "description": "Empowered Prismatic Gem; can be socketed anywhere."
+     },
+     {
+      "element": "Cosmic",
+      "slug": "any",
+      "name": "Star Power",
+      "description": "Empowered Cosmic Gem for any class; shoots stars.",
+      "tiers": [
+       5
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "x",
+      "name": "plain",
+      "description": "No lead here.",
+      "tiers": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "y",
+      "name": "Berserk",
+      "description": "Empowered Prismatic Gem. Rage.",
+      "stats": [
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 25,
+        "prefab": "abilities/gems/battle_frenzy_small"
+       },
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 50,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Crit",
+        "op": "Multiply",
+        "value": 5,
+        "amount": 1.5,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Shield",
+        "op": "Other",
+        "value": 0,
+        "prefab": ""
+       }
+      ]
+     },
+     {
+      "element": "Air",
+      "slug": "z",
+      "name": "",
+      "description": "nameless",
+      "tiers": [
+       1
+      ]
+     },
+     {
+      "element": "Unknown",
+      "slug": "u",
+      "name": "Weird Element",
+      "description": "EMPOWERED  air  gem FOR THE   all classes .  Lower case lead.",
+      "tiers": [
+       3,
+       1,
+       2,
+       1
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "v",
+      "name": "Weird Element",
+      "description": "",
+      "tiers": [
+       9
+      ],
+      "stats": [
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "ring_abilities.json": [
+     {
+      "class": "Bard",
+      "name": "Crystal-Teleport",
+      "description": "Teleport.",
+      "stats": [],
+      "stages": [
+       {
+        "name": "Pop",
+        "multiplier": 0.5,
+        "base": 0,
+        "prefab": "abilities/bard/pop"
+       }
+      ]
+     },
+     {
+      "class": "",
+      "name": "Classless",
+      "description": "None"
+     },
+     {
+      "class": "Archer",
+      "name": "b ring",
+      "description": "x",
+      "stats": [
+       {
+        "name": "Speed",
+        "op": "Add",
+        "value": 1e-05
+       }
+      ]
+     },
+     {
+      "class": "Archer",
+      "name": "A ring",
+      "description": "y"
+     }
+    ],
+    "star_chart.json": {
+     "Combat": {
+      "Path": "combat",
+      "Name": "Combat",
+      "Constellation": "Combat",
+      "Type": "Root",
+      "Abilities": [],
+      "Stars": [
+       {
+        "Path": "combat.a",
+        "Constellation": "Combat",
+        "Type": "Major",
+        "Name": "Lucky",
+        "Abilities": [
+         "5% chance ",
+         " to crit"
+        ],
+        "Ability_Values": [
+         {
+          "name": "Crit",
+          "op": "MultiplySum",
+          "value": 5
+         }
+        ],
+        "Stars": [
+         {
+          "Path": "combat.a.0",
+          "Constellation": "Combat",
+          "Type": "",
+          "Name": "",
+          "Abilities": [
+           "Deep node"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "Gathering": {
+      "Path": "gathering",
+      "Name": "Gathering",
+      "Constellation": "",
+      "Abilities": [
+       "Root ability"
+      ],
+      "Stars": null
+     }
+    },
+    "ally_abilities.json": [
+     {
+      "slug": "a1",
+      "name": "Zeta Pet",
+      "stats": [
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": 150.0,
+        "amount": 150.0
+       },
+       {
+        "name": "Energy Regen Bonus",
+        "op": "MultiplySum",
+        "value": 15.0,
+        "amount": 0.15
+       },
+       {
+        "name": "$Hidden",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": -200
+       }
+      ],
+      "abilities": [
+       {
+        "text": "Triggers Chaos. "
+       },
+       {
+        "text": ""
+       },
+       {
+        "ref": "x"
+       }
+      ]
+     },
+     {
+      "slug": "a2",
+      "name": "alpha pet",
+      "stats": [
+       {
+        "name": "Maximum Health %",
+        "op": "Multiply",
+        "value": 10,
+        "amount": 1.1
+       },
+       {
+        "name": "Speed",
+        "op": "Multiply",
+        "value": 7,
+        "amount": 0
+       }
+      ],
+      "abilities": []
+     },
+     {
+      "slug": "no_stats",
+      "name": "Nothing",
+      "stats": [],
+      "abilities": [
+       {
+        "text": "Only ability"
+       }
+      ]
+     },
+     {
+      "slug": "slug_only",
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "op": "Add",
+        "value": 400
+       }
+      ]
+     },
+     {
+      "slug": "blank",
+      "name": "Blank Stat",
+      "stats": [
+       {
+        "name": "",
+        "value": 5
+       },
+       {
+        "value": 3
+       }
+      ]
+     }
+    ]
+   },
+   "results": {
+    "classes": {
+     "ok": {
+      "nav": [
+       {
+        "tech": "knight",
+        "name": "Knight",
+        "damage_type": "Physical",
+        "dmg_class": "physical"
+       },
+       {
+        "tech": "dupe",
+        "name": "Dupe Two",
+        "damage_type": "magic",
+        "dmg_class": "magic"
+       },
+       {
+        "tech": "icemage",
+        "name": "Ice Sage",
+        "damage_type": "Magic",
+        "dmg_class": "magic"
+       }
+      ],
+      "initial": {
+       "tech": "knight",
+       "name": "Knight",
+       "damage_type": "Physical",
+       "dmg_class": "physical",
+       "weapons": [
+        "Sword"
+       ],
+       "shorts": "KN / K",
+       "stats": [
+        {
+         "name": "Physical Damage",
+         "val": "100"
+        },
+        {
+         "name": "Critical Hit",
+         "val": "12.5%"
+        },
+        {
+         "name": "Attack Speed",
+         "val": "—"
+        },
+        {
+         "name": "Mystery",
+         "val": "0"
+        },
+        {
+         "name": "Flag",
+         "val": "0"
+        },
+        {
+         "name": "Big",
+         "val": "1,234,567.89"
+        },
+        {
+         "name": "Regen",
+         "val": "0.6%"
+        }
+       ],
+       "growth": {
+        "cols": [
+         "Regen",
+         "Critical Hit",
+         "Physical Damage",
+         "Big"
+        ],
+        "rows": [
+         {
+          "level": "2",
+          "cells": [
+           "+0.3",
+           "",
+           "",
+           ""
+          ]
+         },
+         {
+          "level": "3",
+          "cells": [
+           "",
+           "+0.25",
+           "+1.5",
+           ""
+          ]
+         },
+         {
+          "level": "10",
+          "cells": [
+           "",
+           "",
+           "+10",
+           ""
+          ]
+         },
+         {
+          "level": "30",
+          "cells": [
+           "",
+           "+—",
+           "",
+           "+0"
+          ]
+         }
+        ]
+       },
+       "totals": {
+        "cols": [
+         "Physical Damage",
+         "Critical Hit",
+         "Regen"
+        ],
+        "rows": [
+         {
+          "level": "1",
+          "cells": [
+           "88.5",
+           "12.25%",
+           "0%"
+          ]
+         },
+         {
+          "level": "2",
+          "cells": [
+           "88.5",
+           "12.25%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "3",
+          "cells": [
+           "90",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "4",
+          "cells": [
+           "90",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "5",
+          "cells": [
+           "90",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "6",
+          "cells": [
+           "90",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "7",
+          "cells": [
+           "90",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "8",
+          "cells": [
+           "90",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "9",
+          "cells": [
+           "90",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "10",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "11",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "12",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "13",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "14",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "15",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "16",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "17",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "18",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "19",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "20",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "21",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "22",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "23",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "24",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "25",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "26",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "27",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "28",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "29",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         },
+         {
+          "level": "30",
+          "cells": [
+           "100",
+           "12.5%",
+           "0.6%"
+          ]
+         }
+        ]
+       },
+       "bonuses": [
+        {
+         "name": "Health",
+         "val": "+5"
+        },
+        {
+         "name": "Speed",
+         "val": "-2.5"
+        },
+        {
+         "name": "Fly",
+         "val": "7"
+        }
+       ],
+       "subclass": {
+        "name": "Iron Will",
+        "description": "Tough.",
+        "tiers": [
+         {
+          "tier": "5",
+          "bonuses": [
+           {
+            "name": "Padded",
+            "val": "+0"
+           },
+           {
+            "name": "",
+            "val": "+2.5%"
+           }
+          ]
+         },
+         {
+          "tier": "20",
+          "bonuses": [
+           {
+            "name": "Armor",
+            "val": "+5"
+           }
+          ]
+         }
+        ]
+       },
+       "abilities": [
+        {
+         "name": "Slash",
+         "description": "Cuts.",
+         "type": "Active",
+         "inactive": false,
+         "stages": [
+          {
+           "name": "Hit",
+           "damage": "350%",
+           "base": "+50"
+          },
+          {
+           "name": "Flat",
+           "damage": "",
+           "base": "+12.25"
+          },
+          {
+           "name": "Int",
+           "damage": "200%",
+           "base": ""
+          },
+          {
+           "name": "Tiny",
+           "damage": "0.0001%",
+           "base": ""
+          }
+         ]
+        },
+        {
+         "name": "",
+         "description": "Desc only",
+         "type": "Passive",
+         "inactive": false,
+         "stages": []
+        }
+       ],
+       "legacy": [
+        {
+         "name": "Old",
+         "description": "Gone.",
+         "type": "",
+         "inactive": true,
+         "stages": []
+        }
+       ]
+      },
+      "initial_tech": "knight",
+      "count": 3
+     }
+    },
+    "abilities": {
+     "ok": [
+      {
+       "key": "gems",
+       "label": "Gems",
+       "icon": "fa-solid fa-gem",
+       "cards": [
+        {
+         "name": "Aegis Assault",
+         "chips": [
+          {
+           "label": "Fire",
+           "tone": "fire"
+          },
+          {
+           "label": "Air",
+           "tone": "air"
+          },
+          {
+           "label": "Revenant",
+           "tone": "who"
+          }
+         ],
+         "description": "Bash loses its cooldown.",
+         "badge": "T110-T112",
+         "effects": [
+          {
+           "label": "Health Regen",
+           "value": "-100%",
+           "base": "",
+           "kind": "stat",
+           "prefab": "abilities/a/leech"
+          },
+          {
+           "label": "Damage",
+           "value": "+20%",
+           "base": "",
+           "kind": "stat",
+           "prefab": "abilities/a/leech"
+          },
+          {
+           "label": "Smash",
+           "value": "250%",
+           "base": "+10",
+           "kind": "damage",
+           "prefab": "abilities/a/smash"
+          }
+         ],
+         "phases": [
+          {
+           "label": "Leech",
+           "prefab": "abilities/a/leech",
+           "rows": [
+            {
+             "label": "Health Regen",
+             "value": "-100%",
+             "base": "",
+             "kind": "stat",
+             "prefab": "abilities/a/leech"
+            },
+            {
+             "label": "Damage",
+             "value": "+20%",
+             "base": "",
+             "kind": "stat",
+             "prefab": "abilities/a/leech"
+            }
+           ]
+          },
+          {
+           "label": "Smash",
+           "prefab": "abilities/a/smash",
+           "rows": [
+            {
+             "label": "Smash",
+             "value": "250%",
+             "base": "+10",
+             "kind": "damage",
+             "prefab": "abilities/a/smash"
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Fire",
+          "Air"
+         ],
+         "search": "aegis assault bash loses its cooldown. fire air revenant"
+        },
+        {
+         "name": "Berserk",
+         "chips": [
+          {
+           "label": "Prismatic",
+           "tone": "prismatic"
+          }
+         ],
+         "description": "Rage.",
+         "badge": "",
+         "effects": [
+          {
+           "label": "Attack Speed",
+           "value": "+25",
+           "base": "",
+           "kind": "stat",
+           "prefab": "abilities/gems/battle_frenzy_small"
+          },
+          {
+           "label": "Attack Speed",
+           "value": "+50",
+           "base": "",
+           "kind": "stat",
+           "prefab": "abilities/gems/battle_frenzy_large"
+          },
+          {
+           "label": "Crit",
+           "value": "x1.5",
+           "base": "",
+           "kind": "stat",
+           "prefab": "abilities/gems/battle_frenzy_large"
+          },
+          {
+           "label": "Shield",
+           "value": "+0%",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          }
+         ],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": [
+            {
+             "label": "Shield",
+             "value": "+0%",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            }
+           ]
+          },
+          {
+           "label": "Battle Frenzy Small",
+           "prefab": "abilities/gems/battle_frenzy_small",
+           "rows": [
+            {
+             "label": "Attack Speed",
+             "value": "+25",
+             "base": "",
+             "kind": "stat",
+             "prefab": "abilities/gems/battle_frenzy_small"
+            }
+           ]
+          },
+          {
+           "label": "Battle Frenzy Large",
+           "prefab": "abilities/gems/battle_frenzy_large",
+           "rows": [
+            {
+             "label": "Attack Speed",
+             "value": "+50",
+             "base": "",
+             "kind": "stat",
+             "prefab": "abilities/gems/battle_frenzy_large"
+            },
+            {
+             "label": "Crit",
+             "value": "x1.5",
+             "base": "",
+             "kind": "stat",
+             "prefab": "abilities/gems/battle_frenzy_large"
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Prismatic"
+         ],
+         "search": "berserk rage. prismatic"
+        },
+        {
+         "name": "plain",
+         "chips": [
+          {
+           "label": "Water",
+           "tone": "water"
+          }
+         ],
+         "description": "No lead here.",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          "Water"
+         ],
+         "search": "plain no lead here. water"
+        },
+        {
+         "name": "Star Power",
+         "chips": [
+          {
+           "label": "Cosmic",
+           "tone": "cosmic"
+          },
+          {
+           "label": "Any class",
+           "tone": "who"
+          }
+         ],
+         "description": "shoots stars.",
+         "badge": "T5",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          "Cosmic"
+         ],
+         "search": "star power shoots stars. cosmic any class"
+        },
+        {
+         "name": "Weird Element",
+         "chips": [
+          {
+           "label": "Water",
+           "tone": "water"
+          },
+          {
+           "label": "Unknown",
+           "tone": "unknown"
+          },
+          {
+           "label": "Any class",
+           "tone": "who"
+          }
+         ],
+         "description": "Lower case lead.",
+         "badge": "T1-T9",
+         "effects": [
+          {
+           "label": "X",
+           "value": "+1",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          }
+         ],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": [
+            {
+             "label": "X",
+             "value": "+1",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Water",
+          "Unknown"
+         ],
+         "search": "weird element lower case lead. water unknown any class"
+        },
+        {
+         "name": "z",
+         "chips": [
+          {
+           "label": "Air",
+           "tone": "air"
+          }
+         ],
+         "description": "nameless",
+         "badge": "T1",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          "Air"
+         ],
+         "search": "z nameless air"
+        }
+       ],
+       "filters": [
+        "Water",
+        "Fire",
+        "Air",
+        "Cosmic",
+        "Prismatic"
+       ],
+       "count": 6
+      },
+      {
+       "key": "rings",
+       "label": "Rings",
+       "icon": "fa-solid fa-ring",
+       "cards": [
+        {
+         "name": "Classless",
+         "chips": [],
+         "description": "None",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [],
+         "search": "classless none"
+        },
+        {
+         "name": "A ring",
+         "chips": [
+          {
+           "label": "Archer",
+           "tone": "who"
+          }
+         ],
+         "description": "y",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          "Archer"
+         ],
+         "search": "a ring y archer"
+        },
+        {
+         "name": "b ring",
+         "chips": [
+          {
+           "label": "Archer",
+           "tone": "who"
+          }
+         ],
+         "description": "x",
+         "badge": "",
+         "effects": [
+          {
+           "label": "Speed",
+           "value": "+1e-05",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          }
+         ],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": [
+            {
+             "label": "Speed",
+             "value": "+1e-05",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Archer"
+         ],
+         "search": "b ring x archer"
+        },
+        {
+         "name": "Crystal-Teleport",
+         "chips": [
+          {
+           "label": "Bard",
+           "tone": "who"
+          }
+         ],
+         "description": "Teleport.",
+         "badge": "",
+         "effects": [
+          {
+           "label": "Pop",
+           "value": "50%",
+           "base": "",
+           "kind": "damage",
+           "prefab": "abilities/bard/pop"
+          }
+         ],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": [
+            {
+             "label": "Pop",
+             "value": "50%",
+             "base": "",
+             "kind": "damage",
+             "prefab": "abilities/bard/pop"
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Bard"
+         ],
+         "search": "crystal-teleport teleport. bard"
+        }
+       ],
+       "filters": [
+        "Archer",
+        "Bard"
+       ],
+       "count": 4
+      },
+      {
+       "key": "classes",
+       "label": "Classes",
+       "icon": "fa-solid fa-user",
+       "cards": [
+        {
+         "name": "Orphan",
+         "chips": [
+          {
+           "label": "",
+           "tone": "who"
+          }
+         ],
+         "description": "No owner",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          ""
+         ],
+         "search": "orphan no owner "
+        },
+        {
+         "name": "Frost",
+         "chips": [
+          {
+           "label": "Ice Sage",
+           "tone": "who"
+          },
+          {
+           "label": "Active",
+           "tone": "kind"
+          }
+         ],
+         "description": "Cold.",
+         "badge": "",
+         "effects": [
+          {
+           "label": "Movement Speed",
+           "value": "+-20",
+           "base": "",
+           "kind": "stat",
+           "prefab": "abilities/icemage/slow"
+          },
+          {
+           "label": "Attack Speed",
+           "value": "+15%",
+           "base": "",
+           "kind": "stat",
+           "prefab": "abilities/icemage/haste_big"
+          },
+          {
+           "label": "Shard",
+           "value": "125%",
+           "base": "",
+           "kind": "damage",
+           "prefab": "abilities/icemage/shard"
+          }
+         ],
+         "phases": [
+          {
+           "label": "Haste Big",
+           "prefab": "abilities/icemage/haste_big",
+           "rows": [
+            {
+             "label": "Attack Speed",
+             "value": "+15%",
+             "base": "",
+             "kind": "stat",
+             "prefab": "abilities/icemage/haste_big"
+            }
+           ]
+          },
+          {
+           "label": "Slow",
+           "prefab": "abilities/icemage/slow",
+           "rows": [
+            {
+             "label": "Movement Speed",
+             "value": "+-20",
+             "base": "",
+             "kind": "stat",
+             "prefab": "abilities/icemage/slow"
+            }
+           ]
+          },
+          {
+           "label": "Shard",
+           "prefab": "abilities/icemage/shard",
+           "rows": [
+            {
+             "label": "Shard",
+             "value": "125%",
+             "base": "",
+             "kind": "damage",
+             "prefab": "abilities/icemage/shard"
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Ice Sage"
+         ],
+         "search": "frost cold. ice sage active"
+        },
+        {
+         "name": "Legacy Bolt",
+         "chips": [
+          {
+           "label": "Ice Sage",
+           "tone": "who"
+          }
+         ],
+         "description": "Old bolt.",
+         "badge": "Legacy",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          "Ice Sage"
+         ],
+         "search": "legacy bolt old bolt. ice sage"
+        },
+        {
+         "name": "Slash",
+         "chips": [
+          {
+           "label": "Knight",
+           "tone": "who"
+          },
+          {
+           "label": "Active",
+           "tone": "kind"
+          }
+         ],
+         "description": "Cuts.",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          "Knight"
+         ],
+         "search": "slash cuts. knight active"
+        }
+       ],
+       "filters": [
+        "",
+        "Ice Sage",
+        "Knight"
+       ],
+       "count": 4
+      },
+      {
+       "key": "star-chart",
+       "label": "Star Chart",
+       "icon": "fa-solid fa-star",
+       "cards": [
+        {
+         "name": "Gathering",
+         "chips": [
+          {
+           "label": "",
+           "tone": "who"
+          }
+         ],
+         "description": "Root ability",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [],
+         "search": "gathering root ability "
+        },
+        {
+         "name": "combat.a.0",
+         "chips": [
+          {
+           "label": "Combat",
+           "tone": "who"
+          }
+         ],
+         "description": "Deep node",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [
+          "Combat"
+         ],
+         "search": "combat.a.0 deep node combat"
+        },
+        {
+         "name": "Lucky",
+         "chips": [
+          {
+           "label": "Combat",
+           "tone": "who"
+          },
+          {
+           "label": "Major",
+           "tone": "kind"
+          }
+         ],
+         "description": "5% chance   to crit",
+         "badge": "",
+         "effects": [
+          {
+           "label": "Crit",
+           "value": "+5%",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          }
+         ],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": [
+            {
+             "label": "Crit",
+             "value": "+5%",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Combat"
+         ],
+         "search": "lucky 5% chance   to crit combat major"
+        }
+       ],
+       "filters": [
+        "Combat"
+       ],
+       "count": 3
+      },
+      {
+       "key": "allies",
+       "label": "Allies",
+       "icon": "fa-solid fa-paw",
+       "cards": [
+        {
+         "name": "Nothing",
+         "chips": [],
+         "description": "Only ability",
+         "badge": "",
+         "effects": [],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": []
+          }
+         ],
+         "filters": [],
+         "search": "nothing only ability"
+        },
+        {
+         "name": "Zeta Pet",
+         "chips": [
+          {
+           "label": "Light",
+           "tone": "kind"
+          },
+          {
+           "label": "Energy Regen Bonus",
+           "tone": "kind"
+          }
+         ],
+         "description": "Triggers Chaos.",
+         "badge": "",
+         "effects": [
+          {
+           "label": "Light",
+           "value": "+150",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          },
+          {
+           "label": "Energy Regen Bonus",
+           "value": "+15%",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          },
+          {
+           "label": "$Hidden",
+           "value": "+1",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          },
+          {
+           "label": "Light",
+           "value": "+-200",
+           "base": "",
+           "kind": "stat",
+           "prefab": ""
+          }
+         ],
+         "phases": [
+          {
+           "label": "",
+           "prefab": "",
+           "rows": [
+            {
+             "label": "Light",
+             "value": "+150",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            },
+            {
+             "label": "Energy Regen Bonus",
+             "value": "+15%",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            },
+            {
+             "label": "$Hidden",
+             "value": "+1",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            },
+            {
+             "label": "Light",
+             "value": "+-200",
+             "base": "",
+             "kind": "stat",
+             "prefab": ""
+            }
+           ]
+          }
+         ],
+         "filters": [
+          "Energy Regen Bonus",
+          "Light"
+         ],
+         "search": "zeta pet triggers chaos. light energy regen bonus"
+        }
+       ],
+       "filters": [
+        "Energy Regen Bonus",
+        "Light"
+       ],
+       "count": 2
+      }
+     ]
+    },
+    "allies": {
+     "ok": {
+      "rows": [
+       {
+        "name": "alpha pet",
+        "stats": [
+         {
+          "name": "Maximum Health %",
+          "slug": "maximum-health",
+          "shown": "x1.1"
+         },
+         {
+          "name": "Speed",
+          "slug": "speed",
+          "shown": "7%"
+         }
+        ],
+        "sort_values": {
+         "maximum-health": 10.0,
+         "speed": 7.0
+        },
+        "ability": "",
+        "search": "alpha pet maximum health % speed"
+       },
+       {
+        "name": "slug_only",
+        "stats": [
+         {
+          "name": "Physical Damage",
+          "slug": "physical-damage",
+          "shown": "+400"
+         }
+        ],
+        "sort_values": {
+         "physical-damage": 400.0
+        },
+        "ability": "",
+        "search": "slug_only physical damage"
+       },
+       {
+        "name": "Zeta Pet",
+        "stats": [
+         {
+          "name": "Light",
+          "slug": "light",
+          "shown": "+150"
+         },
+         {
+          "name": "Energy Regen Bonus",
+          "slug": "energy-regen-bonus",
+          "shown": "+15%"
+         },
+         {
+          "name": "$Hidden",
+          "slug": "hidden",
+          "shown": "+1"
+         },
+         {
+          "name": "Light",
+          "slug": "light",
+          "shown": "+-200"
+         }
+        ],
+        "sort_values": {
+         "light": 200.0,
+         "energy-regen-bonus": 15.0,
+         "hidden": 1.0
+        },
+        "ability": "Triggers Chaos.",
+        "search": "zeta pet light energy regen bonus $hidden light triggers chaos. "
+       }
+      ],
+      "stats": [
+       {
+        "name": "$Hidden",
+        "slug": "hidden"
+       },
+       {
+        "name": "Energy Regen Bonus",
+        "slug": "energy-regen-bonus"
+       },
+       {
+        "name": "Light",
+        "slug": "light"
+       },
+       {
+        "name": "Maximum Health %",
+        "slug": "maximum-health"
+       },
+       {
+        "name": "Physical Damage",
+        "slug": "physical-damage"
+       },
+       {
+        "name": "Speed",
+        "slug": "speed"
+       }
+      ],
+      "count": 3
+     }
+    }
+   }
+  },
+  {
+   "name": "empty",
+   "files": {},
+   "results": {
+    "classes": {
+     "ok": {
+      "nav": [],
+      "initial": null,
+      "initial_tech": "",
+      "count": 0
+     }
+    },
+    "abilities": {
+     "ok": [
+      {
+       "key": "gems",
+       "label": "Gems",
+       "icon": "fa-solid fa-gem",
+       "cards": [],
+       "filters": [],
+       "count": 0
+      },
+      {
+       "key": "rings",
+       "label": "Rings",
+       "icon": "fa-solid fa-ring",
+       "cards": [],
+       "filters": [],
+       "count": 0
+      },
+      {
+       "key": "classes",
+       "label": "Classes",
+       "icon": "fa-solid fa-user",
+       "cards": [],
+       "filters": [],
+       "count": 0
+      },
+      {
+       "key": "star-chart",
+       "label": "Star Chart",
+       "icon": "fa-solid fa-star",
+       "cards": [],
+       "filters": [],
+       "count": 0
+      },
+      {
+       "key": "allies",
+       "label": "Allies",
+       "icon": "fa-solid fa-paw",
+       "cards": [],
+       "filters": [],
+       "count": 0
+      }
+     ]
+    },
+    "allies": {
+     "ok": {
+      "rows": [],
+      "stats": [],
+      "count": 0
+     }
+    }
+   }
+  },
+  {
+   "name": "bad level key",
+   "files": {
+    "classes.json": [
+     {
+      "name": "K",
+      "qualified_name": "k",
+      "levels": {
+       "x": [
+        {
+         "name": "A",
+         "value": 1
+        }
+       ]
+      }
+     }
+    ],
+    "class_abilities.json": [
+     {
+      "name": "Ice Sage",
+      "abilities": [
+       {
+        "name": "Frost",
+        "description": "Cold.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Shard",
+          "multiplier": 1.25,
+          "base": 0,
+          "prefab": "abilities/icemage/shard"
+         }
+        ],
+        "stats": [
+         {
+          "name": "Movement Speed",
+          "op": "Add",
+          "value": -20,
+          "prefab": "abilities/icemage/slow"
+         },
+         {
+          "name": "Attack Speed",
+          "op": "MultiplySum",
+          "value": 15,
+          "prefab": "abilities/icemage/haste_big"
+         }
+        ]
+       },
+       {
+        "name": "Legacy Bolt",
+        "active": false,
+        "description": "Old bolt."
+       }
+      ]
+     },
+     {
+      "name": "Knight",
+      "abilities": [
+       {
+        "name": "Slash",
+        "type": "Active",
+        "description": "Cuts."
+       }
+      ]
+     },
+     {
+      "name": "",
+      "abilities": [
+       {
+        "name": "Orphan",
+        "description": "No owner"
+       }
+      ]
+     }
+    ],
+    "gem_abilities.json": [
+     {
+      "element": "Air",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Air Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       110,
+       111
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": [
+       {
+        "name": "Smash",
+        "multiplier": 2.5,
+        "base": 10,
+        "prefab": "abilities/a/smash"
+       }
+      ]
+     },
+     {
+      "element": "Fire",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Fire Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       112,
+       110
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       },
+       {
+        "name": "Damage",
+        "op": "MultiplySum",
+        "value": 20,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "mastery",
+      "name": "Masterful",
+      "description": "Empowered Prismatic Gem; can be socketed anywhere."
+     },
+     {
+      "element": "Cosmic",
+      "slug": "any",
+      "name": "Star Power",
+      "description": "Empowered Cosmic Gem for any class; shoots stars.",
+      "tiers": [
+       5
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "x",
+      "name": "plain",
+      "description": "No lead here.",
+      "tiers": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "y",
+      "name": "Berserk",
+      "description": "Empowered Prismatic Gem. Rage.",
+      "stats": [
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 25,
+        "prefab": "abilities/gems/battle_frenzy_small"
+       },
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 50,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Crit",
+        "op": "Multiply",
+        "value": 5,
+        "amount": 1.5,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Shield",
+        "op": "Other",
+        "value": 0,
+        "prefab": ""
+       }
+      ]
+     },
+     {
+      "element": "Air",
+      "slug": "z",
+      "name": "",
+      "description": "nameless",
+      "tiers": [
+       1
+      ]
+     },
+     {
+      "element": "Unknown",
+      "slug": "u",
+      "name": "Weird Element",
+      "description": "EMPOWERED  air  gem FOR THE   all classes .  Lower case lead.",
+      "tiers": [
+       3,
+       1,
+       2,
+       1
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "v",
+      "name": "Weird Element",
+      "description": "",
+      "tiers": [
+       9
+      ],
+      "stats": [
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "ring_abilities.json": [
+     {
+      "class": "Bard",
+      "name": "Crystal-Teleport",
+      "description": "Teleport.",
+      "stats": [],
+      "stages": [
+       {
+        "name": "Pop",
+        "multiplier": 0.5,
+        "base": 0,
+        "prefab": "abilities/bard/pop"
+       }
+      ]
+     },
+     {
+      "class": "",
+      "name": "Classless",
+      "description": "None"
+     },
+     {
+      "class": "Archer",
+      "name": "b ring",
+      "description": "x",
+      "stats": [
+       {
+        "name": "Speed",
+        "op": "Add",
+        "value": 1e-05
+       }
+      ]
+     },
+     {
+      "class": "Archer",
+      "name": "A ring",
+      "description": "y"
+     }
+    ],
+    "star_chart.json": {
+     "Combat": {
+      "Path": "combat",
+      "Name": "Combat",
+      "Constellation": "Combat",
+      "Type": "Root",
+      "Abilities": [],
+      "Stars": [
+       {
+        "Path": "combat.a",
+        "Constellation": "Combat",
+        "Type": "Major",
+        "Name": "Lucky",
+        "Abilities": [
+         "5% chance ",
+         " to crit"
+        ],
+        "Ability_Values": [
+         {
+          "name": "Crit",
+          "op": "MultiplySum",
+          "value": 5
+         }
+        ],
+        "Stars": [
+         {
+          "Path": "combat.a.0",
+          "Constellation": "Combat",
+          "Type": "",
+          "Name": "",
+          "Abilities": [
+           "Deep node"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "Gathering": {
+      "Path": "gathering",
+      "Name": "Gathering",
+      "Constellation": "",
+      "Abilities": [
+       "Root ability"
+      ],
+      "Stars": null
+     }
+    },
+    "ally_abilities.json": [
+     {
+      "slug": "a1",
+      "name": "Zeta Pet",
+      "stats": [
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": 150.0,
+        "amount": 150.0
+       },
+       {
+        "name": "Energy Regen Bonus",
+        "op": "MultiplySum",
+        "value": 15.0,
+        "amount": 0.15
+       },
+       {
+        "name": "$Hidden",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": -200
+       }
+      ],
+      "abilities": [
+       {
+        "text": "Triggers Chaos. "
+       },
+       {
+        "text": ""
+       },
+       {
+        "ref": "x"
+       }
+      ]
+     },
+     {
+      "slug": "a2",
+      "name": "alpha pet",
+      "stats": [
+       {
+        "name": "Maximum Health %",
+        "op": "Multiply",
+        "value": 10,
+        "amount": 1.1
+       },
+       {
+        "name": "Speed",
+        "op": "Multiply",
+        "value": 7,
+        "amount": 0
+       }
+      ],
+      "abilities": []
+     },
+     {
+      "slug": "no_stats",
+      "name": "Nothing",
+      "stats": [],
+      "abilities": [
+       {
+        "text": "Only ability"
+       }
+      ]
+     },
+     {
+      "slug": "slug_only",
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "op": "Add",
+        "value": 400
+       }
+      ]
+     },
+     {
+      "slug": "blank",
+      "name": "Blank Stat",
+      "stats": [
+       {
+        "name": "",
+        "value": 5
+       },
+       {
+        "value": 3
+       }
+      ]
+     }
+    ]
+   },
+   "results": {
+    "classes": {
+     "raises": "ValueError"
+    }
+   }
+  },
+  {
+   "name": "stat not a dict",
+   "files": {
+    "classes.json": [
+     {
+      "name": "K",
+      "qualified_name": "k",
+      "stats": [
+       "oops"
+      ]
+     }
+    ],
+    "class_abilities.json": [
+     {
+      "name": "Ice Sage",
+      "abilities": [
+       {
+        "name": "Frost",
+        "description": "Cold.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Shard",
+          "multiplier": 1.25,
+          "base": 0,
+          "prefab": "abilities/icemage/shard"
+         }
+        ],
+        "stats": [
+         {
+          "name": "Movement Speed",
+          "op": "Add",
+          "value": -20,
+          "prefab": "abilities/icemage/slow"
+         },
+         {
+          "name": "Attack Speed",
+          "op": "MultiplySum",
+          "value": 15,
+          "prefab": "abilities/icemage/haste_big"
+         }
+        ]
+       },
+       {
+        "name": "Legacy Bolt",
+        "active": false,
+        "description": "Old bolt."
+       }
+      ]
+     },
+     {
+      "name": "Knight",
+      "abilities": [
+       {
+        "name": "Slash",
+        "type": "Active",
+        "description": "Cuts."
+       }
+      ]
+     },
+     {
+      "name": "",
+      "abilities": [
+       {
+        "name": "Orphan",
+        "description": "No owner"
+       }
+      ]
+     }
+    ],
+    "gem_abilities.json": [
+     {
+      "element": "Air",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Air Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       110,
+       111
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": [
+       {
+        "name": "Smash",
+        "multiplier": 2.5,
+        "base": 10,
+        "prefab": "abilities/a/smash"
+       }
+      ]
+     },
+     {
+      "element": "Fire",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Fire Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       112,
+       110
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       },
+       {
+        "name": "Damage",
+        "op": "MultiplySum",
+        "value": 20,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "mastery",
+      "name": "Masterful",
+      "description": "Empowered Prismatic Gem; can be socketed anywhere."
+     },
+     {
+      "element": "Cosmic",
+      "slug": "any",
+      "name": "Star Power",
+      "description": "Empowered Cosmic Gem for any class; shoots stars.",
+      "tiers": [
+       5
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "x",
+      "name": "plain",
+      "description": "No lead here.",
+      "tiers": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "y",
+      "name": "Berserk",
+      "description": "Empowered Prismatic Gem. Rage.",
+      "stats": [
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 25,
+        "prefab": "abilities/gems/battle_frenzy_small"
+       },
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 50,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Crit",
+        "op": "Multiply",
+        "value": 5,
+        "amount": 1.5,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Shield",
+        "op": "Other",
+        "value": 0,
+        "prefab": ""
+       }
+      ]
+     },
+     {
+      "element": "Air",
+      "slug": "z",
+      "name": "",
+      "description": "nameless",
+      "tiers": [
+       1
+      ]
+     },
+     {
+      "element": "Unknown",
+      "slug": "u",
+      "name": "Weird Element",
+      "description": "EMPOWERED  air  gem FOR THE   all classes .  Lower case lead.",
+      "tiers": [
+       3,
+       1,
+       2,
+       1
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "v",
+      "name": "Weird Element",
+      "description": "",
+      "tiers": [
+       9
+      ],
+      "stats": [
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "ring_abilities.json": [
+     {
+      "class": "Bard",
+      "name": "Crystal-Teleport",
+      "description": "Teleport.",
+      "stats": [],
+      "stages": [
+       {
+        "name": "Pop",
+        "multiplier": 0.5,
+        "base": 0,
+        "prefab": "abilities/bard/pop"
+       }
+      ]
+     },
+     {
+      "class": "",
+      "name": "Classless",
+      "description": "None"
+     },
+     {
+      "class": "Archer",
+      "name": "b ring",
+      "description": "x",
+      "stats": [
+       {
+        "name": "Speed",
+        "op": "Add",
+        "value": 1e-05
+       }
+      ]
+     },
+     {
+      "class": "Archer",
+      "name": "A ring",
+      "description": "y"
+     }
+    ],
+    "star_chart.json": {
+     "Combat": {
+      "Path": "combat",
+      "Name": "Combat",
+      "Constellation": "Combat",
+      "Type": "Root",
+      "Abilities": [],
+      "Stars": [
+       {
+        "Path": "combat.a",
+        "Constellation": "Combat",
+        "Type": "Major",
+        "Name": "Lucky",
+        "Abilities": [
+         "5% chance ",
+         " to crit"
+        ],
+        "Ability_Values": [
+         {
+          "name": "Crit",
+          "op": "MultiplySum",
+          "value": 5
+         }
+        ],
+        "Stars": [
+         {
+          "Path": "combat.a.0",
+          "Constellation": "Combat",
+          "Type": "",
+          "Name": "",
+          "Abilities": [
+           "Deep node"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "Gathering": {
+      "Path": "gathering",
+      "Name": "Gathering",
+      "Constellation": "",
+      "Abilities": [
+       "Root ability"
+      ],
+      "Stars": null
+     }
+    },
+    "ally_abilities.json": [
+     {
+      "slug": "a1",
+      "name": "Zeta Pet",
+      "stats": [
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": 150.0,
+        "amount": 150.0
+       },
+       {
+        "name": "Energy Regen Bonus",
+        "op": "MultiplySum",
+        "value": 15.0,
+        "amount": 0.15
+       },
+       {
+        "name": "$Hidden",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": -200
+       }
+      ],
+      "abilities": [
+       {
+        "text": "Triggers Chaos. "
+       },
+       {
+        "text": ""
+       },
+       {
+        "ref": "x"
+       }
+      ]
+     },
+     {
+      "slug": "a2",
+      "name": "alpha pet",
+      "stats": [
+       {
+        "name": "Maximum Health %",
+        "op": "Multiply",
+        "value": 10,
+        "amount": 1.1
+       },
+       {
+        "name": "Speed",
+        "op": "Multiply",
+        "value": 7,
+        "amount": 0
+       }
+      ],
+      "abilities": []
+     },
+     {
+      "slug": "no_stats",
+      "name": "Nothing",
+      "stats": [],
+      "abilities": [
+       {
+        "text": "Only ability"
+       }
+      ]
+     },
+     {
+      "slug": "slug_only",
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "op": "Add",
+        "value": 400
+       }
+      ]
+     },
+     {
+      "slug": "blank",
+      "name": "Blank Stat",
+      "stats": [
+       {
+        "name": "",
+        "value": 5
+       },
+       {
+        "value": 3
+       }
+      ]
+     }
+    ]
+   },
+   "results": {
+    "classes": {
+     "raises": "TypeError"
+    }
+   }
+  },
+  {
+   "name": "no qualified name",
+   "files": {
+    "classes.json": [
+     {
+      "name": "K"
+     }
+    ],
+    "class_abilities.json": [
+     {
+      "name": "Ice Sage",
+      "abilities": [
+       {
+        "name": "Frost",
+        "description": "Cold.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Shard",
+          "multiplier": 1.25,
+          "base": 0,
+          "prefab": "abilities/icemage/shard"
+         }
+        ],
+        "stats": [
+         {
+          "name": "Movement Speed",
+          "op": "Add",
+          "value": -20,
+          "prefab": "abilities/icemage/slow"
+         },
+         {
+          "name": "Attack Speed",
+          "op": "MultiplySum",
+          "value": 15,
+          "prefab": "abilities/icemage/haste_big"
+         }
+        ]
+       },
+       {
+        "name": "Legacy Bolt",
+        "active": false,
+        "description": "Old bolt."
+       }
+      ]
+     },
+     {
+      "name": "Knight",
+      "abilities": [
+       {
+        "name": "Slash",
+        "type": "Active",
+        "description": "Cuts."
+       }
+      ]
+     },
+     {
+      "name": "",
+      "abilities": [
+       {
+        "name": "Orphan",
+        "description": "No owner"
+       }
+      ]
+     }
+    ],
+    "gem_abilities.json": [
+     {
+      "element": "Air",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Air Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       110,
+       111
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": [
+       {
+        "name": "Smash",
+        "multiplier": 2.5,
+        "base": 10,
+        "prefab": "abilities/a/smash"
+       }
+      ]
+     },
+     {
+      "element": "Fire",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Fire Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       112,
+       110
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       },
+       {
+        "name": "Damage",
+        "op": "MultiplySum",
+        "value": 20,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "mastery",
+      "name": "Masterful",
+      "description": "Empowered Prismatic Gem; can be socketed anywhere."
+     },
+     {
+      "element": "Cosmic",
+      "slug": "any",
+      "name": "Star Power",
+      "description": "Empowered Cosmic Gem for any class; shoots stars.",
+      "tiers": [
+       5
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "x",
+      "name": "plain",
+      "description": "No lead here.",
+      "tiers": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "y",
+      "name": "Berserk",
+      "description": "Empowered Prismatic Gem. Rage.",
+      "stats": [
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 25,
+        "prefab": "abilities/gems/battle_frenzy_small"
+       },
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 50,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Crit",
+        "op": "Multiply",
+        "value": 5,
+        "amount": 1.5,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Shield",
+        "op": "Other",
+        "value": 0,
+        "prefab": ""
+       }
+      ]
+     },
+     {
+      "element": "Air",
+      "slug": "z",
+      "name": "",
+      "description": "nameless",
+      "tiers": [
+       1
+      ]
+     },
+     {
+      "element": "Unknown",
+      "slug": "u",
+      "name": "Weird Element",
+      "description": "EMPOWERED  air  gem FOR THE   all classes .  Lower case lead.",
+      "tiers": [
+       3,
+       1,
+       2,
+       1
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "v",
+      "name": "Weird Element",
+      "description": "",
+      "tiers": [
+       9
+      ],
+      "stats": [
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "ring_abilities.json": [
+     {
+      "class": "Bard",
+      "name": "Crystal-Teleport",
+      "description": "Teleport.",
+      "stats": [],
+      "stages": [
+       {
+        "name": "Pop",
+        "multiplier": 0.5,
+        "base": 0,
+        "prefab": "abilities/bard/pop"
+       }
+      ]
+     },
+     {
+      "class": "",
+      "name": "Classless",
+      "description": "None"
+     },
+     {
+      "class": "Archer",
+      "name": "b ring",
+      "description": "x",
+      "stats": [
+       {
+        "name": "Speed",
+        "op": "Add",
+        "value": 1e-05
+       }
+      ]
+     },
+     {
+      "class": "Archer",
+      "name": "A ring",
+      "description": "y"
+     }
+    ],
+    "star_chart.json": {
+     "Combat": {
+      "Path": "combat",
+      "Name": "Combat",
+      "Constellation": "Combat",
+      "Type": "Root",
+      "Abilities": [],
+      "Stars": [
+       {
+        "Path": "combat.a",
+        "Constellation": "Combat",
+        "Type": "Major",
+        "Name": "Lucky",
+        "Abilities": [
+         "5% chance ",
+         " to crit"
+        ],
+        "Ability_Values": [
+         {
+          "name": "Crit",
+          "op": "MultiplySum",
+          "value": 5
+         }
+        ],
+        "Stars": [
+         {
+          "Path": "combat.a.0",
+          "Constellation": "Combat",
+          "Type": "",
+          "Name": "",
+          "Abilities": [
+           "Deep node"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "Gathering": {
+      "Path": "gathering",
+      "Name": "Gathering",
+      "Constellation": "",
+      "Abilities": [
+       "Root ability"
+      ],
+      "Stars": null
+     }
+    },
+    "ally_abilities.json": [
+     {
+      "slug": "a1",
+      "name": "Zeta Pet",
+      "stats": [
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": 150.0,
+        "amount": 150.0
+       },
+       {
+        "name": "Energy Regen Bonus",
+        "op": "MultiplySum",
+        "value": 15.0,
+        "amount": 0.15
+       },
+       {
+        "name": "$Hidden",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": -200
+       }
+      ],
+      "abilities": [
+       {
+        "text": "Triggers Chaos. "
+       },
+       {
+        "text": ""
+       },
+       {
+        "ref": "x"
+       }
+      ]
+     },
+     {
+      "slug": "a2",
+      "name": "alpha pet",
+      "stats": [
+       {
+        "name": "Maximum Health %",
+        "op": "Multiply",
+        "value": 10,
+        "amount": 1.1
+       },
+       {
+        "name": "Speed",
+        "op": "Multiply",
+        "value": 7,
+        "amount": 0
+       }
+      ],
+      "abilities": []
+     },
+     {
+      "slug": "no_stats",
+      "name": "Nothing",
+      "stats": [],
+      "abilities": [
+       {
+        "text": "Only ability"
+       }
+      ]
+     },
+     {
+      "slug": "slug_only",
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "op": "Add",
+        "value": 400
+       }
+      ]
+     },
+     {
+      "slug": "blank",
+      "name": "Blank Stat",
+      "stats": [
+       {
+        "name": "",
+        "value": 5
+       },
+       {
+        "value": 3
+       }
+      ]
+     }
+    ]
+   },
+   "results": {
+    "classes": {
+     "raises": "KeyError"
+    }
+   }
+  },
+  {
+   "name": "ally stat name not str",
+   "files": {
+    "classes.json": [
+     {
+      "name": "Knight",
+      "qualified_name": "knight",
+      "shorts": [
+       "KN",
+       "K"
+      ],
+      "damage_type": "Physical",
+      "weapons": [
+       "Sword"
+      ],
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "value": 100,
+        "percentage": false
+       },
+       {
+        "name": "Critical Hit",
+        "value": 12.5,
+        "percentage": true
+       },
+       {
+        "name": "Attack Speed",
+        "value": null
+       },
+       {
+        "name": "Mystery",
+        "value": "x"
+       },
+       {
+        "name": "Flag",
+        "value": true
+       },
+       {
+        "name": "Big",
+        "value": 1234567.891
+       },
+       {
+        "name": "Regen",
+        "value": 0.6,
+        "percentage": true
+       }
+      ],
+      "bonuses": [
+       {
+        "name": "Physical Damage",
+        "value": 0,
+        "percentage": true
+       },
+       {
+        "name": "Health",
+        "value": 5
+       },
+       {
+        "name": "Speed",
+        "value": -2.5
+       },
+       {
+        "name": "Fly",
+        "value": 7,
+        "absolute": true
+       },
+       {
+        "name": "",
+        "value": 3
+       }
+      ],
+      "levels": {
+       "10": [
+        {
+         "name": "Physical Damage",
+         "value": 10
+        }
+       ],
+       "2": [
+        {
+         "name": "Regen",
+         "value": 0.1,
+         "percentage": true
+        },
+        {
+         "name": "Regen",
+         "value": 0.2
+        },
+        {
+         "name": "Regen",
+         "value": 0.3
+        }
+       ],
+       "3": [
+        {
+         "name": "Critical Hit",
+         "value": 0.25
+        },
+        {
+         "name": "Physical Damage",
+         "value": 1.5
+        }
+       ],
+       "30": [
+        {
+         "name": "Big",
+         "value": 0.001
+        },
+        {
+         "name": "Critical Hit",
+         "value": null
+        }
+       ]
+      },
+      "subclass": {
+       "name": "Iron Will",
+       "description": "Tough.",
+       "level": {
+        "20": [
+         {
+          "name": "Armor",
+          "value": 5
+         }
+        ],
+        "1": [
+         {
+          "name": "",
+          "value": 0
+         },
+         {
+          "name": "  ",
+          "value": 0
+         }
+        ],
+        "5": [
+         {
+          "name": " Padded ",
+          "value": 0
+         },
+         {
+          "name": "",
+          "value": 2.5,
+          "percentage": true
+         }
+        ]
+       }
+      },
+      "abilities": [
+       {
+        "name": "Slash",
+        "description": "Cuts.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Hit",
+          "multiplier": 3.5,
+          "base": 50
+         },
+         {
+          "name": "Zero",
+          "multiplier": 0,
+          "base": 0
+         },
+         {
+          "name": "Flat",
+          "base": 12.25
+         },
+         {
+          "name": "Int",
+          "multiplier": 2
+         },
+         {
+          "name": "Tiny",
+          "multiplier": 1e-06
+         }
+        ]
+       },
+       {
+        "name": "Old",
+        "description": "Gone.",
+        "active": false,
+        "stages": []
+       },
+       {
+        "name": "",
+        "description": ""
+       },
+       {
+        "name": "",
+        "description": "Desc only",
+        "type": "Passive",
+        "active": 0
+       }
+      ]
+     },
+     {
+      "name": "Dupe",
+      "qualified_name": "dupe",
+      "damage_type": null
+     },
+     {
+      "name": "Ice Sage",
+      "qualified_name": "icemage",
+      "damage_type": "Magic",
+      "abilities": []
+     },
+     {
+      "name": "Dupe Two",
+      "qualified_name": "dupe",
+      "damage_type": "magic",
+      "levels": {}
+     }
+    ],
+    "class_abilities.json": [
+     {
+      "name": "Ice Sage",
+      "abilities": [
+       {
+        "name": "Frost",
+        "description": "Cold.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Shard",
+          "multiplier": 1.25,
+          "base": 0,
+          "prefab": "abilities/icemage/shard"
+         }
+        ],
+        "stats": [
+         {
+          "name": "Movement Speed",
+          "op": "Add",
+          "value": -20,
+          "prefab": "abilities/icemage/slow"
+         },
+         {
+          "name": "Attack Speed",
+          "op": "MultiplySum",
+          "value": 15,
+          "prefab": "abilities/icemage/haste_big"
+         }
+        ]
+       },
+       {
+        "name": "Legacy Bolt",
+        "active": false,
+        "description": "Old bolt."
+       }
+      ]
+     },
+     {
+      "name": "Knight",
+      "abilities": [
+       {
+        "name": "Slash",
+        "type": "Active",
+        "description": "Cuts."
+       }
+      ]
+     },
+     {
+      "name": "",
+      "abilities": [
+       {
+        "name": "Orphan",
+        "description": "No owner"
+       }
+      ]
+     }
+    ],
+    "gem_abilities.json": [
+     {
+      "element": "Air",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Air Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       110,
+       111
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": [
+       {
+        "name": "Smash",
+        "multiplier": 2.5,
+        "base": 10,
+        "prefab": "abilities/a/smash"
+       }
+      ]
+     },
+     {
+      "element": "Fire",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Fire Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       112,
+       110
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       },
+       {
+        "name": "Damage",
+        "op": "MultiplySum",
+        "value": 20,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "mastery",
+      "name": "Masterful",
+      "description": "Empowered Prismatic Gem; can be socketed anywhere."
+     },
+     {
+      "element": "Cosmic",
+      "slug": "any",
+      "name": "Star Power",
+      "description": "Empowered Cosmic Gem for any class; shoots stars.",
+      "tiers": [
+       5
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "x",
+      "name": "plain",
+      "description": "No lead here.",
+      "tiers": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "y",
+      "name": "Berserk",
+      "description": "Empowered Prismatic Gem. Rage.",
+      "stats": [
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 25,
+        "prefab": "abilities/gems/battle_frenzy_small"
+       },
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 50,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Crit",
+        "op": "Multiply",
+        "value": 5,
+        "amount": 1.5,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Shield",
+        "op": "Other",
+        "value": 0,
+        "prefab": ""
+       }
+      ]
+     },
+     {
+      "element": "Air",
+      "slug": "z",
+      "name": "",
+      "description": "nameless",
+      "tiers": [
+       1
+      ]
+     },
+     {
+      "element": "Unknown",
+      "slug": "u",
+      "name": "Weird Element",
+      "description": "EMPOWERED  air  gem FOR THE   all classes .  Lower case lead.",
+      "tiers": [
+       3,
+       1,
+       2,
+       1
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "v",
+      "name": "Weird Element",
+      "description": "",
+      "tiers": [
+       9
+      ],
+      "stats": [
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "ring_abilities.json": [
+     {
+      "class": "Bard",
+      "name": "Crystal-Teleport",
+      "description": "Teleport.",
+      "stats": [],
+      "stages": [
+       {
+        "name": "Pop",
+        "multiplier": 0.5,
+        "base": 0,
+        "prefab": "abilities/bard/pop"
+       }
+      ]
+     },
+     {
+      "class": "",
+      "name": "Classless",
+      "description": "None"
+     },
+     {
+      "class": "Archer",
+      "name": "b ring",
+      "description": "x",
+      "stats": [
+       {
+        "name": "Speed",
+        "op": "Add",
+        "value": 1e-05
+       }
+      ]
+     },
+     {
+      "class": "Archer",
+      "name": "A ring",
+      "description": "y"
+     }
+    ],
+    "star_chart.json": {
+     "Combat": {
+      "Path": "combat",
+      "Name": "Combat",
+      "Constellation": "Combat",
+      "Type": "Root",
+      "Abilities": [],
+      "Stars": [
+       {
+        "Path": "combat.a",
+        "Constellation": "Combat",
+        "Type": "Major",
+        "Name": "Lucky",
+        "Abilities": [
+         "5% chance ",
+         " to crit"
+        ],
+        "Ability_Values": [
+         {
+          "name": "Crit",
+          "op": "MultiplySum",
+          "value": 5
+         }
+        ],
+        "Stars": [
+         {
+          "Path": "combat.a.0",
+          "Constellation": "Combat",
+          "Type": "",
+          "Name": "",
+          "Abilities": [
+           "Deep node"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "Gathering": {
+      "Path": "gathering",
+      "Name": "Gathering",
+      "Constellation": "",
+      "Abilities": [
+       "Root ability"
+      ],
+      "Stars": null
+     }
+    },
+    "ally_abilities.json": [
+     {
+      "name": "A",
+      "stats": [
+       {
+        "name": 5,
+        "value": 1
+       }
+      ],
+      "abilities": [
+       {
+        "text": "t"
+       }
+      ]
+     }
+    ]
+   },
+   "results": {
+    "abilities": {
+     "raises": "AttributeError"
+    },
+    "allies": {
+     "raises": "AttributeError"
+    }
+   }
+  },
+  {
+   "name": "gem description not str",
+   "files": {
+    "classes.json": [
+     {
+      "name": "Knight",
+      "qualified_name": "knight",
+      "shorts": [
+       "KN",
+       "K"
+      ],
+      "damage_type": "Physical",
+      "weapons": [
+       "Sword"
+      ],
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "value": 100,
+        "percentage": false
+       },
+       {
+        "name": "Critical Hit",
+        "value": 12.5,
+        "percentage": true
+       },
+       {
+        "name": "Attack Speed",
+        "value": null
+       },
+       {
+        "name": "Mystery",
+        "value": "x"
+       },
+       {
+        "name": "Flag",
+        "value": true
+       },
+       {
+        "name": "Big",
+        "value": 1234567.891
+       },
+       {
+        "name": "Regen",
+        "value": 0.6,
+        "percentage": true
+       }
+      ],
+      "bonuses": [
+       {
+        "name": "Physical Damage",
+        "value": 0,
+        "percentage": true
+       },
+       {
+        "name": "Health",
+        "value": 5
+       },
+       {
+        "name": "Speed",
+        "value": -2.5
+       },
+       {
+        "name": "Fly",
+        "value": 7,
+        "absolute": true
+       },
+       {
+        "name": "",
+        "value": 3
+       }
+      ],
+      "levels": {
+       "10": [
+        {
+         "name": "Physical Damage",
+         "value": 10
+        }
+       ],
+       "2": [
+        {
+         "name": "Regen",
+         "value": 0.1,
+         "percentage": true
+        },
+        {
+         "name": "Regen",
+         "value": 0.2
+        },
+        {
+         "name": "Regen",
+         "value": 0.3
+        }
+       ],
+       "3": [
+        {
+         "name": "Critical Hit",
+         "value": 0.25
+        },
+        {
+         "name": "Physical Damage",
+         "value": 1.5
+        }
+       ],
+       "30": [
+        {
+         "name": "Big",
+         "value": 0.001
+        },
+        {
+         "name": "Critical Hit",
+         "value": null
+        }
+       ]
+      },
+      "subclass": {
+       "name": "Iron Will",
+       "description": "Tough.",
+       "level": {
+        "20": [
+         {
+          "name": "Armor",
+          "value": 5
+         }
+        ],
+        "1": [
+         {
+          "name": "",
+          "value": 0
+         },
+         {
+          "name": "  ",
+          "value": 0
+         }
+        ],
+        "5": [
+         {
+          "name": " Padded ",
+          "value": 0
+         },
+         {
+          "name": "",
+          "value": 2.5,
+          "percentage": true
+         }
+        ]
+       }
+      },
+      "abilities": [
+       {
+        "name": "Slash",
+        "description": "Cuts.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Hit",
+          "multiplier": 3.5,
+          "base": 50
+         },
+         {
+          "name": "Zero",
+          "multiplier": 0,
+          "base": 0
+         },
+         {
+          "name": "Flat",
+          "base": 12.25
+         },
+         {
+          "name": "Int",
+          "multiplier": 2
+         },
+         {
+          "name": "Tiny",
+          "multiplier": 1e-06
+         }
+        ]
+       },
+       {
+        "name": "Old",
+        "description": "Gone.",
+        "active": false,
+        "stages": []
+       },
+       {
+        "name": "",
+        "description": ""
+       },
+       {
+        "name": "",
+        "description": "Desc only",
+        "type": "Passive",
+        "active": 0
+       }
+      ]
+     },
+     {
+      "name": "Dupe",
+      "qualified_name": "dupe",
+      "damage_type": null
+     },
+     {
+      "name": "Ice Sage",
+      "qualified_name": "icemage",
+      "damage_type": "Magic",
+      "abilities": []
+     },
+     {
+      "name": "Dupe Two",
+      "qualified_name": "dupe",
+      "damage_type": "magic",
+      "levels": {}
+     }
+    ],
+    "class_abilities.json": [
+     {
+      "name": "Ice Sage",
+      "abilities": [
+       {
+        "name": "Frost",
+        "description": "Cold.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Shard",
+          "multiplier": 1.25,
+          "base": 0,
+          "prefab": "abilities/icemage/shard"
+         }
+        ],
+        "stats": [
+         {
+          "name": "Movement Speed",
+          "op": "Add",
+          "value": -20,
+          "prefab": "abilities/icemage/slow"
+         },
+         {
+          "name": "Attack Speed",
+          "op": "MultiplySum",
+          "value": 15,
+          "prefab": "abilities/icemage/haste_big"
+         }
+        ]
+       },
+       {
+        "name": "Legacy Bolt",
+        "active": false,
+        "description": "Old bolt."
+       }
+      ]
+     },
+     {
+      "name": "Knight",
+      "abilities": [
+       {
+        "name": "Slash",
+        "type": "Active",
+        "description": "Cuts."
+       }
+      ]
+     },
+     {
+      "name": "",
+      "abilities": [
+       {
+        "name": "Orphan",
+        "description": "No owner"
+       }
+      ]
+     }
+    ],
+    "gem_abilities.json": [
+     {
+      "element": "Air",
+      "slug": "s",
+      "name": "G",
+      "description": 5
+     }
+    ],
+    "ring_abilities.json": [
+     {
+      "class": "Bard",
+      "name": "Crystal-Teleport",
+      "description": "Teleport.",
+      "stats": [],
+      "stages": [
+       {
+        "name": "Pop",
+        "multiplier": 0.5,
+        "base": 0,
+        "prefab": "abilities/bard/pop"
+       }
+      ]
+     },
+     {
+      "class": "",
+      "name": "Classless",
+      "description": "None"
+     },
+     {
+      "class": "Archer",
+      "name": "b ring",
+      "description": "x",
+      "stats": [
+       {
+        "name": "Speed",
+        "op": "Add",
+        "value": 1e-05
+       }
+      ]
+     },
+     {
+      "class": "Archer",
+      "name": "A ring",
+      "description": "y"
+     }
+    ],
+    "star_chart.json": {
+     "Combat": {
+      "Path": "combat",
+      "Name": "Combat",
+      "Constellation": "Combat",
+      "Type": "Root",
+      "Abilities": [],
+      "Stars": [
+       {
+        "Path": "combat.a",
+        "Constellation": "Combat",
+        "Type": "Major",
+        "Name": "Lucky",
+        "Abilities": [
+         "5% chance ",
+         " to crit"
+        ],
+        "Ability_Values": [
+         {
+          "name": "Crit",
+          "op": "MultiplySum",
+          "value": 5
+         }
+        ],
+        "Stars": [
+         {
+          "Path": "combat.a.0",
+          "Constellation": "Combat",
+          "Type": "",
+          "Name": "",
+          "Abilities": [
+           "Deep node"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "Gathering": {
+      "Path": "gathering",
+      "Name": "Gathering",
+      "Constellation": "",
+      "Abilities": [
+       "Root ability"
+      ],
+      "Stars": null
+     }
+    },
+    "ally_abilities.json": [
+     {
+      "slug": "a1",
+      "name": "Zeta Pet",
+      "stats": [
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": 150.0,
+        "amount": 150.0
+       },
+       {
+        "name": "Energy Regen Bonus",
+        "op": "MultiplySum",
+        "value": 15.0,
+        "amount": 0.15
+       },
+       {
+        "name": "$Hidden",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": -200
+       }
+      ],
+      "abilities": [
+       {
+        "text": "Triggers Chaos. "
+       },
+       {
+        "text": ""
+       },
+       {
+        "ref": "x"
+       }
+      ]
+     },
+     {
+      "slug": "a2",
+      "name": "alpha pet",
+      "stats": [
+       {
+        "name": "Maximum Health %",
+        "op": "Multiply",
+        "value": 10,
+        "amount": 1.1
+       },
+       {
+        "name": "Speed",
+        "op": "Multiply",
+        "value": 7,
+        "amount": 0
+       }
+      ],
+      "abilities": []
+     },
+     {
+      "slug": "no_stats",
+      "name": "Nothing",
+      "stats": [],
+      "abilities": [
+       {
+        "text": "Only ability"
+       }
+      ]
+     },
+     {
+      "slug": "slug_only",
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "op": "Add",
+        "value": 400
+       }
+      ]
+     },
+     {
+      "slug": "blank",
+      "name": "Blank Stat",
+      "stats": [
+       {
+        "name": "",
+        "value": 5
+       },
+       {
+        "value": 3
+       }
+      ]
+     }
+    ]
+   },
+   "results": {
+    "abilities": {
+     "raises": "AttributeError"
+    }
+   }
+  },
+  {
+   "name": "stage text value",
+   "files": {
+    "classes.json": [
+     {
+      "name": "Knight",
+      "qualified_name": "knight",
+      "shorts": [
+       "KN",
+       "K"
+      ],
+      "damage_type": "Physical",
+      "weapons": [
+       "Sword"
+      ],
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "value": 100,
+        "percentage": false
+       },
+       {
+        "name": "Critical Hit",
+        "value": 12.5,
+        "percentage": true
+       },
+       {
+        "name": "Attack Speed",
+        "value": null
+       },
+       {
+        "name": "Mystery",
+        "value": "x"
+       },
+       {
+        "name": "Flag",
+        "value": true
+       },
+       {
+        "name": "Big",
+        "value": 1234567.891
+       },
+       {
+        "name": "Regen",
+        "value": 0.6,
+        "percentage": true
+       }
+      ],
+      "bonuses": [
+       {
+        "name": "Physical Damage",
+        "value": 0,
+        "percentage": true
+       },
+       {
+        "name": "Health",
+        "value": 5
+       },
+       {
+        "name": "Speed",
+        "value": -2.5
+       },
+       {
+        "name": "Fly",
+        "value": 7,
+        "absolute": true
+       },
+       {
+        "name": "",
+        "value": 3
+       }
+      ],
+      "levels": {
+       "10": [
+        {
+         "name": "Physical Damage",
+         "value": 10
+        }
+       ],
+       "2": [
+        {
+         "name": "Regen",
+         "value": 0.1,
+         "percentage": true
+        },
+        {
+         "name": "Regen",
+         "value": 0.2
+        },
+        {
+         "name": "Regen",
+         "value": 0.3
+        }
+       ],
+       "3": [
+        {
+         "name": "Critical Hit",
+         "value": 0.25
+        },
+        {
+         "name": "Physical Damage",
+         "value": 1.5
+        }
+       ],
+       "30": [
+        {
+         "name": "Big",
+         "value": 0.001
+        },
+        {
+         "name": "Critical Hit",
+         "value": null
+        }
+       ]
+      },
+      "subclass": {
+       "name": "Iron Will",
+       "description": "Tough.",
+       "level": {
+        "20": [
+         {
+          "name": "Armor",
+          "value": 5
+         }
+        ],
+        "1": [
+         {
+          "name": "",
+          "value": 0
+         },
+         {
+          "name": "  ",
+          "value": 0
+         }
+        ],
+        "5": [
+         {
+          "name": " Padded ",
+          "value": 0
+         },
+         {
+          "name": "",
+          "value": 2.5,
+          "percentage": true
+         }
+        ]
+       }
+      },
+      "abilities": [
+       {
+        "name": "Slash",
+        "description": "Cuts.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Hit",
+          "multiplier": 3.5,
+          "base": 50
+         },
+         {
+          "name": "Zero",
+          "multiplier": 0,
+          "base": 0
+         },
+         {
+          "name": "Flat",
+          "base": 12.25
+         },
+         {
+          "name": "Int",
+          "multiplier": 2
+         },
+         {
+          "name": "Tiny",
+          "multiplier": 1e-06
+         }
+        ]
+       },
+       {
+        "name": "Old",
+        "description": "Gone.",
+        "active": false,
+        "stages": []
+       },
+       {
+        "name": "",
+        "description": ""
+       },
+       {
+        "name": "",
+        "description": "Desc only",
+        "type": "Passive",
+        "active": 0
+       }
+      ]
+     },
+     {
+      "name": "Dupe",
+      "qualified_name": "dupe",
+      "damage_type": null
+     },
+     {
+      "name": "Ice Sage",
+      "qualified_name": "icemage",
+      "damage_type": "Magic",
+      "abilities": []
+     },
+     {
+      "name": "Dupe Two",
+      "qualified_name": "dupe",
+      "damage_type": "magic",
+      "levels": {}
+     }
+    ],
+    "class_abilities.json": [
+     {
+      "name": "Ice Sage",
+      "abilities": [
+       {
+        "name": "Frost",
+        "description": "Cold.",
+        "type": "Active",
+        "stages": [
+         {
+          "name": "Shard",
+          "multiplier": 1.25,
+          "base": 0,
+          "prefab": "abilities/icemage/shard"
+         }
+        ],
+        "stats": [
+         {
+          "name": "Movement Speed",
+          "op": "Add",
+          "value": -20,
+          "prefab": "abilities/icemage/slow"
+         },
+         {
+          "name": "Attack Speed",
+          "op": "MultiplySum",
+          "value": 15,
+          "prefab": "abilities/icemage/haste_big"
+         }
+        ]
+       },
+       {
+        "name": "Legacy Bolt",
+        "active": false,
+        "description": "Old bolt."
+       }
+      ]
+     },
+     {
+      "name": "Knight",
+      "abilities": [
+       {
+        "name": "Slash",
+        "type": "Active",
+        "description": "Cuts."
+       }
+      ]
+     },
+     {
+      "name": "",
+      "abilities": [
+       {
+        "name": "Orphan",
+        "description": "No owner"
+       }
+      ]
+     }
+    ],
+    "gem_abilities.json": [
+     {
+      "element": "Air",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Air Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       110,
+       111
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": [
+       {
+        "name": "Smash",
+        "multiplier": 2.5,
+        "base": 10,
+        "prefab": "abilities/a/smash"
+       }
+      ]
+     },
+     {
+      "element": "Fire",
+      "slug": "spirittank",
+      "name": "Aegis Assault",
+      "description": "Empowered Fire Gem for the Revenant. Bash loses its cooldown.",
+      "tiers": [
+       112,
+       110
+      ],
+      "stats": [
+       {
+        "name": "Health Regen",
+        "op": "Multiply",
+        "value": -100.0,
+        "prefab": "abilities/a/leech"
+       },
+       {
+        "name": "Damage",
+        "op": "MultiplySum",
+        "value": 20,
+        "prefab": "abilities/a/leech"
+       }
+      ],
+      "stages": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "mastery",
+      "name": "Masterful",
+      "description": "Empowered Prismatic Gem; can be socketed anywhere."
+     },
+     {
+      "element": "Cosmic",
+      "slug": "any",
+      "name": "Star Power",
+      "description": "Empowered Cosmic Gem for any class; shoots stars.",
+      "tiers": [
+       5
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "x",
+      "name": "plain",
+      "description": "No lead here.",
+      "tiers": []
+     },
+     {
+      "element": "Prismatic",
+      "slug": "y",
+      "name": "Berserk",
+      "description": "Empowered Prismatic Gem. Rage.",
+      "stats": [
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 25,
+        "prefab": "abilities/gems/battle_frenzy_small"
+       },
+       {
+        "name": "Attack Speed",
+        "op": "Add",
+        "value": 50,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Crit",
+        "op": "Multiply",
+        "value": 5,
+        "amount": 1.5,
+        "prefab": "abilities/gems/battle_frenzy_large"
+       },
+       {
+        "name": "Shield",
+        "op": "Other",
+        "value": 0,
+        "prefab": ""
+       }
+      ]
+     },
+     {
+      "element": "Air",
+      "slug": "z",
+      "name": "",
+      "description": "nameless",
+      "tiers": [
+       1
+      ]
+     },
+     {
+      "element": "Unknown",
+      "slug": "u",
+      "name": "Weird Element",
+      "description": "EMPOWERED  air  gem FOR THE   all classes .  Lower case lead.",
+      "tiers": [
+       3,
+       1,
+       2,
+       1
+      ]
+     },
+     {
+      "element": "Water",
+      "slug": "v",
+      "name": "Weird Element",
+      "description": "",
+      "tiers": [
+       9
+      ],
+      "stats": [
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "X",
+        "op": "Add",
+        "value": 1
+       }
+      ]
+     }
+    ],
+    "ring_abilities.json": [
+     {
+      "class": "Bard",
+      "name": "R",
+      "description": "d",
+      "stages": [
+       {
+        "name": "s",
+        "multiplier": "3"
+       }
+      ]
+     }
+    ],
+    "star_chart.json": {
+     "Combat": {
+      "Path": "combat",
+      "Name": "Combat",
+      "Constellation": "Combat",
+      "Type": "Root",
+      "Abilities": [],
+      "Stars": [
+       {
+        "Path": "combat.a",
+        "Constellation": "Combat",
+        "Type": "Major",
+        "Name": "Lucky",
+        "Abilities": [
+         "5% chance ",
+         " to crit"
+        ],
+        "Ability_Values": [
+         {
+          "name": "Crit",
+          "op": "MultiplySum",
+          "value": 5
+         }
+        ],
+        "Stars": [
+         {
+          "Path": "combat.a.0",
+          "Constellation": "Combat",
+          "Type": "",
+          "Name": "",
+          "Abilities": [
+           "Deep node"
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     "Gathering": {
+      "Path": "gathering",
+      "Name": "Gathering",
+      "Constellation": "",
+      "Abilities": [
+       "Root ability"
+      ],
+      "Stars": null
+     }
+    },
+    "ally_abilities.json": [
+     {
+      "slug": "a1",
+      "name": "Zeta Pet",
+      "stats": [
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": 150.0,
+        "amount": 150.0
+       },
+       {
+        "name": "Energy Regen Bonus",
+        "op": "MultiplySum",
+        "value": 15.0,
+        "amount": 0.15
+       },
+       {
+        "name": "$Hidden",
+        "op": "Add",
+        "value": 1
+       },
+       {
+        "name": "Light",
+        "op": "Add",
+        "value": -200
+       }
+      ],
+      "abilities": [
+       {
+        "text": "Triggers Chaos. "
+       },
+       {
+        "text": ""
+       },
+       {
+        "ref": "x"
+       }
+      ]
+     },
+     {
+      "slug": "a2",
+      "name": "alpha pet",
+      "stats": [
+       {
+        "name": "Maximum Health %",
+        "op": "Multiply",
+        "value": 10,
+        "amount": 1.1
+       },
+       {
+        "name": "Speed",
+        "op": "Multiply",
+        "value": 7,
+        "amount": 0
+       }
+      ],
+      "abilities": []
+     },
+     {
+      "slug": "no_stats",
+      "name": "Nothing",
+      "stats": [],
+      "abilities": [
+       {
+        "text": "Only ability"
+       }
+      ]
+     },
+     {
+      "slug": "slug_only",
+      "stats": [
+       {
+        "name": "Physical Damage",
+        "op": "Add",
+        "value": 400
+       }
+      ]
+     },
+     {
+      "slug": "blank",
+      "name": "Blank Stat",
+      "stats": [
+       {
+        "name": "",
+        "value": 5
+       },
+       {
+        "value": 3
+       }
+      ]
+     }
+    ]
+   },
+   "results": {
+    "abilities": {
+     "raises": "ValueError"
+    }
+   }
+  }
+ ],
+ "commands": {
+  "input": {
+   "intro": {
+    "title": {
+     "en": "T",
+     "fr": "F"
+    },
+    "subtitle": {
+     "fr": "only fr"
+    },
+    "search_placeholder": null,
+    "source_note": {
+     "en": "S"
+    },
+    "placeholder_warning": {
+     "en": "W <b>"
+    },
+    "rules": {
+     "fr": [
+      "r"
+     ],
+     "en": [
+      "one",
+      "two"
+     ]
+    }
+   },
+   "categories": [
+    {
+     "key": "chat",
+     "name": {
+      "en": "Chat"
+     }
+    },
+    {
+     "key": "empty",
+     "name": {
+      "en": "Empty"
+     }
+    },
+    {
+     "key": "misc"
+    }
+   ],
+   "commands": [
+    {
+     "syntax": "/1",
+     "category": "chat",
+     "description": {
+      "en": "Global."
+     }
+    },
+    {
+     "syntax": "/w <player>",
+     "category": "chat",
+     "aliases": [
+      "/whisper",
+      "/tell"
+     ],
+     "description": {
+      "en": "Whisper."
+     },
+     "note": {
+      "en": "Note Ü"
+     }
+    },
+    {
+     "syntax": "/x <>",
+     "category": "misc",
+     "description": {},
+     "note": {
+      "fr": "only fr"
+     }
+    }
+   ]
+  },
+  "ok": {
+   "intro": {
+    "title": "T",
+    "subtitle": "",
+    "search_placeholder": "",
+    "source_note": "S",
+    "placeholder_warning": "W <b>",
+    "rules": [
+     "one",
+     "two"
+    ]
+   },
+   "chips": [
+    {
+     "key": "chat",
+     "name": "Chat",
+     "count": 2
+    },
+    {
+     "key": "empty",
+     "name": "Empty",
+     "count": 0
+    },
+    {
+     "key": "misc",
+     "name": "",
+     "count": 1
+    }
+   ],
+   "sections": [
+    {
+     "key": "chat",
+     "name": "Chat",
+     "count": 2,
+     "rows": [
+      {
+       "syntax": "/1",
+       "aliases": [],
+       "desc": "Global.",
+       "note": "",
+       "has_placeholder": false,
+       "search": "/1  global. "
+      },
+      {
+       "syntax": "/w <player>",
+       "aliases": [
+        "/whisper",
+        "/tell"
+       ],
+       "desc": "Whisper.",
+       "note": "Note Ü",
+       "has_placeholder": true,
+       "search": "/w <player> /whisper /tell whisper. note ü"
+      }
+     ]
+    },
+    {
+     "key": "misc",
+     "name": "",
+     "count": 1,
+     "rows": [
+      {
+       "syntax": "/x <>",
+       "aliases": [],
+       "desc": "",
+       "note": "",
+       "has_placeholder": false,
+       "search": "/x <>   "
+      }
+     ]
+    }
+   ],
+   "total": 3,
+   "ssr_lang": "en"
+  }
+ }
+}
