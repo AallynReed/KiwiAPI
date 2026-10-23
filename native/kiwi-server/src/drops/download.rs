@@ -108,6 +108,17 @@ pub async fn file_response(
     filename: &str,
     req_headers: &HeaderMap,
 ) -> Result<Response, ApiError> {
+    file_response_cached(path, media_type, filename, "no-store", req_headers).await
+}
+
+/// [`file_response`] with another `Cache-Control`.
+pub async fn file_response_cached(
+    path: &Path,
+    media_type: &str,
+    filename: &str,
+    cache_control: &str,
+    req_headers: &HeaderMap,
+) -> Result<Response, ApiError> {
     let meta = tokio::fs::metadata(path).await.map_err(|_| ApiError::internal())?;
     if !meta.is_file() {
         return Err(ApiError::internal());
@@ -117,7 +128,7 @@ pub async fn file_response(
     let (etag, last_modified) = stat_headers(mtime, size);
     let ctype = content_type(media_type);
     let mut headers: Vec<(HeaderName, HeaderValue)> = vec![
-        (header::CACHE_CONTROL, HeaderValue::from_static("no-store")),
+        (header::CACHE_CONTROL, hv(cache_control)?),
         (header::CONTENT_TYPE, hv(&ctype)?),
         (header::ACCEPT_RANGES, HeaderValue::from_static("bytes")),
         (header::CONTENT_DISPOSITION, hv(&content_disposition(filename))?),

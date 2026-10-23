@@ -42,6 +42,7 @@ pub mod routes;
 pub mod runtime_config;
 pub mod site_auth;
 pub mod state;
+pub mod updates;
 pub mod usage;
 pub mod validation;
 pub mod webhooks;
