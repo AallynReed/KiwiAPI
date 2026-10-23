@@ -208,6 +208,11 @@ pub fn base64(data: &[u8]) -> String {
 
 /// Each entry's content as base64, sliced the way Python slices (clamped).
 pub fn contents(compressed: &[u8], entries: &[Entry]) -> Vec<String> {
+    raw_contents(compressed, entries).iter().map(|c| base64(c)).collect()
+}
+
+/// [`contents`] before the base64 step.
+pub fn raw_contents(compressed: &[u8], entries: &[Entry]) -> Vec<Vec<u8>> {
     let primary = crate::zlib::inflate(compressed, usize::MAX).map(|z| z.data);
     let s = stream(primary.as_deref(), compressed, entries);
     entries
@@ -215,7 +220,7 @@ pub fn contents(compressed: &[u8], entries: &[Entry]) -> Vec<String> {
         .map(|e| {
             let start = (e.offset as usize).min(s.len());
             let end = (e.offset as usize + e.size as usize).min(s.len()).max(start);
-            base64(&s[start..end])
+            s[start..end].to_vec()
         })
         .collect()
 }

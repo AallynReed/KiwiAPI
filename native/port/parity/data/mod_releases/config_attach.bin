@@ -1,0 +1,9 @@
+--kiwiParityBoundary
+Content-Disposition: form-data; name="file"; filename="settings.cfg"
+Content-Type: text/plain
+
+[parity.swf]
+key=2
+extra=yes
+
+--kiwiParityBoundary--

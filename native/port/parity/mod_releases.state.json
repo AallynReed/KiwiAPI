@@ -1,0 +1,15 @@
+{
+ "mongo": [
+  {"collection": "mod_releases", "sort": ["branch", "tag"],
+   "mask": ["_id", "created_at", "updated_at", "published_at", "announced_at"]},
+  {"collection": "mod_projects", "sort": ["slug"], "mask": ["updated_at", "last_release_at"],
+   "filter": {"owner_id": {"$oid": "65ae00000000000000000c01"}}},
+  {"collection": "mod_download_events", "sort": ["created_at"], "mask": ["_id", "release_id", "created_at"]},
+  {"collection": "mod_creator_links", "sort": ["_id"], "mask": ["last_used_at"]},
+  {"collection": "blueprint_cache", "sort": ["key"], "mask": ["_id", "created_at", "blob_sha", "byte_len"]}
+ ],
+ "redis": [
+  {"pattern": "events:sig:mod_release", "mask_value": true},
+  {"pattern": "rl:swfcode:*", "mask_ttl": true, "mask_value": true}
+ ]
+}

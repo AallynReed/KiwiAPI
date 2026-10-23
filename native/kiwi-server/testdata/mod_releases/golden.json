@@ -1,0 +1,2883 @@
+{
+ "python": "3.13.17",
+ "artifacts": [
+  {
+   "name": "full",
+   "tmod_b64": "eAIAAAAAAAABAAgABXRpdGxlClBhcml0eSBNb2QGYXV0aG9yCEFubiwgQm9iCm1vZFZlcnNpb24DMS4wBHRhZ3MJR1VJLFJhZGFyBWZsYWdzBjI2MjI3MgtwcmV2aWV3UGF0aBFVSS9QYXJpdHktTW9kLlBORwpjb25maWdQYXRoEVVJXFBhcml0eSBNb2QuY2ZnCW1vZExvYWRlcgNCVFQRdWkvcGFyaXR5LW1vZC5wbmcAACiMhKCWCxF1aS9QYXJpdHkgTW9kLmNmZwAoE9Lp1eIDDHVpL2V4dHJhLmNmZwA8BIeTnLsNDXVpL3Bhcml0eS5zd2YAQED9tsenBSpCbHVlcHJpbnRzL0NfTV9Hb2xkZW5CZWV0bGVfSGVhZC5ibHVlcHJpbnQAgAGfCNjAk6kFGmJsdWVwcmludHMvYmxhbmsuYmx1ZXByaW50AKAJFbXQ7OYEN2JsdWVwcmludHMvZXF1aXBtZW50X3dlYXBvbl8xaF9zd29yZF8wMjdbbmltXS5ibHVlcHJpbnQAuAn8C5bTpN8JGmF1ZGlvL1NvdW5kcy9TeW50aGV0aWMuYm5rALQV9SrG35+aAxphdWRpby9zb3VuZHMvc3ludGhldGljLnR4dACsQOYF1tXD4QMYcGFydGljbGVzL3ZmeC9TcGFyay5wa2Z4AJRG4ALDqYS+BBxwYXJ0aWNsZXMvdmZ4L3N1Yi9jaGlsZC5wa2Z4APRISLbA86cDFXRleHR1cmVzL2Z4L3NwYXJrLmRkcwC8SRjK8ritDAxBL2IvWmV0YS50eHQA1EkEran+IQ1hL0IvYWxwaGEudHh0AAAAxbvyiAh4AQDYJCfbxn6Ba0v74vtU9r3ffBzhhwG/Md5Wcg9HZ2aHWaqIPFnqVhN70oWh2FtwYXJpdHkuc3dmXQprZXk9MQoAeD0yCowh/3Lt1xjZThOVE9wbY/yTBva/nOUG4G2wCgWf8nWHjjSzvLMr4gLAoVGMgCO57G1vPWQOnCPsFwdQAz8BhTZraXdpYgQAAAB0AgACFQAxrLoBAwECFQAAnq8BAAICFQAwqbYBAQAIFQAMscMBAAEIFQA9rbkBAwIIFQABus4BAgAGFQAwqbYBAQQAFQAxrLoBAggEFQABtckBAQQEFQAysL4BAwgEFQABtckBBAAEOACiqRYAAAIBFQAwqbYBAwEBFQA7pbEBAAQGFQABus4BAgABFQAAnq8BAgQEFQABus4BAwAGFQAwqbYBAgIIFQABtckBBAAAFQA7pbEBAAAIFQAMscMBAgYEFQABtckBAQEBFQAAk6MBAQICFQAztMIBAAQCFQAxrLoBBQAAFQA7pbEBAgQAFQAMscMBAwACFQAwqbYBAAABFQAwqbYBAgIBFQAMscMBAgECFQAAnq8BAgIEFQAysL4BAQIGFQAxrLoBBQAEOACVmxQAAgAIFQAwqbYBBAIAFQAMscMBAQEEFQAAnq8BBQIGOADx/QAAAQAGFQARXGMBAgEGFQAwqbYBAgIAFQASYGgBAwoEFQABtckBAAAAFQAkoK0BBAIEOAD4/2YAAwQAFQAMscMBAQEAFQAAk6MBAAIEFQAztMIBBQICFQAMscMBAwEEFQAAnq8BAQACFQAztMIBAAECFQAAk6MBAwICFQAztMIBAAAEFQAwqbYBAgAAFQAWdn4BAwQEFQABus4BAAIAFQAztMIBAwEAFQAAk6MBAAEGFQAwqbYBAwIGFQA7pbEBAgAEFQAwqbYBAQEIFQA8qbUBAQQCFQAxrLoBAwEIFQAwqbYBAAIIFQABus4BAQQGFQABus4BBAoEFQABtckBBQoEFQABtckBAQQBFQAxrLoBBAAGOACVmxQAAwYEFQABscQBAQIIFQABus4BBAACFQA5oq0BAAQEFQAztMIBAwAEFQAwqbYBAgQGFQABus4BAAEBFQAAk6MBAwIBFQAMscMBAgIGFQA5oq0BAQABFQAztMIBBQQEFQAysL4BAQIAFQAztMIBAAQAFQAztMIBBQACFQA7pbEBAQEGFQAwqbYBAgQCFQAxrLoBAwAAFQAXeoIBAQAEFQAwqbYBAgEAFQAAk6MBAgICFQAysL4BAgEBFQA5oq0BAwABFQAAnq8BAAACFQAysL4BBAICFQAMscMBAQIEFQAysL4BBQAGOACVmxQAAAQBFQAxrLoBAwQCFQAxrLoBAQIBFQAxrLoBAQECFQAAk6MBBQIEOAD4/2YAAQAAFQAxrLoBBAQEFQAwqbYBAgoEFQABtckBAgEEFQAAnq8BAwIAFQASYGgBAAEAFQAAk6MBAAAGFQATZGwBBAIGOADz/wMAAwQGFQABus4BAwAIFQAwqbYBAAIGFQAztMIBAwEGFQAwqbYBBQIAFQAMscMBAgEIFQAwqbYBAAEEFQAAnq8BAwIEFQAwqbYBAABraXdpYgUAAAB42mJgwA8AAAAA//8AAABraXdpYgMAAACpAQAKCjYAzI4AAwAICDYAzI4AAwAAADYAt4AAAwABLDYA/bEAAwABIDYA/+y5AwAAHjYA6qQAAwAEJjYA4Z0AAwAEGDYA/92MAwAELjYA/9d5AwAAPDYAzI4AAwAEMDYA/8lKAwACDjYAzI4AAwAGEDYA/bEAAwACKjYA/+/KAwAAGjYA7KsAAwACLjYA6KMAAwACAzYArnoAAwIAAzYArnoAAwACNjYA/+SoAwACHDYA/+SoAwACJDYA7KsAAwAAODYA/7UGAwAEHDYA/8AtAwACKDYA/+/KAwABEjYA/bEAAwABCjYA/9BiAwABBjYA/74oAwAHCjYA4Z0AAwAGLDYA/8AtAwADIDYAzpEAAwAFGDYA/8AtAwACOjYA/7oaAwAAFjYA6qQAAwAJDDYAzI4AAwAGCjYAzI4AAwAANDYA/8hIAwAEHjYA/bEAAwAIDDYA/bEAAwABODYA3ZsAAwAAEjYA/8ZAAwABNDYA/+SoAwAENjYA/8ZAAwACFjYA/9BkAwADKDYA/7UJAwACIjYA3ZsAAwABGDYA/92MAwAIDjYA4Z0AAwAAMDYA/+SoAwABDDYA/7MAAwAEEjYA/8AtAwACFDYA+a4AAwABHjYA/7UGAwABGjYA/+SoAwAADjYA/7scAwAEDDYAzI4AAwAGDjYA/bEAAwAEFDYA/8tTAwACJjYA3ZsAAwAEJDYAzI4AAwACMjYA/8hIAwABCDYA/7QEAwADLDYAzI4AAwAAATYAt4AAAwAALDYA6KMAAwACEDYA4Z0AAwAFDDYA4Z0AAwADMjYA/7wgAwAEFjYA/9BkAwAACjYAxIkAAwAECDYArnoAAwAABTYAzpEAAwAAKDYA/7oXAwAEKjYA/8AtAwADKjYA6KMAAwAABjYA/+y/AwADCDYA15YAAwADFjYA/70iAwAAJDYAzI4AAwAEMjYA/7cNAwAGDDYA4Z0AAwABEDYA4Z0AAwAELDYA/8ZAAwAAAjYAt4AAAwACCDYA/8hGAwABMjYA/8hIAwADJDYA/8I1AwABJjYA/7oXAwAFDjYA/bEAAwADFDYA/8tTAwADDDYAzI4AAwACGjYA/92MAwAAIDYA3ZsAAwACHjYA/7cNAwABFDYA/9BkAwADEjYA/8AtAwACDDYA/7MAAwAAPjYAzI4AAwAHDjYA4Z0AAwACGDYA+a4AAwABIjYA//rsAwABFjYA/9mAAwAEKDYA/bEAAwADNjYA+a4AAwACNDYA/+SoAwAAHDYA/7cNAwACODYA/7oaAwAHDDYA/bEAAwADHjYA7KUAAwAAOjYA3ZsAAwAFCjYAzI4AAwAKDDYAzI4AAwAAGDYA/7cNAwABOjYAzI4AAwAGGDYA/8AtAwAEIDYA/bEAAwAFLDYA/7UJAwAICjYA4Z0AAwACBjYA35wAAwACCjYA4Z0AAwABKDYA/8hGAwACEjYA/bEAAwADHDYA/7scAwAANjYA/70kAwABJDYA/7oXAwABHDYA6qQAAwABNjYA/+SoAwABAzYArnoAAwEAAzYArnoAAwABLjYA/8hGAwAAFDYA/7UGAwABKjYA/bEAAwAFEDYA/bEAAwABDjYAzI4AAwADMDYA/8hGAwAAMjYA/96TAwADLjYA/bEAAwADGDYA/7cNAwADJjYA/8tRAwAAEDYA/9BiAwACIDYA6qQAAwACLDYA//rsAwAHCDYAzI4AAwAJCjYAzI4AAwAALjYA/81ZAwADNDYA+a4AAwAFLjYA/8Q3AwABMDYA+a4AAwAADDYA4Z0AAwADEDYA/bEAAwAAAzYArnoAAwAGMDYA/8AtAwAAKjYA/8hGAwAEGjYA/8AtAwAEDjYA4Z0AAwAEIjYA4Z0AAwAACDYA/9VxAwAGFjYA6qQAAwAFFjYA/8tTAwAAJjYA/8hGAwADIjYA9KsAAwADDjYA4Z0AAwADGjYAzI4AAwAFMDYA/9BiAwAABDYA6KMAAwAEEDYA/bEAAwAAIjYA/7MAAwACMDYA+a4AAwAGLjYA/8AtAwAENDYA/8ZAA0JLSEQQAAAAgAAAAEy6AAAAAAAAAAAAAERJRFhgAAAACwAAAAAAAAAqAgAAFgAAADACAACIBAAAIQAAAMAGAACeAgAALAAAAGAJAAAIAQAANwAAAHAKAAAIAQAAQgAAAIALAACoAQAATQAAADANAADQAwAAWAAAAAARAAAqAgAAREFUQSoTAABSSUZGIgIAAFdBVkVmbXQgQgAAAP//AQAAfQAATtwAAAAAAAAwAAAAAUEAAAUBAADLAAAAzAEAAAAAewAAAAAAywAAAEIAewAERwAAzEgAADiMjsIIC2RhdGHMAQAAyQAmJpyAQgoqrMBCCy68AEMMPvwARBBCDEFEEUYcgUQSSizBBDjWXINNNtpsw0033nxTTUAgZAKBAigwkAEABwgJUgBAYYGhQ4QIEKPAwLi4tAhCZIZIRCwGiQnVQFExHQAsLjDkA0CGxkbaxQV0GeCCLu46EEIQghDE4gAKSMDBCTc88YYn3OAEnaJSBwEAAAACADwAABwbQEREcxwdHh8gISIjJCUBAAAAEAB8AAAcJkBERHMcHR4fICEiIyQlAQAAAABAQEAAYAA6AF53aasfCq2npF5v/WQsrB0TGx3SHuex96fpnuFLc2Mez5vb5G/eUkS57U61pkNZIOlGXya7ld+PgARAAFZ/HiVaLHj1sjuAWl0jMnInwDmw+UUkuxMoYP1ctl2whbpQ64fjG8Unx8bxz+1Vy+08kQc1PtZt8yqzECenI2FCACaBjFKeUofaoI4pb9ST726PT6bMAfUcPZhPipFAgc45rENPc9ohd0mvGr3p+WKlKkmjaACn0PPejmyh0cWbeOZmJT0A1lAIa081hPZzglHnzz8mJMwBlR6wc+D6jcUk4DCH+Z4VJXg8zlsRj3h6S/DpKbR0TQsAwEttz+6ZYQMAAAAAAAAAAFJJRkaABAAAV0FWRWZtdCAYAAAAAgABAGBtAACGPQAAJAAEAAYAAAABQQAAc21wbDwAAAAAAAAAAAAAAGBtAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAB/BgAAAAAAAAAAAABjdWUgNAAAAAIAAAABAAAAgAYAAGRhdGEAAAAAAAAAAIAGAAACAAAAAAAAAGRhdGEAAAAAAAAAAAAAAABMSVNUJAAAAGFkdGxsYWJsBwAAAAEAAAAwMQAAbGFibAcAAAACAAAAMDIAAGRhdGGoAwAABc0/ABoZKRkZCICBkbO0pZJAf3+HgICACAgICAgICAgZOkwNTMhDABgqGRkZCAgAGCk6Swnz93cACICAgIAIiICAgBgZW10PGMBMAAAICAgIgICAgICRoqOSeH83gICACAgICIiAgAgpTF0Ph79KAAAICAgYCAgICIChs7WjAn93gYCAgAgICAiIgAAZW10PdbpMAIGACAAICAgICIAYKVtLSzt3JwgICIiAgIAICAiIoPQGdARGAJ8ICICAgIAACAiAkLPEtHJ3gYAIiACIgIAICAgImPMHnvVGAA8JCICAgIAACICAkbLFxCN3AwgICAgICIiAGAkZqPQHgfVFAI8ICAgIgICAgIAAGClrXH0XCAiIgICACAgICAgZCbAHk+c+AJ8qCYCAAICAAAiAkdTF1XeBgIAICAgIiICAgJChoqIIqjo0AP/vgIAACAgICICAgAApa36HAAgICIiAgICAgJChorIDITM3AP+vgICAAAgICAiAgAA5bX6HgICACAgIgAgICIiRobIDITM4AP+fgICAgAiAgAAICAgIsfd3CICAgIAICAgIiICQotMEzClAAP+JgICAAAgIgICAkYEYen+HAAgIiICAgICACICQscQCiT49AP+NgAAIiAAICAgIGBkZiPR3AggICAgICAiIgICgw9QFIR5DAO+AgICAgIAACAgIGCkqKuB3BwiAgIAICAgICIiAsdQGVhFFAL+AgICAAAgICAiAkbK0tLRzd4OAgAgIiICAgJCAGFsOpkI/AP+LCAgICICAgAAIGClLSzt3JwgICIiAgICAkJGAgDkP7EE8AP+OgICAgICAgAAICJCiw8R2hoCAgICAgICAgICQACkO20E9AP+NgICAgIAACAgICJCi09V3gYCACAgICIiAgICQkQALeD82AP/PgIAACAgICAiAgBg5Xap3BIiAgACIAIiACBgZKisKHDQ0APb/CIiAgIAACAgICICRwuV3CICAgIAICAgICAgZKioLYzc4APr/CggICAiAgIAACAiQ0+Z3CAgICAiIgICACAgIKSoLdDc5APr/CQgIiAAICAiAgICAEHt/hwAICAiIgICAgAgIKUsMTzs/AP0PCAiIgAAICAgICBiIofV3AAiIgICAgICACAiIobIFji48AOefCICAgAiAgICAgJGRgUh/J4CAgICAgICACAgIOkwNcD4/AP+LCIAACIgACAiQkaKzowJ/d4GAgIAICAgICIiAkLIFAAAAAAAAAABSSUZGlgIAAFdBVkVmbXQgGAAAAP7/AQDAXQAAgLsAAAIAEAAGAAAAAUEAAEpVTksEAAAAAAAAAGRhdGFeAgAA0P7oAV3+1yV1+mbKmixoCRPK1COKFBPLMBdCIJzNcQuyJhfU3P6QK+zbufNZLZblOuoCLP7vdOJ/KFf6I92/InwEPdpiG38NvNkCEwgVitsiCtYaY99ZAZEexuQk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Y2xpY2sJCQlcRGVmYXVsdCBXb3JrIFVuaXRcVUlcU3RvcF91aV9jbGljawlzb21lIG5vdGVzDQoJNjg2NjcwNzY4CVN0b3BfdWlfY2xpY2tfZHVwZQkJCVxEZWZhdWx0IFdvcmsgVW5pdFxVSVx4CQ0KCTEyeAlOb3RBbklkCQkJXHgJDQoNCkluIE1lbW9yeSBBdWRpbwlJRAlOYW1lCUF1ZGlvIHNvdXJjZSBmaWxlCQlXd2lzZSBPYmplY3QgUGF0aAlOb3RlcwlEYXRhIFNpemUNCgkyMgl1aV9jbGlja18wMQlDOlxUcm92ZVxjYWNoZVx1aV9jbGlja18wMV81NEVDLndlbQkJXEFjdG9yLU1peGVyIEhpZXJhcmNoeVxEZWZhdWx0IFdvcmsgVW5pdFxncnBfVUlcdWlfY2xpY2tcdWlfY2xpY2tfMDEJZmlyc3QJMTAwDQoJMzMJVUlfQWxwaGEJQzovVHJvdmUvY2FjaGUvYWxwaGEud2VtCQlcQWN0b3ItTWl4ZXIgSGllcmFyY2h5XGdycAkJNQ0KCTQ0CXpldGFfdGhpbmcJcGxhaW4ud2VtCQlUb3BsZXZlbAkJDQoJNTUJCWVtcHR5X25hbWUud2VtCQlcYVxiXGMJCQ0KCTY2CcOJY2xhaXIgc291bmQJQzpcw6kud2VtCQlcQWN0b3ItTWl4ZXIgSGllcmFyY2h5XMOcbsOvY29kZSBHcm91cFzDiWNsYWlyIHNvdW5kCW5vdGXigKh4CTENCgpTdHJlYW1lZCBBdWRpbwlJRAlOYW1lDQoJMQlpZ25vcmVkDQoAAENQYXJ0aWNsZUVmZmVjdCAkTE9DQUwkL1Jlc291cmNlCnsKCU9uU3Bhd24gPSAiJExPQ0FMJC9TcGF3bmVyIjsKfQpDUGFydGljbGVSZW5kZXJlcl9CaWxsYm9hcmQgJExPQ0FMJC9SMQp7CglEaWZmdXNlID0gIlRleHR1cmVzL0ZYL1NwYXJrLmRkcyI7CglDaGlsZCA9ICJQYXJ0aWNsZXMvU3ViL0NoaWxkLnBrZngiOwoJTWVzaCA9ICJNZXNoZXMvUm9jay5wa21tIjsKfQpDUGFydGljbGVTYW1wbGVyU2hhcGUgJExPQ0FMJC9TMQp7CglBbmltUmVzb3VyY2UgPSAiTWVzaGVzL1BhdGguZmJ4IjsKfQpDTkVkRWRpdG9yUGFydGljbGVfQmFja2Ryb3AgJExPQ0FMJC9CCnsKCU1lc2ggPSAiRWRpdG9yL1Jvb20uZmJ4IjsKfQpDUGFydGljbGVFZmZlY3QgJExPQ0FMJC9SZXNvdXJjZQp7CglEaWZmdXNlID0gIlRleHR1cmVzL0ZYL0dsb3cucG5nIjsKfQpTw314jrRNt0gvbUY9GeVwJEy7oONY/Hh6ZXRhAAAA//8=",
+   "release": {
+    "_id": {
+     "$oid": "65d000000000000000000000"
+    },
+    "project_id": {
+     "$oid": "65c000000000000000000001"
+    },
+    "owner_id": {
+     "$oid": "65b000000000000000000001"
+    },
+    "tag": "v1.2",
+    "branch": "main",
+    "title": "First",
+    "changelog": "Fixed things",
+    "title_i18n": {
+     "fr": "Premier"
+    },
+    "changelog_i18n": {},
+    "source_commit_sha": null,
+    "release_format": "tmod",
+    "tmod_sha": "e45ae17fc04fa4b3c940be28bf62c07ac5906aa7677785b13e742c659c348a07",
+    "prior_tmod_shas": [
+     "0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "tmod_size": {
+     "$numberInt": "10076"
+    },
+    "tmod_filename": "parity-v1.2.tmod",
+    "tmod_properties": {
+     "title": "Parity Mod",
+     "author": "Ann, Bob",
+     "modVersion": "1.0",
+     "tags": "GUI,Radar",
+     "flags": "262272",
+     "previewPath": "UI/Parity-Mod.PNG",
+     "configPath": "UI\\Parity Mod.cfg",
+     "modLoader": "BTT"
+    },
+    "banner_sha": "abababababababababababababababababababababababababababababababab",
+    "download_count": {
+     "$numberInt": "7"
+    },
+    "status": "published",
+    "created_at": {
+     "$date": {
+      "$numberLong": "1767323045678"
+     }
+    },
+    "updated_at": {
+     "$date": {
+      "$numberLong": "1767323045678"
+     }
+    },
+    "published_at": {
+     "$date": {
+      "$numberLong": "1768383000125"
+     }
+    },
+    "announced_at": null,
+    "silent": false
+   },
+   "dto": {
+    "id": "65d000000000000000000000",
+    "tag": "v1.2",
+    "branch": "main",
+    "title": "First",
+    "title_i18n": {
+     "fr": "Premier"
+    },
+    "changelog": "Fixed things",
+    "changelog_i18n": {},
+    "status": "published",
+    "silent": false,
+    "tmod_filename": "Parity Mod.tmod",
+    "tmod_size": 10076,
+    "download_count": 7,
+    "format": "tmod",
+    "source_commit_sha": null,
+    "banner_sha": "abababababababababababababababababababababababababababababababab",
+    "published_at": "2026-01-14T09:30:00.125000+00:00",
+    "created_at": "2026-01-02T03:04:05.678000+00:00"
+   },
+   "files": {
+    "items": [
+     {
+      "path": "a/B/alpha.txt",
+      "size": 0
+     },
+     {
+      "path": "A/b/Zeta.txt",
+      "size": 4
+     },
+     {
+      "path": "audio/Sounds/Synthetic.bnk",
+      "size": 5493
+     },
+     {
+      "path": "audio/sounds/synthetic.txt",
+      "size": 742
+     },
+     {
+      "path": "blueprints/blank.blueprint",
+      "size": 21
+     },
+     {
+      "path": "Blueprints/C_M_GoldenBeetle_Head.blueprint",
+      "size": 1055
+     },
+     {
+      "path": "blueprints/equipment_weapon_1h_sword_027[nim].blueprint",
+      "size": 1532
+     },
+     {
+      "path": "particles/vfx/Spark.pkfx",
+      "size": 352
+     },
+     {
+      "path": "particles/vfx/sub/child.pkfx",
+      "size": 72
+     },
+     {
+      "path": "textures/fx/spark.dds",
+      "size": 24
+     },
+     {
+      "path": "ui/extra.cfg",
+      "size": 4
+     },
+     {
+      "path": "ui/Parity Mod.cfg",
+      "size": 19
+     },
+     {
+      "path": "ui/parity.swf",
+      "size": 64
+     }
+    ]
+   },
+   "inspect": {
+    "format": "tmod",
+    "tag": "v1.2",
+    "branch": "main",
+    "filename": "Parity Mod.tmod",
+    "sha256": "e45ae17fc04fa4b3c940be28bf62c07ac5906aa7677785b13e742c659c348a07",
+    "prior_sha256s": [
+     "0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "size": 10076,
+    "version": 1,
+    "properties": {
+     "title": "Parity Mod",
+     "author": "Ann, Bob",
+     "modVersion": "1.0",
+     "tags": "GUI,Radar",
+     "flags": "262272",
+     "previewPath": "UI/Parity-Mod.PNG",
+     "configPath": "UI\\Parity Mod.cfg",
+     "modLoader": "BTT"
+    },
+    "categories": [
+     "GUI",
+     "Radar"
+    ],
+    "flags": 262272,
+    "preview_path": "ui/parity-mod.png",
+    "config_path": "ui/parity mod.cfg",
+    "files": [
+     {
+      "path": "a/B/alpha.txt",
+      "size": 0
+     },
+     {
+      "path": "A/b/Zeta.txt",
+      "size": 4
+     },
+     {
+      "path": "audio/Sounds/Synthetic.bnk",
+      "size": 5493
+     },
+     {
+      "path": "audio/sounds/synthetic.txt",
+      "size": 742
+     },
+     {
+      "path": "blueprints/blank.blueprint",
+      "size": 21
+     },
+     {
+      "path": "Blueprints/C_M_GoldenBeetle_Head.blueprint",
+      "size": 1055
+     },
+     {
+      "path": "blueprints/equipment_weapon_1h_sword_027[nim].blueprint",
+      "size": 1532
+     },
+     {
+      "path": "particles/vfx/Spark.pkfx",
+      "size": 352
+     },
+     {
+      "path": "particles/vfx/sub/child.pkfx",
+      "size": 72
+     },
+     {
+      "path": "textures/fx/spark.dds",
+      "size": 24
+     },
+     {
+      "path": "ui/extra.cfg",
+      "size": 4
+     },
+     {
+      "path": "ui/Parity Mod.cfg",
+      "size": 19
+     },
+     {
+      "path": "ui/parity-mod.png",
+      "size": 40
+     },
+     {
+      "path": "ui/parity.swf",
+      "size": 64
+     }
+    ],
+    "file_count": 14,
+    "total_size": 9422,
+    "readable": true
+   },
+   "cfgs": {
+    "items": [
+     {
+      "path": "ui/Parity Mod.cfg",
+      "size": 19,
+      "filename": "Parity Mod.cfg",
+      "declared": true
+     },
+     {
+      "path": "ui/extra.cfg",
+      "size": 4,
+      "filename": "extra.cfg",
+      "declared": false
+     }
+    ],
+    "has_flash_ui": true
+   },
+   "swfs": [
+    {
+     "path": "ui/parity.swf",
+     "size": 64
+    }
+   ],
+   "banks": [
+    {
+     "path": "audio/Sounds/Synthetic.bnk",
+     "size": 5493
+    }
+   ],
+   "vfx": {
+    "items": [
+     {
+      "path": "particles/vfx/Spark.pkfx",
+      "size": 352
+     },
+     {
+      "path": "particles/vfx/sub/child.pkfx",
+      "size": 72
+     }
+    ]
+   },
+   "blueprints": {
+    "items": [
+     {
+      "path": "Blueprints/C_M_GoldenBeetle_Head.blueprint",
+      "size": 1055,
+      "assembled": false
+     },
+     {
+      "path": "blueprints/equipment_weapon_1h_sword_027[nim].blueprint",
+      "size": 1532,
+      "assembled": false
+     }
+    ],
+    "rig": null,
+    "animations": []
+   },
+   "file_downloads": {
+    "ui/parity-mod.png": {
+     "error": "No such file in this release"
+    },
+    "ui/Parity Mod.cfg": {
+     "b64": "W3Bhcml0eS5zd2ZdCmtleT0xCg==",
+     "name": "Parity Mod.cfg"
+    },
+    "ui/extra.cfg": {
+     "b64": "eD0yCg==",
+     "name": "extra.cfg"
+    },
+    "ui/parity.swf": {
+     "b64": "jCH/cu3XGNlOE5UT3Btj/JMG9r+c5QbgbbAKBZ/ydYeONLO8syviAsChUYyAI7nsbW89ZA6cI+wXB1ADPwGFNg==",
+     "name": "parity.swf"
+    },
+    "Blueprints/C_M_GoldenBeetle_Head.blueprint": {
+     "b64": "a2l3aWIEAAAAdAIAAhUAMay6AQMBAhUAAJ6vAQACAhUAMKm2AQEACBUADLHDAQABCBUAPa25AQMCCBUAAbrOAQIABhUAMKm2AQEEABUAMay6AQIIBBUAAbXJAQEEBBUAMrC+AQMIBBUAAbXJAQQABDgAoqkWAAACARUAMKm2AQMBARUAO6WxAQAEBhUAAbrOAQIAARUAAJ6vAQIEBBUAAbrOAQMABhUAMKm2AQICCBUAAbXJAQQAABUAO6WxAQAACBUADLHDAQIGBBUAAbXJAQEBARUAAJOjAQECAhUAM7TCAQAEAhUAMay6AQUAABUAO6WxAQIEABUADLHDAQMAAhUAMKm2AQAAARUAMKm2AQICARUADLHDAQIBAhUAAJ6vAQICBBUAMrC+AQECBhUAMay6AQUABDgAlZsUAAIACBUAMKm2AQQCABUADLHDAQEBBBUAAJ6vAQUCBjgA8f0AAAEABhUAEVxjAQIBBhUAMKm2AQICABUAEmBoAQMKBBUAAbXJAQAAABUAJKCtAQQCBDgA+P9mAAMEABUADLHDAQEBABUAAJOjAQACBBUAM7TCAQUCAhUADLHDAQMBBBUAAJ6vAQEAAhUAM7TCAQABAhUAAJOjAQMCAhUAM7TCAQAABBUAMKm2AQIAABUAFnZ+AQMEBBUAAbrOAQACABUAM7TCAQMBABUAAJOjAQABBhUAMKm2AQMCBhUAO6WxAQIABBUAMKm2AQEBCBUAPKm1AQEEAhUAMay6AQMBCBUAMKm2AQACCBUAAbrOAQEEBhUAAbrOAQQKBBUAAbXJAQUKBBUAAbXJAQEEARUAMay6AQQABjgAlZsUAAMGBBUAAbHEAQECCBUAAbrOAQQAAhUAOaKtAQAEBBUAM7TCAQMABBUAMKm2AQIEBhUAAbrOAQABARUAAJOjAQMCARUADLHDAQICBhUAOaKtAQEAARUAM7TCAQUEBBUAMrC+AQECABUAM7TCAQAEABUAM7TCAQUAAhUAO6WxAQEBBhUAMKm2AQIEAhUAMay6AQMAABUAF3qCAQEABBUAMKm2AQIBABUAAJOjAQICAhUAMrC+AQIBARUAOaKtAQMAARUAAJ6vAQAAAhUAMrC+AQQCAhUADLHDAQECBBUAMrC+AQUABjgAlZsUAAAEARUAMay6AQMEAhUAMay6AQECARUAMay6AQEBAhUAAJOjAQUCBDgA+P9mAAEAABUAMay6AQQEBBUAMKm2AQIKBBUAAbXJAQIBBBUAAJ6vAQMCABUAEmBoAQABABUAAJOjAQAABhUAE2RsAQQCBjgA8/8DAAMEBhUAAbrOAQMACBUAMKm2AQACBhUAM7TCAQMBBhUAMKm2AQUCABUADLHDAQIBCBUAMKm2AQABBBUAAJ6vAQMCBBUAMKm2AQA=",
+     "name": "C_M_GoldenBeetle_Head.blueprint"
+    },
+    "blueprints/blank.blueprint": {
+     "b64": "a2l3aWIFAAAAeNpiYMAPAAAAAP//",
+     "name": "blank.blueprint"
+    },
+    "blueprints/equipment_weapon_1h_sword_027[nim].blueprint": {
+     "b64": "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",
+     "name": "equipment_weapon_1h_sword_027[nim].blueprint"
+    },
+    "audio/Sounds/Synthetic.bnk": {
+     "b64": "QktIRBAAAACAAAAATLoAAAAAAAAAAAAARElEWGAAAAALAAAAAAAAACoCAAAWAAAAMAIAAIgEAAAhAAAAwAYAAJ4CAAAsAAAAYAkAAAgBAAA3AAAAcAoAAAgBAABCAAAAgAsAAKgBAABNAAAAMA0AANADAABYAAAAABEAACoCAABEQVRBKhMAAFJJRkYiAgAAV0FWRWZtdCBCAAAA//8BAAB9AABO3AAAAAAAADAAAAABQQAABQEAAMsAAADMAQAAAAB7AAAAAADLAAAAQgB7AARHAADMSAAAOIyOwggLZGF0YcwBAADJACYmnIBCCiqswEILLrwAQww+/ABEEEIMQUQRRhyBRBJKLMEEONZcg0022mzDTTfefFNNQCBkAoECKDCQAQAHCAlSAEBhgaFDhAgQo8DAuLi0CEJkhkhELAaJCdVAUTEdACwuMOQDQIbGRtrFBXQZ4IIu7joQQhCCEMTiAApIwMEJNzzxhifc4ASdolIHAQAAAAIAPAAAHBtARERzHB0eHyAhIiMkJQEAAAAQAHwAABwmQEREcxwdHh8gISIjJCUBAAAAAEBAQABgADoAXndpqx8KraekXm/9ZCysHRMbHdIe57H3p+me4UtzYx7Pm9vkb95SRLntTrWmQ1kg6UZfJruV34+ABEAAVn8eJVosePWyO4BaXSMycifAObD5RSS7Eyhg/Vy2XbCFulDrh+MbxSfHxvHP7VXL7TyRBzU+1m3zKrMQJ6cjYUIAJoGMUp5Sh9qgjilv1JPvbo9PpswB9Rw9mE+KkUCBzjmsQ09z2iF3Sa8aven5YqUqSaNoAKfQ896ObKHRxZt45mYlPQDWUAhrTzWE9nOCUefPPyYkzAGVHrBz4PqNxSTgMIf5nhUleDzOWxGPeHpL8OkptHRNCwDAS23P7plhAwAAAAAAAAAAUklGRoAEAABXQVZFZm10IBgAAAACAAEAYG0AAIY9AAAkAAQABgAAAAFBAABzbXBsPAAAAAAAAAAAAAAAYG0AAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAH8GAAAAAAAAAAAAAGN1ZSA0AAAAAgAAAAEAAACABgAAZGF0YQAAAAAAAAAAgAYAAAIAAAAAAAAAZGF0YQAAAAAAAAAAAAAAAExJU1QkAAAAYWR0bGxhYmwHAAAAAQAAADAxAABsYWJsBwAAAAIAAAAwMgAAZGF0YagDAAAFzT8AGhkpGRkIgIGRs7SlkkB/f4eAgIAICAgICAgICBk6TA1MyEMAGCoZGRkICAAYKTpLCfP3dwAIgICAgAiIgICAGBlbXQ8YwEwAAAgICAiAgICAgJGio5J4fzeAgIAICAgIiICACClMXQ+Hv0oAAAgICBgICAgIgKGztaMCf3eBgICACAgICIiAABlbXQ91ukwAgYAIAAgICAgIgBgpW0tLO3cnCAgIiICAgAgICIig9AZ0BEYAnwgIgICAgAAICICQs8S0cneBgAiIAIiAgAgICAiY8wee9UYADwkIgICAgAAIgICRssXEI3cDCAgICAgIiIAYCRmo9AeB9UUAjwgICAiAgICAgAAYKWtcfRcICIiAgIAICAgICBkJsAeT5z4AnyoJgIAAgIAACICR1MXVd4GAgAgICAiIgICAkKGiogiqOjQA/++AgAAICAgIgICAAClrfocACAgIiICAgICAkKGisgMhMzcA/6+AgIAACAgICICAADltfoeAgIAICAiACAgIiJGhsgMhMzgA/5+AgICACICAAAgICAix93cIgICAgAgICAiIgJCi0wTMKUAA/4mAgIAACAiAgICRgRh6f4cACAiIgICAgIAIgJCxxAKJPj0A/42AAAiIAAgICAgYGRmI9HcCCAgICAgICIiAgKDD1AUhHkMA74CAgICAgAAICAgYKSoq4HcHCICAgAgICAgIiICx1AZWEUUAv4CAgIAACAgICICRsrS0tHN3g4CACAiIgICAkIAYWw6mQj8A/4sICAgIgICAAAgYKUtLO3cnCAgIiICAgICQkYCAOQ/sQTwA/46AgICAgICAAAgIkKLDxHaGgICAgICAgICAgJAAKQ7bQT0A/42AgICAgAAICAgIkKLT1XeBgIAICAgIiICAgJCRAAt4PzYA/8+AgAAICAgICICAGDldqncEiICAAIgAiIAIGBkqKwocNDQA9v8IiICAgAAICAgIgJHC5XcIgICAgAgICAgICBkqKgtjNzgA+v8KCAgICICAgAAICJDT5ncICAgICIiAgIAICAgpKgt0NzkA+v8JCAiIAAgICICAgIAQe3+HAAgICIiAgICACAgpSwxPOz8A/Q8ICIiAAAgICAgIGIih9XcACIiAgICAgIAICIihsgWOLjwA558IgICACICAgICA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",
+     "name": "Synthetic.bnk"
+    },
+    "audio/sounds/synthetic.txt": {
+     "b64": "RXZlbnQJSUQJTmFtZQkJCVd3aXNlIE9iamVjdCBQYXRoCU5vdGVzDQoJNjA0NjcxNTc4CVBsYXlfdWlfY2xpY2sJCQlcRGVmYXVsdCBXb3JrIFVuaXRcVUlcUGxheV91aV9jbGljawkNCgk2ODY2NzA3NjgJU3RvcF91aV9jbGljawkJCVxEZWZhdWx0IFdvcmsgVW5pdFxVSVxTdG9wX3VpX2NsaWNrCXNvbWUgbm90ZXMNCgk2ODY2NzA3NjgJU3RvcF91aV9jbGlja19kdXBlCQkJXERlZmF1bHQgV29yayBVbml0XFVJXHgJDQoJMTJ4CU5vdEFuSWQJCQlceAkNCg0KSW4gTWVtb3J5IEF1ZGlvCUlECU5hbWUJQXVkaW8gc291cmNlIGZpbGUJCVd3aXNlIE9iamVjdCBQYXRoCU5vdGVzCURhdGEgU2l6ZQ0KCTIyCXVpX2NsaWNrXzAxCUM6XFRyb3ZlXGNhY2hlXHVpX2NsaWNrXzAxXzU0RUMud2VtCQlcQWN0b3ItTWl4ZXIgSGllcmFyY2h5XERlZmF1bHQgV29yayBVbml0XGdycF9VSVx1aV9jbGlja1x1aV9jbGlja18wMQlmaXJzdAkxMDANCgkzMwlVSV9BbHBoYQlDOi9Ucm92ZS9jYWNoZS9hbHBoYS53ZW0JCVxBY3Rvci1NaXhlciBIaWVyYXJjaHlcZ3JwCQk1DQoJNDQJemV0YV90aGluZwlwbGFpbi53ZW0JCVRvcGxldmVsCQkNCgk1NQkJZW1wdHlfbmFtZS53ZW0JCVxhXGJcYwkJDQoJNjYJw4ljbGFpciBzb3VuZAlDOlzDqS53ZW0JCVxBY3Rvci1NaXhlciBIaWVyYXJjaHlcw5xuw69jb2RlIEdyb3VwXMOJY2xhaXIgc291bmQJbm90ZeKAqHgJMQ0KClN0cmVhbWVkIEF1ZGlvCUlECU5hbWUNCgkxCWlnbm9yZWQNCg==",
+     "name": "synthetic.txt"
+    },
+    "particles/vfx/Spark.pkfx": {
+     "b64": "Q1BhcnRpY2xlRWZmZWN0ICRMT0NBTCQvUmVzb3VyY2UKewoJT25TcGF3biA9ICIkTE9DQUwkL1NwYXduZXIiOwp9CkNQYXJ0aWNsZVJlbmRlcmVyX0JpbGxib2FyZCAkTE9DQUwkL1IxCnsKCURpZmZ1c2UgPSAiVGV4dHVyZXMvRlgvU3BhcmsuZGRzIjsKCUNoaWxkID0gIlBhcnRpY2xlcy9TdWIvQ2hpbGQucGtmeCI7CglNZXNoID0gIk1lc2hlcy9Sb2NrLnBrbW0iOwp9CkNQYXJ0aWNsZVNhbXBsZXJTaGFwZSAkTE9DQUwkL1MxCnsKCUFuaW1SZXNvdXJjZSA9ICJNZXNoZXMvUGF0aC5mYngiOwp9CkNORWRFZGl0b3JQYXJ0aWNsZV9CYWNrZHJvcCAkTE9DQUwkL0IKewoJTWVzaCA9ICJFZGl0b3IvUm9vbS5mYngiOwp9Cg==",
+     "name": "Spark.pkfx"
+    },
+    "particles/vfx/sub/child.pkfx": {
+     "b64": "Q1BhcnRpY2xlRWZmZWN0ICRMT0NBTCQvUmVzb3VyY2UKewoJRGlmZnVzZSA9ICJUZXh0dXJlcy9GWC9HbG93LnBuZyI7Cn0K",
+     "name": "child.pkfx"
+    },
+    "textures/fx/spark.dds": {
+     "b64": "U8N9eI60TbdIL21GPRnlcCRMu6DjWPx4",
+     "name": "spark.dds"
+    },
+    "A/b/Zeta.txt": {
+     "b64": "emV0YQ==",
+     "name": "Zeta.txt"
+    },
+    "a/B/alpha.txt": {
+     "b64": "",
+     "name": "alpha.txt"
+    }
+   },
+   "cfg_names": {
+    "ui/Parity Mod.cfg": "Parity Mod.cfg",
+    "ui/extra.cfg": "extra.cfg"
+   },
+   "bank_files": {
+    "synthetic.bnk": {
+     "sha": "e3b4e8e6eccc46d939373cf1dacb10fffd44f4c443db8e91da02d370566396c3",
+     "text": "Event\tID\tName\t\t\tWwise Object Path\tNotes\r\n\t604671578\tPlay_ui_click\t\t\t\\Default Work Unit\\UI\\Play_ui_click\t\r\n\t686670768\tStop_ui_click\t\t\t\\Default Work Unit\\UI\\Stop_ui_click\tsome notes\r\n\t686670768\tStop_ui_click_dupe\t\t\t\\Default Work Unit\\UI\\x\t\r\n\t12x\tNotAnId\t\t\t\\x\t\r\n\r\nIn Memory Audio\tID\tName\tAudio source file\t\tWwise Object Path\tNotes\tData Size\r\n\t22\tui_click_01\tC:\\Trove\\cache\\ui_click_01_54EC.wem\t\t\\Actor-Mixer Hierarchy\\Default Work Unit\\grp_UI\\ui_click\\ui_click_01\tfirst\t100\r\n\t33\tUI_Alpha\tC:/Trove/cache/alpha.wem\t\t\\Actor-Mixer Hierarchy\\grp\t\t5\r\n\t44\tzeta_thing\tplain.wem\t\tToplevel\t\t\r\n\t55\t\tempty_name.wem\t\t\\a\\b\\c\t\t\r\n\t66\tÉclair sound\tC:\\é.wem\t\t\\Actor-Mixer Hierarchy\\Ünïcode Group\\Éclair sound\tnote x\t1\r\n\nStreamed Audio\tID\tName\r\n\t1\tignored\r\n"
+    },
+    "AUDIO/Sounds/SYNTHETIC.bnk": {
+     "sha": "e3b4e8e6eccc46d939373cf1dacb10fffd44f4c443db8e91da02d370566396c3",
+     "text": "Event\tID\tName\t\t\tWwise Object Path\tNotes\r\n\t604671578\tPlay_ui_click\t\t\t\\Default Work Unit\\UI\\Play_ui_click\t\r\n\t686670768\tStop_ui_click\t\t\t\\Default Work Unit\\UI\\Stop_ui_click\tsome notes\r\n\t686670768\tStop_ui_click_dupe\t\t\t\\Default Work Unit\\UI\\x\t\r\n\t12x\tNotAnId\t\t\t\\x\t\r\n\r\nIn Memory Audio\tID\tName\tAudio source file\t\tWwise Object Path\tNotes\tData Size\r\n\t22\tui_click_01\tC:\\Trove\\cache\\ui_click_01_54EC.wem\t\t\\Actor-Mixer Hierarchy\\Default Work Unit\\grp_UI\\ui_click\\ui_click_01\tfirst\t100\r\n\t33\tUI_Alpha\tC:/Trove/cache/alpha.wem\t\t\\Actor-Mixer Hierarchy\\grp\t\t5\r\n\t44\tzeta_thing\tplain.wem\t\tToplevel\t\t\r\n\t55\t\tempty_name.wem\t\t\\a\\b\\c\t\t\r\n\t66\tÉclair sound\tC:\\é.wem\t\t\\Actor-Mixer Hierarchy\\Ünïcode Group\\Éclair sound\tnote x\t1\r\n\nStreamed Audio\tID\tName\r\n\t1\tignored\r\n"
+    },
+    "missing.bnk": null
+   }
+  },
+  {
+   "name": "plain",
+   "tmod_b64": "gAAAAAAAAAABAAQABXRpdGxlAiAgBWZsYWdzBiAxMl8wIAVub3RlcwtjYWbDqSBub3Rlcwltb2RMb2FkZXIDQlRUCnVpL29uZS5jZmcAAAGs0rCgDgp1aS9Ud28uQ0ZHAAQC5eeZvQ4QcHJlZmFicy94LmJpbmZhYgAIAsWaqzh4AQAMAPP/YQAAAGJiAAABAgAAAAAA//8=",
+   "release": {
+    "_id": {
+     "$oid": "65d000000000000000000001"
+    },
+    "project_id": {
+     "$oid": "65c000000000000000000001"
+    },
+    "owner_id": {
+     "$oid": "65b000000000000000000001"
+    },
+    "tag": "v1.2",
+    "branch": "main",
+    "title": "First",
+    "changelog": "Fixed things",
+    "title_i18n": {
+     "fr": "Premier"
+    },
+    "changelog_i18n": {},
+    "source_commit_sha": null,
+    "release_format": "tmod",
+    "tmod_sha": "e0f0a6c53973038680bcf666fd1da52d69bc879c80a9fae9146db401cd3abb9e",
+    "prior_tmod_shas": [
+     "0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "tmod_size": {
+     "$numberInt": "152"
+    },
+    "tmod_filename": "parity-v1.2.tmod",
+    "tmod_properties": {
+     "title": "  ",
+     "flags": " 12_0 ",
+     "notes": "café notes",
+     "modLoader": "BTT"
+    },
+    "banner_sha": "abababababababababababababababababababababababababababababababab",
+    "download_count": {
+     "$numberInt": "7"
+    },
+    "status": "published",
+    "created_at": {
+     "$date": {
+      "$numberLong": "1767323045678"
+     }
+    },
+    "updated_at": {
+     "$date": {
+      "$numberLong": "1767323045678"
+     }
+    },
+    "published_at": {
+     "$date": {
+      "$numberLong": "1768383000125"
+     }
+    },
+    "announced_at": null,
+    "silent": false
+   },
+   "dto": {
+    "id": "65d000000000000000000001",
+    "tag": "v1.2",
+    "branch": "main",
+    "title": "First",
+    "title_i18n": {
+     "fr": "Premier"
+    },
+    "changelog": "Fixed things",
+    "changelog_i18n": {},
+    "status": "published",
+    "silent": false,
+    "tmod_filename": "parity-v1.2.tmod",
+    "tmod_size": 152,
+    "download_count": 7,
+    "format": "tmod",
+    "source_commit_sha": null,
+    "banner_sha": "abababababababababababababababababababababababababababababababab",
+    "published_at": "2026-01-14T09:30:00.125000+00:00",
+    "created_at": "2026-01-02T03:04:05.678000+00:00"
+   },
+   "files": {
+    "items": [
+     {
+      "path": "prefabs/x.binfab",
+      "size": 2
+     },
+     {
+      "path": "ui/one.cfg",
+      "size": 1
+     },
+     {
+      "path": "ui/Two.CFG",
+      "size": 2
+     }
+    ]
+   },
+   "inspect": {
+    "format": "tmod",
+    "tag": "v1.2",
+    "branch": "main",
+    "filename": "parity-v1.2.tmod",
+    "sha256": "e0f0a6c53973038680bcf666fd1da52d69bc879c80a9fae9146db401cd3abb9e",
+    "prior_sha256s": [
+     "0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "size": 152,
+    "version": 1,
+    "properties": {
+     "title": "  ",
+     "flags": " 12_0 ",
+     "notes": "café notes",
+     "modLoader": "BTT"
+    },
+    "categories": [
+     "Cosmetics",
+     "Costumes",
+     "Dragons",
+     "Fishing"
+    ],
+    "flags": 120,
+    "preview_path": "",
+    "config_path": "",
+    "files": [
+     {
+      "path": "prefabs/x.binfab",
+      "size": 2
+     },
+     {
+      "path": "ui/one.cfg",
+      "size": 1
+     },
+     {
+      "path": "ui/Two.CFG",
+      "size": 2
+     }
+    ],
+    "file_count": 3,
+    "total_size": 5,
+    "readable": true
+   },
+   "cfgs": {
+    "items": [
+     {
+      "path": "ui/one.cfg",
+      "size": 1,
+      "filename": "one.cfg",
+      "declared": false
+     },
+     {
+      "path": "ui/Two.CFG",
+      "size": 2,
+      "filename": "Two.CFG",
+      "declared": false
+     }
+    ],
+    "has_flash_ui": false
+   },
+   "swfs": [],
+   "banks": [],
+   "vfx": {
+    "items": []
+   },
+   "blueprints": {
+    "items": [],
+    "rig": null,
+    "animations": []
+   },
+   "file_downloads": {
+    "ui/one.cfg": {
+     "b64": "YQ==",
+     "name": "one.cfg"
+    },
+    "ui/Two.CFG": {
+     "b64": "YmI=",
+     "name": "Two.CFG"
+    },
+    "prefabs/x.binfab": {
+     "b64": "AQI=",
+     "name": "x.binfab"
+    }
+   },
+   "cfg_names": {
+    "ui/one.cfg": "one.cfg",
+    "ui/Two.CFG": "Two.CFG"
+   },
+   "bank_files": {
+    "synthetic.bnk": null,
+    "AUDIO/Sounds/SYNTHETIC.bnk": null,
+    "missing.bnk": null
+   }
+  },
+  {
+   "name": "titled_cfg",
+   "tmod_b64": "gQAAAAAAAAABAAQABXRpdGxlCVN0b3JlIExvZwpjb25maWdQYXRoEC91aS9zdG9yZWxvZy5jZmcFZmxhZ3MEbm9wZQltb2RMb2FkZXIDQlRUD3VpL3N0b3JlbG9nLmNmZwAAD+W5340KD3VpL1N0b3JlTG9nLnN3ZgAQCt6A8YIBeAEAHADj/1tTdG9yZUxvZy5zd2ZdCgAZZvt/L5CClUJLAAAAAAD//w==",
+   "release": {
+    "_id": {
+     "$oid": "65d000000000000000000002"
+    },
+    "project_id": {
+     "$oid": "65c000000000000000000001"
+    },
+    "owner_id": {
+     "$oid": "65b000000000000000000001"
+    },
+    "tag": "v1.2",
+    "branch": "main",
+    "title": "First",
+    "changelog": "Fixed things",
+    "title_i18n": {
+     "fr": "Premier"
+    },
+    "changelog_i18n": {},
+    "source_commit_sha": null,
+    "release_format": "tmod",
+    "tmod_sha": "b8e9f7bd69d2c46eeb396d290f3ba543ab008f3198101916c89a1441363e0968",
+    "prior_tmod_shas": [
+     "0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "tmod_size": {
+     "$numberInt": "169"
+    },
+    "tmod_filename": "parity-v1.2.tmod",
+    "tmod_properties": {
+     "title": "Store Log",
+     "configPath": "/ui/storelog.cfg",
+     "flags": "nope",
+     "modLoader": "BTT"
+    },
+    "banner_sha": "abababababababababababababababababababababababababababababababab",
+    "download_count": {
+     "$numberInt": "7"
+    },
+    "status": "published",
+    "created_at": {
+     "$date": {
+      "$numberLong": "1767323045678"
+     }
+    },
+    "updated_at": {
+     "$date": {
+      "$numberLong": "1767323045678"
+     }
+    },
+    "published_at": {
+     "$date": {
+      "$numberLong": "1768383000125"
+     }
+    },
+    "announced_at": null,
+    "silent": false
+   },
+   "dto": {
+    "id": "65d000000000000000000002",
+    "tag": "v1.2",
+    "branch": "main",
+    "title": "First",
+    "title_i18n": {
+     "fr": "Premier"
+    },
+    "changelog": "Fixed things",
+    "changelog_i18n": {},
+    "status": "published",
+    "silent": false,
+    "tmod_filename": "Store Log.tmod",
+    "tmod_size": 169,
+    "download_count": 7,
+    "format": "tmod",
+    "source_commit_sha": null,
+    "banner_sha": "abababababababababababababababababababababababababababababababab",
+    "published_at": "2026-01-14T09:30:00.125000+00:00",
+    "created_at": "2026-01-02T03:04:05.678000+00:00"
+   },
+   "files": {
+    "items": [
+     {
+      "path": "ui/storelog.cfg",
+      "size": 15
+     },
+     {
+      "path": "ui/StoreLog.swf",
+      "size": 10
+     }
+    ]
+   },
+   "inspect": {
+    "format": "tmod",
+    "tag": "v1.2",
+    "branch": "main",
+    "filename": "Store Log.tmod",
+    "sha256": "b8e9f7bd69d2c46eeb396d290f3ba543ab008f3198101916c89a1441363e0968",
+    "prior_sha256s": [
+     "0000000000000000000000000000000000000000000000000000000000000000"
+    ],
+    "size": 169,
+    "version": 1,
+    "properties": {
+     "title": "Store Log",
+     "configPath": "/ui/storelog.cfg",
+     "flags": "nope",
+     "modLoader": "BTT"
+    },
+    "categories": [],
+    "flags": 0,
+    "preview_path": "",
+    "config_path": "ui/storelog.cfg",
+    "files": [
+     {
+      "path": "ui/storelog.cfg",
+      "size": 15
+     },
+     {
+      "path": "ui/StoreLog.swf",
+      "size": 10
+     }
+    ],
+    "file_count": 2,
+    "total_size": 25,
+    "readable": true
+   },
+   "cfgs": {
+    "items": [
+     {
+      "path": "ui/storelog.cfg",
+      "size": 15,
+      "filename": "storelog.cfg",
+      "declared": true
+     }
+    ],
+    "has_flash_ui": true
+   },
+   "swfs": [
+    {
+     "path": "ui/StoreLog.swf",
+     "size": 10
+    }
+   ],
+   "banks": [],
+   "vfx": {
+    "items": []
+   },
+   "blueprints": {
+    "items": [],
+    "rig": null,
+    "animations": []
+   },
+   "file_downloads": {
+    "ui/storelog.cfg": {
+     "b64": "W1N0b3JlTG9nLnN3Zl0K",
+     "name": "storelog.cfg"
+    },
+    "ui/StoreLog.swf": {
+     "b64": "GWb7fy+QgpVCSw==",
+     "name": "StoreLog.swf"
+    }
+   },
+   "cfg_names": {
+    "ui/storelog.cfg": "storelog.cfg"
+   },
+   "bank_files": {
+    "synthetic.bnk": null,
+    "AUDIO/Sounds/SYNTHETIC.bnk": null,
+    "missing.bnk": null
+   }
+  }
+ ],
+ "zips": [
+  {
+   "name": "plain",
+   "b64": "UEsDBBQAAAAIAMokV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMokV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMokV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMokV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyiRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyiRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADKJFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyiRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsOpL8O8LnR4dFBLBQYAAAAABAAEANYAAADDAAAAAAA=",
+   "is_zipfile": true,
+   "entries": [
+    [
+     "a.txt",
+     5
+    ],
+    [
+     "dir/",
+     0
+    ],
+    [
+     "dir/B.bin",
+     30
+    ],
+    [
+     "café/ü.txt",
+     1
+    ]
+   ]
+  },
+  {
+   "name": "cp437",
+   "b64": "UEsDBBQAAAgIAMokV12vd9JiAwAAAAEAAAAIAAAAeMKAeS50eHSrAgBQSwECFAAUAAAACADKJFddr3fSYgMAAAABAAAACAAAAAAAAAAAAAAAgAEAAAAAeMKAeS50eHRQSwUGAAAAAAEAAQA2AAAAKQAAAAAA",
+   "is_zipfile": true,
+   "entries": [
+    [
+     "x┬Çy.txt",
+     1
+    ]
+   ]
+  },
+  {
+   "name": "comment",
+   "b64": "UEsDBBQAAAAIAMokV13Sowh4AwAAAAEAAAAFAAAAbi50eHTLAwBQSwECFAAUAAAACADKJFdd0qMIeAMAAAABAAAABQAAAAAAAAAAAAAAgAEAAAAAbi50eHRQSwUGAAAAAAEAAQAzAAAAJgAAAAkAYSBjb21tZW50",
+   "is_zipfile": true,
+   "entries": [
+    [
+     "n.txt",
+     1
+    ]
+   ]
+  },
+  {
+   "name": "empty",
+   "b64": "UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==",
+   "is_zipfile": true,
+   "entries": []
+  },
+  {
+   "name": "tiny",
+   "b64": "UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==",
+   "is_zipfile": true,
+   "entries": []
+  },
+  {
+   "name": "junk",
+   "b64": "UEsDBGdhcmJhZ2U=",
+   "is_zipfile": false,
+   "entries": "bad"
+  },
+  {
+   "name": "short",
+   "b64": "UEs=",
+   "is_zipfile": false,
+   "entries": "bad"
+  },
+  {
+   "name": "truncated",
+   "b64": "UEsDBBQAAAAIAMokV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMokV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMokV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMokV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyiRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyiRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADKJFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyiRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsM=",
+   "is_zipfile": false,
+   "entries": "bad"
+  },
+  {
+   "name": "prefixed",
+   "b64": "UFJFRklYUEsDBBQAAAAIAMokV12GphA2BwAAAAUAAAAFAAAAYS50eHTLSM3JyQcAUEsDBBQAAAAIAMokV10AAAAAAgAAAAAAAAAEAAAAZGlyLwMAUEsDBBQAAAAIAMokV11Sfx42IQAAAB4AAAAJAAAAZGlyL0IuYmluu89Z0XoxZ0exTYbsmr+iLyPdbrok5du+WtnQO4mz3hAAUEsDBBQAAAgIAMokV10+am3yAwAAAAEAAAAMAAAAY2Fmw6kvw7wudHh0KwUAUEsBAhQAFAAAAAgAyiRXXYamEDYHAAAABQAAAAUAAAAAAAAAAAAAAIABAAAAAGEudHh0UEsBAhQAFAAAAAgAyiRXXQAAAAACAAAAAAAAAAQAAAAAAAAAAAAQAP1BKgAAAGRpci9QSwECFAAUAAAACADKJFddUn8eNiEAAAAeAAAACQAAAAAAAAAAAAAAgAFOAAAAZGlyL0IuYmluUEsBAhQAFAAACAgAyiRXXT5qbfIDAAAAAQAAAAwAAAAAAAAAAAAAAIABlgAAAGNhZsOpL8O8LnR4dFBLBQYAAAAABAAEANYAAADDAAAAAAA=",
+   "is_zipfile": true,
+   "entries": [
+    [
+     "a.txt",
+     5
+    ],
+    [
+     "dir/",
+     0
+    ],
+    [
+     "dir/B.bin",
+     30
+    ],
+    [
+     "café/ü.txt",
+     1
+    ]
+   ]
+  },
+  {
+   "name": "newer",
+   "b64": "UEsDBBQAAAAIAMokV12EO2RrAwAAAAEAAAAFAAAAdi50eHQrAwBQSwECFABAAAAACADKJFddhDtkawMAAAABAAAABQAAAAAAAAAAAAAAgAEAAAAAdi50eHRQSwUGAAAAAAEAAQAzAAAAJgAAAAAA",
+   "is_zipfile": true,
+   "entries": "unhandled"
+  }
+ ],
+ "names": {
+  "safe": [
+   [
+    "My: Mod*?",
+    "My Mod"
+   ],
+   [
+    "  ..dots..  ",
+    "dots"
+   ],
+   [
+    "",
+    "mod"
+   ],
+   [
+    "<>",
+    "mod"
+   ],
+   [
+    "a\u0000b\u001fc",
+    "abc"
+   ],
+   [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   ],
+   [
+    "café 中",
+    "café 中"
+   ],
+   [
+    ". .a. .",
+    " .a. "
+   ],
+   [
+    "　x　",
+    "x"
+   ]
+  ],
+  "cfg": [
+   {
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ]
+    ],
+    "path": "ui/Parity Mod.cfg",
+    "out": "Parity Mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ]
+    ],
+    "path": "ui/parity mod.cfg",
+    "out": "Parity Mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ]
+    ],
+    "path": "ui/thing.cfg",
+    "out": "thing.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ]
+    ],
+    "path": "ui/x.cfg",
+    "out": "x.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ]
+    ],
+    "path": "deep/one.cfg",
+    "out": "one.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ]
+    ],
+    "path": "store log.cfg",
+    "out": "store log.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      " Store Log "
+     ]
+    ],
+    "path": "ui/Parity Mod.cfg",
+    "out": "Parity Mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      " Store Log "
+     ]
+    ],
+    "path": "ui/parity mod.cfg",
+    "out": "parity mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      " Store Log "
+     ]
+    ],
+    "path": "ui/thing.cfg",
+    "out": "thing.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      " Store Log "
+     ]
+    ],
+    "path": "ui/x.cfg",
+    "out": "x.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      " Store Log "
+     ]
+    ],
+    "path": "deep/one.cfg",
+    "out": "one.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      " Store Log "
+     ]
+    ],
+    "path": "store log.cfg",
+    "out": "Store Log.cfg"
+   },
+   {
+    "props": [
+     [
+      "configPath",
+      "UI\\Cfg\\Thing.CFG"
+     ]
+    ],
+    "path": "ui/Parity Mod.cfg",
+    "out": "Parity Mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "configPath",
+      "UI\\Cfg\\Thing.CFG"
+     ]
+    ],
+    "path": "ui/parity mod.cfg",
+    "out": "parity mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "configPath",
+      "UI\\Cfg\\Thing.CFG"
+     ]
+    ],
+    "path": "ui/thing.cfg",
+    "out": "Thing.CFG"
+   },
+   {
+    "props": [
+     [
+      "configPath",
+      "UI\\Cfg\\Thing.CFG"
+     ]
+    ],
+    "path": "ui/x.cfg",
+    "out": "x.cfg"
+   },
+   {
+    "props": [
+     [
+      "configPath",
+      "UI\\Cfg\\Thing.CFG"
+     ]
+    ],
+    "path": "deep/one.cfg",
+    "out": "one.cfg"
+   },
+   {
+    "props": [
+     [
+      "configPath",
+      "UI\\Cfg\\Thing.CFG"
+     ]
+    ],
+    "path": "store log.cfg",
+    "out": "store log.cfg"
+   },
+   {
+    "props": [
+     [
+      "ConfigPath",
+      "/ui/x.cfg"
+     ],
+     [
+      "title",
+      "x"
+     ]
+    ],
+    "path": "ui/Parity Mod.cfg",
+    "out": "Parity Mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "ConfigPath",
+      "/ui/x.cfg"
+     ],
+     [
+      "title",
+      "x"
+     ]
+    ],
+    "path": "ui/parity mod.cfg",
+    "out": "parity mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "ConfigPath",
+      "/ui/x.cfg"
+     ],
+     [
+      "title",
+      "x"
+     ]
+    ],
+    "path": "ui/thing.cfg",
+    "out": "thing.cfg"
+   },
+   {
+    "props": [
+     [
+      "ConfigPath",
+      "/ui/x.cfg"
+     ],
+     [
+      "title",
+      "x"
+     ]
+    ],
+    "path": "ui/x.cfg",
+    "out": "x.cfg"
+   },
+   {
+    "props": [
+     [
+      "ConfigPath",
+      "/ui/x.cfg"
+     ],
+     [
+      "title",
+      "x"
+     ]
+    ],
+    "path": "deep/one.cfg",
+    "out": "one.cfg"
+   },
+   {
+    "props": [
+     [
+      "ConfigPath",
+      "/ui/x.cfg"
+     ],
+     [
+      "title",
+      "x"
+     ]
+    ],
+    "path": "store log.cfg",
+    "out": "store log.cfg"
+   },
+   {
+    "props": [],
+    "path": "ui/Parity Mod.cfg",
+    "out": "Parity Mod.cfg"
+   },
+   {
+    "props": [],
+    "path": "ui/parity mod.cfg",
+    "out": "parity mod.cfg"
+   },
+   {
+    "props": [],
+    "path": "ui/thing.cfg",
+    "out": "thing.cfg"
+   },
+   {
+    "props": [],
+    "path": "ui/x.cfg",
+    "out": "x.cfg"
+   },
+   {
+    "props": [],
+    "path": "deep/one.cfg",
+    "out": "one.cfg"
+   },
+   {
+    "props": [],
+    "path": "store log.cfg",
+    "out": "store log.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      ""
+     ],
+     [
+      "configPath",
+      "ui/one.cfg"
+     ]
+    ],
+    "path": "ui/Parity Mod.cfg",
+    "out": "Parity Mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      ""
+     ],
+     [
+      "configPath",
+      "ui/one.cfg"
+     ]
+    ],
+    "path": "ui/parity mod.cfg",
+    "out": "parity mod.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      ""
+     ],
+     [
+      "configPath",
+      "ui/one.cfg"
+     ]
+    ],
+    "path": "ui/thing.cfg",
+    "out": "thing.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      ""
+     ],
+     [
+      "configPath",
+      "ui/one.cfg"
+     ]
+    ],
+    "path": "ui/x.cfg",
+    "out": "x.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      ""
+     ],
+     [
+      "configPath",
+      "ui/one.cfg"
+     ]
+    ],
+    "path": "deep/one.cfg",
+    "out": "one.cfg"
+   },
+   {
+    "props": [
+     [
+      "title",
+      ""
+     ],
+     [
+      "configPath",
+      "ui/one.cfg"
+     ]
+    ],
+    "path": "store log.cfg",
+    "out": "store log.cfg"
+   }
+  ],
+  "declared": [
+   {
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ]
+    ],
+    "out": ""
+   },
+   {
+    "props": [
+     [
+      "title",
+      " Store Log "
+     ]
+    ],
+    "out": ""
+   },
+   {
+    "props": [
+     [
+      "configPath",
+      "UI\\Cfg\\Thing.CFG"
+     ]
+    ],
+    "out": "ui/cfg/thing.cfg"
+   },
+   {
+    "props": [
+     [
+      "ConfigPath",
+      "/ui/x.cfg"
+     ],
+     [
+      "title",
+      "x"
+     ]
+    ],
+    "out": "ui/x.cfg"
+   },
+   {
+    "props": [],
+    "out": ""
+   },
+   {
+    "props": [
+     [
+      "title",
+      ""
+     ],
+     [
+      "configPath",
+      "ui/one.cfg"
+     ]
+    ],
+    "out": "ui/one.cfg"
+   }
+  ],
+  "previews": [
+   {
+    "props": [
+     [
+      "previewPath",
+      ""
+     ]
+    ],
+    "out": ""
+   },
+   {
+    "props": [
+     [
+      "previewPath",
+      "  UI/A.PNG "
+     ]
+    ],
+    "out": "ui/a.png"
+   },
+   {
+    "props": [
+     [
+      "previewPath",
+      "ui/b.gif"
+     ]
+    ],
+    "out": "ui/b.gif"
+   }
+  ],
+  "flags": [
+   {
+    "value": "",
+    "flags": 0,
+    "categories": []
+   },
+   {
+    "value": "0",
+    "flags": 0,
+    "categories": []
+   },
+   {
+    "value": " 262144 ",
+    "flags": 262144,
+    "categories": [
+     "Radar"
+    ]
+   },
+   {
+    "value": "1_2",
+    "flags": 12,
+    "categories": [
+     "Boats and Sails",
+     "Cosmetics"
+    ]
+   },
+   {
+    "value": "-3",
+    "flags": -3,
+    "categories": [
+     "Allies",
+     "Boats and Sails",
+     "Cosmetics",
+     "Costumes",
+     "Dragons",
+     "Fishing",
+     "GUI",
+     "Helmets",
+     "Language",
+     "Mag Riders",
+     "Mounts",
+     "NPCs",
+     "Wings",
+     "Automation",
+     "Optimization",
+     "Reskin",
+     "Waypoint",
+     "Radar"
+    ]
+   },
+   {
+    "value": "+7",
+    "flags": 7,
+    "categories": [
+     "Allies",
+     "Banners",
+     "Boats and Sails"
+    ]
+   },
+   {
+    "value": "abc",
+    "flags": 0,
+    "categories": []
+   },
+   {
+    "value": "1__2",
+    "flags": 0,
+    "categories": []
+   },
+   {
+    "value": "٣",
+    "flags": 3,
+    "categories": [
+     "Allies",
+     "Banners"
+    ]
+   },
+   {
+    "value": "99999999999",
+    "flags": 99999999999,
+    "categories": [
+     "Allies",
+     "Banners",
+     "Boats and Sails",
+     "Cosmetics",
+     "Costumes",
+     "Dragons",
+     "Fishing",
+     "GUI",
+     "Helmets",
+     "Language",
+     "Mag Riders",
+     "Wings",
+     "Automation",
+     "Optimization",
+     "Waypoint",
+     "Radar"
+    ]
+   }
+  ],
+  "downloads": [
+   {
+    "format": "tmod",
+    "stored": "s.tmod",
+    "props": [
+     [
+      "title",
+      " T: x "
+     ]
+    ],
+    "out": "T x.tmod"
+   },
+   {
+    "format": "tmod",
+    "stored": "s.tmod",
+    "props": [
+     [
+      "title",
+      " "
+     ]
+    ],
+    "out": "s.tmod"
+   },
+   {
+    "format": "zip",
+    "stored": "z.zip",
+    "props": [
+     [
+      "title",
+      "T"
+     ]
+    ],
+    "out": "z.zip"
+   },
+   {
+    "format": "tmod",
+    "stored": "s.tmod",
+    "props": [],
+    "out": "s.tmod"
+   }
+  ],
+  "authors": [
+   [
+    null,
+    "Owner"
+   ],
+   [
+    "",
+    "Owner"
+   ],
+   [
+    "  ",
+    "Owner"
+   ],
+   [
+    "Ann",
+    "Ann"
+   ],
+   [
+    " Ann ,, Bob ,",
+    "Ann, Bob"
+   ],
+   [
+    ",",
+    "Owner"
+   ],
+   [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   ]
+  ],
+  "thousands": [
+   [
+    0,
+    "0"
+   ],
+   [
+    999,
+    "999"
+   ],
+   [
+    1000,
+    "1,000"
+   ],
+   [
+    250001,
+    "250,001"
+   ],
+   [
+    1234567,
+    "1,234,567"
+   ]
+  ]
+ },
+ "builds": {
+  "releases": [
+   {
+    "title": "Parity Mod",
+    "tags": [
+     "GUI",
+     "Radar",
+     "custom"
+    ],
+    "changelog": "  fixed  ",
+    "author": "Ann, Bob",
+    "props": [
+     [
+      "title",
+      "Parity Mod"
+     ],
+     [
+      "author",
+      "Ann, Bob"
+     ],
+     [
+      "modVersion",
+      "v2"
+     ],
+     [
+      "notes",
+      "fixed"
+     ],
+     [
+      "tags",
+      "GUI,Radar,custom"
+     ],
+     [
+      "flags",
+      "262272"
+     ],
+     [
+      "previewPath",
+      "ui/my slug!.png"
+     ],
+     [
+      "configPath",
+      "ui/Parity Mod.cfg"
+     ]
+    ],
+    "files": [
+     [
+      "UI/Thing.swf",
+      "pqv2jHJJ7VE3"
+     ],
+     [
+      "Blueprints/A.Blueprint",
+      "YnA="
+     ],
+     [
+      "ui/my slug!.png",
+      "bmV3cHJldmlldw=="
+     ],
+     [
+      "ui/Parity Mod.cfg",
+      "W3RoaW5nLnN3Zl0K"
+     ]
+    ],
+    "config_error": null,
+    "tmod_b64": "GwEAAAAAAAABAAkABXRpdGxlClBhcml0eSBNb2QGYXV0aG9yCEFubiwgQm9iCm1vZFZlcnNpb24CdjIFbm90ZXMFZml4ZWQEdGFncxBHVUksUmFkYXIsY3VzdG9tBWZsYWdzBjI2MjI3MgtwcmV2aWV3UGF0aA91aS9teSBzbHVnIS5wbmcKY29uZmlnUGF0aBF1aS9QYXJpdHkgTW9kLmNmZwltb2RMb2FkZXIHS2l3aUFQSQx1aS90aGluZy5zd2YAAAny6NHcBBZibHVlcHJpbnRzL2EuYmx1ZXByaW50AAwC75OarQ8PdWkvbXkgc2x1ZyEucG5nABAKipSXoQoRdWkvUGFyaXR5IE1vZC5jZmcAHAyRmfz/DHgBACgA1/+mq/aMckntUTcAAABicAAAbmV3cHJldmlldwAAW3RoaW5nLnN3Zl0KAAAA//8="
+   },
+   {
+    "title": "Plain",
+    "tags": [],
+    "changelog": "",
+    "author": null,
+    "props": [
+     [
+      "title",
+      "Plain"
+     ],
+     [
+      "author",
+      "Owner"
+     ],
+     [
+      "modVersion",
+      "v2"
+     ],
+     [
+      "previewPath",
+      "ui/my slug!.png"
+     ],
+     [
+      "configPath",
+      "ui/Plain.cfg"
+     ]
+    ],
+    "files": [
+     [
+      "UI/Thing.swf",
+      "pqv2jHJJ7VE3"
+     ],
+     [
+      "Blueprints/A.Blueprint",
+      "YnA="
+     ],
+     [
+      "ui/my slug!.png",
+      "bmV3cHJldmlldw=="
+     ],
+     [
+      "ui/Plain.cfg",
+      "W3RoaW5nLnN3Zl0K"
+     ]
+    ],
+    "config_error": null,
+    "tmod_b64": "2gAAAAAAAAABAAYABXRpdGxlBVBsYWluBmF1dGhvcgVPd25lcgptb2RWZXJzaW9uAnYyC3ByZXZpZXdQYXRoD3VpL215IHNsdWchLnBuZwpjb25maWdQYXRoDHVpL1BsYWluLmNmZwltb2RMb2FkZXIHS2l3aUFQSQx1aS90aGluZy5zd2YAAAny6NHcBBZibHVlcHJpbnRzL2EuYmx1ZXByaW50AAwC75OarQ8PdWkvbXkgc2x1ZyEucG5nABAKipSXoQoMdWkvUGxhaW4uY2ZnABwMkZn8/wx4AQAoANf/pqv2jHJJ7VE3AAAAYnAAAG5ld3ByZXZpZXcAAFt0aGluZy5zd2ZdCgAAAP//"
+   },
+   {
+    "title": "Tagged",
+    "tags": [
+     "nothing"
+    ],
+    "changelog": " ",
+    "author": " ",
+    "props": [
+     [
+      "title",
+      "Tagged"
+     ],
+     [
+      "author",
+      "Owner"
+     ],
+     [
+      "modVersion",
+      "v2"
+     ],
+     [
+      "tags",
+      "nothing"
+     ],
+     [
+      "previewPath",
+      "ui/my slug!.png"
+     ],
+     [
+      "configPath",
+      "ui/Tagged.cfg"
+     ]
+    ],
+    "files": [
+     [
+      "UI/Thing.swf",
+      "pqv2jHJJ7VE3"
+     ],
+     [
+      "Blueprints/A.Blueprint",
+      "YnA="
+     ],
+     [
+      "ui/my slug!.png",
+      "bmV3cHJldmlldw=="
+     ],
+     [
+      "ui/Tagged.cfg",
+      "W3RoaW5nLnN3Zl0K"
+     ]
+    ],
+    "config_error": null,
+    "tmod_b64": "6gAAAAAAAAABAAcABXRpdGxlBlRhZ2dlZAZhdXRob3IFT3duZXIKbW9kVmVyc2lvbgJ2MgR0YWdzB25vdGhpbmcLcHJldmlld1BhdGgPdWkvbXkgc2x1ZyEucG5nCmNvbmZpZ1BhdGgNdWkvVGFnZ2VkLmNmZwltb2RMb2FkZXIHS2l3aUFQSQx1aS90aGluZy5zd2YAAAny6NHcBBZibHVlcHJpbnRzL2EuYmx1ZXByaW50AAwC75OarQ8PdWkvbXkgc2x1ZyEucG5nABAKipSXoQoNdWkvVGFnZ2VkLmNmZwAcDJGZ/P8MeAEAKADX/6ar9oxySe1RNwAAAGJwAABuZXdwcmV2aWV3AABbdGhpbmcuc3dmXQoAAAD//w=="
+   }
+  ],
+  "configs": [
+   {
+    "files": [],
+    "props": [
+     [
+      "title",
+      "T"
+     ]
+    ],
+    "data_len": 0,
+    "error": "The config file is empty."
+   },
+   {
+    "files": [],
+    "props": [
+     [
+      "title",
+      "T"
+     ]
+    ],
+    "data_len": 262145,
+    "error": "A config file can be at most 256 KB."
+   },
+   {
+    "files": [],
+    "props": [
+     [
+      "title",
+      "T"
+     ]
+    ],
+    "data_len": 2,
+    "error": "That doesn't look like a text config file."
+   },
+   {
+    "files": [
+     "ui/a.cfg"
+    ],
+    "props": [
+     [
+      "title",
+      "T"
+     ]
+    ],
+    "data_len": 1,
+    "error": "Only a mod with a Flash UI (.swf) can carry a config file."
+   },
+   {
+    "files": [
+     "ui/a.SWF"
+    ],
+    "props": [
+     [
+      "title",
+      " "
+     ]
+    ],
+    "data_len": 1,
+    "error": "This build has no title in its header to name the config after."
+   },
+   {
+    "files": [
+     "ui/a.swf",
+     "UI/T.cfg",
+     "\\ui\\t.CFG"
+    ],
+    "props": [
+     [
+      "title",
+      " T/x "
+     ]
+    ],
+    "data_len": 3,
+    "out_files": [
+     "ui/a.swf",
+     "UI/T.cfg",
+     "\\ui\\t.CFG",
+     "ui/Tx.cfg"
+    ],
+    "out_props": [
+     [
+      "title",
+      " T/x "
+     ],
+     [
+      "configPath",
+      "ui/Tx.cfg"
+     ]
+    ]
+   }
+  ],
+  "repacks": [
+   {
+    "name": "ok",
+    "in_b64": "gQAAAAAAAAABAAQABXRpdGxlCVN0b3JlIExvZwpjb25maWdQYXRoEC91aS9zdG9yZWxvZy5jZmcFZmxhZ3MEbm9wZQltb2RMb2FkZXIDQlRUD3VpL3N0b3JlbG9nLmNmZwAAD+W5340KD3VpL1N0b3JlTG9nLnN3ZgAQCt6A8YIBeAEAHADj/1tTdG9yZUxvZy5zd2ZdCgAZZvt/L5CClUJLAAAAAAD//w==",
+    "cfg": "[StoreLog.swf]\nk=v\n",
+    "out_b64": "mgAAAAAAAAABAAQABXRpdGxlCVN0b3JlIExvZwpjb25maWdQYXRoEHVpL1N0b3JlIExvZy5jZmcFZmxhZ3MEbm9wZQltb2RMb2FkZXIDQlRUD3VpL3N0b3JlbG9nLmNmZwAAD+W5340KD3VpL1N0b3JlTG9nLnN3ZgAQCt6A8YIBEHVpL1N0b3JlIExvZy5jZmcAHBOBmv+pCngBADAAz/9bU3RvcmVMb2cuc3dmXQoAGWb7fy+QgpVCSwAAW1N0b3JlTG9nLnN3Zl0Kaz12CgAAAAD//w==",
+    "props": [
+     [
+      "title",
+      "Store Log"
+     ],
+     [
+      "configPath",
+      "ui/Store Log.cfg"
+     ],
+     [
+      "flags",
+      "nope"
+     ],
+     [
+      "modLoader",
+      "BTT"
+     ]
+    ]
+   },
+   {
+    "name": "bad",
+    "in_b64": "anVuay1ieXRlcy1ub3QtYS10bW9k",
+    "cfg": "x",
+    "error": "Not a valid .tmod file: declared header size is outside the file"
+   },
+   {
+    "name": "noswf",
+    "in_b64": "gAAAAAAAAAABAAQABXRpdGxlAiAgBWZsYWdzBiAxMl8wIAVub3RlcwtjYWbDqSBub3Rlcwltb2RMb2FkZXIDQlRUCnVpL29uZS5jZmcAAAGs0rCgDgp1aS9Ud28uQ0ZHAAQC5eeZvQ4QcHJlZmFicy94LmJpbmZhYgAIAsWaqzh4AQAMAPP/YQAAAGJiAAABAgAAAAAA//8=",
+    "cfg": "x",
+    "error": "Only a mod with a Flash UI (.swf) can carry a config file."
+   }
+  ]
+ },
+ "i18n": [
+  {
+   "in": [
+    [
+     "fr",
+     " Bonjour "
+    ],
+    [
+     "de",
+     "  "
+    ],
+    [
+     " es ",
+     "Hola"
+    ]
+   ],
+   "base": "title",
+   "out": [
+    [
+     "fr",
+     "Bonjour"
+    ],
+    [
+     "es",
+     "Hola"
+    ]
+   ]
+  },
+  {
+   "in": [
+    [
+     "fr",
+     " Bonjour "
+    ],
+    [
+     "de",
+     "  "
+    ],
+    [
+     " es ",
+     "Hola"
+    ]
+   ],
+   "base": "changelog",
+   "out": [
+    [
+     "fr",
+     "Bonjour"
+    ],
+    [
+     "es",
+     "Hola"
+    ]
+   ]
+  },
+  {
+   "in": [
+    [
+     "en",
+     "x"
+    ]
+   ],
+   "base": "title",
+   "error": "The English title is `title`, not a translation."
+  },
+  {
+   "in": [
+    [
+     "en",
+     "x"
+    ]
+   ],
+   "base": "changelog",
+   "error": "The English changelog is `changelog`, not a translation."
+  },
+  {
+   "in": [
+    [
+     "xx",
+     "y"
+    ]
+   ],
+   "base": "title",
+   "error": "'xx' isn't a language the site supports."
+  },
+  {
+   "in": [
+    [
+     "xx",
+     "y"
+    ]
+   ],
+   "base": "changelog",
+   "error": "'xx' isn't a language the site supports."
+  },
+  {
+   "in": [
+    [
+     "fr",
+     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ]
+   ],
+   "base": "title",
+   "error": "The fr title is too long (max 160 characters)."
+  },
+  {
+   "in": [
+    [
+     "fr",
+     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ]
+   ],
+   "base": "changelog",
+   "out": [
+    [
+     "fr",
+     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    ]
+   ]
+  },
+  {
+   "in": [
+    [
+     "zh-CN",
+     "中"
+    ]
+   ],
+   "base": "title",
+   "out": [
+    [
+     "zh-CN",
+     "中"
+    ]
+   ]
+  },
+  {
+   "in": [
+    [
+     "zh-CN",
+     "中"
+    ]
+   ],
+   "base": "changelog",
+   "out": [
+    [
+     "zh-CN",
+     "中"
+    ]
+   ]
+  }
+ ],
+ "event": {
+  "api_url": "https://api.aallyn.net",
+  "app_url": "https://trove.aallyn.net",
+  "cases": [
+   {
+    "name": "update",
+    "project": {
+     "_id": {
+      "$oid": "65c000000000000000000001"
+     },
+     "slug": "parity-mod",
+     "title": "Parity Mod",
+     "summary": "s",
+     "description": "long",
+     "readme_text": "",
+     "warnings": "",
+     "title_i18n": {},
+     "summary_i18n": {
+      "de": "S"
+     },
+     "description_i18n": {},
+     "readme_i18n": {},
+     "warnings_i18n": {},
+     "tags": [
+      "GUI",
+      "radar",
+      "misc"
+     ],
+     "owner_id": {
+      "$oid": "65b000000000000000000001"
+     },
+     "owner_username": "Parity User",
+     "owner_handle": "parity_user",
+     "collaborators": [],
+     "is_stray": false,
+     "stray_status": null,
+     "author": "",
+     "source": null,
+     "source_id": null,
+     "source_url": null,
+     "source_author_id": null,
+     "source_file_id": null,
+     "source_likes": {
+      "$numberInt": "0"
+     },
+     "uploaded_on_behalf": false,
+     "issues_enabled": true,
+     "issue_seq": {
+      "$numberInt": "0"
+     },
+     "open_issue_count": {
+      "$numberInt": "0"
+     },
+     "visibility": "public",
+     "is_beta": true,
+     "mode": "files",
+     "source_visibility": "public",
+     "default_branch": "main",
+     "banner_sha": null,
+     "preview_shas": [
+      "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      ""
+     ],
+     "discord_url": null,
+     "website_url": "https://example.com",
+     "donation_urls": [],
+     "download_count": {
+      "$numberInt": "12"
+     },
+     "star_count": {
+      "$numberInt": "3"
+     },
+     "downloads_7d": {
+      "$numberInt": "2"
+     },
+     "popularity_score": {
+      "$numberDouble": "0.25"
+     },
+     "hidden_release_branches": [],
+     "branch_order": [],
+     "forked_from_id": null,
+     "forked_from_slug": "orig",
+     "forked_from_handle": "someone",
+     "forked_from_title": "Orig",
+     "forked_from_owner": "Someone",
+     "inspired_by_slug": null,
+     "inspired_by_handle": null,
+     "inspired_by_title": null,
+     "inspired_by_owner": null,
+     "fork_count": {
+      "$numberInt": "1"
+     },
+     "is_remix": false,
+     "remix_status": "pending",
+     "remix_requested_at": null,
+     "remix_resolved_at": null,
+     "remix_resolved_by": null,
+     "taken_down": false,
+     "takedown_reason": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1768383000125"
+      }
+     },
+     "last_release_at": {
+      "$date": {
+       "$numberLong": "1768383000125"
+      }
+     }
+    },
+    "release": {
+     "_id": {
+      "$oid": "65d0000000000000000000a1"
+     },
+     "project_id": {
+      "$oid": "65c000000000000000000001"
+     },
+     "owner_id": {
+      "$oid": "65b000000000000000000001"
+     },
+     "tag": "v1.2",
+     "branch": "main",
+     "title": "First",
+     "changelog": "Fixed things",
+     "title_i18n": {
+      "fr": "Premier"
+     },
+     "changelog_i18n": {},
+     "source_commit_sha": null,
+     "release_format": "tmod",
+     "tmod_sha": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "prior_tmod_shas": [
+      "0000000000000000000000000000000000000000000000000000000000000000"
+     ],
+     "tmod_size": {
+      "$numberInt": "1000"
+     },
+     "tmod_filename": "parity-v1.2.tmod",
+     "tmod_properties": {
+      "title": "Parity Mod",
+      "modVersion": "v1.2",
+      "author": ""
+     },
+     "banner_sha": "abababababababababababababababababababababababababababababababab",
+     "download_count": {
+      "$numberInt": "7"
+     },
+     "status": "published",
+     "created_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "published_at": {
+      "$date": {
+       "$numberLong": "1768383000125"
+      }
+     },
+     "announced_at": null,
+     "silent": false
+    },
+    "previous": {
+     "_id": {
+      "$oid": "65d0000000000000000000a0"
+     },
+     "project_id": {
+      "$oid": "65c000000000000000000001"
+     },
+     "owner_id": {
+      "$oid": "65b000000000000000000001"
+     },
+     "tag": "v1.1",
+     "branch": "main",
+     "title": "First",
+     "changelog": "Fixed things",
+     "title_i18n": {
+      "fr": "Premier"
+     },
+     "changelog_i18n": {},
+     "source_commit_sha": null,
+     "release_format": "tmod",
+     "tmod_sha": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "prior_tmod_shas": [
+      "0000000000000000000000000000000000000000000000000000000000000000"
+     ],
+     "tmod_size": {
+      "$numberInt": "640"
+     },
+     "tmod_filename": "parity-v1.2.tmod",
+     "tmod_properties": {
+      "title": "Parity Mod"
+     },
+     "banner_sha": null,
+     "download_count": {
+      "$numberInt": "7"
+     },
+     "status": "published",
+     "created_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "published_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "announced_at": null,
+     "silent": false
+    },
+    "count": 2,
+    "event_project": {
+     "slug": "parity-mod",
+     "handle": "parity_user",
+     "title": "Parity Mod",
+     "title_i18n": {},
+     "summary": "s",
+     "summary_i18n": {
+      "de": "S"
+     },
+     "warnings": "",
+     "warnings_i18n": {},
+     "tags": [
+      "GUI",
+      "radar",
+      "misc"
+     ],
+     "categories": [
+      "GUI",
+      "Radar"
+     ],
+     "flags": 262272,
+     "author": "Parity User",
+     "is_beta": true,
+     "is_stray": false,
+     "uploaded_on_behalf": false,
+     "banner_url": null,
+     "preview_urls": [
+      "https://api.aallyn.net/v1/mods/hub/image/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+     ],
+     "download_count": 12,
+     "downloads_7d": 2,
+     "star_count": 3,
+     "popularity_score": 0.25,
+     "discord_url": null,
+     "website_url": "https://example.com",
+     "donation_urls": [],
+     "page_url": "https://trove.aallyn.net/mods/parity_user/parity-mod",
+     "created_at": "2026-01-02T03:04:05.678000+00:00",
+     "updated_at": "2026-01-14T09:30:00.125000+00:00",
+     "last_release_at": "2026-01-14T09:30:00.125000+00:00",
+     "forked_from": {
+      "slug": "orig",
+      "handle": "someone",
+      "title": "Orig",
+      "owner": "Someone"
+     },
+     "inspired_by": null,
+     "fork_count": 1,
+     "owner": "Parity User",
+     "mode": "files",
+     "default_branch": "main",
+     "api_url": "https://api.aallyn.net/v1/mods/parity_user/parity-mod"
+    },
+    "event_release": {
+     "tag": "v1.2",
+     "branch": "main",
+     "title": "First",
+     "title_i18n": {
+      "fr": "Premier"
+     },
+     "changelog": "Fixed things",
+     "changelog_i18n": {},
+     "format": "tmod",
+     "filename": "Parity Mod.tmod",
+     "size": 1000,
+     "sha256": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "download_count": 7,
+     "download_url": "https://api.aallyn.net/v1/mods/hub/releases/65d0000000000000000000a1/download",
+     "published_at": "2026-01-14T09:30:00.125000+00:00",
+     "id": "65d0000000000000000000a1",
+     "status": "published",
+     "source_commit_sha": null,
+     "properties": {
+      "title": "Parity Mod",
+      "modVersion": "v1.2",
+      "author": ""
+     },
+     "mod_version": "v1.2",
+     "mod_author": null,
+     "image_url": "https://api.aallyn.net/v1/mods/hub/image/abababababababababababababababababababababababababababababababab",
+     "created_at": "2026-01-02T03:04:05.678000+00:00"
+    },
+    "previous_release": {
+     "tag": "v1.1",
+     "branch": "main",
+     "title": "First",
+     "title_i18n": {
+      "fr": "Premier"
+     },
+     "changelog": "Fixed things",
+     "changelog_i18n": {},
+     "format": "tmod",
+     "filename": "Parity Mod.tmod",
+     "size": 640,
+     "sha256": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "download_count": 7,
+     "download_url": "https://api.aallyn.net/v1/mods/hub/releases/65d0000000000000000000a0/download",
+     "published_at": "2026-01-02T03:04:05.678000+00:00",
+     "id": "65d0000000000000000000a0",
+     "status": "published",
+     "source_commit_sha": null,
+     "properties": {
+      "title": "Parity Mod"
+     },
+     "mod_version": null,
+     "mod_author": null,
+     "image_url": null,
+     "created_at": "2026-01-02T03:04:05.678000+00:00"
+    },
+    "change": {
+     "kind": "update",
+     "is_first_release": false,
+     "from_tag": "v1.1",
+     "to_tag": "v1.2",
+     "size_delta": 360,
+     "days_since_previous": 12.27,
+     "release_count": 2,
+     "artifact_unchanged": true
+    },
+    "public_mod": {
+     "slug": "parity-mod",
+     "handle": "parity_user",
+     "title": "Parity Mod",
+     "title_i18n": {},
+     "summary": "s",
+     "summary_i18n": {
+      "de": "S"
+     },
+     "description": "long",
+     "description_i18n": {},
+     "readme_text": "",
+     "readme_i18n": {},
+     "warnings": "",
+     "warnings_i18n": {},
+     "tags": [
+      "GUI",
+      "radar",
+      "misc"
+     ],
+     "categories": [
+      "GUI",
+      "Radar"
+     ],
+     "flags": 262272,
+     "author": "Parity User",
+     "is_beta": true,
+     "is_stray": false,
+     "uploaded_on_behalf": false,
+     "banner_url": null,
+     "preview_urls": [
+      "https://api.aallyn.net/v1/mods/hub/image/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+     ],
+     "download_count": 12,
+     "downloads_7d": 2,
+     "star_count": 3,
+     "popularity_score": 0.25,
+     "discord_url": null,
+     "website_url": "https://example.com",
+     "donation_urls": [],
+     "page_url": "https://trove.aallyn.net/mods/parity_user/parity-mod",
+     "created_at": "2026-01-02T03:04:05.678000+00:00",
+     "updated_at": "2026-01-14T09:30:00.125000+00:00",
+     "last_release_at": "2026-01-14T09:30:00.125000+00:00",
+     "forked_from": {
+      "slug": "orig",
+      "handle": "someone",
+      "title": "Orig",
+      "owner": "Someone"
+     },
+     "inspired_by": null,
+     "fork_count": 1
+    }
+   },
+   {
+    "name": "initial",
+    "project": {
+     "_id": {
+      "$oid": "65c000000000000000000001"
+     },
+     "slug": "parity-mod",
+     "title": "Parity Mod",
+     "summary": "s",
+     "description": "long",
+     "readme_text": "",
+     "warnings": "",
+     "title_i18n": {},
+     "summary_i18n": {
+      "de": "S"
+     },
+     "description_i18n": {},
+     "readme_i18n": {},
+     "warnings_i18n": {},
+     "tags": [
+      "GUI",
+      "radar",
+      "misc"
+     ],
+     "owner_id": {
+      "$oid": "65b000000000000000000001"
+     },
+     "owner_username": "Parity User",
+     "owner_handle": "parity_user",
+     "collaborators": [],
+     "is_stray": false,
+     "stray_status": null,
+     "author": "",
+     "source": null,
+     "source_id": null,
+     "source_url": null,
+     "source_author_id": null,
+     "source_file_id": null,
+     "source_likes": {
+      "$numberInt": "0"
+     },
+     "uploaded_on_behalf": false,
+     "issues_enabled": true,
+     "issue_seq": {
+      "$numberInt": "0"
+     },
+     "open_issue_count": {
+      "$numberInt": "0"
+     },
+     "visibility": "public",
+     "is_beta": true,
+     "mode": "files",
+     "source_visibility": "public",
+     "default_branch": "main",
+     "banner_sha": null,
+     "preview_shas": [
+      "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      ""
+     ],
+     "discord_url": null,
+     "website_url": "https://example.com",
+     "donation_urls": [],
+     "download_count": {
+      "$numberInt": "12"
+     },
+     "star_count": {
+      "$numberInt": "3"
+     },
+     "downloads_7d": {
+      "$numberInt": "2"
+     },
+     "popularity_score": {
+      "$numberDouble": "0.25"
+     },
+     "hidden_release_branches": [],
+     "branch_order": [],
+     "forked_from_id": null,
+     "forked_from_slug": "orig",
+     "forked_from_handle": "someone",
+     "forked_from_title": "Orig",
+     "forked_from_owner": "Someone",
+     "inspired_by_slug": null,
+     "inspired_by_handle": null,
+     "inspired_by_title": null,
+     "inspired_by_owner": null,
+     "fork_count": {
+      "$numberInt": "1"
+     },
+     "is_remix": false,
+     "remix_status": "pending",
+     "remix_requested_at": null,
+     "remix_resolved_at": null,
+     "remix_resolved_by": null,
+     "taken_down": false,
+     "takedown_reason": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1768383000125"
+      }
+     },
+     "last_release_at": {
+      "$date": {
+       "$numberLong": "1768383000125"
+      }
+     }
+    },
+    "release": {
+     "_id": {
+      "$oid": "65d0000000000000000000a1"
+     },
+     "project_id": {
+      "$oid": "65c000000000000000000001"
+     },
+     "owner_id": {
+      "$oid": "65b000000000000000000001"
+     },
+     "tag": "v1.2",
+     "branch": "main",
+     "title": "First",
+     "changelog": "Fixed things",
+     "title_i18n": {
+      "fr": "Premier"
+     },
+     "changelog_i18n": {},
+     "source_commit_sha": null,
+     "release_format": "tmod",
+     "tmod_sha": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "prior_tmod_shas": [
+      "0000000000000000000000000000000000000000000000000000000000000000"
+     ],
+     "tmod_size": {
+      "$numberInt": "1000"
+     },
+     "tmod_filename": "parity-v1.2.tmod",
+     "tmod_properties": {
+      "title": "Parity Mod",
+      "modVersion": "v1.2",
+      "author": ""
+     },
+     "banner_sha": "abababababababababababababababababababababababababababababababab",
+     "download_count": {
+      "$numberInt": "7"
+     },
+     "status": "published",
+     "created_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1767323045678"
+      }
+     },
+     "published_at": {
+      "$date": {
+       "$numberLong": "1768383000125"
+      }
+     },
+     "announced_at": null,
+     "silent": false
+    },
+    "previous": null,
+    "count": 1,
+    "event_project": {
+     "slug": "parity-mod",
+     "handle": "parity_user",
+     "title": "Parity Mod",
+     "title_i18n": {},
+     "summary": "s",
+     "summary_i18n": {
+      "de": "S"
+     },
+     "warnings": "",
+     "warnings_i18n": {},
+     "tags": [
+      "GUI",
+      "radar",
+      "misc"
+     ],
+     "categories": [
+      "GUI",
+      "Radar"
+     ],
+     "flags": 262272,
+     "author": "Parity User",
+     "is_beta": true,
+     "is_stray": false,
+     "uploaded_on_behalf": false,
+     "banner_url": null,
+     "preview_urls": [
+      "https://api.aallyn.net/v1/mods/hub/image/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+     ],
+     "download_count": 12,
+     "downloads_7d": 2,
+     "star_count": 3,
+     "popularity_score": 0.25,
+     "discord_url": null,
+     "website_url": "https://example.com",
+     "donation_urls": [],
+     "page_url": "https://trove.aallyn.net/mods/parity_user/parity-mod",
+     "created_at": "2026-01-02T03:04:05.678000+00:00",
+     "updated_at": "2026-01-14T09:30:00.125000+00:00",
+     "last_release_at": "2026-01-14T09:30:00.125000+00:00",
+     "forked_from": {
+      "slug": "orig",
+      "handle": "someone",
+      "title": "Orig",
+      "owner": "Someone"
+     },
+     "inspired_by": null,
+     "fork_count": 1,
+     "owner": "Parity User",
+     "mode": "files",
+     "default_branch": "main",
+     "api_url": "https://api.aallyn.net/v1/mods/parity_user/parity-mod"
+    },
+    "event_release": {
+     "tag": "v1.2",
+     "branch": "main",
+     "title": "First",
+     "title_i18n": {
+      "fr": "Premier"
+     },
+     "changelog": "Fixed things",
+     "changelog_i18n": {},
+     "format": "tmod",
+     "filename": "Parity Mod.tmod",
+     "size": 1000,
+     "sha256": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "download_count": 7,
+     "download_url": "https://api.aallyn.net/v1/mods/hub/releases/65d0000000000000000000a1/download",
+     "published_at": "2026-01-14T09:30:00.125000+00:00",
+     "id": "65d0000000000000000000a1",
+     "status": "published",
+     "source_commit_sha": null,
+     "properties": {
+      "title": "Parity Mod",
+      "modVersion": "v1.2",
+      "author": ""
+     },
+     "mod_version": "v1.2",
+     "mod_author": null,
+     "image_url": "https://api.aallyn.net/v1/mods/hub/image/abababababababababababababababababababababababababababababababab",
+     "created_at": "2026-01-02T03:04:05.678000+00:00"
+    },
+    "previous_release": null,
+    "change": {
+     "kind": "initial",
+     "is_first_release": true,
+     "from_tag": null,
+     "to_tag": "v1.2",
+     "size_delta": null,
+     "days_since_previous": null,
+     "release_count": 1,
+     "artifact_unchanged": false
+    },
+    "public_mod": {
+     "slug": "parity-mod",
+     "handle": "parity_user",
+     "title": "Parity Mod",
+     "title_i18n": {},
+     "summary": "s",
+     "summary_i18n": {
+      "de": "S"
+     },
+     "description": "long",
+     "description_i18n": {},
+     "readme_text": "",
+     "readme_i18n": {},
+     "warnings": "",
+     "warnings_i18n": {},
+     "tags": [
+      "GUI",
+      "radar",
+      "misc"
+     ],
+     "categories": [
+      "GUI",
+      "Radar"
+     ],
+     "flags": 262272,
+     "author": "Parity User",
+     "is_beta": true,
+     "is_stray": false,
+     "uploaded_on_behalf": false,
+     "banner_url": null,
+     "preview_urls": [
+      "https://api.aallyn.net/v1/mods/hub/image/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+     ],
+     "download_count": 12,
+     "downloads_7d": 2,
+     "star_count": 3,
+     "popularity_score": 0.25,
+     "discord_url": null,
+     "website_url": "https://example.com",
+     "donation_urls": [],
+     "page_url": "https://trove.aallyn.net/mods/parity_user/parity-mod",
+     "created_at": "2026-01-02T03:04:05.678000+00:00",
+     "updated_at": "2026-01-14T09:30:00.125000+00:00",
+     "last_release_at": "2026-01-14T09:30:00.125000+00:00",
+     "forked_from": {
+      "slug": "orig",
+      "handle": "someone",
+      "title": "Orig",
+      "owner": "Someone"
+     },
+     "inspired_by": null,
+     "fork_count": 1
+    }
+   }
+  ]
+ },
+ "rig": {
+  "rows": [
+   [
+    "prefabs/a.binfab",
+    "c_m_beetle_head",
+    "beetle",
+    "head"
+   ],
+   [
+    "prefabs/a.binfab",
+    "c_m_beetle_body",
+    "beetle",
+    "torso"
+   ],
+   [
+    "prefabs/b.binfab",
+    "c_m_beetle_head",
+    "other",
+    "hat"
+   ],
+   [
+    "prefabs/c.binfab",
+    "equipment_helm_crimefighter",
+    "knight",
+    "hat"
+   ],
+   [
+    "prefabs/c.binfab",
+    "c_p_knight_torso",
+    "knight",
+    "torso"
+   ]
+  ],
+  "cases": [
+   {
+    "fns": [
+     "c_m_beetle_head",
+     "c_m_beetle_body",
+     "nope"
+    ],
+    "skeleton": "beetle",
+    "attach": [
+     [
+      "c_m_beetle_head",
+      "head"
+     ],
+     [
+      "c_m_beetle_body",
+      "torso"
+     ]
+    ]
+   },
+   {
+    "fns": [
+     "equipment_helm_crimefighter_lvl2[technoshyft]",
+     "c_m_beetle_head"
+    ],
+    "skeleton": "knight",
+    "attach": [
+     [
+      "equipment_helm_crimefighter_lvl2[technoshyft]",
+      "hat"
+     ]
+    ]
+   },
+   {
+    "fns": [
+     "c_p_knight_torso",
+     "c_m_beetle_head"
+    ],
+    "skeleton": "knight",
+    "attach": [
+     [
+      "c_p_knight_torso",
+      "torso"
+     ]
+    ]
+   },
+   {
+    "fns": [
+     "unknown"
+    ],
+    "skeleton": null,
+    "attach": []
+   },
+   {
+    "fns": [
+     "_c_m_beetle_body_lvl3_"
+    ],
+    "skeleton": "beetle",
+    "attach": [
+     [
+      "_c_m_beetle_body_lvl3_",
+      "torso"
+     ]
+    ]
+   }
+  ]
+ },
+ "vfx": {
+  "game": [
+   [
+    "rock.pkmm",
+    "meshes/rock.pkmm"
+   ],
+   [
+    "path.pkan",
+    "meshes/path.pkan"
+   ]
+  ],
+  "manifest": {
+   "path": "Particles/VFX/SPARK.pkfx",
+   "pkfx": "CParticleEffect $LOCAL$/Resource\n{\n\tOnSpawn = \"$LOCAL$/Spawner\";\n}\nCParticleRenderer_Billboard $LOCAL$/R1\n{\n\tDiffuse = \"Textures/FX/Spark.dds\";\n\tChild = \"Particles/Sub/Child.pkfx\";\n\tMesh = \"Meshes/Rock.pkmm\";\n}\nCParticleSamplerShape $LOCAL$/S1\n{\n\tAnimResource = \"Meshes/Path.fbx\";\n}\nCNEdEditorParticle_Backdrop $LOCAL$/B\n{\n\tMesh = \"Editor/Room.fbx\";\n}\n",
+   "deps": [
+    {
+     "ref": "Textures/FX/Spark.dds",
+     "basename": "Spark.dds",
+     "source": "mod"
+    },
+    {
+     "ref": "Particles/Sub/Child.pkfx",
+     "basename": "Child.pkfx",
+     "source": "mod"
+    },
+    {
+     "ref": "Meshes/Rock.pkmm",
+     "basename": "Rock.pkmm",
+     "source": "game"
+    },
+    {
+     "ref": "Meshes/Path.pkan",
+     "basename": "Path.pkan",
+     "source": "game"
+    }
+   ],
+   "missing": [],
+   "game_available": true
+  },
+  "depset": [
+   "child.pkfx",
+   "glow.png",
+   "path.pkan",
+   "rock.pkmm",
+   "spark.dds"
+  ],
+  "refs": [
+   "Textures/FX/Spark.dds",
+   "Particles/Sub/Child.pkfx",
+   "Meshes/Rock.pkmm",
+   "Meshes/Path.pkan"
+  ],
+  "media": [
+   [
+    "a/b.DDS",
+    "image/vnd.ms-dds"
+   ],
+   [
+    "x.png",
+    "image/png"
+   ],
+   [
+    "y.pkfx",
+    "text/plain; charset=utf-8"
+   ],
+   [
+    "z.fbx",
+    "application/octet-stream"
+   ],
+   [
+    "noext",
+    "application/octet-stream"
+   ],
+   [
+    "d.ir/x",
+    "application/octet-stream"
+   ]
+  ]
+ }
+}

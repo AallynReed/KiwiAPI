@@ -37,6 +37,7 @@ pub mod maintenance;
 pub mod market;
 pub mod media;
 pub mod middleware;
+pub mod mod_releases;
 pub mod mods_catalog;
 pub mod ocr;
 pub mod og;

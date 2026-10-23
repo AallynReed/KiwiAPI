@@ -1,0 +1,9 @@
+--kiwiParityBoundary
+Content-Disposition: form-data; name="tag"
+
+v4
+--kiwiParityBoundary
+Content-Disposition: form-data; name="file"
+
+not a file
+--kiwiParityBoundary--

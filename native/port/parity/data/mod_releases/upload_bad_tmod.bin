@@ -1,0 +1,10 @@
+--kiwiParityBoundary
+Content-Disposition: form-data; name="tag"
+
+bad
+--kiwiParityBoundary
+Content-Disposition: form-data; name="file"; filename="bad.tmod"
+Content-Type: application/octet-stream
+
+junk-not-a-tmod
+--kiwiParityBoundary--
