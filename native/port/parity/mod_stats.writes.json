@@ -1,0 +1,7 @@
+[
+ {"name": "stats", "path": "/site/mod-stats", "compare_headers": ["content-length"], "sleep": 3},
+ {"name": "stats_head", "method": "HEAD", "path": "/site/mod-stats"},
+ {"name": "stats_with_auth", "path": "/site/mod-stats", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "stats_post_405", "method": "POST", "path": "/site/mod-stats", "compare_headers": ["allow"]},
+ {"name": "stats_delete_405", "method": "DELETE", "path": "/site/mod-stats"}
+]

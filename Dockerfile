@@ -15,7 +15,8 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/native/target \
     cd /native && cargo build --release --locked -p kiwi-server \
-    && install -D target/release/kiwi-server /out/kiwi-server
+    && install -D target/release/kiwi-server /out/kiwi-server \
+    && install -D target/release/kiwi-builder /out/kiwi-builder
 
 FROM python:3.13-slim AS app
 
@@ -112,4 +113,7 @@ RUN dpkg --add-architecture i386 \
        | tar zxf - -C /opt/steamcmd \
     && test -x /opt/steamcmd/steamcmd.sh
 
-CMD ["python", "-m", "app.custom_art.builder"]
+COPY --from=native /out/kiwi-builder /usr/local/bin/kiwi-builder
+
+# KIWI_BUILDER=rust runs the Rust worker; anything else keeps the Python one.
+CMD ["sh", "-c", "if [ \"$KIWI_BUILDER\" = rust ]; then exec kiwi-builder; fi; exec python -m app.custom_art.builder"]

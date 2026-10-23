@@ -72,6 +72,8 @@ fn ported() -> Router<AppState> {
         .merge(crate::mods_issues::router())
         .merge(crate::mods_moderation::router())
         .merge(crate::modpacks::router())
+        .merge(crate::custom_art::router())
+        .merge(crate::mod_stats::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's
@@ -98,6 +100,9 @@ async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: 
         && let Some(field) = matched.as_ref().and_then(|m| crate::portal::defer::email_field(m.as_str(), req.method()))
     {
         (req, defer) = crate::portal::defer::inspect(req, field).await;
+    }
+    if !defer && matched.as_ref().is_some_and(|m| crate::custom_art::intake::inspects(m.as_str(), req.method())) {
+        (req, defer) = crate::custom_art::intake::inspect(&state, req).await;
     }
     if !defer && let Some(kind) = matched.as_ref().and_then(|m| crate::images::defer_kind(m.as_str(), req.method())) {
         (req, defer) = crate::images::inspect(&state, req, kind).await;

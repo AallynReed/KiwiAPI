@@ -65,6 +65,18 @@ pub fn validate(value: &str) -> Email {
     }
 }
 
+/// `email_validator.validate_email(value, check_deliverability=False)` called
+/// directly: no pydantic wrapper, so no display-name unwrapping or length cap.
+pub fn validate_direct(value: &str) -> Email {
+    if needs_unicode(value) {
+        return Email::Unsupported;
+    }
+    match validate_email(value) {
+        Ok(email) => Email::Valid(email),
+        Err(reason) => Email::Invalid(reason),
+    }
+}
+
 type R<T> = Result<T, String>;
 
 fn validate_ascii(value: &str) -> R<String> {

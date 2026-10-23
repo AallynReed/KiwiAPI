@@ -135,8 +135,14 @@ fn dqt(s: &[u8]) -> Option<()> {
     Some(())
 }
 
-/// `JpegImageFile._open`: None wherever `Image.open` would fail.
+/// `JpegImageFile._open` for a stream about to be decoded: None wherever
+/// `Image.open` would fail or no scan follows the headers.
 pub fn header(b: &[u8]) -> Option<Header> {
+    open_header(b).and_then(|(h, scan)| scan.then_some(h))
+}
+
+/// `JpegImageFile._open` alone, and whether it reached a scan.
+pub fn open_header(b: &[u8]) -> Option<(Header, bool)> {
     if !b.starts_with(b"\xff\xd8\xff") {
         return None;
     }
@@ -183,10 +189,10 @@ pub fn header(b: &[u8]) -> Option<Header> {
     }
     let (width, height) = h.size?;
     let mode = h.mode?;
-    if width == 0 || height == 0 || !scan {
+    if width == 0 || height == 0 {
         return None;
     }
-    Some(Header { width, height, mode, icc: h.icc.flatten() })
+    Some((Header { width, height, mode, icc: h.icc.flatten() }, scan))
 }
 
 struct Failed;

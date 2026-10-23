@@ -1475,6 +1475,7 @@ dependencies = [
  "hyper",
  "hyper-util",
  "idna",
+ "image-webp",
  "indexmap",
  "kiwi-core",
  "kiwi-pil",

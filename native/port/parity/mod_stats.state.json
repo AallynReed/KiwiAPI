@@ -1,0 +1,5 @@
+{
+ "mongo": [
+  {"collection": "mod_stats_snapshots", "sort": ["day"]}
+ ]
+}

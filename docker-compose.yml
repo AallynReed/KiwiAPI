@@ -416,6 +416,8 @@ services:
       GIT_COMMITTER_NAME: ${GIT_AUTHOR_NAME:-Aallyn}
       GIT_COMMITTER_EMAIL: ${GIT_AUTHOR_EMAIL:-support@aallyn.net}
       CUSTOM_ART_STEAM_USER: ${CUSTOM_ART_STEAM_USER:-}
+      # rust: the kiwi-builder worker; anything else: app.custom_art.builder (the image CMD picks).
+      KIWI_BUILDER: ${KIWI_BUILDER:-python}
     depends_on:
       mongo:
         condition: service_healthy
@@ -431,7 +433,6 @@ services:
       # The Steam login, put there once by hand. Nothing writes it at build time and
       # it is never in the image; without it the worker warns and skips Steam.
       - steamcmd-home:/home/steam
-    command: ["python", "-m", "app.custom_art.builder"]
     mem_limit: 2g
     logging:
       driver: json-file

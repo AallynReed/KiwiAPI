@@ -25,6 +25,7 @@ http-body-util = "0.1.5"
 hyper = { version = "1.12.0", features = ["client", "http1"] }
 hyper-util = { version = "0.1.21", features = ["client-legacy", "http1", "tokio"] }
 idna = "1.1.0"
+image-webp = "0.2.4"
 indexmap = "2.14.2"
 kiwi-core = { version = "0.1.0", path = "../kiwi-core" }
 kiwi-pil = { version = "0.1.0", path = "../kiwi-pil" }

@@ -115,6 +115,7 @@ pub fn start(state: &AppState) {
     });
     crate::archiver::start(state);
     crate::modpacks::start(state);
+    crate::mod_stats::start(state);
 }
 
 #[cfg(test)]

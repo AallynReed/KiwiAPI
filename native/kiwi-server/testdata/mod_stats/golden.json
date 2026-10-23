@@ -1,0 +1,1458 @@
+{
+ "rows": [
+  {
+   "name": "full",
+   "projects": [
+    {
+     "title": "Zakros UI - Chat",
+     "owner_handle": "aallyn",
+     "slug": "chat",
+     "top_release": 1200,
+     "downloads_7d": 30,
+     "star_count": 5
+    },
+    {
+     "title": "zakros FX - Glow",
+     "owner_handle": "aallyn",
+     "slug": "glow",
+     "top_release": 3000000000,
+     "downloads_7d": 0,
+     "star_count": 1
+    },
+    {
+     "title": "Zakros UI - Clubs",
+     "owner_handle": "aallyn",
+     "slug": "clubs",
+     "top_release": 7,
+     "downloads_7d": 2,
+     "star_count": 0
+    },
+    {
+     "title": "Zakros BP - Ships",
+     "owner_handle": "aallyn",
+     "slug": "ships",
+     "top_release": 0,
+     "downloads_7d": 0,
+     "star_count": 0
+    },
+    {
+     "title": "Zakros UI - Nameplate",
+     "owner_handle": "aallyn",
+     "slug": "nameplate",
+     "top_release": 50,
+     "downloads_7d": 1,
+     "star_count": 2
+    },
+    {
+     "title": "Zakros Σ Final",
+     "owner_handle": "aallyn",
+     "slug": "sigma",
+     "top_release": 1,
+     "downloads_7d": 0,
+     "star_count": 0
+    },
+    {
+     "title": "Zakros İ Dot",
+     "owner_handle": "aallyn",
+     "slug": "idot",
+     "top_release": 2,
+     "downloads_7d": 0,
+     "star_count": 0
+    }
+   ],
+   "trovesaurus_ids": {
+    "Zakros UI - Chat": 11,
+    "Zakros UI - Clubs": "12",
+    "Zakros UI - Nameplate": 13,
+    "zakros FX - Glow": 14,
+    "Zakros İ Dot": 99
+   },
+   "steam_ids": {
+    "Zakros UI - Chat": 2001,
+    "Zakros UI - Clubs": "2002",
+    "Zakros BP - Ships": 2003,
+    "Zakros Σ Final": 2004
+   },
+   "catalog": [
+    {
+     "id": 11,
+     "totaldownloads": "1,234",
+     "likes": 7
+    },
+    {
+     "id": "12",
+     "totaldownloads": " 450 ",
+     "likes": null
+    },
+    {
+     "id": 13,
+     "totaldownloads": 12.9,
+     "likes": true
+    },
+    {
+     "id": 14,
+     "totaldownloads": "1_000",
+     "likes": "x"
+    },
+    "not a dict",
+    {
+     "id": 11,
+     "totaldownloads": 99,
+     "likes": 1
+    },
+    {}
+   ],
+   "details": [
+    {
+     "publishedfileid": "2001",
+     "result": 1,
+     "subscriptions": 10,
+     "lifetime_subscriptions": 25,
+     "favorited": 3,
+     "views": 400
+    },
+    {
+     "publishedfileid": "2002",
+     "result": 9
+    },
+    {
+     "publishedfileid": "2003",
+     "result": true,
+     "subscriptions": "5",
+     "lifetime_subscriptions": 5.5,
+     "favorited": 0,
+     "views": null
+    },
+    {
+     "publishedfileid": 2004,
+     "result": 1.0,
+     "subscriptions": 4000000000
+    }
+   ],
+   "stored": [
+    {
+     "title": "Zakros BP - Ships",
+     "handle": "aallyn",
+     "slug": "ships",
+     "hub": {
+      "top_release": {
+       "$numberInt": "0"
+      },
+      "downloads_7d": {
+       "$numberInt": "0"
+      },
+      "stars": {
+       "$numberInt": "0"
+      }
+     },
+     "trovesaurus": {},
+     "steam": {
+      "id": {
+       "$numberInt": "2003"
+      },
+      "subscriptions": {
+       "$numberInt": "5"
+      },
+      "lifetime_subscriptions": {
+       "$numberInt": "5"
+      },
+      "favorites": {
+       "$numberInt": "0"
+      },
+      "views": {
+       "$numberInt": "0"
+      }
+     }
+    },
+    {
+     "title": "zakros FX - Glow",
+     "handle": "aallyn",
+     "slug": "glow",
+     "hub": {
+      "top_release": {
+       "$numberLong": "3000000000"
+      },
+      "downloads_7d": {
+       "$numberInt": "0"
+      },
+      "stars": {
+       "$numberInt": "1"
+      }
+     },
+     "trovesaurus": {
+      "id": {
+       "$numberInt": "14"
+      },
+      "downloads": {
+       "$numberInt": "1000"
+      },
+      "likes": {
+       "$numberInt": "0"
+      }
+     },
+     "steam": null
+    },
+    {
+     "title": "Zakros İ Dot",
+     "handle": "aallyn",
+     "slug": "idot",
+     "hub": {
+      "top_release": {
+       "$numberInt": "2"
+      },
+      "downloads_7d": {
+       "$numberInt": "0"
+      },
+      "stars": {
+       "$numberInt": "0"
+      }
+     },
+     "trovesaurus": null,
+     "steam": null
+    },
+    {
+     "title": "Zakros UI - Chat",
+     "handle": "aallyn",
+     "slug": "chat",
+     "hub": {
+      "top_release": {
+       "$numberInt": "1200"
+      },
+      "downloads_7d": {
+       "$numberInt": "30"
+      },
+      "stars": {
+       "$numberInt": "5"
+      }
+     },
+     "trovesaurus": {
+      "id": {
+       "$numberInt": "11"
+      },
+      "downloads": {
+       "$numberInt": "99"
+      },
+      "likes": {
+       "$numberInt": "1"
+      }
+     },
+     "steam": {
+      "id": {
+       "$numberInt": "2001"
+      },
+      "subscriptions": {
+       "$numberInt": "10"
+      },
+      "lifetime_subscriptions": {
+       "$numberInt": "25"
+      },
+      "favorites": {
+       "$numberInt": "3"
+      },
+      "views": {
+       "$numberInt": "400"
+      }
+     }
+    },
+    {
+     "title": "Zakros UI - Clubs",
+     "handle": "aallyn",
+     "slug": "clubs",
+     "hub": {
+      "top_release": {
+       "$numberInt": "7"
+      },
+      "downloads_7d": {
+       "$numberInt": "2"
+      },
+      "stars": {
+       "$numberInt": "0"
+      }
+     },
+     "trovesaurus": {
+      "id": {
+       "$numberInt": "12"
+      },
+      "downloads": {
+       "$numberInt": "450"
+      },
+      "likes": {
+       "$numberInt": "0"
+      }
+     },
+     "steam": null
+    },
+    {
+     "title": "Zakros UI - Nameplate",
+     "handle": "aallyn",
+     "slug": "nameplate",
+     "hub": {
+      "top_release": {
+       "$numberInt": "50"
+      },
+      "downloads_7d": {
+       "$numberInt": "1"
+      },
+      "stars": {
+       "$numberInt": "2"
+      }
+     },
+     "trovesaurus": {
+      "id": {
+       "$numberInt": "13"
+      },
+      "downloads": {
+       "$numberInt": "12"
+      },
+      "likes": {
+       "$numberInt": "1"
+      }
+     },
+     "steam": null
+    },
+    {
+     "title": "Zakros Σ Final",
+     "handle": "aallyn",
+     "slug": "sigma",
+     "hub": {
+      "top_release": {
+       "$numberInt": "1"
+      },
+      "downloads_7d": {
+       "$numberInt": "0"
+      },
+      "stars": {
+       "$numberInt": "0"
+      }
+     },
+     "trovesaurus": {},
+     "steam": {
+      "id": {
+       "$numberInt": "2004"
+      },
+      "subscriptions": {
+       "$numberLong": "4000000000"
+      },
+      "lifetime_subscriptions": {
+       "$numberInt": "0"
+      },
+      "favorites": {
+       "$numberInt": "0"
+      },
+      "views": {
+       "$numberInt": "0"
+      }
+     }
+    }
+   ],
+   "totals": "{\"hub_top_release\":3000001260,\"trovesaurus_downloads\":1561,\"steam_subscriptions\":4000000015,\"steam_lifetime_subscriptions\":30}"
+  },
+  {
+   "name": "no_platforms",
+   "projects": [
+    {
+     "title": "Zakros UI - Chat",
+     "owner_handle": "aallyn",
+     "slug": "chat",
+     "top_release": 1200,
+     "downloads_7d": 30,
+     "star_count": 5
+    },
+    {
+     "title": "zakros FX - Glow",
+     "owner_handle": "aallyn",
+     "slug": "glow",
+     "top_release": 3000000000,
+     "downloads_7d": 0,
+     "star_count": 1
+    },
+    {
+     "title": "Zakros UI - Clubs",
+     "owner_handle": "aallyn",
+     "slug": "clubs",
+     "top_release": 7,
+     "downloads_7d": 2,
+     "star_count": 0
+    }
+   ],
+   "trovesaurus_ids": {},
+   "steam_ids": {},
+   "catalog": [],
+   "details": [],
+   "stored": [
+    {
+     "title": "zakros FX - Glow",
+     "handle": "aallyn",
+     "slug": "glow",
+     "hub": {
+      "top_release": {
+       "$numberLong": "3000000000"
+      },
+      "downloads_7d": {
+       "$numberInt": "0"
+      },
+      "stars": {
+       "$numberInt": "1"
+      }
+     },
+     "trovesaurus": null,
+     "steam": null
+    },
+    {
+     "title": "Zakros UI - Chat",
+     "handle": "aallyn",
+     "slug": "chat",
+     "hub": {
+      "top_release": {
+       "$numberInt": "1200"
+      },
+      "downloads_7d": {
+       "$numberInt": "30"
+      },
+      "stars": {
+       "$numberInt": "5"
+      }
+     },
+     "trovesaurus": null,
+     "steam": null
+    },
+    {
+     "title": "Zakros UI - Clubs",
+     "handle": "aallyn",
+     "slug": "clubs",
+     "hub": {
+      "top_release": {
+       "$numberInt": "7"
+      },
+      "downloads_7d": {
+       "$numberInt": "2"
+      },
+      "stars": {
+       "$numberInt": "0"
+      }
+     },
+     "trovesaurus": null,
+     "steam": null
+    }
+   ],
+   "totals": "{\"hub_top_release\":3000001207,\"trovesaurus_downloads\":0,\"steam_subscriptions\":0,\"steam_lifetime_subscriptions\":0}"
+  },
+  {
+   "name": "empty_catalog_entry_matches_missing_id",
+   "projects": [
+    {
+     "title": "Zakros BP - Ships",
+     "owner_handle": "aallyn",
+     "slug": "ships",
+     "top_release": 0,
+     "downloads_7d": 0,
+     "star_count": 0
+    }
+   ],
+   "trovesaurus_ids": {},
+   "steam_ids": {},
+   "catalog": [
+    {}
+   ],
+   "details": [],
+   "stored": [
+    {
+     "title": "Zakros BP - Ships",
+     "handle": "aallyn",
+     "slug": "ships",
+     "hub": {
+      "top_release": {
+       "$numberInt": "0"
+      },
+      "downloads_7d": {
+       "$numberInt": "0"
+      },
+      "stars": {
+       "$numberInt": "0"
+      }
+     },
+     "trovesaurus": {},
+     "steam": null
+    }
+   ],
+   "totals": "{\"hub_top_release\":0,\"trovesaurus_downloads\":0,\"steam_subscriptions\":0,\"steam_lifetime_subscriptions\":0}"
+  },
+  {
+   "name": "none",
+   "projects": [],
+   "trovesaurus_ids": {
+    "Zakros UI - Chat": 11,
+    "Zakros UI - Clubs": "12",
+    "Zakros UI - Nameplate": 13,
+    "zakros FX - Glow": 14,
+    "Zakros İ Dot": 99
+   },
+   "steam_ids": {
+    "Zakros UI - Chat": 2001,
+    "Zakros UI - Clubs": "2002",
+    "Zakros BP - Ships": 2003,
+    "Zakros Σ Final": 2004
+   },
+   "catalog": [
+    {
+     "id": 11,
+     "totaldownloads": "1,234",
+     "likes": 7
+    },
+    {
+     "id": "12",
+     "totaldownloads": " 450 ",
+     "likes": null
+    },
+    {
+     "id": 13,
+     "totaldownloads": 12.9,
+     "likes": true
+    },
+    {
+     "id": 14,
+     "totaldownloads": "1_000",
+     "likes": "x"
+    },
+    "not a dict",
+    {
+     "id": 11,
+     "totaldownloads": 99,
+     "likes": 1
+    },
+    {}
+   ],
+   "details": [
+    {
+     "publishedfileid": "2001",
+     "result": 1,
+     "subscriptions": 10,
+     "lifetime_subscriptions": 25,
+     "favorited": 3,
+     "views": 400
+    },
+    {
+     "publishedfileid": "2002",
+     "result": 9
+    },
+    {
+     "publishedfileid": "2003",
+     "result": true,
+     "subscriptions": "5",
+     "lifetime_subscriptions": 5.5,
+     "favorited": 0,
+     "views": null
+    },
+    {
+     "publishedfileid": 2004,
+     "result": 1.0,
+     "subscriptions": 4000000000
+    }
+   ],
+   "stored": [],
+   "totals": "{\"hub_top_release\":0,\"trovesaurus_downloads\":0,\"steam_subscriptions\":0,\"steam_lifetime_subscriptions\":0}"
+  }
+ ],
+ "route": [
+  {
+   "name": "empty",
+   "docs": [],
+   "status": 200,
+   "resp_headers": [
+    [
+     "content-length",
+     "156"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "cache-control",
+     "public, max-age=600"
+    ]
+   ],
+   "resp": "{\"updated_at\":null,\"mods\":[],\"totals\":{\"hub_top_release\":0,\"trovesaurus_downloads\":0,\"steam_subscriptions\":0,\"steam_lifetime_subscriptions\":0},\"history\":[]}"
+  },
+  {
+   "name": "one",
+   "docs": [
+    {
+     "_id": {
+      "$oid": "6adb133e489690e0a91c4180"
+     },
+     "day": "2026-10-22",
+     "taken_at": {
+      "$date": {
+       "$numberLong": "1792667107123"
+      }
+     },
+     "mods": [
+      {
+       "title": "Zakros BP - Ships",
+       "handle": "aallyn",
+       "slug": "ships",
+       "hub": {
+        "top_release": {
+         "$numberInt": "0"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": {},
+       "steam": {
+        "id": {
+         "$numberInt": "2003"
+        },
+        "subscriptions": {
+         "$numberInt": "5"
+        },
+        "lifetime_subscriptions": {
+         "$numberInt": "5"
+        },
+        "favorites": {
+         "$numberInt": "0"
+        },
+        "views": {
+         "$numberInt": "0"
+        }
+       }
+      },
+      {
+       "title": "zakros FX - Glow",
+       "handle": "aallyn",
+       "slug": "glow",
+       "hub": {
+        "top_release": {
+         "$numberLong": "3000000000"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "1"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "14"
+        },
+        "downloads": {
+         "$numberInt": "1000"
+        },
+        "likes": {
+         "$numberInt": "0"
+        }
+       },
+       "steam": null
+      },
+      {
+       "title": "Zakros İ Dot",
+       "handle": "aallyn",
+       "slug": "idot",
+       "hub": {
+        "top_release": {
+         "$numberInt": "2"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": null,
+       "steam": null
+      },
+      {
+       "title": "Zakros UI - Chat",
+       "handle": "aallyn",
+       "slug": "chat",
+       "hub": {
+        "top_release": {
+         "$numberInt": "1200"
+        },
+        "downloads_7d": {
+         "$numberInt": "30"
+        },
+        "stars": {
+         "$numberInt": "5"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "11"
+        },
+        "downloads": {
+         "$numberInt": "99"
+        },
+        "likes": {
+         "$numberInt": "1"
+        }
+       },
+       "steam": {
+        "id": {
+         "$numberInt": "2001"
+        },
+        "subscriptions": {
+         "$numberInt": "10"
+        },
+        "lifetime_subscriptions": {
+         "$numberInt": "25"
+        },
+        "favorites": {
+         "$numberInt": "3"
+        },
+        "views": {
+         "$numberInt": "400"
+        }
+       }
+      },
+      {
+       "title": "Zakros UI - Clubs",
+       "handle": "aallyn",
+       "slug": "clubs",
+       "hub": {
+        "top_release": {
+         "$numberInt": "7"
+        },
+        "downloads_7d": {
+         "$numberInt": "2"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "12"
+        },
+        "downloads": {
+         "$numberInt": "450"
+        },
+        "likes": {
+         "$numberInt": "0"
+        }
+       },
+       "steam": null
+      },
+      {
+       "title": "Zakros UI - Nameplate",
+       "handle": "aallyn",
+       "slug": "nameplate",
+       "hub": {
+        "top_release": {
+         "$numberInt": "50"
+        },
+        "downloads_7d": {
+         "$numberInt": "1"
+        },
+        "stars": {
+         "$numberInt": "2"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "13"
+        },
+        "downloads": {
+         "$numberInt": "12"
+        },
+        "likes": {
+         "$numberInt": "1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "title": "Zakros Σ Final",
+       "handle": "aallyn",
+       "slug": "sigma",
+       "hub": {
+        "top_release": {
+         "$numberInt": "1"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": {},
+       "steam": {
+        "id": {
+         "$numberInt": "2004"
+        },
+        "subscriptions": {
+         "$numberLong": "4000000000"
+        },
+        "lifetime_subscriptions": {
+         "$numberInt": "0"
+        },
+        "favorites": {
+         "$numberInt": "0"
+        },
+        "views": {
+         "$numberInt": "0"
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "status": 200,
+   "resp_headers": [
+    [
+     "content-length",
+     "1745"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "cache-control",
+     "public, max-age=600"
+    ]
+   ],
+   "resp": "{\"updated_at\":\"2026-10-22T11:05:07.123000+00:00\",\"mods\":[{\"title\":\"Zakros BP - Ships\",\"handle\":\"aallyn\",\"slug\":\"ships\",\"hub\":{\"top_release\":0,\"downloads_7d\":0,\"stars\":0},\"trovesaurus\":{},\"steam\":{\"id\":2003,\"subscriptions\":5,\"lifetime_subscriptions\":5,\"favorites\":0,\"views\":0}},{\"title\":\"zakros FX - Glow\",\"handle\":\"aallyn\",\"slug\":\"glow\",\"hub\":{\"top_release\":3000000000,\"downloads_7d\":0,\"stars\":1},\"trovesaurus\":{\"id\":14,\"downloads\":1000,\"likes\":0},\"steam\":null},{\"title\":\"Zakros İ Dot\",\"handle\":\"aallyn\",\"slug\":\"idot\",\"hub\":{\"top_release\":2,\"downloads_7d\":0,\"stars\":0},\"trovesaurus\":null,\"steam\":null},{\"title\":\"Zakros UI - Chat\",\"handle\":\"aallyn\",\"slug\":\"chat\",\"hub\":{\"top_release\":1200,\"downloads_7d\":30,\"stars\":5},\"trovesaurus\":{\"id\":11,\"downloads\":99,\"likes\":1},\"steam\":{\"id\":2001,\"subscriptions\":10,\"lifetime_subscriptions\":25,\"favorites\":3,\"views\":400}},{\"title\":\"Zakros UI - Clubs\",\"handle\":\"aallyn\",\"slug\":\"clubs\",\"hub\":{\"top_release\":7,\"downloads_7d\":2,\"stars\":0},\"trovesaurus\":{\"id\":12,\"downloads\":450,\"likes\":0},\"steam\":null},{\"title\":\"Zakros UI - Nameplate\",\"handle\":\"aallyn\",\"slug\":\"nameplate\",\"hub\":{\"top_release\":50,\"downloads_7d\":1,\"stars\":2},\"trovesaurus\":{\"id\":13,\"downloads\":12,\"likes\":1},\"steam\":null},{\"title\":\"Zakros Σ Final\",\"handle\":\"aallyn\",\"slug\":\"sigma\",\"hub\":{\"top_release\":1,\"downloads_7d\":0,\"stars\":0},\"trovesaurus\":{},\"steam\":{\"id\":2004,\"subscriptions\":4000000000,\"lifetime_subscriptions\":0,\"favorites\":0,\"views\":0}}],\"totals\":{\"hub_top_release\":3000001260,\"trovesaurus_downloads\":1561,\"steam_subscriptions\":4000000015,\"steam_lifetime_subscriptions\":30},\"history\":[{\"day\":\"2026-10-22\",\"hub_top_release\":3000001260,\"trovesaurus_downloads\":1561,\"steam_subscriptions\":4000000015,\"steam_lifetime_subscriptions\":30}]}"
+  },
+  {
+   "name": "history",
+   "docs": [
+    {
+     "_id": {
+      "$oid": "6adb133e489690e0a91c4181"
+     },
+     "day": "2026-10-22",
+     "taken_at": {
+      "$date": {
+       "$numberLong": "1792667107123"
+      }
+     },
+     "mods": [
+      {
+       "title": "Zakros BP - Ships",
+       "handle": "aallyn",
+       "slug": "ships",
+       "hub": {
+        "top_release": {
+         "$numberInt": "0"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": {},
+       "steam": {
+        "id": {
+         "$numberInt": "2003"
+        },
+        "subscriptions": {
+         "$numberInt": "5"
+        },
+        "lifetime_subscriptions": {
+         "$numberInt": "5"
+        },
+        "favorites": {
+         "$numberInt": "0"
+        },
+        "views": {
+         "$numberInt": "0"
+        }
+       }
+      },
+      {
+       "title": "zakros FX - Glow",
+       "handle": "aallyn",
+       "slug": "glow",
+       "hub": {
+        "top_release": {
+         "$numberLong": "3000000000"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "1"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "14"
+        },
+        "downloads": {
+         "$numberInt": "1000"
+        },
+        "likes": {
+         "$numberInt": "0"
+        }
+       },
+       "steam": null
+      },
+      {
+       "title": "Zakros İ Dot",
+       "handle": "aallyn",
+       "slug": "idot",
+       "hub": {
+        "top_release": {
+         "$numberInt": "2"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": null,
+       "steam": null
+      },
+      {
+       "title": "Zakros UI - Chat",
+       "handle": "aallyn",
+       "slug": "chat",
+       "hub": {
+        "top_release": {
+         "$numberInt": "1200"
+        },
+        "downloads_7d": {
+         "$numberInt": "30"
+        },
+        "stars": {
+         "$numberInt": "5"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "11"
+        },
+        "downloads": {
+         "$numberInt": "99"
+        },
+        "likes": {
+         "$numberInt": "1"
+        }
+       },
+       "steam": {
+        "id": {
+         "$numberInt": "2001"
+        },
+        "subscriptions": {
+         "$numberInt": "10"
+        },
+        "lifetime_subscriptions": {
+         "$numberInt": "25"
+        },
+        "favorites": {
+         "$numberInt": "3"
+        },
+        "views": {
+         "$numberInt": "400"
+        }
+       }
+      },
+      {
+       "title": "Zakros UI - Clubs",
+       "handle": "aallyn",
+       "slug": "clubs",
+       "hub": {
+        "top_release": {
+         "$numberInt": "7"
+        },
+        "downloads_7d": {
+         "$numberInt": "2"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "12"
+        },
+        "downloads": {
+         "$numberInt": "450"
+        },
+        "likes": {
+         "$numberInt": "0"
+        }
+       },
+       "steam": null
+      },
+      {
+       "title": "Zakros UI - Nameplate",
+       "handle": "aallyn",
+       "slug": "nameplate",
+       "hub": {
+        "top_release": {
+         "$numberInt": "50"
+        },
+        "downloads_7d": {
+         "$numberInt": "1"
+        },
+        "stars": {
+         "$numberInt": "2"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "13"
+        },
+        "downloads": {
+         "$numberInt": "12"
+        },
+        "likes": {
+         "$numberInt": "1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "title": "Zakros Σ Final",
+       "handle": "aallyn",
+       "slug": "sigma",
+       "hub": {
+        "top_release": {
+         "$numberInt": "1"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": {},
+       "steam": {
+        "id": {
+         "$numberInt": "2004"
+        },
+        "subscriptions": {
+         "$numberLong": "4000000000"
+        },
+        "lifetime_subscriptions": {
+         "$numberInt": "0"
+        },
+        "favorites": {
+         "$numberInt": "0"
+        },
+        "views": {
+         "$numberInt": "0"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "_id": {
+      "$oid": "6adb133e489690e0a91c4182"
+     },
+     "day": "2026-10-21",
+     "taken_at": {
+      "$date": {
+       "$numberLong": "1792580707123"
+      }
+     },
+     "mods": [
+      {
+       "title": "Zakros BP - Ships",
+       "handle": "aallyn",
+       "slug": "ships",
+       "hub": {
+        "top_release": {
+         "$numberInt": "0"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "0"
+        }
+       },
+       "trovesaurus": {},
+       "steam": {
+        "id": {
+         "$numberInt": "2003"
+        },
+        "subscriptions": {
+         "$numberInt": "5"
+        },
+        "lifetime_subscriptions": {
+         "$numberInt": "5"
+        },
+        "favorites": {
+         "$numberInt": "0"
+        },
+        "views": {
+         "$numberInt": "0"
+        }
+       }
+      },
+      {
+       "title": "zakros FX - Glow",
+       "handle": "aallyn",
+       "slug": "glow",
+       "hub": {
+        "top_release": {
+         "$numberLong": "3000000000"
+        },
+        "downloads_7d": {
+         "$numberInt": "0"
+        },
+        "stars": {
+         "$numberInt": "1"
+        }
+       },
+       "trovesaurus": {
+        "id": {
+         "$numberInt": "14"
+        },
+        "downloads": {
+         "$numberInt": "1000"
+        },
+        "likes": {
+         "$numberInt": "0"
+        }
+       },
+       "steam": null
+      }
+     ]
+    },
+    {
+     "_id": {
+      "$oid": "6adb133e489690e0a91c4183"
+     },
+     "day": "2026-10-19",
+     "taken_at": {
+      "$date": {
+       "$numberLong": "1792407907123"
+      }
+     },
+     "mods": []
+    }
+   ],
+   "status": 200,
+   "resp_headers": [
+    [
+     "content-length",
+     "2005"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "cache-control",
+     "public, max-age=600"
+    ]
+   ],
+   "resp": "{\"updated_at\":\"2026-10-22T11:05:07.123000+00:00\",\"mods\":[{\"title\":\"Zakros BP - Ships\",\"handle\":\"aallyn\",\"slug\":\"ships\",\"hub\":{\"top_release\":0,\"downloads_7d\":0,\"stars\":0},\"trovesaurus\":{},\"steam\":{\"id\":2003,\"subscriptions\":5,\"lifetime_subscriptions\":5,\"favorites\":0,\"views\":0}},{\"title\":\"zakros FX - Glow\",\"handle\":\"aallyn\",\"slug\":\"glow\",\"hub\":{\"top_release\":3000000000,\"downloads_7d\":0,\"stars\":1},\"trovesaurus\":{\"id\":14,\"downloads\":1000,\"likes\":0},\"steam\":null},{\"title\":\"Zakros İ Dot\",\"handle\":\"aallyn\",\"slug\":\"idot\",\"hub\":{\"top_release\":2,\"downloads_7d\":0,\"stars\":0},\"trovesaurus\":null,\"steam\":null},{\"title\":\"Zakros UI - Chat\",\"handle\":\"aallyn\",\"slug\":\"chat\",\"hub\":{\"top_release\":1200,\"downloads_7d\":30,\"stars\":5},\"trovesaurus\":{\"id\":11,\"downloads\":99,\"likes\":1},\"steam\":{\"id\":2001,\"subscriptions\":10,\"lifetime_subscriptions\":25,\"favorites\":3,\"views\":400}},{\"title\":\"Zakros UI - Clubs\",\"handle\":\"aallyn\",\"slug\":\"clubs\",\"hub\":{\"top_release\":7,\"downloads_7d\":2,\"stars\":0},\"trovesaurus\":{\"id\":12,\"downloads\":450,\"likes\":0},\"steam\":null},{\"title\":\"Zakros UI - Nameplate\",\"handle\":\"aallyn\",\"slug\":\"nameplate\",\"hub\":{\"top_release\":50,\"downloads_7d\":1,\"stars\":2},\"trovesaurus\":{\"id\":13,\"downloads\":12,\"likes\":1},\"steam\":null},{\"title\":\"Zakros Σ Final\",\"handle\":\"aallyn\",\"slug\":\"sigma\",\"hub\":{\"top_release\":1,\"downloads_7d\":0,\"stars\":0},\"trovesaurus\":{},\"steam\":{\"id\":2004,\"subscriptions\":4000000000,\"lifetime_subscriptions\":0,\"favorites\":0,\"views\":0}}],\"totals\":{\"hub_top_release\":3000001260,\"trovesaurus_downloads\":1561,\"steam_subscriptions\":4000000015,\"steam_lifetime_subscriptions\":30},\"history\":[{\"day\":\"2026-10-19\",\"hub_top_release\":0,\"trovesaurus_downloads\":0,\"steam_subscriptions\":0,\"steam_lifetime_subscriptions\":0},{\"day\":\"2026-10-21\",\"hub_top_release\":3000000000,\"trovesaurus_downloads\":1000,\"steam_subscriptions\":5,\"steam_lifetime_subscriptions\":5},{\"day\":\"2026-10-22\",\"hub_top_release\":3000001260,\"trovesaurus_downloads\":1561,\"steam_subscriptions\":4000000015,\"steam_lifetime_subscriptions\":30}]}"
+  },
+  {
+   "name": "old_shapes",
+   "docs": [
+    {
+     "_id": {
+      "$oid": "6adb133e489690e0a91c4184"
+     },
+     "day": "2026-10-20",
+     "taken_at": {
+      "$date": {
+       "$numberLong": "1792667107123"
+      }
+     },
+     "mods": [
+      {
+       "title": "Old",
+       "hub": {
+        "top_release": {
+         "$numberDouble": "3.5"
+        }
+       },
+       "trovesaurus": {},
+       "steam": null,
+       "extra": [
+        {
+         "$numberInt": "1"
+        },
+        {
+         "$numberInt": "2"
+        }
+       ]
+      },
+      {
+       "title": "Old2",
+       "hub": {
+        "top_release": {
+         "$numberInt": "2"
+        },
+        "downloads_7d": {
+         "$numberInt": "1"
+        }
+       },
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": {
+        "subscriptions": {
+         "$numberDouble": "0.2"
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "status": 200,
+   "resp_headers": [
+    [
+     "content-length",
+     "526"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "cache-control",
+     "public, max-age=600"
+    ]
+   ],
+   "resp": "{\"updated_at\":\"2026-10-22T11:05:07.123000+00:00\",\"mods\":[{\"title\":\"Old\",\"hub\":{\"top_release\":3.5},\"trovesaurus\":{},\"steam\":null,\"extra\":[1,2]},{\"title\":\"Old2\",\"hub\":{\"top_release\":2,\"downloads_7d\":1},\"trovesaurus\":{\"downloads\":0.1},\"steam\":{\"subscriptions\":0.2}}],\"totals\":{\"hub_top_release\":5.5,\"trovesaurus_downloads\":0.1,\"steam_subscriptions\":0.2,\"steam_lifetime_subscriptions\":0},\"history\":[{\"day\":\"2026-10-20\",\"hub_top_release\":5.5,\"trovesaurus_downloads\":0.1,\"steam_subscriptions\":0.2,\"steam_lifetime_subscriptions\":0}]}"
+  },
+  {
+   "name": "floats_sum",
+   "docs": [
+    {
+     "_id": {
+      "$oid": "6adb133e489690e0a91c4185"
+     },
+     "day": "2026-10-20",
+     "taken_at": {
+      "$date": {
+       "$numberLong": "1792667107123"
+      }
+     },
+     "mods": [
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      },
+      {
+       "hub": {},
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "0.1"
+        }
+       },
+       "steam": null
+      }
+     ]
+    }
+   ],
+   "status": 200,
+   "resp_headers": [
+    [
+     "content-length",
+     "872"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "cache-control",
+     "public, max-age=600"
+    ]
+   ],
+   "resp": "{\"updated_at\":\"2026-10-22T11:05:07.123000+00:00\",\"mods\":[{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null},{\"hub\":{},\"trovesaurus\":{\"downloads\":0.1},\"steam\":null}],\"totals\":{\"hub_top_release\":0,\"trovesaurus_downloads\":1.0,\"steam_subscriptions\":0,\"steam_lifetime_subscriptions\":0},\"history\":[{\"day\":\"2026-10-20\",\"hub_top_release\":0,\"trovesaurus_downloads\":1.0,\"steam_subscriptions\":0,\"steam_lifetime_subscriptions\":0}]}"
+  },
+  {
+   "name": "mixed_sum",
+   "docs": [
+    {
+     "_id": {
+      "$oid": "6adb133e489690e0a91c4186"
+     },
+     "day": "2026-10-20",
+     "taken_at": {
+      "$date": {
+       "$numberLong": "1792667107123"
+      }
+     },
+     "mods": [
+      {
+       "hub": {
+        "top_release": {
+         "$numberDouble": "1e+16"
+        }
+       },
+       "trovesaurus": {
+        "downloads": {
+         "$numberInt": "1"
+        }
+       },
+       "steam": {
+        "subscriptions": {
+         "$numberDouble": "0.1"
+        }
+       }
+      },
+      {
+       "hub": {
+        "top_release": {
+         "$numberInt": "1"
+        }
+       },
+       "trovesaurus": {
+        "downloads": {
+         "$numberDouble": "1e+16"
+        }
+       },
+       "steam": {
+        "subscriptions": {
+         "$numberDouble": "0.2"
+        }
+       }
+      },
+      {
+       "hub": {
+        "top_release": {
+         "$numberInt": "1"
+        }
+       },
+       "trovesaurus": {
+        "downloads": {
+         "$numberInt": "1"
+        }
+       },
+       "steam": {
+        "subscriptions": {
+         "$numberInt": "7"
+        }
+       }
+      },
+      {
+       "hub": {
+        "top_release": {
+         "$numberDouble": "0.3"
+        }
+       },
+       "trovesaurus": {
+        "downloads": true
+       },
+       "steam": {
+        "subscriptions": {
+         "$numberDouble": "0.3"
+        }
+       }
+      }
+     ]
+    }
+   ],
+   "status": 200,
+   "resp_headers": [
+    [
+     "content-length",
+     "683"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "cache-control",
+     "public, max-age=600"
+    ]
+   ],
+   "resp": "{\"updated_at\":\"2026-10-22T11:05:07.123000+00:00\",\"mods\":[{\"hub\":{\"top_release\":1e+16},\"trovesaurus\":{\"downloads\":1},\"steam\":{\"subscriptions\":0.1}},{\"hub\":{\"top_release\":1},\"trovesaurus\":{\"downloads\":1e+16},\"steam\":{\"subscriptions\":0.2}},{\"hub\":{\"top_release\":1},\"trovesaurus\":{\"downloads\":1},\"steam\":{\"subscriptions\":7}},{\"hub\":{\"top_release\":0.3},\"trovesaurus\":{\"downloads\":true},\"steam\":{\"subscriptions\":0.3}}],\"totals\":{\"hub_top_release\":1e+16,\"trovesaurus_downloads\":1e+16,\"steam_subscriptions\":7.6,\"steam_lifetime_subscriptions\":0},\"history\":[{\"day\":\"2026-10-20\",\"hub_top_release\":1e+16,\"trovesaurus_downloads\":1e+16,\"steam_subscriptions\":7.6,\"steam_lifetime_subscriptions\":0}]}"
+  }
+ ]
+}

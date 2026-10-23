@@ -1,0 +1,9 @@
+[
+ {"name": "stats", "path": "/site/mod-stats", "compare_headers": ["content-length"]},
+ {"name": "stats_head", "method": "HEAD", "path": "/site/mod-stats"},
+ {"name": "stats_query", "path": "/site/mod-stats?days=7"},
+ {"name": "stats_preflight", "method": "OPTIONS", "path": "/site/mod-stats",
+  "headers": {"Origin": "https://trove.aallyn.net", "Access-Control-Request-Method": "GET"}},
+ {"name": "stats_with_cookie", "path": "/site/mod-stats", "headers": {"Cookie": "kiwi_site_access=not-a-token"}},
+ {"name": "stats_trailing_slash", "path": "/site/mod-stats/"}
+]
