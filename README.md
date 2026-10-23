@@ -22,9 +22,8 @@ Fully dockerized. **MongoDB** + **Redis** + **PostgreSQL**, all persisted to loc
 
 ## Stack
 
-Python 3.13 · FastAPI + Uvicorn · Beanie/PyMongo on MongoDB 7 · Redis 7 · PostgreSQL
-(leaderboards, market, codexes) · Argon2 + JWT auth · hashed API tokens · Rust (`native/`)
-for CPU-heavy hot paths, on the way to an all-Rust server.
+Rust (`native/`): axum + tokio · MongoDB 7 · Redis 7 · PostgreSQL (leaderboards, market,
+codexes) · Argon2 + JWT auth · hashed API tokens · minijinja templates for the website.
 
 ## Platform features
 
@@ -75,19 +74,19 @@ page, user manual, command reference, and live pages for leaderboards, player/cl
 codexes, the mods hub, modpacks, the marketplace, game updates, server status, and server time.
 Browsing is public; developing and publishing mods is a Discord-login action.
 
-**Game data rebuilds itself after each patch.** Everything under `app/trove/gamedata/` that
+**Game data rebuilds itself after each patch.** Everything under `assets/gamedata/` that
 comes from the game files (class stats and abilities, allies, mounts, gems, rings, PvP curves,
-delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds, subclass powers, daily bonuses, leaderboards, items, upgrade trees, mastery, class rewards, lootbox odds, PvP power-ups, chat commands, the Power Rank / Mastery sigil art, gear rarities, forge rules and banners) has a decoder in `app/trove/decode/`. After the archiver syncs a new live-us patch,
+delve modifiers, companions, fish, mementos, badges, recipes, wings/boats/sails/auras/Mag Riders/flasks/tomes/fishing poles, costumes, bomb skins, styles, titles, NPCs, blocks and placeables, quests and adventures, worlds, subclass powers, daily bonuses, leaderboards, items, upgrade trees, mastery, class rewards, lootbox odds, PvP power-ups, chat commands, the Power Rank / Mastery sigil art, gear rarities, forge rules and banners) has a decoder in `native/kiwi-server/src/decode/`. After the archiver syncs a new live-us patch,
 each decoder reruns and writes to `GAMEDATA_DIR` (`./.gamedata`, shared by the api, web and bot
-containers), which readers prefer over the repo copy. A decoder also reruns when a deploy
-changes its code. One that fails, decodes nothing, or shrinks its output by more than 20% keeps
-serving the previous file and shows up in the dev panel's **Game data** tab with the error and
-traceback, where it can be rerun. `python -m app.trove.decode` rebuilds the repo copies from a
-local client.
+containers), which readers prefer over the repo copy. A decoder also reruns when its
+`code_version` in `decode/registry.rs` changes: bump it by hand when a decoder's output changes.
+One that fails, decodes nothing, or shrinks its output by more than 20% keeps serving the
+previous file and shows up in the dev panel's **Game data** tab with the error, where it can be
+rerun.
 
 **Regional maintenance.** The admin panel's Configuration → Regional access setting
 (`geo_maintenance_countries`) takes a list of country codes; website visitors from those
-countries get the maintenance page (`app/geo_maintenance/maintenance.html`, its voxel art drawn
+countries get the maintenance page (`assets/maintenance.html`, its voxel art drawn
 by `scripts/build_maintenance_page.py`) instead of any page. The web container resolves the
 country from the visitor's IP with DB-IP's free database, downloaded monthly to `./.geoip`;
 nothing about the visitor is stored. The API, bot and BTT app are unaffected.
@@ -98,7 +97,7 @@ anything in the live game — a creature by its own prefab name, or a single blu
 resolves into the whole assembled creature.
 Framing is allowed per-origin (`embed.allowed_origins`), and a mod a partner uploads to preview is
 held in Redis for minutes, never written to disk. Partner guide:
-[docs/embed.html](docs/embed.html); code in `app/embed/`.
+[docs/embed.html](docs/embed.html); code in `native/kiwi-server/src/embed/`.
 
 ## Run with Docker
 
@@ -111,10 +110,10 @@ curl http://127.0.0.1:15546/health   # {"status":"ok"}
 Data lives under `./data` (bind-mounted). There's no migration code: **when a model's
 indexes change, wipe the data dir** and rebuild.
 
-The api, web and bot containers run the Rust binaries from `trove-rust:latest`, a slim Debian
-image with no Python. The Python app still runs behind them as `api-py`, `web-py` and
-`bot-py` (`trove-app:latest`) until it is retired; run Python one-offs there
-(`docker compose exec api-py python ...`).
+The api, web and bot containers run `kiwi-server`, `kiwi-web` and `kiwi-bot` from
+`trove-rust:latest`, a slim Debian image with the binaries, `assets/` and the few tools they
+shell out to (`git`, a JRE for FFDec). `builder` runs `kiwi-builder` from `trove-builder:latest`,
+the same image plus SteamCMD and the small Python TroveUI's release scripts need.
 
 ### Key configuration
 
@@ -122,21 +121,20 @@ See `.env.example` for the full list.
 
 | Variable | Required | Notes |
 |---|---|---|
-| `SECRET_KEY` | **yes** | JWT signing key — `python -c "import secrets;print(secrets.token_urlsafe(48))"` |
+| `SECRET_KEY` | **yes** | JWT signing key — `openssl rand -base64 48` |
 | `MONGO_ROOT_PASSWORD` / `MONGO_APP_PASSWORD` | **yes** | Mongo root + least-privilege app user |
 | `REDIS_PASSWORD` | **yes** | Redis auth |
 | `CAPTCHA_SECRET` / `CAPTCHA_SITEKEY` | prod | Captcha is enforced only when **both** are set |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | no | Bootstraps the master superuser on startup |
 | `SMTP_HOST` (+ `SMTP_*`, `MAIL_FROM`) | prod | Mail relay; if unset, email is logged instead of sent |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | no | Enables "Sign in with GitHub" |
-| `KIWI_BOT` | no | `rust` runs the Discord gateway bot in the `bot` container (Rust `kiwi-bot`); anything else runs it in `bot-py` (`app.bot.runner`). The other one idles, so only one ever runs (`docker compose up -d bot bot-py` after changing it) |
 
 ### Behind a reverse proxy
 
 All services bind to `127.0.0.1`; the proxy routes `api.aallyn.net` → `:15546` (only `/v1/*`
 + `/health`), `dev.aallyn.net` → `:25470`, `docs.aallyn.net` → `:25468`, and
-`trove.aallyn.net` → `:15546` (all paths). Set `FORWARDED_ALLOW_IPS` to the address the
-proxy connects from: Uvicorn then takes the client IP from the rightmost `X-Forwarded-For`
+`trove.aallyn.net` → `:15547` (all paths). Set `FORWARDED_ALLOW_IPS` to the address the
+proxy connects from: kiwi-server then takes the client IP from the rightmost `X-Forwarded-For`
 entry the proxy added, so rate limits key on the real visitor and a client-sent header is
 ignored. Never set it to `*`, which trusts the client's own leftmost entry. Bodies are capped at 8 MB, except the `.tmod` tools and bot
 cfg ingests (`/v1/mods/*`, `/v1/leaderboards/insert`, `/v1/market/insert`) at 20 MB, and the
@@ -149,36 +147,33 @@ change) at 160 MB — allow at least as much at the proxy.
 
 ## Project layout
 
-Feature modules grouped by endpoint path; cross-cutting infrastructure in `app/core/`.
-
 ```
-app/
-├── main.py     # app assembly: routers, middleware, lifespan
-├── core/       # config, db, security, errors, redis, mailer, ratelimit, pagination, …
-├── auth/       # signup, login, sessions, oauth, account
-├── tokens/     # mint/list/edit/rotate/revoke API tokens
-├── trove/      # the Trove data surfaces (rotations, leaderboards, mods, codexes, …)
-├── site_auth/  # Discord login for the showcase site (mods/modpacks)
-├── admin/      # superuser metrics, toggles, moderation
-├── embed/      # the 3D/VFX viewers packaged for other sites' iframes
-└── …           # usage, pageviews, events, scanning
+assets/         # data the binaries read: game data baseline, rigs, locales, codebooks
+builder/        # the five TroveAPI Python files TroveUI's release scripts import
+native/
+├── kiwi-core/  # pure logic and file formats (no server types)
+├── kiwi-pil/   # Pillow-identical image encoding and text
+├── kiwi-zlib/  # classic zlib, byte for byte
+├── kiwi-server/
+│   ├── src/bin/        # kiwi-web, kiwi-bot, kiwi-builder (kiwi-server is main.rs)
+│   ├── src/routes/     # route registry; feature areas live beside it in src/
+│   ├── src/middleware/ # security headers, CSP, CORS, gzip, idempotency, request ids
+│   └── src/starlette/  # the frozen route table 404/405/307 answers come from
+└── port/       # the port's parity specs and fixture generators (history)
 site/           # showcase website (templates + static)
-                #   server-rendered first paint: app/site/ssr.py
 portal/         # developer-portal SPA
 docs/           # static docs (guide + Redoc reference + llms.txt)
-native/         # Rust workspace: kiwi-core (pure Rust) + kiwi-py (PyO3 module `kiwi_native`)
 ```
 
 ## Adding an endpoint
 
-The platform is built so a new endpoint is a small, consistent addition:
-
-1. Create `app/<feature>/` with `router.py` (+ `models.py` if it stores data).
-2. Gate it with `Depends(require_scope("<resource>:<action>"))` and **append** the new scope
-   to `app/core/scopes.py` (bits are permanent — never renumber or reuse).
-3. Use `paginate_newest_first(...)` for lists; writes honour `Idempotency-Key` automatically.
-4. Raise `APIError(status, ErrorCode.x, "msg")` — never a bare `HTTPException`.
-5. Register the router in `app/main.py` and any new `Document` in `app/core/database.py`.
+1. Add a module under `native/kiwi-server/src/` with a `router()` and merge it in `router()`
+   (`src/routes/mod.rs`); the website's pages go in `src/web/`.
+2. Gate it with `RequireScope<BIT>` (or `Public<BIT>` for tokenless reads) and **append** a new
+   scope to `src/auth/scopes.rs` (bits are permanent — never renumber or reuse).
+3. Return `ApiError` for failures so every error keeps the one envelope.
+4. Unmatched paths are answered from `src/starlette/routes.json`; when a route is removed,
+   remove it there too or its path answers 500 instead of 404.
 
 ## Errors & rate limits
 
@@ -190,60 +185,22 @@ Every error uses one envelope (branch on `code`, not `message`); each carries a 
 
 Default limits: signup 5/h/IP · login 10/5min/IP · API 120/min/token · token creation 3/day.
 Fan-out surfaces (codexes, the mods hub, updates file serving) meter in their own widened
-buckets — see the `*_rate_limit_multiplier` settings in `app/core/config.py`.
+buckets — see the `*_rate_limit_multiplier` settings in `native/kiwi-server/src/config.rs`.
 
 JSON responses over 1 KB are gzipped when the client offers it; streams are excluded
-by content type so SSE stays unbuffered (`ResponseCompressionMiddleware`).
+by content type so SSE stays unbuffered (`middleware/compression.rs`).
 
 ## Development
 
 ```bash
-python -m venv .venv && . .venv/bin/activate     # 3.11–3.13
-pip install -r requirements-dev.txt
-ruff check app tests          # lint
-pytest tests/unit             # unit tests (no services needed)
-pytest tests/integration -m integration   # needs Docker (testcontainers spin up Mongo + Redis)
+cargo fmt --all --manifest-path native/Cargo.toml
+cargo clippy --workspace --all-targets --manifest-path native/Cargo.toml -- -D warnings
+cargo test --workspace --manifest-path native/Cargo.toml   # store tests are #[ignore]d: they need Mongo/Redis/Postgres
+cargo run --manifest-path native/Cargo.toml --bin kiwi-server   # reads .env; KIWI_BIND defaults to 0.0.0.0:8000
 ```
 
-### Rust hot paths (`native/`)
-
-The long-term goal is an all-Rust server. Until then, CPU-heavy functions move into
-`native/kiwi-core` (plain Rust, no Python types, so the future server reuses it) and are
-exposed to Python through `native/kiwi-py` as the `kiwi_native` module. The Docker image
-builds it in its own stage. Each ported Python function prefers `kiwi_native` and keeps its
-Python body as the fallback and the parity reference (`tests/unit/native/`).
-
-Ported so far: `troveio.calculate_hash` (~180× faster), `binfab.harvest_strings` (~40×), and the
-blueprint voxel tables: `codec.decode_full`/`encode`, `render.voxel.decode_render_map` and
-`pack_blueprint`, `mods_hub.assembly`'s grid decode, and `audio.wem.convert` (Vorbis to Ogg, ADPCM,
-PCM; ~80×), SWF lossless bitmaps plus shape-fill and sprite matrix parsing (~28×), and the structured binfab
-reader `decode.wire.parse` (~8×, same search and tie-breaks as the Python one). The Mod Workshop's binfab
-preview now parses uploads in-process under a step budget (`view.UPLOAD_BUDGET`); only a file that
-exhausts it still goes to the isolated child process.
-The leaderboard alt-cluster kernels (`detection._board_families`, `_cluster_history_signals`) run in Rust
-too (~13× / ~4×); their tie-breaks are deterministic in both versions.
-Capture ingest parses the LeaderBot.cfg dump in Rust (`kiwi_native.lb_parse`, off the event loop).
-Player activity (live estimate and the admin rebuild) reads each capture as a binary COPY decoded in
-Rust (`act_decode` / `act_pair`), ~4x per capture pair; class activity uses the same captures with
-`act_class_sets` (~7x).
-The renames and duplicates rebuilds use the same COPY captures (`ren_fingerprint`/`ren_diff`, `dup_groups`).
-The player board aggregate rebuild and the last-played backfill replay every capture in memory with
-`AggBuilder` (the ingest fold's rule) and write the result in one COPY before swapping it in.
-`.tmod` read and build (header table, inflate or de-frame, checksums, base64; ~3x / ~2x), SWF static
-arrays (`swf.abc`, ~3x) and the gem build ranking (`calculate_builds`, Farm ~27x) run in Rust too.
-zlib is Rust as well (`troveio.inflate`/`deflate`, flate2 on zlib-rs): every inflate matches CPython's
-zlib, and `.tmod` level-0 streams are byte-identical. Update-archive `.tfa` files inflate in Rust too,
-straight into the result when the index predicts the size (`archive.archive_size`, ~1.4x). Level-9 blueprint output is valid but not
-byte-identical to C zlib for a few percent of files (slightly smaller overall). Any input the Rust
-side can't reproduce exactly returns `None` and reruns in Python, so errors are raised exactly as before.
-
-```bash
-pip install "maturin>=1.15,<2"
-cd native/kiwi-py && maturin develop --release   # build + install into the active venv
-cargo test --manifest-path native/Cargo.toml      # Rust unit tests
-```
-
-Without the module everything still runs on the Python fallbacks.
+Run the binaries from the repo root so `assets/` and `site/` resolve. `scripts/` holds standalone
+helpers (static minify, font subsetting, i18n audit, the maintenance-page generator).
 
 ## Backups
 

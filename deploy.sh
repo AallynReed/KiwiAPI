@@ -31,15 +31,10 @@
 # replaced bind-mounted directory can never leave them serving a stale/empty
 # mount (403).
 #
-# Images: trove-rust (api, web, bot; no Python), trove-builder (the rust image plus
-# SteamCMD) and trove-app (the Python fallback: api-py, web-py, bot-py).
-# The api service is kiwi-server in front of api-py (the Python app). Python's logs
-# are under `api-py`. KIWI_PROXY_ALL=1 in .env, then `./deploy.sh --no-pull
-# --no-build`, sends every route back to Python. The web service is kiwi-web in
-# front of web-py the same way; KIWI_WEB_PROXY_ALL=1 sends every website request
-# back to Python. KIWI_BOT=rust runs the gateway bot in `bot`, anything else in
-# `bot-py`. The Rust images bake in what they read from app/ (game data baseline,
-# rigs, locales...), so --no-build leaves them on the files of the last build.
+# Images: trove-rust (api = kiwi-server, web = kiwi-web, bot = kiwi-bot) and
+# trove-builder (the rust image plus SteamCMD). Both bake in assets/ (game data
+# baseline, rigs, locales...), so --no-build leaves them on the files of the last
+# build.
 #
 set -euo pipefail
 
@@ -191,7 +186,7 @@ fi
 echo
 $COMPOSE ps
 echo
-echo "Done. api -> 127.0.0.1:15546 (kiwi-server, trove-rust; Python behind it as api-py)   web -> 127.0.0.1:15547 (kiwi-web; web-py behind it)   docs -> 127.0.0.1:25468"
+echo "Done. api -> 127.0.0.1:15546 (kiwi-server)   web -> 127.0.0.1:15547 (kiwi-web)   docs -> 127.0.0.1:25468"
 
 if [ "$FOLLOW" -eq 1 ]; then
   echo ">> following logs (Ctrl-C to stop)"
