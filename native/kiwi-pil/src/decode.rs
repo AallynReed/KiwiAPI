@@ -53,7 +53,9 @@ fn unpack_index(row: &[u8], width: usize, depth: u8) -> Vec<u8> {
 
 /// The chunks before the first IDAT, CRC-checked as `PngStream` checks them
 /// (Pillow never checks an IDAT's); `Err` where `Image.open` raises.
-fn header_chunks(data: &[u8]) -> Result<Vec<(&[u8], &[u8])>, String> {
+type Chunk<'a> = (&'a [u8], &'a [u8]);
+
+fn header_chunks(data: &[u8]) -> Result<Vec<Chunk<'_>>, String> {
     let mut out = Vec::new();
     let mut i = 8;
     while i + 8 <= data.len() {
