@@ -6,10 +6,7 @@
 use std::{
     collections::HashMap,
     future::Future,
-    sync::{
-        LazyLock, Mutex,
-        atomic::{AtomicU64, Ordering},
-    },
+    sync::{LazyLock, Mutex},
 };
 
 use anyhow::Context;
@@ -266,36 +263,70 @@ impl Live<'_> {
     }
 }
 
-/// Writes to `entry` or `player` this process has committed (ingest, anchor
-/// delete, reset): the only writers, so an unchanged count means the rows a
-/// chart read before are still the rows Postgres holds.
-static WRITES: AtomicU64 = AtomicU64::new(0);
-
-pub fn entries_written() {
-    WRITES.fetch_add(1, Ordering::SeqCst);
+/// The anchor of every write to `entry` or `player` this process has committed
+/// (ingest, anchor delete; `None` for a reset), in order. These are the only
+/// writers, so rows a chart read stay what Postgres holds at every anchor no
+/// later write touched.
+fn writes() -> std::sync::MutexGuard<'static, Vec<Option<i64>>> {
+    static WRITES: Mutex<Vec<Option<i64>>> = Mutex::new(Vec::new());
+    WRITES.lock().unwrap_or_else(|e| e.into_inner())
 }
 
-/// The warmer's last chart read per board.
+/// Records a committed write to `anchor`'s rows, or to all of them.
+pub fn entries_written(anchor: Option<i64>) {
+    writes().push(anchor);
+}
+
+/// The lowest anchor written after the first `seen` writes (`i64::MIN` after a reset).
+pub(super) fn lowest_written_since(log: &[Option<i64>], seen: usize) -> Option<i64> {
+    log.get(seen..)?.iter().map(|a| a.unwrap_or(i64::MIN)).min()
+}
+
+/// The warmer's last chart read per board, taken after `seen` writes.
 pub(super) struct Chart {
-    pub writes: u64,
+    pub seen: usize,
     pub window_start: i64,
     pub series: TopSeries,
 }
 
-/// `chart`'s rows still inside a window from `window_start`, when nothing has
-/// been written since it was read and the window has the same anchors and top.
-pub(super) fn reusable_rows(
+/// What a chart read can keep from `chart`: its rows of players still in `top`
+/// inside the window, when every write since touched only anchors after its
+/// newest and the window's anchors up to it are unchanged. The rest to read is
+/// the kept players' rows from anchor `after.0` on and the new players' rows.
+#[derive(Debug, PartialEq)]
+pub(super) struct Reuse {
+    pub rows: Vec<SeriesRow>,
+    pub after: Option<(i64, Vec<i64>)>,
+    pub new_players: Vec<i64>,
+}
+
+pub(super) fn reuse(
     chart: &Chart,
-    writes: u64,
+    written: Option<i64>,
     window_start: i64,
     anchors: &[i64],
     top: &[TopMeta],
-) -> Option<Vec<SeriesRow>> {
-    let same = chart.writes == writes
-        && chart.window_start <= window_start
-        && chart.series.top == top
-        && chart.series.anchors.iter().filter(|&&a| a >= window_start).eq(anchors.iter());
-    same.then(|| chart.series.rows.iter().filter(|r| r.created_at >= window_start).cloned().collect())
+) -> Option<Reuse> {
+    let &last = chart.series.anchors.last()?;
+    if chart.window_start > window_start || written.is_some_and(|w| w <= last) {
+        return None;
+    }
+    let old = chart.series.anchors.iter().filter(|&&a| a >= window_start);
+    if !old.eq(anchors.iter().filter(|&&a| a <= last)) {
+        return None;
+    }
+    let had = |id: i64| chart.series.top.iter().any(|m| m.player_id == id);
+    let (kept, new_players): (Vec<i64>, Vec<i64>) = top.iter().map(|m| m.player_id).partition(|&id| had(id));
+    let rows = chart
+        .series
+        .rows
+        .iter()
+        .filter(|r| r.created_at >= window_start && kept.contains(&r.player_id))
+        .cloned()
+        .collect();
+    let from = (last + 1).max(window_start);
+    let after = (anchors.last().is_some_and(|&a| a >= from) && !kept.is_empty()).then_some((from, kept));
+    Some(Reuse { rows, after, new_players })
 }
 
 fn charts() -> std::sync::MutexGuard<'static, HashMap<i32, Chart>> {
@@ -338,13 +369,16 @@ async fn series_head(
     Ok((anchors, top))
 }
 
+fn ids(top: &[TopMeta]) -> Vec<i64> {
+    top.iter().map(|m| m.player_id).collect()
+}
+
 async fn series_rows(
     client: &deadpool_postgres::Client,
     uuid: i32,
     window_start: i64,
-    top: &[TopMeta],
+    ids: &[i64],
 ) -> Res<Vec<SeriesRow>> {
-    let ids: Vec<i64> = top.iter().map(|m| m.player_id).collect();
     let stmt = client.prepare_cached(SERIES_ROWS).await?;
     client
         .query(&stmt, &[&uuid, &window_start, &ids])
@@ -499,24 +533,34 @@ impl Source for Live<'_> {
         if top.is_empty() {
             return Ok(TopSeries { anchors, top, rows: Vec::new() });
         }
-        let rows = series_rows(&client, uuid, window_start, &top).await?;
+        let rows = series_rows(&client, uuid, window_start, &ids(&top)).await?;
         Ok(TopSeries { anchors, top, rows })
     }
 
     async fn warm_top_series(&self, uuid: i32, window_start: i64, top: i64) -> Res<TopSeries> {
-        let writes = WRITES.load(Ordering::SeqCst);
+        let seen = writes().len();
         let client = self.client().await?;
         let (anchors, top) = series_head(&client, uuid, window_start, top).await?;
         if top.is_empty() {
             return Ok(TopSeries { anchors, top, rows: Vec::new() });
         }
-        let reused = charts().get(&uuid).and_then(|c| reusable_rows(c, writes, window_start, &anchors, &top));
-        let rows = match reused {
-            Some(rows) => rows,
-            None => series_rows(&client, uuid, window_start, &top).await?,
+        let plan = charts()
+            .get(&uuid)
+            .and_then(|c| reuse(c, lowest_written_since(&writes(), c.seen), window_start, &anchors, &top));
+        let rows = match plan {
+            Some(Reuse { mut rows, after, new_players }) => {
+                if let Some((from, kept)) = after {
+                    rows.extend(series_rows(&client, uuid, from, &kept).await?);
+                }
+                if !new_players.is_empty() {
+                    rows.extend(series_rows(&client, uuid, window_start, &new_players).await?);
+                }
+                rows
+            }
+            None => series_rows(&client, uuid, window_start, &ids(&top)).await?,
         };
         let series = TopSeries { anchors, top, rows };
-        charts().insert(uuid, Chart { writes, window_start, series: series.clone() });
+        charts().insert(uuid, Chart { seen, window_start, series: series.clone() });
         Ok(series)
     }
 }

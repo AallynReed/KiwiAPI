@@ -265,8 +265,34 @@ async fn lbread_warmer_bench() {
         .unwrap();
     let stale = service::warm_board_history(&live, 1, 7, 5, later).await.unwrap();
     assert_ne!(stale, service::board_history(&live, 1, 7, 5, later).await.unwrap(), "the edit is not in the chart");
-    store::entries_written();
+    store::entries_written(Some(edited));
     let fresh = service::warm_board_history(&live, 1, 7, 5, later).await.unwrap();
     assert_eq!(fresh, service::board_history(&live, 1, 7, 5, later).await.unwrap());
     println!("reused charts match fresh reads; a recorded write forces a fresh read");
+
+    histories(&custom, later, true).await;
+    let next = newest + 6 * 3600;
+    c.batch_execute(&partition_ddl(next)).await.unwrap();
+    c.batch_execute(&format!(
+        "INSERT INTO entry (board_uuid, anchor, rank, score, player_id)
+         SELECT b, {next}, k, (s.sz - k) * 1000.0 + k % 997, ((k + b * 211 + {kn} * 3) % {players}) + 1
+         FROM generate_series(1, {BOARDS}) b
+         CROSS JOIN LATERAL (SELECT (200 + (b * 97) % 1600) * {scale} AS sz) s
+         CROSS JOIN LATERAL generate_series(1, s.sz) k",
+        kn = caps.len() + 1,
+        players = 5000 * scale,
+    ))
+    .await
+    .unwrap();
+    store::entries_written(Some(next));
+    let t = Instant::now();
+    let (_, appended) = histories(&custom, next + 60, true).await;
+    for uuid in 1..=BOARDS {
+        let warm = service::warm_board_history(&live, uuid, 7, 5, next + 60).await.unwrap();
+        assert_eq!(warm, service::board_history(&live, uuid, 7, 5, next + 60).await.unwrap(), "board {uuid}");
+    }
+    println!(
+        "after a new capture: charts in {appended:.1} ms, all equal to fresh reads ({:.1}s)",
+        t.elapsed().as_secs_f64()
+    );
 }

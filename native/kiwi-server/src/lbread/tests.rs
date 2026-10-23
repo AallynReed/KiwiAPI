@@ -596,8 +596,8 @@ async fn routing_matches_starlette() {
 }
 
 #[test]
-fn warm_chart_rows_are_reused_only_while_nothing_changed() {
-    use super::store::{Chart, reusable_rows};
+fn warm_chart_rows_are_reused_only_where_nothing_was_written() {
+    use super::store::{Chart, Reuse, lowest_written_since, reuse};
     let meta = |id: i64, rank: i64| TopMeta { player_id: id, player_name: format!("P{id}"), rank };
     let row = |id: i64, at: i64| SeriesRow { player_id: id, created_at: at, rank: 1, score: at as f64 };
     let top = vec![meta(7, 1), meta(9, 2)];
@@ -606,15 +606,30 @@ fn warm_chart_rows_are_reused_only_while_nothing_changed() {
         top: top.clone(),
         rows: vec![row(7, 100), row(9, 100), row(7, 200), row(9, 300), row(7, 300)],
     };
-    let chart = Chart { writes: 4, window_start: 50, series };
+    let chart = Chart { seen: 2, window_start: 50, series };
+    let all = |rows| Reuse { rows, after: None, new_players: Vec::new() };
 
-    let kept = reusable_rows(&chart, 4, 150, &[200, 300], &top).unwrap();
-    assert_eq!(kept, vec![row(7, 200), row(9, 300), row(7, 300)]);
-    assert_eq!(reusable_rows(&chart, 4, 50, &[100, 200, 300], &top).unwrap().len(), 5);
-    assert!(reusable_rows(&chart, 5, 150, &[200, 300], &top).is_none());
-    assert!(reusable_rows(&chart, 4, 40, &[100, 200, 300], &top).is_none());
-    assert!(reusable_rows(&chart, 4, 150, &[200, 300, 400], &top).is_none());
-    assert!(reusable_rows(&chart, 4, 150, &[300], &top).is_none());
-    assert!(reusable_rows(&chart, 4, 150, &[200, 300], &[meta(9, 1), meta(7, 2)]).is_none());
-    assert!(reusable_rows(&chart, 4, 150, &[200, 300], &[meta(7, 1), meta(9, 3)]).is_none());
+    let log = [Some(300), Some(200), Some(400), None];
+    assert_eq!(lowest_written_since(&log, 2), Some(i64::MIN));
+    assert_eq!(lowest_written_since(&log[..3], 1), Some(200));
+    assert_eq!(lowest_written_since(&log[..3], 2), Some(400));
+    assert_eq!(lowest_written_since(&log[..3], 3), None);
+    assert_eq!(lowest_written_since(&log[..3], 5), None);
+
+    let kept = reuse(&chart, None, 150, &[200, 300], &top).unwrap();
+    assert_eq!(kept, all(vec![row(7, 200), row(9, 300), row(7, 300)]));
+    assert_eq!(reuse(&chart, None, 50, &[100, 200, 300], &top).unwrap().rows.len(), 5);
+    assert_eq!(reuse(&chart, None, 150, &[200, 300], &[meta(9, 1), meta(7, 2)]), Some(kept));
+    assert!(reuse(&chart, None, 40, &[100, 200, 300], &top).is_none());
+    assert!(reuse(&chart, None, 150, &[300], &top).is_none());
+    assert!(reuse(&chart, Some(300), 150, &[200, 300], &top).is_none());
+    assert!(reuse(&chart, Some(i64::MIN), 150, &[200, 300], &top).is_none());
+
+    let next = reuse(&chart, Some(400), 150, &[200, 300, 400], &[meta(9, 1), meta(4, 2)]).unwrap();
+    assert_eq!(next, Reuse { rows: vec![row(9, 300)], after: Some((301, vec![9])), new_players: vec![4] });
+    let gone = reuse(&chart, Some(400), 350, &[400], &top).unwrap();
+    assert_eq!(gone, Reuse { rows: Vec::new(), after: Some((350, vec![7, 9])), new_players: Vec::new() });
+    let fresh = reuse(&chart, Some(400), 150, &[200, 300, 400], &[meta(5, 1), meta(4, 2)]).unwrap();
+    assert_eq!(fresh, Reuse { rows: Vec::new(), after: None, new_players: vec![5, 4] });
+    assert!(reuse(&chart, Some(400), 150, &[200, 250, 300, 400], &top).is_none());
 }

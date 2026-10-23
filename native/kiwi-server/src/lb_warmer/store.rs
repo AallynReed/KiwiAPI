@@ -8,7 +8,7 @@ use crate::lb_ingest::store::{PgResult, exec};
 pub async fn delete_anchor(pool: &Pool, anchor: i64) -> PgResult<i64> {
     let con = pool.get().await.map_err(|e| e.to_string())?;
     let deleted = exec(&**con, "DELETE FROM entry WHERE anchor = $1", &[anchor]).await;
-    crate::lbread::store::entries_written();
+    crate::lbread::store::entries_written(Some(anchor));
     Ok(deleted? as i64)
 }
 
