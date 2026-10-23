@@ -39,6 +39,7 @@ pub mod media;
 pub mod middleware;
 pub mod mod_releases;
 pub mod mods_catalog;
+pub mod mods_git;
 pub mod ocr;
 pub mod og;
 pub mod outbound;

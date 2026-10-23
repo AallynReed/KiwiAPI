@@ -1,0 +1,3657 @@
+{
+ "ops": [
+  [
+   "ensure",
+   "p1"
+  ],
+  [
+   "commit",
+   "p1",
+   "main",
+   [
+    [
+     "ui/a.txt",
+     "aGVsbG8K"
+    ],
+    [
+     "blueprints/deco/x.blueprint",
+     "AAECYnA="
+    ],
+    [
+     "README.md",
+     "IyBSZWFkbWUK"
+    ],
+    [
+     "readme_root.txt",
+     "cg=="
+    ],
+    [
+     "ui/dup.txt",
+     "aGVsbG8K"
+    ]
+   ],
+   [],
+   "Alice Example",
+   "first commit",
+   1700000000
+  ],
+  [
+   "commit",
+   "p1",
+   "main",
+   [
+    [
+     "ui/b.txt",
+     "YmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJiYmJi"
+    ],
+    [
+     "textures/t.dds",
+     "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"
+    ],
+    [
+     "ui/b.txt",
+     "c2Vjb25kIHdyaXRlIHdpbnM="
+    ]
+   ],
+   [
+    "README.md",
+    "not/there.txt"
+   ],
+   "Alice Example",
+   "second",
+   1700000100
+  ],
+  [
+   "commit",
+   "p1",
+   "main",
+   [
+    [
+     "ui/a.txt",
+     "aGVsbG8K"
+    ]
+   ],
+   [],
+   "Alice Example",
+   "noop",
+   1700000200
+  ],
+  [
+   "branch",
+   "p1",
+   "dev",
+   "main"
+  ],
+  [
+   "commit",
+   "p1",
+   "dev",
+   [
+    [
+     "ui/a.txt/c",
+     "Y29sbGlkZQ=="
+    ]
+   ],
+   [],
+   "Zoë_名-x.y",
+   "dir wins",
+   1700000300
+  ],
+  [
+   "commit",
+   "p1",
+   "dev",
+   [
+    [
+     "ui",
+     "ZmlsZSBvdmVyIGRpcg=="
+    ]
+   ],
+   [],
+   "Zoë_名-x.y",
+   "file wins",
+   1700000300
+  ],
+  [
+   "commit",
+   "p1",
+   "feature/x",
+   [
+    [
+     "models/m.txt",
+     "bQ=="
+    ]
+   ],
+   [],
+   "Multi\nLine",
+   "orphan branch",
+   1700000050
+  ],
+  [
+   "branch",
+   "p1",
+   "fromsha",
+   "@1"
+  ],
+  [
+   "branch",
+   "p1",
+   "fromupper",
+   "@2U"
+  ],
+  [
+   "delete_branch",
+   "p1",
+   "feature/x"
+  ],
+  [
+   "delete_branch",
+   "p1",
+   "nope"
+  ],
+  [
+   "ensure",
+   "p3"
+  ],
+  [
+   "branch",
+   "p3",
+   "x",
+   "main"
+  ],
+  [
+   "fork",
+   "p1",
+   "p2",
+   "main",
+   "main",
+   "Zoë_名-x.y",
+   "Fork of slug",
+   1700000400
+  ],
+  [
+   "fork",
+   "p9",
+   "p8",
+   "main",
+   "main",
+   "Zoë_名-x.y",
+   "Fork of nothing",
+   1700000400
+  ],
+  [
+   "commit",
+   "p2",
+   "main",
+   [],
+   [
+    "ui/b.txt"
+   ],
+   "Zoë_名-x.y",
+   "",
+   1700000500
+  ],
+  [
+   "commit",
+   "p2",
+   "main",
+   [
+    [
+     "x.tmod",
+     "dA=="
+    ],
+    [
+     "Ui/Mixed.TXT",
+     "bWl4ZWQ="
+    ]
+   ],
+   [],
+   "",
+   "msg\n with  newline ",
+   1700000600
+  ],
+  [
+   "commit",
+   "p2",
+   "main",
+   [],
+   [
+    "x.tmod",
+    "ui/a.txt",
+    "ui/dup.txt",
+    "Ui/Mixed.TXT",
+    "readme_root.txt",
+    "blueprints/deco/x.blueprint",
+    "textures/t.dds"
+   ],
+   "Zoë_名-x.y",
+   "empty tree",
+   1700000700
+  ]
+ ],
+ "results": [
+  {
+   "ok": null
+  },
+  {
+   "ok": "4a97e1476a464e18b869eef09726921e849145bc"
+  },
+  {
+   "ok": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+  },
+  {
+   "nothing": true
+  },
+  {
+   "ok": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+  },
+  {
+   "ok": "e8db92b0b9d06fcf01f14c4c66391752cef9a192"
+  },
+  {
+   "ok": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d"
+  },
+  {
+   "ok": "eb2e2868d7b3a394b95ea70886f30dcb8444482d"
+  },
+  {
+   "ok": "4a97e1476a464e18b869eef09726921e849145bc"
+  },
+  {
+   "ok": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+  },
+  {
+   "ok": null
+  },
+  {
+   "ok": null
+  },
+  {
+   "ok": null
+  },
+  {
+   "refused": "Commit something before creating a branch."
+  },
+  {
+   "ok": "04177762fac56e5245e27d6099378adc3f9bd02b"
+  },
+  {
+   "ok": null
+  },
+  {
+   "ok": "8e023aaeb7b32d7593863a95227df1818868e8af"
+  },
+  {
+   "ok": "b603b71a2448bfc7c3915945a84ca7c87ef0edfd"
+  },
+  {
+   "ok": "a069d380174769773fe0ca78c13416b572b50963"
+  }
+ ],
+ "reads": {
+  "sha1": "4a97e1476a464e18b869eef09726921e849145bc",
+  "sha2": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+  "branches": {
+   "p1": {
+    "ok": [
+     {
+      "name": "dev",
+      "head_commit_id": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d"
+     },
+     {
+      "name": "fromsha",
+      "head_commit_id": "4a97e1476a464e18b869eef09726921e849145bc"
+     },
+     {
+      "name": "fromupper",
+      "head_commit_id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+     },
+     {
+      "name": "main",
+      "head_commit_id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+     }
+    ]
+   },
+   "p2": {
+    "ok": [
+     {
+      "name": "main",
+      "head_commit_id": "a069d380174769773fe0ca78c13416b572b50963"
+     }
+    ]
+   },
+   "p3": {
+    "ok": [
+     {
+      "name": "main",
+      "head_commit_id": null
+     }
+    ]
+   },
+   "p4": {
+    "ok": [
+     {
+      "name": "main",
+      "head_commit_id": null
+     }
+    ]
+   }
+  },
+  "trees": [
+   [
+    "p1",
+    "",
+    {
+     "ok": {
+      "commit": {
+       "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+       "short": "fe2bab4",
+       "branch": null,
+       "parents": [
+        "4a97e1476a464e18b869eef09726921e849145bc"
+       ],
+       "author_username": "Alice Example",
+       "message": "second",
+       "file_count": 6,
+       "created_at": "2023-11-14T22:15:00+00:00"
+      },
+      "entries": [
+       {
+        "path": "blueprints/deco/x.blueprint",
+        "blob_sha": "309eb6a1ae4c4be5f79e535ed52cbab8c9d0515e",
+        "size": 5
+       },
+       {
+        "path": "readme_root.txt",
+        "blob_sha": "1d2f01491f783c8c7f0917cc68526c6307d80e39",
+        "size": 1
+       },
+       {
+        "path": "textures/t.dds",
+        "blob_sha": "6aba2673884e0af7cc3c6a3b1b54667a13455537",
+        "size": 5120
+       },
+       {
+        "path": "ui/a.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       },
+       {
+        "path": "ui/b.txt",
+        "blob_sha": "2118e399461cc72b703b8ebda9d4ff3aa593a905",
+        "size": 17
+       },
+       {
+        "path": "ui/dup.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       }
+      ]
+     }
+    }
+   ],
+   [
+    "p1",
+    "main",
+    {
+     "ok": {
+      "commit": {
+       "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+       "short": "fe2bab4",
+       "branch": null,
+       "parents": [
+        "4a97e1476a464e18b869eef09726921e849145bc"
+       ],
+       "author_username": "Alice Example",
+       "message": "second",
+       "file_count": 6,
+       "created_at": "2023-11-14T22:15:00+00:00"
+      },
+      "entries": [
+       {
+        "path": "blueprints/deco/x.blueprint",
+        "blob_sha": "309eb6a1ae4c4be5f79e535ed52cbab8c9d0515e",
+        "size": 5
+       },
+       {
+        "path": "readme_root.txt",
+        "blob_sha": "1d2f01491f783c8c7f0917cc68526c6307d80e39",
+        "size": 1
+       },
+       {
+        "path": "textures/t.dds",
+        "blob_sha": "6aba2673884e0af7cc3c6a3b1b54667a13455537",
+        "size": 5120
+       },
+       {
+        "path": "ui/a.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       },
+       {
+        "path": "ui/b.txt",
+        "blob_sha": "2118e399461cc72b703b8ebda9d4ff3aa593a905",
+        "size": 17
+       },
+       {
+        "path": "ui/dup.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       }
+      ]
+     }
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    {
+     "ok": {
+      "commit": {
+       "id": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d",
+       "short": "e4c57db",
+       "branch": null,
+       "parents": [
+        "e8db92b0b9d06fcf01f14c4c66391752cef9a192"
+       ],
+       "author_username": "Zoë_名-x.y",
+       "message": "file wins",
+       "file_count": 4,
+       "created_at": "2023-11-14T22:18:20+00:00"
+      },
+      "entries": [
+       {
+        "path": "blueprints/deco/x.blueprint",
+        "blob_sha": "309eb6a1ae4c4be5f79e535ed52cbab8c9d0515e",
+        "size": 5
+       },
+       {
+        "path": "readme_root.txt",
+        "blob_sha": "1d2f01491f783c8c7f0917cc68526c6307d80e39",
+        "size": 1
+       },
+       {
+        "path": "textures/t.dds",
+        "blob_sha": "6aba2673884e0af7cc3c6a3b1b54667a13455537",
+        "size": 5120
+       },
+       {
+        "path": "ui",
+        "blob_sha": "2fd16f9fac3bab34c5a9cce283001be253e6d30a",
+        "size": 13
+       }
+      ]
+     }
+    }
+   ],
+   [
+    "p1",
+    "fromsha",
+    {
+     "ok": {
+      "commit": {
+       "id": "4a97e1476a464e18b869eef09726921e849145bc",
+       "short": "4a97e14",
+       "branch": null,
+       "parents": [],
+       "author_username": "Alice Example",
+       "message": "first commit",
+       "file_count": 5,
+       "created_at": "2023-11-14T22:13:20+00:00"
+      },
+      "entries": [
+       {
+        "path": "README.md",
+        "blob_sha": "f3954314c1026028e77ea3a765aadefa67b45195",
+        "size": 9
+       },
+       {
+        "path": "blueprints/deco/x.blueprint",
+        "blob_sha": "309eb6a1ae4c4be5f79e535ed52cbab8c9d0515e",
+        "size": 5
+       },
+       {
+        "path": "readme_root.txt",
+        "blob_sha": "1d2f01491f783c8c7f0917cc68526c6307d80e39",
+        "size": 1
+       },
+       {
+        "path": "ui/a.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       },
+       {
+        "path": "ui/dup.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       }
+      ]
+     }
+    }
+   ],
+   [
+    "p1",
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    {
+     "ok": {
+      "commit": {
+       "id": "4a97e1476a464e18b869eef09726921e849145bc",
+       "short": "4a97e14",
+       "branch": null,
+       "parents": [],
+       "author_username": "Alice Example",
+       "message": "first commit",
+       "file_count": 5,
+       "created_at": "2023-11-14T22:13:20+00:00"
+      },
+      "entries": [
+       {
+        "path": "README.md",
+        "blob_sha": "f3954314c1026028e77ea3a765aadefa67b45195",
+        "size": 9
+       },
+       {
+        "path": "blueprints/deco/x.blueprint",
+        "blob_sha": "309eb6a1ae4c4be5f79e535ed52cbab8c9d0515e",
+        "size": 5
+       },
+       {
+        "path": "readme_root.txt",
+        "blob_sha": "1d2f01491f783c8c7f0917cc68526c6307d80e39",
+        "size": 1
+       },
+       {
+        "path": "ui/a.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       },
+       {
+        "path": "ui/dup.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       }
+      ]
+     }
+    }
+   ],
+   [
+    "p1",
+    "4A97E1476A464E18B869EEF09726921E849145BC",
+    {
+     "ok": {
+      "commit": {
+       "id": "4a97e1476a464e18b869eef09726921e849145bc",
+       "short": "4a97e14",
+       "branch": null,
+       "parents": [],
+       "author_username": "Alice Example",
+       "message": "first commit",
+       "file_count": 5,
+       "created_at": "2023-11-14T22:13:20+00:00"
+      },
+      "entries": [
+       {
+        "path": "README.md",
+        "blob_sha": "f3954314c1026028e77ea3a765aadefa67b45195",
+        "size": 9
+       },
+       {
+        "path": "blueprints/deco/x.blueprint",
+        "blob_sha": "309eb6a1ae4c4be5f79e535ed52cbab8c9d0515e",
+        "size": 5
+       },
+       {
+        "path": "readme_root.txt",
+        "blob_sha": "1d2f01491f783c8c7f0917cc68526c6307d80e39",
+        "size": 1
+       },
+       {
+        "path": "ui/a.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       },
+       {
+        "path": "ui/dup.txt",
+        "blob_sha": "ce013625030ba8dba906f756967f9e9ca394464a",
+        "size": 6
+       }
+      ]
+     }
+    }
+   ],
+   [
+    "p1",
+    "nope",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p1",
+    "0000000000000000000000000000000000000000",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p1",
+    "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+    {
+     "exception": "Error"
+    }
+   ],
+   [
+    "p1",
+    "éééééééééééééééééééé",
+    {
+     "exception": "Error"
+    }
+   ],
+   [
+    "p1",
+    "4a97e14",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p1",
+    "refs/heads/main",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p1",
+    "feature/x",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "",
+    {
+     "ok": {
+      "commit": {
+       "id": "a069d380174769773fe0ca78c13416b572b50963",
+       "short": "a069d38",
+       "branch": null,
+       "parents": [
+        "b603b71a2448bfc7c3915945a84ca7c87ef0edfd"
+       ],
+       "author_username": "Zoë_名-x.y",
+       "message": "empty tree",
+       "file_count": 0,
+       "created_at": "2023-11-14T22:25:00+00:00"
+      },
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "main",
+    {
+     "ok": {
+      "commit": {
+       "id": "a069d380174769773fe0ca78c13416b572b50963",
+       "short": "a069d38",
+       "branch": null,
+       "parents": [
+        "b603b71a2448bfc7c3915945a84ca7c87ef0edfd"
+       ],
+       "author_username": "Zoë_名-x.y",
+       "message": "empty tree",
+       "file_count": 0,
+       "created_at": "2023-11-14T22:25:00+00:00"
+      },
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "dev",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "fromsha",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "4A97E1476A464E18B869EEF09726921E849145BC",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "nope",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "0000000000000000000000000000000000000000",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+    {
+     "exception": "Error"
+    }
+   ],
+   [
+    "p2",
+    "éééééééééééééééééééé",
+    {
+     "exception": "Error"
+    }
+   ],
+   [
+    "p2",
+    "4a97e14",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "refs/heads/main",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p2",
+    "feature/x",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "main",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "dev",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "fromsha",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "4A97E1476A464E18B869EEF09726921E849145BC",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "nope",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "0000000000000000000000000000000000000000",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "éééééééééééééééééééé",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "4a97e14",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "refs/heads/main",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ],
+   [
+    "p4",
+    "feature/x",
+    {
+     "ok": {
+      "commit": null,
+      "entries": []
+     }
+    }
+   ]
+  ],
+  "commits": [
+   [
+    "p1",
+    null,
+    50,
+    0,
+    {
+     "ok": [
+      [
+       {
+        "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+        "short": "fe2bab4",
+        "branch": "main",
+        "parents": [
+         "4a97e1476a464e18b869eef09726921e849145bc"
+        ],
+        "author_username": "Alice Example",
+        "message": "second",
+        "file_count": 6,
+        "created_at": "2023-11-14T22:15:00+00:00"
+       },
+       {
+        "id": "4a97e1476a464e18b869eef09726921e849145bc",
+        "short": "4a97e14",
+        "branch": "main",
+        "parents": [],
+        "author_username": "Alice Example",
+        "message": "first commit",
+        "file_count": 5,
+        "created_at": "2023-11-14T22:13:20+00:00"
+       }
+      ],
+      2
+     ]
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    50,
+    0,
+    {
+     "ok": [
+      [
+       {
+        "id": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d",
+        "short": "e4c57db",
+        "branch": "dev",
+        "parents": [
+         "e8db92b0b9d06fcf01f14c4c66391752cef9a192"
+        ],
+        "author_username": "Zoë_名-x.y",
+        "message": "file wins",
+        "file_count": 4,
+        "created_at": "2023-11-14T22:18:20+00:00"
+       },
+       {
+        "id": "e8db92b0b9d06fcf01f14c4c66391752cef9a192",
+        "short": "e8db92b",
+        "branch": "dev",
+        "parents": [
+         "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+        ],
+        "author_username": "Zoë_名-x.y",
+        "message": "dir wins",
+        "file_count": 6,
+        "created_at": "2023-11-14T22:18:20+00:00"
+       },
+       {
+        "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+        "short": "fe2bab4",
+        "branch": "dev",
+        "parents": [
+         "4a97e1476a464e18b869eef09726921e849145bc"
+        ],
+        "author_username": "Alice Example",
+        "message": "second",
+        "file_count": 6,
+        "created_at": "2023-11-14T22:15:00+00:00"
+       },
+       {
+        "id": "4a97e1476a464e18b869eef09726921e849145bc",
+        "short": "4a97e14",
+        "branch": "dev",
+        "parents": [],
+        "author_username": "Alice Example",
+        "message": "first commit",
+        "file_count": 5,
+        "created_at": "2023-11-14T22:13:20+00:00"
+       }
+      ],
+      4
+     ]
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    1,
+    1,
+    {
+     "ok": [
+      [
+       {
+        "id": "e8db92b0b9d06fcf01f14c4c66391752cef9a192",
+        "short": "e8db92b",
+        "branch": "dev",
+        "parents": [
+         "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+        ],
+        "author_username": "Zoë_名-x.y",
+        "message": "dir wins",
+        "file_count": 6,
+        "created_at": "2023-11-14T22:18:20+00:00"
+       }
+      ],
+      4
+     ]
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    2,
+    0,
+    {
+     "ok": [
+      [
+       {
+        "id": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d",
+        "short": "e4c57db",
+        "branch": "dev",
+        "parents": [
+         "e8db92b0b9d06fcf01f14c4c66391752cef9a192"
+        ],
+        "author_username": "Zoë_名-x.y",
+        "message": "file wins",
+        "file_count": 4,
+        "created_at": "2023-11-14T22:18:20+00:00"
+       },
+       {
+        "id": "e8db92b0b9d06fcf01f14c4c66391752cef9a192",
+        "short": "e8db92b",
+        "branch": "dev",
+        "parents": [
+         "fe2bab488c6d7aa05a4ddf993476d941ec5d561c"
+        ],
+        "author_username": "Zoë_名-x.y",
+        "message": "dir wins",
+        "file_count": 6,
+        "created_at": "2023-11-14T22:18:20+00:00"
+       }
+      ],
+      4
+     ]
+    }
+   ],
+   [
+    "p1",
+    "",
+    1,
+    5,
+    {
+     "ok": [
+      [],
+      2
+     ]
+    }
+   ],
+   [
+    "p1",
+    "fromsha",
+    10,
+    0,
+    {
+     "ok": [
+      [
+       {
+        "id": "4a97e1476a464e18b869eef09726921e849145bc",
+        "short": "4a97e14",
+        "branch": "fromsha",
+        "parents": [],
+        "author_username": "Alice Example",
+        "message": "first commit",
+        "file_count": 5,
+        "created_at": "2023-11-14T22:13:20+00:00"
+       }
+      ],
+      1
+     ]
+    }
+   ],
+   [
+    "p1",
+    "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+    10,
+    0,
+    {
+     "ok": [
+      [
+       {
+        "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+        "short": "fe2bab4",
+        "branch": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+        "parents": [
+         "4a97e1476a464e18b869eef09726921e849145bc"
+        ],
+        "author_username": "Alice Example",
+        "message": "second",
+        "file_count": 6,
+        "created_at": "2023-11-14T22:15:00+00:00"
+       },
+       {
+        "id": "4a97e1476a464e18b869eef09726921e849145bc",
+        "short": "4a97e14",
+        "branch": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+        "parents": [],
+        "author_username": "Alice Example",
+        "message": "first commit",
+        "file_count": 5,
+        "created_at": "2023-11-14T22:13:20+00:00"
+       }
+      ],
+      2
+     ]
+    }
+   ],
+   [
+    "p1",
+    "nope",
+    10,
+    0,
+    {
+     "ok": [
+      [],
+      0
+     ]
+    }
+   ],
+   [
+    "p2",
+    null,
+    50,
+    0,
+    {
+     "ok": [
+      [
+       {
+        "id": "a069d380174769773fe0ca78c13416b572b50963",
+        "short": "a069d38",
+        "branch": "main",
+        "parents": [
+         "b603b71a2448bfc7c3915945a84ca7c87ef0edfd"
+        ],
+        "author_username": "Zoë_名-x.y",
+        "message": "empty tree",
+        "file_count": 0,
+        "created_at": "2023-11-14T22:25:00+00:00"
+       },
+       {
+        "id": "b603b71a2448bfc7c3915945a84ca7c87ef0edfd",
+        "short": "b603b71",
+        "branch": "main",
+        "parents": [
+         "8e023aaeb7b32d7593863a95227df1818868e8af"
+        ],
+        "author_username": "",
+        "message": "msg\n with  newline",
+        "file_count": 7,
+        "created_at": "2023-11-14T22:23:20+00:00"
+       },
+       {
+        "id": "8e023aaeb7b32d7593863a95227df1818868e8af",
+        "short": "8e023aa",
+        "branch": "main",
+        "parents": [
+         "04177762fac56e5245e27d6099378adc3f9bd02b"
+        ],
+        "author_username": "Zoë_名-x.y",
+        "message": "(no message)",
+        "file_count": 5,
+        "created_at": "2023-11-14T22:21:40+00:00"
+       },
+       {
+        "id": "04177762fac56e5245e27d6099378adc3f9bd02b",
+        "short": "0417776",
+        "branch": "main",
+        "parents": [],
+        "author_username": "Zoë_名-x.y",
+        "message": "Fork of slug",
+        "file_count": 6,
+        "created_at": "2023-11-14T22:20:00+00:00"
+       }
+      ],
+      4
+     ]
+    }
+   ],
+   [
+    "p4",
+    null,
+    50,
+    0,
+    {
+     "ok": [
+      [],
+      0
+     ]
+    }
+   ]
+  ],
+  "blobs": [
+   [
+    "p1",
+    "main",
+    "ui/a.txt",
+    {
+     "ok_bytes": "aGVsbG8K"
+    }
+   ],
+   [
+    "p1",
+    "main",
+    "UI\\A.txt ",
+    {
+     "ok_bytes": "aGVsbG8K"
+    }
+   ],
+   [
+    "p1",
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    "/readme.md",
+    {
+     "error": [
+      404,
+      "not_found",
+      "No file '/readme.md' in that commit"
+     ]
+    }
+   ],
+   [
+    "p1",
+    "main",
+    "README.md",
+    {
+     "error": [
+      404,
+      "not_found",
+      "No file 'README.md' in that commit"
+     ]
+    }
+   ],
+   [
+    "p1",
+    "main",
+    "../x",
+    {
+     "error": [
+      400,
+      "bad_request",
+      "Invalid file path: '../x'"
+     ]
+    }
+   ],
+   [
+    "p1",
+    "main",
+    "",
+    {
+     "error": [
+      400,
+      "bad_request",
+      "Invalid file path: ''"
+     ]
+    }
+   ],
+   [
+    "p1",
+    "main",
+    "a//b",
+    {
+     "error": [
+      400,
+      "bad_request",
+      "Invalid file path: 'a//b'"
+     ]
+    }
+   ],
+   [
+    "p1",
+    "main",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    {
+     "error": [
+      400,
+      "bad_request",
+      "Path too long (>255 bytes): 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'"
+     ]
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    "ui",
+    {
+     "ok_bytes": "ZmlsZSBvdmVyIGRpcg=="
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    "ui/a.txt/c",
+    {
+     "error": [
+      404,
+      "not_found",
+      "No file 'ui/a.txt/c' in that commit"
+     ]
+    }
+   ],
+   [
+    "p4",
+    "main",
+    "x",
+    {
+     "error": [
+      404,
+      "not_found",
+      "No file 'x' in that commit"
+     ]
+    }
+   ]
+  ],
+  "compare": [
+   [
+    "main",
+    "dev",
+    {
+     "ok": {
+      "base": {
+       "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+       "short": "fe2bab4",
+       "branch": null,
+       "parents": [
+        "4a97e1476a464e18b869eef09726921e849145bc"
+       ],
+       "author_username": "Alice Example",
+       "message": "second",
+       "file_count": 6,
+       "created_at": "2023-11-14T22:15:00+00:00"
+      },
+      "head": {
+       "id": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d",
+       "short": "e4c57db",
+       "branch": null,
+       "parents": [
+        "e8db92b0b9d06fcf01f14c4c66391752cef9a192"
+       ],
+       "author_username": "Zoë_名-x.y",
+       "message": "file wins",
+       "file_count": 4,
+       "created_at": "2023-11-14T22:18:20+00:00"
+      },
+      "added": [
+       "ui"
+      ],
+      "removed": [
+       "ui/a.txt",
+       "ui/b.txt",
+       "ui/dup.txt"
+      ],
+      "modified": []
+     }
+    }
+   ],
+   [
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    "main",
+    {
+     "ok": {
+      "base": {
+       "id": "4a97e1476a464e18b869eef09726921e849145bc",
+       "short": "4a97e14",
+       "branch": null,
+       "parents": [],
+       "author_username": "Alice Example",
+       "message": "first commit",
+       "file_count": 5,
+       "created_at": "2023-11-14T22:13:20+00:00"
+      },
+      "head": {
+       "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+       "short": "fe2bab4",
+       "branch": null,
+       "parents": [
+        "4a97e1476a464e18b869eef09726921e849145bc"
+       ],
+       "author_username": "Alice Example",
+       "message": "second",
+       "file_count": 6,
+       "created_at": "2023-11-14T22:15:00+00:00"
+      },
+      "added": [
+       "textures/t.dds",
+       "ui/b.txt"
+      ],
+      "removed": [
+       "README.md"
+      ],
+      "modified": []
+     }
+    }
+   ],
+   [
+    "dev",
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    {
+     "ok": {
+      "base": {
+       "id": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d",
+       "short": "e4c57db",
+       "branch": null,
+       "parents": [
+        "e8db92b0b9d06fcf01f14c4c66391752cef9a192"
+       ],
+       "author_username": "Zoë_名-x.y",
+       "message": "file wins",
+       "file_count": 4,
+       "created_at": "2023-11-14T22:18:20+00:00"
+      },
+      "head": {
+       "id": "4a97e1476a464e18b869eef09726921e849145bc",
+       "short": "4a97e14",
+       "branch": null,
+       "parents": [],
+       "author_username": "Alice Example",
+       "message": "first commit",
+       "file_count": 5,
+       "created_at": "2023-11-14T22:13:20+00:00"
+      },
+      "added": [
+       "README.md",
+       "ui/a.txt",
+       "ui/dup.txt"
+      ],
+      "removed": [
+       "textures/t.dds",
+       "ui"
+      ],
+      "modified": []
+     }
+    }
+   ],
+   [
+    "main",
+    "nope",
+    {
+     "error": [
+      404,
+      "not_found",
+      "One of the refs doesn't exist on this project."
+     ]
+    }
+   ],
+   [
+    "nope",
+    "main",
+    {
+     "error": [
+      404,
+      "not_found",
+      "One of the refs doesn't exist on this project."
+     ]
+    }
+   ]
+  ],
+  "placement": [
+   [
+    "p1",
+    "",
+    {
+     "ok": {
+      "commit": {
+       "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+       "short": "fe2bab4",
+       "branch": null,
+       "parents": [
+        "4a97e1476a464e18b869eef09726921e849145bc"
+       ],
+       "author_username": "Alice Example",
+       "message": "second",
+       "file_count": 6,
+       "created_at": "2023-11-14T22:15:00+00:00"
+      },
+      "total": 6,
+      "compilable_count": 2,
+      "skipped": [
+       {
+        "path": "ui/b.txt",
+        "reason": "'.txt' files aren't included in a build"
+       },
+       {
+        "path": "ui/dup.txt",
+        "reason": "'.txt' files aren't included in a build"
+       }
+      ],
+      "misplaced": [
+       {
+        "path": "readme_root.txt",
+        "expected": "ui/readme_root.txt"
+       },
+       {
+        "path": "ui/a.txt",
+        "expected": "ui/hud/a.txt"
+       }
+      ],
+      "fix_available": true,
+      "game_index_available": true
+     }
+    }
+   ],
+   [
+    "p1",
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    {
+     "ok": {
+      "commit": {
+       "id": "4a97e1476a464e18b869eef09726921e849145bc",
+       "short": "4a97e14",
+       "branch": null,
+       "parents": [],
+       "author_username": "Alice Example",
+       "message": "first commit",
+       "file_count": 5,
+       "created_at": "2023-11-14T22:13:20+00:00"
+      },
+      "total": 5,
+      "compilable_count": 1,
+      "skipped": [
+       {
+        "path": "README.md",
+        "reason": "root file (only files inside a Trove folder are compiled)"
+       },
+       {
+        "path": "ui/dup.txt",
+        "reason": "'.txt' files aren't included in a build"
+       }
+      ],
+      "misplaced": [
+       {
+        "path": "readme_root.txt",
+        "expected": "ui/readme_root.txt"
+       },
+       {
+        "path": "ui/a.txt",
+        "expected": "ui/hud/a.txt"
+       }
+      ],
+      "fix_available": true,
+      "game_index_available": true
+     }
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    {
+     "ok": {
+      "commit": {
+       "id": "e4c57dbc042cb0a4f5fb71246719b7d23c2b255d",
+       "short": "e4c57db",
+       "branch": null,
+       "parents": [
+        "e8db92b0b9d06fcf01f14c4c66391752cef9a192"
+       ],
+       "author_username": "Zoë_名-x.y",
+       "message": "file wins",
+       "file_count": 4,
+       "created_at": "2023-11-14T22:18:20+00:00"
+      },
+      "total": 4,
+      "compilable_count": 2,
+      "skipped": [
+       {
+        "path": "ui",
+        "reason": "root file (only files inside a Trove folder are compiled)"
+       }
+      ],
+      "misplaced": [
+       {
+        "path": "readme_root.txt",
+        "expected": "ui/readme_root.txt"
+       }
+      ],
+      "fix_available": true,
+      "game_index_available": true
+     }
+    }
+   ],
+   [
+    "p2",
+    "",
+    {
+     "ok": {
+      "commit": {
+       "id": "a069d380174769773fe0ca78c13416b572b50963",
+       "short": "a069d38",
+       "branch": null,
+       "parents": [
+        "b603b71a2448bfc7c3915945a84ca7c87ef0edfd"
+       ],
+       "author_username": "Zoë_名-x.y",
+       "message": "empty tree",
+       "file_count": 0,
+       "created_at": "2023-11-14T22:25:00+00:00"
+      },
+      "total": 0,
+      "compilable_count": 0,
+      "skipped": [],
+      "misplaced": [],
+      "fix_available": false,
+      "game_index_available": true
+     }
+    }
+   ],
+   [
+    "p4",
+    "",
+    {
+     "ok": {
+      "total": 0,
+      "compilable_count": 0,
+      "skipped": [],
+      "misplaced": [],
+      "fix_available": false,
+      "game_index_available": false,
+      "commit": null
+     }
+    }
+   ]
+  ],
+  "placement_no_game": {
+   "ok": {
+    "commit": {
+     "id": "fe2bab488c6d7aa05a4ddf993476d941ec5d561c",
+     "short": "fe2bab4",
+     "branch": null,
+     "parents": [
+      "4a97e1476a464e18b869eef09726921e849145bc"
+     ],
+     "author_username": "Alice Example",
+     "message": "second",
+     "file_count": 6,
+     "created_at": "2023-11-14T22:15:00+00:00"
+    },
+    "total": 6,
+    "compilable_count": 2,
+    "skipped": [
+     {
+      "path": "readme_root.txt",
+      "reason": "root file (only files inside a Trove folder are compiled)"
+     },
+     {
+      "path": "ui/a.txt",
+      "reason": "'.txt' files aren't included in a build"
+     },
+     {
+      "path": "ui/b.txt",
+      "reason": "'.txt' files aren't included in a build"
+     },
+     {
+      "path": "ui/dup.txt",
+      "reason": "'.txt' files aren't included in a build"
+     }
+    ],
+    "misplaced": [],
+    "fix_available": false,
+    "game_index_available": false
+   }
+  },
+  "archives": [
+   [
+    "p1",
+    "",
+    {
+     "ok": [
+      "my mod v2-main-fe2bab4.zip",
+      "UEsDBBQAAAAIAMdLVl0PPNR6BwAAAAUAAAAbAAAAYmx1ZXByaW50cy9kZWNvL3guYmx1ZXByaW50Y2BkSioAAFBLAwQUAAAACADHS1Zdnf8JbAMAAAABAAAADwAAAHJlYWRtZV9yb290LnR4dCsCAFBLAwQUAAAACADHS1ZdyyICZz4BAAAAFAAADgAAAHRleHR1cmVzL3QuZGRzY2BkYmZhZWPn4OTi5uHl4xcQFBIWERUTl5CUkpaRlZNXUFRSVlFVU9fQ1NLW0dXTNzA0MjYxNTO3sLSytrG1s3dwdHJ2cXVz9/D08vbx9fMPCAwKDgkNC4+IjIqOiY2LT0hMSk5JTUvPyMzKzsnNyy8oLCouKS0rr6isqq6pratvaGxqbmlta+/o7Oru6e3rnzBx0uQpU6dNnzFz1uw5c+fNX7Bw0eIlS5ctX7Fy1eo1a9et37Bx0+YtW7dt37Fz1+49e/ftP3Dw0OEjR48dP3Hy1OkzZ8+dv3Dx0uUrV69dv3Hz1u07d+/df/Dw0eMnT589f/Hy1es3b9+9//Dx0+cvX799//Hz1+8/f//9Zxj1/6j/R/0/6v9R/4/6f9T/o/4f9f+o/0f9P+r/Uf+P+n/U/6P+H/X/qP+Hsf8BUEsDBBQAAAAIAMdLVl0gMDo2CAAAAAYAAAAIAAAAdWkvYS50eHTLSM3JyecCAFBLAwQUAAAACADHS1ZdAqspahMAAAARAAAACAAAAHVpL2IudHh0K05Nzs9LUSgvyixJVSjPzCsGAFBLAwQUAAAACADHS1ZdIDA6NggAAAAGAAAACgAAAHVpL2R1cC50eHTLSM3JyecCAFBLAQIUAxQAAAAIAMdLVl0PPNR6BwAAAAUAAAAbAAAAAAAAAAAAAACAAQAAAABibHVlcHJpbnRzL2RlY28veC5ibHVlcHJpbnRQSwECFAMUAAAACADHS1Zdnf8JbAMAAAABAAAADwAAAAAAAAAAAAAAgAFAAAAAcmVhZG1lX3Jvb3QudHh0UEsBAhQDFAAAAAgAx0tWXcsiAmc+AQAAABQAAA4AAAAAAAAAAAAAAIABcAAAAHRleHR1cmVzL3QuZGRzUEsBAhQDFAAAAAgAx0tWXSAwOjYIAAAABgAAAAgAAAAAAAAAAAAAAIAB2gEAAHVpL2EudHh0UEsBAhQDFAAAAAgAx0tWXQKrKWoTAAAAEQAAAAgAAAAAAAAAAAAAAIABCAIAAHVpL2IudHh0UEsBAhQDFAAAAAgAx0tWXSAwOjYIAAAABgAAAAoAAAAAAAAAAAAAAIABQQIAAHVpL2R1cC50eHRQSwUGAAAAAAYABgBmAQAAcQIAAAAA"
+     ]
+    }
+   ],
+   [
+    "p1",
+    "4a97e1476a464e18b869eef09726921e849145bc",
+    {
+     "ok": [
+      "my mod v2-4a97e1476a464e18b869eef09726921e849145bc-4a97e14.zip",
+      "UEsDBBQAAAAIAMdLVl3PvjbgCwAAAAkAAAAJAAAAUkVBRE1FLm1kU1YISk1MyU3lAgBQSwMEFAAAAAgAx0tWXQ881HoHAAAABQAAABsAAABibHVlcHJpbnRzL2RlY28veC5ibHVlcHJpbnRjYGRKKgAAUEsDBBQAAAAIAMdLVl2d/wlsAwAAAAEAAAAPAAAAcmVhZG1lX3Jvb3QudHh0KwIAUEsDBBQAAAAIAMdLVl0gMDo2CAAAAAYAAAAIAAAAdWkvYS50eHTLSM3JyecCAFBLAwQUAAAACADHS1ZdIDA6NggAAAAGAAAACgAAAHVpL2R1cC50eHTLSM3JyecCAFBLAQIUAxQAAAAIAMdLVl3PvjbgCwAAAAkAAAAJAAAAAAAAAAAAAACAAQAAAABSRUFETUUubWRQSwECFAMUAAAACADHS1ZdDzzUegcAAAAFAAAAGwAAAAAAAAAAAAAAgAEyAAAAYmx1ZXByaW50cy9kZWNvL3guYmx1ZXByaW50UEsBAhQDFAAAAAgAx0tWXZ3/CWwDAAAAAQAAAA8AAAAAAAAAAAAAAIABcgAAAHJlYWRtZV9yb290LnR4dFBLAQIUAxQAAAAIAMdLVl0gMDo2CAAAAAYAAAAIAAAAAAAAAAAAAACAAaIAAAB1aS9hLnR4dFBLAQIUAxQAAAAIAMdLVl0gMDo2CAAAAAYAAAAKAAAAAAAAAAAAAACAAdAAAAB1aS9kdXAudHh0UEsFBgAAAAAFAAUAKwEAAAABAAAAAA=="
+     ]
+    }
+   ],
+   [
+    "p1",
+    "dev",
+    {
+     "ok": [
+      "my mod v2-dev-e4c57db.zip",
+      "UEsDBBQAAAAIAMdLVl0PPNR6BwAAAAUAAAAbAAAAYmx1ZXByaW50cy9kZWNvL3guYmx1ZXByaW50Y2BkSioAAFBLAwQUAAAACADHS1Zdnf8JbAMAAAABAAAADwAAAHJlYWRtZV9yb290LnR4dCsCAFBLAwQUAAAACADHS1ZdyyICZz4BAAAAFAAADgAAAHRleHR1cmVzL3QuZGRzY2BkYmZhZWPn4OTi5uHl4xcQFBIWERUTl5CUkpaRlZNXUFRSVlFVU9fQ1NLW0dXTNzA0MjYxNTO3sLSytrG1s3dwdHJ2cXVz9/D08vbx9fMPCAwKDgkNC4+IjIqOiY2LT0hMSk5JTUvPyMzKzsnNyy8oLCouKS0rr6isqq6pratvaGxqbmlta+/o7Oru6e3rnzBx0uQpU6dNnzFz1uw5c+fNX7Bw0eIlS5ctX7Fy1eo1a9et37Bx0+YtW7dt37Fz1+49e/ftP3Dw0OEjR48dP3Hy1OkzZ8+dv3Dx0uUrV69dv3Hz1u07d+/df/Dw0eMnT589f/Hy1es3b9+9//Dx0+cvX799//Hz1+8/f//9Zxj1/6j/R/0/6v9R/4/6f9T/o/4f9f+o/0f9P+r/Uf+P+n/U/6P+H/X/qP+Hsf8BUEsDBBQAAAAIAMdLVl2MKuhDDwAAAA0AAAACAAAAdWlLy8xJVcgvSy1SSMksAgBQSwECFAMUAAAACADHS1ZdDzzUegcAAAAFAAAAGwAAAAAAAAAAAAAAgAEAAAAAYmx1ZXByaW50cy9kZWNvL3guYmx1ZXByaW50UEsBAhQDFAAAAAgAx0tWXZ3/CWwDAAAAAQAAAA8AAAAAAAAAAAAAAIABQAAAAHJlYWRtZV9yb290LnR4dFBLAQIUAxQAAAAIAMdLVl3LIgJnPgEAAAAUAAAOAAAAAAAAAAAAAACAAXAAAAB0ZXh0dXJlcy90LmRkc1BLAQIUAxQAAAAIAMdLVl2MKuhDDwAAAA0AAAACAAAAAAAAAAAAAACAAdoBAAB1aVBLBQYAAAAABAAEAPIAAAAJAgAAAAA="
+     ]
+    }
+   ],
+   [
+    "p2",
+    "",
+    {
+     "error": [
+      404,
+      "not_found",
+      "That commit has no files to download."
+     ]
+    }
+   ],
+   [
+    "p3",
+    "",
+    {
+     "error": [
+      404,
+      "not_found",
+      "No branch or commit 'main', or no commits yet."
+     ]
+    }
+   ],
+   [
+    "p4",
+    "",
+    {
+     "error": [
+      404,
+      "not_found",
+      "No branch or commit 'main', or no commits yet."
+     ]
+    }
+   ],
+   [
+    "p1",
+    "nope",
+    {
+     "error": [
+      404,
+      "not_found",
+      "No branch or commit 'nope', or no commits yet."
+     ]
+    }
+   ]
+  ],
+  "archive_clock": [
+   2026,
+   10,
+   22,
+   9,
+   30,
+   15
+  ]
+ },
+ "writes": [
+  [
+   "commit_ok",
+   {
+    "ok": {
+     "id": "543d04374f8a283c830dddf30601e967464cef61",
+     "short": "543d043",
+     "branch": "main",
+     "parents": [],
+     "author_username": "Alice Example",
+     "message": "add files",
+     "file_count": 2,
+     "created_at": "2026-10-22T09:30:15+00:00"
+    }
+   }
+  ],
+  [
+   "commit_same",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Nothing to commit - the tree is unchanged."
+    ]
+   }
+  ],
+  [
+   "commit_blank_message",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "A commit needs a message."
+    ]
+   }
+  ],
+  [
+   "commit_too_many",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Too many files in one commit (max 4)."
+    ]
+   }
+  ],
+  [
+   "commit_bad_branch",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Invalid branch name."
+    ]
+   }
+  ],
+  [
+   "commit_big_file",
+   {
+    "error": [
+     413,
+     "bad_request",
+     "File \"Ui/Big 'one'.bin\" exceeds the 4096-byte limit."
+    ]
+   }
+  ],
+  [
+   "commit_bad_path",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Invalid file path: 'ui/./x'"
+    ]
+   }
+  ],
+  [
+   "commit_tmod",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "A built .tmod goes in a release, not in your files - use New release to upload it so people can download and install it."
+    ]
+   }
+  ],
+  [
+   "commit_bad_delete",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Invalid file path: 'ui/'"
+    ]
+   }
+  ],
+  [
+   "commit_releases_mode",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "This mod is in releases-only mode - it has no file versioning."
+    ]
+   }
+  ],
+  [
+   "commit_not_owner",
+   {
+    "error": [
+     403,
+     "forbidden",
+     "You don't have edit access to this mod project."
+    ]
+   }
+  ],
+  [
+   "commit_collaborator",
+   {
+    "ok": {
+     "id": "9e85e4d48469bc15a1c7bb400edcccedf0a6337a",
+     "short": "9e85e4d",
+     "branch": "side/one",
+     "parents": [],
+     "author_username": "bob",
+     "message": "bob was here",
+     "file_count": 2,
+     "created_at": "2026-10-22T09:30:15+00:00"
+    }
+   }
+  ],
+  [
+   "branch_ok",
+   {
+    "ok": {
+     "name": "feat-1",
+     "head_commit_id": "543d04374f8a283c830dddf30601e967464cef61"
+    }
+   }
+  ],
+  [
+   "branch_from_sha_bad",
+   {
+    "ok": {
+     "name": "feat-2",
+     "head_commit_id": "543d04374f8a283c830dddf30601e967464cef61"
+    }
+   }
+  ],
+  [
+   "branch_exists",
+   {
+    "error": [
+     409,
+     "conflict",
+     "Branch 'feat-1' already exists."
+    ]
+   }
+  ],
+  [
+   "branch_invalid",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Invalid branch name."
+    ]
+   }
+  ],
+  [
+   "branch_dotlock_500",
+   {
+    "exception": "RefFormatError"
+   }
+  ],
+  [
+   "branch_empty_repo",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Commit something before creating a branch."
+    ]
+   }
+  ],
+  [
+   "branch_from_side",
+   {
+    "ok": {
+     "name": "feat-3",
+     "head_commit_id": "9e85e4d48469bc15a1c7bb400edcccedf0a6337a"
+    }
+   }
+  ],
+  [
+   "delete_default",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Can't delete the default branch."
+    ]
+   }
+  ],
+  [
+   "delete_ok",
+   {
+    "ok": null
+   }
+  ],
+  [
+   "fix_ok",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Nothing to fix - every file is already in its correct place."
+    ]
+   }
+  ],
+  [
+   "fix_nothing",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Nothing to fix - every file is already in its correct place."
+    ]
+   }
+  ],
+  [
+   "fix_no_branch",
+   {
+    "error": [
+     404,
+     "not_found",
+     "Branch 'ghost' has no commits to fix."
+    ]
+   }
+  ],
+  [
+   "fix_bad_branch",
+   {
+    "error": [
+     400,
+     "bad_request",
+     "Invalid branch name."
+    ]
+   }
+  ],
+  [
+   "fix_side",
+   {
+    "ok": {
+     "fixed": 1,
+     "commit": {
+      "id": "9ce9d0afb10a67412b4b46d7ab5aaf436c5766a7",
+      "short": "9ce9d0a",
+      "branch": "side/one",
+      "parents": [
+       "9e85e4d48469bc15a1c7bb400edcccedf0a6337a"
+      ],
+      "author_username": "Alice Example",
+      "message": "Fix file placement (1 file)",
+      "file_count": 2,
+      "created_at": "2026-10-22T09:30:15+00:00"
+     }
+    }
+   }
+  ],
+  [
+   "fix_no_game",
+   {
+    "error": [
+     409,
+     "conflict",
+     "The game file index isn't available right now, so placement can't be auto-fixed. Try again later."
+    ]
+   }
+  ]
+ ],
+ "now": "2026-10-22T09:30:15.123456+00:00",
+ "store": {
+  "p1.git": {
+   "files": {
+    "config": "W2NvcmVdCglyZXBvc2l0b3J5Zm9ybWF0dmVyc2lvbiA9IDAKCWZpbGVtb2RlID0gZmFsc2UKCWJhcmUgPSB0cnVlCglsb2dhbGxyZWZ1cGRhdGVzID0gdHJ1ZQo=",
+    "description": "VW5uYW1lZCByZXBvc2l0b3J5",
+    "HEAD": "cmVmOiByZWZzL2hlYWRzL21haW4K",
+    "info/exclude": "",
+    "objects/00/569b990a12b4b3dd4d7fb6da4d3450004668f2": "eJwrKUpNVTCzYDA0MDAzMVFI1CupKGE4x2imysy94vZKtu9h0+rnzVk8xc0LqiCltACnEgC6KBs9",
+    "objects/08/b9811c98f0d90dbacc006ddcd80c5945b9ea55": "eJxLyslPUjBkyAUADBACXg==",
+    "objects/0b/df9b0c050d71a445403bdb8f34fbc48de9ecc9": "eJwrKUpNVTA0MWMwNDAwMzFRCHJ1dPF11ctNYfg81VnkIFOCxvO6xctTV937lb4lcKqJARAoJOWUphYUZeaVFDNsVkqyqFqYnxTzO03rkL7UVuMOnTyoSUWpiSm5qfFF+fkleiUVJQyy+oye8hU2PfWc4mcygnKS2W/wWULMK81kYAibPZNLaMvmu7712275mgQwuGV8AgCN5TcC",
+    "objects/0f/427d6a90c02c0a36b97540b8d96baf9d5365bf": "eJwrKUpNVTA0MGAwMQAChUS9kooShjjX2IqOnd1my1337ziYNOvYpU9hm4FqzExMFJLAChQlHs90kzmuXWDdt3fllf9WSyevZIUqSCktACs5x2imysy94vZKtu9h0+rnzVk8xc0LALOMKl8=",
+    "objects/1d/2f01491f783c8c7f0917cc68526c6307d80e39": "eJxLyslPUjBkKAIADBUCYw==",
+    "objects/21/18e399461cc72b703b8ebda9d4ff3aa593a905": "eJxLyslPUjA0ZyhOTc7PS1EoL8osSVUoz8wrBgBssQjQ",
+    "objects/2f/d16f9fac3bab34c5a9cce283001be253e6d30a": "eJxLyslPUjA0ZkjLzElVyC9LLVJIySwCAEnnBv8=",
+    "objects/30/9eb6a1ae4c4be5f79e535ed52cbab8c9d0515e": "eJxLyslPUjBlYGBkSioAABTBAso=",
+    "objects/4a/97e1476a464e18b869eef09726921e849145bc": "eJytjkEOwiAURF1zir83NrSlaZsYows9gR4APh8lLdAAjXp7Y+0RnMUkb/NmMDhnM1RVucmRCLjSplccecN1W0ohGsFrpVVnamEUik5TT4g9k3N+hAin0SLB+SXdNBLsF1zpOCeKqfAh0jS+i8E+7QHKlq+B7bcZLgcy/UFFHoO2/g6362XXMWZsTBl+Ax/SB0p2",
+    "objects/5e/455d7888b98b36a745bfb8c1629ac6d2f256b3": "eJwrKUpNVTCyZDA0MDAzMVFIZki4/F/UNWCz+ly73znR+VP92lb36QIA30gNfw==",
+    "objects/60/d3ff154550b3279d3efb6c5b6f954e86ab8e2d": "eJxLyslPUjBnSM7PyclMSQUAIwIE0w==",
+    "objects/6a/ba2673884e0af7cc3c6a3b1b54667a13455537": "eJxLyslPUjA1NDJgYGBkYmZhZWPn4OTi5uHl4xcQFBIWERUTl5CUkpaRlZNXUFRSVlFVU9fQ1NLW0dXTNzA0MjYxNTO3sLSytrG1s3dwdHJ2cXVz9/D08vbx9fMPCAwKDgkNC4+IjIqOiY2LT0hMSk5JTUvPyMzKzsnNyy8oLCouKS0rr6isqq6pratvaGxqbmlta+/o7Oru6e3rnzBx0uQpU6dNnzFz1uw5c+fNX7Bw0eIlS5ctX7Fy1eo1a9et37Bx0+YtW7dt37Fz1+49e/ftP3Dw0OEjR48dP3Hy1OkzZ8+dv3Dx0uUrV69dv3Hz1u07d+/df/Dw0eMnT589f/Hy1es3b9+9//Dx0+cvX799//Hz1+8/f//9H/X/qP9H/T/q/1H/j/p/1P+j/h/1/6j/R/0/6v9R/4/6f9T/o/4f9f+o/4ez/wHEBfkP",
+    "objects/70/182abcab442c733008753d1b23da9f2aea7065": "eJwrKUpNVTA2ZjA0MDAzMVEo0UtJKWbI2qVW3OHH9f2MTZa1dEhalbBrqDkAAH4M1w==",
+    "objects/73/10f3ac21ffa15c6f29c31143ab121ba892d3ef": "eJwrKUpNVTA0MWEwMQAChaSc0tSCosy8kmKGzUpJFlUL85NifqdpHdKX2mrcoZNnaGBgZmKiUJSamJKbGl+Un1+iV1JRwiCrz+gpX2HTU88pfiYjKCeZ/QafJcS8ktSKktKi1GKGAgmtPatddIoNOEptpZVvzdd6VZAKUVKaydD48OTSixcCfKb4VDYZTeBh+2JxSBIAXyo1bQ==",
+    "objects/7b/1cedd18a1e341f192a08dd9b1b773a60459ab6": "eJwrKUpNVTA0MWEwMQAChaSc0tSCosy8kmKGzUpJFlUL85NifqdpHdKX2mrcoZNnaGBgZmKiUJSamJKbGl+Un1+iV1JRwiCrz+gpX2HTU88pfiYjKCeZ/QafJcS8ktSKktKi1GKGAgmtPatddIoNOEptpZVvzdd6VZAKUVKaycDvVJs14YAOl9nOUocdN7PXzw1O3Q8AP0Q0yw==",
+    "objects/81/e1c9a5d1d0504c944c798232900c06f438c219": "eJwrKUpNVTA0MGQwNDAwMzFRSNQrqShhOMdopsrMveL2SrbvYdPq581ZPMXNC6ogCaxAUeLxTDeZ49oF1n17V175b7V08kpWqIKU0gKcZgAAF00oOw==",
+    "objects/82/819e2e2ee1103544fd0bfe26709a3aa0b085d7": "eJwrKUpNVTA2ZjAxAAKF3PyU1Jxihs7Arb0b2dRDz9mv6bgpmuI9Pf9QOgAVsw8r",
+    "objects/89/51b58db1062755ce3fac88d915644b976fc267": "eJwrKUpNVTA2ZjA0MDAzMVHI1SupKGHg2NkoM+PDTd5dZxhy79zgiXTd+SoUABNBD5Y=",
+    "objects/8a/9004d349ffaab2c5fa1f585771dd372e2c4562": "eJwrKUpNVTC2ZDA0MDAzMVGo0EvKKU0tKMrMK2EwmLdt4Tof76ff5wXHXdXZtePkhcA4AICKE1c=",
+    "objects/91/cdda9d13407b1042305bc3200b3fe2faf9e4fb": "eJxLyslPUjA2MDBgSBoFo2AUjIJRMApGwSgYBaNgFAx6AABrFX8v",
+    "objects/b3/2262387aa16f625cfb662ac22f1ab533882c6e": "eJwrKUpNVTA2ZDAxAAKFlNTkfIauCSyXPf+v2nT0l3xEeOFdcz0d1yQABcMOjA==",
+    "objects/ce/013625030ba8dba906f756967f9e9ca394464a": "eJxLyslPUjBjyEjNycnnAgAdxQQU",
+    "objects/e4/c57dbc042cb0a4f5fb71246719b7d23c2b255d": "eJyljjsKAjEURa2ziteLQz5jxgciVq5AGxuZSV40qMmQyaAuQnAfLsO1uA8/lb23OhcOl2vi8egzSF0OciIC9yaLUlghFSdUE9s0KIgQNZcO0biqlLUi1taJQgZ6Cygb3qDl2hnHhROlKY3WCkU1loYc1gIlq/u8iwnW8XHfPG/X0bm4wPS3zfuOUleEmKg9XIq9P/kZiIp/ojiH4QeY+f7N9P8SBROtD1tYLRejCWPOHwhOPnQv1j5a3A==",
+    "objects/e8/db92b0b9d06fcf01f14c4c66391752cef9a192": "eJyljj1OAzEQRql9CvcoK8/a6x8pilJxAtLQoLFnFiwSO/I6CjlEJO7BMTgL90Chouer3muevlQPh9zlaPVdb8zSRUhMBB6BtYEZwojKE4UI0TmNVpkpYLTiiI1LlzOPEaPxPllyiGpCQzSHoI2zFAxwmmiykASe+mtt8ql+fT5/f1xX78NFrv/a9rRwW4ZSGx/3l+Etn/NGglO3aaXk/Q1E+v3b+f8lLqlSLi9y9/iw8kJQbvKcy/IDEaNbJQ==",
+    "objects/eb/2e2868d7b3a394b95ea70886f30dcb8444482d": "eJyljUEOgjAURF33FH9vJL+FSkmMceVKd3qAUj62AVpS2hhvr3AFZxbzZjNjwjS5BIKLXYpEoITiDYmfiXMsZVX1HbY9iWONjS61xhaV7Gqmc7Ihwj2PyTG4OU9w2sqKl7xQXAofIs3jpxjc252B17hJIuzXZGb7TvTfCnkTOudf8HxcD4qxEGerPbRRe2O/HDdFiA==",
+    "objects/f2/64d921d1230e938dbb91ee99602f99cf742a3e": "eJwrKUpNVTA0MWUwMQAChaSc0tSCosy8kmKGzUpJFlUL85NifqdpHdKX2mrcoZNnaGBgZmKiUJSamJKbGl+Un1+iV1JRwiCrz+gpX2HTU88pfiYjKCeZ/QafJcS8ktSKktKi1GKGAgmtPatddIoNOEptpZVvzdd6VZAKNa00k0H/Yv78NdarTY6uPPOomUH6UfCzy1wAilI2bA==",
+    "objects/f3/954314c1026028e77ea3a765aadefa67b45195": "eJxLyslPUrBkUFYISk1MyU3lAgAn6gSU",
+    "objects/fe/2bab488c6d7aa05a4ddf993476d941ec5d561c": "eJytjktOAzEQBVn7FL2PiNy244+EUFjACeAAPT1tsJixRx5HwO1RIo5ArV5tnorbupYBxtu70UUgWNTZEhvMmfDEPpvEFtFZmtDgRDGZ2UpWG3WpAxylIOiCJ+edYJyiTyJZp2B8MijRJXSniRVdxkfr8LQUFnj+pnVbBB5u+mfnyy59P9bWZVt+jp/lqzwCBn0FtYbDdSi+BQ/5hyup3OZS3+Ht9eU+KrULtzr/Ap2mVIg=",
+    "refs/heads/dev": "ZTRjNTdkYmMwNDJjYjBhNGY1ZmI3MTI0NjcxOWI3ZDIzYzJiMjU1ZAo=",
+    "refs/heads/fromsha": "NGE5N2UxNDc2YTQ2NGUxOGI4NjllZWYwOTcyNjkyMWU4NDkxNDViYwo=",
+    "refs/heads/fromupper": "ZmUyYmFiNDg4YzZkN2FhMDVhNGRkZjk5MzQ3NmQ5NDFlYzVkNTYxYwo=",
+    "refs/heads/main": "ZmUyYmFiNDg4YzZkN2FhMDVhNGRkZjk5MzQ3NmQ5NDFlYzVkNTYxYwo="
+   },
+   "dirs": [
+    "branches",
+    "hooks",
+    "info",
+    "objects",
+    "objects/00",
+    "objects/08",
+    "objects/0b",
+    "objects/0f",
+    "objects/1d",
+    "objects/21",
+    "objects/2f",
+    "objects/30",
+    "objects/4a",
+    "objects/5e",
+    "objects/60",
+    "objects/6a",
+    "objects/70",
+    "objects/73",
+    "objects/7b",
+    "objects/81",
+    "objects/82",
+    "objects/89",
+    "objects/8a",
+    "objects/91",
+    "objects/b3",
+    "objects/ce",
+    "objects/e4",
+    "objects/e8",
+    "objects/eb",
+    "objects/f2",
+    "objects/f3",
+    "objects/fe",
+    "objects/info",
+    "objects/pack",
+    "refs",
+    "refs/heads",
+    "refs/tags"
+   ]
+  },
+  "p2.git": {
+   "files": {
+    "config": "W2NvcmVdCglyZXBvc2l0b3J5Zm9ybWF0dmVyc2lvbiA9IDAKCWZpbGVtb2RlID0gZmFsc2UKCWJhcmUgPSB0cnVlCglsb2dhbGxyZWZ1cGRhdGVzID0gdHJ1ZQo=",
+    "description": "VW5uYW1lZCByZXBvc2l0b3J5",
+    "HEAD": "cmVmOiByZWZzL2hlYWRzL21haW4K",
+    "info/exclude": "",
+    "objects/00/569b990a12b4b3dd4d7fb6da4d3450004668f2": "eJwrKUpNVTCzYDA0MDAzMVFI1CupKGE4x2imysy94vZKtu9h0+rnzVk8xc0LqiCltACnEgC6KBs9",
+    "objects/04/177762fac56e5245e27d6099378adc3f9bd02b": "eJxLzs/NzSxRMDK0ZCgpSk1VMDc2NEgzTkw2MkxLSzQ0TTZLM7JMNjY0NDFOTDI0MkxKtLA0SjFOTeNKLC3JyC9SiMo/vDr+6YRe3Qq9SgUbZJ5DaXFqUbFeXn5RakFOpV52ZnmmnYKhuQEImBgYKGiDGFzJYPtLUik3KTUvOT8lMy9dITTETdeCi8stvyhbIT9NoTinNB0ARUFOGg==",
+    "objects/1d/2f01491f783c8c7f0917cc68526c6307d80e39": "eJxLyslPUjBkKAIADBUCYw==",
+    "objects/21/18e399461cc72b703b8ebda9d4ff3aa593a905": "eJxLyslPUjA0ZyhOTc7PS1EoL8osSVUoz8wrBgBssQjQ",
+    "objects/30/9eb6a1ae4c4be5f79e535ed52cbab8c9d0515e": "eJxLyslPUjBlYGBkSioAABTBAso=",
+    "objects/32/f64f4d836716819dc5fa9a1e09a29b428881df": "eJxLyslPUjBkKAEADBcCZQ==",
+    "objects/4b/825dc642cb6eb9a060e54bf8d69288fbee4904": "eJwrKUpNVTBgAAAKLAIB",
+    "objects/52/7e950d5f4239311899edc6f097a7399a582ee5": "eJxLyslPUjBlyM2sSE0BABneBAw=",
+    "objects/6a/ba2673884e0af7cc3c6a3b1b54667a13455537": "eJxLyslPUjA1NDJgYGBkYmZhZWPn4OTi5uHl4xcQFBIWERUTl5CUkpaRlZNXUFRSVlFVU9fQ1NLW0dXTNzA0MjYxNTO3sLSytrG1s3dwdHJ2cXVz9/D08vbx9fMPCAwKDgkNC4+IjIqOiY2LT0hMSk5JTUvPyMzKzsnNyy8oLCouKS0rr6isqq6pratvaGxqbmlta+/o7Oru6e3rnzBx0uQpU6dNnzFz1uw5c+fNX7Bw0eIlS5ctX7Fy1eo1a9et37Bx0+YtW7dt37Fz1+49e/ftP3Dw0OEjR48dP3Hy1OkzZ8+dv3Dx0uUrV69dv3Hz1u07d+/df/Dw0eMnT589f/Hy1es3b9+9//Dx0+cvX799//Hz1+8/f//9H/X/qP9H/T/q/1H/j/p/1P+j/h/1/6j/R/0/6v9R/4/6f9T/o/4f9f+o/4ez/wHEBfkP",
+    "objects/70/182abcab442c733008753d1b23da9f2aea7065": "eJwrKUpNVTA2ZjA0MDAzMVEo0UtJKWbI2qVW3OHH9f2MTZa1dEhalbBrqDkAAH4M1w==",
+    "objects/73/10f3ac21ffa15c6f29c31143ab121ba892d3ef": "eJwrKUpNVTA0MWEwMQAChaSc0tSCosy8kmKGzUpJFlUL85NifqdpHdKX2mrcoZNnaGBgZmKiUJSamJKbGl+Un1+iV1JRwiCrz+gpX2HTU88pfiYjKCeZ/QafJcS8ktSKktKi1GKGAgmtPatddIoNOEptpZVvzdd6VZAKUVKaydD48OTSixcCfKb4VDYZTeBh+2JxSBIAXyo1bQ==",
+    "objects/81/e1c9a5d1d0504c944c798232900c06f438c219": "eJwrKUpNVTA0MGQwNDAwMzFRSNQrqShhOMdopsrMveL2SrbvYdPq581ZPMXNC6ogCaxAUeLxTDeZ49oF1n17V175b7V08kpWqIKU0gKcZgAAF00oOw==",
+    "objects/8a/9004d349ffaab2c5fa1f585771dd372e2c4562": "eJwrKUpNVTC2ZDA0MDAzMVGo0EvKKU0tKMrMK2EwmLdt4Tof76ff5wXHXdXZtePkhcA4AICKE1c=",
+    "objects/8e/023aaeb7b32d7593863a95227df1818868e8af": "eJyljj1OAzEQRql9CpdEKCv/jb2WIkTFCUJDg2bHs2FF1o68jpIcAol7cAzOwj1QqOj5qveap4/KPE9NGh9uWmWWmHok50lbRxBBaY3gYz+idiFZoNHCEK0BccDKuUnldAjBmxEJPINxwCYkr2K0ocdEdoxDUmYQeGyvpcrn8vX58v3xvj53F7n5aw/HhevS5VL5sL90b9Npupc6qOtAKXl3BUG/fxv/v8SZSpryTj5tH9e9ELe5yJmXBXe8+gE7slrK",
+    "objects/91/8a90a57eaf4d1c0090badd9d0ced115a4938ac": "eJwrKUpNVTAyMGcwMQAChdBMho266T8vbzQVuythsJe71mnOP6dlFyGSSTmlqQVFmXklxQyblZIsqhbmJ8X8TtM6pC+11bhDJ8/QwMDMxEShKDUxJTc1vig/v0SvpKKEQVaf0VO+wqannlP8TEZQTjL7DT5LiHklqRUlpUWpxQwFElp7VrvoFBtwlNpKK9+ar/WqIBWipDSTgSFs9kwuoS2b7/rWb7vlaxLA4JbxCWpVhV5Jbn4Kg9E3f9/mdLHGuUd/zZLjXDTbqaPxPgAXe02x",
+    "objects/a0/69d380174769773fe0ca78c13416b572b50963": "eJylkD1OAzEUhKl9itejrLzO858URak4ATQ0yH5+Jqtk1yvHEewhkLgHx+As3AOWip4pRvM1o9FQGcehgTL6plVmwOiUTmRQUTQcfZBGssaYXTJeOZcjM3qJYg6VpwbRyG20fVCILmaytPW99qiDQwqWnOUsOeUkwrUdS4XH8vnx9PX+tnntFtj9pcP1wvXSTaXyfF660/Ay7KG3ctWPw+0aBP3ubfz/Jp6opGF6hof7u40Tgse5LbCe8A2mX1v1",
+    "objects/ad/8ac46c134c595011a5698fa147d35cf35b9325": "eJwrKUpNVTA0MWEwMQAChaSc0tSCosy8kmKGzUpJFlUL85NifqdpHdKX2mrcoZNnaGBgZmKiUJSamJKbGl+Un1+iV1JRwiCrz+gpX2HTU88pfiYjKCeZ/QafJcS8ktSKktKi1GKGAgmtPatddIoNOEptpZVvzdd6VZAKUVKaycAQNnsml9CWzXd967fd8jUJYHDL+AQAQbE0YQ==",
+    "objects/b1/2d67f9d3b13516dd1830bd0b7d429cfe42a6d1": "eJwrKUpNVTA2ZzA0MDAzMVHwzaxITdELiQhhCKqbyhvvZGkoMfPtsQ/Tl1vOitB7CgA1/Q/8",
+    "objects/b3/2262387aa16f625cfb662ac22f1ab533882c6e": "eJwrKUpNVTA2ZDAxAAKFlNTkfIauCSyXPf+v2nT0l3xEeOFdcz0d1yQABcMOjA==",
+    "objects/b6/03b71a2448bfc7c3915945a84ca7c87ef0edfd": "eJyVjkFqwzAQRbvWKWZfEkZSbI2glK56guYAY804EYmlICuY3r5JbtC/evB48FNdltzBeXrrTRWiJY7IQ1CeD2ITYsSJRaJgUrF24EP0xMncuGnpQIrOM+sUJu8kDA85eo6Dc0FmS5ZoJCWeDd/7uTaAj6WKaPu6r9rWfalNb9ff/SVv+RNswOdGRHh/gkmvd13/22lJVXI5wfHne0fGLOvJwJb7GaDods1F4Q+UkUto",
+    "objects/ce/013625030ba8dba906f756967f9e9ca394464a": "eJxLyslPUjBjyEjNycnnAgAdxQQU",
+    "refs/heads/main": "YTA2OWQzODAxNzQ3Njk3NzNmZTBjYTc4YzEzNDE2YjU3MmI1MDk2Mwo="
+   },
+   "dirs": [
+    "branches",
+    "hooks",
+    "info",
+    "objects",
+    "objects/00",
+    "objects/04",
+    "objects/1d",
+    "objects/21",
+    "objects/30",
+    "objects/32",
+    "objects/4b",
+    "objects/52",
+    "objects/6a",
+    "objects/70",
+    "objects/73",
+    "objects/81",
+    "objects/8a",
+    "objects/8e",
+    "objects/91",
+    "objects/a0",
+    "objects/ad",
+    "objects/b1",
+    "objects/b3",
+    "objects/b6",
+    "objects/ce",
+    "objects/info",
+    "objects/pack",
+    "refs",
+    "refs/heads",
+    "refs/tags"
+   ]
+  },
+  "p3.git": {
+   "files": {
+    "config": "W2NvcmVdCglyZXBvc2l0b3J5Zm9ybWF0dmVyc2lvbiA9IDAKCWZpbGVtb2RlID0gZmFsc2UKCWJhcmUgPSB0cnVlCglsb2dhbGxyZWZ1cGRhdGVzID0gdHJ1ZQo=",
+    "description": "VW5uYW1lZCByZXBvc2l0b3J5",
+    "HEAD": "cmVmOiByZWZzL2hlYWRzL21haW4K",
+    "info/exclude": ""
+   },
+   "dirs": [
+    "branches",
+    "hooks",
+    "info",
+    "objects",
+    "objects/info",
+    "objects/pack",
+    "refs",
+    "refs/heads",
+    "refs/tags"
+   ]
+  },
+  "p5.git": {
+   "files": {
+    "config": "W2NvcmVdCglyZXBvc2l0b3J5Zm9ybWF0dmVyc2lvbiA9IDAKCWZpbGVtb2RlID0gZmFsc2UKCWJhcmUgPSB0cnVlCglsb2dhbGxyZWZ1cGRhdGVzID0gdHJ1ZQo=",
+    "description": "VW5uYW1lZCByZXBvc2l0b3J5",
+    "HEAD": "cmVmOiByZWZzL2hlYWRzL21haW4K",
+    "info/exclude": "",
+    "objects/07/c2f022c22df5d3fd9645ffeb0fe732c7b50d41": "eJwrKUpNVTA2YDAxAAKFjNIUBqkE3dkXap6q695a5qd4S+j2Ke2e+QDoiA4m",
+    "objects/12/b98c239e8f933d213617a1b965333d478b2743": "eJxLyslPUjBiSDQCAA6MAoU=",
+    "objects/1a/602d9bd07ce5272ddaa64e21da12dbca2b8c9f": "eJwrKUpNVTA2ZjA0MDAzMVFI1CupKGHQS33/aKHr3eXvAi+WCM384fF0f6keACZ3EPk=",
+    "objects/26/09daf4658baf7d5c8ba5265ef1ea7205b2531d": "eJxLyslPUjA0YCiBAwA6OQap",
+    "objects/2e/65efe2a145dda7ee51d1741299f848e5bf752e": "eJxLyslPUjBkSAQADAQCUg==",
+    "objects/3a/e1bd644f36ef3980653c655d1ca922ed26172c": "eJwrKUpNVTA2ZjA0MDAzMVEo0UtJKWZQ47z1JbV7fW1M91K1uI+vilg3BcsCABF1DwA=",
+    "objects/4f/6c4ee9d928270b4304e3abcd8d81df3e740d12": "eJxLyslPUjBkKAAADBMCYQ==",
+    "objects/54/3d04374f8a283c830dddf30601e967464cef61": "eJytjksKwjAUAF3nFG8vlryYTwsiutAT6AHa5EWDaVPSFPX2SvEIzm42w9jU96GAwHpVMhHUmoSWVgnvETX6puNGO06641tluHCouBGSs3Yu95ThGIMlOL3afowEu0V/dpgnylM1pExjfFeP8Ax7QNMIrVGigjX/wuwyUOgPKRpscmG4wfVy3tSMtc6BD5GmD8+QR5Y=",
+    "objects/7e/d0656934476f0b9d0fe1543eccda1a0916a3ec": "eJwrKUpNVTAzZTAxAAKFgsSikszknNRihtXblfVeXcsOT+Vs9DcLdedhj+k8CVFTmskw+4VS4C7JmKPcObNtNpzaffGgO7MYAIwsGm4=",
+    "objects/86/e264c52ff1161f9b076d0e6b035702d1507240": "eJwrKUpNVTAzYTAxAAKFktSKktKi1GIGq4d7U/zN3ls2pNqkxsqsVHqrJq4DUVKaycB+6IPSId2vl/9Oc/3/mv+50fGtvI4Aj/QcFA==",
+    "objects/94/f5d24ebb148b858fa26e29e7e6dbfb2952387d": "eJwrKUpNVTCyZDAxAAKFtAqG1duV9V5dyw5P5Wz0Nwt152GP6TwJANl3DDQ=",
+    "objects/9b/e82251ba195cc50b6c9b3cb0cabbd1c1470316": "eJwrKUpNVTA2YDAxAAKFjNIUhr+smd8912W9Wlv7+KLAr+71GXKXvAEFag/7",
+    "objects/9c/e9d0afb10a67412b4b46d7ab5aaf436c5766a7": "eJytj0tqAzEQRLPWKXppE2LUsqTRgAnxwj5BcoBWq8cRmR+yjJ3bZzLkCKndK4qiiqdhyBVMsE+1iEBsYtAmeUOkvZdOu4gYEiOSQyMdabSdJlIzFRkrtBKc2GSD9W1kdITcxGi1lsTMkpas3+8bUnSrn1OBY59Z4PSgYe4FDiv+0dvtKuW6G6cic/+9+8r3/ArYtMZ7tOjgWS9SvA6u8g9VMvKU8niBj/fzS1DqnB/Q5aVr7oll+L23wdXZ/gArf1zw",
+    "objects/9e/85e4d48469bc15a1c7bb400edcccedf0a6337a": "eJyVjUsKwjAURR1nFW8uljzzaQMijlyBLiBNXm2oTSRNKe7e6A68gwNncLguzXMogJ3YlUwELXmulTZCylYPvDeeD4RKCnLOW7TcoLZVmF3LmDL0qYdTxWVdKC9NTJlez3czhS2cAVtz1BolKtjzOuZ+b4X+7Si65EN8wP12PXSMfevNLjBSpg+0QDup",
+    "objects/ab/b7232eead66b576509814f3655470c075c89c9": "eJwrKUpNVTA2YTA0MDAzMVEo0CvITqtg8M/xe3lTQ53bmeXx6rO9jfftSniFABXWDmM=",
+    "objects/b7/b802d62aa066ef05b118dc11a512efa014f0aa": "eJwrKUpNVTAzZTAxAAKFgsSikszknNRihilfL/ntFulu7V+Up/n82e3fmkEWtRA1pZkMs18oBe6SjDnKnTPbZsOp3RcPujOLAQAFHR2L",
+    "objects/fd/0569f749ae6aeaad7de3d110fa8baf681ed24b": "eJwrKUpNVTA2ZjA0MDAzMVFI1CupKGEQ2tmjPK9/sq2imfjCnanGtu7d6s4A/G8MxQ==",
+    "refs/heads/feat-2": "NTQzZDA0Mzc0ZjhhMjgzYzgzMGRkZGYzMDYwMWU5Njc0NjRjZWY2MQo=",
+    "refs/heads/feat-3": "OWU4NWU0ZDQ4NDY5YmMxNWExYzdiYjQwMGVkY2NjZWRmMGE2MzM3YQo=",
+    "refs/heads/main": "NTQzZDA0Mzc0ZjhhMjgzYzgzMGRkZGYzMDYwMWU5Njc0NjRjZWY2MQo=",
+    "refs/heads/side/one": "OWNlOWQwYWZiMTBhNjc0MTJiNGI0NmQ3YWI1YWFmNDM2YzU3NjZhNwo="
+   },
+   "dirs": [
+    "branches",
+    "hooks",
+    "info",
+    "objects",
+    "objects/07",
+    "objects/12",
+    "objects/1a",
+    "objects/26",
+    "objects/2e",
+    "objects/3a",
+    "objects/4f",
+    "objects/54",
+    "objects/7e",
+    "objects/86",
+    "objects/94",
+    "objects/9b",
+    "objects/9c",
+    "objects/9e",
+    "objects/ab",
+    "objects/b7",
+    "objects/fd",
+    "objects/info",
+    "objects/pack",
+    "refs",
+    "refs/heads",
+    "refs/heads/side",
+    "refs/tags"
+   ]
+  },
+  "p6.git": {
+   "files": {
+    "config": "W2NvcmVdCglyZXBvc2l0b3J5Zm9ybWF0dmVyc2lvbiA9IDAKCWZpbGVtb2RlID0gZmFsc2UKCWJhcmUgPSB0cnVlCglsb2dhbGxyZWZ1cGRhdGVzID0gdHJ1ZQo=",
+    "description": "VW5uYW1lZCByZXBvc2l0b3J5",
+    "HEAD": "cmVmOiByZWZzL2hlYWRzL21haW4K",
+    "info/exclude": ""
+   },
+   "dirs": [
+    "branches",
+    "hooks",
+    "info",
+    "objects",
+    "objects/info",
+    "objects/pack",
+    "refs",
+    "refs/heads",
+    "refs/tags"
+   ]
+  },
+  "p8.git": {
+   "files": {
+    "config": "W2NvcmVdCglyZXBvc2l0b3J5Zm9ybWF0dmVyc2lvbiA9IDAKCWZpbGVtb2RlID0gZmFsc2UKCWJhcmUgPSB0cnVlCglsb2dhbGxyZWZ1cGRhdGVzID0gdHJ1ZQo=",
+    "description": "VW5uYW1lZCByZXBvc2l0b3J5",
+    "HEAD": "cmVmOiByZWZzL2hlYWRzL21haW4K",
+    "info/exclude": ""
+   },
+   "dirs": [
+    "branches",
+    "hooks",
+    "info",
+    "objects",
+    "objects/info",
+    "objects/pack",
+    "refs",
+    "refs/heads",
+    "refs/tags"
+   ]
+  }
+ },
+ "smart": {
+  "replies": [
+   [
+    "push_ok",
+    "MDAwZXVucGFjayBvawowMDE5b2sgcmVmcy9oZWFkcy9wdXNoZWQKMDAwMA=="
+   ],
+   [
+    "push_blocked",
+    "MDAwZXVucGFjayBvawowMDVjbmcgcmVmcy9oZWFkcy9ibG9ja2VkIGEgYnVpbHQgLnRtb2QgYmVsb25ncyBpbiBhIHJlbGVhc2UsIG5vdCBpbiB0aGUgZmlsZXMgKEJ1aWx0LlRNT0QpCjAwMDA="
+   ]
+  ],
+  "refs": {
+   "refs/heads/pushed": "9111b3fcc5776046bcbaebcfee542fb084aefe90"
+  }
+ },
+ "http": [
+  {
+   "name": "form_empty",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "body": "LS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ieCINCg0KeQ0KLS1YeVotLQ0K",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"branch\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"missing\",\"loc\":[\"body\",\"message\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_mg_000\"}}"
+  },
+  {
+   "name": "form_no_body",
+   "content_type": null,
+   "body": "",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"branch\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"missing\",\"loc\":[\"body\",\"message\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_mg_001\"}}"
+  },
+  {
+   "name": "form_json",
+   "content_type": "application/json",
+   "body": "eyJicmFuY2giOiAibWFpbiIsICJtZXNzYWdlIjogIm0ifQ==",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"branch\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"missing\",\"loc\":[\"body\",\"message\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_mg_002\"}}"
+  },
+  {
+   "name": "form_blank_fields",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "body": "LS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYnJhbmNoIg0KDQoNCi0tWHlaDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCg0KLS1YeVotLQ0K",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"body\",\"branch\"],\"msg\":\"Field required\",\"input\":null},{\"type\":\"missing\",\"loc\":[\"body\",\"message\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_mg_003\"}}"
+  },
+  {
+   "name": "form_fields_are_files",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "body": "LS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYnJhbmNoIjsgZmlsZW5hbWU9ImIudHh0Ig0KQ29udGVudC1UeXBlOiB0ZXh0L3BsYWluDQoNCm1haW4NCi0tWHlaDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiOyBmaWxlbmFtZT0ibS50eHQiDQoNCm0KeA0KLS1YeVotLQ0K",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"branch\"],\"msg\":\"Input should be a valid string\",\"input\":{\"filename\":\"b.txt\",\"file\":{\"_file\":{},\"_max_size\":1048576,\"_rolled\":false,\"_TemporaryFileArgs\":{\"mode\":\"w+b\",\"buffering\":-1,\"suffix\":null,\"prefix\":null,\"encoding\":null,\"newline\":null,\"dir\":null,\"errors\":null}},\"size\":4,\"headers\":{\"content-disposition\":\"form-data; name=\\\"branch\\\"; filename=\\\"b.txt\\\"\",\"content-type\":\"text/plain\"},\"_max_mem_size\":1048576}},{\"type\":\"string_type\",\"loc\":[\"body\",\"message\"],\"msg\":\"Input should be a valid string\",\"input\":{\"filename\":\"m.txt\",\"file\":{\"_file\":{},\"_max_size\":1048576,\"_rolled\":false,\"_TemporaryFileArgs\":{\"mode\":\"w+b\",\"buffering\":-1,\"suffix\":null,\"prefix\":null,\"encoding\":null,\"newline\":null,\"dir\":null,\"errors\":null}},\"size\":3,\"headers\":{\"content-disposition\":\"form-data; name=\\\"message\\\"; filename=\\\"m.txt\\\"\"},\"_max_mem_size\":1048576}}],\"request_id\":\"req_mg_004\"}}"
+  },
+  {
+   "name": "form_files_text",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "body": "LS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYnJhbmNoIg0KDQptYWluDQotLVh5Wg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtZXNzYWdlIg0KDQptDQotLVh5Wg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJmaWxlcyINCg0Kbm90IGEgZmlsZQ0KLS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZXMiOyBmaWxlbmFtZT0ib2sudHh0Ig0KDQpvaw0KLS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZXMiDQoNCg0KLS1YeVotLQ0K",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"value_error\",\"loc\":[\"body\",\"files\",0],\"msg\":\"Value error, Expected UploadFile, received: <class 'str'>\",\"input\":\"not a file\",\"ctx\":{\"error\":{}}},{\"type\":\"value_error\",\"loc\":[\"body\",\"files\",2],\"msg\":\"Value error, Expected UploadFile, received: <class 'str'>\",\"input\":\"\",\"ctx\":{\"error\":{}}}],\"request_id\":\"req_mg_005\"}}"
+  },
+  {
+   "name": "form_paths_file",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "body": "LS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYnJhbmNoIg0KDQptYWluDQotLVh5Wg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJtZXNzYWdlIg0KDQptDQotLVh5Wg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJwYXRocyI7IGZpbGVuYW1lPSJwLnR4dCINCg0KcA0KLS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icGF0aHMiDQoNCnVpL3gudHh0DQotLVh5Wg0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJkZWxldGVzIjsgZmlsZW5hbWU9ImQuYmluIg0KQ29udGVudC1UeXBlOiBhcHBsaWNhdGlvbi9vY3RldC1zdHJlYW0NCg0KZA0KLS1YeVotLQ0K",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"string_type\",\"loc\":[\"body\",\"paths\",0],\"msg\":\"Input should be a valid string\",\"input\":{\"filename\":\"p.txt\",\"file\":{\"_file\":{},\"_max_size\":1048576,\"_rolled\":false,\"_TemporaryFileArgs\":{\"mode\":\"w+b\",\"buffering\":-1,\"suffix\":null,\"prefix\":null,\"encoding\":null,\"newline\":null,\"dir\":null,\"errors\":null}},\"size\":1,\"headers\":{\"content-disposition\":\"form-data; name=\\\"paths\\\"; filename=\\\"p.txt\\\"\"},\"_max_mem_size\":1048576}},{\"type\":\"string_type\",\"loc\":[\"body\",\"deletes\",0],\"msg\":\"Input should be a valid string\",\"input\":{\"filename\":\"d.bin\",\"file\":{\"_file\":{},\"_max_size\":1048576,\"_rolled\":false,\"_TemporaryFileArgs\":{\"mode\":\"w+b\",\"buffering\":-1,\"suffix\":null,\"prefix\":null,\"encoding\":null,\"newline\":null,\"dir\":null,\"errors\":null}},\"size\":1,\"headers\":{\"content-disposition\":\"form-data; name=\\\"deletes\\\"; filename=\\\"d.bin\\\"\",\"content-type\":\"application/octet-stream\"},\"_max_mem_size\":1048576}}],\"request_id\":\"req_mg_006\"}}"
+  },
+  {
+   "name": "form_garbage",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "body": "Z2FyYmFnZQ==",
+   "status": 400,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Invalid multipart data.\",\"details\":null,\"request_id\":\"req_mg_007\"}}"
+  },
+  {
+   "name": "form_no_boundary",
+   "content_type": "multipart/form-data",
+   "body": "LS14DQo=",
+   "status": 400,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Missing boundary in multipart.\",\"details\":null,\"request_id\":\"req_mg_008\"}}"
+  },
+  {
+   "name": "form_ok",
+   "content_type": "multipart/form-data; boundary=XyZ",
+   "body": "LS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYnJhbmNoIg0KDQp3ZWINCi0tWHlaDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9Im1lc3NhZ2UiDQoNCiBmcm9tIHRoZSBmb3JtIA0KLS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZXMiOyBmaWxlbmFtZT0iT25lLlRYVCINCkNvbnRlbnQtVHlwZTogdGV4dC9wbGFpbg0KDQpvbmUNCi0tWHlaDQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImZpbGVzIjsgZmlsZW5hbWU9InR3by5iaW4iDQoNCnR3bw0KLS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iZmlsZXMiOyBmaWxlbmFtZT0iIg0KDQp0aHJlZQ0KLS1YeVoNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0icGF0aHMiDQoNCnVpL29uZS50eHQNCi0tWHlaLS0NCg==",
+   "status": 201,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"id\":\"35ad70be34aac2f8b6574ab249b1080efda6c865\",\"short\":\"35ad70b\",\"branch\":\"web\",\"parents\":[],\"author_username\":\"Alice Example\",\"message\":\"from the form\",\"file_count\":3,\"created_at\":\"2026-10-22T09:30:15+00:00\"}"
+  },
+  {
+   "name": "refs_no_service",
+   "method": "GET",
+   "url": "/git/mods/alice/web.git/info/refs",
+   "status": 422,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"validation_error\",\"message\":\"Request validation failed\",\"details\":[{\"type\":\"missing\",\"loc\":[\"query\",\"service\"],\"msg\":\"Field required\",\"input\":null}],\"request_id\":\"req_mg_git_000\"}}"
+  },
+  {
+   "name": "refs_bad_service",
+   "method": "GET",
+   "url": "/git/mods/alice/web.git/info/refs?service=git-annex",
+   "status": 403,
+   "headers": [
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"forbidden\",\"message\":\"Unsupported service\",\"details\":null,\"request_id\":\"req_mg_git_001\"}}"
+  },
+  {
+   "name": "refs_unknown_anon",
+   "method": "GET",
+   "url": "/git/mods/alice/ghost.git/info/refs?service=git-upload-pack",
+   "status": 401,
+   "headers": [
+    [
+     "www-authenticate",
+     "Basic realm=\"Kiwi Mods Hub git\""
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"req_mg_git_002\"}}"
+  },
+  {
+   "name": "push_anon",
+   "method": "POST",
+   "url": "/git/mods/alice/web.git/git-receive-pack",
+   "status": 401,
+   "headers": [
+    [
+     "www-authenticate",
+     "Basic realm=\"Kiwi Mods Hub git\""
+    ],
+    [
+     "content-type",
+     "application/json"
+    ]
+   ],
+   "resp": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"A git access token is required to push\",\"details\":null,\"request_id\":\"req_mg_git_003\"}}"
+  }
+ ],
+ "basic": [
+  [
+   "Basic dXNlcjprZ2l0X2FiYw==",
+   "kgit_abc"
+  ],
+  [
+   "Basic OmtnaXRfb25seQ==",
+   "kgit_only"
+  ],
+  [
+   "Basic bm9jb2xvbg==",
+   null
+  ],
+  [
+   "Basic dTo=",
+   null
+  ],
+  [
+   "basic dTpw",
+   null
+  ],
+  [
+   "Bearer x",
+   null
+  ],
+  [
+   "Basic !!!",
+   null
+  ],
+  [
+   "Basic dTpw",
+   "p"
+  ],
+  [
+   "Basic dTpwYQ",
+   null
+  ],
+  [
+   "Basic dTpwYQ=",
+   null
+  ],
+  [
+   "Basic dT pw\tYQ==",
+   "pa"
+  ],
+  [
+   "Basic w7w6cMOkc3N3w7ZyZA==",
+   "pässwörd"
+  ],
+  [
+   "Basic dTr//g==",
+   "��"
+  ],
+  [
+   "Basic dTpwYQ==garbage",
+   null
+  ],
+  [
+   "Basic dTpwYQ==Zg==",
+   "pa\u0006`"
+  ],
+  [
+   "Basic dTpwYQ=a=",
+   "pa\u0006"
+  ],
+  [
+   "Basic dTpwY=Q==",
+   "pa"
+  ],
+  [
+   "Basic dTpwY=Q=",
+   null
+  ],
+  [
+   "Basicé x",
+   null
+  ],
+  [
+   "Basic ",
+   null
+  ],
+  [
+   "",
+   null
+  ]
+ ],
+ "authorize": [
+  [
+   "none",
+   "anon",
+   false,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "Authentication required",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "none",
+   "anon",
+   true,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "Authentication required",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "none",
+   "owner",
+   false,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "none",
+   "owner",
+   true,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "none",
+   "other",
+   false,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "none",
+   "other",
+   true,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "public",
+   "anon",
+   false,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "public",
+   "anon",
+   true,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "A git access token is required to push",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "public",
+   "owner",
+   false,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "public",
+   "owner",
+   true,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "public",
+   "other",
+   false,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "public",
+   "other",
+   true,
+   {
+    "error": [
+     403,
+     "forbidden",
+     "You can only push to your own mods",
+     {}
+    ]
+   }
+  ],
+  [
+   "private_src",
+   "anon",
+   false,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "Authentication required",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "private_src",
+   "anon",
+   true,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "A git access token is required to push",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "private_src",
+   "owner",
+   false,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "private_src",
+   "owner",
+   true,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "private_src",
+   "other",
+   false,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "private_src",
+   "other",
+   true,
+   {
+    "error": [
+     403,
+     "forbidden",
+     "You can only push to your own mods",
+     {}
+    ]
+   }
+  ],
+  [
+   "releases",
+   "anon",
+   false,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "Authentication required",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "releases",
+   "anon",
+   true,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "A git access token is required to push",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "releases",
+   "owner",
+   false,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "releases",
+   "owner",
+   true,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "releases",
+   "other",
+   false,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "releases",
+   "other",
+   true,
+   {
+    "error": [
+     403,
+     "forbidden",
+     "You can only push to your own mods",
+     {}
+    ]
+   }
+  ],
+  [
+   "draft",
+   "anon",
+   false,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "Authentication required",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "draft",
+   "anon",
+   true,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "A git access token is required to push",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "draft",
+   "owner",
+   false,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "draft",
+   "owner",
+   true,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "draft",
+   "other",
+   false,
+   {
+    "error": [
+     404,
+     "not_found",
+     "Repository not found",
+     {}
+    ]
+   }
+  ],
+  [
+   "draft",
+   "other",
+   true,
+   {
+    "error": [
+     403,
+     "forbidden",
+     "You can only push to your own mods",
+     {}
+    ]
+   }
+  ],
+  [
+   "collab_draft",
+   "anon",
+   false,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "Authentication required",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "collab_draft",
+   "anon",
+   true,
+   {
+    "error": [
+     401,
+     "not_authenticated",
+     "A git access token is required to push",
+     {
+      "WWW-Authenticate": "Basic realm=\"Kiwi Mods Hub git\""
+     }
+    ]
+   }
+  ],
+  [
+   "collab_draft",
+   "owner",
+   false,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "collab_draft",
+   "owner",
+   true,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "collab_draft",
+   "other",
+   false,
+   {
+    "ok": true
+   }
+  ],
+  [
+   "collab_draft",
+   "other",
+   true,
+   {
+    "error": [
+     403,
+     "forbidden",
+     "You can only push to your own mods",
+     {}
+    ]
+   }
+  ]
+ ],
+ "saves": {
+  "projects": [
+   {
+    "raw": {
+     "_id": {
+      "$oid": "66a000000000000000000001"
+     },
+     "slug": "s",
+     "title": "T",
+     "summary": "",
+     "tags": [
+      "a",
+      "b"
+     ],
+     "owner_id": {
+      "$oid": "65b000000000000000000001"
+     },
+     "owner_username": "Alice",
+     "owner_handle": "alice",
+     "collaborators": [
+      {
+       "user_id": {
+        "$oid": "65b000000000000000000002"
+       },
+       "username": "bob",
+       "extra": {
+        "$numberInt": "1"
+       }
+      }
+     ],
+     "visibility": "public",
+     "download_count": {
+      "$numberDouble": "3.0"
+     },
+     "popularity_score": {
+      "$numberInt": "1"
+     },
+     "star_count": {
+      "$numberLong": "1099511627776"
+     },
+     "title_i18n": {
+      "fr": "Le T"
+     },
+     "remix_requested_at": {
+      "$date": {
+       "$numberLong": "1767225600000"
+      }
+     },
+     "legacy_field": "kept by $set",
+     "created_at": {
+      "$date": {
+       "$numberLong": "1746515289123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1746515289456"
+      }
+     }
+    },
+    "set": {
+     "_id": {
+      "$oid": "66a000000000000000000001"
+     },
+     "slug": "s",
+     "title": "T",
+     "summary": "",
+     "description": "",
+     "readme_text": "",
+     "warnings": "",
+     "title_i18n": {
+      "fr": "Le T"
+     },
+     "summary_i18n": {},
+     "description_i18n": {},
+     "readme_i18n": {},
+     "warnings_i18n": {},
+     "tags": [
+      "a",
+      "b"
+     ],
+     "owner_id": {
+      "$oid": "65b000000000000000000001"
+     },
+     "owner_username": "Alice",
+     "owner_handle": "alice",
+     "collaborators": [
+      {
+       "user_id": {
+        "$oid": "65b000000000000000000002"
+       },
+       "username": "bob"
+      }
+     ],
+     "is_stray": false,
+     "stray_status": null,
+     "author": "",
+     "source": null,
+     "source_id": null,
+     "source_url": null,
+     "source_author_id": null,
+     "source_file_id": null,
+     "source_likes": {
+      "$numberInt": "0"
+     },
+     "uploaded_on_behalf": false,
+     "issues_enabled": true,
+     "issue_seq": {
+      "$numberInt": "0"
+     },
+     "open_issue_count": {
+      "$numberInt": "0"
+     },
+     "visibility": "public",
+     "is_beta": false,
+     "mode": "files",
+     "source_visibility": "public",
+     "default_branch": "main",
+     "banner_sha": null,
+     "preview_shas": [],
+     "discord_url": null,
+     "website_url": null,
+     "donation_urls": [],
+     "download_count": {
+      "$numberInt": "3"
+     },
+     "star_count": {
+      "$numberLong": "1099511627776"
+     },
+     "downloads_7d": {
+      "$numberInt": "0"
+     },
+     "popularity_score": {
+      "$numberDouble": "1.0"
+     },
+     "hidden_release_branches": [],
+     "branch_order": [],
+     "forked_from_id": null,
+     "forked_from_slug": null,
+     "forked_from_handle": null,
+     "forked_from_title": null,
+     "forked_from_owner": null,
+     "inspired_by_slug": null,
+     "inspired_by_handle": null,
+     "inspired_by_title": null,
+     "inspired_by_owner": null,
+     "fork_count": {
+      "$numberInt": "0"
+     },
+     "is_remix": false,
+     "remix_status": "pending",
+     "remix_requested_at": {
+      "$date": {
+       "$numberLong": "1767225600000"
+      }
+     },
+     "remix_resolved_at": null,
+     "remix_resolved_by": null,
+     "taken_down": false,
+     "takedown_reason": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1746515289123"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1746515289456"
+      }
+     },
+     "last_release_at": null
+    }
+   },
+   {
+    "raw": {
+     "_id": {
+      "$oid": "66a000000000000000000002"
+     },
+     "slug": "z",
+     "title": "Z",
+     "created_at": {
+      "$date": {
+       "$numberLong": "1735689600000"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1735776000000"
+      }
+     },
+     "is_stray": true,
+     "stray_status": "pending",
+     "source": "x",
+     "mode": "releases"
+    },
+    "set": {
+     "_id": {
+      "$oid": "66a000000000000000000002"
+     },
+     "slug": "z",
+     "title": "Z",
+     "summary": "",
+     "description": "",
+     "readme_text": "",
+     "warnings": "",
+     "title_i18n": {},
+     "summary_i18n": {},
+     "description_i18n": {},
+     "readme_i18n": {},
+     "warnings_i18n": {},
+     "tags": [],
+     "owner_id": null,
+     "owner_username": "",
+     "owner_handle": "",
+     "collaborators": [],
+     "is_stray": true,
+     "stray_status": "pending",
+     "author": "",
+     "source": "x",
+     "source_id": null,
+     "source_url": null,
+     "source_author_id": null,
+     "source_file_id": null,
+     "source_likes": {
+      "$numberInt": "0"
+     },
+     "uploaded_on_behalf": false,
+     "issues_enabled": true,
+     "issue_seq": {
+      "$numberInt": "0"
+     },
+     "open_issue_count": {
+      "$numberInt": "0"
+     },
+     "visibility": "draft",
+     "is_beta": false,
+     "mode": "releases",
+     "source_visibility": "public",
+     "default_branch": "main",
+     "banner_sha": null,
+     "preview_shas": [],
+     "discord_url": null,
+     "website_url": null,
+     "donation_urls": [],
+     "download_count": {
+      "$numberInt": "0"
+     },
+     "star_count": {
+      "$numberInt": "0"
+     },
+     "downloads_7d": {
+      "$numberInt": "0"
+     },
+     "popularity_score": {
+      "$numberDouble": "0.0"
+     },
+     "hidden_release_branches": [],
+     "branch_order": [],
+     "forked_from_id": null,
+     "forked_from_slug": null,
+     "forked_from_handle": null,
+     "forked_from_title": null,
+     "forked_from_owner": null,
+     "inspired_by_slug": null,
+     "inspired_by_handle": null,
+     "inspired_by_title": null,
+     "inspired_by_owner": null,
+     "fork_count": {
+      "$numberInt": "0"
+     },
+     "is_remix": false,
+     "remix_status": "pending",
+     "remix_requested_at": null,
+     "remix_resolved_at": null,
+     "remix_resolved_by": null,
+     "taken_down": false,
+     "takedown_reason": null,
+     "created_at": {
+      "$date": {
+       "$numberLong": "1735689600000"
+      }
+     },
+     "updated_at": {
+      "$date": {
+       "$numberLong": "1735776000000"
+      }
+     },
+     "last_release_at": null
+    }
+   }
+  ],
+  "token": {
+   "set": {
+    "_id": {
+     "$oid": "66b000000000000000000001"
+    },
+    "site_user_id": {
+     "$oid": "65b000000000000000000001"
+    },
+    "token_hash": "abababababababababababababababababababababababababababababababab",
+    "prefix": "kgit_abcdefg",
+    "name": "laptop",
+    "revoked": false,
+    "created_at": {
+     "$date": {
+      "$numberLong": "1770091506789"
+     }
+    },
+    "last_used_at": {
+     "$date": {
+      "$numberLong": "1792661415123"
+     }
+    }
+   },
+   "dto": {
+    "id": "66b000000000000000000001",
+    "name": "laptop",
+    "prefix": "kgit_abcdefg",
+    "created_at": "2026-02-03T04:05:06.789000+00:00",
+    "last_used_at": "2026-10-22T09:30:15.123456+00:00"
+   },
+   "fresh_dto": {
+    "id": "None",
+    "name": "x",
+    "prefix": "kgit_1234567",
+    "created_at": "2026-10-22T09:30:15.123456+00:00",
+    "last_used_at": null
+   }
+  }
+ },
+ "pure": {
+  "norm_path": [
+   [
+    "UI\\Hud\\A.txt",
+    {
+     "ok": "ui/hud/a.txt"
+    }
+   ],
+   [
+    "/lead",
+    {
+     "ok": "lead"
+    }
+   ],
+   [
+    "  Pad  ",
+    {
+     "ok": "pad"
+    }
+   ],
+   [
+    "a/./b",
+    {
+     "error": [
+      400,
+      "Invalid file path: 'a/./b'"
+     ]
+    }
+   ],
+   [
+    "a/../b",
+    {
+     "error": [
+      400,
+      "Invalid file path: 'a/../b'"
+     ]
+    }
+   ],
+   [
+    "",
+    {
+     "error": [
+      400,
+      "Invalid file path: ''"
+     ]
+    }
+   ],
+   [
+    "/",
+    {
+     "error": [
+      400,
+      "Invalid file path: '/'"
+     ]
+    }
+   ],
+   [
+    "x/",
+    {
+     "error": [
+      400,
+      "Invalid file path: 'x/'"
+     ]
+    }
+   ],
+   [
+    "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+    {
+     "error": [
+      400,
+      "Path too long (>255 bytes): 'éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé'"
+     ]
+    }
+   ],
+   [
+    "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+    {
+     "ok": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+    }
+   ],
+   [
+    "ok/path.TXT",
+    {
+     "ok": "ok/path.txt"
+    }
+   ],
+   [
+    "'quote",
+    {
+     "ok": "'quote"
+    }
+   ],
+   [
+    "tab\there",
+    {
+     "ok": "tab\there"
+    }
+   ]
+  ],
+  "branch_names": [
+   [
+    "main",
+    {
+     "ok": "main"
+    }
+   ],
+   [
+    " main ",
+    {
+     "ok": "main"
+    }
+   ],
+   [
+    "a/b-c_d.e",
+    {
+     "ok": "a/b-c_d.e"
+    }
+   ],
+   [
+    "",
+    {
+     "error": "Invalid branch name."
+    }
+   ],
+   [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    {
+     "ok": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   ],
+   [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    {
+     "error": "Invalid branch name."
+    }
+   ],
+   [
+    "/a",
+    {
+     "error": "Invalid branch name."
+    }
+   ],
+   [
+    "a..b",
+    {
+     "error": "Invalid branch name."
+    }
+   ],
+   [
+    "a b",
+    {
+     "error": "Invalid branch name."
+    }
+   ],
+   [
+    "é",
+    {
+     "error": "Invalid branch name."
+    }
+   ],
+   [
+    "a//b",
+    {
+     "ok": "a//b"
+    }
+   ],
+   [
+    "x.lock",
+    {
+     "ok": "x.lock"
+    }
+   ]
+  ],
+  "safe_filename": [
+   [
+    "my mod: <v2>",
+    "my mod v2"
+   ],
+   [
+    "...dots...",
+    "dots"
+   ],
+   [
+    "  ",
+    "mod"
+   ],
+   [
+    "a\"b|c?d*e\u0001f",
+    "abcdef"
+   ],
+   [
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   ],
+   [
+    "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+    "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+   ]
+  ],
+  "author_ident": [
+   [
+    "Alice Example",
+    "Alice Example <AliceExample@users.noreply.kiwi>"
+   ],
+   [
+    "",
+    " <modder@users.noreply.kiwi>"
+   ],
+   [
+    "Zoë_名-x.y",
+    "Zoë_名-x.y <Zoë_名-x.y@users.noreply.kiwi>"
+   ],
+   [
+    "a<b>c",
+    "a<b>c <abc@users.noreply.kiwi>"
+   ],
+   [
+    "١٢٣",
+    "١٢٣ <١٢٣@users.noreply.kiwi>"
+   ],
+   [
+    "Ǆ x",
+    "Ǆ x <Ǆx@users.noreply.kiwi>"
+   ],
+   [
+    "abͅc",
+    "abͅc <abc@users.noreply.kiwi>"
+   ],
+   [
+    "ा",
+    "ा <modder@users.noreply.kiwi>"
+   ]
+  ]
+ }
+}

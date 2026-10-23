@@ -76,7 +76,7 @@ fn spooled_json(data: &[u8]) -> Value {
 }
 
 /// `jsonable_encoder(upload_file)`, the `input` of a type error on a str field.
-pub(crate) fn upload_json(f: &UploadFile) -> Value {
+pub fn upload_json(f: &UploadFile) -> Value {
     let mut headers = Map::new();
     for (k, v) in &f.headers {
         headers.entry(form::latin1(k)).or_insert_with(|| Value::String(form::latin1(v)));

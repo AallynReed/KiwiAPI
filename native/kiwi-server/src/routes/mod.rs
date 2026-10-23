@@ -67,6 +67,7 @@ fn ported() -> Router<AppState> {
         .merge(crate::ocr::router())
         .merge(crate::mods_catalog::router())
         .merge(crate::mod_releases::router())
+        .merge(crate::mods_git::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's
@@ -83,6 +84,7 @@ async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: 
             || crate::decode::routes::defers(m, req.method(), req.uri())
             || crate::codexes::defers(m, req.uri())
             || crate::mods_catalog::defers(m, req.method(), req.uri())
+            || crate::mods_git::defers(m, req.uri())
     });
     if !defer && let Some(m) = &matched {
         defer = crate::blueprints::defers(&state, m.as_str(), req.uri()).await
