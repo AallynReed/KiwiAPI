@@ -40,6 +40,7 @@ struct Style {
 const COMPACT: Style = Style { item_sep: ",", key_sep: ":", ascii: false, floats: Floats::Repr };
 const SPACED: Style = Style { item_sep: ", ", key_sep: ": ", ascii: true, floats: Floats::Repr };
 const PYDANTIC: Style = Style { item_sep: ",", key_sep: ":", ascii: false, floats: Floats::Pydantic };
+const COMPACT_ASCII: Style = Style { item_sep: ",", key_sep: ":", ascii: true, floats: Floats::Repr };
 
 /// `json.dumps(value, ensure_ascii=False, separators=(",", ":"))`.
 pub fn dumps(value: &Value) -> String {
@@ -49,6 +50,11 @@ pub fn dumps(value: &Value) -> String {
 /// `json.dumps(value)` with Python's defaults (spaced separators, ASCII only).
 pub fn dumps_spaced(value: &Value) -> String {
     render(value, SPACED)
+}
+
+/// `json.dumps(value, separators=(",", ":"))`: compact, ASCII only.
+pub fn dumps_compact_ascii(value: &Value) -> String {
+    render(value, COMPACT_ASCII)
 }
 
 /// pydantic-core `dump_json` of an already-built value.

@@ -1,0 +1,8 @@
+{
+ "mongo": [
+  {"collection": "blueprint_cache", "sort": ["key"], "mask": ["_id", "created_at", "blob_sha", "byte_len"]}
+ ],
+ "redis": [
+  {"pattern": "rl:swfcode:*", "mask_ttl": true, "mask_value": true}
+ ]
+}

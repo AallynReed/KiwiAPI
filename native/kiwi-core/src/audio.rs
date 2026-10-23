@@ -1,7 +1,9 @@
 //! Wwise media (`.wem`) to browser audio, mirroring `app/trove/audio/{wem,wwise_vorbis,ogg}.py`.
 //!
-//! `convert` returns None wherever the Python reference raises, so a binding can
-//! rerun Python and keep the exact exception.
+//! [`convert_detailed`] fails the way the Python reference does: a `WemError`
+//! with its exact text, or a [`ConvertError::Crash`] where Python raises
+//! something else. [`convert`] is the same as an `Option` (None wherever
+//! Python raises), and [`parse`] is `wem.parse`.
 
 const FMT_PCM: u16 = 0xFFFE;
 const FMT_ADPCM: u16 = 0x0002;
@@ -14,6 +16,23 @@ const BLOCKSIZE_AT: usize = 0x28;
 const ADPCM_BLOCK: usize = 0x24;
 const ADPCM_HEADER: usize = 4;
 const MAX_DECODED_BYTES: usize = 96 * 1024 * 1024;
+
+/// Why a conversion failed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ConvertError {
+    /// `WemError(text)` (a `VorbisError` from the setup rebuild included).
+    Wem(String),
+    /// Any other exception Python raises on the way.
+    Crash(&'static str),
+}
+
+type R<T> = Result<T, ConvertError>;
+
+fn wem<T>(msg: impl Into<String>) -> R<T> {
+    Err(ConvertError::Wem(msg.into()))
+}
+
+const CRASH: ConvertError = ConvertError::Crash("unhandled");
 
 #[inline]
 fn u16_at(b: &[u8], o: usize) -> Option<u16> {
@@ -53,14 +72,16 @@ impl<'a> BitReader<'a> {
         BitReader { data, pos: 0 }
     }
 
-    fn read(&mut self, n: u32) -> Option<u64> {
+    fn read(&mut self, n: u32) -> R<u64> {
         let mut v = 0u64;
         for i in 0..n {
-            let byte = *self.data.get(self.pos >> 3)?;
+            let Some(&byte) = self.data.get(self.pos >> 3) else {
+                return wem("ran off the end of a packet");
+            };
             v |= u64::from((byte >> (self.pos & 7)) & 1) << i;
             self.pos += 1;
         }
-        Some(v)
+        Ok(v)
     }
 }
 
@@ -101,25 +122,25 @@ struct Codebooks<'a> {
 }
 
 impl<'a> Codebooks<'a> {
-    fn new(raw: &'a [u8]) -> Option<Self> {
+    fn new(raw: &'a [u8]) -> R<Self> {
         if raw.len() < 4 {
-            return None;
+            return wem("codebook library is truncated");
         }
-        let table = u32_at(raw, raw.len() - 4)? as usize;
+        let table = u32_at(raw, raw.len() - 4).ok_or(CRASH)? as usize;
         if table > raw.len() - 4 || !(raw.len() - 4 - table).is_multiple_of(4) {
-            return None;
+            return wem("codebook library has a bad offset table");
         }
-        Some(Codebooks { data: raw, table, count: (raw.len() - table) / 4 })
+        Ok(Codebooks { data: raw, table, count: (raw.len() - table) / 4 })
     }
 
     fn offset(&self, i: usize) -> usize {
         u32_at(self.data, self.table + 4 * i).unwrap_or(0) as usize
     }
 
-    fn expand(&self, cb_id: u64, out: &mut BitWriter) -> Option<()> {
+    fn expand(&self, cb_id: u64, out: &mut BitWriter) -> R<()> {
         let id = cb_id as usize;
         if id >= self.count.saturating_sub(1) {
-            return None;
+            return wem(format!("codebook {cb_id} is not in the library"));
         }
         let mut bits = BitReader::new(slice(self.data, self.offset(id), self.offset(id + 1)));
         let dimensions = bits.read(4)?;
@@ -140,13 +161,13 @@ impl<'a> Codebooks<'a> {
                 current += n;
             }
             if current > entries {
-                return None;
+                return wem("ordered codebook overruns its entry count");
             }
         } else {
             let length_bits = bits.read(3)? as u32;
             let sparse = bits.read(1)?;
             if !(1..=5).contains(&length_bits) {
-                return None;
+                return wem(format!("bad codeword length width {length_bits}"));
             }
             out.write(sparse, 1);
             for _ in 0..entries {
@@ -173,20 +194,21 @@ impl<'a> Codebooks<'a> {
                 out.write(bits.read(value_bits + 1)?, value_bits + 1);
             }
         }
-        Some(())
+        Ok(())
     }
 }
 
-/// libvorbis `_book_maptype1_quantvals`, with Python's ValueError cases as None.
-fn quantvals(entries: i64, dimensions: i64) -> Option<i64> {
+/// libvorbis `_book_maptype1_quantvals`: Python's `VorbisError` for no
+/// dimensions, its `ValueError` (a negative shift) as a crash.
+fn quantvals(entries: i64, dimensions: i64) -> R<i64> {
     if dimensions <= 0 {
-        return None;
+        return wem("codebook has no dimensions");
     }
     let bits = i64::from(ilog(entries));
     let num = (bits - 1) * (dimensions - 1);
     let shift = num.div_euclid(dimensions);
     if shift < 0 {
-        return None;
+        return Err(ConvertError::Crash("negative shift count"));
     }
     let mut vals = if shift >= 63 { 0 } else { entries >> shift };
     let pow = |v: i64| -> i128 {
@@ -200,7 +222,7 @@ fn quantvals(entries: i64, dimensions: i64) -> Option<i64> {
         let (acc, acc1) = (pow(vals), pow(vals + 1));
         let e = i128::from(entries);
         if acc <= e && e < acc1 {
-            return Some(vals);
+            return Ok(vals);
         }
         vals += if acc > e { -1 } else { 1 };
     }
@@ -214,7 +236,7 @@ struct Setup {
     mode_bits: u32,
 }
 
-fn rebuild_setup(packed: &[u8], channels: i64, lib: &Codebooks) -> Option<Setup> {
+fn rebuild_setup(packed: &[u8], channels: i64, lib: &Codebooks) -> R<Setup> {
     let mut bits = BitReader::new(packed);
     let mut out = BitWriter::default();
 
@@ -260,7 +282,7 @@ fn rebuild_setup(packed: &[u8], channels: i64, lib: &Codebooks) -> Option<Setup>
         let rangebits = bits.read(4)? as u32;
         out.write(u64::from(rangebits), 4);
         for &c in &classes {
-            for _ in 0..*dimensions.get(c as usize)? {
+            for _ in 0..*dimensions.get(c as usize).ok_or(CRASH)? {
                 out.write(bits.read(rangebits)?, rangebits);
             }
         }
@@ -271,7 +293,7 @@ fn rebuild_setup(packed: &[u8], channels: i64, lib: &Codebooks) -> Option<Setup>
     for _ in 0..residue_count {
         let residue_type = bits.read(2)?;
         if residue_type > 2 {
-            return None;
+            return wem(format!("residue type {residue_type} is not valid"));
         }
         out.write(residue_type, 16);
         out.write(bits.read(24)?, 24);
@@ -325,7 +347,7 @@ fn rebuild_setup(packed: &[u8], channels: i64, lib: &Codebooks) -> Option<Setup>
             }
         }
         if bits.read(2)? != 0 {
-            return None;
+            return wem("mapping reserved field is not zero");
         }
         out.write(0, 2);
         if submaps > 1 {
@@ -352,7 +374,7 @@ fn rebuild_setup(packed: &[u8], channels: i64, lib: &Codebooks) -> Option<Setup>
         out.write(bits.read(8)?, 8);
     }
     out.write(1, 1);
-    Some(Setup { body: out.finish(), blockflags, mode_bits: ilog(mode_count as i64 - 1) })
+    Ok(Setup { body: out.finish(), blockflags, mode_bits: ilog(mode_count as i64 - 1) })
 }
 
 // ─── ogg ──────────────────────────────────────────────────────────────────
@@ -451,27 +473,46 @@ impl OggWriter {
 
 // ─── wem ──────────────────────────────────────────────────────────────────
 
-struct Info {
-    codec: u16,
-    channels: i64,
-    rate: u32,
-    avg: u32,
-    align: u16,
-    bits: u16,
-    samples: i64,
-    fmt_off: usize,
-    data_off: usize,
-    data_size: usize,
+/// `wem.WemInfo`, plus where the fmt chunk sits.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Info {
+    pub codec: u16,
+    pub channels: i64,
+    pub rate: u32,
+    pub avg: u32,
+    pub align: u16,
+    pub bits: u16,
+    pub samples: i64,
+    pub fmt_off: usize,
+    pub data_off: usize,
+    pub data_size: usize,
 }
 
-fn parse(raw: &[u8]) -> Option<Info> {
+impl Info {
+    /// `CODEC_NAMES[codec]`.
+    pub fn codec_name(&self) -> &'static str {
+        match self.codec {
+            FMT_VORBIS => "vorbis",
+            FMT_ADPCM => "adpcm",
+            _ => "pcm",
+        }
+    }
+
+    /// `samples / rate`.
+    pub fn duration(&self) -> f64 {
+        if self.rate == 0 { 0.0 } else { self.samples as f64 / f64::from(self.rate) }
+    }
+}
+
+/// `wem.parse`: header facts, or the `WemError` text.
+pub fn parse(raw: &[u8]) -> Result<Info, String> {
     if raw.len() < 12 || &raw[..4] != b"RIFF" || &raw[8..12] != b"WAVE" {
-        return None;
+        return Err("not a RIFF/WAVE container".into());
     }
     let (mut fmt, mut data) = (None, None);
     let mut off = 12usize;
     while off + 8 <= raw.len() {
-        let size = u32_at(raw, off + 4)? as usize;
+        let size = u32_at(raw, off + 4).unwrap_or(0) as usize;
         if off + 8 + size > raw.len() {
             break;
         }
@@ -482,56 +523,58 @@ fn parse(raw: &[u8]) -> Option<Info> {
         }
         off += 8 + size + (size & 1);
     }
-    let ((fmt_off, fmt_size), (data_off, data_size)) = (fmt?, data?);
+    let (Some((fmt_off, fmt_size)), Some((data_off, data_size))) = (fmt, data) else {
+        return Err("missing fmt or data chunk".into());
+    };
     if fmt_size < 16 {
-        return None;
+        return Err("fmt chunk is too small".into());
     }
-    let codec = u16_at(raw, fmt_off)?;
-    let channels = i64::from(u16_at(raw, fmt_off + 2)?);
-    let rate = u32_at(raw, fmt_off + 4)?;
-    let avg = u32_at(raw, fmt_off + 8)?;
-    let align = u16_at(raw, fmt_off + 12)?;
-    let bits = u16_at(raw, fmt_off + 14)?;
+    let at16 = |o| u16_at(raw, fmt_off + o).unwrap_or(0);
+    let at32 = |o| u32_at(raw, fmt_off + o).unwrap_or(0);
+    let (codec, channels, rate, avg, align, bits) = (at16(0), i64::from(at16(2)), at32(4), at32(8), at16(12), at16(14));
     if ![FMT_PCM, FMT_ADPCM, FMT_VORBIS].contains(&codec) {
-        return None;
+        return Err(format!("unsupported codec 0x{codec:04x}"));
     }
     if !(1..=8).contains(&channels) || !(1000..=192_000).contains(&rate) {
-        return None;
+        return Err("implausible channel count or sample rate".into());
     }
     let samples = match codec {
         FMT_VORBIS => {
             if fmt_size != VORBIS_FMT_SIZE {
-                return None;
+                return Err(format!("unsupported Vorbis header layout (fmt size {fmt_size})"));
             }
-            i64::from(u32_at(raw, fmt_off + VORB_AT)?)
+            i64::from(at32(VORB_AT))
         }
         FMT_ADPCM => {
             let per_block = ((ADPCM_BLOCK - ADPCM_HEADER) * 2) as i64;
             let blocks = if align != 0 { (data_size / align as usize) as i64 } else { 0 };
             blocks * per_block
         }
-        _ => 0,
+        _ => {
+            let frame = channels as usize * usize::from((bits / 8).max(1));
+            (data_size / frame) as i64
+        }
     };
-    Some(Info { codec, channels, rate, avg, align, bits, samples, fmt_off, data_off, data_size })
+    Ok(Info { codec, channels, rate, avg, align, bits, samples, fmt_off, data_off, data_size })
 }
 
-fn wav(samples: &[u8], channels: i64, rate: u32) -> Option<Vec<u8>> {
+fn wav(samples: &[u8], channels: i64, rate: u32) -> R<Vec<u8>> {
     let align = (channels * 2) as u32;
     let mut out = Vec::with_capacity(44 + samples.len());
     out.extend_from_slice(b"RIFF");
-    out.extend_from_slice(&u32::try_from(36 + samples.len()).ok()?.to_le_bytes());
+    out.extend_from_slice(&u32::try_from(36 + samples.len()).map_err(|_| CRASH)?.to_le_bytes());
     out.extend_from_slice(b"WAVEfmt ");
     out.extend_from_slice(&16u32.to_le_bytes());
     out.extend_from_slice(&1u16.to_le_bytes());
     out.extend_from_slice(&(channels as u16).to_le_bytes());
     out.extend_from_slice(&rate.to_le_bytes());
-    out.extend_from_slice(&rate.checked_mul(align)?.to_le_bytes());
+    out.extend_from_slice(&rate.checked_mul(align).ok_or(CRASH)?.to_le_bytes());
     out.extend_from_slice(&(align as u16).to_le_bytes());
     out.extend_from_slice(&16u16.to_le_bytes());
     out.extend_from_slice(b"data");
     out.extend_from_slice(&(samples.len() as u32).to_le_bytes());
     out.extend_from_slice(samples);
-    Some(out)
+    Ok(out)
 }
 
 const STEP_TABLE: [i32; 89] = [
@@ -543,16 +586,16 @@ const STEP_TABLE: [i32; 89] = [
 ];
 const INDEX_TABLE: [i32; 8] = [-1, -1, -1, -1, 2, 4, 6, 8];
 
-fn decode_adpcm(raw: &[u8], info: &Info) -> Option<Vec<u8>> {
+fn decode_adpcm(raw: &[u8], info: &Info) -> R<Vec<u8>> {
     let channels = info.channels as usize;
     let stride = ADPCM_BLOCK * channels;
     if info.align as usize != stride {
-        return None;
+        return wem(format!("unexpected ADPCM block size {}", info.align));
     }
     let per_block = (ADPCM_BLOCK - ADPCM_HEADER) * 2;
     let blocks = info.data_size / stride;
     if blocks * per_block * channels * 2 > MAX_DECODED_BYTES {
-        return None;
+        return wem("decoded audio would be too large");
     }
     let data = slice(raw, info.data_off, info.data_off + info.data_size);
     let mut out = vec![0u8; blocks * per_block * channels * 2];
@@ -587,15 +630,15 @@ fn decode_adpcm(raw: &[u8], info: &Info) -> Option<Vec<u8>> {
             }
         }
     }
-    Some(out)
+    Ok(out)
 }
 
-fn restore_packet(packet: &[u8], mode_bits: u32, blockflag: u8, previous: u8, following: u8) -> Option<Vec<u8>> {
+fn restore_packet(packet: &[u8], mode_bits: u32, blockflag: u8, previous: u8, following: u8) -> R<Vec<u8>> {
     let mut bits = BitReader::new(packet);
     let mut out = BitWriter { out: Vec::with_capacity(packet.len() + 1), ..Default::default() };
     out.write(0, 1);
-    out.write(bits.read(mode_bits)?, mode_bits);
-    let rest = bits.read(8 - mode_bits)?;
+    out.write(bits.read(mode_bits).map_err(|_| CRASH)?, mode_bits);
+    let rest = bits.read(8 - mode_bits).map_err(|_| CRASH)?;
     if blockflag != 0 {
         out.write(u64::from(previous), 1);
         out.write(u64::from(following), 1);
@@ -604,24 +647,24 @@ fn restore_packet(packet: &[u8], mode_bits: u32, blockflag: u8, previous: u8, fo
     for &b in &packet[1..] {
         out.write(u64::from(b), 8);
     }
-    Some(out.finish())
+    Ok(out.finish())
 }
 
-fn to_ogg(raw: &[u8], info: &Info, codebooks: &[u8]) -> Option<Vec<u8>> {
+fn to_ogg(raw: &[u8], info: &Info, codebooks: Result<&[u8], &str>) -> R<Vec<u8>> {
     let vorb = info.fmt_off + VORB_AT;
-    let setup_at = u32_at(raw, vorb + SETUP_OFFSET_AT)? as usize;
-    let first_at = u32_at(raw, vorb + FIRST_PACKET_AT)? as usize;
-    let short_pow = *raw.get(vorb + BLOCKSIZE_AT)?;
-    let long_pow = *raw.get(vorb + BLOCKSIZE_AT + 1)?;
+    let setup_at = u32_at(raw, vorb + SETUP_OFFSET_AT).ok_or(CRASH)? as usize;
+    let first_at = u32_at(raw, vorb + FIRST_PACKET_AT).ok_or(CRASH)? as usize;
+    let short_pow = *raw.get(vorb + BLOCKSIZE_AT).ok_or(CRASH)?;
+    let long_pow = *raw.get(vorb + BLOCKSIZE_AT + 1).ok_or(CRASH)?;
     if !(6 <= short_pow && short_pow <= long_pow && long_pow <= 13) {
-        return None;
+        return wem(format!("implausible block sizes 2^{short_pow}/2^{long_pow}"));
     }
     if !(setup_at <= first_at && first_at <= info.data_size) {
-        return None;
+        return wem("packet offsets fall outside the data chunk");
     }
-    let size = u16_at(raw, info.data_off + setup_at)? as usize;
+    let size = u16_at(raw, info.data_off + setup_at).ok_or(CRASH)? as usize;
     let body_at = info.data_off + setup_at + 2;
-    let lib = Codebooks::new(codebooks)?;
+    let lib = Codebooks::new(codebooks.map_err(|e| ConvertError::Wem(e.to_owned()))?)?;
     let setup = rebuild_setup(slice(raw, body_at, body_at + size), info.channels, &lib)?;
 
     let mut ogg = OggWriter::new(1);
@@ -630,7 +673,7 @@ fn to_ogg(raw: &[u8], info: &Info, codebooks: &[u8]) -> Option<Vec<u8>> {
     ident.push(info.channels as u8);
     ident.extend_from_slice(&info.rate.to_le_bytes());
     ident.extend_from_slice(&0i32.to_le_bytes());
-    ident.extend_from_slice(&i32::try_from(i64::from(info.avg) * 8).ok()?.to_le_bytes());
+    ident.extend_from_slice(&i32::try_from(i64::from(info.avg) * 8).map_err(|_| CRASH)?.to_le_bytes());
     ident.extend_from_slice(&0i32.to_le_bytes());
     ident.push(short_pow | (long_pow << 4));
     ident.push(1);
@@ -651,7 +694,7 @@ fn to_ogg(raw: &[u8], info: &Info, codebooks: &[u8]) -> Option<Vec<u8>> {
     let mut packets: Vec<&[u8]> = Vec::new();
     let mut off = start;
     while off + 2 <= end {
-        let size = u16_at(raw, off)? as usize;
+        let size = u16_at(raw, off).ok_or(CRASH)? as usize;
         off += 2;
         if size == 0 || off + size > end {
             break;
@@ -660,12 +703,12 @@ fn to_ogg(raw: &[u8], info: &Info, codebooks: &[u8]) -> Option<Vec<u8>> {
         off += size;
     }
     if packets.is_empty() {
-        return None;
+        return wem("stream carries no audio packets");
     }
     let blocksizes = [1i64 << short_pow, 1i64 << long_pow];
     let mask = (1u8 << setup.mode_bits).wrapping_sub(1);
     let modes: Vec<usize> = packets.iter().map(|p| (p[0] & mask) as usize).collect();
-    let flag = |m: usize| setup.blockflags.get(m).copied();
+    let flag = |m: usize| setup.blockflags.get(m).copied().ok_or(CRASH);
 
     let mut granules = Vec::with_capacity(packets.len());
     let (mut position, mut previous) = (0i64, 0i64);
@@ -686,7 +729,7 @@ fn to_ogg(raw: &[u8], info: &Info, codebooks: &[u8]) -> Option<Vec<u8>> {
         for (i, p) in packets.iter().enumerate() {
             ogg.write(p.to_vec(), granules[i]);
         }
-        return Some(ogg.finish());
+        return Ok(ogg.finish());
     }
     let mut previous_flag = 0u8;
     for (i, p) in packets.iter().enumerate() {
@@ -695,7 +738,7 @@ fn to_ogg(raw: &[u8], info: &Info, codebooks: &[u8]) -> Option<Vec<u8>> {
         ogg.write(restore_packet(p, setup.mode_bits, blockflag, previous_flag, following)?, granules[i]);
         previous_flag = blockflag;
     }
-    Some(ogg.finish())
+    Ok(ogg.finish())
 }
 
 pub struct Converted {
@@ -704,24 +747,31 @@ pub struct Converted {
     pub ext: &'static str,
 }
 
-/// `wem.convert`. `codebooks` is the packed library; None means it couldn't be
-/// loaded, so Vorbis input returns None for the caller to report.
-pub fn convert(raw: &[u8], codebooks: Option<&[u8]>) -> Option<Converted> {
-    let info = parse(raw)?;
+/// `wem.convert`. `codebooks` is the packed library, or the text of
+/// `VorbisError("codebook library is unavailable: ...")` when it couldn't be
+/// read (only Vorbis input needs it).
+pub fn convert_detailed(raw: &[u8], codebooks: Result<&[u8], &str>) -> Result<Converted, ConvertError> {
+    let info = parse(raw).map_err(ConvertError::Wem)?;
     match info.codec {
-        FMT_VORBIS => Some(Converted { bytes: to_ogg(raw, &info, codebooks?)?, mime: "audio/ogg", ext: "ogg" }),
+        FMT_VORBIS => Ok(Converted { bytes: to_ogg(raw, &info, codebooks)?, mime: "audio/ogg", ext: "ogg" }),
         FMT_ADPCM => {
             let pcm = decode_adpcm(raw, &info)?;
-            Some(Converted { bytes: wav(&pcm, info.channels, info.rate)?, mime: "audio/wav", ext: "wav" })
+            Ok(Converted { bytes: wav(&pcm, info.channels, info.rate)?, mime: "audio/wav", ext: "wav" })
         }
         _ => {
             if info.bits != 16 {
-                return None;
+                return wem(format!("unsupported PCM depth {}", info.bits));
             }
             let pcm = slice(raw, info.data_off, info.data_off + info.data_size);
-            Some(Converted { bytes: wav(pcm, info.channels, info.rate)?, mime: "audio/wav", ext: "wav" })
+            Ok(Converted { bytes: wav(pcm, info.channels, info.rate)?, mime: "audio/wav", ext: "wav" })
         }
     }
+}
+
+/// `wem.convert`. `codebooks` is the packed library; None means it couldn't be
+/// loaded, so Vorbis input returns None for the caller to report.
+pub fn convert(raw: &[u8], codebooks: Option<&[u8]>) -> Option<Converted> {
+    convert_detailed(raw, codebooks.ok_or("codebook library is unavailable")).ok()
 }
 
 #[cfg(test)]
@@ -730,10 +780,11 @@ mod tests {
 
     #[test]
     fn quantvals_matches_libvorbis() {
-        assert_eq!(quantvals(81, 4), Some(3));
-        assert_eq!(quantvals(256, 2), Some(16));
-        assert_eq!(quantvals(0, 1), Some(0));
-        assert_eq!(quantvals(0, 2), None);
+        assert_eq!(quantvals(81, 4), Ok(3));
+        assert_eq!(quantvals(256, 2), Ok(16));
+        assert_eq!(quantvals(0, 1), Ok(0));
+        assert_eq!(quantvals(0, 2), Err(ConvertError::Crash("negative shift count")));
+        assert_eq!(quantvals(5, 0), Err(ConvertError::Wem("codebook has no dimensions".into())));
     }
 
     #[test]
@@ -743,6 +794,16 @@ mod tests {
         w.write(0xABCD, 16);
         let bytes = w.finish();
         let mut r = BitReader::new(&bytes);
-        assert_eq!((r.read(3), r.read(16)), (Some(0b101), Some(0xABCD)));
+        assert_eq!((r.read(3), r.read(16)), (Ok(0b101), Ok(0xABCD)));
+        assert_eq!(r.read(16), Err(ConvertError::Wem("ran off the end of a packet".into())));
+    }
+
+    #[test]
+    fn parse_errors_carry_python_text() {
+        assert_eq!(parse(b"nope").unwrap_err(), "not a RIFF/WAVE container");
+        let mut w = b"RIFF\0\0\0\0WAVEfmt \x10\0\0\0".to_vec();
+        w.extend_from_slice(&[0x01, 0, 1, 0, 0x44, 0xAC, 0, 0, 0, 0, 0, 0, 2, 0, 16, 0]);
+        w.extend_from_slice(b"data\0\0\0\0");
+        assert_eq!(parse(&w).unwrap_err(), "unsupported codec 0x0001");
     }
 }

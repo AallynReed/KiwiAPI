@@ -331,6 +331,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c9ea0ac24bc397ab3c98583a3c9ba74fa56b09a4449bbe172b9b1ddb016027a"
 
 [[package]]
+name = "color_quant"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
+
+[[package]]
 name = "combine"
 version = "4.6.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -654,6 +660,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
+name = "dunce"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
+
+[[package]]
 name = "either"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -911,6 +923,16 @@ dependencies = [
  "r-efi 6.0.0",
  "rand_core 0.10.1",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "gif"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee8cfcc411d9adbbaba82fb72661cc1bcca13e8bba98b364e62b2dba8f960159"
+dependencies = [
+ "color_quant",
+ "weezl",
 ]
 
 [[package]]
@@ -1405,9 +1427,11 @@ dependencies = [
  "crc32fast",
  "deadpool-postgres",
  "dotenvy",
+ "flate2",
  "form_urlencoded",
  "futures",
  "getrandom 0.3.4",
+ "gif",
  "hex",
  "hmac",
  "http-body",
@@ -1420,11 +1444,13 @@ dependencies = [
  "kiwi-pil",
  "lettre",
  "libz-sys",
+ "lzma-rust2",
  "md-5",
  "memchr",
  "memmap2",
  "mimalloc",
  "mongodb",
+ "mozjpeg-sys",
  "percent-encoding",
  "pin-project-lite",
  "png",
@@ -1437,6 +1463,7 @@ dependencies = [
  "serde_json",
  "sha1",
  "sha2",
+ "stacker",
  "thiserror",
  "tokio",
  "tokio-postgres",
@@ -1447,6 +1474,7 @@ dependencies = [
  "tracing-subscriber",
  "unicode-normalization",
  "webpki-roots",
+ "zlib-rs",
 ]
 
 [[package]]
@@ -1563,6 +1591,12 @@ name = "log"
 version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
+
+[[package]]
+name = "lzma-rust2"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1c46f3fcd2e888afdb01a07efc071cb21300e07c68d32c3e8b01b5c8cb1fcaa"
 
 [[package]]
 name = "macro_magic"
@@ -1799,6 +1833,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "mozjpeg-sys"
+version = "2.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f0dc668bf9bf888c88e2fb1ab16a406d2c380f1d082b20d51dd540ab2aa70c1"
+dependencies = [
+ "cc",
+ "dunce",
+ "libc",
 ]
 
 [[package]]
@@ -3460,6 +3505,12 @@ checksum = "1c1c8e20c8a38fc7d65abfe74eb7280e4aa667e8eec8bc84996d2874810748d9"
 dependencies = [
  "rustls-pki-types",
 ]
+
+[[package]]
+name = "weezl"
+version = "0.1.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88"
 
 [[package]]
 name = "whoami"

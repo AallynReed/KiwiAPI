@@ -58,6 +58,7 @@ fn ported() -> Router<AppState> {
         .merge(crate::updates::router())
         .merge(crate::decode::routes::router())
         .merge(crate::codexes::router())
+        .merge(crate::media::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's

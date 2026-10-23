@@ -13,9 +13,11 @@ chrono = { version = "0.4.45", features = ["serde"] }
 crc32fast = "1.5.0"
 deadpool-postgres = "0.14.2"
 dotenvy = "0.15.7"
+flate2 = { version = "1.1.10", default-features = false, features = ["zlib-rs"] }
 form_urlencoded = "1.2.2"
 futures = "0.3.34"
 getrandom = "0.3.4"
+gif = "0.14.2"
 hex = "0.4.3"
 hmac = "0.13.0"
 http-body = "1.1.0"
@@ -28,13 +30,16 @@ kiwi-core = { version = "0.1.0", path = "../kiwi-core" }
 kiwi-pil = { version = "0.1.0", path = "../kiwi-pil" }
 lettre = { version = "0.11.23", default-features = false, features = ["builder", "smtp-transport", "tokio1-rustls-tls"] }
 libz-sys = { version = "1.1.29", features = ["static"] }
+lzma-rust2 = { version = "0.23.0", default-features = false, features = ["std"] }
 md-5 = "0.11.0"
 memchr = "2.8.3"
 memmap2 = "0.9.11"
 mimalloc = "0.1.52"
 mongodb = "3.9.1"
+mozjpeg-sys = { version = "2.2.3", default-features = false, features = ["arith_dec", "unwinding"] }
 percent-encoding = "2.3.2"
 pin-project-lite = "0.2.17"
+png = "0.18.1"
 redis = { version = "1.7.1", features = ["tokio-comp", "connection-manager"] }
 regex = "1.13.1"
 reqwest = { version = "0.13.5", default-features = false, features = ["rustls-no-provider", "multipart", "gzip", "deflate", "charset", "query"] }
@@ -44,6 +49,7 @@ serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.154", features = ["preserve_order"] }
 sha1 = "0.11.0"
 sha2 = "0.11.1"
+stacker = "0.1.25"
 thiserror = "2.0.21"
 tokio = { version = "1.54.1", features = ["full"] }
 tokio-postgres = "0.7.18"
@@ -54,6 +60,7 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 unicode-normalization = "0.1.26"
 webpki-roots = "1.0.10"
+zlib-rs = { version = "0.6.8", default-features = false, features = ["rust-allocator"] }
 
 [dev-dependencies]
 png = "0.18.1"

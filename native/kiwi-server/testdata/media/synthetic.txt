@@ -1,0 +1,15 @@
+Event	ID	Name			Wwise Object Path	Notes
+	604671578	Play_ui_click			\Default Work Unit\UI\Play_ui_click	
+	686670768	Stop_ui_click			\Default Work Unit\UI\Stop_ui_click	some notes
+	686670768	Stop_ui_click_dupe			\Default Work Unit\UI\x	
+	12x	NotAnId			\x	
+
+In Memory Audio	ID	Name	Audio source file		Wwise Object Path	Notes	Data Size
+	22	ui_click_01	C:\Trove\cache\ui_click_01_54EC.wem		\Actor-Mixer Hierarchy\Default Work Unit\grp_UI\ui_click\ui_click_01	first	100
+	33	UI_Alpha	C:/Trove/cache/alpha.wem		\Actor-Mixer Hierarchy\grp		5
+	44	zeta_thing	plain.wem		Toplevel		
+	55		empty_name.wem		\a\b\c		
+	66	Éclair sound	C:\é.wem		\Actor-Mixer Hierarchy\Ünïcode Group\Éclair sound	note x	1
+
+Streamed Audio	ID	Name
+	1	ignored

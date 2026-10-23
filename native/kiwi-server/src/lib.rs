@@ -31,6 +31,7 @@ pub mod lb_warmer;
 pub mod lbread;
 pub mod maintenance;
 pub mod market;
+pub mod media;
 pub mod middleware;
 pub mod og;
 pub mod outbound;
