@@ -37,6 +37,7 @@ memmap2 = "0.9.11"
 mimalloc = "0.1.52"
 mongodb = "3.9.1"
 mozjpeg-sys = { version = "2.2.3", default-features = false, features = ["arith_dec", "unwinding"] }
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic"] }
 percent-encoding = "2.3.2"
 pin-project-lite = "0.2.17"
 png = "0.18.1"

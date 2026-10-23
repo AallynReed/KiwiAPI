@@ -1,0 +1,13 @@
+[
+ {"name": "mods_read_get_405", "method": "GET", "path": "/v1/mods/read", "compare_headers": ["allow"]},
+ {"name": "mods_read_head_405", "method": "HEAD", "path": "/v1/mods/read", "compare_headers": ["allow"]},
+ {"name": "mods_build_get_405", "method": "GET", "path": "/v1/mods/build?x=1", "compare_headers": ["allow"]},
+ {"name": "ocr_get_405", "method": "GET", "path": "/v1/ocr/character", "compare_headers": ["allow"]},
+ {"name": "ocr_get_browser", "method": "GET", "path": "/v1/ocr/character", "headers": {"Accept": "text/html"}, "compare_headers": ["allow"]},
+ {"name": "unlock_get_405", "method": "GET", "path": "/site/unlock-debug", "compare_headers": ["allow"]},
+ {"name": "unlock_head_405", "method": "HEAD", "path": "/site/unlock-debug", "compare_headers": ["allow"]},
+ {"name": "ocr_preflight", "method": "OPTIONS", "path": "/v1/ocr/character", "headers": {"Origin": "https://docs.aallyn.net", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "authorization, content-type"}},
+ {"name": "mods_preflight", "method": "OPTIONS", "path": "/v1/mods/build", "headers": {"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"}},
+ {"name": "unlock_preflight", "method": "OPTIONS", "path": "/site/unlock-debug", "headers": {"Origin": "https://trove.aallyn.net", "Access-Control-Request-Method": "POST"}},
+ {"name": "mods_read_trailing_slash", "method": "GET", "path": "/v1/mods/read/", "compare_headers": ["allow"]}
+]

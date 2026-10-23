@@ -1,0 +1,5931 @@
+[
+ {
+  "file": "en_sheet.png",
+  "content_type": "image/png",
+  "elems": [
+   {
+    "text": "Stats",
+    "box": [
+     [
+      23.0,
+      15.0
+     ],
+     [
+      71.0,
+      15.0
+     ],
+     [
+      71.0,
+      33.0
+     ],
+     [
+      23.0,
+      33.0
+     ]
+    ]
+   },
+   {
+    "text": "Physical Damage",
+    "box": [
+     [
+      129.0,
+      42.0
+     ],
+     [
+      249.0,
+      45.0
+     ],
+     [
+      249.0,
+      63.0
+     ],
+     [
+      129.0,
+      61.0
+     ]
+    ]
+   },
+   {
+    "text": "799,894",
+    "box": [
+     [
+      23.0,
+      43.0
+     ],
+     [
+      84.0,
+      43.0
+     ],
+     [
+      84.0,
+      60.0
+     ],
+     [
+      23.0,
+      60.0
+     ]
+    ]
+   },
+   {
+    "text": "14,300",
+    "box": [
+     [
+      23.0,
+      67.0
+     ],
+     [
+      74.0,
+      67.0
+     ],
+     [
+      74.0,
+      85.0
+     ],
+     [
+      23.0,
+      85.0
+     ]
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      129.0,
+      67.0
+     ],
+     [
+      234.0,
+      68.0
+     ],
+     [
+      234.0,
+      88.0
+     ],
+     [
+      128.0,
+      86.0
+     ]
+    ]
+   },
+   {
+    "text": "3,239,060",
+    "box": [
+     [
+      22.0,
+      91.0
+     ],
+     [
+      97.0,
+      91.0
+     ],
+     [
+      97.0,
+      109.0
+     ],
+     [
+      22.0,
+      109.0
+     ]
+    ]
+   },
+   {
+    "text": "MaximumHealth",
+    "box": [
+     [
+      130.0,
+      93.0
+     ],
+     [
+      251.0,
+      93.0
+     ],
+     [
+      251.0,
+      108.0
+     ],
+     [
+      130.0,
+      108.0
+     ]
+    ]
+   },
+   {
+    "text": "MaximumEnergy",
+    "box": [
+     [
+      129.0,
+      113.0
+     ],
+     [
+      253.0,
+      117.0
+     ],
+     [
+      252.0,
+      136.0
+     ],
+     [
+      128.0,
+      132.0
+     ]
+    ]
+   },
+   {
+    "text": "127",
+    "box": [
+     [
+      22.0,
+      114.0
+     ],
+     [
+      53.0,
+      114.0
+     ],
+     [
+      53.0,
+      133.0
+     ],
+     [
+      22.0,
+      133.0
+     ]
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      129.0,
+      138.0
+     ],
+     [
+      223.0,
+      140.0
+     ],
+     [
+      223.0,
+      159.0
+     ],
+     [
+      128.0,
+      157.0
+     ]
+    ]
+   },
+   {
+    "text": "4,237",
+    "box": [
+     [
+      22.0,
+      139.0
+     ],
+     [
+      66.0,
+      139.0
+     ],
+     [
+      66.0,
+      157.0
+     ],
+     [
+      22.0,
+      157.0
+     ]
+    ]
+   },
+   {
+    "text": "Energy Regen",
+    "box": [
+     [
+      128.0,
+      162.0
+     ],
+     [
+      226.0,
+      164.0
+     ],
+     [
+      226.0,
+      185.0
+     ],
+     [
+      128.0,
+      183.0
+     ]
+    ]
+   },
+   {
+    "text": "177",
+    "box": [
+     [
+      22.0,
+      163.0
+     ],
+     [
+      54.0,
+      163.0
+     ],
+     [
+      54.0,
+      181.0
+     ],
+     [
+      22.0,
+      181.0
+     ]
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      128.0,
+      186.0
+     ],
+     [
+      187.0,
+      188.0
+     ],
+     [
+      186.0,
+      207.0
+     ],
+     [
+      128.0,
+      205.0
+     ]
+    ]
+   },
+   {
+    "text": "145",
+    "box": [
+     [
+      23.0,
+      187.0
+     ],
+     [
+      52.0,
+      187.0
+     ],
+     [
+      52.0,
+      204.0
+     ],
+     [
+      23.0,
+      204.0
+     ]
+    ]
+   },
+   {
+    "text": "132",
+    "box": [
+     [
+      23.0,
+      211.0
+     ],
+     [
+      53.0,
+      211.0
+     ],
+     [
+      53.0,
+      228.0
+     ],
+     [
+      23.0,
+      228.0
+     ]
+    ]
+   },
+   {
+    "text": "MovementSpeed",
+    "box": [
+     [
+      130.0,
+      212.0
+     ],
+     [
+      252.0,
+      212.0
+     ],
+     [
+      252.0,
+      229.0
+     ],
+     [
+      130.0,
+      229.0
+     ]
+    ]
+   },
+   {
+    "text": "204%",
+    "box": [
+     [
+      22.0,
+      235.0
+     ],
+     [
+      67.0,
+      235.0
+     ],
+     [
+      67.0,
+      252.0
+     ],
+     [
+      22.0,
+      252.0
+     ]
+    ]
+   },
+   {
+    "text": "Attack Speed",
+    "box": [
+     [
+      128.0,
+      235.0
+     ],
+     [
+      221.0,
+      235.0
+     ],
+     [
+      221.0,
+      254.0
+     ],
+     [
+      128.0,
+      254.0
+     ]
+    ]
+   },
+   {
+    "text": "74",
+    "box": [
+     [
+      21.0,
+      259.0
+     ],
+     [
+      45.0,
+      259.0
+     ],
+     [
+      45.0,
+      277.0
+     ],
+     [
+      21.0,
+      277.0
+     ]
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      126.0,
+      260.0
+     ],
+     [
+      169.0,
+      260.0
+     ],
+     [
+      169.0,
+      280.0
+     ],
+     [
+      126.0,
+      280.0
+     ]
+    ]
+   },
+   {
+    "text": "Critical Hit",
+    "box": [
+     [
+      129.0,
+      282.0
+     ],
+     [
+      205.0,
+      283.0
+     ],
+     [
+      205.0,
+      301.0
+     ],
+     [
+      128.0,
+      300.0
+     ]
+    ]
+   },
+   {
+    "text": "114.8%",
+    "box": [
+     [
+      23.0,
+      284.0
+     ],
+     [
+      79.0,
+      284.0
+     ],
+     [
+      79.0,
+      300.0
+     ],
+     [
+      23.0,
+      300.0
+     ]
+    ]
+   },
+   {
+    "text": "Critical Damage",
+    "box": [
+     [
+      129.0,
+      305.0
+     ],
+     [
+      240.0,
+      308.0
+     ],
+     [
+      239.0,
+      327.0
+     ],
+     [
+      129.0,
+      324.0
+     ]
+    ]
+   },
+   {
+    "text": "3,438.3%",
+    "box": [
+     [
+      22.0,
+      308.0
+     ],
+     [
+      92.0,
+      308.0
+     ],
+     [
+      92.0,
+      325.0
+     ],
+     [
+      22.0,
+      325.0
+     ]
+    ]
+   },
+   {
+    "text": "Superstition",
+    "box": [
+     [
+      129.0,
+      330.0
+     ],
+     [
+      216.0,
+      332.0
+     ],
+     [
+      215.0,
+      351.0
+     ],
+     [
+      128.0,
+      349.0
+     ]
+    ]
+   },
+   {
+    "text": "0",
+    "box": [
+     [
+      24.0,
+      333.0
+     ],
+     [
+      34.0,
+      333.0
+     ],
+     [
+      34.0,
+      347.0
+     ],
+     [
+      24.0,
+      347.0
+     ]
+    ]
+   },
+   {
+    "text": "Magic Find",
+    "box": [
+     [
+      128.0,
+      355.0
+     ],
+     [
+      207.0,
+      354.0
+     ],
+     [
+      207.0,
+      374.0
+     ],
+     [
+      128.0,
+      374.0
+     ]
+    ]
+   },
+   {
+    "text": "14,253",
+    "box": [
+     [
+      23.0,
+      356.0
+     ],
+     [
+      75.0,
+      356.0
+     ],
+     [
+      75.0,
+      372.0
+     ],
+     [
+      23.0,
+      372.0
+     ]
+    ]
+   },
+   {
+    "text": "450",
+    "box": [
+     [
+      22.0,
+      378.0
+     ],
+     [
+      54.0,
+      378.0
+     ],
+     [
+      54.0,
+      397.0
+     ],
+     [
+      22.0,
+      397.0
+     ]
+    ]
+   },
+   {
+    "text": "Lasermancy",
+    "box": [
+     [
+      129.0,
+      379.0
+     ],
+     [
+      214.0,
+      382.0
+     ],
+     [
+      214.0,
+      399.0
+     ],
+     [
+      128.0,
+      396.0
+     ]
+    ]
+   },
+   {
+    "text": "28",
+    "box": [
+     [
+      22.0,
+      402.0
+     ],
+     [
+      45.0,
+      402.0
+     ],
+     [
+      45.0,
+      421.0
+     ],
+     [
+      22.0,
+      421.0
+     ]
+    ]
+   },
+   {
+    "text": "Flask Capacity",
+    "box": [
+     [
+      129.0,
+      402.0
+     ],
+     [
+      228.0,
+      404.0
+     ],
+     [
+      227.0,
+      424.0
+     ],
+     [
+      128.0,
+      421.0
+     ]
+    ]
+   },
+   {
+    "text": "221",
+    "box": [
+     [
+      22.0,
+      427.0
+     ],
+     [
+      52.0,
+      427.0
+     ],
+     [
+      52.0,
+      444.0
+     ],
+     [
+      22.0,
+      444.0
+     ]
+    ]
+   },
+   {
+    "text": "Experience Gain",
+    "box": [
+     [
+      129.0,
+      427.0
+     ],
+     [
+      243.0,
+      428.0
+     ],
+     [
+      243.0,
+      447.0
+     ],
+     [
+      129.0,
+      445.0
+     ]
+    ]
+   },
+   {
+    "text": "6",
+    "box": [
+     [
+      23.0,
+      452.0
+     ],
+     [
+      35.0,
+      452.0
+     ],
+     [
+      35.0,
+      467.0
+     ],
+     [
+      23.0,
+      467.0
+     ]
+    ]
+   },
+   {
+    "text": "BattleFactor",
+    "box": [
+     [
+      129.0,
+      452.0
+     ],
+     [
+      219.0,
+      452.0
+     ],
+     [
+      219.0,
+      469.0
+     ],
+     [
+      129.0,
+      469.0
+     ]
+    ]
+   },
+   {
+    "text": "13,185",
+    "box": [
+     [
+      23.0,
+      475.0
+     ],
+     [
+      74.0,
+      475.0
+     ],
+     [
+      74.0,
+      493.0
+     ],
+     [
+      23.0,
+      493.0
+     ]
+    ]
+   },
+   {
+    "text": "Light",
+    "box": [
+     [
+      128.0,
+      475.0
+     ],
+     [
+      168.0,
+      475.0
+     ],
+     [
+      168.0,
+      496.0
+     ],
+     [
+      128.0,
+      496.0
+     ]
+    ]
+   },
+   {
+    "text": "ChaosFactor",
+    "box": [
+     [
+      129.0,
+      499.0
+     ],
+     [
+      221.0,
+      500.0
+     ],
+     [
+      221.0,
+      517.0
+     ],
+     [
+      129.0,
+      516.0
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": "Physical Damage",
+    "box": [
+     [
+      129.0,
+      42.0
+     ],
+     [
+      249.0,
+      45.0
+     ],
+     [
+      249.0,
+      63.0
+     ],
+     [
+      129.0,
+      61.0
+     ]
+    ],
+    "texts": [
+     "Physical Damage"
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      129.0,
+      67.0
+     ],
+     [
+      234.0,
+      68.0
+     ],
+     [
+      234.0,
+      88.0
+     ],
+     [
+      128.0,
+      86.0
+     ]
+    ],
+    "texts": [
+     "Magic Damage"
+    ]
+   },
+   {
+    "text": "MaximumHealth",
+    "box": [
+     [
+      130.0,
+      93.0
+     ],
+     [
+      251.0,
+      93.0
+     ],
+     [
+      251.0,
+      108.0
+     ],
+     [
+      130.0,
+      108.0
+     ]
+    ],
+    "texts": [
+     "Health",
+     "Maximum l"
+    ]
+   },
+   {
+    "text": "MaximumEnergy",
+    "box": [
+     [
+      129.0,
+      113.0
+     ],
+     [
+      253.0,
+      117.0
+     ],
+     [
+      252.0,
+      136.0
+     ],
+     [
+      128.0,
+      132.0
+     ]
+    ],
+    "texts": [
+     "Energy",
+     "Maximum"
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      129.0,
+      138.0
+     ],
+     [
+      223.0,
+      140.0
+     ],
+     [
+      223.0,
+      159.0
+     ],
+     [
+      128.0,
+      157.0
+     ]
+    ],
+    "texts": [
+     "Health Regen"
+    ]
+   },
+   {
+    "text": "Energy Regen",
+    "box": [
+     [
+      128.0,
+      162.0
+     ],
+     [
+      226.0,
+      164.0
+     ],
+     [
+      226.0,
+      185.0
+     ],
+     [
+      128.0,
+      183.0
+     ]
+    ],
+    "texts": [
+     "Energy ",
+     "Regen"
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      128.0,
+      186.0
+     ],
+     [
+      187.0,
+      188.0
+     ],
+     [
+      186.0,
+      207.0
+     ],
+     [
+      128.0,
+      205.0
+     ]
+    ],
+    "texts": [
+     " Stability "
+    ]
+   },
+   {
+    "text": "MovementSpeed",
+    "box": [
+     [
+      130.0,
+      212.0
+     ],
+     [
+      252.0,
+      212.0
+     ],
+     [
+      252.0,
+      229.0
+     ],
+     [
+      130.0,
+      229.0
+     ]
+    ],
+    "texts": [
+     "Movement Speed"
+    ]
+   },
+   {
+    "text": "Attack Speed",
+    "box": [
+     [
+      128.0,
+      235.0
+     ],
+     [
+      221.0,
+      235.0
+     ],
+     [
+      221.0,
+      254.0
+     ],
+     [
+      128.0,
+      254.0
+     ]
+    ],
+    "texts": [
+     "Attack Speed"
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      126.0,
+      260.0
+     ],
+     [
+      169.0,
+      260.0
+     ],
+     [
+      169.0,
+      280.0
+     ],
+     [
+      126.0,
+      280.0
+     ]
+    ],
+    "texts": [
+     " Jump"
+    ]
+   },
+   {
+    "text": "Critical Hit",
+    "box": [
+     [
+      129.0,
+      282.0
+     ],
+     [
+      205.0,
+      283.0
+     ],
+     [
+      205.0,
+      301.0
+     ],
+     [
+      128.0,
+      300.0
+     ]
+    ],
+    "texts": [
+     "Critical Hit"
+    ]
+   },
+   {
+    "text": "Critical Damage",
+    "box": [
+     [
+      129.0,
+      305.0
+     ],
+     [
+      240.0,
+      308.0
+     ],
+     [
+      239.0,
+      327.0
+     ],
+     [
+      129.0,
+      324.0
+     ]
+    ],
+    "texts": [
+     "Critical Damage"
+    ]
+   },
+   {
+    "text": "Superstition",
+    "box": [
+     [
+      129.0,
+      330.0
+     ],
+     [
+      216.0,
+      332.0
+     ],
+     [
+      215.0,
+      351.0
+     ],
+     [
+      128.0,
+      349.0
+     ]
+    ],
+    "texts": [
+     "Superstition"
+    ]
+   },
+   {
+    "text": "Magic Find",
+    "box": [
+     [
+      128.0,
+      355.0
+     ],
+     [
+      207.0,
+      354.0
+     ],
+     [
+      207.0,
+      374.0
+     ],
+     [
+      128.0,
+      374.0
+     ]
+    ],
+    "texts": [
+     "Magic Find"
+    ]
+   },
+   {
+    "text": "Lasermancy",
+    "box": [
+     [
+      129.0,
+      379.0
+     ],
+     [
+      214.0,
+      382.0
+     ],
+     [
+      214.0,
+      399.0
+     ],
+     [
+      128.0,
+      396.0
+     ]
+    ],
+    "texts": [
+     "Lasermancy"
+    ]
+   },
+   {
+    "text": "Flask Capacity",
+    "box": [
+     [
+      129.0,
+      402.0
+     ],
+     [
+      228.0,
+      404.0
+     ],
+     [
+      227.0,
+      424.0
+     ],
+     [
+      128.0,
+      421.0
+     ]
+    ],
+    "texts": [
+     "Flask Capacity"
+    ]
+   },
+   {
+    "text": "Experience Gain",
+    "box": [
+     [
+      129.0,
+      427.0
+     ],
+     [
+      243.0,
+      428.0
+     ],
+     [
+      243.0,
+      447.0
+     ],
+     [
+      129.0,
+      445.0
+     ]
+    ],
+    "texts": [
+     "Experience Gain"
+    ]
+   },
+   {
+    "text": "BattleFactor",
+    "box": [
+     [
+      129.0,
+      452.0
+     ],
+     [
+      219.0,
+      452.0
+     ],
+     [
+      219.0,
+      469.0
+     ],
+     [
+      129.0,
+      469.0
+     ]
+    ],
+    "texts": [
+     "Battle Factor"
+    ]
+   },
+   {
+    "text": "Light",
+    "box": [
+     [
+      128.0,
+      475.0
+     ],
+     [
+      168.0,
+      475.0
+     ],
+     [
+      168.0,
+      496.0
+     ],
+     [
+      128.0,
+      496.0
+     ]
+    ],
+    "texts": [
+     "Light "
+    ]
+   },
+   {
+    "text": "ChaosFactor",
+    "box": [
+     [
+      129.0,
+      499.0
+     ],
+     [
+      221.0,
+      500.0
+     ],
+     [
+      221.0,
+      517.0
+     ],
+     [
+      129.0,
+      516.0
+     ]
+    ],
+    "texts": [
+     "Chaos Factor"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "physical_damage": {
+     "value": 799894,
+     "unit": "count",
+     "raw": "799,894",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_damage": {
+     "value": 14300,
+     "unit": "count",
+     "raw": "14,300",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_health": {
+     "value": 3239060,
+     "unit": "count",
+     "raw": "3,239,060",
+     "confidence": 0.819,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_energy": {
+     "value": 127,
+     "unit": "count",
+     "raw": "127",
+     "confidence": 0.819,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "health_regen": {
+     "value": 4237,
+     "unit": "count",
+     "raw": "4,237",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "energy_regen": {
+     "value": 177,
+     "unit": "count",
+     "raw": "177",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "stability": {
+     "value": 145,
+     "unit": "count",
+     "raw": "145",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "movement_speed": {
+     "value": 132,
+     "unit": "count",
+     "raw": "132",
+     "confidence": 0.825,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "attack_speed": {
+     "value": 204.0,
+     "unit": "percent",
+     "raw": "204%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "jump": {
+     "value": 74,
+     "unit": "count",
+     "raw": "74",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_hit": {
+     "value": 114.8,
+     "unit": "percent",
+     "raw": "114.8%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_damage": {
+     "value": 3438.3,
+     "unit": "percent",
+     "raw": "3,438.3%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "superstition": {
+     "value": 0,
+     "unit": "count",
+     "raw": "0",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_find": {
+     "value": 14253,
+     "unit": "count",
+     "raw": "14,253",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "lasermancy": {
+     "value": 450,
+     "unit": "count",
+     "raw": "450",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "flask_capacity": {
+     "value": 28,
+     "unit": "count",
+     "raw": "28",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "experience_gain": {
+     "value": 221,
+     "unit": "count",
+     "raw": "221",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "battle_factor": {
+     "value": 6,
+     "unit": "count",
+     "raw": "6",
+     "confidence": 0.816,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "light": {
+     "value": 13185,
+     "unit": "count",
+     "raw": "13,185",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "coefficient": {
+     "value": 28302649,
+     "unit": "count",
+     "raw": "",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": true
+    }
+   },
+   "matched": 20,
+   "total_known": 22,
+   "lines": [
+    "Stats",
+    "Physical Damage",
+    "799,894",
+    "14,300",
+    "MagicDamage",
+    "3,239,060",
+    "MaximumHealth",
+    "MaximumEnergy",
+    "127",
+    "Health Regen",
+    "4,237",
+    "Energy Regen",
+    "177",
+    "Stability",
+    "145",
+    "132",
+    "MovementSpeed",
+    "204%",
+    "Attack Speed",
+    "74",
+    "Jump",
+    "Critical Hit",
+    "114.8%",
+    "Critical Damage",
+    "3,438.3%",
+    "Superstition",
+    "0",
+    "Magic Find",
+    "14,253",
+    "450",
+    "Lasermancy",
+    "28",
+    "Flask Capacity",
+    "221",
+    "Experience Gain",
+    "6",
+    "BattleFactor",
+    "13,185",
+    "Light",
+    "ChaosFactor"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"physical_damage\":{\"value\":799894,\"unit\":\"count\",\"raw\":\"799,894\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_damage\":{\"value\":14300,\"unit\":\"count\",\"raw\":\"14,300\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_health\":{\"value\":3239060,\"unit\":\"count\",\"raw\":\"3,239,060\",\"confidence\":0.819,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_energy\":{\"value\":127,\"unit\":\"count\",\"raw\":\"127\",\"confidence\":0.819,\"in_range\":true,\"type_match\":true,\"derived\":false},\"health_regen\":{\"value\":4237,\"unit\":\"count\",\"raw\":\"4,237\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"energy_regen\":{\"value\":177,\"unit\":\"count\",\"raw\":\"177\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"stability\":{\"value\":145,\"unit\":\"count\",\"raw\":\"145\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"movement_speed\":{\"value\":132,\"unit\":\"count\",\"raw\":\"132\",\"confidence\":0.825,\"in_range\":true,\"type_match\":true,\"derived\":false},\"attack_speed\":{\"value\":204.0,\"unit\":\"percent\",\"raw\":\"204%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"jump\":{\"value\":74,\"unit\":\"count\",\"raw\":\"74\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_hit\":{\"value\":114.8,\"unit\":\"percent\",\"raw\":\"114.8%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_damage\":{\"value\":3438.3,\"unit\":\"percent\",\"raw\":\"3,438.3%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"superstition\":{\"value\":0,\"unit\":\"count\",\"raw\":\"0\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_find\":{\"value\":14253,\"unit\":\"count\",\"raw\":\"14,253\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"lasermancy\":{\"value\":450,\"unit\":\"count\",\"raw\":\"450\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"flask_capacity\":{\"value\":28,\"unit\":\"count\",\"raw\":\"28\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"experience_gain\":{\"value\":221,\"unit\":\"count\",\"raw\":\"221\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"battle_factor\":{\"value\":6,\"unit\":\"count\",\"raw\":\"6\",\"confidence\":0.816,\"in_range\":true,\"type_match\":true,\"derived\":false},\"light\":{\"value\":13185,\"unit\":\"count\",\"raw\":\"13,185\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"coefficient\":{\"value\":28302649,\"unit\":\"count\",\"raw\":\"\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":true}},\"matched\":20,\"total_known\":22,\"lines\":[\"Stats\",\"Physical Damage\",\"799,894\",\"14,300\",\"MagicDamage\",\"3,239,060\",\"MaximumHealth\",\"MaximumEnergy\",\"127\",\"Health Regen\",\"4,237\",\"Energy Regen\",\"177\",\"Stability\",\"145\",\"132\",\"MovementSpeed\",\"204%\",\"Attack Speed\",\"74\",\"Jump\",\"Critical Hit\",\"114.8%\",\"Critical Damage\",\"3,438.3%\",\"Superstition\",\"0\",\"Magic Find\",\"14,253\",\"450\",\"Lasermancy\",\"28\",\"Flask Capacity\",\"221\",\"Experience Gain\",\"6\",\"BattleFactor\",\"13,185\",\"Light\",\"ChaosFactor\"]}"
+ },
+ {
+  "file": "fr_sheet.png",
+  "content_type": "image/png",
+  "elems": [
+   {
+    "text": "Stats",
+    "box": [
+     [
+      23.0,
+      15.0
+     ],
+     [
+      72.0,
+      16.0
+     ],
+     [
+      72.0,
+      33.0
+     ],
+     [
+      22.0,
+      32.0
+     ]
+    ]
+   },
+   {
+    "text": "799,894",
+    "box": [
+     [
+      23.0,
+      44.0
+     ],
+     [
+      83.0,
+      44.0
+     ],
+     [
+      83.0,
+      59.0
+     ],
+     [
+      23.0,
+      59.0
+     ]
+    ]
+   },
+   {
+    "text": "Degats physiques",
+    "box": [
+     [
+      140.0,
+      44.0
+     ],
+     [
+      262.0,
+      45.0
+     ],
+     [
+      262.0,
+      63.0
+     ],
+     [
+      140.0,
+      62.0
+     ]
+    ]
+   },
+   {
+    "text": "Degats magiques",
+    "box": [
+     [
+      140.0,
+      67.0
+     ],
+     [
+      259.0,
+      69.0
+     ],
+     [
+      259.0,
+      88.0
+     ],
+     [
+      140.0,
+      86.0
+     ]
+    ]
+   },
+   {
+    "text": "14,300",
+    "box": [
+     [
+      24.0,
+      68.0
+     ],
+     [
+      74.0,
+      68.0
+     ],
+     [
+      74.0,
+      84.0
+     ],
+     [
+      24.0,
+      84.0
+     ]
+    ]
+   },
+   {
+    "text": "3,239,060",
+    "box": [
+     [
+      23.0,
+      93.0
+     ],
+     [
+      95.0,
+      92.0
+     ],
+     [
+      96.0,
+      107.0
+     ],
+     [
+      23.0,
+      108.0
+     ]
+    ]
+   },
+   {
+    "text": "PV maximum",
+    "box": [
+     [
+      139.0,
+      92.0
+     ],
+     [
+      234.0,
+      93.0
+     ],
+     [
+      234.0,
+      108.0
+     ],
+     [
+      139.0,
+      107.0
+     ]
+    ]
+   },
+   {
+    "text": "114.8%",
+    "box": [
+     [
+      24.0,
+      116.0
+     ],
+     [
+      79.0,
+      116.0
+     ],
+     [
+      79.0,
+      131.0
+     ],
+     [
+      24.0,
+      131.0
+     ]
+    ]
+   },
+   {
+    "text": "Coup critique",
+    "box": [
+     [
+      140.0,
+      116.0
+     ],
+     [
+      233.0,
+      117.0
+     ],
+     [
+      233.0,
+      134.0
+     ],
+     [
+      139.0,
+      132.0
+     ]
+    ]
+   },
+   {
+    "text": "Degats critiques",
+    "box": [
+     [
+      139.0,
+      139.0
+     ],
+     [
+      252.0,
+      141.0
+     ],
+     [
+      252.0,
+      159.0
+     ],
+     [
+      139.0,
+      157.0
+     ]
+    ]
+   },
+   {
+    "text": "3,438.3%",
+    "box": [
+     [
+      24.0,
+      140.0
+     ],
+     [
+      92.0,
+      140.0
+     ],
+     [
+      92.0,
+      156.0
+     ],
+     [
+      24.0,
+      156.0
+     ]
+    ]
+   },
+   {
+    "text": "13,185",
+    "box": [
+     [
+      24.0,
+      164.0
+     ],
+     [
+      74.0,
+      164.0
+     ],
+     [
+      74.0,
+      180.0
+     ],
+     [
+      24.0,
+      180.0
+     ]
+    ]
+   },
+   {
+    "text": "Lumiere",
+    "box": [
+     [
+      139.0,
+      164.0
+     ],
+     [
+      199.0,
+      164.0
+     ],
+     [
+      198.0,
+      180.0
+     ],
+     [
+      139.0,
+      179.0
+     ]
+    ]
+   },
+   {
+    "text": "145",
+    "box": [
+     [
+      23.0,
+      187.0
+     ],
+     [
+      53.0,
+      187.0
+     ],
+     [
+      53.0,
+      204.0
+     ],
+     [
+      23.0,
+      204.0
+     ]
+    ]
+   },
+   {
+    "text": "Stabilite",
+    "box": [
+     [
+      139.0,
+      188.0
+     ],
+     [
+      196.0,
+      188.0
+     ],
+     [
+      196.0,
+      204.0
+     ],
+     [
+      139.0,
+      204.0
+     ]
+    ]
+   },
+   {
+    "text": "74",
+    "box": [
+     [
+      22.0,
+      211.0
+     ],
+     [
+      44.0,
+      211.0
+     ],
+     [
+      44.0,
+      228.0
+     ],
+     [
+      22.0,
+      228.0
+     ]
+    ]
+   },
+   {
+    "text": "Saut",
+    "box": [
+     [
+      139.0,
+      211.0
+     ],
+     [
+      174.0,
+      212.0
+     ],
+     [
+      173.0,
+      229.0
+     ],
+     [
+      138.0,
+      227.0
+     ]
+    ]
+   },
+   {
+    "text": "Coefficient",
+    "box": [
+     [
+      140.0,
+      235.0
+     ],
+     [
+      215.0,
+      236.0
+     ],
+     [
+      215.0,
+      252.0
+     ],
+     [
+      140.0,
+      251.0
+     ]
+    ]
+   },
+   {
+    "text": "28,302,108",
+    "box": [
+     [
+      24.0,
+      237.0
+     ],
+     [
+      104.0,
+      237.0
+     ],
+     [
+      104.0,
+      252.0
+     ],
+     [
+      24.0,
+      252.0
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": "Degats physiques",
+    "box": [
+     [
+      140.0,
+      44.0
+     ],
+     [
+      262.0,
+      45.0
+     ],
+     [
+      262.0,
+      63.0
+     ],
+     [
+      140.0,
+      62.0
+     ]
+    ],
+    "texts": [
+     "Dégats physiques"
+    ]
+   },
+   {
+    "text": "Degats magiques",
+    "box": [
+     [
+      140.0,
+      67.0
+     ],
+     [
+      259.0,
+      69.0
+     ],
+     [
+      259.0,
+      88.0
+     ],
+     [
+      140.0,
+      86.0
+     ]
+    ],
+    "texts": [
+     "Dégats magiques"
+    ]
+   },
+   {
+    "text": "PV maximum",
+    "box": [
+     [
+      139.0,
+      92.0
+     ],
+     [
+      234.0,
+      93.0
+     ],
+     [
+      234.0,
+      108.0
+     ],
+     [
+      139.0,
+      107.0
+     ]
+    ],
+    "texts": [
+     "PV maximum"
+    ]
+   },
+   {
+    "text": "Coup critique",
+    "box": [
+     [
+      140.0,
+      116.0
+     ],
+     [
+      233.0,
+      117.0
+     ],
+     [
+      233.0,
+      134.0
+     ],
+     [
+      139.0,
+      132.0
+     ]
+    ],
+    "texts": [
+     "Coup critique"
+    ]
+   },
+   {
+    "text": "Degats critiques",
+    "box": [
+     [
+      139.0,
+      139.0
+     ],
+     [
+      252.0,
+      141.0
+     ],
+     [
+      252.0,
+      159.0
+     ],
+     [
+      139.0,
+      157.0
+     ]
+    ],
+    "texts": [
+     "Dégats critiques"
+    ]
+   },
+   {
+    "text": "Lumiere",
+    "box": [
+     [
+      139.0,
+      164.0
+     ],
+     [
+      199.0,
+      164.0
+     ],
+     [
+      198.0,
+      180.0
+     ],
+     [
+      139.0,
+      179.0
+     ]
+    ],
+    "texts": [
+     "Lumiere"
+    ]
+   },
+   {
+    "text": "Stabilite",
+    "box": [
+     [
+      139.0,
+      188.0
+     ],
+     [
+      196.0,
+      188.0
+     ],
+     [
+      196.0,
+      204.0
+     ],
+     [
+      139.0,
+      204.0
+     ]
+    ],
+    "texts": [
+     "Stabilité"
+    ]
+   },
+   {
+    "text": "Saut",
+    "box": [
+     [
+      139.0,
+      211.0
+     ],
+     [
+      174.0,
+      212.0
+     ],
+     [
+      173.0,
+      229.0
+     ],
+     [
+      138.0,
+      227.0
+     ]
+    ],
+    "texts": [
+     "Saut"
+    ]
+   },
+   {
+    "text": "Coefficient",
+    "box": [
+     [
+      140.0,
+      235.0
+     ],
+     [
+      215.0,
+      236.0
+     ],
+     [
+      215.0,
+      252.0
+     ],
+     [
+      140.0,
+      251.0
+     ]
+    ],
+    "texts": [
+     "Coefficient"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "physical_damage": {
+     "value": 799894,
+     "unit": "count",
+     "raw": "799,894",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_damage": {
+     "value": 14300,
+     "unit": "count",
+     "raw": "14,300",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_health": {
+     "value": 3239060,
+     "unit": "count",
+     "raw": "3,239,060",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_hit": {
+     "value": 114.8,
+     "unit": "percent",
+     "raw": "114.8%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_damage": {
+     "value": 3438.3,
+     "unit": "percent",
+     "raw": "3,438.3%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "light": {
+     "value": 13185,
+     "unit": "count",
+     "raw": "13,185",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "stability": {
+     "value": 145,
+     "unit": "count",
+     "raw": "145",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "jump": {
+     "value": 74,
+     "unit": "count",
+     "raw": "74",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "coefficient": {
+     "value": 28302649,
+     "unit": "count",
+     "raw": "28,302,108",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    }
+   },
+   "matched": 9,
+   "total_known": 22,
+   "lines": [
+    "Stats",
+    "799,894",
+    "Degats physiques",
+    "Degats magiques",
+    "14,300",
+    "3,239,060",
+    "PV maximum",
+    "114.8%",
+    "Coup critique",
+    "Degats critiques",
+    "3,438.3%",
+    "13,185",
+    "Lumiere",
+    "145",
+    "Stabilite",
+    "74",
+    "Saut",
+    "Coefficient",
+    "28,302,108"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"physical_damage\":{\"value\":799894,\"unit\":\"count\",\"raw\":\"799,894\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_damage\":{\"value\":14300,\"unit\":\"count\",\"raw\":\"14,300\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_health\":{\"value\":3239060,\"unit\":\"count\",\"raw\":\"3,239,060\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_hit\":{\"value\":114.8,\"unit\":\"percent\",\"raw\":\"114.8%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_damage\":{\"value\":3438.3,\"unit\":\"percent\",\"raw\":\"3,438.3%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"light\":{\"value\":13185,\"unit\":\"count\",\"raw\":\"13,185\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"stability\":{\"value\":145,\"unit\":\"count\",\"raw\":\"145\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"jump\":{\"value\":74,\"unit\":\"count\",\"raw\":\"74\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"coefficient\":{\"value\":28302649,\"unit\":\"count\",\"raw\":\"28,302,108\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false}},\"matched\":9,\"total_known\":22,\"lines\":[\"Stats\",\"799,894\",\"Degats physiques\",\"Degats magiques\",\"14,300\",\"3,239,060\",\"PV maximum\",\"114.8%\",\"Coup critique\",\"Degats critiques\",\"3,438.3%\",\"13,185\",\"Lumiere\",\"145\",\"Stabilite\",\"74\",\"Saut\",\"Coefficient\",\"28,302,108\"]}"
+ },
+ {
+  "file": "two_columns.png",
+  "content_type": "image/png",
+  "elems": [
+   {
+    "text": "799,894",
+    "box": [
+     [
+      199.0,
+      33.0
+     ],
+     [
+      267.0,
+      34.0
+     ],
+     [
+      267.0,
+      52.0
+     ],
+     [
+      199.0,
+      52.0
+     ]
+    ]
+   },
+   {
+    "text": "Physical Damage",
+    "box": [
+     [
+      20.0,
+      34.0
+     ],
+     [
+      151.0,
+      36.0
+     ],
+     [
+      151.0,
+      55.0
+     ],
+     [
+      20.0,
+      53.0
+     ]
+    ]
+   },
+   {
+    "text": "Critical Hit",
+    "box": [
+     [
+      340.0,
+      34.0
+     ],
+     [
+      421.0,
+      35.0
+     ],
+     [
+      421.0,
+      52.0
+     ],
+     [
+      340.0,
+      51.0
+     ]
+    ]
+   },
+   {
+    "text": "114.8%",
+    "box": [
+     [
+      520.0,
+      35.0
+     ],
+     [
+      581.0,
+      35.0
+     ],
+     [
+      581.0,
+      51.0
+     ],
+     [
+      520.0,
+      51.0
+     ]
+    ]
+   },
+   {
+    "text": "Critical Damage",
+    "box": [
+     [
+      341.0,
+      73.0
+     ],
+     [
+      463.0,
+      77.0
+     ],
+     [
+      462.0,
+      95.0
+     ],
+     [
+      340.0,
+      91.0
+     ]
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      20.0,
+      74.0
+     ],
+     [
+      135.0,
+      76.0
+     ],
+     [
+      135.0,
+      95.0
+     ],
+     [
+      20.0,
+      93.0
+     ]
+    ]
+   },
+   {
+    "text": "14,300",
+    "box": [
+     [
+      199.0,
+      75.0
+     ],
+     [
+      256.0,
+      74.0
+     ],
+     [
+      256.0,
+      92.0
+     ],
+     [
+      199.0,
+      93.0
+     ]
+    ]
+   },
+   {
+    "text": "3,438.3%",
+    "box": [
+     [
+      519.0,
+      75.0
+     ],
+     [
+      596.0,
+      75.0
+     ],
+     [
+      596.0,
+      92.0
+     ],
+     [
+      519.0,
+      92.0
+     ]
+    ]
+   },
+   {
+    "text": "AttackSpeed",
+    "box": [
+     [
+      339.0,
+      114.0
+     ],
+     [
+      443.0,
+      114.0
+     ],
+     [
+      443.0,
+      134.0
+     ],
+     [
+      339.0,
+      133.0
+     ]
+    ]
+   },
+   {
+    "text": "204%",
+    "box": [
+     [
+      518.0,
+      114.0
+     ],
+     [
+      567.0,
+      114.0
+     ],
+     [
+      567.0,
+      131.0
+     ],
+     [
+      518.0,
+      131.0
+     ]
+    ]
+   },
+   {
+    "text": "MaximumHealth",
+    "box": [
+     [
+      20.0,
+      116.0
+     ],
+     [
+      155.0,
+      115.0
+     ],
+     [
+      155.0,
+      131.0
+     ],
+     [
+      20.0,
+      131.0
+     ]
+    ]
+   },
+   {
+    "text": "3,239,060",
+    "box": [
+     [
+      199.0,
+      115.0
+     ],
+     [
+      281.0,
+      115.0
+     ],
+     [
+      281.0,
+      132.0
+     ],
+     [
+      199.0,
+      132.0
+     ]
+    ]
+   },
+   {
+    "text": "Light",
+    "box": [
+     [
+      19.0,
+      154.0
+     ],
+     [
+      61.0,
+      154.0
+     ],
+     [
+      61.0,
+      175.0
+     ],
+     [
+      19.0,
+      175.0
+     ]
+    ]
+   },
+   {
+    "text": "13,185",
+    "box": [
+     [
+      199.0,
+      154.0
+     ],
+     [
+      256.0,
+      154.0
+     ],
+     [
+      256.0,
+      172.0
+     ],
+     [
+      199.0,
+      173.0
+     ]
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      336.0,
+      154.0
+     ],
+     [
+      383.0,
+      155.0
+     ],
+     [
+      383.0,
+      175.0
+     ],
+     [
+      336.0,
+      174.0
+     ]
+    ]
+   },
+   {
+    "text": "74",
+    "box": [
+     [
+      518.0,
+      154.0
+     ],
+     [
+      542.0,
+      154.0
+     ],
+     [
+      542.0,
+      172.0
+     ],
+     [
+      518.0,
+      172.0
+     ]
+    ]
+   },
+   {
+    "text": "MagicFind",
+    "box": [
+     [
+      338.0,
+      194.0
+     ],
+     [
+      423.0,
+      194.0
+     ],
+     [
+      423.0,
+      214.0
+     ],
+     [
+      338.0,
+      215.0
+     ]
+    ]
+   },
+   {
+    "text": "PowerRank",
+    "box": [
+     [
+      20.0,
+      195.0
+     ],
+     [
+      113.0,
+      195.0
+     ],
+     [
+      113.0,
+      211.0
+     ],
+     [
+      20.0,
+      211.0
+     ]
+    ]
+   },
+   {
+    "text": "35,201",
+    "box": [
+     [
+      199.0,
+      195.0
+     ],
+     [
+      255.0,
+      195.0
+     ],
+     [
+      255.0,
+      212.0
+     ],
+     [
+      199.0,
+      212.0
+     ]
+    ]
+   },
+   {
+    "text": "14,253",
+    "box": [
+     [
+      520.0,
+      195.0
+     ],
+     [
+      576.0,
+      195.0
+     ],
+     [
+      576.0,
+      212.0
+     ],
+     [
+      520.0,
+      212.0
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": "Physical Damage",
+    "box": [
+     [
+      20.0,
+      34.0
+     ],
+     [
+      151.0,
+      36.0
+     ],
+     [
+      151.0,
+      55.0
+     ],
+     [
+      20.0,
+      53.0
+     ]
+    ],
+    "texts": [
+     "Physical Damage",
+     "799,894"
+    ]
+   },
+   {
+    "text": "Critical Hit",
+    "box": [
+     [
+      340.0,
+      34.0
+     ],
+     [
+      421.0,
+      35.0
+     ],
+     [
+      421.0,
+      52.0
+     ],
+     [
+      340.0,
+      51.0
+     ]
+    ],
+    "texts": [
+     "Critical Hit",
+     "114.8%"
+    ]
+   },
+   {
+    "text": "Critical Damage",
+    "box": [
+     [
+      341.0,
+      73.0
+     ],
+     [
+      463.0,
+      77.0
+     ],
+     [
+      462.0,
+      95.0
+     ],
+     [
+      340.0,
+      91.0
+     ]
+    ],
+    "texts": [
+     "Critical Damage",
+     "3,438.3%"
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      20.0,
+      74.0
+     ],
+     [
+      135.0,
+      76.0
+     ],
+     [
+      135.0,
+      95.0
+     ],
+     [
+      20.0,
+      93.0
+     ]
+    ],
+    "texts": [
+     "Magic Damage",
+     "14,300"
+    ]
+   },
+   {
+    "text": "AttackSpeed",
+    "box": [
+     [
+      339.0,
+      114.0
+     ],
+     [
+      443.0,
+      114.0
+     ],
+     [
+      443.0,
+      134.0
+     ],
+     [
+      339.0,
+      133.0
+     ]
+    ],
+    "texts": [
+     "Attack Speed",
+     "204%"
+    ]
+   },
+   {
+    "text": "MaximumHealth",
+    "box": [
+     [
+      20.0,
+      116.0
+     ],
+     [
+      155.0,
+      115.0
+     ],
+     [
+      155.0,
+      131.0
+     ],
+     [
+      20.0,
+      131.0
+     ]
+    ],
+    "texts": [
+     "Maximum Health",
+     "3,239,060"
+    ]
+   },
+   {
+    "text": "Light",
+    "box": [
+     [
+      19.0,
+      154.0
+     ],
+     [
+      61.0,
+      154.0
+     ],
+     [
+      61.0,
+      175.0
+     ],
+     [
+      19.0,
+      175.0
+     ]
+    ],
+    "texts": [
+     "Light",
+     "13,185"
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      336.0,
+      154.0
+     ],
+     [
+      383.0,
+      155.0
+     ],
+     [
+      383.0,
+      175.0
+     ],
+     [
+      336.0,
+      174.0
+     ]
+    ],
+    "texts": [
+     "Jump",
+     "74"
+    ]
+   },
+   {
+    "text": "MagicFind",
+    "box": [
+     [
+      338.0,
+      194.0
+     ],
+     [
+      423.0,
+      194.0
+     ],
+     [
+      423.0,
+      214.0
+     ],
+     [
+      338.0,
+      215.0
+     ]
+    ],
+    "texts": [
+     "Magic Find",
+     "14,253"
+    ]
+   },
+   {
+    "text": "PowerRank",
+    "box": [
+     [
+      20.0,
+      195.0
+     ],
+     [
+      113.0,
+      195.0
+     ],
+     [
+      113.0,
+      211.0
+     ],
+     [
+      20.0,
+      211.0
+     ]
+    ],
+    "texts": [
+     "Power Rank",
+     "35,201"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "physical_damage": {
+     "value": 799894,
+     "unit": "count",
+     "raw": "799,894",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_hit": {
+     "value": 114.8,
+     "unit": "percent",
+     "raw": "114.8%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_damage": {
+     "value": 3438.3,
+     "unit": "percent",
+     "raw": "3,438.3%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_damage": {
+     "value": 14300,
+     "unit": "count",
+     "raw": "14,300",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "attack_speed": {
+     "value": 204.0,
+     "unit": "percent",
+     "raw": "204%",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_health": {
+     "value": 3239060,
+     "unit": "count",
+     "raw": "3,239,060",
+     "confidence": 0.819,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "light": {
+     "value": 13185,
+     "unit": "count",
+     "raw": "13,185",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "jump": {
+     "value": 74,
+     "unit": "count",
+     "raw": "74",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_find": {
+     "value": 35201,
+     "unit": "count",
+     "raw": "35,201",
+     "confidence": 0.805,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "power_rank": {
+     "value": 14253,
+     "unit": "count",
+     "raw": "14,253",
+     "confidence": 0.805,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "coefficient": {
+     "value": 28302649,
+     "unit": "count",
+     "raw": "",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": true
+    }
+   },
+   "matched": 11,
+   "total_known": 22,
+   "lines": [
+    "799,894",
+    "Physical Damage",
+    "Critical Hit",
+    "114.8%",
+    "Critical Damage",
+    "MagicDamage",
+    "14,300",
+    "3,438.3%",
+    "AttackSpeed",
+    "204%",
+    "MaximumHealth",
+    "3,239,060",
+    "Light",
+    "13,185",
+    "Jump",
+    "74",
+    "MagicFind",
+    "PowerRank",
+    "35,201",
+    "14,253"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"physical_damage\":{\"value\":799894,\"unit\":\"count\",\"raw\":\"799,894\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_hit\":{\"value\":114.8,\"unit\":\"percent\",\"raw\":\"114.8%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_damage\":{\"value\":3438.3,\"unit\":\"percent\",\"raw\":\"3,438.3%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_damage\":{\"value\":14300,\"unit\":\"count\",\"raw\":\"14,300\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":false},\"attack_speed\":{\"value\":204.0,\"unit\":\"percent\",\"raw\":\"204%\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_health\":{\"value\":3239060,\"unit\":\"count\",\"raw\":\"3,239,060\",\"confidence\":0.819,\"in_range\":true,\"type_match\":true,\"derived\":false},\"light\":{\"value\":13185,\"unit\":\"count\",\"raw\":\"13,185\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"jump\":{\"value\":74,\"unit\":\"count\",\"raw\":\"74\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_find\":{\"value\":35201,\"unit\":\"count\",\"raw\":\"35,201\",\"confidence\":0.805,\"in_range\":true,\"type_match\":true,\"derived\":false},\"power_rank\":{\"value\":14253,\"unit\":\"count\",\"raw\":\"14,253\",\"confidence\":0.805,\"in_range\":true,\"type_match\":true,\"derived\":false},\"coefficient\":{\"value\":28302649,\"unit\":\"count\",\"raw\":\"\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":true}},\"matched\":11,\"total_known\":22,\"lines\":[\"799,894\",\"Physical Damage\",\"Critical Hit\",\"114.8%\",\"Critical Damage\",\"MagicDamage\",\"14,300\",\"3,438.3%\",\"AttackSpeed\",\"204%\",\"MaximumHealth\",\"3,239,060\",\"Light\",\"13,185\",\"Jump\",\"74\",\"MagicFind\",\"PowerRank\",\"35,201\",\"14,253\"]}"
+ },
+ {
+  "file": "rotated.png",
+  "content_type": "image/png",
+  "elems": [
+   {
+    "text": "Stats",
+    "box": [
+     [
+      23.0,
+      15.0
+     ],
+     [
+      72.0,
+      16.0
+     ],
+     [
+      71.0,
+      33.0
+     ],
+     [
+      22.0,
+      32.0
+     ]
+    ]
+   },
+   {
+    "text": "799,894",
+    "box": [
+     [
+      23.0,
+      43.0
+     ],
+     [
+      83.0,
+      44.0
+     ],
+     [
+      83.0,
+      60.0
+     ],
+     [
+      22.0,
+      59.0
+     ]
+    ]
+   },
+   {
+    "text": "PhysicalDamage",
+    "box": [
+     [
+      130.0,
+      43.0
+     ],
+     [
+      248.0,
+      45.0
+     ],
+     [
+      248.0,
+      62.0
+     ],
+     [
+      130.0,
+      61.0
+     ]
+    ]
+   },
+   {
+    "text": "14,300",
+    "box": [
+     [
+      23.0,
+      68.0
+     ],
+     [
+      74.0,
+      67.0
+     ],
+     [
+      74.0,
+      84.0
+     ],
+     [
+      23.0,
+      85.0
+     ]
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      129.0,
+      67.0
+     ],
+     [
+      234.0,
+      69.0
+     ],
+     [
+      233.0,
+      87.0
+     ],
+     [
+      129.0,
+      85.0
+     ]
+    ]
+   },
+   {
+    "text": "3,239,060",
+    "box": [
+     [
+      23.0,
+      92.0
+     ],
+     [
+      96.0,
+      92.0
+     ],
+     [
+      96.0,
+      108.0
+     ],
+     [
+      23.0,
+      108.0
+     ]
+    ]
+   },
+   {
+    "text": "Maximum Health",
+    "box": [
+     [
+      129.0,
+      92.0
+     ],
+     [
+      250.0,
+      92.0
+     ],
+     [
+      250.0,
+      107.0
+     ],
+     [
+      129.0,
+      107.0
+     ]
+    ]
+   },
+   {
+    "text": "2",
+    "box": [
+     [
+      384.0,
+      94.0
+     ],
+     [
+      395.0,
+      94.0
+     ],
+     [
+      395.0,
+      111.0
+     ],
+     [
+      384.0,
+      111.0
+     ]
+    ]
+   },
+   {
+    "text": "MaximumEnergy",
+    "box": [
+     [
+      129.0,
+      113.0
+     ],
+     [
+      252.0,
+      118.0
+     ],
+     [
+      252.0,
+      136.0
+     ],
+     [
+      128.0,
+      131.0
+     ]
+    ]
+   },
+   {
+    "text": "127",
+    "box": [
+     [
+      22.0,
+      115.0
+     ],
+     [
+      53.0,
+      115.0
+     ],
+     [
+      53.0,
+      132.0
+     ],
+     [
+      22.0,
+      132.0
+     ]
+    ]
+   },
+   {
+    "text": "3",
+    "box": [
+     [
+      384.0,
+      120.0
+     ],
+     [
+      395.0,
+      120.0
+     ],
+     [
+      395.0,
+      139.0
+     ],
+     [
+      384.0,
+      139.0
+     ]
+    ]
+   },
+   {
+    "text": "4,237",
+    "box": [
+     [
+      22.0,
+      140.0
+     ],
+     [
+      65.0,
+      138.0
+     ],
+     [
+      66.0,
+      156.0
+     ],
+     [
+      22.0,
+      157.0
+     ]
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      128.0,
+      139.0
+     ],
+     [
+      222.0,
+      140.0
+     ],
+     [
+      222.0,
+      158.0
+     ],
+     [
+      128.0,
+      157.0
+     ]
+    ]
+   },
+   {
+    "text": "4",
+    "box": [
+     [
+      384.0,
+      145.0
+     ],
+     [
+      396.0,
+      145.0
+     ],
+     [
+      396.0,
+      165.0
+     ],
+     [
+      384.0,
+      165.0
+     ]
+    ]
+   },
+   {
+    "text": "177",
+    "box": [
+     [
+      23.0,
+      163.0
+     ],
+     [
+      52.0,
+      163.0
+     ],
+     [
+      52.0,
+      180.0
+     ],
+     [
+      23.0,
+      180.0
+     ]
+    ]
+   },
+   {
+    "text": "Energy Regen",
+    "box": [
+     [
+      129.0,
+      163.0
+     ],
+     [
+      224.0,
+      164.0
+     ],
+     [
+      224.0,
+      184.0
+     ],
+     [
+      129.0,
+      182.0
+     ]
+    ]
+   },
+   {
+    "text": "5",
+    "box": [
+     [
+      384.0,
+      172.0
+     ],
+     [
+      395.0,
+      172.0
+     ],
+     [
+      395.0,
+      188.0
+     ],
+     [
+      384.0,
+      188.0
+     ]
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      129.0,
+      186.0
+     ],
+     [
+      187.0,
+      188.0
+     ],
+     [
+      186.0,
+      207.0
+     ],
+     [
+      128.0,
+      204.0
+     ]
+    ]
+   },
+   {
+    "text": "145",
+    "box": [
+     [
+      23.0,
+      187.0
+     ],
+     [
+      52.0,
+      187.0
+     ],
+     [
+      52.0,
+      204.0
+     ],
+     [
+      23.0,
+      204.0
+     ]
+    ]
+   },
+   {
+    "text": "132",
+    "box": [
+     [
+      23.0,
+      212.0
+     ],
+     [
+      53.0,
+      212.0
+     ],
+     [
+      53.0,
+      228.0
+     ],
+     [
+      23.0,
+      228.0
+     ]
+    ]
+   },
+   {
+    "text": "MovementSpeed",
+    "box": [
+     [
+      130.0,
+      212.0
+     ],
+     [
+      251.0,
+      212.0
+     ],
+     [
+      251.0,
+      229.0
+     ],
+     [
+      130.0,
+      229.0
+     ]
+    ]
+   },
+   {
+    "text": "13,185Light",
+    "box": [
+     [
+      299.0,
+      241.0
+     ],
+     [
+      397.0,
+      242.0
+     ],
+     [
+      396.0,
+      261.0
+     ],
+     [
+      299.0,
+      260.0
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": "PhysicalDamage",
+    "box": [
+     [
+      130.0,
+      43.0
+     ],
+     [
+      248.0,
+      45.0
+     ],
+     [
+      248.0,
+      62.0
+     ],
+     [
+      130.0,
+      61.0
+     ]
+    ],
+    "texts": [
+     "Physical Damage"
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      129.0,
+      67.0
+     ],
+     [
+      234.0,
+      69.0
+     ],
+     [
+      233.0,
+      87.0
+     ],
+     [
+      129.0,
+      85.0
+     ]
+    ],
+    "texts": [
+     "Magic Damage"
+    ]
+   },
+   {
+    "text": "Maximum Health",
+    "box": [
+     [
+      129.0,
+      92.0
+     ],
+     [
+      250.0,
+      92.0
+     ],
+     [
+      250.0,
+      107.0
+     ],
+     [
+      129.0,
+      107.0
+     ]
+    ],
+    "texts": [
+     "Health",
+     "Maximum"
+    ]
+   },
+   {
+    "text": "MaximumEnergy",
+    "box": [
+     [
+      129.0,
+      113.0
+     ],
+     [
+      252.0,
+      118.0
+     ],
+     [
+      252.0,
+      136.0
+     ],
+     [
+      128.0,
+      131.0
+     ]
+    ],
+    "texts": [
+     "Energy",
+     "Maximum"
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      128.0,
+      139.0
+     ],
+     [
+      222.0,
+      140.0
+     ],
+     [
+      222.0,
+      158.0
+     ],
+     [
+      128.0,
+      157.0
+     ]
+    ],
+    "texts": [
+     "Health Regen"
+    ]
+   },
+   {
+    "text": "Energy Regen",
+    "box": [
+     [
+      129.0,
+      163.0
+     ],
+     [
+      224.0,
+      164.0
+     ],
+     [
+      224.0,
+      184.0
+     ],
+     [
+      129.0,
+      182.0
+     ]
+    ],
+    "texts": [
+     "Energy",
+     "Regen"
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      129.0,
+      186.0
+     ],
+     [
+      187.0,
+      188.0
+     ],
+     [
+      186.0,
+      207.0
+     ],
+     [
+      128.0,
+      204.0
+     ]
+    ],
+    "texts": [
+     " Stability "
+    ]
+   },
+   {
+    "text": "MovementSpeed",
+    "box": [
+     [
+      130.0,
+      212.0
+     ],
+     [
+      251.0,
+      212.0
+     ],
+     [
+      251.0,
+      229.0
+     ],
+     [
+      130.0,
+      229.0
+     ]
+    ],
+    "texts": [
+     "Movement Speed"
+    ]
+   },
+   {
+    "text": "13,185Light",
+    "box": [
+     [
+      299.0,
+      241.0
+     ],
+     [
+      397.0,
+      242.0
+     ],
+     [
+      396.0,
+      261.0
+     ],
+     [
+      299.0,
+      260.0
+     ]
+    ],
+    "texts": [
+     " Light",
+     "185",
+     "13,"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "light": {
+     "value": 13185,
+     "unit": "count",
+     "raw": "13,185",
+     "confidence": 1.0,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "physical_damage": {
+     "value": 799894,
+     "unit": "count",
+     "raw": "799,894",
+     "confidence": 0.821,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_damage": {
+     "value": 14300,
+     "unit": "count",
+     "raw": "14,300",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_health": {
+     "value": 3239060,
+     "unit": "count",
+     "raw": "3,239,060",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_energy": {
+     "value": 2,
+     "unit": "count",
+     "raw": "2",
+     "confidence": 0.819,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "health_regen": {
+     "value": 4237,
+     "unit": "count",
+     "raw": "4,237",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "energy_regen": {
+     "value": 177,
+     "unit": "count",
+     "raw": "177",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "stability": {
+     "value": 5,
+     "unit": "count",
+     "raw": "5",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "movement_speed": {
+     "value": 132,
+     "unit": "count",
+     "raw": "132",
+     "confidence": 0.825,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    }
+   },
+   "matched": 9,
+   "total_known": 22,
+   "lines": [
+    "Stats",
+    "799,894",
+    "PhysicalDamage",
+    "14,300",
+    "MagicDamage",
+    "3,239,060",
+    "Maximum Health",
+    "2",
+    "MaximumEnergy",
+    "127",
+    "3",
+    "4,237",
+    "Health Regen",
+    "4",
+    "177",
+    "Energy Regen",
+    "5",
+    "Stability",
+    "145",
+    "132",
+    "MovementSpeed",
+    "13,185Light"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"light\":{\"value\":13185,\"unit\":\"count\",\"raw\":\"13,185\",\"confidence\":1.0,\"in_range\":true,\"type_match\":true,\"derived\":false},\"physical_damage\":{\"value\":799894,\"unit\":\"count\",\"raw\":\"799,894\",\"confidence\":0.821,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_damage\":{\"value\":14300,\"unit\":\"count\",\"raw\":\"14,300\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_health\":{\"value\":3239060,\"unit\":\"count\",\"raw\":\"3,239,060\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_energy\":{\"value\":2,\"unit\":\"count\",\"raw\":\"2\",\"confidence\":0.819,\"in_range\":true,\"type_match\":true,\"derived\":false},\"health_regen\":{\"value\":4237,\"unit\":\"count\",\"raw\":\"4,237\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"energy_regen\":{\"value\":177,\"unit\":\"count\",\"raw\":\"177\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"stability\":{\"value\":5,\"unit\":\"count\",\"raw\":\"5\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"movement_speed\":{\"value\":132,\"unit\":\"count\",\"raw\":\"132\",\"confidence\":0.825,\"in_range\":true,\"type_match\":true,\"derived\":false}},\"matched\":9,\"total_known\":22,\"lines\":[\"Stats\",\"799,894\",\"PhysicalDamage\",\"14,300\",\"MagicDamage\",\"3,239,060\",\"Maximum Health\",\"2\",\"MaximumEnergy\",\"127\",\"3\",\"4,237\",\"Health Regen\",\"4\",\"177\",\"Energy Regen\",\"5\",\"Stability\",\"145\",\"132\",\"MovementSpeed\",\"13,185Light\"]}"
+ },
+ {
+  "file": "wide_strip.png",
+  "content_type": "image/png",
+  "elems": [
+   {
+    "text": "Light13,185",
+    "box": [
+     [
+      363.0,
+      12.0
+     ],
+     [
+      460.0,
+      11.0
+     ],
+     [
+      460.0,
+      30.0
+     ],
+     [
+      364.0,
+      31.0
+     ]
+    ]
+   },
+   {
+    "text": "Physical Damage 799,894Critical Hit 114.8%",
+    "box": [
+     [
+      13.0,
+      12.0
+     ],
+     [
+      356.0,
+      12.0
+     ],
+     [
+      356.0,
+      30.0
+     ],
+     [
+      13.0,
+      30.0
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": "Light13,185",
+    "box": [
+     [
+      363.0,
+      12.0
+     ],
+     [
+      460.0,
+      11.0
+     ],
+     [
+      460.0,
+      30.0
+     ],
+     [
+      364.0,
+      31.0
+     ]
+    ],
+    "texts": [
+     "Light 13,185",
+     "4.8%"
+    ]
+   },
+   {
+    "text": "Physical Damage 799,894Critical Hit 114.8%",
+    "box": [
+     [
+      13.0,
+      12.0
+     ],
+     [
+      356.0,
+      12.0
+     ],
+     [
+      356.0,
+      30.0
+     ],
+     [
+      13.0,
+      30.0
+     ]
+    ],
+    "texts": [
+     "Light 13,185",
+     "Physical Damage 799,894",
+     "Critical Hit 114.8%"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "light": {
+     "value": 13185,
+     "unit": "count",
+     "raw": "13,185",
+     "confidence": 1.0,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "physical_damage": {
+     "value": 799894,
+     "unit": "count",
+     "raw": "799,894",
+     "confidence": 1.0,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_hit": {
+     "value": 114.8,
+     "unit": "percent",
+     "raw": "114.8%",
+     "confidence": 1.0,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    }
+   },
+   "matched": 3,
+   "total_known": 22,
+   "lines": [
+    "Light13,185",
+    "Physical Damage 799,894Critical Hit 114.8%"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"light\":{\"value\":13185,\"unit\":\"count\",\"raw\":\"13,185\",\"confidence\":1.0,\"in_range\":true,\"type_match\":true,\"derived\":false},\"physical_damage\":{\"value\":799894,\"unit\":\"count\",\"raw\":\"799,894\",\"confidence\":1.0,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_hit\":{\"value\":114.8,\"unit\":\"percent\",\"raw\":\"114.8%\",\"confidence\":1.0,\"in_range\":true,\"type_match\":true,\"derived\":false}},\"matched\":3,\"total_known\":22,\"lines\":[\"Light13,185\",\"Physical Damage 799,894Critical Hit 114.8%\"]}"
+ },
+ {
+  "file": "tiny.png",
+  "content_type": "",
+  "elems": [
+   {
+    "text": "Jump",
+    "box": [
+     [
+      0.0,
+      4.125
+     ],
+     [
+      42.14285659790039,
+      6.875
+     ],
+     [
+      40.71428680419922,
+      21.3125
+     ],
+     [
+      0.0,
+      21.3125
+     ]
+    ]
+   },
+   {
+    "text": "74",
+    "box": [
+     [
+      36.42857360839844,
+      5.5
+     ],
+     [
+      57.142860412597656,
+      5.5
+     ],
+     [
+      57.142860412597656,
+      19.25
+     ],
+     [
+      36.42857360839844,
+      19.25
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": "Jump",
+    "box": [
+     [
+      0.0,
+      4.125
+     ],
+     [
+      42.14285659790039,
+      6.875
+     ],
+     [
+      40.71428680419922,
+      21.3125
+     ],
+     [
+      0.0,
+      21.3125
+     ]
+    ],
+    "texts": [
+     "Jump",
+     "74"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "jump": {
+     "value": 74,
+     "unit": "count",
+     "raw": "74",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    }
+   },
+   "matched": 1,
+   "total_known": 22,
+   "lines": [
+    "Jump",
+    "74"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"jump\":{\"value\":74,\"unit\":\"count\",\"raw\":\"74\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false}},\"matched\":1,\"total_known\":22,\"lines\":[\"Jump\",\"74\"]}"
+ },
+ {
+  "file": "big.png",
+  "content_type": "image/png",
+  "elems": [
+   {
+    "text": "Stats",
+    "box": [
+     [
+      1720.161376953125,
+      133.79464721679688
+     ],
+     [
+      1787.9033203125,
+      133.79464721679688
+     ],
+     [
+      1787.9033203125,
+      163.92857360839844
+     ],
+     [
+      1720.161376953125,
+      163.92857360839844
+     ]
+    ]
+   },
+   {
+    "text": " Physical Damage",
+    "box": [
+     [
+      1865.3226318359375,
+      160.3125
+     ],
+     [
+      2033.4677734375,
+      162.7232208251953
+     ],
+     [
+      2033.4677734375,
+      191.65179443359375
+     ],
+     [
+      1865.3226318359375,
+      189.24107360839844
+     ]
+    ]
+   },
+   {
+    "text": "799,894",
+    "box": [
+     [
+      1720.161376953125,
+      161.5178680419922
+     ],
+     [
+      1802.41943359375,
+      161.5178680419922
+     ],
+     [
+      1802.41943359375,
+      190.44644165039062
+     ],
+     [
+      1720.161376953125,
+      190.44644165039062
+     ]
+    ]
+   },
+   {
+    "text": "14,300",
+    "box": [
+     [
+      1720.161376953125,
+      191.65179443359375
+     ],
+     [
+      1791.5323486328125,
+      191.65179443359375
+     ],
+     [
+      1791.5323486328125,
+      220.5803680419922
+     ],
+     [
+      1720.161376953125,
+      220.5803680419922
+     ]
+    ]
+   },
+   {
+    "text": "Magic Damage",
+    "box": [
+     [
+      1865.3226318359375,
+      191.65179443359375
+     ],
+     [
+      2012.9033203125,
+      194.06251525878906
+     ],
+     [
+      2012.9033203125,
+      221.7857208251953
+     ],
+     [
+      1865.3226318359375,
+      219.37501525878906
+     ]
+    ]
+   },
+   {
+    "text": "3,239,060",
+    "box": [
+     [
+      1718.95166015625,
+      220.5803680419922
+     ],
+     [
+      1818.145263671875,
+      222.99107360839844
+     ],
+     [
+      1818.145263671875,
+      251.91964721679688
+     ],
+     [
+      1718.95166015625,
+      249.50894165039062
+     ]
+    ]
+   },
+   {
+    "text": "Maximum Health",
+    "box": [
+     [
+      1867.741943359375,
+      222.99107360839844
+     ],
+     [
+      2033.4677734375,
+      222.99107360839844
+     ],
+     [
+      2033.4677734375,
+      247.0982208251953
+     ],
+     [
+      1867.741943359375,
+      247.0982208251953
+     ]
+    ]
+   },
+   {
+    "text": "Maximum Energy",
+    "box": [
+     [
+      1864.1129150390625,
+      249.50894165039062
+     ],
+     [
+      2035.88720703125,
+      253.12501525878906
+     ],
+     [
+      2035.88720703125,
+      282.0535888671875
+     ],
+     [
+      1864.1129150390625,
+      278.4375
+     ]
+    ]
+   },
+   {
+    "text": "127",
+    "box": [
+     [
+      1721.3709716796875,
+      251.91964721679688
+     ],
+     [
+      1761.2904052734375,
+      251.91964721679688
+     ],
+     [
+      1761.2904052734375,
+      279.64288330078125
+     ],
+     [
+      1721.3709716796875,
+      279.64288330078125
+     ]
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      1866.5323486328125,
+      279.64288330078125
+     ],
+     [
+      1999.5968017578125,
+      283.2589416503906
+     ],
+     [
+      1998.38720703125,
+      312.1875
+     ],
+     [
+      1865.3226318359375,
+      308.5714416503906
+     ]
+    ]
+   },
+   {
+    "text": "4,237",
+    "box": [
+     [
+      1720.161376953125,
+      283.2589416503906
+     ],
+     [
+      1778.225830078125,
+      283.2589416503906
+     ],
+     [
+      1778.225830078125,
+      309.77679443359375
+     ],
+     [
+      1720.161376953125,
+      309.77679443359375
+     ]
+    ]
+   },
+   {
+    "text": "177",
+    "box": [
+     [
+      1721.3709716796875,
+      312.1875
+     ],
+     [
+      1761.2904052734375,
+      312.1875
+     ],
+     [
+      1761.2904052734375,
+      339.9107360839844
+     ],
+     [
+      1721.3709716796875,
+      339.9107360839844
+     ]
+    ]
+   },
+   {
+    "text": "Energy Regen",
+    "box": [
+     [
+      1866.5323486328125,
+      313.39288330078125
+     ],
+     [
+      2000.8065185546875,
+      313.39288330078125
+     ],
+     [
+      2000.8065185546875,
+      342.3214416503906
+     ],
+     [
+      1866.5323486328125,
+      342.3214416503906
+     ]
+    ]
+   },
+   {
+    "text": "145",
+    "box": [
+     [
+      1721.3709716796875,
+      342.3214416503906
+     ],
+     [
+      1762.5,
+      342.3214416503906
+     ],
+     [
+      1762.5,
+      370.0446472167969
+     ],
+     [
+      1721.3709716796875,
+      370.0446472167969
+     ]
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      1865.3226318359375,
+      342.3214416503906
+     ],
+     [
+      1947.5806884765625,
+      342.3214416503906
+     ],
+     [
+      1947.5806884765625,
+      371.2500305175781
+     ],
+     [
+      1865.3226318359375,
+      371.2500305175781
+     ]
+    ]
+   },
+   {
+    "text": "Movement Speed",
+    "box": [
+     [
+      1864.1129150390625,
+      371.2500305175781
+     ],
+     [
+      2037.0968017578125,
+      373.6607360839844
+     ],
+     [
+      2037.0968017578125,
+      401.3839416503906
+     ],
+     [
+      1864.1129150390625,
+      398.9732360839844
+     ]
+    ]
+   },
+   {
+    "text": "132",
+    "box": [
+     [
+      1722.5806884765625,
+      373.6607360839844
+     ],
+     [
+      1762.5,
+      373.6607360839844
+     ],
+     [
+      1762.5,
+      398.9732360839844
+     ],
+     [
+      1722.5806884765625,
+      398.9732360839844
+     ]
+    ]
+   },
+   {
+    "text": "204%",
+    "box": [
+     [
+      1721.3709716796875,
+      402.58929443359375
+     ],
+     [
+      1780.645263671875,
+      402.58929443359375
+     ],
+     [
+      1780.645263671875,
+      427.90179443359375
+     ],
+     [
+      1721.3709716796875,
+      427.90179443359375
+     ]
+    ]
+   },
+   {
+    "text": "Attack Speed",
+    "box": [
+     [
+      1866.5323486328125,
+      402.58929443359375
+     ],
+     [
+      1995.9677734375,
+      402.58929443359375
+     ],
+     [
+      1995.9677734375,
+      430.3125305175781
+     ],
+     [
+      1866.5323486328125,
+      430.3125305175781
+     ]
+    ]
+   },
+   {
+    "text": "74",
+    "box": [
+     [
+      1721.3709716796875,
+      432.7232360839844
+     ],
+     [
+      1751.6129150390625,
+      432.7232360839844
+     ],
+     [
+      1751.6129150390625,
+      459.2410888671875
+     ],
+     [
+      1721.3709716796875,
+      459.2410888671875
+     ]
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      1864.1129150390625,
+      435.1339416503906
+     ],
+     [
+      1923.38720703125,
+      435.1339416503906
+     ],
+     [
+      1923.38720703125,
+      461.65179443359375
+     ],
+     [
+      1864.1129150390625,
+      461.65179443359375
+     ]
+    ]
+   },
+   {
+    "text": "114.8%",
+    "box": [
+     [
+      1722.5806884765625,
+      464.0625305175781
+     ],
+     [
+      1796.3709716796875,
+      464.0625305175781
+     ],
+     [
+      1796.3709716796875,
+      489.3750305175781
+     ],
+     [
+      1722.5806884765625,
+      489.3750305175781
+     ]
+    ]
+   },
+   {
+    "text": "Critical Hit",
+    "box": [
+     [
+      1867.741943359375,
+      464.0625305175781
+     ],
+     [
+      1970.5645751953125,
+      464.0625305175781
+     ],
+     [
+      1970.5645751953125,
+      488.169677734375
+     ],
+     [
+      1867.741943359375,
+      488.169677734375
+     ]
+    ]
+   },
+   {
+    "text": "Critical Damage",
+    "box": [
+     [
+      1866.5323486328125,
+      489.3750305175781
+     ],
+     [
+      2020.161376953125,
+      492.9910888671875
+     ],
+     [
+      2020.161376953125,
+      521.919677734375
+     ],
+     [
+      1866.5323486328125,
+      518.3035888671875
+     ]
+    ]
+   },
+   {
+    "text": "3,438.3%",
+    "box": [
+     [
+      1721.3709716796875,
+      494.1964416503906
+     ],
+     [
+      1813.3065185546875,
+      494.1964416503906
+     ],
+     [
+      1813.3065185546875,
+      519.5089721679688
+     ],
+     [
+      1721.3709716796875,
+      519.5089721679688
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": " Physical Damage",
+    "box": [
+     [
+      1865.3226318359375,
+      160.3125
+     ],
+     [
+      2033.4677734375,
+      162.7232208251953
+     ],
+     [
+      2033.4677734375,
+      191.65179443359375
+     ],
+     [
+      1865.3226318359375,
+      189.24107360839844
+     ]
+    ],
+    "texts": [
+     "Physical Damage",
+     "9,894"
+    ]
+   },
+   {
+    "text": "Magic Damage",
+    "box": [
+     [
+      1865.3226318359375,
+      191.65179443359375
+     ],
+     [
+      2012.9033203125,
+      194.06251525878906
+     ],
+     [
+      2012.9033203125,
+      221.7857208251953
+     ],
+     [
+      1865.3226318359375,
+      219.37501525878906
+     ]
+    ],
+    "texts": [
+     "Magic Damage",
+     ",300"
+    ]
+   },
+   {
+    "text": "Maximum Health",
+    "box": [
+     [
+      1867.741943359375,
+      222.99107360839844
+     ],
+     [
+      2033.4677734375,
+      222.99107360839844
+     ],
+     [
+      2033.4677734375,
+      247.0982208251953
+     ],
+     [
+      1867.741943359375,
+      247.0982208251953
+     ]
+    ],
+    "texts": [
+     "239,060",
+     "Maximum Health"
+    ]
+   },
+   {
+    "text": "Maximum Energy",
+    "box": [
+     [
+      1864.1129150390625,
+      249.50894165039062
+     ],
+     [
+      2035.88720703125,
+      253.12501525878906
+     ],
+     [
+      2035.88720703125,
+      282.0535888671875
+     ],
+     [
+      1864.1129150390625,
+      278.4375
+     ]
+    ],
+    "texts": [
+     "Maximum Energy",
+     "7"
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      1866.5323486328125,
+      279.64288330078125
+     ],
+     [
+      1999.5968017578125,
+      283.2589416503906
+     ],
+     [
+      1998.38720703125,
+      312.1875
+     ],
+     [
+      1865.3226318359375,
+      308.5714416503906
+     ]
+    ],
+    "texts": [
+     "Health Regen",
+     "237"
+    ]
+   },
+   {
+    "text": "Energy Regen",
+    "box": [
+     [
+      1866.5323486328125,
+      313.39288330078125
+     ],
+     [
+      2000.8065185546875,
+      313.39288330078125
+     ],
+     [
+      2000.8065185546875,
+      342.3214416503906
+     ],
+     [
+      1866.5323486328125,
+      342.3214416503906
+     ]
+    ],
+    "texts": [
+     "Energy Regen",
+     "7"
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      1865.3226318359375,
+      342.3214416503906
+     ],
+     [
+      1947.5806884765625,
+      342.3214416503906
+     ],
+     [
+      1947.5806884765625,
+      371.2500305175781
+     ],
+     [
+      1865.3226318359375,
+      371.2500305175781
+     ]
+    ],
+    "texts": [
+     "Stability",
+     "5"
+    ]
+   },
+   {
+    "text": "Movement Speed",
+    "box": [
+     [
+      1864.1129150390625,
+      371.2500305175781
+     ],
+     [
+      2037.0968017578125,
+      373.6607360839844
+     ],
+     [
+      2037.0968017578125,
+      401.3839416503906
+     ],
+     [
+      1864.1129150390625,
+      398.9732360839844
+     ]
+    ],
+    "texts": [
+     "2",
+     "Movement Speed"
+    ]
+   },
+   {
+    "text": "Attack Speed",
+    "box": [
+     [
+      1866.5323486328125,
+      402.58929443359375
+     ],
+     [
+      1995.9677734375,
+      402.58929443359375
+     ],
+     [
+      1995.9677734375,
+      430.3125305175781
+     ],
+     [
+      1866.5323486328125,
+      430.3125305175781
+     ]
+    ],
+    "texts": [
+     "Attack Speed",
+     "4%"
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      1864.1129150390625,
+      435.1339416503906
+     ],
+     [
+      1923.38720703125,
+      435.1339416503906
+     ],
+     [
+      1923.38720703125,
+      461.65179443359375
+     ],
+     [
+      1864.1129150390625,
+      461.65179443359375
+     ]
+    ],
+    "texts": [
+     "Jump"
+    ]
+   },
+   {
+    "text": "Critical Hit",
+    "box": [
+     [
+      1867.741943359375,
+      464.0625305175781
+     ],
+     [
+      1970.5645751953125,
+      464.0625305175781
+     ],
+     [
+      1970.5645751953125,
+      488.169677734375
+     ],
+     [
+      1867.741943359375,
+      488.169677734375
+     ]
+    ],
+    "texts": [
+     "4.8%",
+     "Critical Hit"
+    ]
+   },
+   {
+    "text": "Critical Damage",
+    "box": [
+     [
+      1866.5323486328125,
+      489.3750305175781
+     ],
+     [
+      2020.161376953125,
+      492.9910888671875
+     ],
+     [
+      2020.161376953125,
+      521.919677734375
+     ],
+     [
+      1866.5323486328125,
+      518.3035888671875
+     ]
+    ],
+    "texts": [
+     "Critical Damage",
+     "438.3%"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "physical_damage": {
+     "value": 799894,
+     "unit": "count",
+     "raw": "799,894",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_damage": {
+     "value": 14300,
+     "unit": "count",
+     "raw": "14,300",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_health": {
+     "value": 3239060,
+     "unit": "count",
+     "raw": "3,239,060",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_energy": {
+     "value": 127,
+     "unit": "count",
+     "raw": "127",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "health_regen": {
+     "value": 4237,
+     "unit": "count",
+     "raw": "4,237",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "energy_regen": {
+     "value": 177,
+     "unit": "count",
+     "raw": "177",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "stability": {
+     "value": 145,
+     "unit": "count",
+     "raw": "145",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "movement_speed": {
+     "value": 132,
+     "unit": "count",
+     "raw": "132",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "attack_speed": {
+     "value": 204.0,
+     "unit": "percent",
+     "raw": "204%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "jump": {
+     "value": 74,
+     "unit": "count",
+     "raw": "74",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_hit": {
+     "value": 114.8,
+     "unit": "percent",
+     "raw": "114.8%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "critical_damage": {
+     "value": 3438.3,
+     "unit": "percent",
+     "raw": "3,438.3%",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "coefficient": {
+     "value": 28302649,
+     "unit": "count",
+     "raw": "",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": true
+    }
+   },
+   "matched": 13,
+   "total_known": 22,
+   "lines": [
+    "Stats",
+    " Physical Damage",
+    "799,894",
+    "14,300",
+    "Magic Damage",
+    "3,239,060",
+    "Maximum Health",
+    "Maximum Energy",
+    "127",
+    "Health Regen",
+    "4,237",
+    "177",
+    "Energy Regen",
+    "145",
+    "Stability",
+    "Movement Speed",
+    "132",
+    "204%",
+    "Attack Speed",
+    "74",
+    "Jump",
+    "114.8%",
+    "Critical Hit",
+    "Critical Damage",
+    "3,438.3%"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"physical_damage\":{\"value\":799894,\"unit\":\"count\",\"raw\":\"799,894\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_damage\":{\"value\":14300,\"unit\":\"count\",\"raw\":\"14,300\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_health\":{\"value\":3239060,\"unit\":\"count\",\"raw\":\"3,239,060\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_energy\":{\"value\":127,\"unit\":\"count\",\"raw\":\"127\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"health_regen\":{\"value\":4237,\"unit\":\"count\",\"raw\":\"4,237\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"energy_regen\":{\"value\":177,\"unit\":\"count\",\"raw\":\"177\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"stability\":{\"value\":145,\"unit\":\"count\",\"raw\":\"145\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"movement_speed\":{\"value\":132,\"unit\":\"count\",\"raw\":\"132\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"attack_speed\":{\"value\":204.0,\"unit\":\"percent\",\"raw\":\"204%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"jump\":{\"value\":74,\"unit\":\"count\",\"raw\":\"74\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_hit\":{\"value\":114.8,\"unit\":\"percent\",\"raw\":\"114.8%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"critical_damage\":{\"value\":3438.3,\"unit\":\"percent\",\"raw\":\"3,438.3%\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"coefficient\":{\"value\":28302649,\"unit\":\"count\",\"raw\":\"\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":true}},\"matched\":13,\"total_known\":22,\"lines\":[\"Stats\",\" Physical Damage\",\"799,894\",\"14,300\",\"Magic Damage\",\"3,239,060\",\"Maximum Health\",\"Maximum Energy\",\"127\",\"Health Regen\",\"4,237\",\"177\",\"Energy Regen\",\"145\",\"Stability\",\"Movement Speed\",\"132\",\"204%\",\"Attack Speed\",\"74\",\"Jump\",\"114.8%\",\"Critical Hit\",\"Critical Damage\",\"3,438.3%\"]}"
+ },
+ {
+  "file": "en_sheet.jpg",
+  "content_type": "image/jpeg",
+  "elems": [
+   {
+    "text": "Stats",
+    "box": [
+     [
+      23.0,
+      15.0
+     ],
+     [
+      72.0,
+      16.0
+     ],
+     [
+      71.0,
+      34.0
+     ],
+     [
+      22.0,
+      32.0
+     ]
+    ]
+   },
+   {
+    "text": "799,894",
+    "box": [
+     [
+      23.0,
+      43.0
+     ],
+     [
+      83.0,
+      44.0
+     ],
+     [
+      83.0,
+      60.0
+     ],
+     [
+      22.0,
+      59.0
+     ]
+    ]
+   },
+   {
+    "text": "Physical Damage",
+    "box": [
+     [
+      130.0,
+      43.0
+     ],
+     [
+      248.0,
+      45.0
+     ],
+     [
+      248.0,
+      62.0
+     ],
+     [
+      130.0,
+      61.0
+     ]
+    ]
+   },
+   {
+    "text": "14,300",
+    "box": [
+     [
+      23.0,
+      68.0
+     ],
+     [
+      74.0,
+      67.0
+     ],
+     [
+      74.0,
+      84.0
+     ],
+     [
+      23.0,
+      85.0
+     ]
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      129.0,
+      67.0
+     ],
+     [
+      234.0,
+      69.0
+     ],
+     [
+      233.0,
+      87.0
+     ],
+     [
+      129.0,
+      85.0
+     ]
+    ]
+   },
+   {
+    "text": "3,239,060",
+    "box": [
+     [
+      23.0,
+      92.0
+     ],
+     [
+      95.0,
+      91.0
+     ],
+     [
+      96.0,
+      108.0
+     ],
+     [
+      23.0,
+      108.0
+     ]
+    ]
+   },
+   {
+    "text": "MaximumHealth",
+    "box": [
+     [
+      129.0,
+      93.0
+     ],
+     [
+      250.0,
+      92.0
+     ],
+     [
+      250.0,
+      107.0
+     ],
+     [
+      130.0,
+      108.0
+     ]
+    ]
+   },
+   {
+    "text": "MaximumEnergy",
+    "box": [
+     [
+      129.0,
+      113.0
+     ],
+     [
+      253.0,
+      118.0
+     ],
+     [
+      252.0,
+      136.0
+     ],
+     [
+      128.0,
+      131.0
+     ]
+    ]
+   },
+   {
+    "text": "127",
+    "box": [
+     [
+      22.0,
+      115.0
+     ],
+     [
+      53.0,
+      115.0
+     ],
+     [
+      53.0,
+      132.0
+     ],
+     [
+      22.0,
+      132.0
+     ]
+    ]
+   },
+   {
+    "text": "4,237",
+    "box": [
+     [
+      23.0,
+      139.0
+     ],
+     [
+      65.0,
+      139.0
+     ],
+     [
+      65.0,
+      157.0
+     ],
+     [
+      23.0,
+      157.0
+     ]
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      129.0,
+      139.0
+     ],
+     [
+      222.0,
+      140.0
+     ],
+     [
+      222.0,
+      159.0
+     ],
+     [
+      129.0,
+      157.0
+     ]
+    ]
+   },
+   {
+    "text": "177",
+    "box": [
+     [
+      23.0,
+      163.0
+     ],
+     [
+      52.0,
+      163.0
+     ],
+     [
+      52.0,
+      180.0
+     ],
+     [
+      23.0,
+      180.0
+     ]
+    ]
+   },
+   {
+    "text": "EnergyRegen",
+    "box": [
+     [
+      129.0,
+      163.0
+     ],
+     [
+      225.0,
+      164.0
+     ],
+     [
+      224.0,
+      183.0
+     ],
+     [
+      129.0,
+      182.0
+     ]
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      129.0,
+      186.0
+     ],
+     [
+      187.0,
+      189.0
+     ],
+     [
+      186.0,
+      207.0
+     ],
+     [
+      128.0,
+      204.0
+     ]
+    ]
+   },
+   {
+    "text": "145",
+    "box": [
+     [
+      23.0,
+      187.0
+     ],
+     [
+      53.0,
+      187.0
+     ],
+     [
+      53.0,
+      204.0
+     ],
+     [
+      23.0,
+      204.0
+     ]
+    ]
+   },
+   {
+    "text": "132",
+    "box": [
+     [
+      23.0,
+      212.0
+     ],
+     [
+      53.0,
+      212.0
+     ],
+     [
+      53.0,
+      228.0
+     ],
+     [
+      23.0,
+      228.0
+     ]
+    ]
+   },
+   {
+    "text": "MovementSpeed",
+    "box": [
+     [
+      129.0,
+      212.0
+     ],
+     [
+      252.0,
+      212.0
+     ],
+     [
+      252.0,
+      229.0
+     ],
+     [
+      129.0,
+      228.0
+     ]
+    ]
+   },
+   {
+    "text": "204%",
+    "box": [
+     [
+      23.0,
+      236.0
+     ],
+     [
+      66.0,
+      236.0
+     ],
+     [
+      66.0,
+      251.0
+     ],
+     [
+      23.0,
+      251.0
+     ]
+    ]
+   },
+   {
+    "text": "AttackSpeed",
+    "box": [
+     [
+      129.0,
+      236.0
+     ],
+     [
+      220.0,
+      236.0
+     ],
+     [
+      220.0,
+      253.0
+     ],
+     [
+      129.0,
+      253.0
+     ]
+    ]
+   },
+   {
+    "text": "74",
+    "box": [
+     [
+      21.0,
+      258.0
+     ],
+     [
+      45.0,
+      258.0
+     ],
+     [
+      45.0,
+      276.0
+     ],
+     [
+      21.0,
+      276.0
+     ]
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      127.0,
+      260.0
+     ],
+     [
+      168.0,
+      261.0
+     ],
+     [
+      167.0,
+      279.0
+     ],
+     [
+      126.0,
+      278.0
+     ]
+    ]
+   }
+  ],
+  "rows": [
+   {
+    "text": "Physical Damage",
+    "box": [
+     [
+      130.0,
+      43.0
+     ],
+     [
+      248.0,
+      45.0
+     ],
+     [
+      248.0,
+      62.0
+     ],
+     [
+      130.0,
+      61.0
+     ]
+    ],
+    "texts": [
+     "Physical Damage"
+    ]
+   },
+   {
+    "text": "MagicDamage",
+    "box": [
+     [
+      129.0,
+      67.0
+     ],
+     [
+      234.0,
+      69.0
+     ],
+     [
+      233.0,
+      87.0
+     ],
+     [
+      129.0,
+      85.0
+     ]
+    ],
+    "texts": [
+     "Magic Damage"
+    ]
+   },
+   {
+    "text": "MaximumHealth",
+    "box": [
+     [
+      129.0,
+      93.0
+     ],
+     [
+      250.0,
+      92.0
+     ],
+     [
+      250.0,
+      107.0
+     ],
+     [
+      130.0,
+      108.0
+     ]
+    ],
+    "texts": [
+     "Maximum Health"
+    ]
+   },
+   {
+    "text": "MaximumEnergy",
+    "box": [
+     [
+      129.0,
+      113.0
+     ],
+     [
+      253.0,
+      118.0
+     ],
+     [
+      252.0,
+      136.0
+     ],
+     [
+      128.0,
+      131.0
+     ]
+    ],
+    "texts": [
+     "Energy",
+     "Maximum"
+    ]
+   },
+   {
+    "text": "Health Regen",
+    "box": [
+     [
+      129.0,
+      139.0
+     ],
+     [
+      222.0,
+      140.0
+     ],
+     [
+      222.0,
+      159.0
+     ],
+     [
+      129.0,
+      157.0
+     ]
+    ],
+    "texts": [
+     "Health Regen"
+    ]
+   },
+   {
+    "text": "EnergyRegen",
+    "box": [
+     [
+      129.0,
+      163.0
+     ],
+     [
+      225.0,
+      164.0
+     ],
+     [
+      224.0,
+      183.0
+     ],
+     [
+      129.0,
+      182.0
+     ]
+    ],
+    "texts": [
+     "Energy",
+     "Regen"
+    ]
+   },
+   {
+    "text": "Stability",
+    "box": [
+     [
+      129.0,
+      186.0
+     ],
+     [
+      187.0,
+      189.0
+     ],
+     [
+      186.0,
+      207.0
+     ],
+     [
+      128.0,
+      204.0
+     ]
+    ],
+    "texts": [
+     "Stability "
+    ]
+   },
+   {
+    "text": "MovementSpeed",
+    "box": [
+     [
+      129.0,
+      212.0
+     ],
+     [
+      252.0,
+      212.0
+     ],
+     [
+      252.0,
+      229.0
+     ],
+     [
+      129.0,
+      228.0
+     ]
+    ],
+    "texts": [
+     "Movement Speed"
+    ]
+   },
+   {
+    "text": "AttackSpeed",
+    "box": [
+     [
+      129.0,
+      236.0
+     ],
+     [
+      220.0,
+      236.0
+     ],
+     [
+      220.0,
+      253.0
+     ],
+     [
+      129.0,
+      253.0
+     ]
+    ],
+    "texts": [
+     "Attack Speed"
+    ]
+   },
+   {
+    "text": "Jump",
+    "box": [
+     [
+      127.0,
+      260.0
+     ],
+     [
+      168.0,
+      261.0
+     ],
+     [
+      167.0,
+      279.0
+     ],
+     [
+      126.0,
+      278.0
+     ]
+    ],
+    "texts": [
+     " Jump"
+    ]
+   }
+  ],
+  "body": {
+   "stats": {
+    "physical_damage": {
+     "value": 799894,
+     "unit": "count",
+     "raw": "799,894",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "magic_damage": {
+     "value": 14300,
+     "unit": "count",
+     "raw": "14,300",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_health": {
+     "value": 3239060,
+     "unit": "count",
+     "raw": "3,239,060",
+     "confidence": 0.819,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "maximum_energy": {
+     "value": 127,
+     "unit": "count",
+     "raw": "127",
+     "confidence": 0.819,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "health_regen": {
+     "value": 4237,
+     "unit": "count",
+     "raw": "4,237",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "energy_regen": {
+     "value": 177,
+     "unit": "count",
+     "raw": "177",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "stability": {
+     "value": 145,
+     "unit": "count",
+     "raw": "145",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "movement_speed": {
+     "value": 132,
+     "unit": "count",
+     "raw": "132",
+     "confidence": 0.825,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "attack_speed": {
+     "value": 204.0,
+     "unit": "percent",
+     "raw": "204%",
+     "confidence": 0.813,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    },
+    "jump": {
+     "value": 74,
+     "unit": "count",
+     "raw": "74",
+     "confidence": 0.85,
+     "in_range": true,
+     "type_match": true,
+     "derived": false
+    }
+   },
+   "matched": 10,
+   "total_known": 22,
+   "lines": [
+    "Stats",
+    "799,894",
+    "Physical Damage",
+    "14,300",
+    "MagicDamage",
+    "3,239,060",
+    "MaximumHealth",
+    "MaximumEnergy",
+    "127",
+    "4,237",
+    "Health Regen",
+    "177",
+    "EnergyRegen",
+    "Stability",
+    "145",
+    "132",
+    "MovementSpeed",
+    "204%",
+    "AttackSpeed",
+    "74",
+    "Jump"
+   ]
+  },
+  "body_raw": "{\"stats\":{\"physical_damage\":{\"value\":799894,\"unit\":\"count\",\"raw\":\"799,894\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"magic_damage\":{\"value\":14300,\"unit\":\"count\",\"raw\":\"14,300\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_health\":{\"value\":3239060,\"unit\":\"count\",\"raw\":\"3,239,060\",\"confidence\":0.819,\"in_range\":true,\"type_match\":true,\"derived\":false},\"maximum_energy\":{\"value\":127,\"unit\":\"count\",\"raw\":\"127\",\"confidence\":0.819,\"in_range\":true,\"type_match\":true,\"derived\":false},\"health_regen\":{\"value\":4237,\"unit\":\"count\",\"raw\":\"4,237\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"energy_regen\":{\"value\":177,\"unit\":\"count\",\"raw\":\"177\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":false},\"stability\":{\"value\":145,\"unit\":\"count\",\"raw\":\"145\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false},\"movement_speed\":{\"value\":132,\"unit\":\"count\",\"raw\":\"132\",\"confidence\":0.825,\"in_range\":true,\"type_match\":true,\"derived\":false},\"attack_speed\":{\"value\":204.0,\"unit\":\"percent\",\"raw\":\"204%\",\"confidence\":0.813,\"in_range\":true,\"type_match\":true,\"derived\":false},\"jump\":{\"value\":74,\"unit\":\"count\",\"raw\":\"74\",\"confidence\":0.85,\"in_range\":true,\"type_match\":true,\"derived\":false}},\"matched\":10,\"total_known\":22,\"lines\":[\"Stats\",\"799,894\",\"Physical Damage\",\"14,300\",\"MagicDamage\",\"3,239,060\",\"MaximumHealth\",\"MaximumEnergy\",\"127\",\"4,237\",\"Health Regen\",\"177\",\"EnergyRegen\",\"Stability\",\"145\",\"132\",\"MovementSpeed\",\"204%\",\"AttackSpeed\",\"74\",\"Jump\"]}"
+ }
+]

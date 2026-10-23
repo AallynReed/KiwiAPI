@@ -65,6 +65,14 @@ RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 # would download ~15 MB of ONNX models. Constructing RapidOCR() fetches them.
 RUN python -c "from rapidocr import RapidOCR; RapidOCR()"
 
+# kiwi-server's OCR (ort, load-dynamic) runs the very onnxruntime build and ONNX
+# files Python uses: the pinned wheel's own libonnxruntime and the models above.
+ENV KIWI_ORT_DYLIB=/usr/local/lib/python3.13/site-packages/onnxruntime/capi/libonnxruntime.so.1.26.0 \
+    KIWI_OCR_MODEL_DIR=/usr/local/lib/python3.13/site-packages/rapidocr/models
+RUN test -f "$KIWI_ORT_DYLIB" \
+    && for m in ch_PP-OCRv4_det_mobile ch_ppocr_mobile_v2.0_cls_mobile ch_PP-OCRv4_rec_mobile; do \
+        test -f "$KIWI_OCR_MODEL_DIR/$m.onnx" || exit 1; done
+
 COPY --from=native /wheels /tmp/wheels
 RUN pip install --no-cache-dir /tmp/wheels/*.whl && rm -rf /tmp/wheels
 

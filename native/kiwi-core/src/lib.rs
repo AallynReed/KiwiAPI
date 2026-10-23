@@ -28,6 +28,7 @@ pub mod leaf;
 pub mod mail;
 pub mod market;
 pub mod mod_categories;
+pub mod ocr;
 pub mod pydantic_dt;
 pub mod pydt;
 pub mod pynum;

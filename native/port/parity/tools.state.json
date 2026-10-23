@@ -1,0 +1,8 @@
+{
+ "mongo": [
+  {"collection": "runtime_config", "sort": ["key"], "filter": {"key": "feature_unlock_debug_enabled"}, "mask": ["_id", "updated_at"]}
+ ],
+ "redis": [
+  {"pattern": "rl:unlockdebug:*", "mask_ttl": true, "mask_value": true}
+ ]
+}

@@ -1,0 +1,6 @@
+--kiwiParityBoundary
+Content-Disposition: form-data; name="file"; filename="notes.txt"
+Content-Type: text/plain
+
+hello
+--kiwiParityBoundary--

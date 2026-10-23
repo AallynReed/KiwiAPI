@@ -37,6 +37,7 @@ pub mod maintenance;
 pub mod market;
 pub mod media;
 pub mod middleware;
+pub mod ocr;
 pub mod og;
 pub mod outbound;
 pub mod portal;
