@@ -1,6 +1,6 @@
 //! `/site/mod-stats` and the hourly snapshot loop (`app/mod_stats`, RUST_OWNS
-//! `mod_stats`): one creator's Zakros mods on the hub, Trovesaurus and the
-//! Steam Workshop, one snapshot per UTC day.
+//! `mod_stats`): one creator's Zakros mods across the hub and the outside
+//! mod platforms, one snapshot per UTC day.
 
 #[cfg(test)]
 mod tests;
