@@ -37,6 +37,7 @@ pub mod store;
 pub mod swf;
 pub mod tmod;
 pub mod troveio;
+pub mod update_archive;
 pub mod wire;
 pub mod zlib;
 pub mod zoneinfo;

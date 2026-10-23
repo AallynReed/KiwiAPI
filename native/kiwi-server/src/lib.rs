@@ -4,6 +4,7 @@
 
 pub mod activity;
 pub mod admin;
+pub mod archiver;
 pub mod auth;
 pub mod cheaters;
 pub mod config;

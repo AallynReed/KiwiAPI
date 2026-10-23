@@ -1,0 +1,23 @@
+[
+ {"name": "status_after_sync", "sleep": 25, "path": "/admin/updates/backfill-modified/status",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_pts_idle", "path": "/admin/updates/backfill-modified/status?branch=pts",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_unknown", "path": "/admin/updates/backfill-modified/status?branch=nope",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "start_unknown", "method": "POST", "path": "/admin/updates/backfill-modified?branch=LIVE-US",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "start_unauth", "method": "POST", "path": "/admin/updates/backfill-modified?branch=pts"},
+ {"name": "start_pts", "method": "POST", "path": "/admin/updates/backfill-modified?branch=pts",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_pts_done", "sleep": 3, "path": "/admin/updates/backfill-modified/status?branch=pts",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}, "mask": ["backfill.started_at", "backfill.finished_at"]},
+ {"name": "start_live", "method": "POST", "path": "/admin/updates/backfill-modified",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_live_done", "sleep": 3, "path": "/admin/updates/backfill-modified/status?branch=live-us",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}, "mask": ["backfill.started_at", "backfill.finished_at"]},
+ {"name": "start_wrong_method", "path": "/admin/updates/backfill-modified",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_after_more_cycles", "sleep": 20, "path": "/admin/updates/backfill-modified/status?branch=pts",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}, "mask": ["backfill.started_at", "backfill.finished_at"]}
+]

@@ -1,0 +1,13 @@
+version TWIN-1
+Trove.exe:41eacc36e0691deb96a04e49b10656d42c85f543:11
+Trove.cfg:565a53850cb40edac5222161b60f15a74176969e:6
+garbage-line-without-colons
+dir with space\a b.txt:3e9a81ed3758e91d536544706ec09e73404ce2b5:6
+x+y.bin:6a8437dd0009e4aa220215ad24cf7c7d2e8c95c8:4
+dup.bin:f9e33e08ff7d9b9b47644528f5db29ca96433379:10
+ui\index.tfi:ddc6481d64e9dc26d36f192e9063d1b3b81af7a0:67
+ui\archive0.tfa:d07f729f793dab0a2978ff08cf5980f1607905b9:24
+ui\archive1.tfa:5de7b3b19bd0f48794386db2a1571cc4eb26e9ef:28
+audio\index.tfi:cbc930a8a2e7177a5ace1baf67592e2ec4c6cbeb:31
+audio\archive0.tfa:fa057312798f669b42d0c1954f27069c4c4b1c96:305
+audio\archive2.tfa:2bedfe943284e05c12f94272ddedfb34e35c21de:13

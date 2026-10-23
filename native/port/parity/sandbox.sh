@@ -38,6 +38,11 @@
 # AREA.loops (optional, comma list) names loops the area moves: A's Python runs
 # them, B's kiwi-server owns them, B's Python still runs none.
 #
+# AREA.env (optional, NAME=value lines) is extra env for every app container of
+# both stacks. data/AREA_cdn/ (optional) is served by the runner on
+# http://kp-twin:8099 from twin-seed on (just before the apps restart), a fake
+# upstream for loops that would otherwise call a third party.
+#
 # IMG (default trove-app:latest) runs every container; RS_IMG overrides it for
 # B's kiwi-server alone, so a branch build is tested without retagging the
 # production image. Wait budget per service: WAIT seconds (default 180).
@@ -183,15 +188,28 @@ loops_without() {
   printf '%s\n' "$out"
 }
 
+AREA_ENV=()
+
+area_env() {
+  AREA_ENV=()
+  local f=$HERE/${1:-}.env line
+  [ -n "${1:-}" ] && [ -f "$f" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line=${line%$'\r'}
+    case $line in '' | '#'*) ;; *) AREA_ENV+=(-e "$line") ;; esac
+  done < "$f"
+}
+
 twin_py() {
   docker run -d --name "kp-$1-py" --network "kiwi-parity-$1" --network-alias api-py --memory 2g \
-    "${TWIN_ENV[@]}" -e RUST_OWNS="${2:-$LOOPS}" "${TWIN_MOUNTS[@]}" "$IMG" \
+    "${TWIN_ENV[@]}" "${AREA_ENV[@]}" -e RUST_OWNS="${2:-$LOOPS}" "${TWIN_MOUNTS[@]}" "$IMG" \
     uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*' \
     --timeout-keep-alive 120 --timeout-graceful-shutdown 3 >/dev/null
 }
 
 twin_up() {
   local moved=${1:-}
+  area_env "${2:-}"
   twin_down
   twin_stores a
   twin_stores b
@@ -207,7 +225,7 @@ twin_up() {
   done
   twin_py a "$(loops_without "$moved")"
   twin_py b
-  docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" -e RUST_OWNS="${RS_OWNS:-$moved}" \
+  docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" "${AREA_ENV[@]}" -e RUST_OWNS="${RS_OWNS:-$moved}" \
     -e KIWI_BIND=0.0.0.0:8000 -e PY_UPSTREAM=http://api-py:8000 -e FORWARDED_ALLOW_IPS='*' \
     "${TWIN_MOUNTS[@]}" "$RS_IMG" kiwi-server >/dev/null
   twin_wait
@@ -248,6 +266,9 @@ twin_seed() {
   docker exec kp-b-mongo mongosh --quiet kiwi --eval 'db.dropDatabase()' >/dev/null
   docker exec kp-a-mongo mongodump --quiet --archive --db=kiwi \
     | docker exec -i kp-b-mongo mongorestore --quiet --archive --drop
+  if [ -d "$HERE/data/${a}_cdn" ]; then
+    docker exec -d "$RUNNER" python -m http.server 8099 --bind 0.0.0.0 --directory "/parity/data/${a}_cdn"
+  fi
   docker restart kp-a-py kp-b-py kp-b-rs >/dev/null
   twin_wait
   echo "seeded $a; tokens: docker exec $RUNNER cat /tmp/a.env"
@@ -286,7 +307,7 @@ twin_all() {
   for a in "$@"; do
     a=$(area "$a")
     echo "======== $a"
-    twin_up "$(moved_loops "$a")"
+    twin_up "$(moved_loops "$a")" "$a"
     twin_seed "$a"
     twin_run "$a" || rc=1
     if [ -f "$HERE/$a.state.json" ]; then twin_state "$a" || rc=1; fi
@@ -301,7 +322,7 @@ case "$cmd" in
   seed) seed "$@" ;;
   run) run "$@" ;;
   down) down ;;
-  twin-up) if [ $# -ge 1 ]; then twin_up "$(moved_loops "$1")"; else twin_up; fi ;;
+  twin-up) if [ $# -ge 1 ]; then twin_up "$(moved_loops "$1")" "$(area "$1")"; else twin_up; fi ;;
   twin-seed) [ $# = 1 ] || { echo "usage: $0 twin-seed AREA" >&2; exit 2; }; twin_seed "$1" ;;
   twin-run) [ $# -ge 1 ] || { echo "usage: $0 twin-run AREA|SPEC..." >&2; exit 2; }; twin_run "$@" ;;
   twin-state) [ $# = 1 ] || { echo "usage: $0 twin-state AREA" >&2; exit 2; }; twin_state "$1" ;;

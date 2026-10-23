@@ -105,6 +105,7 @@ pub fn start(state: &AppState) {
     crate::dm_subs::start_jobs(state);
     crate::email::worker::start(state);
     crate::maintenance::start(state);
+    crate::archiver::start(state);
 }
 
 #[cfg(test)]

@@ -1,0 +1,6808 @@
+{
+ "python": "3.13.17",
+ "pure": {
+  "branches": [
+   [
+    "live-us",
+    "kiwi-live-us.txt"
+   ],
+   [
+    "pts",
+    "kiwi-pts.txt"
+   ]
+  ],
+  "pointers": [
+   {
+    "text": "STABLE-103-418-A-335805|content/patchkiwi-live-us01|May 21 15:16, STABLE-103-418-A-335805|http://alpha.triongames.com/installer/trove/trove-alpha-motd.html|kiwi_STABLE-103-418-A-335805_Patch|*",
+    "ok": {
+     "version": "STABLE-103-418-A-335805",
+     "content_path": "patchkiwi-live-us01",
+     "motd": "http://alpha.triongames.com/installer/trove/trove-alpha-motd.html",
+     "fields": [
+      "STABLE-103-418-A-335805",
+      "content/patchkiwi-live-us01",
+      "May 21 15:16, STABLE-103-418-A-335805",
+      "http://alpha.triongames.com/installer/trove/trove-alpha-motd.html",
+      "kiwi_STABLE-103-418-A-335805_Patch",
+      "*"
+     ]
+    }
+   },
+   {
+    "text": "",
+    "error": "malformed bootstrap pointer",
+    "type": "CdnError"
+   },
+   {
+    "text": "only-one-field",
+    "error": "malformed bootstrap pointer",
+    "type": "CdnError"
+   },
+   {
+    "text": "  V1 | content/cp |x\r\n",
+    "ok": {
+     "version": "V1",
+     "content_path": "cp",
+     "motd": "",
+     "fields": [
+      "V1 ",
+      " content/cp ",
+      "x"
+     ]
+    }
+   },
+   {
+    "text": "V2|cp",
+    "ok": {
+     "version": "V2",
+     "content_path": "cp",
+     "motd": "",
+     "fields": [
+      "V2",
+      "cp"
+     ]
+    }
+   },
+   {
+    "text": "V3|cp|m",
+    "ok": {
+     "version": "V3",
+     "content_path": "cp",
+     "motd": "",
+     "fields": [
+      "V3",
+      "cp",
+      "m"
+     ]
+    }
+   },
+   {
+    "text": "V4|cp|m| motd \u001c",
+    "ok": {
+     "version": "V4",
+     "content_path": "cp",
+     "motd": "motd",
+     "fields": [
+      "V4",
+      "cp",
+      "m",
+      " motd"
+     ]
+    }
+   },
+   {
+    "text": "|cp|x|y",
+    "error": "malformed bootstrap pointer",
+    "type": "CdnError"
+   },
+   {
+    "text": "V5| |x|y",
+    "error": "malformed bootstrap pointer",
+    "type": "CdnError"
+   },
+   {
+    "text": "\ufeffV6|content/content/cp|a|b",
+    "ok": {
+     "version": "\ufeffV6",
+     "content_path": "content/cp",
+     "motd": "b",
+     "fields": [
+      "\ufeffV6",
+      "content/content/cp",
+      "a",
+      "b"
+     ]
+    }
+   },
+   {
+    "text": "V7|contentx/cp|a|\u00e9t\u00e9\u2003",
+    "ok": {
+     "version": "V7",
+     "content_path": "contentx/cp",
+     "motd": "\u00e9t\u00e9",
+     "fields": [
+      "V7",
+      "contentx/cp",
+      "a",
+      "\u00e9t\u00e9"
+     ]
+    }
+   },
+   {
+    "text": "\u001fV8|cp\u001d",
+    "ok": {
+     "version": "V8",
+     "content_path": "cp",
+     "motd": "",
+     "fields": [
+      "V8",
+      "cp"
+     ]
+    }
+   },
+   {
+    "text": "V9\u3000|cp|||",
+    "ok": {
+     "version": "V9",
+     "content_path": "cp",
+     "motd": "",
+     "fields": [
+      "V9\u3000",
+      "cp",
+      "",
+      "",
+      ""
+     ]
+    }
+   }
+  ],
+  "manifests": [
+   {
+    "text": "version STABLE-103-415-A-335760\r\nCrashHandler.exe:535853c2de3cc8da34f376c53850f66d00232723:2376192\r\naudio\\archive0.tfa:84f78fad45833a3735d15bff5f66bb19f5eb79e1:4039807\r\n",
+    "ok": [
+     "STABLE-103-415-A-335760",
+     [
+      {
+       "path": "CrashHandler.exe",
+       "sha1": "535853c2de3cc8da34f376c53850f66d00232723",
+       "size": 2376192
+      },
+      {
+       "path": "audio/archive0.tfa",
+       "sha1": "84f78fad45833a3735d15bff5f66bb19f5eb79e1",
+       "size": 4039807
+      }
+     ]
+    ]
+   },
+   {
+    "text": "version V1\r\nGood.exe:abc:123\r\ngarbage-no-colons\r\nBad.exe:def:notanint\r\n",
+    "ok": [
+     "V1",
+     [
+      {
+       "path": "Good.exe",
+       "sha1": "abc",
+       "size": 123
+      }
+     ]
+    ]
+   },
+   {
+    "text": "Trove_x64.exe:abc:1\r\n",
+    "error": "manifest missing 'version' line",
+    "type": "CdnError"
+   },
+   {
+    "text": " version V1\nA:b:1\n",
+    "error": "manifest missing 'version' line",
+    "type": "CdnError"
+   },
+   {
+    "text": "version   V2 \r\r\nc:d:e:f:9\nx: y :1_000\n z:w: +12 \nn:m:-4\nq:r:1__0\ns:t:_1\nu:v:\uff11\uff12\n",
+    "ok": [
+     "V2",
+     [
+      {
+       "path": "c:d:e",
+       "sha1": "f",
+       "size": 9
+      },
+      {
+       "path": "x",
+       "sha1": " y ",
+       "size": 1000
+      },
+      {
+       "path": "z",
+       "sha1": "w",
+       "size": 12
+      },
+      {
+       "path": "n",
+       "sha1": "m",
+       "size": -4
+      },
+      {
+       "path": "u",
+       "sha1": "v",
+       "size": 12
+      }
+     ]
+    ]
+   },
+   {
+    "text": "version V3\n\n\n:sha:5\npath::6\npath:sha:\nx\\y\\z.tfi:s:7\r\n",
+    "ok": [
+     "V3",
+     [
+      {
+       "path": "",
+       "sha1": "sha",
+       "size": 5
+      },
+      {
+       "path": "path",
+       "sha1": "",
+       "size": 6
+      },
+      {
+       "path": "x/y/z.tfi",
+       "sha1": "s",
+       "size": 7
+      }
+     ]
+    ]
+   },
+   {
+    "text": "version V4\rwith-cr\nA:B:1\rC:D:2\n",
+    "ok": [
+     "V4\rwith-cr",
+     [
+      {
+       "path": "A:B:1\rC",
+       "sha1": "D",
+       "size": 2
+      }
+     ]
+    ]
+   },
+   {
+    "text": "version",
+    "error": "manifest missing 'version' line",
+    "type": "CdnError"
+   },
+   {
+    "text": "version \n",
+    "ok": [
+     "",
+     []
+    ]
+   },
+   {
+    "text": "",
+    "error": "manifest missing 'version' line",
+    "type": "CdnError"
+   },
+   {
+    "text": "version V5\nbig:s:99999999999\nneg:s:-0\nws:s:\t3\n",
+    "ok": [
+     "V5",
+     [
+      {
+       "path": "big",
+       "sha1": "s",
+       "size": 99999999999
+      },
+      {
+       "path": "neg",
+       "sha1": "s",
+       "size": 0
+      },
+      {
+       "path": "ws",
+       "sha1": "s",
+       "size": 3
+      }
+     ]
+    ]
+   }
+  ],
+  "urls": [
+   {
+    "args": [
+     "http://trove-update.dyn.triongames.com",
+     "/kiwi-live-client-patch/",
+     "patchkiwi-live-us01",
+     "ui/archive0.tfa",
+     "deadbeef"
+    ],
+    "pointer": "http://trove-update.dyn.triongames.com/kiwi-live-client-patch//public/kiwi-pts.txt",
+    "manifest": "http://trove-update.dyn.triongames.com/kiwi-live-client-patch//content/patchkiwi-live-us01/V1.manifest",
+    "file": "http://trove-update.dyn.triongames.com/kiwi-live-client-patch//content/patchkiwi-live-us01/recovery/ui/archive0.tfa?sha1=deadbeef"
+   },
+   {
+    "args": [
+     "http://h",
+     "/p/",
+     "cp",
+     "dir with space/f+g&h=i?#%.bin",
+     "abc"
+    ],
+    "pointer": "http://h/p//public/kiwi-pts.txt",
+    "manifest": "http://h/p//content/cp/V1.manifest",
+    "file": "http://h/p//content/cp/recovery/dir%20with%20space/f%2Bg%26h%3Di%3F%23%25.bin?sha1=abc"
+   },
+   {
+    "args": [
+     "http://h",
+     "",
+     "cp",
+     "\u00fcml\u00e4ut/\u65e5\u672c/~a_b-c.d",
+     "0"
+    ],
+    "pointer": "http://h/public/kiwi-pts.txt",
+    "manifest": "http://h/content/cp/V1.manifest",
+    "file": "http://h/content/cp/recovery/%C3%BCml%C3%A4ut/%E6%97%A5%E6%9C%AC/~a_b-c.d?sha1=0"
+   },
+   {
+    "args": [
+     "http://h",
+     "/p/",
+     "cp",
+     "a//b/./c/../d;e:f@g$h!i'j(k)l*m,n",
+     "s"
+    ],
+    "pointer": "http://h/p//public/kiwi-pts.txt",
+    "manifest": "http://h/p//content/cp/V1.manifest",
+    "file": "http://h/p//content/cp/recovery/a//b/./c/../d%3Be%3Af%40g%24h%21i%27j%28k%29l%2Am%2Cn?sha1=s"
+   }
+  ],
+  "tfi": [
+   {
+    "hex": "05612e62696e000005b7f0fd28097375625c622e62696e0005068cf1997805632e62696e010009c6f7ca9204",
+    "entries": [
+     [
+      "a.bin",
+      0,
+      0,
+      5,
+      85948471
+     ],
+     [
+      "sub/b.bin",
+      0,
+      5,
+      6,
+      252082316
+     ],
+     [
+      "c.bin",
+      1,
+      0,
+      9,
+      1112718278
+     ]
+    ]
+   },
+   {
+    "hex": "08612e62696e000000000005b7f0fd280c7375625c622e62696e0000000005068cf1997808632e62696e000000010009c6f7ca9204",
+    "entries": [
+     [
+      "a.bin",
+      0,
+      0,
+      5,
+      85948471
+     ],
+     [
+      "sub/b.bin",
+      0,
+      5,
+      6,
+      252082316
+     ],
+     [
+      "c.bin",
+      1,
+      0,
+      9,
+      1112718278
+     ]
+    ]
+   },
+   {
+    "hex": "",
+    "entries": []
+   },
+   {
+    "hex": "036162",
+    "error": "malformed .tfi: index out of range"
+   },
+   {
+    "hex": "026100000000",
+    "error": "malformed .tfi: index out of range"
+   },
+   {
+    "hex": "056162ff636400000000",
+    "error": "malformed .tfi: 'utf-8' codec can't decode byte 0xff in position 2: invalid start byte"
+   },
+   {
+    "hex": "03e28200000000",
+    "error": "malformed .tfi: 'utf-8' codec can't decode bytes in position 0-1: unexpected end of data"
+   },
+   {
+    "hex": "03e282",
+    "error": "malformed .tfi: 'utf-8' codec can't decode bytes in position 0-1: unexpected end of data"
+   },
+   {
+    "hex": "02c08000000000",
+    "error": "malformed .tfi: 'utf-8' codec can't decode byte 0xc0 in position 0: invalid start byte"
+   },
+   {
+    "hex": "04f090804100000000",
+    "error": "malformed .tfi: 'utf-8' codec can't decode bytes in position 0-2: invalid continuation byte"
+   },
+   {
+    "hex": "016180808080808080808080",
+    "error": "malformed .tfi: varint too long"
+   },
+   {
+    "hex": "0161ffffffff7fffffffff7fffffffff7fffffffff7f",
+    "entries": [
+     [
+      "a",
+      4294967295,
+      4294967295,
+      4294967295,
+      4294967295
+     ]
+    ]
+   },
+   {
+    "hex": "0161000000",
+    "error": "malformed .tfi: index out of range"
+   },
+   {
+    "hex": "0361006200000000",
+    "entries": [
+     [
+      "a",
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "hex": "09c3a974c3a900000000",
+    "error": "malformed .tfi: index out of range"
+   },
+   {
+    "hex": "0a6e616d655c785c79000001020304",
+    "entries": [
+     [
+      "name/x/y",
+      1,
+      2,
+      3,
+      4
+     ]
+    ]
+   },
+   {
+    "hex": "02eda000000000",
+    "error": "malformed .tfi: 'utf-8' codec can't decode byte 0xed in position 0: invalid continuation byte"
+   }
+  ],
+  "archive_size": [
+   [
+    [
+     [
+      "a.bin",
+      0,
+      0,
+      5,
+      85948471
+     ],
+     [
+      "sub/b.bin",
+      0,
+      5,
+      6,
+      252082316
+     ],
+     [
+      "c.bin",
+      1,
+      0,
+      9,
+      1112718278
+     ]
+    ],
+    0,
+    12
+   ],
+   [
+    [
+     [
+      "a.bin",
+      0,
+      0,
+      5,
+      85948471
+     ],
+     [
+      "sub/b.bin",
+      0,
+      5,
+      6,
+      252082316
+     ],
+     [
+      "c.bin",
+      1,
+      0,
+      9,
+      1112718278
+     ]
+    ],
+    1,
+    12
+   ],
+   [
+    [
+     [
+      "a.bin",
+      0,
+      0,
+      5,
+      85948471
+     ],
+     [
+      "sub/b.bin",
+      0,
+      5,
+      6,
+      252082316
+     ],
+     [
+      "c.bin",
+      1,
+      0,
+      9,
+      1112718278
+     ]
+    ],
+    2,
+    0
+   ]
+  ],
+  "inflate": [
+   {
+    "name": "exact",
+    "hex": "789c3330343236313533b7b03418658d1016004dbc668b",
+    "hint": 500,
+    "sha": "fab6d25d512442fc25ce3b1304a014240c059c6a5f619201fe97681c235a8bbf",
+    "len": 500
+   },
+   {
+    "name": "hint-short",
+    "hex": "789c3330343236313533b7b03418658d1016004dbc668b",
+    "hint": 400,
+    "sha": "fab6d25d512442fc25ce3b1304a014240c059c6a5f619201fe97681c235a8bbf",
+    "len": 500
+   },
+   {
+    "name": "hint-long",
+    "hex": "789c3330343236313533b7b03418658d1016004dbc668b",
+    "hint": 512,
+    "sha": "fab6d25d512442fc25ce3b1304a014240c059c6a5f619201fe97681c235a8bbf",
+    "len": 500
+   },
+   {
+    "name": "no-hint",
+    "hex": "789c3330343236313533b7b03418658d1016004dbc668b",
+    "hint": 0,
+    "sha": "fab6d25d512442fc25ce3b1304a014240c059c6a5f619201fe97681c235a8bbf",
+    "len": 500
+   },
+   {
+    "name": "trailing",
+    "hex": "789c3330343236313533b7b03418658d1016004dbc668b67617262616765",
+    "hint": 500,
+    "sha": "fab6d25d512442fc25ce3b1304a014240c059c6a5f619201fe97681c235a8bbf",
+    "len": 500
+   },
+   {
+    "name": "truncated",
+    "hex": "789c3330343236313533b7b034",
+    "hint": 500,
+    "sha": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882",
+    "len": 10
+   },
+   {
+    "name": "truncated-nohint",
+    "hex": "789c3330343236313533b7b03418658d1016004d",
+    "hint": 0,
+    "sha": "fab6d25d512442fc25ce3b1304a014240c059c6a5f619201fe97681c235a8bbf",
+    "len": 500
+   },
+   {
+    "name": "bad-header",
+    "hex": "00010203",
+    "hint": 4,
+    "error": "could not inflate .tfa: Error -3 while decompressing data: incorrect header check"
+   },
+   {
+    "name": "empty",
+    "hex": "",
+    "hint": 0,
+    "sha": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "len": 0
+   },
+   {
+    "name": "bad-block",
+    "hex": "789cffffff",
+    "hint": 8,
+    "error": "could not inflate .tfa: Error -3 while decompressing data: invalid block type"
+   },
+   {
+    "name": "needs-dict",
+    "hex": "78bb000000010000000000000000",
+    "hint": 8,
+    "error": "could not inflate .tfa: Error 2 while decompressing data"
+   }
+  ],
+  "classify": [
+   {
+    "old": [
+     [
+      "Trove.exe",
+      "a",
+      1
+     ],
+     [
+      "ui/index.tfi",
+      "t",
+      1
+     ],
+     [
+      "ui/archive0.tfa",
+      "x",
+      1
+     ]
+    ],
+    "new": [
+     {
+      "path": "Trove.exe",
+      "sha1": "a",
+      "size": 1
+     },
+     {
+      "path": "ui/index.tfi",
+      "sha1": "T2",
+      "size": 2
+     },
+     {
+      "path": "ui/archive0.tfa",
+      "sha1": "X2",
+      "size": 2
+     },
+     {
+      "path": "NewLoose.dll",
+      "sha1": "n",
+      "size": 3
+     }
+    ],
+    "plan": {
+     "changed_loose": [
+      "NewLoose.dll"
+     ],
+     "removed_loose": [],
+     "dir_work": [
+      [
+       "ui",
+       "ui/index.tfi",
+       [
+        0
+       ]
+      ]
+     ],
+     "new_map": [
+      [
+       "Trove.exe",
+       "a",
+       1
+      ],
+      [
+       "ui/index.tfi",
+       "T2",
+       2
+      ],
+      [
+       "ui/archive0.tfa",
+       "X2",
+       2
+      ],
+      [
+       "NewLoose.dll",
+       "n",
+       3
+      ]
+     ],
+     "any": true
+    }
+   },
+   {
+    "old": [
+     [
+      "a.exe",
+      "x",
+      1
+     ]
+    ],
+    "new": [
+     {
+      "path": "a.exe",
+      "sha1": "x",
+      "size": 1
+     }
+    ],
+    "plan": {
+     "changed_loose": [],
+     "removed_loose": [],
+     "dir_work": [],
+     "new_map": [
+      [
+       "a.exe",
+       "x",
+       1
+      ]
+     ],
+     "any": false
+    }
+   },
+   {
+    "old": [
+     [
+      "ui/index.tfi",
+      "t",
+      1
+     ],
+     [
+      "ui/archive0.tfa",
+      "x",
+      1
+     ],
+     [
+      "z.dll",
+      "z",
+      1
+     ]
+    ],
+    "new": [],
+    "plan": {
+     "changed_loose": [],
+     "removed_loose": [
+      "z.dll"
+     ],
+     "dir_work": [
+      [
+       "ui",
+       null,
+       []
+      ]
+     ],
+     "new_map": [],
+     "any": true
+    }
+   },
+   {
+    "old": [],
+    "new": [
+     {
+      "path": "b/archive2.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/x_archive2.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/archive10.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/archive01.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/two.tfi",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/index.tfi",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/archive.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/archive\u0663.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "root.tfi",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "archive7.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "b/c/archive0.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "\u00e9/a.bin",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "Z.bin",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "dup",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "dup",
+      "sha1": "2",
+      "size": 9
+     }
+    ],
+    "plan": {
+     "changed_loose": [
+      "Z.bin",
+      "dup",
+      "\u00e9/a.bin"
+     ],
+     "removed_loose": [],
+     "dir_work": [
+      [
+       "",
+       "root.tfi",
+       [
+        7
+       ]
+      ],
+      [
+       "b",
+       "b/two.tfi",
+       [
+        1,
+        2,
+        2,
+        3,
+        10
+       ]
+      ],
+      [
+       "b/c",
+       null,
+       [
+        0
+       ]
+      ]
+     ],
+     "new_map": [
+      [
+       "b/archive2.tfa",
+       "1",
+       1
+      ],
+      [
+       "b/x_archive2.tfa",
+       "1",
+       1
+      ],
+      [
+       "b/archive10.tfa",
+       "1",
+       1
+      ],
+      [
+       "b/archive01.tfa",
+       "1",
+       1
+      ],
+      [
+       "b/two.tfi",
+       "1",
+       1
+      ],
+      [
+       "b/index.tfi",
+       "1",
+       1
+      ],
+      [
+       "b/archive.tfa",
+       "1",
+       1
+      ],
+      [
+       "b/archive\u0663.tfa",
+       "1",
+       1
+      ],
+      [
+       "root.tfi",
+       "1",
+       1
+      ],
+      [
+       "archive7.tfa",
+       "1",
+       1
+      ],
+      [
+       "b/c/archive0.tfa",
+       "1",
+       1
+      ],
+      [
+       "\u00e9/a.bin",
+       "1",
+       1
+      ],
+      [
+       "Z.bin",
+       "1",
+       1
+      ],
+      [
+       "dup",
+       "2",
+       9
+      ]
+     ],
+     "any": true
+    }
+   },
+   {
+    "old": [
+     [
+      "q/index.tfi",
+      "1",
+      1
+     ],
+     [
+      "q/archive0.tfa",
+      "1",
+      1
+     ],
+     [
+      "q/archive1.tfa",
+      "1",
+      1
+     ],
+     [
+      "q/loose.txt",
+      "1",
+      1
+     ]
+    ],
+    "new": [
+     {
+      "path": "q/index.tfi",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "q/archive0.tfa",
+      "sha1": "1",
+      "size": 1
+     },
+     {
+      "path": "q/loose.txt",
+      "sha1": "2",
+      "size": 1
+     }
+    ],
+    "plan": {
+     "changed_loose": [
+      "q/loose.txt"
+     ],
+     "removed_loose": [],
+     "dir_work": [
+      [
+       "q",
+       "q/index.tfi",
+       []
+      ]
+     ],
+     "new_map": [
+      [
+       "q/index.tfi",
+       "1",
+       1
+      ],
+      [
+       "q/archive0.tfa",
+       "1",
+       1
+      ],
+      [
+       "q/loose.txt",
+       "2",
+       1
+      ]
+     ],
+     "any": true
+    }
+   }
+  ],
+  "diff_logical": [
+   {
+    "old": [
+     [
+      "a",
+      1
+     ],
+     [
+      "b",
+      2
+     ],
+     [
+      "c",
+      3
+     ],
+     [
+      "n",
+      null
+     ]
+    ],
+    "new": [
+     [
+      "a",
+      1
+     ],
+     [
+      "b",
+      99
+     ],
+     [
+      "d",
+      4
+     ],
+     [
+      "n",
+      5
+     ]
+    ],
+    "out": {
+     "added": [
+      "d"
+     ],
+     "modified": [
+      "b",
+      "n"
+     ],
+     "removed": [
+      "c"
+     ]
+    }
+   }
+  ],
+  "archive_index_of": [
+   [
+    "ui/archive12.tfa",
+    12
+   ],
+   [
+    "ui/index.tfi",
+    null
+   ],
+   [
+    "archivearchive3.tfa",
+    3
+   ],
+   [
+    "x/archive\u0661\u0662.tfa",
+    12
+   ],
+   [
+    "archive.tfa",
+    null
+   ],
+   [
+    "a/archive5.tfa.bak",
+    null
+   ],
+   [
+    "archive007.tfa",
+    7
+   ],
+   [
+    "Archive1.tfa",
+    null
+   ]
+  ],
+  "status_messages": [
+   {
+    "status": 500,
+    "reason": "Internal Server Error",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Server error '500 Internal Server Error' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+   },
+   {
+    "status": 403,
+    "reason": "Forbidden",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Client error '403 Forbidden' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+   },
+   {
+    "status": 404,
+    "reason": "File not found",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Client error '404 File not found' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+   },
+   {
+    "status": 301,
+    "reason": "Moved Permanently",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": "http://x/y?z=1",
+    "message": "Redirect response '301 Moved Permanently' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nRedirect location: 'http://x/y?z=1'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/301"
+   },
+   {
+    "status": 302,
+    "reason": "Found",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Redirect response '302 Found' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302"
+   },
+   {
+    "status": 304,
+    "reason": "Not Modified",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": "/a",
+    "message": "Redirect response '304 Not Modified' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/304"
+   },
+   {
+    "status": 199,
+    "reason": "Odd",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Informational response '199 Odd' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/199"
+   },
+   {
+    "status": 600,
+    "reason": "Way Out",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Invalid status code '600 Way Out' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/600"
+   },
+   {
+    "status": 418,
+    "reason": "",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Client error '418 ' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/418"
+   },
+   {
+    "status": 503,
+    "reason": "Servie",
+    "url": "http://h/p//content/cp/recovery/a%20b.bin?sha1=x",
+    "location": null,
+    "message": "Server error '503 Servie' for url 'http://h/p//content/cp/recovery/a%20b.bin?sha1=x'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503"
+   }
+  ],
+  "text": [
+   {
+    "hex": "56317c6370",
+    "content_type": null,
+    "text": "V1|cp"
+   },
+   {
+    "hex": "fffe567c6370",
+    "content_type": "text/plain",
+    "text": "\ufffd\ufffdV|cp"
+   },
+   {
+    "hex": "e97c6370",
+    "content_type": "text/plain; charset=ISO-8859-1",
+    "text": "\u00e9|cp"
+   },
+   {
+    "hex": "c3a97c6370",
+    "content_type": "text/plain; charset=utf-8",
+    "text": "\u00e9|cp"
+   },
+   {
+    "hex": "618062",
+    "content_type": "text/plain; charset=us-ascii",
+    "text": "a\ufffdb"
+   },
+   {
+    "hex": "efbbbf567c6370",
+    "content_type": "text/plain",
+    "text": "\ufeffV|cp"
+   },
+   {
+    "hex": "e282",
+    "content_type": "text/plain; charset=\"UTF-8\"",
+    "text": "\ufffd"
+   }
+  ]
+ },
+ "ingest": [
+  {
+   "name": "lifecycle",
+   "branch": "live-us",
+   "steps": [
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "Trove_x64.exe",
+       "sha1": "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       "size": 6
+      },
+      {
+       "path": "Trove.cfg",
+       "sha1": "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       "size": 5
+      },
+      {
+       "path": "ui/index.tfi",
+       "sha1": "6b09758563039601a09d3694f18f5c6cbb9d6d2a",
+       "size": 50
+      },
+      {
+       "path": "ui/archive0.tfa",
+       "sha1": "02547efab817e70f20b43f336546012595a5a6f6",
+       "size": 27
+      },
+      {
+       "path": "ui/archive1.tfa",
+       "sha1": "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       "size": 15
+      },
+      {
+       "path": "audio/index.tfi",
+       "sha1": "e294d23211d4832c464d4de8d56b41c632916508",
+       "size": 31
+      },
+      {
+       "path": "audio/archive0.tfa",
+       "sha1": "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       "size": 298
+      },
+      {
+       "path": "audio/archive2.tfa",
+       "sha1": "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "Trove_x64.exe": "6578652d7631",
+      "Trove.cfg": "5b6366675d",
+      "ui/index.tfi": "06612e62696e0000000dbdffa6c40706622e62696e00000d0dcccbf9c00f0b646565705c632e62696e0001000795fbec8c02",
+      "ui/archive0.tfa": "789c4bcc29c848d44dcecf2b49cd2b492a4a2ccb8771008b0e0a71",
+      "ui/archive1.tfa": "789c4bce482ccac94c05000b5402d9",
+      "audio/index.tfi": "06732e77656d0000008012c58f92da0706742e77656d00020002a3c38f8c0f",
+      "audio/archive0.tfa": "789c6360646266616563e7e0e4e2e6e1e5e3171014121611151397909492969195935750545256515553d7d0d4d2d6d1d5d33730343236313533b7b0b4b2b6b1b5b37770747276717573f7f0f4f2f6f1f5f30f080c0a0e090d0b8f888c8a8e898d8b4f484c4a4e494d4bcfc8cccacec9cdcb2f282c2a2e292d2bafa8acaaaea9adab6f686c6a6e696d6befe8eceaeee9edeb9f3071d2e42953a74d9f3173d6ec3973e7cd5fb070d1e2254b972d5fb172d5ea356bd7addfb071d3e62d5bb76ddfb173d7ee3d7bf7ed3f70f0d0e123478f1d3f71f2d4e93367cf9dbf70f1d2e52b57af5dbf71f3d6ed3b77efdd7ff0f0d1e3274f9f3d7ff1f2d5eb376fdfbdfff0f1d3e72f5fbf7dfff1f3d7ef3f7ffffd6718f5ffa8ff47fd3feaff51ff8ffa7fd4ff23ceff002b017bbd",
+      "audio/archive2.tfa": "789c2b290100015e00e9"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V1",
+      "changed": true,
+      "ordinal": 1,
+      "added": 7,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 2350
+     },
+     "manifest": [
+      [
+       "Trove.cfg",
+       "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       5
+      ],
+      [
+       "Trove_x64.exe",
+       "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       6
+      ],
+      [
+       "audio/archive0.tfa",
+       "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       298
+      ],
+      [
+       "audio/archive2.tfa",
+       "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       10
+      ],
+      [
+       "audio/index.tfi",
+       "e294d23211d4832c464d4de8d56b41c632916508",
+       31
+      ],
+      [
+       "ui/archive0.tfa",
+       "02547efab817e70f20b43f336546012595a5a6f6",
+       27
+      ],
+      [
+       "ui/archive1.tfa",
+       "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       15
+      ],
+      [
+       "ui/index.tfi",
+       "6b09758563039601a09d3694f18f5c6cbb9d6d2a",
+       50
+      ]
+     ],
+     "state": [
+      [
+       "Trove.cfg",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5,
+       null,
+       null,
+       1
+      ],
+      [
+       "Trove_x64.exe",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6,
+       null,
+       null,
+       1
+      ],
+      [
+       "audio/s.wem",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304,
+       "audio",
+       0,
+       1
+      ],
+      [
+       "audio/t.wem",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2,
+       "audio",
+       2,
+       1
+      ],
+      [
+       "ui/a.bin",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13,
+       "ui",
+       0,
+       1
+      ],
+      [
+       "ui/b.bin",
+       "4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       4162741708,
+       13,
+       "ui",
+       0,
+       1
+      ],
+      [
+       "ui/deep/c.bin",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7,
+       "ui",
+       1,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "Trove.cfg",
+       "added",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5
+      ],
+      [
+       1,
+       "Trove_x64.exe",
+       "added",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6
+      ],
+      [
+       1,
+       "audio/s.wem",
+       "added",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304
+      ],
+      [
+       1,
+       "audio/t.wem",
+       "added",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2
+      ],
+      [
+       1,
+       "ui/a.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13
+      ],
+      [
+       1,
+       "ui/b.bin",
+       "added",
+       "4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       4162741708,
+       13
+      ],
+      [
+       1,
+       "ui/deep/c.bin",
+       "added",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 7,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2350
+      }
+     ],
+     "branch": {
+      "current_version": "M-V1",
+      "current_ordinal": 1,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/0e/0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       2
+      ],
+      [
+       "objects/3b/3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       13
+      ],
+      [
+       "objects/4c/4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       13
+      ],
+      [
+       "objects/74/74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       5
+      ],
+      [
+       "objects/a8/a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2304
+      ],
+      [
+       "objects/b9/b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       7
+      ],
+      [
+       "objects/b9/b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       6
+      ]
+     ]
+    },
+    {
+     "version": "V2",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "Trove_x64.exe",
+       "sha1": "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       "size": 6
+      },
+      {
+       "path": "Trove.cfg",
+       "sha1": "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       "size": 5
+      },
+      {
+       "path": "ui/index.tfi",
+       "sha1": "57e213d5d179b32270e66e6009018cd7f335e49c",
+       "size": 50
+      },
+      {
+       "path": "ui/archive0.tfa",
+       "sha1": "92a537e4d631c97d5474dd5914d0feb929d4c802",
+       "size": 35
+      },
+      {
+       "path": "ui/archive1.tfa",
+       "sha1": "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       "size": 15
+      },
+      {
+       "path": "audio/index.tfi",
+       "sha1": "e294d23211d4832c464d4de8d56b41c632916508",
+       "size": 31
+      },
+      {
+       "path": "audio/archive0.tfa",
+       "sha1": "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       "size": 298
+      },
+      {
+       "path": "audio/archive2.tfa",
+       "sha1": "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "Trove_x64.exe": "6578652d7631",
+      "Trove.cfg": "5b6366675d",
+      "ui/index.tfi": "06612e62696e0000000dbdffa6c40706622e62696e00000d0ee4c683a2030b646565705c632e62696e0001000795fbec8c02",
+      "ui/archive0.tfa": "789c4bcc29c848d44dcecf2b49cd2b710a720cf3d775f670f473777551040088f008e1",
+      "ui/archive1.tfa": "789c4bce482ccac94c05000b5402d9",
+      "audio/index.tfi": "06732e77656d0000008012c58f92da0706742e77656d00020002a3c38f8c0f",
+      "audio/archive0.tfa": "789c6360646266616563e7e0e4e2e6e1e5e3171014121611151397909492969195935750545256515553d7d0d4d2d6d1d5d33730343236313533b7b0b4b2b6b1b5b37770747276717573f7f0f4f2f6f1f5f30f080c0a0e090d0b8f888c8a8e898d8b4f484c4a4e494d4bcfc8cccacec9cdcb2f282c2a2e292d2bafa8acaaaea9adab6f686c6a6e696d6befe8eceaeee9edeb9f3071d2e42953a74d9f3173d6ec3973e7cd5fb070d1e2254b972d5fb172d5ea356bd7addfb071d3e62d5bb76ddfb173d7ee3d7bf7ed3f70f0d0e123478f1d3f71f2d4e93367cf9dbf70f1d2e52b57af5dbf71f3d6ed3b77efdd7ff0f0d1e3274f9f3d7ff1f2d5eb376fdfbdfff0f1d3e72f5fbf7dfff1f3d7ef3f7ffffd6718f5ffa8ff47fd3feaff51ff8ffa7fd4ff23ceff002b017bbd",
+      "audio/archive2.tfa": "789c2b290100015e00e9"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V2",
+      "changed": true,
+      "ordinal": 2,
+      "added": 0,
+      "modified": 1,
+      "removed": 0,
+      "bytes_added": 14
+     },
+     "manifest": [
+      [
+       "Trove.cfg",
+       "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       5
+      ],
+      [
+       "Trove_x64.exe",
+       "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       6
+      ],
+      [
+       "audio/archive0.tfa",
+       "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       298
+      ],
+      [
+       "audio/archive2.tfa",
+       "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       10
+      ],
+      [
+       "audio/index.tfi",
+       "e294d23211d4832c464d4de8d56b41c632916508",
+       31
+      ],
+      [
+       "ui/archive0.tfa",
+       "92a537e4d631c97d5474dd5914d0feb929d4c802",
+       35
+      ],
+      [
+       "ui/archive1.tfa",
+       "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       15
+      ],
+      [
+       "ui/index.tfi",
+       "57e213d5d179b32270e66e6009018cd7f335e49c",
+       50
+      ]
+     ],
+     "state": [
+      [
+       "Trove.cfg",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5,
+       null,
+       null,
+       1
+      ],
+      [
+       "Trove_x64.exe",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6,
+       null,
+       null,
+       1
+      ],
+      [
+       "audio/s.wem",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304,
+       "audio",
+       0,
+       1
+      ],
+      [
+       "audio/t.wem",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2,
+       "audio",
+       2,
+       1
+      ],
+      [
+       "ui/a.bin",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13,
+       "ui",
+       0,
+       1
+      ],
+      [
+       "ui/b.bin",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14,
+       "ui",
+       0,
+       2
+      ],
+      [
+       "ui/deep/c.bin",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7,
+       "ui",
+       1,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "Trove.cfg",
+       "added",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5
+      ],
+      [
+       1,
+       "Trove_x64.exe",
+       "added",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6
+      ],
+      [
+       1,
+       "audio/s.wem",
+       "added",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304
+      ],
+      [
+       1,
+       "audio/t.wem",
+       "added",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2
+      ],
+      [
+       1,
+       "ui/a.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13
+      ],
+      [
+       1,
+       "ui/b.bin",
+       "added",
+       "4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       4162741708,
+       13
+      ],
+      [
+       1,
+       "ui/deep/c.bin",
+       "added",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7
+      ],
+      [
+       2,
+       "ui/b.bin",
+       "modified",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 7,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2350
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "bytes_added": 14
+      }
+     ],
+     "branch": {
+      "current_version": "M-V2",
+      "current_ordinal": 2,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/0e/0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       2
+      ],
+      [
+       "objects/3b/3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       13
+      ],
+      [
+       "objects/4c/4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       13
+      ],
+      [
+       "objects/74/74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       5
+      ],
+      [
+       "objects/8f/8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       14
+      ],
+      [
+       "objects/a8/a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2304
+      ],
+      [
+       "objects/b9/b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       7
+      ],
+      [
+       "objects/b9/b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       6
+      ]
+     ]
+    },
+    {
+     "version": "V2",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "Trove_x64.exe",
+       "sha1": "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       "size": 6
+      },
+      {
+       "path": "Trove.cfg",
+       "sha1": "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       "size": 5
+      },
+      {
+       "path": "ui/index.tfi",
+       "sha1": "57e213d5d179b32270e66e6009018cd7f335e49c",
+       "size": 50
+      },
+      {
+       "path": "ui/archive0.tfa",
+       "sha1": "92a537e4d631c97d5474dd5914d0feb929d4c802",
+       "size": 35
+      },
+      {
+       "path": "ui/archive1.tfa",
+       "sha1": "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       "size": 15
+      },
+      {
+       "path": "audio/index.tfi",
+       "sha1": "e294d23211d4832c464d4de8d56b41c632916508",
+       "size": 31
+      },
+      {
+       "path": "audio/archive0.tfa",
+       "sha1": "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       "size": 298
+      },
+      {
+       "path": "audio/archive2.tfa",
+       "sha1": "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "Trove_x64.exe": "6578652d7631",
+      "Trove.cfg": "5b6366675d",
+      "ui/index.tfi": "06612e62696e0000000dbdffa6c40706622e62696e00000d0ee4c683a2030b646565705c632e62696e0001000795fbec8c02",
+      "ui/archive0.tfa": "789c4bcc29c848d44dcecf2b49cd2b710a720cf3d775f670f473777551040088f008e1",
+      "ui/archive1.tfa": "789c4bce482ccac94c05000b5402d9",
+      "audio/index.tfi": "06732e77656d0000008012c58f92da0706742e77656d00020002a3c38f8c0f",
+      "audio/archive0.tfa": "789c6360646266616563e7e0e4e2e6e1e5e3171014121611151397909492969195935750545256515553d7d0d4d2d6d1d5d33730343236313533b7b0b4b2b6b1b5b37770747276717573f7f0f4f2f6f1f5f30f080c0a0e090d0b8f888c8a8e898d8b4f484c4a4e494d4bcfc8cccacec9cdcb2f282c2a2e292d2bafa8acaaaea9adab6f686c6a6e696d6befe8eceaeee9edeb9f3071d2e42953a74d9f3173d6ec3973e7cd5fb070d1e2254b972d5fb172d5ea356bd7addfb071d3e62d5bb76ddfb173d7ee3d7bf7ed3f70f0d0e123478f1d3f71f2d4e93367cf9dbf70f1d2e52b57af5dbf71f3d6ed3b77efdd7ff0f0d1e3274f9f3d7ff1f2d5eb376fdfbdfff0f1d3e72f5fbf7dfff1f3d7ef3f7ffffd6718f5ffa8ff47fd3feaff51ff8ffa7fd4ff23ceff002b017bbd",
+      "audio/archive2.tfa": "789c2b290100015e00e9"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V2",
+      "changed": false,
+      "added": 0,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 0
+     },
+     "manifest": [
+      [
+       "Trove.cfg",
+       "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       5
+      ],
+      [
+       "Trove_x64.exe",
+       "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       6
+      ],
+      [
+       "audio/archive0.tfa",
+       "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       298
+      ],
+      [
+       "audio/archive2.tfa",
+       "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       10
+      ],
+      [
+       "audio/index.tfi",
+       "e294d23211d4832c464d4de8d56b41c632916508",
+       31
+      ],
+      [
+       "ui/archive0.tfa",
+       "92a537e4d631c97d5474dd5914d0feb929d4c802",
+       35
+      ],
+      [
+       "ui/archive1.tfa",
+       "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       15
+      ],
+      [
+       "ui/index.tfi",
+       "57e213d5d179b32270e66e6009018cd7f335e49c",
+       50
+      ]
+     ],
+     "state": [
+      [
+       "Trove.cfg",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5,
+       null,
+       null,
+       1
+      ],
+      [
+       "Trove_x64.exe",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6,
+       null,
+       null,
+       1
+      ],
+      [
+       "audio/s.wem",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304,
+       "audio",
+       0,
+       1
+      ],
+      [
+       "audio/t.wem",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2,
+       "audio",
+       2,
+       1
+      ],
+      [
+       "ui/a.bin",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13,
+       "ui",
+       0,
+       1
+      ],
+      [
+       "ui/b.bin",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14,
+       "ui",
+       0,
+       2
+      ],
+      [
+       "ui/deep/c.bin",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7,
+       "ui",
+       1,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "Trove.cfg",
+       "added",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5
+      ],
+      [
+       1,
+       "Trove_x64.exe",
+       "added",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6
+      ],
+      [
+       1,
+       "audio/s.wem",
+       "added",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304
+      ],
+      [
+       1,
+       "audio/t.wem",
+       "added",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2
+      ],
+      [
+       1,
+       "ui/a.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13
+      ],
+      [
+       1,
+       "ui/b.bin",
+       "added",
+       "4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       4162741708,
+       13
+      ],
+      [
+       1,
+       "ui/deep/c.bin",
+       "added",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7
+      ],
+      [
+       2,
+       "ui/b.bin",
+       "modified",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 7,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2350
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "bytes_added": 14
+      }
+     ],
+     "branch": {
+      "current_version": "M-V2",
+      "current_ordinal": 2,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/0e/0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       2
+      ],
+      [
+       "objects/3b/3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       13
+      ],
+      [
+       "objects/4c/4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       13
+      ],
+      [
+       "objects/74/74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       5
+      ],
+      [
+       "objects/8f/8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       14
+      ],
+      [
+       "objects/a8/a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2304
+      ],
+      [
+       "objects/b9/b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       7
+      ],
+      [
+       "objects/b9/b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       6
+      ]
+     ]
+    },
+    {
+     "version": "V3",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "Trove_x64.exe",
+       "sha1": "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       "size": 6
+      },
+      {
+       "path": "Trove.cfg",
+       "sha1": "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       "size": 5
+      },
+      {
+       "path": "ui/index.tfi",
+       "sha1": "19a02c4c9845df4cf933f11b9ff99d37a562cecb",
+       "size": 35
+      },
+      {
+       "path": "ui/archive0.tfa",
+       "sha1": "a275441df4b23b7ddcfff341136aa9d5bb745231",
+       "size": 22
+      },
+      {
+       "path": "ui/archive1.tfa",
+       "sha1": "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       "size": 15
+      },
+      {
+       "path": "audio/index.tfi",
+       "sha1": "e294d23211d4832c464d4de8d56b41c632916508",
+       "size": 31
+      },
+      {
+       "path": "audio/archive0.tfa",
+       "sha1": "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       "size": 298
+      },
+      {
+       "path": "audio/archive2.tfa",
+       "sha1": "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "Trove_x64.exe": "6578652d7631",
+      "Trove.cfg": "5b6366675d",
+      "ui/index.tfi": "06622e62696e0000000ee4c683a2030b646565705c632e62696e0001000795fbec8c02",
+      "ui/archive0.tfa": "789c730a720cf3d775f670f47377755104001ced03b3",
+      "ui/archive1.tfa": "789c4bce482ccac94c05000b5402d9",
+      "audio/index.tfi": "06732e77656d0000008012c58f92da0706742e77656d00020002a3c38f8c0f",
+      "audio/archive0.tfa": "789c6360646266616563e7e0e4e2e6e1e5e3171014121611151397909492969195935750545256515553d7d0d4d2d6d1d5d33730343236313533b7b0b4b2b6b1b5b37770747276717573f7f0f4f2f6f1f5f30f080c0a0e090d0b8f888c8a8e898d8b4f484c4a4e494d4bcfc8cccacec9cdcb2f282c2a2e292d2bafa8acaaaea9adab6f686c6a6e696d6befe8eceaeee9edeb9f3071d2e42953a74d9f3173d6ec3973e7cd5fb070d1e2254b972d5fb172d5ea356bd7addfb071d3e62d5bb76ddfb173d7ee3d7bf7ed3f70f0d0e123478f1d3f71f2d4e93367cf9dbf70f1d2e52b57af5dbf71f3d6ed3b77efdd7ff0f0d1e3274f9f3d7ff1f2d5eb376fdfbdfff0f1d3e72f5fbf7dfff1f3d7ef3f7ffffd6718f5ffa8ff47fd3feaff51ff8ffa7fd4ff23ceff002b017bbd",
+      "audio/archive2.tfa": "789c2b290100015e00e9"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V3",
+      "changed": true,
+      "ordinal": 3,
+      "added": 0,
+      "modified": 0,
+      "removed": 1,
+      "bytes_added": 0
+     },
+     "manifest": [
+      [
+       "Trove.cfg",
+       "06b1839bf8b5e28b587b36c229501ffce6ea4ca0",
+       5
+      ],
+      [
+       "Trove_x64.exe",
+       "35043d5acd8f78b25f4829c8876aa57c4eb80710",
+       6
+      ],
+      [
+       "audio/archive0.tfa",
+       "499d6168babc0f878c4127fdf032a8a40108ffc8",
+       298
+      ],
+      [
+       "audio/archive2.tfa",
+       "bfe47f0ac5db5681c5ea348d3742b4a3a49b17c1",
+       10
+      ],
+      [
+       "audio/index.tfi",
+       "e294d23211d4832c464d4de8d56b41c632916508",
+       31
+      ],
+      [
+       "ui/archive0.tfa",
+       "a275441df4b23b7ddcfff341136aa9d5bb745231",
+       22
+      ],
+      [
+       "ui/archive1.tfa",
+       "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       15
+      ],
+      [
+       "ui/index.tfi",
+       "19a02c4c9845df4cf933f11b9ff99d37a562cecb",
+       35
+      ]
+     ],
+     "state": [
+      [
+       "Trove.cfg",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5,
+       null,
+       null,
+       1
+      ],
+      [
+       "Trove_x64.exe",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6,
+       null,
+       null,
+       1
+      ],
+      [
+       "audio/s.wem",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304,
+       "audio",
+       0,
+       1
+      ],
+      [
+       "audio/t.wem",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2,
+       "audio",
+       2,
+       1
+      ],
+      [
+       "ui/b.bin",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14,
+       "ui",
+       0,
+       2
+      ],
+      [
+       "ui/deep/c.bin",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7,
+       "ui",
+       1,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "Trove.cfg",
+       "added",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5
+      ],
+      [
+       1,
+       "Trove_x64.exe",
+       "added",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6
+      ],
+      [
+       1,
+       "audio/s.wem",
+       "added",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304
+      ],
+      [
+       1,
+       "audio/t.wem",
+       "added",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2
+      ],
+      [
+       1,
+       "ui/a.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13
+      ],
+      [
+       1,
+       "ui/b.bin",
+       "added",
+       "4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       4162741708,
+       13
+      ],
+      [
+       1,
+       "ui/deep/c.bin",
+       "added",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7
+      ],
+      [
+       2,
+       "ui/b.bin",
+       "modified",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14
+      ],
+      [
+       3,
+       "ui/a.bin",
+       "removed",
+       null,
+       null,
+       0
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 7,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2350
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "bytes_added": 14
+      },
+      {
+       "ordinal": 3,
+       "version_tag": "M-V3",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V3",
+       "added": 0,
+       "modified": 0,
+       "removed": 1,
+       "bytes_added": 0
+      }
+     ],
+     "branch": {
+      "current_version": "M-V3",
+      "current_ordinal": 3,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/0e/0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       2
+      ],
+      [
+       "objects/3b/3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       13
+      ],
+      [
+       "objects/4c/4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       13
+      ],
+      [
+       "objects/74/74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       5
+      ],
+      [
+       "objects/8f/8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       14
+      ],
+      [
+       "objects/a8/a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2304
+      ],
+      [
+       "objects/b9/b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       7
+      ],
+      [
+       "objects/b9/b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       6
+      ]
+     ]
+    },
+    {
+     "version": "V4",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "Trove_x64.exe",
+       "sha1": "bcf586b8e27bd09a06a86ed6cd75c7bfb277fa1a",
+       "size": 6
+      },
+      {
+       "path": "ui/index.tfi",
+       "sha1": "19a02c4c9845df4cf933f11b9ff99d37a562cecb",
+       "size": 35
+      },
+      {
+       "path": "ui/archive0.tfa",
+       "sha1": "a275441df4b23b7ddcfff341136aa9d5bb745231",
+       "size": 22
+      },
+      {
+       "path": "ui/archive1.tfa",
+       "sha1": "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       "size": 15
+      }
+     ],
+     "cdn_files": {
+      "Trove_x64.exe": "6578652d7632",
+      "ui/index.tfi": "06622e62696e0000000ee4c683a2030b646565705c632e62696e0001000795fbec8c02",
+      "ui/archive0.tfa": "789c730a720cf3d775f670f47377755104001ced03b3",
+      "ui/archive1.tfa": "789c4bce482ccac94c05000b5402d9"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V4",
+      "changed": true,
+      "ordinal": 4,
+      "added": 0,
+      "modified": 1,
+      "removed": 3,
+      "bytes_added": 6
+     },
+     "manifest": [
+      [
+       "Trove_x64.exe",
+       "bcf586b8e27bd09a06a86ed6cd75c7bfb277fa1a",
+       6
+      ],
+      [
+       "ui/archive0.tfa",
+       "a275441df4b23b7ddcfff341136aa9d5bb745231",
+       22
+      ],
+      [
+       "ui/archive1.tfa",
+       "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       15
+      ],
+      [
+       "ui/index.tfi",
+       "19a02c4c9845df4cf933f11b9ff99d37a562cecb",
+       35
+      ]
+     ],
+     "state": [
+      [
+       "Trove_x64.exe",
+       "28a269dc7d77a89597f5a4a22721b77a43ff1248becc87b145b08c6585db5537",
+       null,
+       6,
+       null,
+       null,
+       4
+      ],
+      [
+       "ui/b.bin",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14,
+       "ui",
+       0,
+       2
+      ],
+      [
+       "ui/deep/c.bin",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7,
+       "ui",
+       1,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "Trove.cfg",
+       "added",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5
+      ],
+      [
+       1,
+       "Trove_x64.exe",
+       "added",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6
+      ],
+      [
+       1,
+       "audio/s.wem",
+       "added",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304
+      ],
+      [
+       1,
+       "audio/t.wem",
+       "added",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2
+      ],
+      [
+       1,
+       "ui/a.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13
+      ],
+      [
+       1,
+       "ui/b.bin",
+       "added",
+       "4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       4162741708,
+       13
+      ],
+      [
+       1,
+       "ui/deep/c.bin",
+       "added",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7
+      ],
+      [
+       2,
+       "ui/b.bin",
+       "modified",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14
+      ],
+      [
+       3,
+       "ui/a.bin",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       4,
+       "Trove.cfg",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       4,
+       "Trove_x64.exe",
+       "modified",
+       "28a269dc7d77a89597f5a4a22721b77a43ff1248becc87b145b08c6585db5537",
+       null,
+       6
+      ],
+      [
+       4,
+       "audio/s.wem",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       4,
+       "audio/t.wem",
+       "removed",
+       null,
+       null,
+       0
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 7,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2350
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "bytes_added": 14
+      },
+      {
+       "ordinal": 3,
+       "version_tag": "M-V3",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V3",
+       "added": 0,
+       "modified": 0,
+       "removed": 1,
+       "bytes_added": 0
+      },
+      {
+       "ordinal": 4,
+       "version_tag": "M-V4",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V4",
+       "added": 0,
+       "modified": 1,
+       "removed": 3,
+       "bytes_added": 6
+      }
+     ],
+     "branch": {
+      "current_version": "M-V4",
+      "current_ordinal": 4,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/0e/0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       2
+      ],
+      [
+       "objects/28/28a269dc7d77a89597f5a4a22721b77a43ff1248becc87b145b08c6585db5537",
+       6
+      ],
+      [
+       "objects/3b/3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       13
+      ],
+      [
+       "objects/4c/4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       13
+      ],
+      [
+       "objects/74/74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       5
+      ],
+      [
+       "objects/8f/8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       14
+      ],
+      [
+       "objects/a8/a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2304
+      ],
+      [
+       "objects/b9/b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       7
+      ],
+      [
+       "objects/b9/b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       6
+      ]
+     ]
+    },
+    {
+     "version": "V5",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "Trove_x64.exe",
+       "sha1": "bcf586b8e27bd09a06a86ed6cd75c7bfb277fa1a",
+       "size": 6
+      },
+      {
+       "path": "dup.bin",
+       "sha1": "0353d4de5ab1a3888c645453257a94c6d650e3d2",
+       "size": 13
+      },
+      {
+       "path": "ui/index.tfi",
+       "sha1": "23fe87a6fb48d958d50b3fd5e085f3ba41e656ea",
+       "size": 64
+      },
+      {
+       "path": "ui/archive0.tfa",
+       "sha1": "a275441df4b23b7ddcfff341136aa9d5bb745231",
+       "size": 22
+      },
+      {
+       "path": "ui/archive1.tfa",
+       "sha1": "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       "size": 15
+      },
+      {
+       "path": "ui/archive3.tfa",
+       "sha1": "aa571f356be245b28fcc9e5b268a33ec42fd8a51",
+       "size": 25
+      },
+      {
+       "path": "index.tfi",
+       "sha1": "85681f0fb32f35691215c72f2c79c25ee916e047",
+       "size": 15
+      },
+      {
+       "path": "archive0.tfa",
+       "sha1": "d4ff3743e7129f1978a2c62eef48d409cc9970c2",
+       "size": 9
+      }
+     ],
+     "cdn_files": {
+      "Trove_x64.exe": "6578652d7632",
+      "dup.bin": "616c7068612d636f6e74656e74",
+      "ui/index.tfi": "06622e62696e0000000ee4c683a2030b646565705c632e62696e0001000795fbec8c0206652e62696e00030004e0abb31106662e62696e0003040dbdffa6c407",
+      "ui/archive0.tfa": "789c730a720cf3d775f670f47377755104001ced03b3",
+      "ui/archive1.tfa": "789c4bce482ccac94c05000b5402d9",
+      "ui/archive3.tfa": "789c4b4dcec84fcc29c848d44dcecf2b49cd2b01003c9206ce",
+      "index.tfi": "06726f6f746600000001958eb1b80f",
+      "archive0.tfa": "789c2b020000730073"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V5",
+      "changed": true,
+      "ordinal": 5,
+      "added": 4,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 5
+     },
+     "manifest": [
+      [
+       "Trove_x64.exe",
+       "bcf586b8e27bd09a06a86ed6cd75c7bfb277fa1a",
+       6
+      ],
+      [
+       "archive0.tfa",
+       "d4ff3743e7129f1978a2c62eef48d409cc9970c2",
+       9
+      ],
+      [
+       "dup.bin",
+       "0353d4de5ab1a3888c645453257a94c6d650e3d2",
+       13
+      ],
+      [
+       "index.tfi",
+       "85681f0fb32f35691215c72f2c79c25ee916e047",
+       15
+      ],
+      [
+       "ui/archive0.tfa",
+       "a275441df4b23b7ddcfff341136aa9d5bb745231",
+       22
+      ],
+      [
+       "ui/archive1.tfa",
+       "44e0f8d63b9d600a5f60f45cbef8adcc31a96d23",
+       15
+      ],
+      [
+       "ui/archive3.tfa",
+       "aa571f356be245b28fcc9e5b268a33ec42fd8a51",
+       25
+      ],
+      [
+       "ui/index.tfi",
+       "23fe87a6fb48d958d50b3fd5e085f3ba41e656ea",
+       64
+      ]
+     ],
+     "state": [
+      [
+       "Trove_x64.exe",
+       "28a269dc7d77a89597f5a4a22721b77a43ff1248becc87b145b08c6585db5537",
+       null,
+       6,
+       null,
+       null,
+       4
+      ],
+      [
+       "dup.bin",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       null,
+       13,
+       null,
+       null,
+       5
+      ],
+      [
+       "rootf",
+       "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       4144776981,
+       1,
+       "",
+       0,
+       5
+      ],
+      [
+       "ui/b.bin",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14,
+       "ui",
+       0,
+       2
+      ],
+      [
+       "ui/deep/c.bin",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7,
+       "ui",
+       1,
+       1
+      ],
+      [
+       "ui/e.bin",
+       "092c79e8f80e559e404bcf660c48f3522b67aba9ff1484b0367e1a4ddef7431d",
+       36492768,
+       4,
+       "ui",
+       3,
+       5
+      ],
+      [
+       "ui/f.bin",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13,
+       "ui",
+       3,
+       5
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "Trove.cfg",
+       "added",
+       "74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       null,
+       5
+      ],
+      [
+       1,
+       "Trove_x64.exe",
+       "added",
+       "b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       null,
+       6
+      ],
+      [
+       1,
+       "audio/s.wem",
+       "added",
+       "a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2068088773,
+       2304
+      ],
+      [
+       1,
+       "audio/t.wem",
+       "added",
+       "0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       4051952035,
+       2
+      ],
+      [
+       1,
+       "ui/a.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13
+      ],
+      [
+       1,
+       "ui/b.bin",
+       "added",
+       "4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       4162741708,
+       13
+      ],
+      [
+       1,
+       "ui/deep/c.bin",
+       "added",
+       "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       563821973,
+       7
+      ],
+      [
+       2,
+       "ui/b.bin",
+       "modified",
+       "8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       876667748,
+       14
+      ],
+      [
+       3,
+       "ui/a.bin",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       4,
+       "Trove.cfg",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       4,
+       "Trove_x64.exe",
+       "modified",
+       "28a269dc7d77a89597f5a4a22721b77a43ff1248becc87b145b08c6585db5537",
+       null,
+       6
+      ],
+      [
+       4,
+       "audio/s.wem",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       4,
+       "audio/t.wem",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       5,
+       "dup.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       null,
+       13
+      ],
+      [
+       5,
+       "rootf",
+       "added",
+       "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       4144776981,
+       1
+      ],
+      [
+       5,
+       "ui/e.bin",
+       "added",
+       "092c79e8f80e559e404bcf660c48f3522b67aba9ff1484b0367e1a4ddef7431d",
+       36492768,
+       4
+      ],
+      [
+       5,
+       "ui/f.bin",
+       "added",
+       "3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       2022293437,
+       13
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 7,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2350
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "bytes_added": 14
+      },
+      {
+       "ordinal": 3,
+       "version_tag": "M-V3",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V3",
+       "added": 0,
+       "modified": 0,
+       "removed": 1,
+       "bytes_added": 0
+      },
+      {
+       "ordinal": 4,
+       "version_tag": "M-V4",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V4",
+       "added": 0,
+       "modified": 1,
+       "removed": 3,
+       "bytes_added": 6
+      },
+      {
+       "ordinal": 5,
+       "version_tag": "M-V5",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V5",
+       "added": 4,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 5
+      }
+     ],
+     "branch": {
+      "current_version": "M-V5",
+      "current_ordinal": 5,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/09/092c79e8f80e559e404bcf660c48f3522b67aba9ff1484b0367e1a4ddef7431d",
+       4
+      ],
+      [
+       "objects/0e/0e07cf830957701d43c183f1515f63e6b68027e528f43ef52b1527a520ddec82",
+       2
+      ],
+      [
+       "objects/28/28a269dc7d77a89597f5a4a22721b77a43ff1248becc87b145b08c6585db5537",
+       6
+      ],
+      [
+       "objects/3b/3b867bbfe4d276005ffae3db17950428a12f1f61dd8ea55cd1eed11ea02b85a2",
+       13
+      ],
+      [
+       "objects/45/454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       1
+      ],
+      [
+       "objects/4c/4ccef80bbcab636629d6e91eeb670bb3dc5586d3d841b1729ef7db745d667804",
+       13
+      ],
+      [
+       "objects/74/74e41c0db8e93934444565e68f76f2deda9d5aa636b5cd85b8d79f10e52b3c7e",
+       5
+      ],
+      [
+       "objects/8f/8f5849a00cd5d19f43472300ce75bb01812bea3b943addba9d8903636e18f2f3",
+       14
+      ],
+      [
+       "objects/a8/a8b2beedb2cb53792d92eb492452bf399e8ba7fa5659c1c916b0ec7410e06cc5",
+       2304
+      ],
+      [
+       "objects/b9/b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c",
+       7
+      ],
+      [
+       "objects/b9/b9ef0d8f5d2bc193dd5d1de0ba58eb27404211e95b45d640148963309289260b",
+       6
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "loose",
+   "branch": "pts",
+   "steps": [
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "keep.dll",
+       "sha1": "13fbd79c3d390e5d6585a21e11ff5ec1970cff0c",
+       "size": 1
+      },
+      {
+       "path": "drop.dll",
+       "sha1": "3c363836cf4e16666669a25da280a1865c2d2874",
+       "size": 1
+      },
+      {
+       "path": "x/y z.txt",
+       "sha1": "e8c5e5be4d4926e3acc74ed8dd3beb18fa6b1593",
+       "size": 2
+      }
+     ],
+     "cdn_files": {
+      "keep.dll": "6b",
+      "drop.dll": "64",
+      "x/y z.txt": "7370"
+     },
+     "summary": {
+      "branch": "pts",
+      "version": "M-V1",
+      "changed": true,
+      "ordinal": 1,
+      "added": 3,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 4
+     },
+     "manifest": [
+      [
+       "drop.dll",
+       "3c363836cf4e16666669a25da280a1865c2d2874",
+       1
+      ],
+      [
+       "keep.dll",
+       "13fbd79c3d390e5d6585a21e11ff5ec1970cff0c",
+       1
+      ],
+      [
+       "x/y z.txt",
+       "e8c5e5be4d4926e3acc74ed8dd3beb18fa6b1593",
+       2
+      ]
+     ],
+     "state": [
+      [
+       "drop.dll",
+       "18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
+       null,
+       1,
+       null,
+       null,
+       1
+      ],
+      [
+       "keep.dll",
+       "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+       null,
+       1,
+       null,
+       null,
+       1
+      ],
+      [
+       "x/y z.txt",
+       "be18b85f77fc024db379acf19e8a1ce62307ab7bb1bca395389ecfc2dafaf741",
+       null,
+       2,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "drop.dll",
+       "added",
+       "18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
+       null,
+       1
+      ],
+      [
+       1,
+       "keep.dll",
+       "added",
+       "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+       null,
+       1
+      ],
+      [
+       1,
+       "x/y z.txt",
+       "added",
+       "be18b85f77fc024db379acf19e8a1ce62307ab7bb1bca395389ecfc2dafaf741",
+       null,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-pts",
+       "motd": "m-V1",
+       "added": 3,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 4
+      }
+     ],
+     "branch": {
+      "current_version": "M-V1",
+      "current_ordinal": 1,
+      "content_path": "cp-pts"
+     },
+     "cas": [
+      [
+       "objects/18/18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
+       1
+      ],
+      [
+       "objects/82/8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+       1
+      ],
+      [
+       "objects/be/be18b85f77fc024db379acf19e8a1ce62307ab7bb1bca395389ecfc2dafaf741",
+       2
+      ]
+     ]
+    },
+    {
+     "version": "V2",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "keep.dll",
+       "sha1": "bfeb734d2eb5d0915145c1861248757d4fd32bc2",
+       "size": 2
+      },
+      {
+       "path": "x/y z.txt",
+       "sha1": "e8c5e5be4d4926e3acc74ed8dd3beb18fa6b1593",
+       "size": 2
+      }
+     ],
+     "cdn_files": {
+      "keep.dll": "6b32",
+      "x/y z.txt": "7370"
+     },
+     "summary": {
+      "branch": "pts",
+      "version": "M-V2",
+      "changed": true,
+      "ordinal": 2,
+      "added": 0,
+      "modified": 1,
+      "removed": 1,
+      "bytes_added": 2
+     },
+     "manifest": [
+      [
+       "keep.dll",
+       "bfeb734d2eb5d0915145c1861248757d4fd32bc2",
+       2
+      ],
+      [
+       "x/y z.txt",
+       "e8c5e5be4d4926e3acc74ed8dd3beb18fa6b1593",
+       2
+      ]
+     ],
+     "state": [
+      [
+       "keep.dll",
+       "015f7e6bc5aeaf483724089e9252cc13b50951a6b69412522765cff4d780306e",
+       null,
+       2,
+       null,
+       null,
+       2
+      ],
+      [
+       "x/y z.txt",
+       "be18b85f77fc024db379acf19e8a1ce62307ab7bb1bca395389ecfc2dafaf741",
+       null,
+       2,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "drop.dll",
+       "added",
+       "18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
+       null,
+       1
+      ],
+      [
+       1,
+       "keep.dll",
+       "added",
+       "8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+       null,
+       1
+      ],
+      [
+       1,
+       "x/y z.txt",
+       "added",
+       "be18b85f77fc024db379acf19e8a1ce62307ab7bb1bca395389ecfc2dafaf741",
+       null,
+       2
+      ],
+      [
+       2,
+       "drop.dll",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       2,
+       "keep.dll",
+       "modified",
+       "015f7e6bc5aeaf483724089e9252cc13b50951a6b69412522765cff4d780306e",
+       null,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-pts",
+       "motd": "m-V1",
+       "added": 3,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 4
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-pts",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 1,
+       "removed": 1,
+       "bytes_added": 2
+      }
+     ],
+     "branch": {
+      "current_version": "M-V2",
+      "current_ordinal": 2,
+      "content_path": "cp-pts"
+     },
+     "cas": [
+      [
+       "objects/01/015f7e6bc5aeaf483724089e9252cc13b50951a6b69412522765cff4d780306e",
+       2
+      ],
+      [
+       "objects/18/18ac3e7343f016890c510e93f935261169d9e3f565436429830faf0934f4f8e4",
+       1
+      ],
+      [
+       "objects/82/8254c329a92850f6d539dd376f4816ee2764517da5e0235514af433164480d7a",
+       1
+      ],
+      [
+       "objects/be/be18b85f77fc024db379acf19e8a1ce62307ab7bb1bca395389ecfc2dafaf741",
+       2
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "loose-failure",
+   "branch": "live-us",
+   "steps": [
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {
+      "f03.dat": "boom f03",
+      "f09.dat": "boom f09"
+     },
+     "cdn_manifest": [
+      {
+       "path": "f00.dat",
+       "sha1": "4437e408b8418425d1625093b9ce657e006c4268",
+       "size": 9
+      },
+      {
+       "path": "f01.dat",
+       "sha1": "cfd5ed8bcec0d21525be8e18a942827859e98bb0",
+       "size": 9
+      },
+      {
+       "path": "f02.dat",
+       "sha1": "82a3a7cb4f9cb57f73c02f8b1a30b92033b73953",
+       "size": 9
+      },
+      {
+       "path": "f03.dat",
+       "sha1": "4fde26d26c1a2ad2a4f0fda98b8e2f2b21cb0c50",
+       "size": 9
+      },
+      {
+       "path": "f04.dat",
+       "sha1": "d9e33e9115493417fd35b9387594064d97bc42f8",
+       "size": 9
+      },
+      {
+       "path": "f05.dat",
+       "sha1": "e650dff4e200ff2e474c7d1aca1cf52399411085",
+       "size": 9
+      },
+      {
+       "path": "f06.dat",
+       "sha1": "5709d339ef8674631779cd7f8565399906b845e2",
+       "size": 9
+      },
+      {
+       "path": "f07.dat",
+       "sha1": "04f9a9b4d79fbac2784a16ef63703b5fd77b9841",
+       "size": 9
+      },
+      {
+       "path": "f08.dat",
+       "sha1": "4f98f064b5f63c2a8b63b05830a33ba316ee4991",
+       "size": 9
+      },
+      {
+       "path": "f09.dat",
+       "sha1": "a1a55756892dfd61f412b8d26b03e71caae24ee4",
+       "size": 9
+      },
+      {
+       "path": "f10.dat",
+       "sha1": "39042e1e7f1bc639b55fc9f89baab21c9e68bd0b",
+       "size": 10
+      },
+      {
+       "path": "f11.dat",
+       "sha1": "24dea0827d9a99f084668effe904e7abb0242bcc",
+       "size": 10
+      },
+      {
+       "path": "f12.dat",
+       "sha1": "ffe614a7486aabca948568031f91e9784828b291",
+       "size": 10
+      },
+      {
+       "path": "f13.dat",
+       "sha1": "db56aa1f88a0d76328ca0724c1613d9e2aecd7bf",
+       "size": 10
+      },
+      {
+       "path": "d/index.tfi",
+       "sha1": "92f84e290277f90a97ff4babfba20dc437df2097",
+       "size": 11
+      },
+      {
+       "path": "d/archive0.tfa",
+       "sha1": "1acb8839bb2494228df2915ff82664c07f7da604",
+       "size": 9
+      }
+     ],
+     "cdn_files": {
+      "f00.dat": "7061796c6f61642d30",
+      "f01.dat": "7061796c6f61642d31",
+      "f02.dat": "7061796c6f61642d32",
+      "f03.dat": "7061796c6f61642d33",
+      "f04.dat": "7061796c6f61642d34",
+      "f05.dat": "7061796c6f61642d35",
+      "f06.dat": "7061796c6f61642d36",
+      "f07.dat": "7061796c6f61642d37",
+      "f08.dat": "7061796c6f61642d38",
+      "f09.dat": "7061796c6f61642d39",
+      "f10.dat": "7061796c6f61642d3130",
+      "f11.dat": "7061796c6f61642d3131",
+      "f12.dat": "7061796c6f61642d3132",
+      "f13.dat": "7061796c6f61642d3133",
+      "d/index.tfi": "027100000001dc84b1a00f",
+      "d/archive0.tfa": "789c2b040000720072"
+     },
+     "error": "boom f03",
+     "type": "CdnError",
+     "manifest": [
+      [
+       "f00.dat",
+       "4437e408b8418425d1625093b9ce657e006c4268",
+       9
+      ],
+      [
+       "f01.dat",
+       "cfd5ed8bcec0d21525be8e18a942827859e98bb0",
+       9
+      ],
+      [
+       "f02.dat",
+       "82a3a7cb4f9cb57f73c02f8b1a30b92033b73953",
+       9
+      ],
+      [
+       "f04.dat",
+       "d9e33e9115493417fd35b9387594064d97bc42f8",
+       9
+      ],
+      [
+       "f05.dat",
+       "e650dff4e200ff2e474c7d1aca1cf52399411085",
+       9
+      ],
+      [
+       "f06.dat",
+       "5709d339ef8674631779cd7f8565399906b845e2",
+       9
+      ],
+      [
+       "f07.dat",
+       "04f9a9b4d79fbac2784a16ef63703b5fd77b9841",
+       9
+      ],
+      [
+       "f08.dat",
+       "4f98f064b5f63c2a8b63b05830a33ba316ee4991",
+       9
+      ],
+      [
+       "f10.dat",
+       "39042e1e7f1bc639b55fc9f89baab21c9e68bd0b",
+       10
+      ],
+      [
+       "f11.dat",
+       "24dea0827d9a99f084668effe904e7abb0242bcc",
+       10
+      ],
+      [
+       "f12.dat",
+       "ffe614a7486aabca948568031f91e9784828b291",
+       10
+      ],
+      [
+       "f13.dat",
+       "db56aa1f88a0d76328ca0724c1613d9e2aecd7bf",
+       10
+      ]
+     ],
+     "state": [
+      [
+       "f00.dat",
+       "d449acb92215ed502901c9e6f6a4dc6d28e6856fb6754892becd148dee1b3e85",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f01.dat",
+       "2e6709af8dbfe7cd5abb2f716924848e527b4486c30c4509b0e4aa8171987335",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f02.dat",
+       "bddd3a6e5dab59fa05fa8fb0d789a3c2ad3c9982dcc4a368f3d5719f421ffda8",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f04.dat",
+       "85261d40c625814f4e9eae3aac7948691fbcd76d4e19d85a71e30a665add4d3b",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f05.dat",
+       "ed8a2d8e007008d5582cc9fc8f72c361f32b698dc426c70691072aa18e5be1c8",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f06.dat",
+       "5a0d213bcb76501fe96df9a0a4e4f37b5c30c2b717c9d2eb30974b70af62f41d",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f07.dat",
+       "a2a9cf6047dc46b2eea1fafb92dbb2c9d94e4c37ad9b1a9ce4a1429670d11e36",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f08.dat",
+       "b4ab322615d461e96fdb253cd1ed95b32c21a779ac74e2e797790ce69fd7e4fc",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f10.dat",
+       "9f0254a61db34612c2fe052ceb5f1651c2679d3661e555f9a772de77dead38f1",
+       null,
+       10,
+       null,
+       null,
+       1
+      ],
+      [
+       "f11.dat",
+       "4d996ea2a6508b181c69c6bdd2064c3cea79113c9a116b906a35bbb4057cde8a",
+       null,
+       10,
+       null,
+       null,
+       1
+      ],
+      [
+       "f12.dat",
+       "9467e9b86669b9debcae2b9f9cfe12cc4921422b52f137bda8385b1a74d04b2b",
+       null,
+       10,
+       null,
+       null,
+       1
+      ],
+      [
+       "f13.dat",
+       "fcc2daba2511fc61d557d8de0b9583a4c5ca05cd7edc5cd859b3de9a6f71a596",
+       null,
+       10,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "f00.dat",
+       "added",
+       "d449acb92215ed502901c9e6f6a4dc6d28e6856fb6754892becd148dee1b3e85",
+       null,
+       9
+      ],
+      [
+       1,
+       "f01.dat",
+       "added",
+       "2e6709af8dbfe7cd5abb2f716924848e527b4486c30c4509b0e4aa8171987335",
+       null,
+       9
+      ],
+      [
+       1,
+       "f02.dat",
+       "added",
+       "bddd3a6e5dab59fa05fa8fb0d789a3c2ad3c9982dcc4a368f3d5719f421ffda8",
+       null,
+       9
+      ],
+      [
+       1,
+       "f04.dat",
+       "added",
+       "85261d40c625814f4e9eae3aac7948691fbcd76d4e19d85a71e30a665add4d3b",
+       null,
+       9
+      ],
+      [
+       1,
+       "f05.dat",
+       "added",
+       "ed8a2d8e007008d5582cc9fc8f72c361f32b698dc426c70691072aa18e5be1c8",
+       null,
+       9
+      ],
+      [
+       1,
+       "f06.dat",
+       "added",
+       "5a0d213bcb76501fe96df9a0a4e4f37b5c30c2b717c9d2eb30974b70af62f41d",
+       null,
+       9
+      ],
+      [
+       1,
+       "f07.dat",
+       "added",
+       "a2a9cf6047dc46b2eea1fafb92dbb2c9d94e4c37ad9b1a9ce4a1429670d11e36",
+       null,
+       9
+      ],
+      [
+       1,
+       "f08.dat",
+       "added",
+       "b4ab322615d461e96fdb253cd1ed95b32c21a779ac74e2e797790ce69fd7e4fc",
+       null,
+       9
+      ],
+      [
+       1,
+       "f10.dat",
+       "added",
+       "9f0254a61db34612c2fe052ceb5f1651c2679d3661e555f9a772de77dead38f1",
+       null,
+       10
+      ],
+      [
+       1,
+       "f11.dat",
+       "added",
+       "4d996ea2a6508b181c69c6bdd2064c3cea79113c9a116b906a35bbb4057cde8a",
+       null,
+       10
+      ],
+      [
+       1,
+       "f12.dat",
+       "added",
+       "9467e9b86669b9debcae2b9f9cfe12cc4921422b52f137bda8385b1a74d04b2b",
+       null,
+       10
+      ],
+      [
+       1,
+       "f13.dat",
+       "added",
+       "fcc2daba2511fc61d557d8de0b9583a4c5ca05cd7edc5cd859b3de9a6f71a596",
+       null,
+       10
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "in_progress",
+       "content_path": "cp-live-us",
+       "motd": "m-V1"
+      }
+     ],
+     "branch": {},
+     "cas": [
+      [
+       "objects/2e/2e6709af8dbfe7cd5abb2f716924848e527b4486c30c4509b0e4aa8171987335",
+       9
+      ],
+      [
+       "objects/4d/4d996ea2a6508b181c69c6bdd2064c3cea79113c9a116b906a35bbb4057cde8a",
+       10
+      ],
+      [
+       "objects/5a/5a0d213bcb76501fe96df9a0a4e4f37b5c30c2b717c9d2eb30974b70af62f41d",
+       9
+      ],
+      [
+       "objects/85/85261d40c625814f4e9eae3aac7948691fbcd76d4e19d85a71e30a665add4d3b",
+       9
+      ],
+      [
+       "objects/94/9467e9b86669b9debcae2b9f9cfe12cc4921422b52f137bda8385b1a74d04b2b",
+       10
+      ],
+      [
+       "objects/9f/9f0254a61db34612c2fe052ceb5f1651c2679d3661e555f9a772de77dead38f1",
+       10
+      ],
+      [
+       "objects/a2/a2a9cf6047dc46b2eea1fafb92dbb2c9d94e4c37ad9b1a9ce4a1429670d11e36",
+       9
+      ],
+      [
+       "objects/b4/b4ab322615d461e96fdb253cd1ed95b32c21a779ac74e2e797790ce69fd7e4fc",
+       9
+      ],
+      [
+       "objects/bd/bddd3a6e5dab59fa05fa8fb0d789a3c2ad3c9982dcc4a368f3d5719f421ffda8",
+       9
+      ],
+      [
+       "objects/d4/d449acb92215ed502901c9e6f6a4dc6d28e6856fb6754892becd148dee1b3e85",
+       9
+      ],
+      [
+       "objects/ed/ed8a2d8e007008d5582cc9fc8f72c361f32b698dc426c70691072aa18e5be1c8",
+       9
+      ],
+      [
+       "objects/fc/fcc2daba2511fc61d557d8de0b9583a4c5ca05cd7edc5cd859b3de9a6f71a596",
+       10
+      ]
+     ]
+    },
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "f00.dat",
+       "sha1": "4437e408b8418425d1625093b9ce657e006c4268",
+       "size": 9
+      },
+      {
+       "path": "f01.dat",
+       "sha1": "cfd5ed8bcec0d21525be8e18a942827859e98bb0",
+       "size": 9
+      },
+      {
+       "path": "f02.dat",
+       "sha1": "82a3a7cb4f9cb57f73c02f8b1a30b92033b73953",
+       "size": 9
+      },
+      {
+       "path": "f03.dat",
+       "sha1": "4fde26d26c1a2ad2a4f0fda98b8e2f2b21cb0c50",
+       "size": 9
+      },
+      {
+       "path": "f04.dat",
+       "sha1": "d9e33e9115493417fd35b9387594064d97bc42f8",
+       "size": 9
+      },
+      {
+       "path": "f05.dat",
+       "sha1": "e650dff4e200ff2e474c7d1aca1cf52399411085",
+       "size": 9
+      },
+      {
+       "path": "f06.dat",
+       "sha1": "5709d339ef8674631779cd7f8565399906b845e2",
+       "size": 9
+      },
+      {
+       "path": "f07.dat",
+       "sha1": "04f9a9b4d79fbac2784a16ef63703b5fd77b9841",
+       "size": 9
+      },
+      {
+       "path": "f08.dat",
+       "sha1": "4f98f064b5f63c2a8b63b05830a33ba316ee4991",
+       "size": 9
+      },
+      {
+       "path": "f09.dat",
+       "sha1": "a1a55756892dfd61f412b8d26b03e71caae24ee4",
+       "size": 9
+      },
+      {
+       "path": "f10.dat",
+       "sha1": "39042e1e7f1bc639b55fc9f89baab21c9e68bd0b",
+       "size": 10
+      },
+      {
+       "path": "f11.dat",
+       "sha1": "24dea0827d9a99f084668effe904e7abb0242bcc",
+       "size": 10
+      },
+      {
+       "path": "f12.dat",
+       "sha1": "ffe614a7486aabca948568031f91e9784828b291",
+       "size": 10
+      },
+      {
+       "path": "f13.dat",
+       "sha1": "db56aa1f88a0d76328ca0724c1613d9e2aecd7bf",
+       "size": 10
+      },
+      {
+       "path": "d/index.tfi",
+       "sha1": "92f84e290277f90a97ff4babfba20dc437df2097",
+       "size": 11
+      },
+      {
+       "path": "d/archive0.tfa",
+       "sha1": "1acb8839bb2494228df2915ff82664c07f7da604",
+       "size": 9
+      }
+     ],
+     "cdn_files": {
+      "f00.dat": "7061796c6f61642d30",
+      "f01.dat": "7061796c6f61642d31",
+      "f02.dat": "7061796c6f61642d32",
+      "f03.dat": "7061796c6f61642d33",
+      "f04.dat": "7061796c6f61642d34",
+      "f05.dat": "7061796c6f61642d35",
+      "f06.dat": "7061796c6f61642d36",
+      "f07.dat": "7061796c6f61642d37",
+      "f08.dat": "7061796c6f61642d38",
+      "f09.dat": "7061796c6f61642d39",
+      "f10.dat": "7061796c6f61642d3130",
+      "f11.dat": "7061796c6f61642d3131",
+      "f12.dat": "7061796c6f61642d3132",
+      "f13.dat": "7061796c6f61642d3133",
+      "d/index.tfi": "027100000001dc84b1a00f",
+      "d/archive0.tfa": "789c2b040000720072"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V1",
+      "changed": true,
+      "ordinal": 1,
+      "added": 3,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 19
+     },
+     "manifest": [
+      [
+       "d/archive0.tfa",
+       "1acb8839bb2494228df2915ff82664c07f7da604",
+       9
+      ],
+      [
+       "d/index.tfi",
+       "92f84e290277f90a97ff4babfba20dc437df2097",
+       11
+      ],
+      [
+       "f00.dat",
+       "4437e408b8418425d1625093b9ce657e006c4268",
+       9
+      ],
+      [
+       "f01.dat",
+       "cfd5ed8bcec0d21525be8e18a942827859e98bb0",
+       9
+      ],
+      [
+       "f02.dat",
+       "82a3a7cb4f9cb57f73c02f8b1a30b92033b73953",
+       9
+      ],
+      [
+       "f03.dat",
+       "4fde26d26c1a2ad2a4f0fda98b8e2f2b21cb0c50",
+       9
+      ],
+      [
+       "f04.dat",
+       "d9e33e9115493417fd35b9387594064d97bc42f8",
+       9
+      ],
+      [
+       "f05.dat",
+       "e650dff4e200ff2e474c7d1aca1cf52399411085",
+       9
+      ],
+      [
+       "f06.dat",
+       "5709d339ef8674631779cd7f8565399906b845e2",
+       9
+      ],
+      [
+       "f07.dat",
+       "04f9a9b4d79fbac2784a16ef63703b5fd77b9841",
+       9
+      ],
+      [
+       "f08.dat",
+       "4f98f064b5f63c2a8b63b05830a33ba316ee4991",
+       9
+      ],
+      [
+       "f09.dat",
+       "a1a55756892dfd61f412b8d26b03e71caae24ee4",
+       9
+      ],
+      [
+       "f10.dat",
+       "39042e1e7f1bc639b55fc9f89baab21c9e68bd0b",
+       10
+      ],
+      [
+       "f11.dat",
+       "24dea0827d9a99f084668effe904e7abb0242bcc",
+       10
+      ],
+      [
+       "f12.dat",
+       "ffe614a7486aabca948568031f91e9784828b291",
+       10
+      ],
+      [
+       "f13.dat",
+       "db56aa1f88a0d76328ca0724c1613d9e2aecd7bf",
+       10
+      ]
+     ],
+     "state": [
+      [
+       "d/q",
+       "8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf",
+       4094444124,
+       1,
+       "d",
+       0,
+       1
+      ],
+      [
+       "f00.dat",
+       "d449acb92215ed502901c9e6f6a4dc6d28e6856fb6754892becd148dee1b3e85",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f01.dat",
+       "2e6709af8dbfe7cd5abb2f716924848e527b4486c30c4509b0e4aa8171987335",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f02.dat",
+       "bddd3a6e5dab59fa05fa8fb0d789a3c2ad3c9982dcc4a368f3d5719f421ffda8",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f03.dat",
+       "c97811e4375fda6eb4b46693d20752e6d584a4ec8a7910a25c52f09988c2d4cb",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f04.dat",
+       "85261d40c625814f4e9eae3aac7948691fbcd76d4e19d85a71e30a665add4d3b",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f05.dat",
+       "ed8a2d8e007008d5582cc9fc8f72c361f32b698dc426c70691072aa18e5be1c8",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f06.dat",
+       "5a0d213bcb76501fe96df9a0a4e4f37b5c30c2b717c9d2eb30974b70af62f41d",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f07.dat",
+       "a2a9cf6047dc46b2eea1fafb92dbb2c9d94e4c37ad9b1a9ce4a1429670d11e36",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f08.dat",
+       "b4ab322615d461e96fdb253cd1ed95b32c21a779ac74e2e797790ce69fd7e4fc",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f09.dat",
+       "db76722b603030591995ccce894d8d6864492b58130992613bdaecd746389d50",
+       null,
+       9,
+       null,
+       null,
+       1
+      ],
+      [
+       "f10.dat",
+       "9f0254a61db34612c2fe052ceb5f1651c2679d3661e555f9a772de77dead38f1",
+       null,
+       10,
+       null,
+       null,
+       1
+      ],
+      [
+       "f11.dat",
+       "4d996ea2a6508b181c69c6bdd2064c3cea79113c9a116b906a35bbb4057cde8a",
+       null,
+       10,
+       null,
+       null,
+       1
+      ],
+      [
+       "f12.dat",
+       "9467e9b86669b9debcae2b9f9cfe12cc4921422b52f137bda8385b1a74d04b2b",
+       null,
+       10,
+       null,
+       null,
+       1
+      ],
+      [
+       "f13.dat",
+       "fcc2daba2511fc61d557d8de0b9583a4c5ca05cd7edc5cd859b3de9a6f71a596",
+       null,
+       10,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "d/q",
+       "added",
+       "8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf",
+       4094444124,
+       1
+      ],
+      [
+       1,
+       "f00.dat",
+       "added",
+       "d449acb92215ed502901c9e6f6a4dc6d28e6856fb6754892becd148dee1b3e85",
+       null,
+       9
+      ],
+      [
+       1,
+       "f01.dat",
+       "added",
+       "2e6709af8dbfe7cd5abb2f716924848e527b4486c30c4509b0e4aa8171987335",
+       null,
+       9
+      ],
+      [
+       1,
+       "f02.dat",
+       "added",
+       "bddd3a6e5dab59fa05fa8fb0d789a3c2ad3c9982dcc4a368f3d5719f421ffda8",
+       null,
+       9
+      ],
+      [
+       1,
+       "f03.dat",
+       "added",
+       "c97811e4375fda6eb4b46693d20752e6d584a4ec8a7910a25c52f09988c2d4cb",
+       null,
+       9
+      ],
+      [
+       1,
+       "f04.dat",
+       "added",
+       "85261d40c625814f4e9eae3aac7948691fbcd76d4e19d85a71e30a665add4d3b",
+       null,
+       9
+      ],
+      [
+       1,
+       "f05.dat",
+       "added",
+       "ed8a2d8e007008d5582cc9fc8f72c361f32b698dc426c70691072aa18e5be1c8",
+       null,
+       9
+      ],
+      [
+       1,
+       "f06.dat",
+       "added",
+       "5a0d213bcb76501fe96df9a0a4e4f37b5c30c2b717c9d2eb30974b70af62f41d",
+       null,
+       9
+      ],
+      [
+       1,
+       "f07.dat",
+       "added",
+       "a2a9cf6047dc46b2eea1fafb92dbb2c9d94e4c37ad9b1a9ce4a1429670d11e36",
+       null,
+       9
+      ],
+      [
+       1,
+       "f08.dat",
+       "added",
+       "b4ab322615d461e96fdb253cd1ed95b32c21a779ac74e2e797790ce69fd7e4fc",
+       null,
+       9
+      ],
+      [
+       1,
+       "f09.dat",
+       "added",
+       "db76722b603030591995ccce894d8d6864492b58130992613bdaecd746389d50",
+       null,
+       9
+      ],
+      [
+       1,
+       "f10.dat",
+       "added",
+       "9f0254a61db34612c2fe052ceb5f1651c2679d3661e555f9a772de77dead38f1",
+       null,
+       10
+      ],
+      [
+       1,
+       "f11.dat",
+       "added",
+       "4d996ea2a6508b181c69c6bdd2064c3cea79113c9a116b906a35bbb4057cde8a",
+       null,
+       10
+      ],
+      [
+       1,
+       "f12.dat",
+       "added",
+       "9467e9b86669b9debcae2b9f9cfe12cc4921422b52f137bda8385b1a74d04b2b",
+       null,
+       10
+      ],
+      [
+       1,
+       "f13.dat",
+       "added",
+       "fcc2daba2511fc61d557d8de0b9583a4c5ca05cd7edc5cd859b3de9a6f71a596",
+       null,
+       10
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 3,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 19
+      }
+     ],
+     "branch": {
+      "current_version": "M-V1",
+      "current_ordinal": 1,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/2e/2e6709af8dbfe7cd5abb2f716924848e527b4486c30c4509b0e4aa8171987335",
+       9
+      ],
+      [
+       "objects/4d/4d996ea2a6508b181c69c6bdd2064c3cea79113c9a116b906a35bbb4057cde8a",
+       10
+      ],
+      [
+       "objects/5a/5a0d213bcb76501fe96df9a0a4e4f37b5c30c2b717c9d2eb30974b70af62f41d",
+       9
+      ],
+      [
+       "objects/85/85261d40c625814f4e9eae3aac7948691fbcd76d4e19d85a71e30a665add4d3b",
+       9
+      ],
+      [
+       "objects/8e/8e35c2cd3bf6641bdb0e2050b76932cbb2e6034a0ddacc1d9bea82a6ba57f7cf",
+       1
+      ],
+      [
+       "objects/94/9467e9b86669b9debcae2b9f9cfe12cc4921422b52f137bda8385b1a74d04b2b",
+       10
+      ],
+      [
+       "objects/9f/9f0254a61db34612c2fe052ceb5f1651c2679d3661e555f9a772de77dead38f1",
+       10
+      ],
+      [
+       "objects/a2/a2a9cf6047dc46b2eea1fafb92dbb2c9d94e4c37ad9b1a9ce4a1429670d11e36",
+       9
+      ],
+      [
+       "objects/b4/b4ab322615d461e96fdb253cd1ed95b32c21a779ac74e2e797790ce69fd7e4fc",
+       9
+      ],
+      [
+       "objects/bd/bddd3a6e5dab59fa05fa8fb0d789a3c2ad3c9982dcc4a368f3d5719f421ffda8",
+       9
+      ],
+      [
+       "objects/c9/c97811e4375fda6eb4b46693d20752e6d584a4ec8a7910a25c52f09988c2d4cb",
+       9
+      ],
+      [
+       "objects/d4/d449acb92215ed502901c9e6f6a4dc6d28e6856fb6754892becd148dee1b3e85",
+       9
+      ],
+      [
+       "objects/db/db76722b603030591995ccce894d8d6864492b58130992613bdaecd746389d50",
+       9
+      ],
+      [
+       "objects/ed/ed8a2d8e007008d5582cc9fc8f72c361f32b698dc426c70691072aa18e5be1c8",
+       9
+      ],
+      [
+       "objects/fc/fcc2daba2511fc61d557d8de0b9583a4c5ca05cd7edc5cd859b3de9a6f71a596",
+       10
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "archive-edge",
+   "branch": "live-us",
+   "steps": [
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "pk/index.tfi",
+       "sha1": "136e18756feaa1c1edcfaece315d74deb3ad7612",
+       "size": 32
+      },
+      {
+       "path": "pk/archive0.tfa",
+       "sha1": "9db0d8d89859111c687c8beee1bbfa78ae70209f",
+       "size": 12
+      },
+      {
+       "path": "pk/archive1.tfa",
+       "sha1": "66907b5ed0b77cffc0cfe2d4b8ff7047776b8e21",
+       "size": 12
+      },
+      {
+       "path": "pk/archive2.tfa",
+       "sha1": "703ae908abf0b219c1264ebdc293c98f48a7cfe7",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "pk/index.tfi": "026100000004acecd252026200010004e5e7b1bf0c026300020002d2be93b50e",
+      "pk/archive0.tfa": "789c4b4c4c4c040003ce0185",
+      "pk/archive1.tfa": "789c4b4a4a4a020003d80189",
+      "pk/archive2.tfa": "789c4b4e0600012b00c7"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V1",
+      "changed": true,
+      "ordinal": 1,
+      "added": 3,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 10
+     },
+     "manifest": [
+      [
+       "pk/archive0.tfa",
+       "9db0d8d89859111c687c8beee1bbfa78ae70209f",
+       12
+      ],
+      [
+       "pk/archive1.tfa",
+       "66907b5ed0b77cffc0cfe2d4b8ff7047776b8e21",
+       12
+      ],
+      [
+       "pk/archive2.tfa",
+       "703ae908abf0b219c1264ebdc293c98f48a7cfe7",
+       10
+      ],
+      [
+       "pk/index.tfi",
+       "136e18756feaa1c1edcfaece315d74deb3ad7612",
+       32
+      ]
+     ],
+     "state": [
+      [
+       "pk/a",
+       "61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       173323820,
+       4,
+       "pk",
+       0,
+       1
+      ],
+      [
+       "pk/b",
+       "81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       3354162149,
+       4,
+       "pk",
+       1,
+       1
+      ],
+      [
+       "pk/c",
+       "355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       3869564754,
+       2,
+       "pk",
+       2,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "pk/a",
+       "added",
+       "61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       173323820,
+       4
+      ],
+      [
+       1,
+       "pk/b",
+       "added",
+       "81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       3354162149,
+       4
+      ],
+      [
+       1,
+       "pk/c",
+       "added",
+       "355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       3869564754,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 3,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 10
+      }
+     ],
+     "branch": {
+      "current_version": "M-V1",
+      "current_ordinal": 1,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/35/355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       2
+      ],
+      [
+       "objects/61/61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       4
+      ],
+      [
+       "objects/81/81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       4
+      ]
+     ]
+    },
+    {
+     "version": "V2",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "pk/index.tfi",
+       "sha1": "d5cb940257cd34b4bc73bb4c45d102a7f1fdee66",
+       "size": 21
+      },
+      {
+       "path": "pk/archive0.tfa",
+       "sha1": "9db0d8d89859111c687c8beee1bbfa78ae70209f",
+       "size": 12
+      }
+     ],
+     "cdn_files": {
+      "pk/index.tfi": "026100000004acecd252026300020002f299c9b30c",
+      "pk/archive0.tfa": "789c4b4c4c4c040003ce0185",
+      "pk/archive2.tfa": "789c7376060000cb0087"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V2",
+      "changed": true,
+      "ordinal": 2,
+      "added": 0,
+      "modified": 0,
+      "removed": 1,
+      "bytes_added": 0
+     },
+     "manifest": [
+      [
+       "pk/archive0.tfa",
+       "9db0d8d89859111c687c8beee1bbfa78ae70209f",
+       12
+      ],
+      [
+       "pk/archive1.tfa",
+       "66907b5ed0b77cffc0cfe2d4b8ff7047776b8e21",
+       12
+      ],
+      [
+       "pk/archive2.tfa",
+       "703ae908abf0b219c1264ebdc293c98f48a7cfe7",
+       10
+      ],
+      [
+       "pk/index.tfi",
+       "d5cb940257cd34b4bc73bb4c45d102a7f1fdee66",
+       21
+      ]
+     ],
+     "state": [
+      [
+       "pk/a",
+       "61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       173323820,
+       4,
+       "pk",
+       0,
+       1
+      ],
+      [
+       "pk/c",
+       "355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       3869564754,
+       2,
+       "pk",
+       2,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "pk/a",
+       "added",
+       "61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       173323820,
+       4
+      ],
+      [
+       1,
+       "pk/b",
+       "added",
+       "81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       3354162149,
+       4
+      ],
+      [
+       1,
+       "pk/c",
+       "added",
+       "355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       3869564754,
+       2
+      ],
+      [
+       2,
+       "pk/b",
+       "removed",
+       null,
+       null,
+       0
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 3,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 10
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 0,
+       "removed": 1,
+       "bytes_added": 0
+      }
+     ],
+     "branch": {
+      "current_version": "M-V2",
+      "current_ordinal": 2,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/35/355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       2
+      ],
+      [
+       "objects/61/61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       4
+      ],
+      [
+       "objects/81/81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       4
+      ]
+     ]
+    },
+    {
+     "version": "V3",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "pk/index.tfi",
+       "sha1": "d5cb940257cd34b4bc73bb4c45d102a7f1fdee66",
+       "size": 21
+      },
+      {
+       "path": "pk/archive0.tfa",
+       "sha1": "9db0d8d89859111c687c8beee1bbfa78ae70209f",
+       "size": 12
+      },
+      {
+       "path": "pk/archive2.tfa",
+       "sha1": "3efedcb40d8bab6585586dd35286076514bac37c",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "pk/index.tfi": "026100000004acecd252026300020002f299c9b30c",
+      "pk/archive0.tfa": "789c4b4c4c4c040003ce0185",
+      "pk/archive2.tfa": "789c7376060000cb0087"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V3",
+      "changed": true,
+      "ordinal": 3,
+      "added": 0,
+      "modified": 1,
+      "removed": 0,
+      "bytes_added": 2
+     },
+     "manifest": [
+      [
+       "pk/archive0.tfa",
+       "9db0d8d89859111c687c8beee1bbfa78ae70209f",
+       12
+      ],
+      [
+       "pk/archive1.tfa",
+       "66907b5ed0b77cffc0cfe2d4b8ff7047776b8e21",
+       12
+      ],
+      [
+       "pk/archive2.tfa",
+       "3efedcb40d8bab6585586dd35286076514bac37c",
+       10
+      ],
+      [
+       "pk/index.tfi",
+       "d5cb940257cd34b4bc73bb4c45d102a7f1fdee66",
+       21
+      ]
+     ],
+     "state": [
+      [
+       "pk/a",
+       "61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       173323820,
+       4,
+       "pk",
+       0,
+       1
+      ],
+      [
+       "pk/c",
+       "a56362a10c816abf206d72cb914e2d5ca454eb9c7e744f88b1a1422c379e9942",
+       3329379570,
+       2,
+       "pk",
+       2,
+       3
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "pk/a",
+       "added",
+       "61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       173323820,
+       4
+      ],
+      [
+       1,
+       "pk/b",
+       "added",
+       "81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       3354162149,
+       4
+      ],
+      [
+       1,
+       "pk/c",
+       "added",
+       "355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       3869564754,
+       2
+      ],
+      [
+       2,
+       "pk/b",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       3,
+       "pk/c",
+       "modified",
+       "a56362a10c816abf206d72cb914e2d5ca454eb9c7e744f88b1a1422c379e9942",
+       3329379570,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 3,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 10
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 0,
+       "removed": 1,
+       "bytes_added": 0
+      },
+      {
+       "ordinal": 3,
+       "version_tag": "M-V3",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V3",
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "bytes_added": 2
+      }
+     ],
+     "branch": {
+      "current_version": "M-V3",
+      "current_ordinal": 3,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/35/355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       2
+      ],
+      [
+       "objects/61/61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       4
+      ],
+      [
+       "objects/81/81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       4
+      ],
+      [
+       "objects/a5/a56362a10c816abf206d72cb914e2d5ca454eb9c7e744f88b1a1422c379e9942",
+       2
+      ]
+     ]
+    },
+    {
+     "version": "V4",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "pk/index.tfi",
+       "sha1": "34aa93670225e42217c845ac0ce692f08bd97214",
+       "size": 32
+      },
+      {
+       "path": "pk/archive0.tfa",
+       "sha1": "6f794b7109aefbd357e7681f693252703022b491",
+       "size": 14
+      },
+      {
+       "path": "pk/archive1.tfa",
+       "sha1": "7049bcf9d3ebf944bcdb051ff89dc3bba7f1b23d",
+       "size": 16
+      }
+     ],
+     "cdn_files": {
+      "pk/index.tfi": "026100000004acecd25202610001000884f3808c0d027a00000402ada383fc0f",
+      "pk/archive0.tfa": "789c4b4c4c4cacaa020008460279",
+      "pk/archive1.tfa": "789c2b4e4dcecf4bd14d04000e7f030b"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V4",
+      "changed": true,
+      "ordinal": 4,
+      "added": 1,
+      "modified": 1,
+      "removed": 1,
+      "bytes_added": 10
+     },
+     "manifest": [
+      [
+       "pk/archive0.tfa",
+       "6f794b7109aefbd357e7681f693252703022b491",
+       14
+      ],
+      [
+       "pk/archive1.tfa",
+       "7049bcf9d3ebf944bcdb051ff89dc3bba7f1b23d",
+       16
+      ],
+      [
+       "pk/archive2.tfa",
+       "3efedcb40d8bab6585586dd35286076514bac37c",
+       10
+      ],
+      [
+       "pk/index.tfi",
+       "34aa93670225e42217c845ac0ce692f08bd97214",
+       32
+      ]
+     ],
+     "state": [
+      [
+       "pk/a",
+       "0a89963c2453fd8167c572c5c5623a0d3a414627c7d0517fd495d176c480d1f2",
+       3514841476,
+       8,
+       "pk",
+       1,
+       4
+      ],
+      [
+       "pk/z",
+       "4a60bf7d4bc1e485744cf7e8d0860524752fca1ce42331be7c439fd23043f151",
+       4286632365,
+       2,
+       "pk",
+       0,
+       4
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "pk/a",
+       "added",
+       "61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       173323820,
+       4
+      ],
+      [
+       1,
+       "pk/b",
+       "added",
+       "81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       3354162149,
+       4
+      ],
+      [
+       1,
+       "pk/c",
+       "added",
+       "355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       3869564754,
+       2
+      ],
+      [
+       2,
+       "pk/b",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       3,
+       "pk/c",
+       "modified",
+       "a56362a10c816abf206d72cb914e2d5ca454eb9c7e744f88b1a1422c379e9942",
+       3329379570,
+       2
+      ],
+      [
+       4,
+       "pk/a",
+       "modified",
+       "0a89963c2453fd8167c572c5c5623a0d3a414627c7d0517fd495d176c480d1f2",
+       3514841476,
+       8
+      ],
+      [
+       4,
+       "pk/c",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       4,
+       "pk/z",
+       "added",
+       "4a60bf7d4bc1e485744cf7e8d0860524752fca1ce42331be7c439fd23043f151",
+       4286632365,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 3,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 10
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 0,
+       "removed": 1,
+       "bytes_added": 0
+      },
+      {
+       "ordinal": 3,
+       "version_tag": "M-V3",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V3",
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "bytes_added": 2
+      },
+      {
+       "ordinal": 4,
+       "version_tag": "M-V4",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V4",
+       "added": 1,
+       "modified": 1,
+       "removed": 1,
+       "bytes_added": 10
+      }
+     ],
+     "branch": {
+      "current_version": "M-V4",
+      "current_ordinal": 4,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/0a/0a89963c2453fd8167c572c5c5623a0d3a414627c7d0517fd495d176c480d1f2",
+       8
+      ],
+      [
+       "objects/35/355b1bbfc96725cdce8f4a2708fda310a80e6d13315aec4e5eed2a75fe8032ce",
+       2
+      ],
+      [
+       "objects/4a/4a60bf7d4bc1e485744cf7e8d0860524752fca1ce42331be7c439fd23043f151",
+       2
+      ],
+      [
+       "objects/61/61be55a8e2f6b4e172338bddf184d6dbee29c98853e0a0485ecee7f27b9af0b4",
+       4
+      ],
+      [
+       "objects/81/81cc5b17018674b401b42f35ba07bb79e211239c23bffe658da1577e3e646877",
+       4
+      ],
+      [
+       "objects/a5/a56362a10c816abf206d72cb914e2d5ca454eb9c7e744f88b1a1422c379e9942",
+       2
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "errors",
+   "branch": "live-us",
+   "steps": [
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "ok.txt",
+       "sha1": "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       "size": 2
+      },
+      {
+       "path": "bad/index.tfi",
+       "sha1": "s1",
+       "size": 3
+      }
+     ],
+     "cdn_files": {
+      "ok.txt": "6f6b",
+      "bad/index.tfi": "056162"
+     },
+     "error": "malformed .tfi: index out of range",
+     "type": "ArchiveError",
+     "manifest": [
+      [
+       "ok.txt",
+       "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       2
+      ]
+     ],
+     "state": [
+      [
+       "ok.txt",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "ok.txt",
+       "added",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "in_progress",
+       "content_path": "cp-live-us",
+       "motd": "m-V1"
+      }
+     ],
+     "branch": {},
+     "cas": [
+      [
+       "objects/26/2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       2
+      ]
+     ]
+    },
+    {
+     "version": "V1",
+     "pointer_error": "malformed bootstrap pointer",
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "ok.txt",
+       "sha1": "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       "size": 2
+      },
+      {
+       "path": "good/index.tfi",
+       "sha1": "28f48f1b4ed82938a29148a859e556bd28536c68",
+       "size": 11
+      },
+      {
+       "path": "good/archive0.tfa",
+       "sha1": "4fb8754801f6344874e59cf109bbb5c6e9f04e21",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "ok.txt": "6f6b",
+      "good/index.tfi": "026700000002869afa940e",
+      "good/archive0.tfa": "789c4b4f0700013700cf"
+     },
+     "error": "malformed bootstrap pointer",
+     "type": "CdnError",
+     "manifest": [
+      [
+       "ok.txt",
+       "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       2
+      ]
+     ],
+     "state": [
+      [
+       "ok.txt",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "ok.txt",
+       "added",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "in_progress",
+       "content_path": "cp-live-us",
+       "motd": "m-V1"
+      }
+     ],
+     "branch": {},
+     "cas": [
+      [
+       "objects/26/2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       2
+      ]
+     ]
+    },
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "ok.txt",
+       "sha1": "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       "size": 2
+      },
+      {
+       "path": "good/index.tfi",
+       "sha1": "28f48f1b4ed82938a29148a859e556bd28536c68",
+       "size": 11
+      },
+      {
+       "path": "good/archive0.tfa",
+       "sha1": "4fb8754801f6344874e59cf109bbb5c6e9f04e21",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "ok.txt": "6f6b",
+      "good/index.tfi": "026700000002869afa940e",
+      "good/archive0.tfa": "789cffff0700013700cf"
+     },
+     "error": "could not inflate .tfa: Error -3 while decompressing data: invalid block type",
+     "type": "ArchiveError",
+     "manifest": [
+      [
+       "ok.txt",
+       "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       2
+      ]
+     ],
+     "state": [
+      [
+       "ok.txt",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "ok.txt",
+       "added",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "in_progress",
+       "content_path": "cp-live-us",
+       "motd": "m-V1"
+      }
+     ],
+     "branch": {},
+     "cas": [
+      [
+       "objects/26/2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       2
+      ]
+     ]
+    },
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "ok.txt",
+       "sha1": "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       "size": 2
+      },
+      {
+       "path": "good/index.tfi",
+       "sha1": "28f48f1b4ed82938a29148a859e556bd28536c68",
+       "size": 11
+      },
+      {
+       "path": "good/archive0.tfa",
+       "sha1": "4fb8754801f6344874e59cf109bbb5c6e9f04e21",
+       "size": 10
+      }
+     ],
+     "cdn_files": {
+      "ok.txt": "6f6b",
+      "good/index.tfi": "026700000002869afa940e",
+      "good/archive0.tfa": "789c4b4f0700013700cf"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V1",
+      "changed": true,
+      "ordinal": 1,
+      "added": 1,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 2
+     },
+     "manifest": [
+      [
+       "good/archive0.tfa",
+       "4fb8754801f6344874e59cf109bbb5c6e9f04e21",
+       10
+      ],
+      [
+       "good/index.tfi",
+       "28f48f1b4ed82938a29148a859e556bd28536c68",
+       11
+      ],
+      [
+       "ok.txt",
+       "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       2
+      ]
+     ],
+     "state": [
+      [
+       "good/g",
+       "cbd3cfb9b9f51bbbfbf08759e243f5b3519cbf6ecc219ee95fe7c667e32c0a8d",
+       3802041606,
+       2,
+       "good",
+       0,
+       1
+      ],
+      [
+       "ok.txt",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "good/g",
+       "added",
+       "cbd3cfb9b9f51bbbfbf08759e243f5b3519cbf6ecc219ee95fe7c667e32c0a8d",
+       3802041606,
+       2
+      ],
+      [
+       1,
+       "ok.txt",
+       "added",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2
+      }
+     ],
+     "branch": {
+      "current_version": "M-V1",
+      "current_ordinal": 1,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/26/2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       2
+      ],
+      [
+       "objects/cb/cbd3cfb9b9f51bbbfbf08759e243f5b3519cbf6ecc219ee95fe7c667e32c0a8d",
+       2
+      ]
+     ]
+    },
+    {
+     "version": "V2",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "ok.txt",
+       "sha1": "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       "size": 2
+      },
+      {
+       "path": "good/index.tfi",
+       "sha1": "5d9a9f3f97c257cd802378a559bbb72e21748a9f",
+       "size": 22
+      },
+      {
+       "path": "good/archive0.tfa",
+       "sha1": "4f9eb6127330b082f0a92326e712db70bcdab5a2",
+       "size": 12
+      }
+     ],
+     "cdn_files": {
+      "ok.txt": "6f6b",
+      "good/index.tfi": "026700000002869afa940e02680000025095e6f0c908",
+      "good/archive0.tfa": "789c4b4fcfa0320000667221"
+     },
+     "summary": {
+      "branch": "live-us",
+      "version": "M-V2",
+      "changed": true,
+      "ordinal": 2,
+      "added": 1,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 80
+     },
+     "manifest": [
+      [
+       "good/archive0.tfa",
+       "4f9eb6127330b082f0a92326e712db70bcdab5a2",
+       12
+      ],
+      [
+       "good/index.tfi",
+       "5d9a9f3f97c257cd802378a559bbb72e21748a9f",
+       22
+      ],
+      [
+       "ok.txt",
+       "7a85f4764bbd6daf1c3545efbbf0f279a6dc0beb",
+       2
+      ]
+     ],
+     "state": [
+      [
+       "good/g",
+       "cbd3cfb9b9f51bbbfbf08759e243f5b3519cbf6ecc219ee95fe7c667e32c0a8d",
+       3802041606,
+       2,
+       "good",
+       0,
+       1
+      ],
+      [
+       "good/h",
+       "0e77209df8747f979391d9378bc3a630dcf575d3dccf9aeacb93095e34745fa7",
+       2302423829,
+       80,
+       "good",
+       0,
+       2
+      ],
+      [
+       "ok.txt",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "good/g",
+       "added",
+       "cbd3cfb9b9f51bbbfbf08759e243f5b3519cbf6ecc219ee95fe7c667e32c0a8d",
+       3802041606,
+       2
+      ],
+      [
+       1,
+       "ok.txt",
+       "added",
+       "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       null,
+       2
+      ],
+      [
+       2,
+       "good/h",
+       "added",
+       "0e77209df8747f979391d9378bc3a630dcf575d3dccf9aeacb93095e34745fa7",
+       2302423829,
+       80
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V1",
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 2
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-live-us",
+       "motd": "m-V2",
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 80
+      }
+     ],
+     "branch": {
+      "current_version": "M-V2",
+      "current_ordinal": 2,
+      "content_path": "cp-live-us"
+     },
+     "cas": [
+      [
+       "objects/0e/0e77209df8747f979391d9378bc3a630dcf575d3dccf9aeacb93095e34745fa7",
+       80
+      ],
+      [
+       "objects/26/2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+       2
+      ],
+      [
+       "objects/cb/cbd3cfb9b9f51bbbfbf08759e243f5b3519cbf6ecc219ee95fe7c667e32c0a8d",
+       2
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "dir-removed",
+   "branch": "pts",
+   "steps": [
+    {
+     "version": "V1",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "top.bin",
+       "sha1": "8efd86fb78a56a5145ed7739dcb00c78581c5375",
+       "size": 1
+      },
+      {
+       "path": "gone/index.tfi",
+       "sha1": "9b0180e8880a2a6060c71d55ac0bd96f5ebb6b6e",
+       "size": 22
+      },
+      {
+       "path": "gone/archive0.tfa",
+       "sha1": "6f4502222cb9529151bd68b8ad1e954071aa4bd4",
+       "size": 12
+      },
+      {
+       "path": "stay/index.tfi",
+       "sha1": "70bd22439a6e359e43ace636904dae021ac0e51c",
+       "size": 11
+      },
+      {
+       "path": "stay/archive0.tfa",
+       "sha1": "2ccc9ce2d7a05388ef5f06a5c460f62aea3ed8f4",
+       "size": 9
+      },
+      {
+       "path": "gone/readme.txt",
+       "sha1": "r",
+       "size": 1
+      }
+     ],
+     "cdn_files": {
+      "top.bin": "74",
+      "gone/index.tfi": "0278000000029cfef7a3030279000002029cd8f1a303",
+      "gone/archive0.tfa": "789cab30ac340400039a0154",
+      "stay/index.tfi": "027300000001828bb1b00f",
+      "stay/archive0.tfa": "789c2b060000740074",
+      "gone/readme.txt": "72"
+     },
+     "summary": {
+      "branch": "pts",
+      "version": "M-V1",
+      "changed": true,
+      "ordinal": 1,
+      "added": 5,
+      "modified": 0,
+      "removed": 0,
+      "bytes_added": 7
+     },
+     "manifest": [
+      [
+       "gone/archive0.tfa",
+       "6f4502222cb9529151bd68b8ad1e954071aa4bd4",
+       12
+      ],
+      [
+       "gone/index.tfi",
+       "9b0180e8880a2a6060c71d55ac0bd96f5ebb6b6e",
+       22
+      ],
+      [
+       "gone/readme.txt",
+       "r",
+       1
+      ],
+      [
+       "stay/archive0.tfa",
+       "2ccc9ce2d7a05388ef5f06a5c460f62aea3ed8f4",
+       9
+      ],
+      [
+       "stay/index.tfi",
+       "70bd22439a6e359e43ace636904dae021ac0e51c",
+       11
+      ],
+      [
+       "top.bin",
+       "8efd86fb78a56a5145ed7739dcb00c78581c5375",
+       1
+      ]
+     ],
+     "state": [
+      [
+       "gone/readme.txt",
+       "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       null,
+       1,
+       null,
+       null,
+       1
+      ],
+      [
+       "gone/x",
+       "ec31682fde561917952ff78a7a8adeffd0febc372dd26871916c46c630381b45",
+       880672540,
+       2,
+       "gone",
+       0,
+       1
+      ],
+      [
+       "gone/y",
+       "03e0769b10886aef0ff2170851dd67d41755c87037c4319d9901e7fdf518c485",
+       880569372,
+       2,
+       "gone",
+       0,
+       1
+      ],
+      [
+       "stay/s",
+       "043a718774c572bd8a25adbeb1bfcd5c0256ae11cecf9f9c3f925d0e52beaf89",
+       4127999362,
+       1,
+       "stay",
+       0,
+       1
+      ],
+      [
+       "top.bin",
+       "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+       null,
+       1,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "gone/readme.txt",
+       "added",
+       "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       null,
+       1
+      ],
+      [
+       1,
+       "gone/x",
+       "added",
+       "ec31682fde561917952ff78a7a8adeffd0febc372dd26871916c46c630381b45",
+       880672540,
+       2
+      ],
+      [
+       1,
+       "gone/y",
+       "added",
+       "03e0769b10886aef0ff2170851dd67d41755c87037c4319d9901e7fdf518c485",
+       880569372,
+       2
+      ],
+      [
+       1,
+       "stay/s",
+       "added",
+       "043a718774c572bd8a25adbeb1bfcd5c0256ae11cecf9f9c3f925d0e52beaf89",
+       4127999362,
+       1
+      ],
+      [
+       1,
+       "top.bin",
+       "added",
+       "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+       null,
+       1
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-pts",
+       "motd": "m-V1",
+       "added": 5,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 7
+      }
+     ],
+     "branch": {
+      "current_version": "M-V1",
+      "current_ordinal": 1,
+      "content_path": "cp-pts"
+     },
+     "cas": [
+      [
+       "objects/03/03e0769b10886aef0ff2170851dd67d41755c87037c4319d9901e7fdf518c485",
+       2
+      ],
+      [
+       "objects/04/043a718774c572bd8a25adbeb1bfcd5c0256ae11cecf9f9c3f925d0e52beaf89",
+       1
+      ],
+      [
+       "objects/45/454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       1
+      ],
+      [
+       "objects/e3/e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+       1
+      ],
+      [
+       "objects/ec/ec31682fde561917952ff78a7a8adeffd0febc372dd26871916c46c630381b45",
+       2
+      ]
+     ]
+    },
+    {
+     "version": "V2",
+     "pointer_error": null,
+     "fail": {},
+     "cdn_manifest": [
+      {
+       "path": "top.bin",
+       "sha1": "8efd86fb78a56a5145ed7739dcb00c78581c5375",
+       "size": 1
+      },
+      {
+       "path": "stay/index.tfi",
+       "sha1": "70bd22439a6e359e43ace636904dae021ac0e51c",
+       "size": 11
+      },
+      {
+       "path": "stay/archive0.tfa",
+       "sha1": "2ccc9ce2d7a05388ef5f06a5c460f62aea3ed8f4",
+       "size": 9
+      }
+     ],
+     "cdn_files": {
+      "top.bin": "74",
+      "stay/index.tfi": "027300000001828bb1b00f",
+      "stay/archive0.tfa": "789c2b060000740074"
+     },
+     "summary": {
+      "branch": "pts",
+      "version": "M-V2",
+      "changed": true,
+      "ordinal": 2,
+      "added": 0,
+      "modified": 0,
+      "removed": 3,
+      "bytes_added": 0
+     },
+     "manifest": [
+      [
+       "stay/archive0.tfa",
+       "2ccc9ce2d7a05388ef5f06a5c460f62aea3ed8f4",
+       9
+      ],
+      [
+       "stay/index.tfi",
+       "70bd22439a6e359e43ace636904dae021ac0e51c",
+       11
+      ],
+      [
+       "top.bin",
+       "8efd86fb78a56a5145ed7739dcb00c78581c5375",
+       1
+      ]
+     ],
+     "state": [
+      [
+       "stay/s",
+       "043a718774c572bd8a25adbeb1bfcd5c0256ae11cecf9f9c3f925d0e52beaf89",
+       4127999362,
+       1,
+       "stay",
+       0,
+       1
+      ],
+      [
+       "top.bin",
+       "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+       null,
+       1,
+       null,
+       null,
+       1
+      ]
+     ],
+     "changes": [
+      [
+       1,
+       "gone/readme.txt",
+       "added",
+       "454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       null,
+       1
+      ],
+      [
+       1,
+       "gone/x",
+       "added",
+       "ec31682fde561917952ff78a7a8adeffd0febc372dd26871916c46c630381b45",
+       880672540,
+       2
+      ],
+      [
+       1,
+       "gone/y",
+       "added",
+       "03e0769b10886aef0ff2170851dd67d41755c87037c4319d9901e7fdf518c485",
+       880569372,
+       2
+      ],
+      [
+       1,
+       "stay/s",
+       "added",
+       "043a718774c572bd8a25adbeb1bfcd5c0256ae11cecf9f9c3f925d0e52beaf89",
+       4127999362,
+       1
+      ],
+      [
+       1,
+       "top.bin",
+       "added",
+       "e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+       null,
+       1
+      ],
+      [
+       2,
+       "gone/readme.txt",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       2,
+       "gone/x",
+       "removed",
+       null,
+       null,
+       0
+      ],
+      [
+       2,
+       "gone/y",
+       "removed",
+       null,
+       null,
+       0
+      ]
+     ],
+     "versions": [
+      {
+       "ordinal": 1,
+       "version_tag": "M-V1",
+       "status": "complete",
+       "content_path": "cp-pts",
+       "motd": "m-V1",
+       "added": 5,
+       "modified": 0,
+       "removed": 0,
+       "bytes_added": 7
+      },
+      {
+       "ordinal": 2,
+       "version_tag": "M-V2",
+       "status": "complete",
+       "content_path": "cp-pts",
+       "motd": "m-V2",
+       "added": 0,
+       "modified": 0,
+       "removed": 3,
+       "bytes_added": 0
+      }
+     ],
+     "branch": {
+      "current_version": "M-V2",
+      "current_ordinal": 2,
+      "content_path": "cp-pts"
+     },
+     "cas": [
+      [
+       "objects/03/03e0769b10886aef0ff2170851dd67d41755c87037c4319d9901e7fdf518c485",
+       2
+      ],
+      [
+       "objects/04/043a718774c572bd8a25adbeb1bfcd5c0256ae11cecf9f9c3f925d0e52beaf89",
+       1
+      ],
+      [
+       "objects/45/454349e422f05297191ead13e21d3db520e5abef52055e4964b82fb213f593a1",
+       1
+      ],
+      [
+       "objects/e3/e3b98a4da31a127d4bde6e43033f66ba274cab0eb7eb1c70ec41402bf6273dd8",
+       1
+      ],
+      [
+       "objects/ec/ec31682fde561917952ff78a7a8adeffd0febc372dd26871916c46c630381b45",
+       2
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "routes": {
+  "authed": [
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status",
+    "status": 200,
+    "body": "{\"branch\":\"live-us\",\"backfill\":{\"running\":false,\"updated\":0,\"done\":false,\"started_at\":null,\"finished_at\":null,\"error\":null}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status?branch=pts",
+    "status": 200,
+    "body": "{\"branch\":\"pts\",\"backfill\":{\"running\":false,\"updated\":0,\"done\":false,\"started_at\":null,\"finished_at\":null,\"error\":null}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status?branch=nope",
+    "status": 400,
+    "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"Unknown branch 'nope'\",\"details\":null,\"request_id\":\"parity-arc-3\"}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status?branch=",
+    "status": 400,
+    "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"Unknown branch ''\",\"details\":null,\"request_id\":\"parity-arc-4\"}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status?branch=%C3%A9t%C3%A9",
+    "status": 400,
+    "body": "{\"error\":{\"code\":\"not_found\",\"message\":\"Unknown branch '\u00e9t\u00e9'\",\"details\":null,\"request_id\":\"parity-arc-5\"}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "POST",
+    "url": "/admin/updates/backfill-modified?branch=x%27y",
+    "status": 400,
+    "body": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Unknown branch 'x'y' (known: live-us, pts)\",\"details\":null,\"request_id\":\"parity-arc-6\"}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "POST",
+    "url": "/admin/updates/backfill-modified?branch=LIVE-US",
+    "status": 400,
+    "body": "{\"error\":{\"code\":\"bad_request\",\"message\":\"Unknown branch 'LIVE-US' (known: live-us, pts)\",\"details\":null,\"request_id\":\"parity-arc-7\"}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "POST",
+    "url": "/admin/updates/backfill-modified?branch=pts&branch=live-us",
+    "status": 200,
+    "body": "{\"started\":true,\"branch\":\"live-us\",\"message\":\"Backfill started - poll /admin/updates/backfill-modified/status.\"}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status?branch=live-us",
+    "status": 200,
+    "body": "{\"branch\":\"live-us\",\"backfill\":{\"running\":true,\"updated\":0,\"done\":false,\"started_at\":\"2026-10-22T14:37:21.654321Z\",\"finished_at\":null,\"error\":null}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "POST",
+    "url": "/admin/updates/backfill-modified",
+    "status": 200,
+    "body": "{\"started\":false,\"branch\":\"live-us\",\"message\":\"A backfill is already running.\"}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status?branch=pts",
+    "status": 200,
+    "body": "{\"branch\":\"pts\",\"backfill\":{\"running\":false,\"updated\":2003,\"done\":true,\"started_at\":\"2026-10-22T14:37:21.654321Z\",\"finished_at\":\"2026-10-22T14:37:21Z\",\"error\":null}}",
+    "content-type": "application/json"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status?branch=pts",
+    "status": 200,
+    "body": "{\"branch\":\"pts\",\"backfill\":{\"running\":false,\"updated\":1000,\"done\":false,\"started_at\":\"2026-10-22T14:37:21.001000Z\",\"finished_at\":\"2026-10-22T14:37:21.654321Z\",\"error\":\"boom \u00e9 \\\"quoted\\\"\\n\"}}",
+    "content-type": "application/json"
+   }
+  ],
+  "started": [
+   "live-us"
+  ],
+  "unauth": [
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified/status",
+    "status": 401,
+    "body": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"parity-arc-u0\"}}",
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   {
+    "method": "POST",
+    "url": "/admin/updates/backfill-modified",
+    "status": 401,
+    "body": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"parity-arc-u1\"}}",
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   {
+    "method": "GET",
+    "url": "/admin/updates/backfill-modified",
+    "status": 405,
+    "body": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"parity-arc-u2\"}}",
+    "content-type": "application/json",
+    "allow": "POST"
+   },
+   {
+    "method": "POST",
+    "url": "/admin/updates/backfill-modified/status",
+    "status": 405,
+    "body": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"parity-arc-u3\"}}",
+    "content-type": "application/json",
+    "allow": "GET"
+   },
+   {
+    "method": "HEAD",
+    "url": "/admin/updates/backfill-modified/status",
+    "status": 401,
+    "body": "{\"error\":{\"code\":\"not_authenticated\",\"message\":\"Authentication required\",\"details\":null,\"request_id\":\"parity-arc-u4\"}}",
+    "content-type": "application/json",
+    "www-authenticate": "Bearer"
+   },
+   {
+    "method": "PUT",
+    "url": "/admin/updates/backfill-modified",
+    "status": 405,
+    "body": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"parity-arc-u5\"}}",
+    "content-type": "application/json",
+    "allow": "POST"
+   },
+   {
+    "method": "DELETE",
+    "url": "/admin/updates/backfill-modified/status?branch=nope",
+    "status": 405,
+    "body": "{\"error\":{\"code\":\"method_not_allowed\",\"message\":\"Method Not Allowed\",\"details\":null,\"request_id\":\"parity-arc-u6\"}}",
+    "content-type": "application/json",
+    "allow": "GET"
+   }
+  ]
+ },
+ "repo": {
+  "now": "2026-10-22T14:37:21.654321+00:00",
+  "pointer": {
+   "version": "PV",
+   "content_path": "patchkiwi-live-us01",
+   "motd": "Motd \u00e9",
+   "fields": []
+  },
+  "ops": [
+   {
+    "coll": "update_changes",
+    "ordered": false,
+    "ops": [
+     {
+      "update": {
+       "branch": "live-us",
+       "ordinal": {
+        "$numberInt": "3"
+       },
+       "path": "ui/a.bin"
+      },
+      "set": {
+       "type": "added",
+       "content_sha256": "abababababababababababababababababababababababababababababababab",
+       "fnv_hash": {
+        "$numberLong": "4000000000"
+       },
+       "size": {
+        "$numberInt": "12"
+       }
+      },
+      "upsert": true
+     },
+     {
+      "update": {
+       "branch": "live-us",
+       "ordinal": {
+        "$numberInt": "4"
+       },
+       "path": "ui/b.bin"
+      },
+      "set": {
+       "type": "removed",
+       "content_sha256": null,
+       "fnv_hash": null,
+       "size": {
+        "$numberInt": "0"
+       }
+      },
+      "upsert": true
+     },
+     {
+      "update": {
+       "branch": "pts",
+       "ordinal": {
+        "$numberLong": "2147483648"
+       },
+       "path": "x"
+      },
+      "set": {
+       "type": "modified",
+       "content_sha256": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+       "fnv_hash": {
+        "$numberInt": "5"
+       },
+       "size": {
+        "$numberLong": "8589934592"
+       }
+      },
+      "upsert": true
+     }
+    ]
+   },
+   {
+    "coll": "update_state",
+    "ordered": false,
+    "ops": [
+     {
+      "update": {
+       "branch": "live-us",
+       "path": "ui/a.bin"
+      },
+      "set": {
+       "content_sha256": "abababababababababababababababababababababababababababababababab",
+       "fnv_hash": {
+        "$numberLong": "4000000000"
+       },
+       "size": {
+        "$numberInt": "12"
+       },
+       "archive": "ui",
+       "archive_index": {
+        "$numberInt": "0"
+       },
+       "last_ordinal": {
+        "$numberInt": "3"
+       }
+      },
+      "upsert": true
+     },
+     {
+      "update": {
+       "branch": "live-us",
+       "path": "Trove.exe"
+      },
+      "set": {
+       "content_sha256": "efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+       "fnv_hash": null,
+       "size": {
+        "$numberLong": "2147483648"
+       },
+       "archive": null,
+       "archive_index": null,
+       "last_ordinal": {
+        "$numberInt": "2147483647"
+       }
+      },
+      "upsert": true
+     },
+     {
+      "delete": {
+       "branch": "live-us",
+       "path": "gone.bin"
+      }
+     },
+     {
+      "update": {
+       "branch": "live-us",
+       "path": "gone.bin"
+      },
+      "set": {
+       "content_sha256": "0101010101010101010101010101010101010101010101010101010101010101",
+       "fnv_hash": {
+        "$numberInt": "1"
+       },
+       "size": {
+        "$numberInt": "1"
+       },
+       "archive": "d",
+       "archive_index": {
+        "$numberInt": "7"
+       },
+       "last_ordinal": {
+        "$numberInt": "9"
+       }
+      },
+      "upsert": true
+     }
+    ]
+   },
+   {
+    "coll": "update_manifest",
+    "ordered": false,
+    "ops": [
+     {
+      "update": {
+       "branch": "live-us",
+       "path": "ui/index.tfi"
+      },
+      "set": {
+       "sha1": "s1",
+       "size": {
+        "$numberLong": "1099511627776"
+       }
+      },
+      "upsert": true
+     },
+     {
+      "delete": {
+       "branch": "live-us",
+       "path": "old.tfa"
+      }
+     },
+     {
+      "update": {
+       "branch": "live-us",
+       "path": "ui/archive0.tfa"
+      },
+      "set": {
+       "sha1": "s2",
+       "size": {
+        "$numberInt": "3"
+       }
+      },
+      "upsert": true
+     }
+    ]
+   }
+  ],
+  "begin": {
+   "result": [
+    7,
+    false
+   ],
+   "log": [
+    {
+     "coll": "update_versions",
+     "insert": {
+      "branch": "live-us",
+      "ordinal": {
+       "$numberInt": "7"
+      },
+      "version_tag": "MV-7",
+      "status": "in_progress",
+      "captured_at": "<now>",
+      "completed_at": null,
+      "content_path": "patchkiwi-live-us01",
+      "motd": "Motd \u00e9",
+      "files_added": {
+       "$numberInt": "0"
+      },
+      "files_modified": {
+       "$numberInt": "0"
+      },
+      "files_removed": {
+       "$numberInt": "0"
+      },
+      "bytes_added": {
+       "$numberInt": "0"
+      }
+     }
+    },
+    {
+     "coll": "update_branches",
+     "insert": {
+      "branch": "live-us",
+      "content_path": "",
+      "current_version": null,
+      "current_ordinal": {
+       "$numberInt": "0"
+      },
+      "last_probe_at": null,
+      "status": "syncing",
+      "last_error": null
+     }
+    }
+   ],
+   "last": {
+    "_id": {
+     "$oid": "65f0000000000000000000a6"
+    },
+    "branch": "live-us",
+    "ordinal": {
+     "$numberInt": "6"
+    },
+    "version_tag": "OLD",
+    "status": "complete",
+    "captured_at": {
+     "$date": {
+      "$numberLong": "1792716336411"
+     }
+    },
+    "completed_at": null,
+    "content_path": "",
+    "motd": "",
+    "files_added": {
+     "$numberInt": "0"
+    },
+    "files_modified": {
+     "$numberInt": "0"
+    },
+    "files_removed": {
+     "$numberInt": "0"
+    },
+    "bytes_added": {
+     "$numberInt": "0"
+    }
+   }
+  },
+  "resumed": {
+   "result": [
+    9,
+    true
+   ],
+   "log": []
+  },
+  "finish": {
+   "version": {
+    "_id": {
+     "$oid": "65f0000000000000000000a8"
+    },
+    "branch": "live-us",
+    "ordinal": {
+     "$numberInt": "7"
+    },
+    "version_tag": "MV-7",
+    "status": "in_progress",
+    "captured_at": {
+     "$date": {
+      "$numberLong": "1790816523456"
+     }
+    },
+    "content_path": "cp",
+    "motd": "m",
+    "files_added": {
+     "$numberLong": "1"
+    }
+   },
+   "branch": {
+    "_id": {
+     "$oid": "65f0000000000000000000b1"
+    },
+    "branch": "live-us",
+    "content_path": "old",
+    "current_version": "MV-6",
+    "current_ordinal": {
+     "$numberLong": "6"
+    },
+    "last_probe_at": {
+     "$date": {
+      "$numberLong": "1788220800000"
+     }
+    },
+    "status": "syncing",
+    "last_error": "earlier"
+   },
+   "log": [
+    {
+     "coll": "update_versions",
+     "save": {
+      "_id": {
+       "$oid": "65f0000000000000000000a8"
+      },
+      "branch": "live-us",
+      "ordinal": {
+       "$numberInt": "7"
+      },
+      "version_tag": "MV-7",
+      "status": "complete",
+      "captured_at": {
+       "$date": {
+        "$numberLong": "1790816523456"
+       }
+      },
+      "completed_at": {
+       "$date": {
+        "$numberLong": "1792679841654"
+       }
+      },
+      "content_path": "cp",
+      "motd": "m",
+      "files_added": {
+       "$numberInt": "3"
+      },
+      "files_modified": {
+       "$numberLong": "2147483648"
+      },
+      "files_removed": {
+       "$numberInt": "0"
+      },
+      "bytes_added": {
+       "$numberLong": "34359738368"
+      }
+     }
+    },
+    {
+     "coll": "update_branches",
+     "save": {
+      "_id": {
+       "$oid": "65f0000000000000000000b1"
+      },
+      "branch": "live-us",
+      "content_path": "patchkiwi-live-us01",
+      "current_version": "MV-7",
+      "current_ordinal": {
+       "$numberInt": "7"
+      },
+      "last_probe_at": {
+       "$date": {
+        "$numberLong": "1792679841654"
+       }
+      },
+      "status": "idle",
+      "last_error": "earlier"
+     }
+    },
+    {
+     "publish": "game_update"
+    }
+   ]
+  },
+  "touch": {
+   "log": [
+    {
+     "coll": "update_branches",
+     "save": {
+      "_id": {
+       "$oid": "65f0000000000000000000b1"
+      },
+      "branch": "live-us",
+      "content_path": "cp2",
+      "current_version": "MV-8",
+      "current_ordinal": {
+       "$numberInt": "6"
+      },
+      "last_probe_at": {
+       "$date": {
+        "$numberLong": "1792679841654"
+       }
+      },
+      "status": "idle",
+      "last_error": "earlier"
+     }
+    }
+   ]
+  },
+  "error": {
+   "message": "\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "log": [
+    {
+     "coll": "update_branches",
+     "save": {
+      "_id": {
+       "$oid": "65f0000000000000000000b1"
+      },
+      "branch": "live-us",
+      "content_path": "old",
+      "current_version": "MV-6",
+      "current_ordinal": {
+       "$numberInt": "6"
+      },
+      "last_probe_at": {
+       "$date": {
+        "$numberLong": "1788220800000"
+       }
+      },
+      "status": "error",
+      "last_error": "\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     }
+    }
+   ]
+  },
+  "error_new": {
+   "log": [
+    {
+     "coll": "update_branches",
+     "insert": {
+      "branch": "pts",
+      "content_path": "",
+      "current_version": null,
+      "current_ordinal": {
+       "$numberInt": "0"
+      },
+      "last_probe_at": null,
+      "status": "error",
+      "last_error": "Server error '500 Internal Server Error' for url 'http://h'"
+     }
+    }
+   ]
+  }
+ },
+ "backfill": {
+  "updated": 2000,
+  "log": [
+   {
+    "pipeline": [
+     {
+      "$match": {
+       "branch": "pts"
+      }
+     },
+     {
+      "$group": {
+       "_id": "$path",
+       "last": {
+        "$max": "$ordinal"
+       }
+      }
+     }
+    ],
+    "kw": {
+     "allowDiskUse": true
+    }
+   }
+  ],
+  "calls": [
+   {
+    "n": 1000,
+    "ordered": false,
+    "first": {
+     "filter": {
+      "branch": "pts",
+      "path": "p0"
+     },
+     "update": {
+      "$set": {
+       "last_ordinal": {
+        "$numberLong": "0"
+       }
+      }
+     },
+     "upsert": null
+    },
+    "last": {
+     "filter": {
+      "branch": "pts",
+      "path": "p999"
+     },
+     "update": {
+      "$set": {
+       "last_ordinal": {
+        "$numberLong": "999"
+       }
+      }
+     }
+    }
+   },
+   {
+    "n": 1000,
+    "ordered": false,
+    "first": {
+     "filter": {
+      "branch": "pts",
+      "path": "p1000"
+     },
+     "update": {
+      "$set": {
+       "last_ordinal": {
+        "$numberInt": "10"
+       }
+      }
+     },
+     "upsert": null
+    },
+    "last": {
+     "filter": {
+      "branch": "pts",
+      "path": "p1999"
+     },
+     "update": {
+      "$set": {
+       "last_ordinal": {
+        "$numberInt": "8"
+       }
+      }
+     }
+    }
+   },
+   {
+    "n": 3,
+    "ordered": false,
+    "first": {
+     "filter": {
+      "branch": "pts",
+      "path": "p2000"
+     },
+     "update": {
+      "$set": {
+       "last_ordinal": {
+        "$numberInt": "9"
+       }
+      }
+     },
+     "upsert": null
+    },
+    "last": {
+     "filter": {
+      "branch": "pts",
+      "path": "p2002"
+     },
+     "update": {
+      "$set": {
+       "last_ordinal": {
+        "$numberInt": "0"
+       }
+      }
+     }
+    }
+   }
+  ],
+  "status": {
+   "running": false,
+   "updated": {
+    "$numberInt": "2000"
+   },
+   "done": true,
+   "started_at": {
+    "$date": {
+     "$numberLong": "1792679841654"
+    }
+   },
+   "finished_at": {
+    "$date": {
+     "$numberLong": "1792679841654"
+    }
+   },
+   "error": null
+  },
+  "rows_rule": "path p{i}, last Int64(i) when i % 3 == 0 else int32 i % 11, i < 2003"
+ }
+}

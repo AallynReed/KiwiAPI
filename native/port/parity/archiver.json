@@ -1,0 +1,20 @@
+[
+ {"name": "status_unauth", "path": "/admin/updates/backfill-modified/status"},
+ {"name": "status_head_unauth", "method": "HEAD", "path": "/admin/updates/backfill-modified/status"},
+ {"name": "start_get_405", "path": "/admin/updates/backfill-modified"},
+ {"name": "start_head_405", "method": "HEAD", "path": "/admin/updates/backfill-modified"},
+ {"name": "status", "path": "/admin/updates/backfill-modified/status", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
+  "allow_diff": ["body"], "reason": "the backfill status is per process: a Python worker that ran a backfill since its last restart reports it"},
+ {"name": "status_pts", "path": "/admin/updates/backfill-modified/status?branch=pts", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
+  "allow_diff": ["body"], "reason": "the backfill status is per process: a Python worker that ran a backfill since its last restart reports it"},
+ {"name": "status_head", "method": "HEAD", "path": "/admin/updates/backfill-modified/status?branch=pts", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_unknown", "path": "/admin/updates/backfill-modified/status?branch=nope", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_empty", "path": "/admin/updates/backfill-modified/status?branch=", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_unicode", "path": "/admin/updates/backfill-modified/status?branch=%C3%A9t%C3%A9%22", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_repeated", "path": "/admin/updates/backfill-modified/status?branch=pts&branch=nope", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_bad_token", "path": "/admin/updates/backfill-modified/status", "headers": {"Authorization": "Bearer not-a-token"}},
+ {"name": "status_api_token", "path": "/admin/updates/backfill-modified/status", "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"}},
+ {"name": "status_trailing_slash", "path": "/admin/updates/backfill-modified/status/", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "preflight", "method": "OPTIONS", "path": "/admin/updates/backfill-modified",
+  "headers": {"Origin": "https://aallyn.net", "Access-Control-Request-Method": "POST"}}
+]
