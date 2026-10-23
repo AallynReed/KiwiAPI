@@ -1,0 +1,2652 @@
+{
+ "full": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": true,
+   "market_enabled": true,
+   "store_enabled": true,
+   "leaderboards_enabled": true,
+   "player_activity_enabled": true,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": true,
+   "codexes_enabled": true,
+   "server_status_enabled": true,
+   "giveaways_enabled": true,
+   "commands_enabled": true,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": true,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": true,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": true,
+   "gems_guide_enabled": true,
+   "abilities_enabled": true,
+   "guides_enabled": true,
+   "allies_enabled": true,
+   "gem_tools_enabled": true,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": true,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": true,
+   "unlock_debug_enabled": true,
+   "file_drops_enabled": true,
+   "community_sites_enabled": true,
+   "cheater_detection_enabled": true,
+   "alt_clusters_enabled": true,
+   "renames_enabled": true,
+   "duplicates_enabled": true
+  },
+  "/site/embed/allowed-origins": {
+   "origins": [
+    "https://partner.example"
+   ]
+  },
+  "/internal/geo-maintenance": {
+   "countries": []
+  },
+  "/site/rotations": {
+   "server_time": {
+    "now_unix": 1760000000,
+    "now_iso": "2025-10-09T08:53:20+00:00",
+    "trove_day": "Thursday",
+    "daily_reset_at": 1760007600,
+    "weekly_reset_at": 1760300000
+   },
+   "daily_buff": {
+    "name": "Treasure Day",
+    "emoji": "💰",
+    "color": "#e6bf62",
+    "normal_buffs": [
+     "+50% Loot",
+     5,
+     "+25% XP",
+     "Chests <3",
+     "Fifth",
+     "Sixth"
+    ],
+    "premium_buffs": [
+     "Patron & friends",
+     null,
+     "Double",
+     "Triple",
+     "Quad",
+     "Penta"
+    ]
+   },
+   "weekly_buff": {
+    "name": "Gem Week",
+    "emoji": "",
+    "buffs": [
+     "Gem drops +100%",
+     "Geode XP"
+    ]
+   },
+   "daily_rotation": [
+    {
+     "weekday": "Monday",
+     "name": "Treasure Day",
+     "is_current": false
+    },
+    {
+     "weekday": "Tuesday",
+     "name": "Gem Day",
+     "is_current": true
+    },
+    {
+     "weekday": "W",
+     "name": null
+    },
+    {
+     "weekday": 12345,
+     "name": 7,
+     "is_current": "yes"
+    },
+    "junk"
+   ],
+   "weekly_rotation": [],
+   "chaos": {
+    "starts_at": 1759996400,
+    "ends_at": 1760005000,
+    "seconds_remaining": 5000,
+    "item": {
+     "name": "Sunset Sail <Deluxe>",
+     "identifier": "x"
+    }
+   },
+   "merchants": [
+    {
+     "id": "corruxion",
+     "name": "Corruxion",
+     "active": true,
+     "state": null,
+     "starts_at": 1759999900,
+     "ends_at": 1760000200,
+     "biomes": [],
+     "window": null,
+     "schedule": [
+      {
+       "starts_at": 1760000000,
+       "ends_at": 1760000050,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000100,
+       "ends_at": 1760000150,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000200,
+       "ends_at": 1760000250,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000300,
+       "ends_at": 1760000350,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000400,
+       "ends_at": 1760000450,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000500,
+       "ends_at": 1760000550,
+       "biomes": []
+      }
+     ]
+    },
+    {
+     "id": "fluxion",
+     "name": "Fluxion",
+     "active": false,
+     "state": "Voting",
+     "starts_at": null,
+     "ends_at": null,
+     "biomes": [
+      {
+       "name": "Neon City",
+       "icon": "neon.png"
+      },
+      {
+       "name": null
+      },
+      "bare"
+     ],
+     "schedule": [
+      {
+       "starts_at": 1.5,
+       "ends_at": null,
+       "biomes": [
+        {
+         "name": "Desert",
+         "icon": 3
+        }
+       ]
+      },
+      "x"
+     ]
+    },
+    {
+     "id": "luxion",
+     "name": "Luxion",
+     "active": true,
+     "state": "Open",
+     "starts_at": 1760000000,
+     "ends_at": 1760259200,
+     "window": {
+      "open": true,
+      "starts_at": 1760000000,
+      "ends_at": 1760010800
+     },
+     "biomes": [
+      "Candoria",
+      {
+       "name": "Fae Forest"
+      },
+      {
+       "icon": "x"
+      },
+      "Fourth"
+     ],
+     "schedule": []
+    },
+    {
+     "id": "wild_mana",
+     "name": "Wild Mana",
+     "active": true,
+     "state": "Here",
+     "biomes": [
+      {
+       "name": "Lunar Lagoon",
+       "icon": "lunar.png"
+      }
+     ],
+     "starts_at": 1250000000.0,
+     "ends_at": 1e+16
+    }
+   ]
+  },
+  "/site/feeds/news?limit=16": {
+   "items": [
+    {
+     "title": "News <0> & \"more\"",
+     "url": "https://trovegame.com/news/0",
+     "category": "",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00"
+    },
+    {
+     "title": "News <1> & \"more\"",
+     "url": "https://trovegame.com/news/1",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00Z"
+    },
+    {
+     "title": "News <2> & \"more\"",
+     "url": "https://trovegame.com/news/2",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": 1760000002
+    },
+    {
+     "title": "News <3> & \"more\"",
+     "url": "https://trovegame.com/news/3",
+     "category": "Events",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": 1700000000.9
+    },
+    {
+     "title": "News <4> & \"more\"",
+     "url": "https://trovegame.com/news/4",
+     "category": "",
+     "categories": "Patch, Shop Offers",
+     "image": null,
+     "published_at": "2026-10-01T23:30:00-05:00"
+    },
+    {
+     "title": "News <5> & \"more\"",
+     "url": "https://trovegame.com/news/5",
+     "category": "Events",
+     "categories": null,
+     "image": null,
+     "published_at": "2026-10-01"
+    },
+    {
+     "title": "News <6> & \"more\"",
+     "url": "https://trovegame.com/news/6",
+     "category": "",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": "nope"
+    },
+    {
+     "title": "News <7> & \"more\"",
+     "url": "https://trovegame.com/news/7",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": ""
+    },
+    {
+     "title": "News <8> & \"more\"",
+     "url": "https://trovegame.com/news/8",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "title": "News <9> & \"more\"",
+     "url": "https://trovegame.com/news/9",
+     "category": "Events",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": true
+    },
+    {
+     "title": "News <10> & \"more\"",
+     "url": "https://trovegame.com/news/10",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": 86401
+    },
+    {
+     "title": "News <11> & \"more\"",
+     "url": "https://trovegame.com/news/11",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00.999999+00:00"
+    },
+    {
+     "title": "News <12> & \"more\"",
+     "url": "https://trovegame.com/news/12",
+     "category": "",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-W40-4T05:06"
+    },
+    {
+     "title": "News <13> & \"more\"",
+     "url": "https://trovegame.com/news/13",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00ZZ"
+    },
+    {
+     "title": "News <14> & \"more\"",
+     "url": "https://trovegame.com/news/14",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "20261001T100000"
+    }
+   ]
+  },
+  "/site/feeds/videos?platform=youtube": {
+   "platform": "youtube",
+   "items": [
+    {
+     "title": "youtube video 0 — über",
+     "url": "https://youtube.example/0",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1760000000
+    },
+    {
+     "title": "youtube video 1 — über",
+     "url": "https://youtube.example/1",
+     "channel": "Chan 1",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t1.jpg",
+     "published_at": 1759913600
+    },
+    {
+     "title": "youtube video 2 — über",
+     "url": "https://youtube.example/2",
+     "channel": "Chan 2",
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t2.jpg",
+     "published_at": 1759827200
+    },
+    {
+     "title": "youtube video 3 — über",
+     "url": "https://youtube.example/3",
+     "channel": "Chan 3",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "",
+     "published_at": 1759740800
+    },
+    {
+     "title": "youtube video 4 — über",
+     "url": "https://youtube.example/4",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t4.jpg",
+     "published_at": 1759654400
+    },
+    {
+     "title": "youtube video 5 — über",
+     "url": "https://youtube.example/5",
+     "channel": "Chan 5",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t5.jpg",
+     "published_at": 1759568000
+    },
+    {
+     "title": "youtube video 6 — über",
+     "url": "https://youtube.example/6",
+     "channel": "Chan 6",
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1759481600
+    },
+    {
+     "title": "youtube video 7 — über",
+     "url": "https://youtube.example/7",
+     "channel": "Chan 7",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t7.jpg",
+     "published_at": 1759395200
+    },
+    {
+     "title": "youtube video 8 — über",
+     "url": "https://youtube.example/8",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t8.jpg",
+     "published_at": 1759308800
+    },
+    {
+     "title": "youtube video 9 — über",
+     "url": "https://youtube.example/9",
+     "channel": "Chan 9",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "",
+     "published_at": 1759222400
+    },
+    {
+     "title": "youtube video 10 — über",
+     "url": "https://youtube.example/10",
+     "channel": "Chan 10",
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t10.jpg",
+     "published_at": 1759136000
+    },
+    {
+     "title": "youtube video 11 — über",
+     "url": "https://youtube.example/11",
+     "channel": "Chan 11",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t11.jpg",
+     "published_at": 1759049600
+    },
+    {
+     "title": "youtube video 12 — über",
+     "url": "https://youtube.example/12",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1758963200
+    },
+    {
+     "title": "youtube video 13 — über",
+     "url": "https://youtube.example/13",
+     "channel": "Chan 13",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t13.jpg",
+     "published_at": 1758876800
+    }
+   ],
+   "fetched_at": 1760000000
+  },
+  "/site/feeds/videos?platform=twitch": {
+   "platform": "twitch",
+   "items": [
+    {
+     "title": "twitch video 0 — über",
+     "url": "https://twitch.example/0",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1760000000
+    },
+    {
+     "title": "twitch video 1 — über",
+     "url": "https://twitch.example/1",
+     "channel": "Chan 1",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t1.jpg",
+     "published_at": 1759913600
+    },
+    {
+     "title": "twitch video 2 — über",
+     "url": "https://twitch.example/2",
+     "channel": "Chan 2",
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t2.jpg",
+     "published_at": 1759827200
+    }
+   ],
+   "fetched_at": 1760000000
+  },
+  "/site/leaderboards/records": {
+   "trove_mastery": {
+    "level": 1234,
+    "points": 9876543,
+    "player_name": "Zed <b>"
+   },
+   "geode_mastery": {
+    "level": 345.0,
+    "points": null,
+    "player_name": ""
+   },
+   "power_rank": {
+    "value": 41234.5678,
+    "player_name": "O'Neil"
+   }
+  },
+  "/site/mods/projects?sort=recent&limit=40": {
+   "items": [
+    {
+     "handle": "h0",
+     "slug": "mod-0",
+     "title": "Mod 0 <x>",
+     "author": "Alice",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h1",
+     "slug": "mod-1",
+     "title": "Mod 1 <x>",
+     "author": "alice",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h2",
+     "slug": "mod-2",
+     "title": "Mod 2 <x>",
+     "author": "ALICE",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "",
+     "slug": "mod-3",
+     "title": "Mod 3 <x>",
+     "author": null,
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h4",
+     "slug": "mod-4",
+     "title": "Mod 4 <x>",
+     "author": "Bob",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h5",
+     "slug": "mod-5",
+     "title": "Mod 5 <x>",
+     "author": "",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "h6",
+     "slug": "mod-6",
+     "title": "",
+     "author": "Carol",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h7",
+     "slug": "mod-7",
+     "title": "Mod 7 <x>",
+     "author": "Bob",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h8",
+     "slug": "mod-8",
+     "title": "Mod 8 <x>",
+     "author": "Dave",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "h9",
+     "slug": "mod-9",
+     "title": "Mod 9 <x>",
+     "author": "Eve",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h10",
+     "slug": "mod-10",
+     "title": "Mod 10 <x>",
+     "author": "Frank",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h11",
+     "slug": "mod-11",
+     "title": "Mod 11 <x>",
+     "author": "Grace",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "h12",
+     "slug": "mod-12",
+     "title": "Mod 12 <x>",
+     "author": "H",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h13",
+     "slug": "mod-13",
+     "title": "Mod 13 <x>",
+     "author": "I",
+     "owner_username": "owner1"
+    },
+    "junk"
+   ],
+   "total": 15
+  },
+  "/site/calendar/events": {
+   "ongoing": [
+    {
+     "event_id": 0,
+     "name": "Event 0 & co",
+     "url": "https://ev.example/0",
+     "category": "Bonus",
+     "starts_at": 1760000000,
+     "ends_at": 1760000000
+    },
+    {
+     "event_id": 1,
+     "name": "Event 1 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759913600,
+     "ends_at": 1760003600
+    },
+    {
+     "event_id": 2,
+     "name": "Event 2 & co",
+     "url": "https://ev.example/2",
+     "category": "Bonus",
+     "starts_at": 1759827200,
+     "ends_at": 1760007200
+    },
+    {
+     "event_id": 3,
+     "name": "Event 3 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759740800,
+     "ends_at": 1760010800
+    },
+    {
+     "event_id": 4,
+     "name": "Event 4 & co",
+     "url": "https://ev.example/4",
+     "category": "Bonus",
+     "starts_at": 1759654400,
+     "ends_at": 1760014400
+    },
+    {
+     "event_id": 5,
+     "name": "Event 5 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759568000,
+     "ends_at": 1760018000
+    },
+    {
+     "event_id": 6,
+     "name": "Event 6 & co",
+     "url": "https://ev.example/6",
+     "category": "Bonus",
+     "starts_at": 1759481600,
+     "ends_at": 1760021600
+    },
+    {
+     "event_id": 7,
+     "name": "Event 7 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759395200,
+     "ends_at": 1760025200
+    },
+    {
+     "event_id": 8,
+     "name": "Event 8 & co",
+     "url": "https://ev.example/8",
+     "category": "Bonus",
+     "starts_at": 1759308800,
+     "ends_at": 1760028800
+    },
+    {
+     "event_id": 9,
+     "name": "Event 9 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759222400,
+     "ends_at": 1760032400
+    },
+    {
+     "event_id": 10,
+     "name": "Event 10 & co",
+     "url": "https://ev.example/10",
+     "category": "Bonus",
+     "starts_at": 1759136000,
+     "ends_at": 1760036000
+    },
+    {
+     "event_id": 11,
+     "name": "Event 11 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759049600,
+     "ends_at": 1760039600
+    },
+    {
+     "event_id": 12,
+     "name": "Event 12 & co",
+     "url": "https://ev.example/12",
+     "category": "Bonus",
+     "starts_at": 1758963200,
+     "ends_at": 1760043200
+    },
+    {
+     "event_id": 13,
+     "name": "Event 13 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758876800,
+     "ends_at": 1760046800
+    },
+    {
+     "event_id": 14,
+     "name": "Event 14 & co",
+     "url": "https://ev.example/14",
+     "category": "Bonus",
+     "starts_at": 1758790400,
+     "ends_at": 1760050400
+    },
+    {
+     "event_id": 15,
+     "name": "Event 15 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758704000,
+     "ends_at": 1760054000
+    },
+    {
+     "event_id": 16,
+     "name": "Event 16 & co",
+     "url": "https://ev.example/16",
+     "category": "Bonus",
+     "starts_at": 1758617600,
+     "ends_at": 1760057600
+    },
+    {
+     "event_id": 17,
+     "name": "Event 17 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758531200,
+     "ends_at": 1760061200
+    },
+    {
+     "event_id": 18,
+     "name": "Event 18 & co",
+     "url": "https://ev.example/18",
+     "category": "Bonus",
+     "starts_at": 1758444800,
+     "ends_at": 1760064800
+    },
+    {
+     "event_id": 19,
+     "name": "Event 19 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758358400,
+     "ends_at": 1760068400
+    },
+    {
+     "event_id": 20,
+     "name": "Event 20 & co",
+     "url": "https://ev.example/20",
+     "category": "Bonus",
+     "starts_at": 1758272000,
+     "ends_at": 1760072000
+    },
+    {
+     "event_id": 21,
+     "name": "Event 21 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758185600,
+     "ends_at": 1760075600
+    }
+   ],
+   "upcoming": [
+    {
+     "name": "Later",
+     "url": "https://ev.example/later",
+     "starts_at": "2026-11-01T00:00:00Z",
+     "ends_at": null
+    },
+    5
+   ],
+   "now": 1760000000
+  },
+  "/site/btt/releases?limit=24": {
+   "channel": null,
+   "count": 4,
+   "total": 4,
+   "items": [
+    {
+     "tag_name": "v2.1.0",
+     "name": "",
+     "body": "**Fixed** the <b>gem</b> [builder](https://x.example/a) and ![shot](https://x.example/s.png) `code` # heading > quote ~strike~ | pipe _under_ word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+     "html_url": "https://github.com/x/releases/v2.1.0",
+     "channel": "release",
+     "published_at": "2026-09-30T12:00:00Z"
+    },
+    {
+     "tag_name": "v2.1.0-beta.1",
+     "name": "Beta <1>",
+     "body": null,
+     "html_url": null,
+     "channel": "beta",
+     "published_at": null
+    },
+    {
+     "tag_name": "",
+     "name": "untagged"
+    },
+    {
+     "tag_name": 210,
+     "name": null,
+     "body": "short\n\nnotes   here\u001c!",
+     "channel": "",
+     "published_at": 1760000000
+    }
+   ]
+  },
+  "/site/trove-status": {
+   "overall": "online",
+   "checked_at": 1760000000,
+   "environments": {
+    "eu": {
+     "status": "online"
+    },
+    "us": {
+     "status": "maintenance mode"
+    },
+    "pts": "down",
+    "extra": {}
+   }
+  },
+  "/site/leaderboards/activity": {
+   "estimate_24h": 12345,
+   "estimate_7d": 45678.9,
+   "window_end": 1760000000
+  },
+  "/site/leaderboards/class-activity/current": {
+   "total_active": 98765,
+   "classes": [
+    {
+     "name": "Knight",
+     "active_players": 100,
+     "share": 0.25
+    },
+    {
+     "name": "Bard",
+     "active_players": 300.5,
+     "share": 0.12345
+    },
+    {
+     "name": "Neon Ninja",
+     "active_players": 100,
+     "share": true
+    },
+    {
+     "name": "Ice Sage",
+     "active_players": 100,
+     "share": 1
+    },
+    {
+     "name": "Revenant",
+     "active_players": 2500,
+     "share": 0.0005
+    },
+    {
+     "name": "",
+     "active_players": 5
+    },
+    {
+     "name": "Vanguardian",
+     "active_players": "many"
+    },
+    {
+     "name": "Chloromancer",
+     "active_players": 0,
+     "share": null
+    },
+    {
+     "name": "Lunar Lancer",
+     "active_players": true,
+     "share": 0.125
+    }
+   ]
+  },
+  "/site/giveaways": {
+   "items": [
+    {
+     "prize_name": "Sunset Sail",
+     "title": "Weekly <draw>",
+     "description": "**Fixed** the <b>gem</b> [builder](https://x.example/a) and ![shot](https://x.example/s.png) `code` # heading > quote ~strike~ | pipe _under_ word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+     "status": "open",
+     "entry_count": 0,
+     "ends_at": "2026-10-30T11:00:00",
+     "winner_username": null
+    },
+    {
+     "prize_name": "",
+     "title": null,
+     "description": null,
+     "status": null,
+     "entry_count": null,
+     "ends_at": null,
+     "winner_username": "Win & Ner"
+    },
+    {
+     "prize_name": "Prize 0",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 1",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 2",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 3",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 4",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 5",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 6",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 7",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 8",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 9",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 10",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 11",
+     "entry_count": 1234567,
+     "status": "closed"
+    }
+   ]
+  },
+  "/site/mod-stats": {
+   "mods": [
+    {
+     "title": "Zakros UI - Chat",
+     "handle": "zakros",
+     "slug": "chat"
+    },
+    {
+     "title": "Zakros UI - alpha bars",
+     "handle": "zakros",
+     "slug": "bars"
+    },
+    {
+     "title": "Zakros FX - Glow",
+     "handle": "zakros",
+     "slug": "glow"
+    },
+    {
+     "title": "Zakros BP - Ship",
+     "handle": "zakros",
+     "slug": "ship"
+    },
+    {
+     "title": "Other - <script>alert(1)</script>",
+     "handle": "zakros",
+     "slug": "x"
+    },
+    {
+     "title": "Aardvark - Thing",
+     "handle": "zakros",
+     "slug": "aard"
+    },
+    {
+     "title": "Loose Mod",
+     "handle": "zakros",
+     "slug": "loose"
+    },
+    {
+     "title": "Zakros UI - Éclair",
+     "handle": "zakros",
+     "slug": "eclair"
+    },
+    {
+     "title": "No Handle - X",
+     "handle": null,
+     "slug": "nh"
+    },
+    {
+     "title": "",
+     "handle": "zakros",
+     "slug": "empty"
+    },
+    {
+     "title": "Zakros UI - Chat",
+     "handle": "other",
+     "slug": 5
+    }
+   ]
+  },
+  "/site/leaderboards/timestamps?limit=1": {
+   "items": [
+    "x",
+    1.5,
+    1760000000,
+    1759996400
+   ],
+   "count": 4
+  },
+  "/site/leaderboards/boards?created_at=1760000000": {
+   "created_at": 1760000000,
+   "items": [
+    {
+     "uuid": 1001,
+     "name": "Trove Mastery",
+     "entries": 123456
+    },
+    {
+     "uuid": 1002,
+     "name": "Power Rank",
+     "entries": null
+    },
+    {
+     "uuid": 1003,
+     "name": "",
+     "entries": 5
+    },
+    {
+     "uuid": 1004,
+     "name": "Effort <Knight>",
+     "entries": 0
+    }
+   ]
+  },
+  "/site/leaderboards/1001/entries?created_at=1760000000&limit=25": {
+   "items": [
+    {
+     "rank": 1,
+     "player_name": "Some One",
+     "score": 987654.0
+    },
+    {
+     "rank": 2,
+     "player_name": "café <b>",
+     "score": 12.5
+    },
+    {
+     "rank": 3,
+     "player_name": "100%/x?y",
+     "score": null
+    },
+    {
+     "rank": null,
+     "player_name": "",
+     "score": 1
+    },
+    {
+     "rank": 4.0,
+     "player_name": "O'Neil",
+     "score": true
+    }
+   ]
+  },
+  "/site/leaderboards/players/Some%20One/profile": {
+   "player_name": "Some One",
+   "verified": true,
+   "summary": {
+    "best_rank": 3,
+    "boards_appeared": 12,
+    "top10_count": 0,
+    "latest_anchor": 1760000000
+   },
+   "boards": [
+    {
+     "board_name": "Trove Mastery",
+     "category": "Mastery",
+     "latest_rank": 5,
+     "best_rank": 3,
+     "latest_score": 1234567
+    },
+    {
+     "board_name": "",
+     "latest_rank": 1
+    },
+    {
+     "board_name": "Effort <Bard>",
+     "category": null,
+     "latest_rank": 0,
+     "best_rank": null,
+     "latest_score": null
+    },
+    {
+     "board_name": "Delves",
+     "latest_rank": 1500.0,
+     "best_rank": 2.5,
+     "latest_score": 0
+    }
+   ]
+  },
+  "/site/leaderboards/players/caf%C3%A9%20%3Cb%3E/profile": {
+   "player_name": null,
+   "summary": "x",
+   "boards": "y"
+  },
+  "/site/updates/branches": {
+   "items": [
+    {
+     "branch": "live-us",
+     "current_version": "v1.2.3"
+    },
+    {
+     "branch": "pts",
+     "current_version": null
+    },
+    {
+     "branch": "",
+     "current_version": "x"
+    },
+    "junk"
+   ]
+  },
+  "/site/updates/live-us/versions?limit=24": {
+   "items": [
+    {
+     "version_tag": "v1.2.3",
+     "captured_at": "2026-10-20T11:00:00+00:00",
+     "files_added": 1234,
+     "files_modified": null,
+     "files_removed": 2.5
+    },
+    {
+     "version_tag": "",
+     "captured_at": 1760000000
+    },
+    {
+     "version_tag": "v1.2.2",
+     "captured_at": null,
+     "files_added": 0,
+     "files_modified": "x",
+     "files_removed": true
+    }
+   ]
+  }
+ },
+ "odd": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": true,
+   "market_enabled": true,
+   "store_enabled": true,
+   "leaderboards_enabled": true,
+   "player_activity_enabled": true,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": true,
+   "codexes_enabled": true,
+   "server_status_enabled": true,
+   "giveaways_enabled": true,
+   "commands_enabled": true,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": true,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": true,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": true,
+   "gems_guide_enabled": true,
+   "abilities_enabled": true,
+   "guides_enabled": true,
+   "allies_enabled": true,
+   "gem_tools_enabled": true,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": true,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": true,
+   "unlock_debug_enabled": true,
+   "file_drops_enabled": true,
+   "community_sites_enabled": true,
+   "cheater_detection_enabled": false,
+   "alt_clusters_enabled": true,
+   "renames_enabled": 0,
+   "duplicates_enabled": "yes"
+  },
+  "/site/embed/allowed-origins": {
+   "origins": [
+    "https://partner.example"
+   ]
+  },
+  "/internal/geo-maintenance": {
+   "countries": []
+  },
+  "/site/rotations": {
+   "daily_buff": {
+    "name": "   ",
+    "emoji": "x"
+   },
+   "weekly_buff": {
+    "name": "Hoard Week",
+    "emoji": 7,
+    "buffs": {
+     "Loot +50%": 1,
+     "XP": 2
+    },
+    "premium_buffs": "ab"
+   },
+   "chaos": {
+    "ends_at": true,
+    "item": "not a dict"
+   },
+   "merchants": [
+    {
+     "name": 12,
+     "active": 1,
+     "state": null,
+     "biomes": {
+      "Neon City": 1,
+      "Desert": 2
+     },
+     "schedule": "abcdef",
+     "window": [
+      1,
+      2
+     ]
+    },
+    "skip me",
+    null,
+    {
+     "name": "",
+     "active": 0,
+     "state": "Open",
+     "biomes": [
+      null,
+      0,
+      "",
+      {},
+      {
+       "name": null
+      },
+      "Tundra"
+     ]
+    }
+   ],
+   "daily_rotation": {
+    "Mon": 1
+   },
+   "server_time": [
+    1,
+    2
+   ]
+  },
+  "/site/feeds/news?limit=16": {
+   "items": "nope"
+  },
+  "/site/feeds/videos?platform=youtube": [
+   1,
+   2
+  ],
+  "/site/feeds/videos?platform=twitch": {
+   "items": [
+    {
+     "title": null,
+     "thumbnail_url": ""
+    }
+   ]
+  },
+  "/site/leaderboards/records": {
+   "trove_mastery": "x",
+   "geode_mastery": {},
+   "power_rank": {
+    "value": "big"
+   }
+  },
+  "/site/mods/projects?sort=recent&limit=40": {
+   "items": [
+    {
+     "handle": 5,
+     "slug": 6,
+     "title": null,
+     "author": "Seven"
+    }
+   ]
+  },
+  "/site/calendar/events": {
+   "ongoing": {
+    "a": 1
+   },
+   "upcoming": null
+  },
+  "/site/btt/releases?limit=24": {
+   "items": null
+  },
+  "/site/trove-status": {
+   "overall": "down",
+   "checked_at": "2026-10-23T01:02:03Z",
+   "environments": {
+    "eu": {
+     "status": null
+    },
+    "us": {
+     "status": "they're up"
+    },
+    "pts": {
+     "status": 503
+    }
+   }
+  },
+  "/site/leaderboards/activity": {
+   "estimate_24h": true,
+   "estimate_7d": "x",
+   "window_end": "bad"
+  },
+  "/site/leaderboards/class-activity/current": {
+   "total_active": 0,
+   "classes": "nope"
+  },
+  "/site/giveaways": {
+   "items": [
+    {}
+   ]
+  },
+  "/site/mod-stats": {
+   "mods": [
+    {
+     "title": "Nope",
+     "handle": "",
+     "slug": "x"
+    }
+   ]
+  },
+  "/site/leaderboards/timestamps?limit=1": {
+   "items": [
+    true
+   ]
+  },
+  "/site/leaderboards/boards?created_at=True": {
+   "items": [
+    {
+     "uuid": null,
+     "name": "Solo",
+     "entries": 7
+    }
+   ]
+  },
+  "/site/leaderboards/boards?created_at=true": {
+   "items": [
+    {
+     "uuid": null,
+     "name": "Solo",
+     "entries": 7
+    }
+   ]
+  },
+  "/site/leaderboards/players/Some%20One/profile": [
+   1
+  ],
+  "/site/updates/branches": null,
+  "/site/updates/live-us/versions?limit=24": {
+   "items": [
+    {
+     "version_tag": 3
+    }
+   ]
+  }
+ },
+ "off": {
+  "/site/feature-flags": {
+   "mods_hub_enabled": false,
+   "market_enabled": true,
+   "store_enabled": true,
+   "leaderboards_enabled": false,
+   "player_activity_enabled": false,
+   "class_activity_enabled": true,
+   "clubs_enabled": true,
+   "updates_enabled": false,
+   "codexes_enabled": true,
+   "server_status_enabled": false,
+   "giveaways_enabled": false,
+   "commands_enabled": true,
+   "server_time_enabled": true,
+   "webhooks_enabled": true,
+   "dm_subscriptions_enabled": true,
+   "image_studio_enabled": true,
+   "calendar_enabled": false,
+   "streams_enabled": true,
+   "btt_releases_enabled": true,
+   "classes_enabled": true,
+   "star_chart_enabled": true,
+   "gem_simulator_enabled": true,
+   "gem_evaluator_enabled": true,
+   "gem_builds_enabled": true,
+   "calculators_enabled": true,
+   "gems_guide_enabled": true,
+   "abilities_enabled": true,
+   "guides_enabled": true,
+   "allies_enabled": true,
+   "gem_tools_enabled": true,
+   "fishing_guide_enabled": true,
+   "gear_guide_enabled": true,
+   "loot_collector_guide_enabled": true,
+   "dressing_room_enabled": true,
+   "dressing_room_page_enabled": true,
+   "sound_studio_enabled": true,
+   "mod_workshop_enabled": true,
+   "blueprint_editor_enabled": true,
+   "tomes_enabled": true,
+   "unlock_debug_enabled": true,
+   "file_drops_enabled": true,
+   "community_sites_enabled": true,
+   "cheater_detection_enabled": true,
+   "alt_clusters_enabled": true,
+   "renames_enabled": true,
+   "duplicates_enabled": true
+  },
+  "/site/embed/allowed-origins": {
+   "origins": [
+    "https://partner.example"
+   ]
+  },
+  "/internal/geo-maintenance": {
+   "countries": []
+  },
+  "/site/rotations": {
+   "server_time": {
+    "now_unix": 1760000000,
+    "now_iso": "2025-10-09T08:53:20+00:00",
+    "trove_day": "Thursday",
+    "daily_reset_at": 1760007600,
+    "weekly_reset_at": 1760300000
+   },
+   "daily_buff": {
+    "name": "Treasure Day",
+    "emoji": "💰",
+    "color": "#e6bf62",
+    "normal_buffs": [
+     "+50% Loot",
+     5,
+     "+25% XP",
+     "Chests <3",
+     "Fifth",
+     "Sixth"
+    ],
+    "premium_buffs": [
+     "Patron & friends",
+     null,
+     "Double",
+     "Triple",
+     "Quad",
+     "Penta"
+    ]
+   },
+   "weekly_buff": {
+    "name": "Gem Week",
+    "emoji": "",
+    "buffs": [
+     "Gem drops +100%",
+     "Geode XP"
+    ]
+   },
+   "daily_rotation": [
+    {
+     "weekday": "Monday",
+     "name": "Treasure Day",
+     "is_current": false
+    },
+    {
+     "weekday": "Tuesday",
+     "name": "Gem Day",
+     "is_current": true
+    },
+    {
+     "weekday": "W",
+     "name": null
+    },
+    {
+     "weekday": 12345,
+     "name": 7,
+     "is_current": "yes"
+    },
+    "junk"
+   ],
+   "weekly_rotation": [],
+   "chaos": {
+    "starts_at": 1759996400,
+    "ends_at": 1760005000,
+    "seconds_remaining": 5000,
+    "item": {
+     "name": "Sunset Sail <Deluxe>",
+     "identifier": "x"
+    }
+   },
+   "merchants": [
+    {
+     "id": "corruxion",
+     "name": "Corruxion",
+     "active": true,
+     "state": null,
+     "starts_at": 1759999900,
+     "ends_at": 1760000200,
+     "biomes": [],
+     "window": null,
+     "schedule": [
+      {
+       "starts_at": 1760000000,
+       "ends_at": 1760000050,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000100,
+       "ends_at": 1760000150,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000200,
+       "ends_at": 1760000250,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000300,
+       "ends_at": 1760000350,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000400,
+       "ends_at": 1760000450,
+       "biomes": []
+      },
+      {
+       "starts_at": 1760000500,
+       "ends_at": 1760000550,
+       "biomes": []
+      }
+     ]
+    },
+    {
+     "id": "fluxion",
+     "name": "Fluxion",
+     "active": false,
+     "state": "Voting",
+     "starts_at": null,
+     "ends_at": null,
+     "biomes": [
+      {
+       "name": "Neon City",
+       "icon": "neon.png"
+      },
+      {
+       "name": null
+      },
+      "bare"
+     ],
+     "schedule": [
+      {
+       "starts_at": 1.5,
+       "ends_at": null,
+       "biomes": [
+        {
+         "name": "Desert",
+         "icon": 3
+        }
+       ]
+      },
+      "x"
+     ]
+    },
+    {
+     "id": "luxion",
+     "name": "Luxion",
+     "active": true,
+     "state": "Open",
+     "starts_at": 1760000000,
+     "ends_at": 1760259200,
+     "window": {
+      "open": true,
+      "starts_at": 1760000000,
+      "ends_at": 1760010800
+     },
+     "biomes": [
+      "Candoria",
+      {
+       "name": "Fae Forest"
+      },
+      {
+       "icon": "x"
+      },
+      "Fourth"
+     ],
+     "schedule": []
+    },
+    {
+     "id": "wild_mana",
+     "name": "Wild Mana",
+     "active": true,
+     "state": "Here",
+     "biomes": [
+      {
+       "name": "Lunar Lagoon",
+       "icon": "lunar.png"
+      }
+     ],
+     "starts_at": 1250000000.0,
+     "ends_at": 1e+16
+    }
+   ]
+  },
+  "/site/feeds/news?limit=16": {
+   "items": [
+    {
+     "title": "News <0> & \"more\"",
+     "url": "https://trovegame.com/news/0",
+     "category": "",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00"
+    },
+    {
+     "title": "News <1> & \"more\"",
+     "url": "https://trovegame.com/news/1",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00Z"
+    },
+    {
+     "title": "News <2> & \"more\"",
+     "url": "https://trovegame.com/news/2",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": 1760000002
+    },
+    {
+     "title": "News <3> & \"more\"",
+     "url": "https://trovegame.com/news/3",
+     "category": "Events",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": 1700000000.9
+    },
+    {
+     "title": "News <4> & \"more\"",
+     "url": "https://trovegame.com/news/4",
+     "category": "",
+     "categories": "Patch, Shop Offers",
+     "image": null,
+     "published_at": "2026-10-01T23:30:00-05:00"
+    },
+    {
+     "title": "News <5> & \"more\"",
+     "url": "https://trovegame.com/news/5",
+     "category": "Events",
+     "categories": null,
+     "image": null,
+     "published_at": "2026-10-01"
+    },
+    {
+     "title": "News <6> & \"more\"",
+     "url": "https://trovegame.com/news/6",
+     "category": "",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": "nope"
+    },
+    {
+     "title": "News <7> & \"more\"",
+     "url": "https://trovegame.com/news/7",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": ""
+    },
+    {
+     "title": "News <8> & \"more\"",
+     "url": "https://trovegame.com/news/8",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": null
+    },
+    {
+     "title": "News <9> & \"more\"",
+     "url": "https://trovegame.com/news/9",
+     "category": "Events",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": true
+    },
+    {
+     "title": "News <10> & \"more\"",
+     "url": "https://trovegame.com/news/10",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": 86401
+    },
+    {
+     "title": "News <11> & \"more\"",
+     "url": "https://trovegame.com/news/11",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00.999999+00:00"
+    },
+    {
+     "title": "News <12> & \"more\"",
+     "url": "https://trovegame.com/news/12",
+     "category": "",
+     "categories": [
+      "Shop Offers",
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-W40-4T05:06"
+    },
+    {
+     "title": "News <13> & \"more\"",
+     "url": "https://trovegame.com/news/13",
+     "category": "Events",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "2026-10-01T10:00:00ZZ"
+    },
+    {
+     "title": "News <14> & \"more\"",
+     "url": "https://trovegame.com/news/14",
+     "category": "",
+     "categories": [
+      "Events"
+     ],
+     "image": null,
+     "published_at": "20261001T100000"
+    }
+   ]
+  },
+  "/site/feeds/videos?platform=youtube": {
+   "platform": "youtube",
+   "items": [
+    {
+     "title": "youtube video 0 — über",
+     "url": "https://youtube.example/0",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1760000000
+    },
+    {
+     "title": "youtube video 1 — über",
+     "url": "https://youtube.example/1",
+     "channel": "Chan 1",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t1.jpg",
+     "published_at": 1759913600
+    },
+    {
+     "title": "youtube video 2 — über",
+     "url": "https://youtube.example/2",
+     "channel": "Chan 2",
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t2.jpg",
+     "published_at": 1759827200
+    },
+    {
+     "title": "youtube video 3 — über",
+     "url": "https://youtube.example/3",
+     "channel": "Chan 3",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "",
+     "published_at": 1759740800
+    },
+    {
+     "title": "youtube video 4 — über",
+     "url": "https://youtube.example/4",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t4.jpg",
+     "published_at": 1759654400
+    },
+    {
+     "title": "youtube video 5 — über",
+     "url": "https://youtube.example/5",
+     "channel": "Chan 5",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t5.jpg",
+     "published_at": 1759568000
+    },
+    {
+     "title": "youtube video 6 — über",
+     "url": "https://youtube.example/6",
+     "channel": "Chan 6",
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1759481600
+    },
+    {
+     "title": "youtube video 7 — über",
+     "url": "https://youtube.example/7",
+     "channel": "Chan 7",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t7.jpg",
+     "published_at": 1759395200
+    },
+    {
+     "title": "youtube video 8 — über",
+     "url": "https://youtube.example/8",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t8.jpg",
+     "published_at": 1759308800
+    },
+    {
+     "title": "youtube video 9 — über",
+     "url": "https://youtube.example/9",
+     "channel": "Chan 9",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "",
+     "published_at": 1759222400
+    },
+    {
+     "title": "youtube video 10 — über",
+     "url": "https://youtube.example/10",
+     "channel": "Chan 10",
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t10.jpg",
+     "published_at": 1759136000
+    },
+    {
+     "title": "youtube video 11 — über",
+     "url": "https://youtube.example/11",
+     "channel": "Chan 11",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t11.jpg",
+     "published_at": 1759049600
+    },
+    {
+     "title": "youtube video 12 — über",
+     "url": "https://youtube.example/12",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1758963200
+    },
+    {
+     "title": "youtube video 13 — über",
+     "url": "https://youtube.example/13",
+     "channel": "Chan 13",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t13.jpg",
+     "published_at": 1758876800
+    }
+   ],
+   "fetched_at": 1760000000
+  },
+  "/site/feeds/videos?platform=twitch": {
+   "platform": "twitch",
+   "items": [
+    {
+     "title": "twitch video 0 — über",
+     "url": "https://twitch.example/0",
+     "channel": null,
+     "thumbnail_url": null,
+     "thumbnail": "",
+     "published_at": 1760000000
+    },
+    {
+     "title": "twitch video 1 — über",
+     "url": "https://twitch.example/1",
+     "channel": "Chan 1",
+     "thumbnail_url": "https://img.example/{width}x{height}.jpg",
+     "thumbnail": "https://img.example/t1.jpg",
+     "published_at": 1759913600
+    },
+    {
+     "title": "twitch video 2 — über",
+     "url": "https://twitch.example/2",
+     "channel": "Chan 2",
+     "thumbnail_url": null,
+     "thumbnail": "https://img.example/t2.jpg",
+     "published_at": 1759827200
+    }
+   ],
+   "fetched_at": 1760000000
+  },
+  "/site/leaderboards/records": {
+   "trove_mastery": {
+    "level": 1234,
+    "points": 9876543,
+    "player_name": "Zed <b>"
+   },
+   "geode_mastery": {
+    "level": 345.0,
+    "points": null,
+    "player_name": ""
+   },
+   "power_rank": {
+    "value": 41234.5678,
+    "player_name": "O'Neil"
+   }
+  },
+  "/site/mods/projects?sort=recent&limit=40": {
+   "items": [
+    {
+     "handle": "h0",
+     "slug": "mod-0",
+     "title": "Mod 0 <x>",
+     "author": "Alice",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h1",
+     "slug": "mod-1",
+     "title": "Mod 1 <x>",
+     "author": "alice",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h2",
+     "slug": "mod-2",
+     "title": "Mod 2 <x>",
+     "author": "ALICE",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "",
+     "slug": "mod-3",
+     "title": "Mod 3 <x>",
+     "author": null,
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h4",
+     "slug": "mod-4",
+     "title": "Mod 4 <x>",
+     "author": "Bob",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h5",
+     "slug": "mod-5",
+     "title": "Mod 5 <x>",
+     "author": "",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "h6",
+     "slug": "mod-6",
+     "title": "",
+     "author": "Carol",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h7",
+     "slug": "mod-7",
+     "title": "Mod 7 <x>",
+     "author": "Bob",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h8",
+     "slug": "mod-8",
+     "title": "Mod 8 <x>",
+     "author": "Dave",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "h9",
+     "slug": "mod-9",
+     "title": "Mod 9 <x>",
+     "author": "Eve",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h10",
+     "slug": "mod-10",
+     "title": "Mod 10 <x>",
+     "author": "Frank",
+     "owner_username": "owner1"
+    },
+    {
+     "handle": "h11",
+     "slug": "mod-11",
+     "title": "Mod 11 <x>",
+     "author": "Grace",
+     "owner_username": "owner2"
+    },
+    {
+     "handle": "h12",
+     "slug": "mod-12",
+     "title": "Mod 12 <x>",
+     "author": "H",
+     "owner_username": "owner0"
+    },
+    {
+     "handle": "h13",
+     "slug": "mod-13",
+     "title": "Mod 13 <x>",
+     "author": "I",
+     "owner_username": "owner1"
+    },
+    "junk"
+   ],
+   "total": 15
+  },
+  "/site/calendar/events": {
+   "ongoing": [
+    {
+     "event_id": 0,
+     "name": "Event 0 & co",
+     "url": "https://ev.example/0",
+     "category": "Bonus",
+     "starts_at": 1760000000,
+     "ends_at": 1760000000
+    },
+    {
+     "event_id": 1,
+     "name": "Event 1 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759913600,
+     "ends_at": 1760003600
+    },
+    {
+     "event_id": 2,
+     "name": "Event 2 & co",
+     "url": "https://ev.example/2",
+     "category": "Bonus",
+     "starts_at": 1759827200,
+     "ends_at": 1760007200
+    },
+    {
+     "event_id": 3,
+     "name": "Event 3 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759740800,
+     "ends_at": 1760010800
+    },
+    {
+     "event_id": 4,
+     "name": "Event 4 & co",
+     "url": "https://ev.example/4",
+     "category": "Bonus",
+     "starts_at": 1759654400,
+     "ends_at": 1760014400
+    },
+    {
+     "event_id": 5,
+     "name": "Event 5 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759568000,
+     "ends_at": 1760018000
+    },
+    {
+     "event_id": 6,
+     "name": "Event 6 & co",
+     "url": "https://ev.example/6",
+     "category": "Bonus",
+     "starts_at": 1759481600,
+     "ends_at": 1760021600
+    },
+    {
+     "event_id": 7,
+     "name": "Event 7 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759395200,
+     "ends_at": 1760025200
+    },
+    {
+     "event_id": 8,
+     "name": "Event 8 & co",
+     "url": "https://ev.example/8",
+     "category": "Bonus",
+     "starts_at": 1759308800,
+     "ends_at": 1760028800
+    },
+    {
+     "event_id": 9,
+     "name": "Event 9 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759222400,
+     "ends_at": 1760032400
+    },
+    {
+     "event_id": 10,
+     "name": "Event 10 & co",
+     "url": "https://ev.example/10",
+     "category": "Bonus",
+     "starts_at": 1759136000,
+     "ends_at": 1760036000
+    },
+    {
+     "event_id": 11,
+     "name": "Event 11 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1759049600,
+     "ends_at": 1760039600
+    },
+    {
+     "event_id": 12,
+     "name": "Event 12 & co",
+     "url": "https://ev.example/12",
+     "category": "Bonus",
+     "starts_at": 1758963200,
+     "ends_at": 1760043200
+    },
+    {
+     "event_id": 13,
+     "name": "Event 13 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758876800,
+     "ends_at": 1760046800
+    },
+    {
+     "event_id": 14,
+     "name": "Event 14 & co",
+     "url": "https://ev.example/14",
+     "category": "Bonus",
+     "starts_at": 1758790400,
+     "ends_at": 1760050400
+    },
+    {
+     "event_id": 15,
+     "name": "Event 15 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758704000,
+     "ends_at": 1760054000
+    },
+    {
+     "event_id": 16,
+     "name": "Event 16 & co",
+     "url": "https://ev.example/16",
+     "category": "Bonus",
+     "starts_at": 1758617600,
+     "ends_at": 1760057600
+    },
+    {
+     "event_id": 17,
+     "name": "Event 17 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758531200,
+     "ends_at": 1760061200
+    },
+    {
+     "event_id": 18,
+     "name": "Event 18 & co",
+     "url": "https://ev.example/18",
+     "category": "Bonus",
+     "starts_at": 1758444800,
+     "ends_at": 1760064800
+    },
+    {
+     "event_id": 19,
+     "name": "Event 19 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758358400,
+     "ends_at": 1760068400
+    },
+    {
+     "event_id": 20,
+     "name": "Event 20 & co",
+     "url": "https://ev.example/20",
+     "category": "Bonus",
+     "starts_at": 1758272000,
+     "ends_at": 1760072000
+    },
+    {
+     "event_id": 21,
+     "name": "Event 21 & co",
+     "url": "",
+     "category": "Bonus",
+     "starts_at": 1758185600,
+     "ends_at": 1760075600
+    }
+   ],
+   "upcoming": [
+    {
+     "name": "Later",
+     "url": "https://ev.example/later",
+     "starts_at": "2026-11-01T00:00:00Z",
+     "ends_at": null
+    },
+    5
+   ],
+   "now": 1760000000
+  },
+  "/site/btt/releases?limit=24": {
+   "channel": null,
+   "count": 4,
+   "total": 4,
+   "items": [
+    {
+     "tag_name": "v2.1.0",
+     "name": "",
+     "body": "**Fixed** the <b>gem</b> [builder](https://x.example/a) and ![shot](https://x.example/s.png) `code` # heading > quote ~strike~ | pipe _under_ word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+     "html_url": "https://github.com/x/releases/v2.1.0",
+     "channel": "release",
+     "published_at": "2026-09-30T12:00:00Z"
+    },
+    {
+     "tag_name": "v2.1.0-beta.1",
+     "name": "Beta <1>",
+     "body": null,
+     "html_url": null,
+     "channel": "beta",
+     "published_at": null
+    },
+    {
+     "tag_name": "",
+     "name": "untagged"
+    },
+    {
+     "tag_name": 210,
+     "name": null,
+     "body": "short\n\nnotes   here\u001c!",
+     "channel": "",
+     "published_at": 1760000000
+    }
+   ]
+  },
+  "/site/trove-status": {
+   "overall": "online",
+   "checked_at": 1760000000,
+   "environments": {
+    "eu": {
+     "status": "online"
+    },
+    "us": {
+     "status": "maintenance mode"
+    },
+    "pts": "down",
+    "extra": {}
+   }
+  },
+  "/site/leaderboards/activity": {
+   "estimate_24h": 12345,
+   "estimate_7d": 45678.9,
+   "window_end": 1760000000
+  },
+  "/site/leaderboards/class-activity/current": {
+   "total_active": 98765,
+   "classes": [
+    {
+     "name": "Knight",
+     "active_players": 100,
+     "share": 0.25
+    },
+    {
+     "name": "Bard",
+     "active_players": 300.5,
+     "share": 0.12345
+    },
+    {
+     "name": "Neon Ninja",
+     "active_players": 100,
+     "share": true
+    },
+    {
+     "name": "Ice Sage",
+     "active_players": 100,
+     "share": 1
+    },
+    {
+     "name": "Revenant",
+     "active_players": 2500,
+     "share": 0.0005
+    },
+    {
+     "name": "",
+     "active_players": 5
+    },
+    {
+     "name": "Vanguardian",
+     "active_players": "many"
+    },
+    {
+     "name": "Chloromancer",
+     "active_players": 0,
+     "share": null
+    },
+    {
+     "name": "Lunar Lancer",
+     "active_players": true,
+     "share": 0.125
+    }
+   ]
+  },
+  "/site/giveaways": {
+   "items": [
+    {
+     "prize_name": "Sunset Sail",
+     "title": "Weekly <draw>",
+     "description": "**Fixed** the <b>gem</b> [builder](https://x.example/a) and ![shot](https://x.example/s.png) `code` # heading > quote ~strike~ | pipe _under_ word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ",
+     "status": "open",
+     "entry_count": 0,
+     "ends_at": "2026-10-30T11:00:00",
+     "winner_username": null
+    },
+    {
+     "prize_name": "",
+     "title": null,
+     "description": null,
+     "status": null,
+     "entry_count": null,
+     "ends_at": null,
+     "winner_username": "Win & Ner"
+    },
+    {
+     "prize_name": "Prize 0",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 1",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 2",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 3",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 4",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 5",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 6",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 7",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 8",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 9",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 10",
+     "entry_count": 1234567,
+     "status": "closed"
+    },
+    {
+     "prize_name": "Prize 11",
+     "entry_count": 1234567,
+     "status": "closed"
+    }
+   ]
+  },
+  "/site/leaderboards/timestamps?limit=1": {
+   "items": [
+    "x",
+    1.5,
+    1760000000,
+    1759996400
+   ],
+   "count": 4
+  },
+  "/site/leaderboards/boards?created_at=1760000000": {
+   "created_at": 1760000000,
+   "items": [
+    {
+     "uuid": 1001,
+     "name": "Trove Mastery",
+     "entries": 123456
+    },
+    {
+     "uuid": 1002,
+     "name": "Power Rank",
+     "entries": null
+    },
+    {
+     "uuid": 1003,
+     "name": "",
+     "entries": 5
+    },
+    {
+     "uuid": 1004,
+     "name": "Effort <Knight>",
+     "entries": 0
+    }
+   ]
+  },
+  "/site/leaderboards/1001/entries?created_at=1760000000&limit=25": {
+   "items": [
+    {
+     "rank": 1,
+     "player_name": "Some One",
+     "score": 987654.0
+    },
+    {
+     "rank": 2,
+     "player_name": "café <b>",
+     "score": 12.5
+    },
+    {
+     "rank": 3,
+     "player_name": "100%/x?y",
+     "score": null
+    },
+    {
+     "rank": null,
+     "player_name": "",
+     "score": 1
+    },
+    {
+     "rank": 4.0,
+     "player_name": "O'Neil",
+     "score": true
+    }
+   ]
+  },
+  "/site/leaderboards/players/Some%20One/profile": {
+   "player_name": "Some One",
+   "verified": true,
+   "summary": {
+    "best_rank": 3,
+    "boards_appeared": 12,
+    "top10_count": 0,
+    "latest_anchor": 1760000000
+   },
+   "boards": [
+    {
+     "board_name": "Trove Mastery",
+     "category": "Mastery",
+     "latest_rank": 5,
+     "best_rank": 3,
+     "latest_score": 1234567
+    },
+    {
+     "board_name": "",
+     "latest_rank": 1
+    },
+    {
+     "board_name": "Effort <Bard>",
+     "category": null,
+     "latest_rank": 0,
+     "best_rank": null,
+     "latest_score": null
+    },
+    {
+     "board_name": "Delves",
+     "latest_rank": 1500.0,
+     "best_rank": 2.5,
+     "latest_score": 0
+    }
+   ]
+  },
+  "/site/leaderboards/players/caf%C3%A9%20%3Cb%3E/profile": {
+   "player_name": null,
+   "summary": "x",
+   "boards": "y"
+  },
+  "/site/updates/branches": {
+   "items": [
+    {
+     "branch": "live-us",
+     "current_version": "v1.2.3"
+    },
+    {
+     "branch": "pts",
+     "current_version": null
+    },
+    {
+     "branch": "",
+     "current_version": "x"
+    },
+    "junk"
+   ]
+  },
+  "/site/updates/live-us/versions?limit=24": {
+   "items": [
+    {
+     "version_tag": "v1.2.3",
+     "captured_at": "2026-10-20T11:00:00+00:00",
+     "files_added": 1234,
+     "files_modified": null,
+     "files_removed": 2.5
+    },
+    {
+     "version_tag": "",
+     "captured_at": 1760000000
+    },
+    {
+     "version_tag": "v1.2.2",
+     "captured_at": null,
+     "files_added": 0,
+     "files_modified": "x",
+     "files_removed": true
+    }
+   ]
+  }
+ },
+ "down": {}
+}

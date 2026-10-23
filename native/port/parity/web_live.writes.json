@@ -1,0 +1,22 @@
+[
+ {"name": "home_voxel", "path": "/", "headers": {"Accept": "text/html", "Cookie": "btt_theme=dark"}, "allow_diff": ["body"], "reason": "the island JSON carries now_unix from each stack's own 30s rotations memo"},
+ {"name": "home_classic", "path": "/", "headers": {"Accept": "text/html", "Cookie": "btt_design=classic; btt_theme=light"}},
+ {"name": "home_head", "method": "HEAD", "path": "/", "headers": {"Cookie": "btt_design=classic"}, "compare_headers": ["content-length"]},
+ {"name": "status", "path": "/status", "headers": {"Accept": "text/html"}, "compare_headers": ["content-length", "content-security-policy", "x-frame-options"]},
+ {"name": "calendar", "path": "/calendar"},
+ {"name": "streams", "path": "/streams"},
+ {"name": "releases", "path": "/releases"},
+ {"name": "mod_stats", "path": "/zakros-ui-stats"},
+ {"name": "giveaways", "path": "/giveaways"},
+ {"name": "activity", "path": "/activity"},
+ {"name": "activity_1m", "path": "/activity?period=1M"},
+ {"name": "activity_7d_repeated", "path": "/activity?period=x&period=7d"},
+ {"name": "class_activity", "path": "/class-activity"},
+ {"name": "leaderboards", "path": "/leaderboards", "headers": {"Cookie": "btt_theme=light"}},
+ {"name": "updates", "path": "/updates"},
+ {"name": "player_seeded", "path": "/player/Alpha"},
+ {"name": "player_sigma", "path": "/player/%CE%A3%CE%8A%CE%A3%CE%A5%CE%A6%CE%9F%CE%A3"},
+ {"name": "player_unknown", "path": "/player/Parity%20Nobody", "headers": {"Accept": "text/html"}},
+ {"name": "player_quote", "path": "/player/O'Neil"},
+ {"name": "home_classic_cached", "path": "/", "headers": {"Cookie": "btt_design=classic; btt_theme=light"}}
+]

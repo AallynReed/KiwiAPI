@@ -12,6 +12,7 @@ pub mod flags;
 pub mod geo;
 pub mod gzip;
 pub mod internal;
+pub mod live;
 pub mod meta;
 pub mod nav;
 pub mod pages;
@@ -143,6 +144,7 @@ fn ported(web: Arc<Web>) -> Router<AppState> {
     let static_root = web.static_root.clone();
     Router::new()
         .merge(pages::router())
+        .merge(live::router())
         .route("/robots.txt", get(meta::robots))
         .route("/BingSiteAuth.xml", get(meta::bing))
         .route("/sitemap.xml", get(meta::sitemap))
