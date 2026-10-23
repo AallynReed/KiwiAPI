@@ -428,11 +428,9 @@ fn player_name_is_the_decoded_segment() {
 
 fn bare_state() -> crate::state::AppState {
     use crate::{config::Settings, db::Db, state::Inner};
-    use hyper_util::{client::legacy::Client, rt::TokioExecutor};
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
+    let settings = Settings::default();
     crate::state::AppState {
-        inner: std::sync::Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }),
+        inner: std::sync::Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }),
     }
 }
 
@@ -461,8 +459,8 @@ async fn routing() {
     assert_eq!(body["error"]["details"][1]["loc"], json!(["query", "uuid"]));
     assert_eq!(send("GET", "/site/leaderboards/players/x/series?days=31").await.0, 422);
     assert_eq!(send("POST", "/site/leaderboards/players/x/profile").await.0, 405);
-    // Shapes Starlette doesn't route here go to Python untouched (an empty
-    // segment does in `routes::app`, before this router).
+    // Shapes Starlette doesn't route here fall through this router (an empty
+    // segment does in `routes::app`, before it).
     for uri in [
         "/v1/leaderboards/players/x/history/",
         "/v1/leaderboards/players/x/y/history",

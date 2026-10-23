@@ -1,6 +1,5 @@
-//! The website container (`web`), in front of the Python website (`web-py`,
-//! `PY_WEB_UPSTREAM`) the way kiwi-server fronts api-py. No database, no
-//! loops but the page-view beacon and the GeoIP refresh.
+//! The website container (`web`). No database, no loops but the page-view
+//! beacon and the GeoIP refresh.
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -18,13 +17,7 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
         .with_ansi(std::io::IsTerminal::is_terminal(&std::io::stderr()))
         .init();
-    let mut vars: Vec<(String, String)> =
-        std::env::vars_os().filter_map(|(k, v)| Some((k.into_string().ok()?, v.into_string().ok()?))).collect();
-    if let Some(up) = vars.iter().find(|(k, v)| k.eq_ignore_ascii_case("PY_WEB_UPSTREAM") && !v.is_empty()).cloned() {
-        vars.retain(|(k, _)| !k.eq_ignore_ascii_case("PY_UPSTREAM"));
-        vars.push(("PY_UPSTREAM".into(), up.1));
-    }
-    let settings = Settings::from_vars(vars)?;
+    let settings = Settings::from_env()?;
     let bind: SocketAddr = settings.bind.parse()?;
     let site = Arc::new(web::Web::new(&settings, kiwi_server::middleware::MwConfig::from_env()));
     let state = AppState::new(settings).await?;

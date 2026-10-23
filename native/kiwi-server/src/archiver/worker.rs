@@ -39,9 +39,6 @@ pub fn set_decode_hook(hook: DecodeHook) {
 }
 
 pub fn start(state: &AppState) {
-    if !crate::jobs::owns("update_archiver") {
-        return;
-    }
     if !state.settings().trove_update_enabled {
         tracing::info!("updates: archiver disabled (set TROVE_UPDATE_ENABLED=true to run)");
         return;

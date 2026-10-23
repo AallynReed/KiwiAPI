@@ -1,4 +1,4 @@
-//! The daily maintenance sweep (`app/core/maintenance.py`, RUST_OWNS
+//! The daily maintenance sweep (`app/core/maintenance.py`, loop
 //! `maintenance`): auto-revoke inactive API tokens, warn owners of tokens
 //! about to expire, and mail the admin a digest of rate-limit hits. Runs at
 //! startup, then every 24 hours.

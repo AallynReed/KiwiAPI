@@ -5,7 +5,6 @@
 
 use std::sync::Arc;
 
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use serde_json::json;
 
 use super::store::{DateWrite, DuplicateWrite, Pg, RenameWrite, Store};
@@ -58,13 +57,7 @@ async fn state(schema: &str) -> AppState {
         Ok(url) => Some(redis::aio::ConnectionManager::new(redis::Client::open(url).unwrap()).await.unwrap()),
         Err(_) => None,
     };
-    AppState {
-        inner: Arc::new(Inner {
-            settings: Settings::from_vars([("PY_UPSTREAM", "http://127.0.0.1:9")]).unwrap(),
-            db: Db { mongo: None, redis, pg: Some(pool) },
-            upstream: Client::builder(TokioExecutor::new()).build_http(),
-        }),
-    }
+    AppState { inner: Arc::new(Inner { settings: Settings::default(), db: Db { mongo: None, redis, pg: Some(pool) } }) }
 }
 
 async fn admin() -> tokio_postgres::Client {

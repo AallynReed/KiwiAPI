@@ -10,7 +10,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use chrono::{DateTime, TimeZone, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::leaf::{clean_supporter_names, normalize_handle, py_strip};
 use mongodb::bson::{Bson, Document, oid::ObjectId};
 use serde_json::{Value, json};
@@ -53,15 +52,13 @@ fn latin1(s: &str) -> Vec<u8> {
 
 fn settings() -> Settings {
     let env = golden()["env"].as_object().expect("env");
-    let mut vars: Vec<(String, String)> = env.iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
+    let vars: Vec<(String, String)> = env.iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
     Settings::from_vars(vars).expect("settings")
 }
 
 fn state() -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
     let db = Db { mongo: None, redis: None, pg: None };
-    AppState { inner: Arc::new(Inner { settings: settings(), db, upstream }) }
+    AppState { inner: Arc::new(Inner { settings: settings(), db }) }
 }
 
 /// The leaf routes under the real middleware stack, without stores.
@@ -418,7 +415,7 @@ async fn moderation_report_rows() {
 
 #[test]
 fn config_and_docs_follow_settings() {
-    let defaults = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
+    let defaults = Settings::default();
     let body = pyjson::pydantic(&meta::config_body(&defaults));
     assert!(body.starts_with(r#"{"app_name":"Kiwi API","api_url":"https://api.aallyn.net","captcha_provider":"turnstile","captcha_sitekey":null,"require_verified_for_tokens":true,"#));
     assert!(body.ends_with(r#""github_oauth_enabled":false,"discord_oauth_enabled":false}"#));
@@ -448,10 +445,6 @@ async fn leaf_store_round_trip() {
     use crate::auth::sessions::{Audience, create_access_token};
     use mongodb::bson::doc;
 
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     let db = state.mongo().clone();
     let user_id = ObjectId::new();

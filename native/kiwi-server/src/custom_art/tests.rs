@@ -14,7 +14,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use base64::Engine;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 
 use mongodb::bson::{Bson, Document};
 use serde_json::Value;
@@ -61,15 +60,13 @@ fn to_doc(v: &Value) -> Document {
 }
 
 fn settings() -> Settings {
-    let mut vars: Vec<(String, String)> =
+    let vars: Vec<(String, String)> =
         golden()["env"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
     Settings::from_vars(vars).expect("settings")
 }
 
 fn state_with(mongo: Option<mongodb::Database>) -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings: settings(), db: Db { mongo, redis: None, pg: None }, upstream }) }
+    AppState { inner: Arc::new(Inner { settings: settings(), db: Db { mongo, redis: None, pg: None } }) }
 }
 
 fn app(state: AppState) -> Router {
@@ -432,20 +429,17 @@ async fn worker_steps_against_real_repos() {
     std::fs::write(t.join("troveui.env"), "API_TOKEN=x\n").unwrap();
 
     let p = |n: &str| t.join(n).to_string_lossy().into_owned();
-    let vars = vec![
-        ("PY_UPSTREAM".to_owned(), "http://py:8000".to_owned()),
+    let vars: Vec<(String, String)> = vec![
         ("CUSTOM_ART_WORKSPACE".into(), p("ws")),
         ("CUSTOM_ART_REMOTE".into(), p("troveui.git")),
         ("CUSTOM_ART_LIB_REMOTE".into(), p("lib.git")),
         ("CUSTOM_ART_ENV_FILE".into(), p("troveui.env")),
         ("MODS_STORE_DIR".into(), p("mods")),
     ];
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
     let state = AppState {
         inner: Arc::new(Inner {
             settings: Settings::from_vars(vars).unwrap(),
             db: Db { mongo: None, redis: None, pg: None },
-            upstream,
         }),
     };
     let python = std::env::var("KIWI_TEST_PYTHON").unwrap_or_else(|_| "python".into());

@@ -214,7 +214,6 @@ mod http {
 
     use axum::{Router, body::Body, http::Request};
     use http_body_util::BodyExt;
-    use hyper_util::{client::legacy::Client, rt::TokioExecutor};
     use mongodb::bson::{Bson, Document, doc};
     use serde_json::Value;
     use tower::ServiceExt;
@@ -226,10 +225,9 @@ mod http {
     };
 
     fn bare_app() -> Router {
-        let settings = Settings::from_vars([("PY_UPSTREAM", "http://127.0.0.1:9")]).unwrap();
-        let upstream = Client::builder(TokioExecutor::new()).build_http();
+        let settings = Settings::default();
         let db = Db { mongo: None, redis: None, pg: None };
-        crate::routes::app(AppState { inner: Arc::new(Inner { settings, db, upstream }) })
+        crate::routes::app(AppState { inner: Arc::new(Inner { settings, db }) })
     }
 
     async fn send(app: &Router, req: Request<Body>) -> (u16, axum::http::HeaderMap, Value) {
@@ -275,10 +273,6 @@ mod http {
     #[tokio::test]
     #[ignore = "writes to MONGO_URI / REDIS_URL"]
     async fn misc_store_roundtrip() {
-        if std::env::var("PY_UPSTREAM").is_err() {
-            // SAFETY: only this ignored test runs in its process invocation.
-            unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-        }
         let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
         let db = state.inner.db.mongo.clone().expect("MONGO_URI");
         let app = crate::routes::app(state);

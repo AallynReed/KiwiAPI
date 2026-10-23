@@ -1,7 +1,6 @@
 //! uvicorn `--proxy-headers` with `--forwarded-allow-ips` (env
 //! `FORWARDED_ALLOW_IPS`, default `127.0.0.1`): which client and scheme a
-//! request is from. Rust routes read [`ClientAddr`] from the request
-//! extensions; the proxy hands the same answer to Python.
+//! request is from. Routes read [`ClientAddr`] from the request extensions.
 
 use std::net::{IpAddr, SocketAddr};
 use std::sync::OnceLock;

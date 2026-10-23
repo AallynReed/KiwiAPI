@@ -152,10 +152,6 @@ async fn inserts_store_capture_lifecycles() {
     use super::{inserts, store};
     use crate::{config::Settings, state::AppState};
 
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: set before any other thread reads the environment.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     let db = state.mongo();
     for (coll, key) in

@@ -42,10 +42,6 @@ const A: i64 = 4_102_444_800;
 #[tokio::test]
 #[ignore = "creates and drops rows in POSTGRES_DSN, keys in REDIS_URL and a doc in MONGO_URI"]
 async fn lb_players_live() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     let pg = state.inner.db.pg.clone().expect("POSTGRES_DSN").get().await.unwrap();
     pg.batch_execute(DDL).await.unwrap();

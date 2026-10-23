@@ -1,4 +1,4 @@
-//! `/site/mod-stats` and the hourly snapshot loop (`app/mod_stats`, RUST_OWNS
+//! `/site/mod-stats` and the hourly snapshot loop (`app/mod_stats`, loop
 //! `mod_stats`): one creator's Zakros mods across the hub and the outside
 //! mod platforms, one snapshot per UTC day.
 

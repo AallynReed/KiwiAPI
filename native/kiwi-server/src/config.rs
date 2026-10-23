@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::{Context, anyhow};
+use anyhow::anyhow;
 use serde_json::Value;
 
 #[cfg(test)]
@@ -40,8 +40,6 @@ macro_rules! settings {
         pub struct Settings {
             /// Where this server listens, e.g. `0.0.0.0:8000` (`KIWI_BIND`).
             pub bind: String,
-            /// The Python app every unported route is proxied to (`PY_UPSTREAM`).
-            pub py_upstream: String,
             $( pub $name: settings!(@ty $kind), )*
         }
 
@@ -53,10 +51,6 @@ macro_rules! settings {
                 let set = |name: &str| env.get(name).filter(|v| !v.is_empty()).cloned();
                 Ok(Settings {
                     bind: set("kiwi_bind").unwrap_or_else(|| "0.0.0.0:8000".into()),
-                    py_upstream: set("py_upstream")
-                        .context("PY_UPSTREAM is required (the Python app to proxy unported routes to)")?
-                        .trim_end_matches('/')
-                        .to_owned(),
                     $( $name: match env.get(stringify!($name)) {
                         Some(raw) => settings!(@parse $kind, raw.as_str())
                             .map_err(|e| anyhow!("{}: {e}", stringify!($name).to_uppercase()))?,
@@ -328,6 +322,13 @@ settings! {
 }
 
 const CAPTCHA_PROVIDERS: [&str; 2] = ["hcaptcha", "turnstile"];
+
+impl Default for Settings {
+    /// Every field at its default, as with an empty environment.
+    fn default() -> Self {
+        Self::from_vars(std::iter::empty::<(&str, String)>()).expect("the defaults parse")
+    }
+}
 
 impl Settings {
     pub fn from_env() -> anyhow::Result<Self> {

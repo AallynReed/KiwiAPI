@@ -7,11 +7,8 @@ use mongodb::bson::{Bson, Document, doc, oid::ObjectId};
 use serde_json::{Value, json};
 
 use crate::{
-    auth::{
-        jwt,
-        models::{ApiToken, User},
-    },
-    dt, jobs, pyjson,
+    auth::models::{ApiToken, User},
+    dt, pyjson,
     state::AppState,
 };
 
@@ -118,37 +115,4 @@ pub fn event_payload(kind: &str, data: Value, ts: i64) -> String {
 /// `bus.publish(type, signature, data)` on the events bus.
 pub async fn publish_event(state: &AppState, kind: &str, signature: &str, data: Value) -> bool {
     crate::events::publish(state, kind, signature, data).await
-}
-
-/// `detection.trigger_warmer()`. While Python owns the warmer it lives in a
-/// worker's event loop with no outside signal, so wake it the one way
-/// Python offers: `POST /v1/leaderboards/warm` as the same master (a
-/// short-lived session token, so no rate limit, cooldown or usage row).
-pub fn trigger_warmer(state: &AppState, user: &User) {
-    if jobs::owns("leaderboards_warmer") {
-        crate::lb_warmer::trigger();
-        return;
-    }
-    let token = jwt::create_access_token_at(
-        &state.settings().secret_key,
-        &user.id.to_hex(),
-        user.token_version,
-        None,
-        chrono::Duration::seconds(60),
-        chrono::Utc::now(),
-    );
-    let state = state.clone();
-    tokio::spawn(async move {
-        let uri = format!("{}/v1/leaderboards/warm", state.settings().py_upstream);
-        let req = axum::http::Request::post(uri)
-            .header("authorization", format!("Bearer {token}"))
-            .header("content-length", "0")
-            .body(axum::body::Body::empty());
-        let Ok(req) = req else { return };
-        match state.inner.upstream.request(req).await {
-            Ok(res) if res.status().is_success() => {}
-            Ok(res) => tracing::warn!("leaderboards warmer wake answered {}", res.status()),
-            Err(e) => tracing::warn!("leaderboards warmer wake failed: {e}"),
-        }
-    });
 }

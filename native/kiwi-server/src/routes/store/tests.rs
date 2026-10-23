@@ -17,7 +17,6 @@ use axum::{
 };
 use base64::Engine;
 use futures::FutureExt;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::store::{
     Category, NO_STORE_DATA, Product, State, Summary, ingest_category, ingest_product, ingest_state,
     parser::{ParsedProduct, ParsedStoreDump, parse_dump},
@@ -303,10 +302,8 @@ async fn http_replay() {
 }
 
 fn state() -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000"), ("SECRET_KEY", "store-fixture-secret")])
-        .expect("settings");
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::from_vars([("SECRET_KEY", "store-fixture-secret")]).expect("settings");
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 /// The store routes under the real middleware stack, without stores.

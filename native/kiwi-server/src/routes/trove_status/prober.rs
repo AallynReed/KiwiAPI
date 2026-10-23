@@ -1,4 +1,4 @@
-//! The status prober loop of `app/trove/status.py` (`RUST_OWNS=status_prober`):
+//! The status prober loop of `app/trove/status.py` (`status_prober`):
 //! probe, record transitions, mirror the snapshot to Redis for every other
 //! process, then publish `server_status` on the events bus.
 

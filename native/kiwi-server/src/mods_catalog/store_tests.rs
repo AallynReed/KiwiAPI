@@ -3,7 +3,6 @@
 
 use std::sync::Arc;
 
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{doc, oid::ObjectId};
 
 use super::{bodies::CreateProject, model, service, writes};
@@ -19,15 +18,10 @@ async fn scratch() -> (AppState, mongodb::Database, std::path::PathBuf) {
     let client = mongodb::Client::with_uri_str(&uri).await.unwrap();
     let db = client.database(&format!("kiwi_mods_test_{}", ObjectId::new().to_hex()));
     let dir = std::env::temp_dir().join(format!("kiwi-mods-store-{}", ObjectId::new().to_hex()));
-    let vars = vec![
-        ("PY_UPSTREAM".to_owned(), "http://py:8000".to_owned()),
-        ("MODS_STORE_DIR".to_owned(), dir.to_string_lossy().into_owned()),
-    ];
+    let vars = vec![("MODS_STORE_DIR".to_owned(), dir.to_string_lossy().into_owned())];
     let settings = Settings::from_vars(vars).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state = AppState {
-        inner: Arc::new(Inner { settings, db: Db { mongo: Some(db.clone()), redis: None, pg: None }, upstream }),
-    };
+    let state =
+        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: Some(db.clone()), redis: None, pg: None } }) };
     (state, db, dir)
 }
 

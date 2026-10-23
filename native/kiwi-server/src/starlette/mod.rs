@@ -1,13 +1,11 @@
 //! Starlette 1.9's router (`starlette/routing.py`) for what axum's can't decide
-//! alone. `routes.json` holds both Python apps' route tables in registration
-//! order (native/port/parity/gen_routing_fixtures.py). A request is matched on
-//! its decoded path: the first route matching path and method wins, else the
-//! first matching the path alone answers 405 with that route's `Allow`, else
-//! a trailing-slash twin that matches anything is a 307 to it, else the
-//! framework 404.
-//!
-//! `KIWI_NATIVE_FALLBACK=1` answers all of that in Rust ([`rewrite`], [`gate`],
-//! [`fallback`]); without it such a request goes to Python ([`defers`]).
+//! alone ([`rewrite`], [`gate`], [`fallback`]). `routes.json` holds the api's
+//! and the website's route tables in registration order, frozen from the
+//! Python apps (native/port/parity/gen_routing_fixtures.py). A request is
+//! matched on its decoded path: the first route matching path and method wins,
+//! else the first matching the path alone answers 405 with that route's
+//! `Allow`, else a trailing-slash twin that matches anything is a 307 to it,
+//! else the framework 404.
 
 #[cfg(test)]
 mod tests;
@@ -28,19 +26,9 @@ use crate::error::{ApiError, method_not_allowed, not_found};
 use crate::middleware::ClientAddr;
 use crate::middleware::pyurl::{first, header_value, quote, scope_path, url_path, valid_host};
 
-/// `KIWI_NATIVE_FALLBACK`: answer every request in Rust, never proxy.
-pub fn native_enabled() -> bool {
-    static ON: OnceLock<bool> = OnceLock::new();
-    *ON.get_or_init(|| {
-        std::env::var("KIWI_NATIVE_FALLBACK")
-            .is_ok_and(|v| matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"))
-    })
-}
-
 struct Route {
     methods: Option<Vec<String>>,
     strict: Regex,
-    shape: String,
 }
 
 pub struct Table {
@@ -109,6 +97,7 @@ impl Table {
     fn parse(rows: &Value) -> Table {
         let mut routes = Vec::new();
         let mut lenient = Vec::new();
+        let mut shapes = HashSet::new();
         for row in rows.as_array().expect("route table") {
             let path = row[0].as_str().expect("path");
             let methods = row[1].as_array().map(|m| m.iter().map(|x| x.as_str().expect("method").to_owned()).collect());
@@ -116,13 +105,9 @@ impl Table {
             let body = compile(&template);
             // Python's `$` also matches before one final newline.
             lenient.push(format!(r"{body}\n?$"));
-            routes.push(Route {
-                methods,
-                strict: Regex::new(&format!("{body}$")).expect("route regex"),
-                shape: shape(&template),
-            });
+            shapes.insert(shape(&template));
+            routes.push(Route { methods, strict: Regex::new(&format!("{body}$")).expect("route regex") });
         }
-        let shapes = routes.iter().map(|r| r.shape.clone()).collect();
         Table { set: RegexSet::new(&lenient).expect("route set"), routes, shapes }
     }
 
@@ -175,13 +160,9 @@ impl Table {
         self.routes[i].methods.as_deref().unwrap_or_default().join(", ")
     }
 
-    /// Whether a Python route has this axum template's shape.
+    /// Whether a table route has this axum template's shape.
     pub fn knows(&self, axum_template: &str) -> bool {
         self.shapes.contains(&shape(axum_template))
-    }
-
-    fn same(&self, i: usize, axum_template: &str) -> bool {
-        self.routes[i].shape == shape(axum_template)
     }
 }
 
@@ -274,7 +255,7 @@ pub async fn gate(State(t): State<&'static Table>, req: Request, next: Next) -> 
     }
 }
 
-/// Marks the answer to a request only a Python route could serve.
+/// Marks the answer to a request only a table route without a Rust handler could serve.
 #[derive(Clone, Copy, Debug)]
 pub struct NoRoute;
 
@@ -321,19 +302,4 @@ pub async fn rewrite(State(t): State<&'static Table>, mut req: Request, next: Ne
         }
     }
     next.run(req).await
-}
-
-/// Proxy mode: whether Python must answer a request axum matched to
-/// `matched` (Starlette routes it elsewhere, or nowhere). A 405 stays: the
-/// ported route answers that itself.
-pub fn defers(t: &Table, matched: &str, method: &Method, uri: &Uri) -> bool {
-    if !t.knows(matched) {
-        return false;
-    }
-    let path = scope_path(uri);
-    match t.resolve(&routing_method(method, &path), &path) {
-        Outcome::Full(i) => !t.same(i, matched),
-        Outcome::Partial(_) => false,
-        Outcome::Redirect(_) | Outcome::NotFound => true,
-    }
 }

@@ -12,10 +12,6 @@ const SEED: &str = include_str!("../../../port/parity/site_live.seed.sql");
 #[tokio::test]
 #[ignore = "writes to POSTGRES_DSN / REDIS_URL"]
 async fn site_live_store_reads() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     state.pg().get().await.unwrap().batch_execute(SEED).await.unwrap();
 

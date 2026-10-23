@@ -14,7 +14,6 @@ use axum::{
     extract::Request,
     http::{HeaderMap, HeaderValue, Method, StatusCode, header},
 };
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::lbparse::{self, Board, Verdict};
 use mongodb::bson::{self, Document, doc, oid::ObjectId};
 use serde_json::{Map, Value, json};
@@ -306,7 +305,7 @@ fn backlog_names_dirs_and_events() {
         assert_eq!(backlog::anchor_of(s(&p[0])).map(Value::from).unwrap_or(Value::Null), p[1], "{p}");
     }
     for p in b["dir"].as_array().unwrap() {
-        let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000"), ("BACKLOG_DIR", s(&p[0]))]).unwrap();
+        let settings = Settings::from_vars([("BACKLOG_DIR", s(&p[0]))]).unwrap();
         assert_eq!(backlog::dir_text(&settings), s(&p[1]), "{p}");
     }
     for c in cases("events") {
@@ -318,10 +317,8 @@ fn backlog_names_dirs_and_events() {
 async fn backlog_save_and_list() {
     let root = std::env::temp_dir().join(format!("lb_backlog_{}", ObjectId::new().to_hex()));
     let root_s = root.to_string_lossy().replace('\\', "/");
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000"), ("BACKLOG_DIR", root_s.as_str())]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state =
-        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+    let settings = Settings::from_vars([("BACKLOG_DIR", root_s.as_str())]).unwrap();
+    let state = AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) };
     let text = Arc::new("A$B$1 = N$C##1;Zoë;1\n".repeat(50));
     backlog::save(&state, 1_700_000_000, text.clone()).await;
     backlog::save(&state, 0, text.clone()).await;
@@ -577,10 +574,8 @@ async fn job_status_routes() {
 
 /// A store-less state: routing, 405s and the form errors raised before the gate.
 fn stack() -> Router {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state =
-        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+    let settings = Settings::default();
+    let state = AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) };
     let mw = Arc::new(Mw::new(
         MwConfig::from_lookup(&|_| None),
         None,
@@ -649,9 +644,8 @@ fn partition_names_and_fold_sql() {
 // --- stores (throwaway databases only) -------------------------------------------------
 
 fn live_state(pg: Option<deadpool_postgres::Pool>) -> AppState {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://127.0.0.1:9")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg }, upstream }) }
+    let settings = Settings::default();
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg } }) }
 }
 
 fn scratch_pool() -> deadpool_postgres::Pool {

@@ -49,7 +49,7 @@ fn btt_bodies_match_python() {
 
 #[test]
 fn site_changelog_matches_python() {
-    let st = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
+    let st = Settings::default();
     for case in fixture("site_changelog.json").as_array().unwrap() {
         let tags = (!case["tags"].is_null()).then(|| case["tags"].clone());
         let commits = (!case["commits"].is_null()).then(|| case["commits"].clone());

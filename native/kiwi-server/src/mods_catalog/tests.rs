@@ -7,12 +7,11 @@ use axum::{
     Router,
     body::Body,
     extract::{MatchedPath, Request},
-    http::{Method, StatusCode, Uri},
+    http::{Method, StatusCode},
     middleware::{Next, from_fn},
     response::{IntoResponse, Response},
 };
 use chrono::{DateTime, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{Bson, Document, oid::ObjectId};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
@@ -458,12 +457,10 @@ async fn fork_matches_dulwich() {
 }
 
 fn test_state() -> AppState {
-    let mut vars: Vec<(String, String)> =
+    let vars: Vec<(String, String)> =
         golden()["env"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
     let settings = Settings::from_vars(vars).expect("settings");
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 async fn matched(req: Request, _next: Next) -> Response {
@@ -524,15 +521,6 @@ async fn route_precedence() {
     for path in ["/v1/mods/hub/projects/x", "/v1/mods/a", "/v1/mods/hub/creator-links/x", "/site/mods/creator-token"] {
         assert_eq!(route_of(&app, Method::GET, path).await.0, 418, "{path}");
     }
-}
-
-#[test]
-fn encoded_literals_route_like_starlette() {
-    let uri = |p: &str| p.parse::<Uri>().unwrap();
-    let t = crate::starlette::Table::api();
-    let any = "/v1/mods/{handle}/{slug}";
-    assert!(crate::starlette::defers(t, any, &Method::GET, &uri("/v1/mods/hub/creator-l%69nks")));
-    assert!(!crate::starlette::defers(t, any, &Method::GET, &uri("/v1/mods/hub/xyz")));
 }
 
 #[test]

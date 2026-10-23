@@ -1,6 +1,5 @@
-//! The Rust server for Kiwi API. It answers every route it has been ported to
-//! and, unless `KIWI_NATIVE_FALLBACK` is on, proxies everything else to the
-//! Python app (`PY_UPSTREAM`). See `native/PORT_PLAN.md`.
+//! Kiwi API: the api server (`kiwi-server`), the website (`kiwi-web`), the
+//! Discord gateway bot (`kiwi-bot`) and the custom art worker (`kiwi-builder`).
 
 pub mod activity;
 pub mod admin;
@@ -57,7 +56,6 @@ pub mod og;
 pub mod openapi;
 pub mod outbound;
 pub mod portal;
-pub mod proxy;
 pub mod pyfloat;
 pub mod pyjson;
 pub mod ratelimit;
@@ -78,8 +76,6 @@ pub mod web;
 pub mod webhooks;
 pub mod workshop;
 
-#[cfg(test)]
-mod coverage_tests;
 #[cfg(test)]
 mod foundation_golden;
 #[cfg(test)]

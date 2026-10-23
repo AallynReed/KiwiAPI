@@ -13,7 +13,6 @@ use axum::{
     response::{IntoResponse, Response},
     routing::{delete, get},
 };
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::btt::{
     check_block_values, compare_versions, conventional_prefix, parse_version, platform_order, py_strip,
 };
@@ -159,7 +158,7 @@ fn block_values() {
 #[ignore = "needs network access to api.github.com"]
 async fn github_live() {
     let client = super::http_client(std::time::Duration::from_secs(15)).unwrap();
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
+    let settings = Settings::default();
     let releases = super::github::fetch_list(&client, &settings, "releases?per_page=5").await.unwrap();
     assert!(releases.iter().filter_map(|r| normalize_release(r).unwrap()).count() > 0);
     let commits = super::github::fetch_list(&client, &settings, "commits?per_page=5").await.unwrap();
@@ -239,9 +238,8 @@ async fn mongo_writes() {
 
     let st = AppState {
         inner: Arc::new(Inner {
-            settings: Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap(),
+            settings: Settings::default(),
             db: Db { mongo: Some(db.clone()), redis: None, pg: None },
-            upstream: Client::builder(TokioExecutor::new()).build_http(),
         }),
     };
     let store = super::Mongo(&st);
@@ -366,9 +364,8 @@ impl Store for Fixture {
 
 /// A store-less state: enough for routing, 405s and rejected auth.
 fn state() -> AppState {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::default();
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn stack(routes: Router<AppState>) -> Router {

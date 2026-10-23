@@ -301,10 +301,6 @@ async fn auth_probe_over_tls() {
 async fn trove_status_store_roundtrip() {
     use mongodb::bson::{Bson, Document, doc};
 
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = crate::state::AppState::new(crate::config::Settings::from_env().unwrap()).await.unwrap();
     let env = format!("test-{}", mongodb::bson::oid::ObjectId::new());
     assert!(prober::try_record(&state, &env, "online", true).await.unwrap());

@@ -81,8 +81,8 @@ pub fn from_headers(headers: &HeaderMap) -> (String, bool) {
 
 /// The request-id layer (`axum::middleware::from_fn(request_id::middleware)`).
 ///
-/// A generated id is also set on the request, so a proxied Python app reuses
-/// it instead of minting its own. Log lines inside carry it as the span field
+/// A generated id is also set on the request, so inner layers reuse it
+/// instead of minting their own. Log lines inside carry it as the span field
 /// `rid`. A panic below becomes the 500 envelope, as Python's error boundary
 /// turns an unhandled exception into one.
 pub async fn middleware(mut req: Request, next: Next) -> Response {

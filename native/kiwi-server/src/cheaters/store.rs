@@ -8,7 +8,7 @@ use anyhow::Context;
 use kiwi_core::cheaters::{Board, Entry, Series, effective_reset_kind};
 use serde_json::Value;
 
-use crate::{jobs, pyjson, runtime_config, state::AppState};
+use crate::{pyjson, runtime_config, state::AppState};
 
 pub const PREFIX: &str = "lb:cache:";
 pub const READY_KEY: &str = "lb:cache:ready_anchor";
@@ -171,22 +171,6 @@ impl Live<'_> {
     }
 }
 
-/// Wakes one Python worker's warmer while Python still runs the loop: its
-/// serving path calls `trigger_warmer()` on the same miss this server just saw.
-fn wake_python(state: &AppState) {
-    let state = state.clone();
-    tokio::spawn(async move {
-        let uri = format!("{}/site/leaderboards/cheaters", state.settings().py_upstream);
-        let Ok(req) = axum::http::Request::get(uri).body(axum::body::Body::empty()) else { return };
-        match state.inner.upstream.request(req).await {
-            Ok(res) => {
-                let _ = http_body_util::BodyExt::collect(res.into_body()).await;
-            }
-            Err(e) => tracing::warn!("cheaters: waking the Python warmer failed: {e}"),
-        }
-    });
-}
-
 fn i32_of(uuid: i64) -> anyhow::Result<i32> {
     i32::try_from(uuid).context("board uuid out of int4 range")
 }
@@ -205,11 +189,7 @@ impl Store for Live<'_> {
     }
 
     fn trigger_warmer(&self) {
-        if jobs::owns("leaderboards_warmer") {
-            WAKE.notify_one();
-        } else {
-            wake_python(self.0);
-        }
+        WAKE.notify_one();
     }
 
     fn has_redis(&self) -> bool {

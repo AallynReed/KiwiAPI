@@ -24,9 +24,8 @@ pub(crate) fn s(v: &Value) -> &str {
 }
 
 pub(crate) fn settings() -> Settings {
-    let mut vars: Vec<(String, String)> =
+    let vars: Vec<(String, String)> =
         golden()["env"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
     Settings::from_vars(vars).expect("settings")
 }
 
@@ -126,7 +125,6 @@ fn message_shape() {
 async fn outbox_store_flow() {
     use std::sync::Arc;
 
-    use hyper_util::{client::legacy::Client, rt::TokioExecutor};
     use mongodb::bson::{Document, doc};
 
     use crate::{
@@ -140,10 +138,8 @@ async fn outbox_store_flow() {
     let mut st = settings();
     st.smtp_host = Some("127.0.0.1".into());
     st.smtp_port = 9;
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state = AppState {
-        inner: Arc::new(Inner { settings: st, db: Db { mongo: Some(db.clone()), redis: None, pg: None }, upstream }),
-    };
+    let state =
+        AppState { inner: Arc::new(Inner { settings: st, db: Db { mongo: Some(db.clone()), redis: None, pg: None } }) };
     db.collection::<Document>("users")
         .insert_one(doc! {"email": "dead@example.test", "hashed_password": "x", "email_bounced": true})
         .await

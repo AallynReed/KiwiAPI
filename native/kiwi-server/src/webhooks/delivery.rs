@@ -4,9 +4,7 @@
 
 use std::{future::Future, sync::Arc, time::Duration};
 
-use axum::body::Body;
 use futures::future::join_all;
-use http_body_util::BodyExt;
 use mongodb::bson::oid::ObjectId;
 use serde_json::{Map, Value};
 
@@ -48,19 +46,21 @@ impl Poster for LivePoster {
 }
 
 /// `_render_attachment`: the design rendered with live data, through the
-/// public PNG route on the internal API (Image Studio is not ported yet); any
-/// failure just sends the embed without the image.
+/// public PNG route on the internal API; any failure just sends the embed
+/// without the image.
 async fn render_attachment(state: &AppState, design: Option<&str>) -> Option<Vec<u8>> {
+    static CLIENT: std::sync::LazyLock<reqwest::Client> = std::sync::LazyLock::new(|| {
+        crate::http::client_builder().redirect(reqwest::redirect::Policy::none()).build().expect("http client")
+    });
     let oid = ObjectId::parse_str(design.filter(|d| !d.is_empty())?).ok()?;
     let base = state.settings().internal_api_url.trim_end_matches('/').to_owned();
     let uri = format!("{base}/site/images/{}.png", oid.to_hex());
-    let req = axum::http::Request::get(uri).body(Body::empty()).ok()?;
     let fetch = async {
-        let resp = state.inner.upstream.request(req).await.map_err(|e| e.to_string())?;
-        if resp.status() != axum::http::StatusCode::OK {
+        let resp = CLIENT.get(uri).send().await.map_err(|e| e.to_string())?;
+        if resp.status() != reqwest::StatusCode::OK {
             return Ok(None);
         }
-        let bytes = resp.into_body().collect().await.map_err(|e| e.to_string())?.to_bytes();
+        let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
         Ok::<_, String>(Some(bytes.to_vec()))
     };
     match tokio::time::timeout(Duration::from_secs(60), fetch).await {

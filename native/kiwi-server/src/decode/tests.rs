@@ -128,7 +128,6 @@ async fn web_gamedata_unknown_name() {
     use std::sync::Arc;
 
     use axum::{body::Body, extract::Request};
-    use hyper_util::{client::legacy::Client, rt::TokioExecutor};
     use tower::ServiceExt;
 
     use crate::{
@@ -136,10 +135,8 @@ async fn web_gamedata_unknown_name() {
         db::Db,
         state::{AppState, Inner},
     };
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state =
-        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+    let settings = Settings::default();
+    let state = AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) };
     let app = super::routes::web_router().with_state(state);
     let get = |path: &str, accept: Option<&str>| {
         let mut req = Request::builder().uri(path);

@@ -1,6 +1,6 @@
 //! The durable email outbox (`app/core/email_outbox.py`): [`queue_email`]
 //! writes `email_outbox` documents exactly as Python does, and [`worker`]
-//! (RUST_OWNS `email_outbox`) claims and delivers them through [`mailer`].
+//! (the `email_outbox` loop) claims and delivers them through [`mailer`].
 
 pub mod mailer;
 pub mod worker;

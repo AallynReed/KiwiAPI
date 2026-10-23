@@ -20,12 +20,7 @@ use crate::{
 
 async fn state() -> AppState {
     // SAFETY: only these ignored tests run in their process invocation.
-    unsafe {
-        if std::env::var("PY_UPSTREAM").is_err() {
-            std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9");
-        }
-        std::env::set_var("PASSWORD_BREACH_CHECK", "false");
-    }
+    unsafe { std::env::set_var("PASSWORD_BREACH_CHECK", "false") };
     AppState::new(Settings::from_env().unwrap()).await.unwrap()
 }
 

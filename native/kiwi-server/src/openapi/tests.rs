@@ -9,7 +9,6 @@ use axum::{
     body::Body,
     http::{Method, Request, StatusCode, header},
 };
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use tower::ServiceExt;
@@ -51,18 +50,13 @@ fn strings(v: &Value) -> Vec<String> {
 }
 
 fn settings() -> Settings {
-    Settings::from_vars([
-        ("APP_NAME", env("APP_NAME").to_owned()),
-        ("API_URL", env("API_URL").to_owned()),
-        ("PY_UPSTREAM", "http://py:8000".to_owned()),
-    ])
-    .expect("settings")
+    Settings::from_vars([("APP_NAME", env("APP_NAME").to_owned()), ("API_URL", env("API_URL").to_owned())])
+        .expect("settings")
 }
 
 fn app() -> Router {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
     let db = Db { mongo: None, redis: None, pg: None };
-    let state = AppState { inner: Arc::new(Inner { settings: settings(), db, upstream }) };
+    let state = AppState { inner: Arc::new(Inner { settings: settings(), db }) };
     let mw =
         Mw::new(MwConfig::from_lookup(&|_| None), None, EmbedSource::Fixed(vec![]), TrustedHosts::parse("127.0.0.1"));
     let inner = middleware::wrap(super::router(), Arc::new(mw), None)
@@ -165,21 +159,4 @@ fn ops_and_snapshot_agree_with_base() {
             assert!(served.contains(&(p.clone(), m.clone())), "{m} {p} is in base.json but no Python route serves it");
         }
     }
-}
-
-/// `KIWI_PY_ROUTES` is the live `py_routes.py` table; a difference means the
-/// committed base spec predates a route change: rerun gen_openapi.py.
-#[test]
-#[ignore = "needs KIWI_PY_ROUTES"]
-fn base_spec_is_fresh() {
-    let file = std::env::var("KIWI_PY_ROUTES").expect("KIWI_PY_ROUTES");
-    let live: Value = serde_json::from_slice(&std::fs::read(file).unwrap()).unwrap();
-    let snap = routes_snapshot();
-    let (live, snap) = (live.as_array().unwrap(), snap.as_array().unwrap());
-    let added: Vec<&Value> = live.iter().filter(|r| !snap.contains(r)).collect();
-    let removed: Vec<&Value> = snap.iter().filter(|r| !live.contains(r)).collect();
-    assert!(
-        added.is_empty() && removed.is_empty() && live == snap,
-        "openapi base.json is stale (rerun native/port/parity/gen_openapi.py): added {added:?}, removed {removed:?}"
-    );
 }

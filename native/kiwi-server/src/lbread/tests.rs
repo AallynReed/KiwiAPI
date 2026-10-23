@@ -552,37 +552,11 @@ async fn past_int32_runs_the_steps_before_the_query() {
     assert!(fake.sets.lock().unwrap().is_empty() && fake.archive_keys.lock().unwrap().is_empty());
 }
 
-/// A stand-in for api-py that answers every request with `py` and keeps its request lines.
-async fn upstream() -> (SocketAddr, Arc<Mutex<Vec<String>>>) {
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let addr = listener.local_addr().unwrap();
-    let seen = Arc::new(Mutex::new(Vec::new()));
-    let log = seen.clone();
-    tokio::spawn(async move {
-        while let Ok((mut sock, _)) = listener.accept().await {
-            let mut buf = vec![0u8; 8192];
-            let n = sock.read(&mut buf).await.unwrap_or(0);
-            let head = String::from_utf8_lossy(&buf[..n]);
-            log.lock().unwrap().push(head.lines().next().unwrap_or("").to_owned());
-            let _ = sock
-                .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\nx-upstream: py\r\nconnection: close\r\n\r\npy")
-                .await;
-        }
-    });
-    (addr, seen)
-}
-
 #[tokio::test]
-async fn deferred_requests_reach_python_untouched() {
-    use hyper_util::{client::legacy::Client, rt::TokioExecutor};
-    let (addr, seen) = upstream().await;
-    let settings = crate::config::Settings::from_vars([("PY_UPSTREAM", format!("http://{addr}"))]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
+async fn routing_matches_starlette() {
+    let settings = crate::config::Settings::default();
     let db = crate::db::Db { mongo: None, redis: None, pg: None };
-    let state = crate::state::AppState { inner: Arc::new(crate::state::Inner { settings, db, upstream }) };
-    let app = crate::routes::app_with(state.clone(), false);
-    let native = crate::routes::app_with(state, true);
+    let app = crate::routes::app(crate::state::AppState { inner: Arc::new(crate::state::Inner { settings, db }) });
     let peer: SocketAddr = "203.0.113.9:5000".parse().unwrap();
     let send = |method: Method, path: &'static str| {
         let app = app.clone();
@@ -592,22 +566,6 @@ async fn deferred_requests_reach_python_untouched() {
             app.oneshot(req).await.unwrap()
         }
     };
-    for (method, path) in [
-        (Method::POST, "/v1/leaderboards/warm"),
-        (Method::POST, "/v1/leaderboards/delete-anchor"),
-        (Method::POST, "/v1/leaderboards/reingest-backlog"),
-        (Method::GET, "/v1/leaderboards/cheaters%2F"),
-        (Method::GET, "/v1/leaderboards/abc"),
-        (Method::GET, "/v1/leaderboards/"),
-        (Method::GET, "/v1/leaderboards/1000/"),
-    ] {
-        let resp = send(method.clone(), path).await;
-        assert_eq!(resp.headers().get("x-upstream").map(|v| v.to_str().unwrap()), Some("py"), "{method} {path}");
-        assert!(resp.headers().get("x-content-type-options").is_none(), "{method} {path} went through the stack");
-        let line = seen.lock().unwrap().last().cloned().unwrap();
-        assert_eq!(line, format!("{method} {path} HTTP/1.1"));
-    }
-    let before = seen.lock().unwrap().len();
     for (path, status) in [
         ("/v1/leaderboards/1000", StatusCode::UNAUTHORIZED),
         ("/v1/leaderboards/0004000/entries", StatusCode::UNAUTHORIZED),
@@ -625,20 +583,14 @@ async fn deferred_requests_reach_python_untouched() {
     }
     let resp = send(Method::POST, "/v1/leaderboards/1000").await;
     assert_eq!((resp.status(), &resp.headers()["allow"]), (StatusCode::METHOD_NOT_ALLOWED, &"GET".parse().unwrap()));
-    // Python's unhandled 500 skips the security headers.
     let resp = send(Method::GET, "/site/leaderboards/2147483648/health").await;
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
-    assert!(resp.headers().get("x-upstream").is_none());
     for (method, path, status) in [
-        (Method::POST, "/v1/leaderboards/1000", StatusCode::METHOD_NOT_ALLOWED),
         (Method::GET, "/v1/leaderboards/abc", StatusCode::NOT_FOUND),
         (Method::GET, "/v1/leaderboards/", StatusCode::TEMPORARY_REDIRECT),
         (Method::GET, "/v1/leaderboards/1000/", StatusCode::TEMPORARY_REDIRECT),
         (Method::GET, "/v1/leaderboards/cheaters%2F", StatusCode::TEMPORARY_REDIRECT),
     ] {
-        let req = Request::builder().method(method).uri(path).extension(ConnectInfo(peer)).body(Body::empty()).unwrap();
-        let resp = native.clone().oneshot(req).await.unwrap();
-        assert_eq!(resp.status(), status, "native {path}");
+        assert_eq!(send(method, path).await.status(), status, "{path}");
     }
-    assert_eq!(seen.lock().unwrap().len(), before, "Rust-owned requests reached Python");
 }

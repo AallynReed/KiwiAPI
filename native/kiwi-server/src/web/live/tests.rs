@@ -155,7 +155,6 @@ async fn rig(scenario: &str) -> Rig {
         ("GEOIP_DIR".into(), geo.to_string_lossy().into_owned()),
         ("GAMEDATA_DIR".into(), root.join("assets/gamedata").to_string_lossy().into_owned()),
         ("INTERNAL_API_URL".into(), api),
-        ("PY_UPSTREAM".into(), "http://127.0.0.1:9".into()),
     ]);
     let lookup: HashMap<String, String> = vars.iter().map(|(k, v)| (k.to_lowercase(), v.clone())).collect();
     let settings = Settings::from_vars(vars.clone()).expect("settings");
@@ -200,6 +199,12 @@ fn untimed(body: &[u8]) -> String {
         }
         None => s.into_owned(),
     }
+}
+
+/// A `content-length` without the bytes `untimed` masks.
+fn timeless_length(value: Option<&str>, body: &[u8]) -> Option<String> {
+    let masked = body.len().saturating_sub(untimed(body).len());
+    value.map(|v| v.parse::<usize>().map_or_else(|_| v.to_owned(), |n| n.saturating_sub(masked).to_string()))
 }
 
 fn header<'a>(hs: &'a [(String, String)], name: &str) -> Option<&'a str> {
@@ -253,8 +258,13 @@ async fn replay(scenario: &str) {
             .iter()
             .map(|h| (h[0].as_str().unwrap_or("").to_owned(), h[1].as_str().unwrap_or("").to_owned()))
             .collect();
+        let want_body = unz(case["resp_body_z"].as_str().unwrap_or(""));
         for h in COMPARED {
-            let (got, want) = (header(&headers, h), header(&want_headers, h));
+            let (got, want) = if h == "content-length" && case["method"] != "HEAD" {
+                (timeless_length(header(&headers, h), &body), timeless_length(header(&want_headers, h), &want_body))
+            } else {
+                (header(&headers, h).map(str::to_owned), header(&want_headers, h).map(str::to_owned))
+            };
             if got != want {
                 failures.push(format!("{name}: {h}: {got:?} != {want:?}"));
             }

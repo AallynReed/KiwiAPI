@@ -17,10 +17,6 @@ const MON_11: i64 = 1_894_014_000;
 #[tokio::test]
 #[ignore = "writes to POSTGRES_DSN / REDIS_URL"]
 async fn lbread_store_reads() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     state.pg().get().await.unwrap().batch_execute(SEED).await.unwrap();
     let live = Live(&state);

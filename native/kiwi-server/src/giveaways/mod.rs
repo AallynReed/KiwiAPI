@@ -3,7 +3,7 @@
 //! site-user routes and the tokenless `giveaways:read` lists (both behind
 //! `feature_giveaways_enabled`, checked before auth like `_GIVEAWAYS_GATE`).
 //!
-//! The auto-open/draw worker ([`spawn_worker`], `RUST_OWNS=giveaways`) ends
+//! The auto-open/draw worker ([`spawn_worker`]) ends
 //! every tick with the events bus' `publish_type("giveaways")`.
 
 pub mod body;
@@ -225,7 +225,7 @@ async fn ended(_: Gate, Public(ctx): GwPublic, State(st): State<AppState>, Query
 
 // --- worker -----------------------------------------------------------------------
 
-/// The 60 s auto-open/draw loop (`RUST_OWNS=giveaways`). `publish` is the
+/// The 60 s auto-open/draw loop. `publish` is the
 /// events bus' `publish_type("giveaways")`, run after every good tick.
 pub fn spawn_worker<P, PF>(state: &AppState, publish: P)
 where

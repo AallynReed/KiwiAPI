@@ -25,10 +25,6 @@ use crate::{
 const BOUNDARY: &str = "storeTestBoundary";
 
 async fn state() -> AppState {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: set before any other thread reads the environment.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     AppState::new(Settings::from_env().unwrap()).await.unwrap()
 }
 

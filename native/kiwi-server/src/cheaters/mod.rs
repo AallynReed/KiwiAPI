@@ -1,9 +1,8 @@
 //! Possible cheaters and alt clusters (`app/trove/leaderboards/detection.py`):
 //! `GET /v1/leaderboards/cheaters`, `GET /site/leaderboards/cheaters`,
-//! `POST /v1/leaderboards/views/recompute`, and `POST .../cheaters/recompute`
-//! once this server owns the warmer (until then Python answers it, since only
-//! Python's warmer can act on it). The warmer calls [`warm`]; serving never
-//! computes, it reads what the warmer persisted.
+//! `POST /v1/leaderboards/views/recompute` and `POST .../cheaters/recompute`.
+//! The warmer calls [`warm`]; serving never computes, it reads what the
+//! warmer persisted.
 
 pub mod store;
 pub mod views;
@@ -38,7 +37,6 @@ use crate::{
     auth::{MasterIngest, Public, scopes::LEADERBOARDS_READ},
     error::ApiError,
     features::{self, Leaderboards, RequireFeature, py_truthy},
-    jobs,
     pyjson::{PyJson, PydanticJson},
     state::AppState,
 };
@@ -396,11 +394,11 @@ async fn comovement<S: Store>(
 // Routes
 
 pub fn router() -> Router<AppState> {
-    let r = Router::new()
+    Router::new()
         .route("/v1/leaderboards/cheaters", get(v1_cheaters))
         .route("/site/leaderboards/cheaters", get(site_cheaters))
-        .route("/v1/leaderboards/views/recompute", post(views_recompute));
-    if jobs::owns(WARMER) { r.route("/v1/leaderboards/cheaters/recompute", post(recompute)) } else { r }
+        .route("/v1/leaderboards/views/recompute", post(views_recompute))
+        .route("/v1/leaderboards/cheaters/recompute", post(recompute))
 }
 
 fn internal(what: &str, e: impl std::fmt::Display) -> Response {

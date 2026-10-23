@@ -1,9 +1,7 @@
 //! The leaderboards warmer (`detection.py`: `_warmup_loop`, `_warm_all`,
 //! `_persisted_pass_age`, cold tiering) and the master routes that exist to
 //! drive it: `POST /v1/leaderboards/warm`, `/delete-anchor` and
-//! `/reingest-backlog` (`backlog.reingest`). Both move with the loop: they are
-//! served here only under `RUST_OWNS=leaderboards_warmer`, since until then
-//! only Python's warmer can act on them.
+//! `/reingest-backlog` (`backlog.reingest`).
 
 pub mod pass;
 pub mod reingest;
@@ -21,29 +19,20 @@ use crate::{jobs, state::AppState};
 
 pub const WARMER: &str = crate::cheaters::WARMER;
 
-/// The routes, registered only while this server owns the warmer.
 pub fn router() -> Router<AppState> {
-    if jobs::owns(WARMER) { routes() } else { Router::new() }
-}
-
-pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/v1/leaderboards/warm", post(routes::warm))
         .route("/v1/leaderboards/delete-anchor", post(routes::delete_anchor))
         .route("/v1/leaderboards/reingest-backlog", post(routes::reingest_backlog))
 }
 
-/// Starts the loop when this server owns it.
 pub fn start(state: &AppState) {
     jobs::spawn(state, WARMER, pass::run);
 }
 
-/// `detection.trigger_warmer()`: wake this server's warmer. While Python owns
-/// it there is nothing here to wake.
+/// `detection.trigger_warmer()`: wake the warmer.
 pub fn trigger() {
-    if jobs::owns(WARMER) {
-        crate::cheaters::store::warmer_wake().notify_one();
-    }
+    crate::cheaters::store::warmer_wake().notify_one();
 }
 
 /// The in-process memos `service.reset_all` drops with the data.

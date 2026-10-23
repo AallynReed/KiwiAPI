@@ -9,7 +9,6 @@ use axum::{
     http::{HeaderName, HeaderValue, Method, Request, StatusCode},
 };
 use chrono::{DateTime, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{Bson, Document};
 use serde_json::Value;
 use tower::ServiceExt;
@@ -41,12 +40,10 @@ fn latin1(s: &str) -> Vec<u8> {
 }
 
 fn state() -> AppState {
-    let mut vars: Vec<(String, String)> =
+    let vars: Vec<(String, String)> =
         golden()["env"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
     let settings = Settings::from_vars(vars).expect("settings");
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn app() -> Router {

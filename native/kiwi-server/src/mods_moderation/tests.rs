@@ -14,7 +14,6 @@ use axum::{
     http::{HeaderMap, Method, StatusCode, Uri},
 };
 use chrono::{DateTime, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{self, Bson, Document, doc, oid::ObjectId};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -869,9 +868,8 @@ fn parameter_errors() {
 }
 
 fn state() -> AppState {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: std::sync::Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::default();
+    AppState { inner: std::sync::Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn stack() -> Router {

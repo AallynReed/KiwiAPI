@@ -11,7 +11,6 @@ use std::{
 use axum::{body::Body, http::Request};
 use base64::Engine;
 use http_body_util::BodyExt;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use tower::ServiceExt;
@@ -283,14 +282,11 @@ fn env() -> &'static Env {
         }
         let mods = temp_dir("mods");
         let settings = Settings::from_vars([
-            ("PY_UPSTREAM", "http://py:8000".to_owned()),
             ("TROVE_UPDATE_STORE_DIR", updates.display().to_string()),
             ("MODS_STORE_DIR", mods.display().to_string()),
         ])
         .unwrap();
-        let upstream = Client::builder(TokioExecutor::new()).build_http();
-        let state =
-            AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+        let state = AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) };
         Env { state }
     })
 }
@@ -437,7 +433,7 @@ fn cached_blobs_are_python_gzip_of_compact_ascii_json() {
 
 #[test]
 fn decompile_helpers_follow_python() {
-    let s = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
+    let s = Settings::default();
     assert_eq!(swf::decompile::version("JPEXS Free Flash Decompiler v.25.1.3\n"), "ffdec 25.1.3");
     assert_eq!(swf::decompile::version("nothing"), "ffdec");
     let root = temp_dir("export");
@@ -458,8 +454,7 @@ fn decompile_helpers_follow_python() {
 #[ignore = "needs Java and JPEXS FFDec at the path the fixture was made with"]
 async fn decompile_matches_python_ffdec_run() {
     let Some(g) = golden().get("decompile").filter(|v| !v.is_null()) else { return };
-    let s =
-        Settings::from_vars([("PY_UPSTREAM", "http://py:8000"), ("FFDEC_JAR", g["jar"].as_str().unwrap())]).unwrap();
+    let s = Settings::from_vars([("FFDEC_JAR", g["jar"].as_str().unwrap())]).unwrap();
     for c in g["cases"].as_array().unwrap() {
         let raw = match c.get("file") {
             Some(f) => data(f.as_str().unwrap()),

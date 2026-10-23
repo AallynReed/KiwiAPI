@@ -9,10 +9,6 @@ use super::{service as svc, strayimport};
 use crate::{config::Settings, state::AppState};
 
 async fn state() -> AppState {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only these ignored tests run in their process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     AppState::new(Settings::from_env().unwrap()).await.unwrap()
 }
 

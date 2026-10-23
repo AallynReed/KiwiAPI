@@ -1,5 +1,5 @@
 //! Replays testdata/routing/golden.json (gen_routing_fixtures.py) through both
-//! apps in native mode, and checks every Python route reaches a Rust one.
+//! apps, and checks every table route reaches a Rust one.
 
 use std::{
     collections::HashMap,
@@ -15,7 +15,6 @@ use axum::{
     http::{HeaderName, HeaderValue, Method, Request},
 };
 use base64::Engine as _;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use serde_json::Value;
 use tower::ServiceExt;
 
@@ -41,11 +40,10 @@ fn closed_port() -> String {
 }
 
 fn api_app() -> Router {
-    let settings = crate::config::Settings::from_vars([("PY_UPSTREAM", closed_port())]).expect("settings");
+    let settings = crate::config::Settings::default();
     let db = crate::db::Db { mongo: None, redis: None, pg: None };
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state = crate::state::AppState { inner: Arc::new(crate::state::Inner { settings, db, upstream }) };
-    crate::routes::app_with(state, true)
+    let state = crate::state::AppState { inner: Arc::new(crate::state::Inner { settings, db }) };
+    crate::routes::app(state)
 }
 
 async fn web_app() -> Router {
@@ -62,14 +60,13 @@ async fn web_app() -> Router {
         ("GEOIP_DIR".into(), geo.to_string_lossy().into_owned()),
         ("GAMEDATA_DIR".into(), repo().join("assets/gamedata").to_string_lossy().into_owned()),
         ("INTERNAL_API_URL".into(), closed_port()),
-        ("PY_UPSTREAM".into(), closed_port()),
     ]);
     let lookup: HashMap<String, String> = vars.iter().map(|(k, v)| (k.to_lowercase(), v.clone())).collect();
     let settings = crate::config::Settings::from_vars(vars).expect("settings");
     let cfg = crate::middleware::MwConfig::from_lookup(&|k| lookup.get(k).cloned());
     let web = Arc::new(crate::web::Web::new(&settings, cfg));
     let state = crate::state::AppState::new(settings).await.expect("state");
-    crate::web::app_with(state, web, true)
+    crate::web::app(state, web)
 }
 
 fn latin1_bytes(s: &str) -> Vec<u8> {
@@ -164,9 +161,6 @@ fn concrete(path: &str) -> String {
         .into_owned()
 }
 
-/// Served only while this process owns the warmer (`RUST_OWNS`).
-const OWNED_ONLY: [&str; 1] = ["POST /v1/leaderboards/cheaters/recompute"];
-
 async fn unrouted(app: Router, t: &Table, raw: &Value) -> Vec<String> {
     let mut missing = Vec::new();
     for (i, row) in raw.as_array().expect("table").iter().enumerate() {
@@ -202,17 +196,14 @@ async fn unrouted(app: Router, t: &Table, raw: &Value) -> Vec<String> {
 async fn every_api_route_reaches_rust() {
     let raw: Value = serde_json::from_str(include_str!("routes.json")).expect("routes");
     let missing = unrouted(api_app(), Table::api(), &raw["api"]).await;
-    let missing: Vec<String> = missing.into_iter().filter(|m| !OWNED_ONLY.contains(&m.as_str())).collect();
-    assert!(missing.is_empty(), "Python routes with no Rust route: {missing:?}");
+    assert!(missing.is_empty(), "table routes with no Rust route: {missing:?}");
 }
 
-/// The website pages no Rust route serves yet (they still go to web-py).
 #[tokio::test]
-#[ignore = "a report for the cutover"]
-async fn web_route_gaps() {
+async fn every_web_route_reaches_rust() {
     let raw: Value = serde_json::from_str(include_str!("routes.json")).expect("routes");
     let missing = unrouted(web_app().await, Table::web(), &raw["web"]).await;
-    println!("{} web routes without a Rust route: {missing:?}", missing.len());
+    assert!(missing.is_empty(), "table routes with no Rust route: {missing:?}");
 }
 
 #[test]
@@ -235,25 +226,6 @@ fn outcomes() {
     assert_eq!(w.resolve(&get, "/static"), Outcome::Redirect("/static/".into()));
     assert!(matches!(w.resolve(&Method::POST, "/static/"), Outcome::Full(_)));
     assert!(w.knows("/static/{*path}"));
-}
-
-#[test]
-fn proxy_mode_defers() {
-    let t = Table::api();
-    let uri = |s: &str| s.parse::<Uri>().expect("uri");
-    let lb = "/v1/leaderboards/{uuid}";
-    assert!(!defers(t, lb, &Method::GET, &uri("/v1/leaderboards/1000")));
-    assert!(!defers(t, lb, &Method::HEAD, &uri("/v1/leaderboards/1000")));
-    assert!(!defers(t, lb, &Method::GET, &uri("/v1/leaderboards/%31")));
-    assert!(!defers(t, lb, &Method::GET, &uri("/v1/leaderboards/9999999999")));
-    assert!(defers(t, lb, &Method::GET, &uri("/v1/leaderboards/abc")));
-    assert!(!defers(t, lb, &Method::POST, &uri("/v1/leaderboards/1000")));
-    assert!(defers(t, lb, &Method::POST, &uri("/v1/leaderboards/warm")));
-    assert!(!defers(t, "/site/leaderboards/{uuid}/entries", &Method::GET, &uri("/site/leaderboards/abc/entries")));
-    assert!(defers(t, "/git/mods/{handle}/{slug}/info/refs", &Method::GET, &uri("/git/mods/a/b/info/refs")));
-    assert!(!defers(t, "/git/mods/{handle}/{slug}/info/refs", &Method::GET, &uri("/git/mods/a/b.git/info/refs")));
-    assert!(defers(t, "/tokens/activity", &Method::PATCH, &uri("/tokens/activity")));
-    assert!(!defers(t, "/__rust_only", &Method::GET, &uri("/__rust_only")));
 }
 
 #[test]

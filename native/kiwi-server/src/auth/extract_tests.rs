@@ -17,10 +17,6 @@ use super::{CurrentSiteUser, CurrentUser, MasterIngest, OptionalSiteUser, Requir
 use crate::{config::Settings, state::AppState};
 
 async fn state() -> AppState {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: set once before any thread reads it; the value is constant.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     AppState::new(Settings::from_env().unwrap()).await.unwrap()
 }
 

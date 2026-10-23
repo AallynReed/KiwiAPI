@@ -148,19 +148,14 @@ async fn live_store_round_trip() {
     use mongodb::bson::doc;
 
     use super::store::Store;
-    let settings = crate::config::Settings::from_vars([
-        ("PY_UPSTREAM", "http://py:8000"),
-        ("MONGO_URI", std::env::var("MONGO_URI").unwrap().as_str()),
-    ])
-    .unwrap();
+    let settings =
+        crate::config::Settings::from_vars([("MONGO_URI", std::env::var("MONGO_URI").unwrap().as_str())]).unwrap();
     let client = mongodb::Client::with_uri_str(std::env::var("MONGO_URI").unwrap()).await.unwrap();
     let db = client.database("kiwi_test_mods_social");
-    let upstream = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new()).build_http();
     let state = crate::state::AppState {
         inner: std::sync::Arc::new(crate::state::Inner {
             settings,
             db: crate::db::Db { mongo: Some(db.clone()), redis: None, pg: None },
-            upstream,
         }),
     };
     let st = Store::live(&state);

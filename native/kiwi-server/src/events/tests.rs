@@ -329,12 +329,6 @@ async fn stream_matches_python_generator() {
 }
 
 #[test]
-fn stream_defers_until_the_listener_moves() {
-    assert!(super::defers(super::STREAM_PATH));
-    assert!(!super::defers("/v1/events/{x}"));
-}
-
-#[test]
 fn signature_edges() {
     let sig = |s: Source, d: &Value| s.sig(d, 0);
     assert_eq!(sig(Source::Activity, &serde_json::json!({"window_start": 5})), Some("5".into()));

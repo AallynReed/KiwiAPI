@@ -228,10 +228,6 @@ fn base64_like_binascii() {
 async fn call(method: &str, path: &str, ct: Option<&str>, body: &str) -> (u16, HeaderMap, Value) {
     use http_body_util::BodyExt;
     use tower::ServiceExt;
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: set once before any thread reads it; the value is constant.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(crate::config::Settings::from_env().expect("settings")).await.expect("state");
     let mut req = axum::http::Request::builder().method(method).uri(path);
     if let Some(ct) = ct {

@@ -28,10 +28,6 @@ async fn get_status(app: &Router, path: &str, bearer: &str) -> (StatusCode, axum
 #[tokio::test]
 #[ignore = "writes to MONGO_URI / REDIS_URL"]
 async fn store_roundtrip() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     let db = state.inner.db.mongo.clone().expect("MONGO_URI");
     let mut redis = state.inner.db.redis.clone().expect("REDIS_URL");

@@ -2,13 +2,7 @@
 
 use std::sync::Arc;
 
-use axum::body::Body;
-use hyper_util::client::legacy::{Client, connect::HttpConnector};
-use hyper_util::rt::TokioExecutor;
-
 use crate::{config::Settings, db::Db};
-
-pub type HttpClient = Client<HttpConnector, Body>;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -18,17 +12,12 @@ pub struct AppState {
 pub struct Inner {
     pub settings: Settings,
     pub db: Db,
-    /// Pooled HTTP/1.1 client for the Python upstream.
-    pub upstream: HttpClient,
 }
 
 impl AppState {
     pub async fn new(settings: Settings) -> anyhow::Result<Self> {
-        let mut connector = HttpConnector::new();
-        connector.set_nodelay(true);
-        let upstream = Client::builder(TokioExecutor::new()).pool_max_idle_per_host(256).build(connector);
         let db = Db::connect().await?;
-        Ok(AppState { inner: Arc::new(Inner { settings, db, upstream }) })
+        Ok(AppState { inner: Arc::new(Inner { settings, db }) })
     }
 
     pub fn settings(&self) -> &Settings {

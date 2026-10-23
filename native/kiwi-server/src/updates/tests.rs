@@ -20,7 +20,6 @@ use axum::{
 };
 use base64::Engine;
 use futures::FutureExt;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::updates::{compare, difflib, pkfx, tree};
 use mongodb::bson::{Bson, Document};
 use serde_json::{Value, json};
@@ -489,10 +488,8 @@ async fn vfx_index_cached_per_ordinal() {
 }
 
 fn state() -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000"), ("SECRET_KEY", "updates-fixture-secret")])
-        .expect("settings");
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::from_vars([("SECRET_KEY", "updates-fixture-secret")]).expect("settings");
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn app() -> Router {

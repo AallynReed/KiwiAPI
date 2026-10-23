@@ -11,7 +11,6 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::Response,
 };
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{Bson, Document, oid::ObjectId};
 use serde_json::Value;
 
@@ -225,10 +224,8 @@ impl Transport for Scripted {
 }
 
 pub fn state() -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000"), ("SECRET_KEY", "webhooks-fixture-secret")])
-        .expect("settings");
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::from_vars([("SECRET_KEY", "webhooks-fixture-secret")]).expect("settings");
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 /// `router` under the real middleware stack, without stores.

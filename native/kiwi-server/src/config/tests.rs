@@ -10,9 +10,7 @@ pub(crate) fn fixture(name: &str) -> Value {
 }
 
 pub(crate) fn settings_from(env: &Map<String, Value>) -> anyhow::Result<Settings> {
-    let mut vars: Vec<(String, String)> = vec![("PY_UPSTREAM".into(), "http://py:8000/".into())];
-    vars.extend(env.iter().map(|(k, v)| (k.clone(), v.as_str().unwrap().to_owned())));
-    Settings::from_vars(vars)
+    Settings::from_vars(env.iter().map(|(k, v)| (k.clone(), v.as_str().unwrap().to_owned())))
 }
 
 /// Exact JSON equality, keeping int vs float apart; `{"$float": ..}` marks a
@@ -53,7 +51,6 @@ fn defaults_match_python() {
     for (k, w) in want {
         assert!(same(&got[k], w), "{k}: rust {} vs python {w}", got[k]);
     }
-    assert_eq!(s.py_upstream, "http://py:8000");
     assert_eq!(s.bind, "0.0.0.0:8000");
 }
 
@@ -87,7 +84,6 @@ fn env_cases_match_python() {
 }
 
 #[test]
-fn py_upstream_is_required() {
-    assert!(Settings::from_vars(Vec::<(String, String)>::new()).is_err());
-    assert!(Settings::from_vars([("PY_UPSTREAM", "")]).is_err());
+fn default_is_the_empty_environment() {
+    assert_eq!(dump(&Settings::default()), dump(&settings_from(&Map::new()).unwrap()));
 }

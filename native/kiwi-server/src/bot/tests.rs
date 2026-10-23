@@ -556,11 +556,7 @@ fn minute_alignment() {
 
 #[test]
 fn settings_carry_the_bot_fields() {
-    let s = crate::config::Settings::from_vars([
-        ("PY_UPSTREAM", "http://x"),
-        ("ASSET_BASE_URL", "https://api.aallyn.net/"),
-    ])
-    .unwrap();
+    let s = crate::config::Settings::from_vars([("ASSET_BASE_URL", "https://api.aallyn.net/")]).unwrap();
     assert_eq!(s.asset_url(), "https://api.aallyn.net");
     assert!(s.bot_members_intent);
     assert_eq!(s.events_channel, "kiwi:events");

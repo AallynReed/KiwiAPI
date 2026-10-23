@@ -100,9 +100,6 @@ async fn cycle(state: &AppState) -> Duration {
 }
 
 pub fn start(state: &AppState) {
-    if !jobs::owns("delves") {
-        return;
-    }
     if state.settings().trove_delve_source_url.is_empty() {
         tracing::info!("delves: no source URL configured (set TROVE_DELVE_SOURCE_URL) - refresher off");
         return;

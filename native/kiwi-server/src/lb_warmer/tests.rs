@@ -14,7 +14,6 @@ use axum::{
     http::{HeaderMap, Method, StatusCode, header},
 };
 use base64::Engine;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{Document, doc};
 use serde_json::{Value, json};
 use tower::ServiceExt;
@@ -471,17 +470,17 @@ async fn route_work_matches_python() {
 }
 
 fn stack() -> Router {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state =
-        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+    let settings = Settings::default();
+    let state = AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) };
     let mw = Arc::new(Mw::new(
         MwConfig::from_lookup(&|_| None),
         None,
         EmbedSource::Fixed(Vec::new()),
         TrustedHosts::parse("127.0.0.1"),
     ));
-    outer(wrap(super::routes(), mw, None).fallback(|| async { (StatusCode::IM_A_TEAPOT, "proxied") }).with_state(state))
+    outer(
+        wrap(super::router(), mw, None).fallback(|| async { (StatusCode::IM_A_TEAPOT, "unrouted") }).with_state(state),
+    )
 }
 
 #[tokio::test]

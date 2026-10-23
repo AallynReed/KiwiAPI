@@ -30,10 +30,6 @@ fn keys(d: &Document) -> Vec<&str> {
 #[tokio::test]
 #[ignore = "writes to MONGO_URI / REDIS_URL"]
 async fn feeds_store_roundtrip() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     let db = state.mongo().clone();
     let marker = ObjectId::new().to_hex();

@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use axum::body::Body;
 use base64::Engine as _;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::workshop::{self as ws, Fail};
 use kiwi_core::zipread;
 use serde_json::{Value, json};
@@ -31,9 +30,8 @@ pub fn s(v: &Value) -> &str {
 }
 
 pub fn state() -> AppState {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::default();
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 pub fn install_game() {

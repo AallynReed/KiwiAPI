@@ -1,6 +1,5 @@
 //! The Python middleware stack (`app/main.py`, `app/core/middleware.py`) as
-//! tower layers, applied to the ported router only: proxied responses already
-//! went through Python's copy. Outer to inner:
+//! tower layers. Outer to inner:
 //!
 //! client address (uvicorn `--proxy-headers`) -> gzip -> public-asset CORS ->
 //! CORS -> request id + panic boundary -> api-host 301 -> security (body cap,

@@ -51,7 +51,11 @@ impl Gamedata {
         static G: OnceLock<Gamedata> = OnceLock::new();
         G.get_or_init(|| {
             let runtime = Some(&settings.gamedata_dir).filter(|d| !d.is_empty()).map(PathBuf::from);
-            Gamedata::new(BASELINE_DIR, runtime)
+            let mut baseline = PathBuf::from(BASELINE_DIR);
+            if cfg!(test) && !baseline.is_dir() {
+                baseline = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..").join(BASELINE_DIR);
+            }
+            Gamedata::new(baseline, runtime)
         })
     }
 

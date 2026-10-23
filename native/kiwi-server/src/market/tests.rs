@@ -17,7 +17,6 @@ use axum::{
     routing::{get, patch, post, put},
 };
 use chrono::{TimeZone, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::market::{
     self as core,
     parser::{created_at, parse_dump, uuid_str},
@@ -267,9 +266,8 @@ impl Store for Arc<Fixture> {
 /// A store-less state: enough for routing, 405s, rejected auth and the
 /// admin answers that never reach Mongo.
 fn state() -> AppState {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::default();
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn stack(routes: Router<AppState>) -> Router {

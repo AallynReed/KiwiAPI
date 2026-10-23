@@ -11,7 +11,6 @@ use axum::{
 };
 use base64::Engine;
 use chrono::{DateTime, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{Bson, Document, oid::ObjectId};
 use serde_json::Value;
 use tower::ServiceExt;
@@ -80,17 +79,13 @@ fn pack(name: &str) -> Pack {
 }
 
 fn settings() -> Settings {
-    let mut vars: Vec<(String, String)> =
+    let vars: Vec<(String, String)> =
         golden()["env"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
     Settings::from_vars(vars).expect("settings")
 }
 
 fn state() -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState {
-        inner: Arc::new(Inner { settings: settings(), db: Db { mongo: None, redis: None, pg: None }, upstream }),
-    }
+    AppState { inner: Arc::new(Inner { settings: settings(), db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn bases(st: &AppState) -> Bases<'_> {

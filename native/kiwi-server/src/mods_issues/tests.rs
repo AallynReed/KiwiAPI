@@ -145,7 +145,7 @@ fn rate_limit_defaults_match_python() {
     for (prefix, want) in g.as_object().unwrap() {
         let max = crate::runtime_config::spec(&format!("{prefix}_max")).unwrap();
         let window = crate::runtime_config::spec(&format!("{prefix}_window_seconds")).unwrap();
-        let settings = crate::config::Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
+        let settings = crate::config::Settings::default();
         assert_eq!(max.default_value(&settings), want[0], "{prefix}");
         assert_eq!(window.default_value(&settings), want[1], "{prefix}");
     }

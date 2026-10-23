@@ -14,7 +14,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use chrono::{DateTime, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::drops::{RangeError, parse_range_header, safe_filename};
 use mongodb::bson::{Bson, Document};
 use serde_json::Value;
@@ -54,15 +53,13 @@ fn latin1(s: &str) -> Vec<u8> {
 }
 
 fn settings() -> Settings {
-    let mut vars: Vec<(String, String)> =
+    let vars: Vec<(String, String)> =
         golden()["env"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
     Settings::from_vars(vars).expect("settings")
 }
 
 fn state_with(mongo: Option<mongodb::Database>) -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings: settings(), db: Db { mongo, redis: None, pg: None }, upstream }) }
+    AppState { inner: Arc::new(Inner { settings: settings(), db: Db { mongo, redis: None, pg: None } }) }
 }
 
 fn app(state: AppState) -> Router {

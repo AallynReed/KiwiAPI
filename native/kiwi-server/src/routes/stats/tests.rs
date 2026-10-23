@@ -246,10 +246,6 @@ async fn table_cases() {
 // --- through the router and middleware (no store is reached) ----------------
 
 async fn app() -> axum::Router {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: set once before any thread reads it; the value is constant.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     crate::routes::app(AppState::new(Settings::from_env().unwrap()).await.unwrap())
 }
 

@@ -155,7 +155,6 @@ async fn rig(scenario: &str) -> Rig {
         ("GEOIP_DIR".into(), geo.to_string_lossy().into_owned()),
         ("GAMEDATA_DIR".into(), root.join("assets/gamedata").to_string_lossy().into_owned()),
         ("INTERNAL_API_URL".into(), api),
-        ("PY_UPSTREAM".into(), "http://127.0.0.1:9".into()),
     ]);
     let lookup: HashMap<String, String> = vars.iter().map(|(k, v)| (k.to_lowercase(), v.clone())).collect();
     let settings = Settings::from_vars(vars.clone()).expect("settings");

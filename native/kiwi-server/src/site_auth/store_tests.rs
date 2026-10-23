@@ -35,10 +35,6 @@ async fn call(app: &Router, method: &str, path: &str, bearer: &str, body: Option
 #[tokio::test]
 #[ignore = "writes to MONGO_URI / REDIS_URL"]
 async fn site_auth_store_flow() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     let db = state.inner.db.mongo.clone().expect("MONGO_URI");
     let mut redis = state.inner.db.redis.clone().expect("REDIS_URL");

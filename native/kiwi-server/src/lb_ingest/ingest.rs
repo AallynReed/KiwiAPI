@@ -335,7 +335,7 @@ pub async fn process_dump(
             Effect::Publish { signature, data } => {
                 signals::publish_event(state, "leaderboard", &signature, data).await;
             }
-            Effect::Warm => signals::trigger_warmer(state, &who.user),
+            Effect::Warm => crate::lb_warmer::trigger(),
         }
     }
     result.ok()

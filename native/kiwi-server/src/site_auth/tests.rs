@@ -10,7 +10,6 @@ use axum::{
     response::Response,
 };
 use chrono::{TimeZone, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::pystr;
 use mongodb::bson::{Bson, Document, doc, oid::ObjectId};
 use serde_json::Value;
@@ -282,11 +281,9 @@ fn state_values_parse_like_python() {
 
 fn state() -> AppState {
     let env = golden()["env"].as_object().expect("env");
-    let mut vars: Vec<(String, String)> = env.iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
+    let vars: Vec<(String, String)> = env.iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
     let settings = Settings::from_vars(vars).expect("settings");
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn app() -> Router {

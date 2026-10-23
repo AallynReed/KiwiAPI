@@ -82,10 +82,9 @@ pub async fn patch_board(State(state): State<AppState>, req: Request) -> Respons
         Ok(b) => b,
         Err(e) => return e.into_response(),
     };
-    let admin = match Superuser::from_request_parts(&mut parts, &state).await {
-        Ok(Superuser(u)) => u,
-        Err(r) => return r.into_response(),
-    };
+    if let Err(r) = Superuser::from_request_parts(&mut parts, &state).await {
+        return r.into_response();
+    }
     let path = match RawPathParams::from_request_parts(&mut parts, &state).await {
         Ok(raw) => raw.iter().map(|(k, v)| (k.to_owned(), v.to_owned())).collect(),
         Err(_) => Vec::new(),
@@ -109,7 +108,7 @@ pub async fn patch_board(State(state): State<AppState>, req: Request) -> Respons
         Ok(None) => ApiError::not_found(format!("No leaderboard with uuid={uuid}")).into_response(),
         Ok(Some(row)) => {
             crate::cheaters::invalidate_cache();
-            signals::trigger_warmer(&state, &admin);
+            crate::lb_warmer::trigger();
             PydanticJson(board_view(&row)).into_response()
         }
     }

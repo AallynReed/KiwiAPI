@@ -32,7 +32,7 @@ fn from_canon(v: &Value) -> Document {
 }
 
 fn settings() -> Settings {
-    Settings::from_vars([("PY_UPSTREAM", "http://127.0.0.1:9")]).unwrap()
+    Settings::default()
 }
 
 /// mongod 7's index catalog as the fixture generator emulates it.
@@ -317,10 +317,6 @@ fn interest_seed_skips_the_repeated_name() {
 #[tokio::test]
 #[ignore = "writes to MONGO_URI and POSTGRES_DSN"]
 async fn live_startup_is_idempotent() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: only this ignored test runs in its process invocation.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = crate::state::AppState::new(Settings::from_env().unwrap()).await.unwrap();
     super::run(&state).await;
     super::run(&state).await;

@@ -522,11 +522,8 @@ fn app() -> axum::Router {
         middleware::{self, EmbedSource, Mw, MwConfig, forwarded::TrustedHosts},
         state::{AppState, Inner},
     };
-    let upstream = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new()).build_http();
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000"), ("SECRET_KEY", "giveaways-fixture-secret")])
-        .expect("settings");
-    let state =
-        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+    let settings = Settings::from_vars([("SECRET_KEY", "giveaways-fixture-secret")]).expect("settings");
+    let state = AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) };
     let mw =
         Mw::new(MwConfig::from_lookup(&|_| None), None, EmbedSource::Fixed(vec![]), TrustedHosts::parse("127.0.0.1"));
     let inner = middleware::wrap(super::router(), Arc::new(mw), None)

@@ -16,7 +16,6 @@ use axum::{
 };
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use kiwi_core::update_archive::{self as ua, ManifestEntry, Ordered, Pointer, Sidecar};
 use mongodb::bson::{Bson, Document, doc};
 use serde_json::{Value, json};
@@ -884,9 +883,8 @@ impl Micros for DateTime<Utc> {
 }
 
 fn state() -> AppState {
-    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) }
+    let settings = Settings::default();
+    AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 fn stack() -> Router {

@@ -5,7 +5,6 @@ use std::{path::PathBuf, sync::Arc};
 
 use axum::{body::Body, http::Request};
 use http_body_util::BodyExt;
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{Bson, Document};
 use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
@@ -55,14 +54,11 @@ fn flags_from(v: &Value) -> Flags {
 }
 
 fn settings() -> Settings {
-    Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap()
+    Settings::default()
 }
 
 fn state() -> AppState {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    AppState {
-        inner: Arc::new(Inner { settings: settings(), db: Db { mongo: None, redis: None, pg: None }, upstream }),
-    }
+    AppState { inner: Arc::new(Inner { settings: settings(), db: Db { mongo: None, redis: None, pg: None } }) }
 }
 
 #[test]

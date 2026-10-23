@@ -842,17 +842,10 @@ async fn push_replies_match_dulwich() {
 async fn routes_answer_before_any_store() {
     use http_body_util::BodyExt;
     use tower::ServiceExt;
-    let settings = crate::config::Settings::from_vars([("PY_UPSTREAM", "http://127.0.0.1:9")]).unwrap();
-    let upstream = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new()).build_http();
+    let settings = crate::config::Settings::default();
     let db = crate::db::Db { mongo: None, redis: None, pg: None };
-    let state = crate::state::AppState { inner: std::sync::Arc::new(crate::state::Inner { settings, db, upstream }) };
-    let app = crate::routes::app_with(state.clone(), false);
-    for path in ["/git/mods/a/b/info/refs?service=git-upload-pack", "/git/mods/a/.git/info/refs"] {
-        let peer = axum::extract::ConnectInfo(std::net::SocketAddr::from(([127, 0, 0, 1], 50000)));
-        let req = axum::http::Request::builder().uri(path).extension(peer).body(Body::empty()).unwrap();
-        let resp = crate::routes::app_with(state.clone(), true).oneshot(req).await.unwrap();
-        assert_eq!(resp.status().as_u16(), 404, "native {path}");
-    }
+    let state = crate::state::AppState { inner: std::sync::Arc::new(crate::state::Inner { settings, db }) };
+    let app = crate::routes::app(state);
     let cases = [
         ("PUT", "/v1/mods/hub/me/git-tokens", 405, Some("GET")),
         ("GET", "/v1/mods/hub/me/git-tokens/abc", 405, Some("DELETE")),
@@ -862,8 +855,9 @@ async fn routes_answer_before_any_store() {
         ("GET", "/git/mods/a/b.git/git-receive-pack", 405, Some("POST")),
         ("GET", "/git/mods/a/b.git/info/refs", 422, None),
         ("GET", "/git/mods/a/b.git/info/refs?service=git-annex", 403, None),
-        ("GET", "/git/mods/a/b/info/refs?service=git-upload-pack", 502, None),
-        ("GET", "/git/mods/a/.git/info/refs?service=git-upload-pack", 502, None),
+        ("GET", "/git/mods/a/b/info/refs?service=git-upload-pack", 404, None),
+        ("GET", "/git/mods/a/.git/info/refs?service=git-upload-pack", 404, None),
+        ("GET", "/git/mods/a/.git/info/refs", 404, None),
     ];
     for (method, path, status, allow) in cases {
         let peer = axum::extract::ConnectInfo(std::net::SocketAddr::from(([127, 0, 0, 1], 50000)));

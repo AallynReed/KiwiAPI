@@ -133,10 +133,6 @@ mod tempdir {
 }
 
 async fn rig(scenario: &str) -> Rig {
-    rig_with(scenario, "http://127.0.0.1:9".into()).await
-}
-
-async fn rig_with(scenario: &str, py_upstream: String) -> Rig {
     let upstream = data("upstream.json");
     let api = if scenario == "down" { closed_port().await } else { fake_api(&upstream[scenario]).await };
     static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -158,7 +154,6 @@ async fn rig_with(scenario: &str, py_upstream: String) -> Rig {
         ("GEOIP_DIR".into(), geo.to_string_lossy().into_owned()),
         ("GAMEDATA_DIR".into(), root.join("assets/gamedata").to_string_lossy().into_owned()),
         ("INTERNAL_API_URL".into(), api),
-        ("PY_UPSTREAM".into(), py_upstream),
     ]);
     let lookup: HashMap<String, String> = vars.iter().map(|(k, v)| (k.to_lowercase(), v.clone())).collect();
     let settings = Settings::from_vars(vars.clone()).expect("settings");
@@ -389,48 +384,6 @@ fn route_table_matches_python() {
     let py: Vec<&str> =
         golden()["routes"].as_array().expect("routes").iter().map(|r| r[0].as_str().unwrap_or("")).collect();
     assert_eq!(py, pageviews::ROUTES.to_vec());
-}
-
-/// Which website routes Rust answers and which go to web-py, written to
-/// `KIWI_COVERAGE_OUT` (default: stdout).
-#[tokio::test]
-#[ignore]
-async fn web_route_coverage() {
-    let py = fake_api(&Value::Null).await;
-    let rig = rig_with("down", py).await;
-    let (mut rust, mut python) = (Vec::new(), Vec::new());
-    for r in golden()["routes"].as_array().expect("routes") {
-        let path = r[0].as_str().unwrap_or("");
-        let concrete = if path == "/static" {
-            "/static/appearance.css".to_owned()
-        } else {
-            path.replace("{doc}", "atlas").replace("{name}", "pvp.json").replace(['{', '}'], "")
-        };
-        let methods: Vec<&str> =
-            r[1].as_array().map(|m| m.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
-        for m in if methods.is_empty() { vec!["GET"] } else { methods } {
-            let mut req = Request::builder().method(m).uri(&concrete).body(Body::empty()).expect("request");
-            req.extensions_mut().insert(ConnectInfo(SocketAddr::from(([203, 0, 113, 9], 5000))));
-            let res = rig.app.clone().oneshot(req).await.expect("infallible");
-            let line = format!("{m} {path}");
-            if res.status() == StatusCode::NOT_FOUND && res.headers().get("x-request-id").is_none() {
-                python.push(line)
-            } else {
-                rust.push(line)
-            }
-        }
-    }
-    let report = format!(
-        "rust ({}):\n  {}\npython ({}):\n  {}\n",
-        rust.len(),
-        rust.join("\n  "),
-        python.len(),
-        python.join("\n  ")
-    );
-    match std::env::var("KIWI_COVERAGE_OUT") {
-        Ok(p) => std::fs::write(p, report).expect("write"),
-        Err(_) => println!("{report}"),
-    }
 }
 
 #[test]

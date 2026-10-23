@@ -1,5 +1,5 @@
 //! Opt-in: POSTGRES_DSN at a throwaway database with the leaderboards schema
-//! (api-py creates it at startup); `cargo test -p kiwi-server cheaters_store -- --ignored`.
+//! (kiwi-server creates it at startup); `cargo test -p kiwi-server cheaters_store -- --ignored`.
 
 use kiwi_core::cheaters::Entry;
 
@@ -11,10 +11,6 @@ const BOARD: i32 = 990_401;
 #[tokio::test]
 #[ignore = "writes to POSTGRES_DSN"]
 async fn cheaters_store_reads_like_pg_store() {
-    if std::env::var("PY_UPSTREAM").is_err() {
-        // SAFETY: set before any other thread reads the environment.
-        unsafe { std::env::set_var("PY_UPSTREAM", "http://127.0.0.1:9") };
-    }
     let state = AppState::new(Settings::from_env().unwrap()).await.unwrap();
     let anchor: i64 = 2_000_000_000 / 86400 * 86400 + 11 * 3600 + 7200;
     let day = trove_day_start(anchor);

@@ -9,7 +9,6 @@ use axum::{
     http::{HeaderMap, HeaderName, HeaderValue, Method, Request, StatusCode},
     response::Response,
 };
-use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 use mongodb::bson::{Bson, DateTime as BsonDateTime, Document, oid::ObjectId};
 use serde_json::{Value, json};
 use tower::ServiceExt;
@@ -55,14 +54,11 @@ fn settings(extra: &[(&str, &str)]) -> Settings {
     let env = golden()["env"].as_object().expect("env");
     let mut vars: Vec<(String, String)> = env.iter().map(|(k, v)| (k.clone(), s(v).to_owned())).collect();
     vars.extend(extra.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())));
-    vars.push(("PY_UPSTREAM".into(), "http://py:8000".into()));
     Settings::from_vars(vars).expect("settings")
 }
 
 fn app(settings: Settings) -> Router {
-    let upstream = Client::builder(TokioExecutor::new()).build_http();
-    let state =
-        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+    let state = AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None } }) };
     let mw =
         Mw::new(MwConfig::from_lookup(&|_| None), None, EmbedSource::Fixed(vec![]), TrustedHosts::parse("127.0.0.1"));
     let inner = middleware::wrap(super::router(), Arc::new(mw), None)
@@ -481,49 +477,11 @@ fn document_field_order() {
     assert_eq!(json!(outbox), m["outbox"]);
 }
 
-/// A stand-in for api-py that answers `py` and keeps each raw request.
-async fn upstream() -> (std::net::SocketAddr, Arc<std::sync::Mutex<Vec<String>>>) {
-    use tokio::io::{AsyncReadExt, AsyncWriteExt};
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let addr = listener.local_addr().unwrap();
-    let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
-    let log = seen.clone();
-    tokio::spawn(async move {
-        while let Ok((mut sock, _)) = listener.accept().await {
-            let mut raw = Vec::new();
-            let mut buf = vec![0u8; 8192];
-            loop {
-                let n = sock.read(&mut buf).await.unwrap_or(0);
-                raw.extend_from_slice(&buf[..n]);
-                let text = String::from_utf8_lossy(&raw).into_owned();
-                let done = text.split_once("\r\n\r\n").is_some_and(|(head, body)| {
-                    let len = head
-                        .lines()
-                        .find_map(|l| {
-                            l.to_ascii_lowercase().strip_prefix("content-length:").map(|v| v.trim().to_owned())
-                        })
-                        .and_then(|v| v.parse::<usize>().ok())
-                        .unwrap_or(0);
-                    body.len() >= len
-                });
-                if n == 0 || done {
-                    break;
-                }
-            }
-            log.lock().unwrap().push(String::from_utf8_lossy(&raw).into_owned());
-            let _ = sock.write_all(b"HTTP/1.1 201 Created\r\ncontent-length: 2\r\nconnection: close\r\n\r\npy").await;
-        }
-    });
-    (addr, seen)
-}
-
 #[tokio::test]
-async fn unicode_emails_stay_in_rust() {
-    let (addr, seen) = upstream().await;
-    let settings = Settings::from_vars([("PY_UPSTREAM", format!("http://{addr}"))]).unwrap();
-    let client = Client::builder(TokioExecutor::new()).build_http();
+async fn unicode_emails_are_answered() {
+    let settings = Settings::default();
     let db = Db { mongo: None, redis: None, pg: None };
-    let app = crate::routes::app(AppState { inner: Arc::new(Inner { settings, db, upstream: client }) });
+    let app = crate::routes::app(AppState { inner: Arc::new(Inner { settings, db }) });
     let peer: std::net::SocketAddr = "203.0.113.9:5000".parse().unwrap();
     let send = |path: &'static str, body: &'static str| {
         let app = app.clone();
@@ -546,5 +504,4 @@ async fn unicode_emails_stay_in_rust() {
     assert_ne!(status, StatusCode::CREATED);
     let (status, _) = send("/auth/signup", r#"{"email": "a@[1.2.3.4]", "password": "x"}"#).await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
-    assert!(seen.lock().unwrap().is_empty(), "a Unicode email reached Python");
 }
