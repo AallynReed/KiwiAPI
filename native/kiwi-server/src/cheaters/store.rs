@@ -258,19 +258,7 @@ impl Store for Live<'_> {
     }
 
     async fn list_boards_at(&self, anchor: i64) -> anyhow::Result<Vec<BoardRow>> {
-        let rows = self
-            .pg()
-            .await?
-            .query(
-                "SELECT b.uuid, b.name_id, b.name, b.category_id, b.category, \
-                        b.reset_kind_override, bc.type AS contest_type \
-                 FROM (SELECT DISTINCT board_uuid FROM entry WHERE anchor = $1) e \
-                 JOIN board b ON b.uuid = e.board_uuid \
-                 LEFT JOIN board_contest bc ON bc.board_uuid = b.uuid AND bc.anchor = $1 \
-                 ORDER BY b.category, b.name",
-                &[&anchor],
-            )
-            .await?;
+        let rows = crate::lbread::store::board_rows_at(&self.pg().await?, anchor).await?;
         Ok(rows
             .iter()
             .map(|r| {
@@ -442,10 +430,7 @@ impl Store for Live<'_> {
         let con = self.pg().await?;
         let id = i32_of(uuid)?;
         let anchors: Vec<i64> = con
-            .query(
-                "SELECT DISTINCT anchor FROM entry WHERE board_uuid = $1 AND anchor >= $2 ORDER BY anchor",
-                &[&id, &window_start],
-            )
+            .query(crate::lbread::store::SERIES_ANCHORS, &[&id, &window_start])
             .await?
             .iter()
             .map(|r| r.get(0))

@@ -55,18 +55,7 @@ pub struct Board {
 
 /// `list_boards_at(anchor)` in its `ORDER BY category, name` order.
 pub async fn list_boards_at(pg: &Pool, anchor: i64) -> anyhow::Result<Vec<Board>> {
-    let client = pg.get().await?;
-    let rows = client
-        .query(
-            "SELECT b.uuid, b.name_id, b.name, b.category_id, b.category, \
-                    b.reset_kind_override, bc.type AS contest_type \
-             FROM (SELECT DISTINCT board_uuid FROM entry WHERE anchor = $1) e \
-             JOIN board b ON b.uuid = e.board_uuid \
-             LEFT JOIN board_contest bc ON bc.board_uuid = b.uuid AND bc.anchor = $1 \
-             ORDER BY b.category, b.name",
-            &[&anchor],
-        )
-        .await?;
+    let rows = crate::lbread::store::board_rows_at(&pg.get().await?, anchor).await?;
     Ok(rows.iter().map(|r| Board { uuid: r.get("uuid"), name: r.get("name"), category: r.get("category") }).collect())
 }
 

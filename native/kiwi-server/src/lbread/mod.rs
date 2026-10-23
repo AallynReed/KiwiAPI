@@ -11,6 +11,8 @@ pub mod service;
 pub mod store;
 
 #[cfg(test)]
+mod bench_tests;
+#[cfg(test)]
 mod store_tests;
 #[cfg(test)]
 mod tests;

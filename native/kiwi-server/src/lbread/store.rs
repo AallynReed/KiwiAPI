@@ -1,5 +1,7 @@
-//! `app/trove/leaderboards/pg_store.py` reads, SQL verbatim: the skip scans and
-//! orderings are what keep these under the statement timeout on the cold tier.
+//! `app/trove/leaderboards/pg_store.py` reads, SQL verbatim except the board
+//! list and the chart's anchors, which return the same rows from index seeks:
+//! the skip scans and orderings are what keep these under the statement
+//! timeout on the cold tier.
 
 use std::{collections::HashMap, future::Future};
 
@@ -166,10 +168,18 @@ const LIST_DAYS: &str = "
             SELECT anchor FROM d WHERE anchor IS NOT NULL LIMIT $1
             ";
 
-const LIST_BOARDS_AT: &str = "SELECT b.uuid, b.name_id, b.name, b.category_id, b.category, \
+pub const LIST_BOARDS_AT: &str = "SELECT b.uuid, b.name_id, b.name, b.category_id, b.category, \
        b.reset_kind_override, bc.type AS contest_type \
 FROM (SELECT DISTINCT board_uuid FROM entry WHERE anchor = $1) e \
 JOIN board b ON b.uuid = e.board_uuid \
+LEFT JOIN board_contest bc ON bc.board_uuid = b.uuid AND bc.anchor = $1 \
+ORDER BY b.category, b.name";
+
+/// `LIST_BOARDS_AT` with one index probe per board instead of a scan of the capture.
+pub const LIST_BOARDS_AT_PROBE: &str = "SELECT b.uuid, b.name_id, b.name, b.category_id, b.category, \
+       b.reset_kind_override, bc.type AS contest_type \
+FROM board b \
+CROSS JOIN LATERAL (SELECT 1 FROM entry e WHERE e.board_uuid = b.uuid AND e.anchor = $1 LIMIT 1) e \
 LEFT JOIN board_contest bc ON bc.board_uuid = b.uuid AND bc.anchor = $1 \
 ORDER BY b.category, b.name";
 
@@ -200,12 +210,23 @@ const PREV_ROWS_FOR_PLAYERS: &str = "SELECT p.name_lower, e.rank, e.score \
 FROM entry e JOIN player p ON p.id = e.player_id \
 WHERE e.board_uuid = $1 AND e.anchor = $2 AND p.name_lower = ANY($3)";
 
-const SERIES_ANCHORS: &str = "SELECT DISTINCT anchor FROM entry WHERE board_uuid = $1 AND anchor >= $2 ORDER BY anchor";
-const SERIES_TOP: &str = "SELECT e.player_id, p.name AS player_name, e.rank \
+/// `SELECT DISTINCT anchor FROM entry WHERE board_uuid = $1 AND anchor >= $2
+/// ORDER BY anchor` as a skip scan: one index seek per anchor rather than
+/// reading every entry of the board in the window.
+pub const SERIES_ANCHORS: &str = "
+    WITH RECURSIVE a AS (
+        SELECT (SELECT min(anchor) FROM entry WHERE board_uuid = $1 AND anchor >= $2) AS anchor
+        UNION ALL
+        SELECT (SELECT min(e.anchor) FROM entry e
+                WHERE e.board_uuid = $1 AND e.anchor > a.anchor AND e.anchor >= $2)
+        FROM a WHERE a.anchor IS NOT NULL
+    )
+    SELECT anchor FROM a WHERE anchor IS NOT NULL ORDER BY anchor";
+pub const SERIES_TOP: &str = "SELECT e.player_id, p.name AS player_name, e.rank \
 FROM entry e JOIN player p ON p.id = e.player_id \
 WHERE e.board_uuid = $1 AND e.anchor = $2 \
 ORDER BY e.rank LIMIT $3";
-const SERIES_ROWS: &str = "SELECT e.player_id, e.anchor AS created_at, e.rank, e.score \
+pub const SERIES_ROWS: &str = "SELECT e.player_id, e.anchor AS created_at, e.rank, e.score \
 FROM entry e \
 WHERE e.board_uuid = $1 AND e.anchor >= $2 AND e.player_id = ANY($3)";
 
@@ -232,6 +253,23 @@ impl Live<'_> {
     ) -> Res<Option<T>> {
         Ok(self.query(sql, params).await?.first().map(|r| r.try_get::<_, Option<T>>(0)).transpose()?.flatten())
     }
+}
+
+/// `list_boards_at`'s rows. Boards sharing a category and name come back in
+/// whatever order the plan gives, so a tie reruns Python's query to keep it.
+pub async fn board_rows_at(client: &deadpool_postgres::Client, anchor: i64) -> Res<Vec<tokio_postgres::Row>> {
+    let stmt = client.prepare_cached(LIST_BOARDS_AT_PROBE).await?;
+    let rows = client.query(&stmt, &[&anchor]).await?;
+    let key = |r: &tokio_postgres::Row| -> Res<(String, String)> { Ok((r.try_get("category")?, r.try_get("name")?)) };
+    let mut tied = false;
+    for w in rows.windows(2) {
+        tied |= key(&w[0])? == key(&w[1])?;
+    }
+    if !tied {
+        return Ok(rows);
+    }
+    let stmt = client.prepare_cached(LIST_BOARDS_AT).await?;
+    Ok(client.query(&stmt, &[&anchor]).await?)
 }
 
 fn board_row(r: &tokio_postgres::Row, contest: bool) -> Res<BoardRow> {
@@ -262,7 +300,7 @@ impl Source for Live<'_> {
     }
 
     async fn list_boards_at(&self, anchor: i64) -> Res<Vec<BoardRow>> {
-        self.query(LIST_BOARDS_AT, &[&anchor]).await?.iter().map(|r| board_row(r, true)).collect()
+        board_rows_at(&self.client().await?, anchor).await?.iter().map(|r| board_row(r, true)).collect()
     }
 
     async fn get_board(&self, uuid: i32) -> Res<Option<Board>> {
