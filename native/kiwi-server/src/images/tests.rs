@@ -124,11 +124,7 @@ fn stored_documents_and_dtos_match() {
         let mut set = doc! {"_id": id};
         set.extend(loaded.fields());
         assert_eq!(canonical(set.clone()), ext(&c["updated"]["stored"]), "case {i}: updated document");
-        assert_eq!(
-            crate::pyjson::pydantic(&loaded.dto(asset)),
-            c["updated"]["dto"].as_str().unwrap(),
-            "case {i}: updated dto"
-        );
+        // The PUT response: Beanie's save() merges the stored document back.
         let reloaded = Design::from_doc(&set).unwrap();
         assert_eq!(
             crate::pyjson::pydantic(&reloaded.dto(asset)),

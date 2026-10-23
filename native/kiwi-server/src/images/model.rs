@@ -4,7 +4,8 @@
 //! A layer's float fields keep Python's int-or-float identity: Beanie
 //! validates a created or loaded design (every one a float), but `PUT` assigns
 //! the body's `model_dump()` dicts unvalidated, so a defaulted `x`/`y`/`w`/`h`
-//! stays the int it was declared as, in Mongo and in the response.
+//! is stored as the int it was declared as. The `PUT` response is the stored
+//! document read back (`save()` merges it), so it shows floats again.
 
 use chrono::{DateTime, Utc};
 use mongodb::bson::{Bson, Document, doc, oid::ObjectId};

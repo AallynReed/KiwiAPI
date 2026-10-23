@@ -29,7 +29,7 @@ use crate::{
     auth::CurrentSiteUser,
     error::{ApiError, method_not_allowed},
     features::{self, ImageStudio, RequireFeature},
-    pyjson::{PydanticJson, no_content},
+    pyjson::PydanticJson,
     state::AppState,
     validation::{self, DepsThenBody, Fail, Params},
 };
@@ -133,8 +133,9 @@ async fn delete_design(
     _: RequireFeature<ImageStudio>,
     CurrentSiteUser(user): CurrentSiteUser,
 ) -> Response {
+    // `return Response(status_code=204)`: no Content-Type, unlike a `-> None` 204.
     match service::delete(&state, user.id, &id).await {
-        Ok(()) => no_content(),
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(e) => e.into_response(),
     }
 }

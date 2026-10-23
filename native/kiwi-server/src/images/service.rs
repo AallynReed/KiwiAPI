@@ -13,6 +13,7 @@ use futures::TryStreamExt;
 use mongodb::{
     Collection,
     bson::{Document, doc, oid::ObjectId},
+    options::ReturnDocument,
 };
 use serde_json::{Value, json};
 
@@ -225,7 +226,15 @@ pub async fn update(
     d.updated_at = now;
     let mut set = doc! {"_id": d.id};
     set.extend(d.fields());
-    coll(state).update_one(doc! {"_id": d.id}, doc! {"$set": set}).upsert(true).await.map_err(internal)?;
+    // Beanie's save() merges the stored document back (re-validated: float
+    // layer fields, millisecond dates); that is what the response shows.
+    let stored = coll(state)
+        .find_one_and_update(doc! {"_id": d.id}, doc! {"$set": set})
+        .upsert(true)
+        .return_document(ReturnDocument::After)
+        .await
+        .map_err(internal)?;
+    let d = stored.as_ref().and_then(Design::from_doc).unwrap_or(d);
     Ok(d.dto(&state.settings().asset_url()))
 }
 
