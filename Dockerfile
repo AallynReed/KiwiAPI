@@ -17,7 +17,8 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
     cd /native && cargo build --release --locked -p kiwi-server \
     && install -D target/release/kiwi-server /out/kiwi-server \
     && install -D target/release/kiwi-builder /out/kiwi-builder \
-    && install -D target/release/kiwi-bot /out/kiwi-bot     && install -D target/release/kiwi-web /out/kiwi-web
+    && install -D target/release/kiwi-bot /out/kiwi-bot \
+    && install -D target/release/kiwi-web /out/kiwi-web
 
 FROM python:3.13-slim AS app
 
