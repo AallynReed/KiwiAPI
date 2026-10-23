@@ -5,6 +5,7 @@
 use std::collections::{BTreeSet, HashMap};
 use std::sync::{LazyLock, Mutex};
 
+use futures::{StreamExt, stream};
 use kiwi_core::duplicates::{self as core, Point, SeriesSummary};
 use serde_json::{Map, Value, json};
 
@@ -15,6 +16,8 @@ use crate::{features, pyjson};
 pub const METHOD_VERSION: i64 = 1;
 pub const STATUS_KEY: &str = "lb:duplicates:status";
 pub const RUNNING_KEY: &str = "lb:duplicates:running";
+/// Names whose window rows load at once in the live pass (records keep their order).
+const RECORD_CONCURRENCY: usize = 6;
 
 /// `_last_scanned_anchor`.
 pub static LAST_ANCHOR: Mutex<Option<i64>> = Mutex::new(None);
@@ -184,10 +187,11 @@ pub async fn detect_latest<S: Store>(
     ordered.sort_by_key(|(_, g)| std::cmp::Reverse(g.len()));
     ordered.retain(|(_, g)| g.len() as i64 >= cfg.min_boards);
     let now = int_secs(clock());
-    let mut records = Vec::new();
-    for (name, g) in &ordered[..py_slice_end(ordered.len(), cfg.max_names)] {
-        records.push(build_record(s, name, g, &cfg, anchor, now, None).await);
-    }
+    let builds: Vec<_> = ordered[..py_slice_end(ordered.len(), cfg.max_names)]
+        .iter()
+        .map(|(name, g)| build_record(s, name, g, &cfg, anchor, now, None))
+        .collect();
+    let records: Vec<DuplicateWrite> = stream::iter(builds).buffered(RECORD_CONCURRENCY).collect().await;
     if !records.is_empty() {
         s.upsert_duplicates(&records).await?;
     }
