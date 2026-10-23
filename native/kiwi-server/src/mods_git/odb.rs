@@ -7,12 +7,10 @@ use std::{
     collections::HashMap,
     fs,
     io::{self, Write},
-    os::raw::{c_int, c_void},
     path::{Path, PathBuf},
     sync::OnceLock,
 };
 
-use libz_sys as z;
 use memmap2::Mmap;
 use sha1::{Digest, Sha1};
 
@@ -495,86 +493,14 @@ pub fn init_bare(dir: &Path) -> GitResult<()> {
     Ok(())
 }
 
-unsafe extern "C" fn zalloc(_: *mut c_void, items: z::uInt, size: z::uInt) -> *mut c_void {
-    unsafe { libc_calloc(items as usize, size as usize) }
-}
-
-unsafe extern "C" fn zfree(_: *mut c_void, ptr: *mut c_void) {
-    unsafe { libc_free(ptr) }
-}
-
-unsafe extern "C" {
-    #[link_name = "calloc"]
-    fn libc_calloc(n: usize, size: usize) -> *mut c_void;
-    #[link_name = "free"]
-    fn libc_free(ptr: *mut c_void);
-}
-
 /// `zlib.compressobj(level, DEFLATED, wbits)`, one `compress()` per chunk,
-/// then `flush()`: zlib itself (libz-sys), so the bytes are CPython's.
-pub fn deflate(chunks: &[&[u8]], level: c_int, wbits: c_int) -> Option<Vec<u8>> {
-    let total: usize = chunks.iter().map(|c| c.len()).sum();
-    // SAFETY: a z_stream with our allocator, initialised by deflateInit2_
-    // and torn down by deflateEnd on every path below.
-    unsafe {
-        let mut s = Box::new(z::z_stream {
-            next_in: std::ptr::null_mut(),
-            avail_in: 0,
-            total_in: 0,
-            next_out: std::ptr::null_mut(),
-            avail_out: 0,
-            total_out: 0,
-            msg: std::ptr::null_mut(),
-            state: std::ptr::null_mut(),
-            zalloc,
-            zfree,
-            opaque: std::ptr::null_mut(),
-            data_type: 0,
-            adler: 0,
-            reserved: 0,
-        });
-        let rc = z::deflateInit2_(
-            &mut *s,
-            level,
-            z::Z_DEFLATED,
-            wbits,
-            8,
-            z::Z_DEFAULT_STRATEGY,
-            z::zlibVersion(),
-            std::mem::size_of::<z::z_stream>() as c_int,
-        );
-        if rc != z::Z_OK {
-            return None;
-        }
-        let bound = z::deflateBound(&mut *s, total as z::uLong) as usize + 64;
-        let mut out: Vec<u8> = vec![0u8; bound];
-        s.next_out = out.as_mut_ptr();
-        s.avail_out = bound as z::uInt;
-        let mut ok = true;
-        for c in chunks {
-            s.next_in = c.as_ptr() as *mut u8;
-            s.avail_in = c.len() as z::uInt;
-            while s.avail_in > 0 {
-                let rc = z::deflate(&mut *s, z::Z_NO_FLUSH);
-                if rc != z::Z_OK || s.avail_out == 0 {
-                    ok = false;
-                    break;
-                }
-            }
-        }
-        while ok {
-            match z::deflate(&mut *s, z::Z_FINISH) {
-                z::Z_STREAM_END => break,
-                z::Z_OK | z::Z_BUF_ERROR if s.avail_out > 0 => {}
-                _ => ok = false,
-            }
-        }
-        let written = bound - s.avail_out as usize;
-        z::deflateEnd(&mut *s);
-        if !ok {
-            return None;
-        }
-        out.truncate(written);
-        Some(out)
+/// then `flush()`: classic zlib, so the bytes are CPython's.
+pub fn deflate(chunks: &[&[u8]], level: i32, wbits: i32) -> Option<Vec<u8>> {
+    let mut d = kiwi_zlib::compressobj(level, wbits, 8, kiwi_zlib::Z_DEFAULT_STRATEGY)?;
+    let mut out = Vec::new();
+    for c in chunks {
+        out.extend(d.compress(c)?);
     }
+    out.extend(d.flush(kiwi_zlib::Z_FINISH)?);
+    Some(out)
 }

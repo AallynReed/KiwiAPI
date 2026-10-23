@@ -21,7 +21,7 @@ mod tests;
 
 use axum::{
     Router,
-    http::{Method, Uri},
+    http::Uri,
     routing::{delete, get, patch, post},
 };
 
@@ -38,7 +38,7 @@ pub fn router() -> Router<AppState> {
         .route("/v1/mods/hub/tags", get(hub_tags).fallback(na("GET")))
         .route("/v1/mods/hub/profile/{handle}", get(hub_profile).fallback(na("GET")))
         .route(PROJECT, get(hub_project).patch(update_project).delete(delete_project).fallback(na("GET")))
-        .route(&sub("releases"), get(hub_releases).fallback(na("GET")))
+        .route(&sub("releases"), get(hub_releases).post(crate::mod_releases::write::create).fallback(na("GET")))
         .route(&sub("forks"), get(hub_forks).fallback(na("GET")))
         .route(&sub("fork"), post(fork_project).fallback(na("POST")))
         .route(&sub("remixes"), get(list_remixes).fallback(na("GET")))
@@ -77,9 +77,8 @@ pub fn router() -> Router<AppState> {
 /// For `routes::defer_to_python`: the `POST` on the releases path belongs to
 /// the release component, and `/v1/mods/hub/creator-links` (caught here by
 /// `/v1/mods/{handle}/{slug}`) to the creator-link one.
-pub fn defers(matched: &str, method: &Method, uri: &Uri) -> bool {
+pub fn defers(matched: &str, uri: &Uri) -> bool {
     match matched {
-        "/v1/mods/hub/projects/{handle}/{slug}/releases" => !matches!(*method, Method::GET | Method::HEAD),
         "/v1/mods/{handle}/{slug}" => scope_path(uri) == "/v1/mods/hub/creator-links",
         _ => false,
     }

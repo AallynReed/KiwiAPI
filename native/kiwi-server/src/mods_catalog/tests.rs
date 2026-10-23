@@ -530,14 +530,11 @@ async fn route_precedence() {
 fn defers_to_python() {
     let uri = |p: &str| p.parse::<Uri>().unwrap();
     let rel = "/v1/mods/hub/projects/{handle}/{slug}/releases";
-    assert!(super::defers(rel, &Method::POST, &uri("/v1/mods/hub/projects/a/b/releases")));
-    assert!(!super::defers(rel, &Method::GET, &uri("/v1/mods/hub/projects/a/b/releases")));
-    assert!(!super::defers(rel, &Method::HEAD, &uri("/v1/mods/hub/projects/a/b/releases")));
+    assert!(!super::defers(rel, &uri("/v1/mods/hub/projects/a/b/releases")));
     let any = "/v1/mods/{handle}/{slug}";
-    assert!(super::defers(any, &Method::GET, &uri("/v1/mods/hub/creator-links")));
-    assert!(super::defers(any, &Method::POST, &uri("/v1/mods/hub/creator-links")));
-    assert!(!super::defers(any, &Method::GET, &uri("/v1/mods/hub/xyz")));
-    assert!(!super::defers("/v1/mods/hub/projects", &Method::POST, &uri("/v1/mods/hub/projects")));
+    assert!(super::defers(any, &uri("/v1/mods/hub/creator-links")));
+    assert!(!super::defers(any, &uri("/v1/mods/hub/xyz")));
+    assert!(!super::defers("/v1/mods/hub/projects", &uri("/v1/mods/hub/projects")));
 }
 
 #[test]

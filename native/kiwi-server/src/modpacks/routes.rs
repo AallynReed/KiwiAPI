@@ -14,18 +14,18 @@ use serde_json::{Map, Value, json};
 
 use super::{
     body::{
-        AdminListQuery, ApiDownload, CollaboratorBody, CreateBody, CreateVariantBody, ListQuery, SetEntriesBody,
-        SiteDownload, TakedownBody, UpdateBody, UpdateVariantBody,
+        ApiDownload, CollaboratorBody, CreateBody, CreateVariantBody, ListQuery, SetEntriesBody, SiteDownload,
+        UpdateBody, UpdateVariantBody,
     },
     model::Pack,
     service::{self, Res},
 };
 use crate::{
-    auth::{CurrentSiteUser, OptionalSiteUser, Superuser, extract::Public, scopes::MODS_READ},
+    auth::{CurrentSiteUser, OptionalSiteUser, extract::Public, scopes::MODS_READ},
     error::{self, ApiError},
     features::{self, ModsHub, RequireFeature},
     middleware::pyurl::{quote, scope_path},
-    pyjson::{PyJson, PydanticJson, no_content},
+    pyjson::{PyJson, PydanticJson},
     state::AppState,
     validation::{DepsThenBody, Query},
 };
@@ -523,58 +523,6 @@ pub async fn site_download(
         async {
             let pack = service::get_for_view(&state, &seg(&uri, 4), &seg(&uri, 5), viewer.map(|u| u.id)).await?;
             download(&state, pack, q.variant.as_deref(), &q.format, true).await
-        }
-        .await,
-    )
-}
-
-// --- /admin/modpacks -------------------------------------------------------
-
-pub async fn admin_list(State(state): State<AppState>, _: Superuser, Query(q): Query<AdminListQuery>) -> Response {
-    reply(
-        async {
-            let (items, total) = service::master_list(&state, &q).await?;
-            let n = items.len();
-            Ok(PydanticJson(json!({"items": items, "count": n, "total": total})).into_response())
-        }
-        .await,
-    )
-}
-
-pub async fn admin_delete(State(state): State<AppState>, _: Superuser, uri: Uri) -> Response {
-    reply(
-        async {
-            service::master_delete(&state, &seg(&uri, 3)).await?;
-            Ok(no_content())
-        }
-        .await,
-    )
-}
-
-pub async fn admin_takedown(
-    State(state): State<AppState>,
-    uri: Uri,
-    DepsThenBody(_, req): DepsThenBody<Superuser, TakedownBody>,
-) -> Response {
-    reply(
-        async {
-            let pack = service::take_down(&state, &seg(&uri, 3), &req.reason).await?;
-            Ok(PydanticJson(json!({
-                "slug": pack.slug, "handle": pack.owner_handle,
-                "taken_down": pack.taken_down, "takedown_reason": pack.takedown_reason,
-            }))
-            .into_response())
-        }
-        .await,
-    )
-}
-
-pub async fn admin_restore(State(state): State<AppState>, _: Superuser, uri: Uri) -> Response {
-    reply(
-        async {
-            let pack = service::restore(&state, &seg(&uri, 3)).await?;
-            Ok(PydanticJson(json!({"slug": pack.slug, "handle": pack.owner_handle, "taken_down": pack.taken_down}))
-                .into_response())
         }
         .await,
     )

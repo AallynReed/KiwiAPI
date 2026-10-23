@@ -1,8 +1,7 @@
 //! Modpacks (`app/trove/modpacks`): user-curated bundles of Mods Hub mod
 //! references, built into a `.tpack`, `.zip` or configs zip on the fly. The
 //! hub surface and the documented catalog ride the Mods Hub gate; the
-//! `/site/modpacks/*` proxies and `/admin/modpacks*` master routes sit on the
-//! same service.
+//! `/site/modpacks/*` proxies sit on the same service.
 
 pub mod artifact;
 pub mod body;
@@ -66,8 +65,4 @@ pub fn router() -> Router<AppState> {
         .route("/site/modpacks/projects/{handle}/{slug}", get(r::site_get))
         .route("/site/modpacks/for-mod/{handle}/{slug}", get(r::site_for_mod))
         .route("/site/modpacks/projects/{handle}/{slug}/download", get(r::site_download))
-        .route("/admin/modpacks", get(r::admin_list))
-        .route("/admin/modpacks/{pack_id}", delete(r::admin_delete))
-        .route("/admin/modpacks/{pack_id}/takedown", post(r::admin_takedown))
-        .route("/admin/modpacks/{pack_id}/restore", post(r::admin_restore))
 }

@@ -590,8 +590,8 @@ async fn create_from_commit(
     insert_release(state, project, n).await
 }
 
-/// `POST /v1/mods/hub/projects/{handle}/{slug}/releases`; not routed while
-/// the path's GET is still the catalog's.
+/// `POST /v1/mods/hub/projects/{handle}/{slug}/releases`, routed on the
+/// catalog's path.
 pub async fn create(State(s): State<AppState>, req: Request) -> Response {
     let (mut parts, body) = req.into_parts();
     let body = match read_body(&parts.headers, body).await {

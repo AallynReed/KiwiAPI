@@ -579,7 +579,7 @@ fn upload_vetting() {
 fn app(state: AppState) -> Router {
     let mw =
         Mw::new(MwConfig::from_lookup(&|_| None), None, EmbedSource::Fixed(vec![]), TrustedHosts::parse("127.0.0.1"));
-    let inner = middleware::wrap(super::router(), Arc::new(mw), None)
+    let inner = middleware::wrap(super::router().merge(crate::mods_moderation::router()), Arc::new(mw), None)
         .fallback(|| async { StatusCode::IM_A_TEAPOT })
         .with_state(state);
     middleware::outer(inner)

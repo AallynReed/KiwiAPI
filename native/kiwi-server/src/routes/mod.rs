@@ -91,7 +91,7 @@ async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: 
             || crate::og::defers(m, req.uri())
             || crate::decode::routes::defers(m, req.method(), req.uri())
             || crate::codexes::defers(m, req.uri())
-            || crate::mods_catalog::defers(m, req.method(), req.uri())
+            || crate::mods_catalog::defers(m, req.uri())
             || crate::mods_git::defers(m, req.uri())
     });
     if !defer && let Some(m) = &matched {
