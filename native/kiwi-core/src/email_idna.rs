@@ -165,8 +165,7 @@ fn valid_contexto(label: &[u32], pos: usize) -> bool {
         0x375 => pos + 1 < label.len() && script(label[pos + 1], t::SCRIPT_GREEK),
         0x5F3 | 0x5F4 => pos > 0 && script(label[pos - 1], t::SCRIPT_HEBREW),
         0x30FB => label.iter().any(|&c| {
-            c != 0x30FB
-                && (script(c, t::SCRIPT_HIRAGANA) || script(c, t::SCRIPT_KATAKANA) || script(c, t::SCRIPT_HAN))
+            c != 0x30FB && (script(c, t::SCRIPT_HIRAGANA) || script(c, t::SCRIPT_KATAKANA) || script(c, t::SCRIPT_HAN))
         }),
         0x660..=0x669 => !label.iter().any(|c| (0x6F0..=0x6F9).contains(c)),
         0x6F0..=0x6F9 => !label.iter().any(|c| (0x660..=0x669).contains(c)),

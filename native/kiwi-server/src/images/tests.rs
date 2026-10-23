@@ -206,6 +206,12 @@ fn pil_open_matches_pillow() {
             bad.push(format!("{name}: RGBA differs"));
         }
     }
-    assert!(bad.is_empty(), "{}", bad.join("
-"));
+    assert!(
+        bad.is_empty(),
+        "{}",
+        bad.join(
+            "
+"
+        )
+    );
 }

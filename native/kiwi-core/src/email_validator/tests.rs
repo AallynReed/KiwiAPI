@@ -53,3 +53,20 @@ fn punycode_round_trips() {
     assert_eq!(idna::punycode_encode(&s), b"55qx5d");
     assert_eq!(idna::repr(&[0x61, 0xD800, 0x27]), "\"a\\ud800'\"");
 }
+
+#[test]
+fn nfc_window_matches_whole_suffix() {
+    let g = golden();
+    let mut inputs: Vec<String> =
+        g["cases"].as_array().unwrap().iter().map(|c| c["in"].as_str().unwrap().to_owned()).collect();
+    inputs.extend(g["nfc_strings"].as_array().unwrap().iter().map(|p| p[0].as_str().unwrap().to_owned()));
+    inputs.push("\u{1100}\u{1161}\u{11a8}x\u{0b47}\u{0b3e}a\u{0328}\u{0301}".to_owned());
+    for s in inputs {
+        let chars: Vec<(usize, char)> = s.char_indices().collect();
+        for (k, &(i, _)) in chars.iter().enumerate() {
+            let stop = chars[k + 1..].iter().find(|&&(_, n)| unidata::stable_starter(u32::from(n)));
+            let window = nfc_str(&s[i..stop.map_or(s.len(), |x| x.0)]);
+            assert_eq!(window.chars().next(), nfc_str(&s[i..]).chars().next(), "{s:?} at {k}");
+        }
+    }
+}

@@ -38,6 +38,24 @@ pub fn decomposes_to_dot(cp: u32) -> bool {
     t::DOT_DECOMP.binary_search(&cp).is_ok()
 }
 
+static SECONDS: std::sync::LazyLock<Vec<u32>> = std::sync::LazyLock::new(|| {
+    let mut v: Vec<u32> = t::COMPOSE.iter().map(|e| e.1).collect();
+    v.sort_unstable();
+    v.dedup();
+    v
+});
+
+/// A starter NFC never changes or merges backwards: `NFC(x + y) ==
+/// NFC(x) + NFC(y)` when `y` begins with one.
+pub fn stable_starter(cp: u32) -> bool {
+    combining(cp) == 0
+        && !(S_BASE..S_BASE + S_COUNT).contains(&cp)
+        && !(V_BASE..V_BASE + V_COUNT).contains(&cp)
+        && !(T_BASE..T_BASE + T_COUNT).contains(&cp)
+        && t::DECOMP.binary_search_by_key(&cp, |e| e.0).is_err()
+        && SECONDS.binary_search(&cp).is_err()
+}
+
 const S_BASE: u32 = 0xAC00;
 const L_BASE: u32 = 0x1100;
 const V_BASE: u32 = 0x1161;
@@ -53,7 +71,7 @@ fn decompose(cp: u32, out: &mut Vec<u32>) {
         let s = cp - S_BASE;
         out.push(L_BASE + s / N_COUNT);
         out.push(V_BASE + (s % N_COUNT) / T_COUNT);
-        if s % T_COUNT != 0 {
+        if !s.is_multiple_of(T_COUNT) {
             out.push(T_BASE + s % T_COUNT);
         }
         return;
@@ -74,7 +92,11 @@ fn compose(a: u32, b: u32) -> Option<u32> {
     if (L_BASE..L_BASE + L_COUNT).contains(&a) && (V_BASE..V_BASE + V_COUNT).contains(&b) {
         return Some(S_BASE + ((a - L_BASE) * V_COUNT + (b - V_BASE)) * T_COUNT);
     }
-    if (S_BASE..S_BASE + S_COUNT).contains(&a) && (a - S_BASE) % T_COUNT == 0 && b > T_BASE && b < T_BASE + T_COUNT {
+    if (S_BASE..S_BASE + S_COUNT).contains(&a)
+        && (a - S_BASE).is_multiple_of(T_COUNT)
+        && b > T_BASE
+        && b < T_BASE + T_COUNT
+    {
         return Some(a + (b - T_BASE));
     }
     t::COMPOSE.binary_search_by(|e| (e.0, e.1).cmp(&(a, b))).ok().map(|i| t::COMPOSE[i].2)

@@ -19,6 +19,10 @@ pub enum Format {
     Webp,
 }
 
+/// Pillow raised something the caller does not catch.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Raised;
+
 pub struct Opened {
     pub format: Format,
     pub width: usize,
@@ -81,12 +85,12 @@ pub fn open(data: &[u8]) -> Option<Opened> {
 
 /// `getattr(img, "n_frames", 1)` after a successful [`open`]; `Err` where
 /// counting raises something other than `EOFError`.
-pub fn n_frames(data: &[u8], format: Format) -> Result<usize, ()> {
+pub fn n_frames(data: &[u8], format: Format) -> Result<usize, Raised> {
     match format {
         Format::Png => png_frames(data),
         Format::Jpeg => Ok(mpo_frames(data).unwrap_or(1)),
         Format::Gif => gif_frames(data),
-        Format::Webp => webp_decode(data).map(|d| d.4).ok_or(()),
+        Format::Webp => webp_decode(data).map(|d| d.4).ok_or(Raised),
     }
 }
 
@@ -117,14 +121,14 @@ fn has_trns(d: &[u8]) -> bool {
 
 /// `PngImageFile.n_frames`: the acTL count, plus the default image when no
 /// fcTL comes before the IDAT. `Err` where `_open` raises.
-fn png_frames(d: &[u8]) -> Result<usize, ()> {
+fn png_frames(d: &[u8]) -> Result<usize, Raised> {
     let (mut frames, mut bbox, mut seq) = (None::<u32>, false, None::<u32>);
     let (w, h) = if d.len() >= 24 { (be32(d, 16), be32(d, 20)) } else { (0, 0) };
     for (kind, s) in png_chunks(d) {
         match kind {
             b"acTL" => {
                 if s.len() < 8 {
-                    return Err(());
+                    return Err(Raised);
                 }
                 if frames.is_some() {
                     frames = None;
@@ -137,16 +141,16 @@ fn png_frames(d: &[u8]) -> Result<usize, ()> {
             }
             b"fcTL" => {
                 if s.len() < 26 {
-                    return Err(());
+                    return Err(Raised);
                 }
                 let n = be32(s, 0);
                 if seq.map_or(n != 0, |p| u64::from(p) + 1 != u64::from(n)) {
-                    return Err(());
+                    return Err(Raised);
                 }
                 seq = Some(n);
                 let (fw, fh, px, py) = (be32(s, 4), be32(s, 8), be32(s, 12), be32(s, 16));
                 if u64::from(px) + u64::from(fw) > u64::from(w) || u64::from(py) + u64::from(fh) > u64::from(h) {
-                    return Err(());
+                    return Err(Raised);
                 }
                 bbox = true;
             }
@@ -214,7 +218,8 @@ fn mpo_frames(d: &[u8]) -> Option<usize> {
         if mp.len() < e + 12 {
             break;
         }
-        let (Some(tag), Some(typ), Some(n)) = (u16_at(mp, e, ifd_big), u16_at(mp, e + 2, ifd_big), u32_at(mp, e + 4, ifd_big))
+        let (Some(tag), Some(typ), Some(n)) =
+            (u16_at(mp, e, ifd_big), u16_at(mp, e + 2, ifd_big), u32_at(mp, e + 4, ifd_big))
         else {
             break;
         };
@@ -270,9 +275,9 @@ fn mpo_frames(d: &[u8]) -> Option<usize> {
 }
 
 /// `GifImageFile.n_frames`: frame 0 plus every later image descriptor.
-fn gif_frames(d: &[u8]) -> Result<usize, ()> {
+fn gif_frames(d: &[u8]) -> Result<usize, Raised> {
     let mut p = 13usize;
-    let flags = *d.get(10).ok_or(())?;
+    let flags = *d.get(10).ok_or(Raised)?;
     if flags & 0x80 != 0 {
         p += 3 << ((flags & 7) + 1);
     }
@@ -303,17 +308,17 @@ fn gif_frames(d: &[u8]) -> Result<usize, ()> {
             match byte(&mut p) {
                 None | Some(b';') => break,
                 Some(b'!') => {
-                    byte(&mut p).ok_or(())?;
+                    byte(&mut p).ok_or(Raised)?;
                     skip_blocks(&mut p);
                 }
                 Some(b',') => {
-                    let desc = d.get(p..(p + 9).min(d.len())).ok_or(())?;
+                    let desc = d.get(p..(p + 9).min(d.len())).ok_or(Raised)?;
                     p += desc.len();
-                    let f = *desc.get(8).ok_or(())?;
+                    let f = *desc.get(8).ok_or(Raised)?;
                     if f & 0x80 != 0 {
                         p = (p + (3 << ((f & 7) + 1))).min(d.len());
                     }
-                    byte(&mut p).ok_or(())?;
+                    byte(&mut p).ok_or(Raised)?;
                     found = true;
                     break;
                 }
@@ -321,7 +326,7 @@ fn gif_frames(d: &[u8]) -> Result<usize, ()> {
             }
         }
         if !found {
-            return if frames == 0 { Err(()) } else { Ok(frames) };
+            return if frames == 0 { Err(Raised) } else { Ok(frames) };
         }
         frames += 1;
     }
@@ -332,12 +337,8 @@ fn gif_frames(d: &[u8]) -> Result<usize, ()> {
 fn webp_decode(data: &[u8]) -> Option<(usize, usize, Vec<u8>, bool, usize)> {
     unsafe {
         let mut f: webp::WebPBitstreamFeatures = std::mem::zeroed();
-        let st = webp::WebPGetFeaturesInternal(
-            data.as_ptr(),
-            data.len(),
-            &mut f,
-            webp::WEBP_DECODER_ABI_VERSION as c_int,
-        );
+        let st =
+            webp::WebPGetFeaturesInternal(data.as_ptr(), data.len(), &mut f, webp::WEBP_DECODER_ABI_VERSION as c_int);
         let rgba_mode = st != webp::VP8StatusCode::VP8_STATUS_OK || f.has_alpha != 0;
         let src = webp::WebPData { bytes: data.as_ptr(), size: data.len() };
         let dec = webp::WebPAnimDecoderNewInternal(&src, std::ptr::null(), webp::WEBP_DEMUX_ABI_VERSION as c_int);
@@ -369,7 +370,14 @@ fn webp_decode(data: &[u8]) -> Option<(usize, usize, Vec<u8>, bool, usize)> {
 /// `img.save(buf, "WEBP", quality=quality, method=method)` of RGB (`alpha`
 /// false, the fourth byte ignored) or RGBA pixels: `_webp.WebPEncode` with
 /// `use_argb`, then the WebPMux reassembly it always runs.
-pub fn webp_encode(rgba: &[u8], width: usize, height: usize, alpha: bool, quality: f32, method: i32) -> Option<Vec<u8>> {
+pub fn webp_encode(
+    rgba: &[u8],
+    width: usize,
+    height: usize,
+    alpha: bool,
+    quality: f32,
+    method: i32,
+) -> Option<Vec<u8>> {
     unsafe {
         let mut config: webp::WebPConfig = std::mem::zeroed();
         if webp::WebPConfigInitInternal(

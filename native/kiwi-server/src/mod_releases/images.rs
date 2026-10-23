@@ -86,7 +86,7 @@ async fn lookup(state: &AppState, sha: &str, width: Option<i64>) -> Result<Got, 
     let thumb = tokio::task::spawn_blocking(move || render_thumbnail(&src, width))
         .await
         .map_err(access::internal)?
-        .map_err(|()| access::internal("render_thumbnail raised"))?;
+        .map_err(|_| access::internal("render_thumbnail raised"))?;
     let Some(thumb) = thumb else { return Ok(Got::Image(data, asset.content_type)) };
     let store = media::mods_store(state);
     let stored = thumb.clone();
@@ -105,7 +105,7 @@ async fn lookup(state: &AppState, sha: &str, width: Option<i64>) -> Result<Got, 
 
 /// `store.render_thumbnail(data, width)`: a WebP no wider than `width`, or
 /// `None` to serve the original; `Err` where Python raises.
-pub fn render_thumbnail(data: &[u8], width: usize) -> Result<Option<Vec<u8>>, ()> {
+pub fn render_thumbnail(data: &[u8], width: usize) -> Result<Option<Vec<u8>>, pil::Raised> {
     let Some(img) = pil::open(data) else { return Ok(None) };
     let resize = img.width > width;
     if pil::n_frames(data, img.format)? > 1 || (!resize && img.format == Format::Webp) {

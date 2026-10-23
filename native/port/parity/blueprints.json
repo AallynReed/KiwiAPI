@@ -33,6 +33,10 @@
  {"name": "site_render_bad_branch", "path": "/site/codexes/render?blueprint=x&branch=PTS"},
  {"name": "site_render_dim_high", "path": "/site/codexes/render?blueprint=x&dim=513"},
  {"name": "site_render_prefab_unknown", "path": "/site/codexes/render?blueprint=equipment_weapon_1h_sword_001&prefab=prefabs/parity/none.prefab"},
+ {"name": "site_render_prefab_costume", "path": "/site/codexes/render?blueprint=x&prefab=prefabs/skins/knight_blood.binfab&dim=97"},
+ {"name": "site_render_prefab_mount", "path": "/site/codexes/render?blueprint=x&prefab=prefabs/collections/mount/mount_raptor_peacock&dim=101"},
+ {"name": "v1_render_prefab_costume", "path": "/v1/codexes/render?blueprint=x&prefab=prefabs/skins/knight_blood.binfab&dim=99"},
+ {"name": "v1_render_prefab_pts", "path": "/v1/codexes/render?blueprint=x&branch=pts&prefab=prefabs/skins/knight_blood.binfab&dim=103"},
 
  {"name": "file_blueprint_json_gzip", "path": "/site/updates/live-us/file/blueprint?path=blueprints/equipment_weapon_1h_sword_001.blueprint",
   "headers": {"Accept-Encoding": "gzip"}, "compare_headers": ["etag", "content-encoding"]},

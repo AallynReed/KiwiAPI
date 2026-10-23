@@ -164,8 +164,11 @@ fn split_at_unquoted<'a>(text: &'a str, specials: &[char]) -> R<(&'a str, &'a st
     let mut end = text.len();
     for (k, &(i, c)) in chars.iter().enumerate() {
         let combines = !c.is_ascii() || chars.get(k + 1).is_some_and(|&(_, n)| !n.is_ascii());
-        if combines && nfc_str(&text[i..]).chars().next() != Some(c) {
-            continue;
+        if combines {
+            let stop = chars[k + 1..].iter().find(|&&(_, n)| unidata::stable_starter(u32::from(n)));
+            if !nfc_str(&text[i..stop.map_or(text.len(), |s| s.0)]).starts_with(c) {
+                continue;
+            }
         }
         if inside_quote {
             if c == '\\' && !escaped {
@@ -185,8 +188,9 @@ fn split_at_unquoted<'a>(text: &'a str, specials: &[char]) -> R<(&'a str, &'a st
     }
     if end == text.len() {
         if text.contains('＠') {
-            return Err("The email address has the \"full-width\" at-sign (@) character instead of a regular at-sign."
-                .into());
+            return Err(
+                "The email address has the \"full-width\" at-sign (@) character instead of a regular at-sign.".into()
+            );
         }
         if text.contains('﹫') {
             return Err(
@@ -375,10 +379,7 @@ fn uts46_valid_char(ch: char) -> bool {
 
 fn hostname_label(l: &str) -> bool {
     let b = l.as_bytes();
-    !b.is_empty()
-        && b.iter().all(|c| c.is_ascii_alphanumeric() || *c == b'-')
-        && b[0] != b'-'
-        && b[b.len() - 1] != b'-'
+    !b.is_empty() && b.iter().all(|c| c.is_ascii_alphanumeric() || *c == b'-') && b[0] != b'-' && b[b.len() - 1] != b'-'
 }
 
 fn dot_atom_hostname(s: &str) -> bool {

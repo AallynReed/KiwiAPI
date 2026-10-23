@@ -410,6 +410,12 @@ fn thumbnails_match_pillow() {
             }
         }
     }
-    assert!(bad.is_empty(), "{}", bad.join("
-"));
+    assert!(
+        bad.is_empty(),
+        "{}",
+        bad.join(
+            "
+"
+        )
+    );
 }

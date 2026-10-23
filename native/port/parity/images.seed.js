@@ -26,3 +26,19 @@ db.image_designs.insertMany([
    height: NumberInt(60), background: bg({}), layers: [layer({text: "hi"})], bind_type: null,
    created_at: T0, updated_at: T0},
 ]);
+
+// Hub image sidecars for the blobs the spec uploads, so /site/mods/image renders their thumbnails.
+db.mod_images.insertMany([
+  {sha: "db203a2e7bed487ae3a22439608c8b411e9987e62225ac06d6607c04044d6ed8", content_type: "image/jpeg", byte_size: NumberInt(8756), owner_id: LINKED,
+   width: NumberInt(240), height: NumberInt(160), variants: {}, created_at: T0},
+  {sha: "1f7bf933988f3bfb3609b65320bb2cad9aa8b2a95f982cc1ecea91dd3a1b638c", content_type: "image/jpeg", byte_size: NumberInt(22248), owner_id: LINKED,
+   width: NumberInt(240), height: NumberInt(160), variants: {}, created_at: T0},
+  {sha: "83704126fc75a733e825f61ab15f4e030122baaf37b73888fb2135970854e8d7", content_type: "image/webp", byte_size: NumberInt(5242), owner_id: LINKED,
+   width: NumberInt(240), height: NumberInt(160), variants: {}, created_at: T0},
+  {sha: "7bbc3b9d5e4b294d16e5ee0378d1681ef24b9ecb5b0f12955dede21b3ef5db10", content_type: "image/webp", byte_size: NumberInt(4608), owner_id: LINKED,
+   width: NumberInt(240), height: NumberInt(160), variants: {}, created_at: T0},
+  {sha: "ed49a506ffad1a7e4b42b16827307312b787e2a1f5bc5a4d8bfe79f4ddf7c0c4", content_type: "image/gif", byte_size: NumberInt(7477), owner_id: LINKED,
+   width: NumberInt(240), height: NumberInt(160), variants: {}, created_at: T0},
+  {sha: "7e8329929b0374faede2ff11a0035ff6af33d150c3668e1d374c89ce3715b65e", content_type: "image/png", byte_size: NumberInt(983), owner_id: LINKED,
+   width: NumberInt(240), height: NumberInt(160), variants: {}, created_at: T0},
+]);

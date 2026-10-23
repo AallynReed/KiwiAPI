@@ -10,6 +10,15 @@
     "created_at",
     "updated_at"
    ]
+  },
+  {
+   "collection": "mod_images",
+   "sort": [
+    "sha"
+   ],
+   "mask": [
+    "_id"
+   ]
   }
  ]
 }
