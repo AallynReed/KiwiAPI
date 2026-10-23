@@ -89,47 +89,6 @@ fn ported() -> Router<AppState> {
         .merge(crate::discord::router())
 }
 
-/// A body route can own only some bodies (portal emails needing
-/// Unicode/IDNA), a render route only what it can draw: the rest go to Python
-/// after routing but before the ported stack has touched the request.
-async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: Next) -> Response {
-    let matched = req.extensions().get::<MatchedPath>().cloned();
-    let mut defer = false;
-    if let Some(m) = &matched {
-        defer = crate::blueprints::defers(&state, m.as_str(), req.uri()).await
-            || crate::mod_releases::defers(&state, m.as_str(), req.uri()).await;
-    }
-    if !defer
-        && let Some(field) = matched.as_ref().and_then(|m| crate::portal::defer::email_field(m.as_str(), req.method()))
-    {
-        (req, defer) = crate::portal::defer::inspect(req, field).await;
-    }
-    if !defer && matched.as_ref().is_some_and(|m| crate::custom_art::intake::inspects(m.as_str(), req.method())) {
-        (req, defer) = crate::custom_art::intake::inspect(&state, req).await;
-    }
-    if !defer && let Some(kind) = matched.as_ref().and_then(|m| crate::images::defer_kind(m.as_str(), req.method())) {
-        (req, defer) = crate::images::inspect(&state, req, kind).await;
-    }
-/// A param route can own only some values of its segment (Starlette's
-/// `{uuid:int}` next to literals Python still serves): the rest go to Python
-/// after routing but before the ported stack has touched the request.
-async fn defer_to_python(State(state): State<AppState>, req: Request, next: Next) -> Response {
-    let matched = req.extensions().get::<MatchedPath>().cloned();
-    let defer = matched.as_ref().is_some_and(|m| {
-        let m = m.as_str();
-        crate::lbread::defers(m, req.method(), req.uri().path())
-            || crate::events::defers(m)
-            || crate::codexes::defers(m, req.uri())
-            || crate::mods_catalog::defers(m, req.uri())
-            || crate::mods_git::defers(m, req.uri())
-            || crate::discord::defers(m, req.uri().path())
-    });
-    if defer && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
-        return proxy(State(state), ConnectInfo(peer), req).await;
-    }
-    next.run(req).await
-}
-
 /// Proxy mode only: what Starlette would route elsewhere (an int segment that
 /// isn't one, a method another route owns, ...) and the event stream while
 /// Python feeds it. OPTIONS stays here: the CORS layers answer it before any
@@ -176,14 +135,11 @@ pub fn app_with(state: AppState, native: bool) -> Router {
             .method_not_allowed_fallback(middleware::errors::method_not_allowed)
             .fallback(move |req: Request| starlette::fallback(table, req))
             .layer(from_fn_with_state(table, starlette::gate));
-        let inner = middleware::wrap(routes, mw, Some(state.clone()))
-            .layer(from_fn_with_state(state.clone(), defer_to_python))
-            .with_state(state);
+        let inner = middleware::wrap(routes, mw, Some(state.clone())).with_state(state);
         return middleware::outer(inner).layer(from_fn_with_state(table, starlette::rewrite));
     }
     let routes = if proxy_all { Router::new() } else { ported() };
     let inner = middleware::wrap(routes, mw, Some(state.clone()))
-        .layer(from_fn_with_state(state.clone(), defer_to_python))
         .layer(from_fn_with_state(state.clone(), proxy_defers))
         .fallback(proxy)
         .layer(from_fn_with_state(state.clone(), encoded_slash))

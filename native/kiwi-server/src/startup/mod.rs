@@ -100,7 +100,6 @@ pub async fn bootstrap_admin(state: &AppState) -> anyhow::Result<()> {
         let email = match kiwi_core::email_validator::validate(&email) {
             kiwi_core::email_validator::Email::Valid(normalized) => normalized,
             kiwi_core::email_validator::Email::Invalid(reason) => anyhow::bail!("ADMIN_EMAIL: {reason}"),
-            kiwi_core::email_validator::Email::Unsupported => email,
         };
         let hashed = passwords::hash_password_blocking(password.to_owned()).await;
         let user = admin_user(ObjectId::new(), email, hashed, dt::now());
