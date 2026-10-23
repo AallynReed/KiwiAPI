@@ -71,6 +71,7 @@ fn ported() -> Router<AppState> {
         .merge(crate::mods_creators::router())
         .merge(crate::mods_issues::router())
         .merge(crate::mods_moderation::router())
+        .merge(crate::modpacks::router())
 }
 
 /// A param route can own only some values of its segment (Starlette's

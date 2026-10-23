@@ -38,6 +38,7 @@ pub mod market;
 pub mod media;
 pub mod middleware;
 pub mod mod_releases;
+pub mod modpacks;
 pub mod mods_catalog;
 pub mod mods_creators;
 pub mod mods_git;
