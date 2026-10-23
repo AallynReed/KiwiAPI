@@ -1,4 +1,4 @@
-//! `img.save(fp, "PNG", optimize=True)` for an "RGB" image: `ZipEncode.c`'s
+//! `img.save(fp, "PNG", optimize=True)` for an "RGB" or "RGBA" image: `ZipEncode.c`'s
 //! filter choice, zlib level 9 / memLevel 9 / Z_FILTERED, IDAT chunks of
 //! `ImageFile.MAXBLOCK` bytes. zlib-rs emits the same stream as zlib-ng 2.3.3
 //! does in Pillow's Windows wheel.
@@ -12,8 +12,12 @@ fn cost(v: u8) -> i32 {
 /// The filtered scanlines (filter byte + row), as `ImagingZipEncode` with
 /// `optimize` picks them.
 pub fn filter_rows(rgb: &[u8], width: usize, height: usize) -> Vec<u8> {
-    const BPP: usize = 3;
-    let bytes = width * BPP;
+    filter_rows_bpp(rgb, width, height, 3)
+}
+
+/// [`filter_rows`] for `bpp` bytes per pixel.
+pub fn filter_rows_bpp(rgb: &[u8], width: usize, height: usize, bpp: usize) -> Vec<u8> {
+    let bytes = width * bpp;
     let mut out = Vec::with_capacity((bytes + 1) * height);
     let mut previous = vec![0u8; bytes + 1];
     let mut buffer = vec![0u8; bytes + 1];
@@ -41,7 +45,7 @@ pub fn filter_rows(rgb: &[u8], width: usize, height: usize) -> Vec<u8> {
         if sum > 0 {
             let mut s = 0;
             for i in 1..=bytes {
-                let v = if i <= BPP { buffer[i] } else { buffer[i].wrapping_sub(buffer[i - BPP]) };
+                let v = if i <= bpp { buffer[i] } else { buffer[i].wrapping_sub(buffer[i - bpp]) };
                 prior[i] = v;
                 s += cost(v);
             }
@@ -53,10 +57,10 @@ pub fn filter_rows(rgb: &[u8], width: usize, height: usize) -> Vec<u8> {
         if sum > 0 {
             let mut s = 0;
             for i in 1..=bytes {
-                let v = if i <= BPP {
+                let v = if i <= bpp {
                     buffer[i].wrapping_sub(previous[i] / 2)
                 } else {
-                    buffer[i].wrapping_sub(((buffer[i - BPP] as u32 + previous[i] as u32) / 2) as u8)
+                    buffer[i].wrapping_sub(((buffer[i - bpp] as u32 + previous[i] as u32) / 2) as u8)
                 };
                 average[i] = v;
                 s += cost(v);
@@ -69,12 +73,12 @@ pub fn filter_rows(rgb: &[u8], width: usize, height: usize) -> Vec<u8> {
         if sum > 0 {
             let mut s = 0;
             for i in 1..=bytes {
-                let v = if i <= BPP {
+                let v = if i <= bpp {
                     buffer[i].wrapping_sub(previous[i])
                 } else {
-                    let a = buffer[i - BPP] as i32;
+                    let a = buffer[i - bpp] as i32;
                     let b = previous[i] as i32;
-                    let c = previous[i - BPP] as i32;
+                    let c = previous[i - bpp] as i32;
                     let pa = (b - c).abs();
                     let pb = (a - c).abs();
                     let pc = (a + b - 2 * c).abs();
@@ -119,7 +123,16 @@ fn chunk(out: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
 
 /// A complete PNG for 8-bit RGB pixels.
 pub fn encode_rgb(rgb: &[u8], width: usize, height: usize) -> Vec<u8> {
-    let raw = filter_rows(rgb, width, height);
+    encode(rgb, width, height, 3)
+}
+
+/// A complete PNG for 8-bit RGBA pixels.
+pub fn encode_rgba(rgba: &[u8], width: usize, height: usize) -> Vec<u8> {
+    encode(rgba, width, height, 4)
+}
+
+fn encode(px: &[u8], width: usize, height: usize, bpp: usize) -> Vec<u8> {
+    let raw = filter_rows_bpp(px, width, height, bpp);
     let cfg = zlib_rs::DeflateConfig {
         level: 9,
         method: zlib_rs::Method::Deflated,
@@ -134,7 +147,7 @@ pub fn encode_rgb(rgb: &[u8], width: usize, height: usize) -> Vec<u8> {
     let mut ihdr = Vec::with_capacity(13);
     ihdr.extend_from_slice(&(width as u32).to_be_bytes());
     ihdr.extend_from_slice(&(height as u32).to_be_bytes());
-    ihdr.extend_from_slice(&[8, 2, 0, 0, 0]);
+    ihdr.extend_from_slice(&[8, if bpp == 4 { 6 } else { 2 }, 0, 0, 0]);
     chunk(&mut out, b"IHDR", &ihdr);
     for part in z.chunks(MAXBLOCK) {
         chunk(&mut out, b"IDAT", part);

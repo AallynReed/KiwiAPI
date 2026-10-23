@@ -120,8 +120,19 @@ struct Deflate(Box<z::z_stream>);
 // The stream is owned by one body and zlib keeps no thread-local state.
 unsafe impl Send for Deflate {}
 
+/// `zlib.compressobj(level, DEFLATED, -15)` over all of `data`, flushed.
+pub fn deflate_raw(data: &[u8], level: c_int) -> Option<Vec<u8>> {
+    let mut d = Deflate::with_level(level)?;
+    let mut out = Vec::with_capacity(data.len() / 2 + 64);
+    d.run(data, true, &mut out).then_some(out)
+}
+
 impl Deflate {
     fn new() -> Option<Self> {
+        Self::with_level(LEVEL)
+    }
+
+    fn with_level(level: c_int) -> Option<Self> {
         let mut strm = Box::new(z::z_stream {
             next_in: std::ptr::null_mut(),
             avail_in: 0,
@@ -141,7 +152,7 @@ impl Deflate {
         let rc = unsafe {
             z::deflateInit2_(
                 &mut *strm,
-                LEVEL,
+                level,
                 z::Z_DEFLATED,
                 -15,
                 8,
