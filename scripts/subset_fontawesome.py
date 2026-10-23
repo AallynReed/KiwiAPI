@@ -32,8 +32,8 @@ OUT_CSS = ROOT / "site" / "static" / "fonts" / "fontawesome.min.css"
 OUT_FONTS = ROOT / "site" / "static" / "fonts" / "fa"
 
 # Scanned for `fa-*` tokens. The vendor CSS is excluded (it names every icon).
-SCAN_DIRS = ("site/templates", "site/static", "app")
-SCAN_EXTS = {".html", ".js", ".css", ".py", ".json", ".txt"}
+SCAN_DIRS = ("site/templates", "site/static", "native/kiwi-server/src")
+SCAN_EXTS = {".html", ".js", ".css", ".rs", ".json", ".txt"}
 
 # Names assembled at runtime, so no literal `fa-<name>` exists to grep for.
 EXTRA = {

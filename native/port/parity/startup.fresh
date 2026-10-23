@@ -1,1 +1,0 @@
-# Marker: sandbox.sh seeds both stacks' empty stores, boots api-py (A) and kiwi-server alone (B) twice, then diffs.

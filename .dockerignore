@@ -17,8 +17,5 @@ site/static/assets/
 .env
 README.md
 .dockerignore
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
 
 native/target/
