@@ -1,0 +1,21 @@
+{
+ "mongo_indexes": [
+  {"collection": "*"}
+ ],
+ "pg_schema": [
+  {"schema": "public"}
+ ],
+ "mongo": [
+  {"collection": "users", "sort": ["email"], "mask": ["hashed_password", "updated_at"]},
+  {"collection": "supporters", "sort": ["name"], "mask": ["_id", "created_at"]},
+  {"collection": "site_users", "sort": ["_id"]},
+  {"collection": "sessions", "sort": ["_id"]},
+  {"collection": "site_sessions", "sort": ["_id"]},
+  {"collection": "mod_projects", "sort": ["_id"]},
+  {"collection": "mod_releases", "sort": ["_id"]},
+  {"collection": "mod_taken_down_artifacts", "sort": ["sha256"], "mask": ["_id", "created_at"], "upsert_keys": ["sha256"]},
+  {"collection": "modpack_projects", "sort": ["_id"]},
+  {"collection": "giveaways", "sort": ["_id"]},
+  {"collection": "prize_codes", "sort": ["_id"]}
+ ]
+}

@@ -31,6 +31,17 @@ type, TTL in seconds (only set or unset with ``mask_ttl``) and value: strings
 gunzipped when gzipped and parsed when JSON, hashes, lists, sets, sorted sets
 with scores, streams; ``mask_value`` keeps only the type and element count.
 
+Two schema sections compare structure instead of rows (startup twins):
+
+    {"mongo_indexes": [{"collection": "*"}], "pg_schema": [{"schema": "public"}]}
+
+mongo_indexes: listCollections (type and options; ``*`` = every collection but
+system.*) and each collection's listIndexes specs, keyed by index name (the
+catalog's order is not compared). pg_schema: the schema's relations (kind,
+persistence, partition key and bound, parent, tablespace), columns (number,
+type, not-null, default, identity, generated), constraints, indexes
+(``pg_get_indexdef``) and sequences, each keyed by name.
+
 ``mask`` paths are dotted; a numeric part indexes a list, any other part
 applies to every element of a list. A masked value becomes "<masked:TYPE>", so
 presence and type still count. Nothing is masked unless the spec says so: an
@@ -216,18 +227,24 @@ def _op_msg(sock: socket.socket, request_id: int, cmd: dict) -> dict:
     return reply
 
 
-def mongo_docs(url: str, collection: str, flt: dict | None = None) -> list[dict]:
+def mongo_cursor(url: str, cmd: dict, collection: str) -> list[dict]:
+    """Every document a cursor-returning command yields (``collection`` names
+    the getMore target)."""
     u = urllib.parse.urlsplit(url)
     db = u.path.lstrip("/") or "kiwi"
     with socket.create_connection((u.hostname, u.port or 27017), timeout=TIMEOUT) as s:
-        cursor = _op_msg(s, 1, {"find": collection, "filter": flt or {}, "batchSize": 1000, "$db": db})["cursor"]
+        cursor = _op_msg(s, 1, {**cmd, "$db": db})["cursor"]
         docs, n = list(cursor["firstBatch"]), 2
         while _as_int(cursor["id"]):
-            cmd = {"getMore": Long(_as_int(cursor["id"])), "collection": collection, "batchSize": 1000, "$db": db}
-            cursor = _op_msg(s, n, cmd)["cursor"]
+            more = {"getMore": Long(_as_int(cursor["id"])), "collection": collection, "batchSize": 1000, "$db": db}
+            cursor = _op_msg(s, n, more)["cursor"]
             docs += cursor["nextBatch"]
             n += 1
     return docs
+
+
+def mongo_docs(url: str, collection: str, flt: dict | None = None) -> list[dict]:
+    return mongo_cursor(url, {"find": collection, "filter": flt or {}, "batchSize": 1000}, collection)
 
 
 # ------------------------------------------------------------------- Postgres
@@ -527,6 +544,71 @@ def pg_records(url: str, rule: dict) -> list[tuple[str, object]]:
     return out
 
 
+def mongo_index_records(url: str, rule: dict) -> list[tuple[str, object]]:
+    name = rule["collection"]
+    flt = {} if name == "*" else {"name": name}
+    colls = mongo_cursor(url, {"listCollections": 1, "filter": flt}, "$cmd.listCollections")
+    out = []
+    for c in sorted(colls, key=lambda c: c["name"]):
+        if c["name"].startswith("system."):
+            continue
+        out.append((f"collection {c['name']}", {"type": c.get("type"), "options": c.get("options", {})}))
+        if c.get("type", "collection") != "collection":
+            continue
+        specs = mongo_cursor(url, {"listIndexes": c["name"]}, c["name"])
+        for spec in sorted(specs, key=lambda s: s["name"]):
+            for path in rule.get("mask", []):
+                mask_path(spec, path)
+            out.append((f"index {c['name']}.{spec['name']}", spec))
+    return out
+
+
+_PG_SCHEMA_SQL = """SELECT row_to_json(t)::text FROM (
+ SELECT 'relation' AS kind, c.relname::text AS label, json_build_object(
+   'relkind', c.relkind::text, 'persistence', c.relpersistence::text,
+   'partkey', pg_get_partkeydef(c.oid), 'partbound', pg_get_expr(c.relpartbound, c.oid),
+   'parent', (SELECT p.relname::text FROM pg_inherits i JOIN pg_class p ON p.oid = i.inhparent
+              WHERE i.inhrelid = c.oid),
+   'tablespace', COALESCE(ts.spcname::text, 'pg_default')) AS def
+ FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+ LEFT JOIN pg_tablespace ts ON ts.oid = c.reltablespace
+ WHERE n.nspname = {schema} AND c.relkind IN ('r', 'p', 'v', 'm', 'f', 'S', 'i', 'I')
+ UNION ALL
+ SELECT 'column', c.relname || '.' || a.attname, json_build_object(
+   'attnum', a.attnum, 'type', format_type(a.atttypid, a.atttypmod), 'notnull', a.attnotnull,
+   'default', pg_get_expr(d.adbin, d.adrelid), 'identity', a.attidentity::text,
+   'generated', a.attgenerated::text)
+ FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid JOIN pg_namespace n ON n.oid = c.relnamespace
+ LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
+ WHERE n.nspname = {schema} AND c.relkind IN ('r', 'p', 'v', 'm', 'f') AND a.attnum > 0 AND NOT a.attisdropped
+ UNION ALL
+ SELECT 'constraint', c.relname || '.' || k.conname, json_build_object(
+   'type', k.contype::text, 'def', pg_get_constraintdef(k.oid))
+ FROM pg_constraint k JOIN pg_class c ON c.oid = k.conrelid JOIN pg_namespace n ON n.oid = c.relnamespace
+ WHERE n.nspname = {schema}
+ UNION ALL
+ SELECT 'index', i.indexname::text, json_build_object('table', i.tablename, 'def', i.indexdef)
+ FROM pg_indexes i WHERE i.schemaname = {schema}
+ UNION ALL
+ SELECT 'sequence', s.sequencename::text, json_build_object(
+   'type', s.data_type::text, 'start', s.start_value, 'increment', s.increment_by, 'min', s.min_value,
+   'max', s.max_value, 'cache', s.cache_size, 'cycle', s.cycle)
+ FROM pg_sequences s WHERE s.schemaname = {schema}
+) t ORDER BY t.kind COLLATE "C", t.label COLLATE "C"
+"""
+
+
+def pg_schema_records(url: str, rule: dict) -> list[tuple[str, object]]:
+    schema = "'" + rule["schema"].replace("'", "''") + "'"
+    out = []
+    for (text,) in pg_rows(url, _PG_SCHEMA_SQL.format(schema=schema)):
+        row = json.loads(text or "null")
+        for path in rule.get("mask", []):
+            mask_path(row["def"], path)
+        out.append((f"{row['kind']} {row['label']}", row["def"]))
+    return out
+
+
 def redis_records(url: str, rule: dict) -> list[tuple[str, object]]:
     out = []
     for e in redis_entries(url, rule["pattern"]):
@@ -547,6 +629,8 @@ SECTIONS = {
     "mongo": ("mongodb", "collection", mongo_records),
     "postgres": ("postgresql", "table", pg_records),
     "redis": ("redis", "pattern", redis_records),
+    "mongo_indexes": ("mongodb", "collection", mongo_index_records),
+    "pg_schema": ("postgresql", "schema", pg_schema_records),
 }
 
 

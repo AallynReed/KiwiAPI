@@ -26,6 +26,12 @@
 #   native/port/parity/sandbox.sh twin-state AREA     # AREA.state.json: diff the stores
 #   native/port/parity/sandbox.sh twin-down
 #   native/port/parity/sandbox.sh twin AREA...        # all of it per area on fresh stacks
+#   native/port/parity/sandbox.sh twin-fresh AREA     # startup only, then twin-state AREA
+#
+# twin-fresh (and `twin` for an area with an AREA.fresh marker) compares what
+# each side's startup alone writes: AREA.seed.js/.seed.sql go into both stacks'
+# EMPTY stores, then A boots api-py and B boots kiwi-server with no Python
+# behind it, each twice. Only A gets the interest-item placeholder.
 #
 # twin-seed runs AREA.seed.js in A's Mongo, then copies A's whole kiwi database
 # into B (mongodump | mongorestore), so the admin user, the parity tokens and
@@ -323,6 +329,44 @@ twin_state() {
     --b mongodb://kp-b-mongo:27017/kiwi postgresql://kiwi@kp-b-pg:5432/kiwi_lb redis://kp-b-redis:6379/0
 }
 
+fresh_wait() {
+  retry probe http://kp-a-py:8000/health
+  retry probe http://kp-b-rs:8000/health
+}
+
+twin_fresh() {
+  local a js sql s
+  a=$(area "$1")
+  area_env "$a"
+  twin_down
+  twin_stores a
+  twin_stores b
+  docker run -d --name "$RUNNER" --network kiwi-parity-a --memory 512m -v "$HERE:/parity:ro" "$IMG" sleep infinity >/dev/null
+  docker network connect kiwi-parity-b "$RUNNER"
+  js=$HERE/$a.seed.js
+  sql=$HERE/$a.seed.sql
+  for s in a b; do
+    retry docker exec "kp-$s-mongo" mongosh --quiet --eval 'db.adminCommand({ping: 1})'
+    retry docker exec "kp-$s-redis" redis-cli ping
+    retry docker exec "kp-$s-pg" pg_isready -h 127.0.0.1 -U kiwi -d kiwi_lb
+    if [ -f "$js" ]; then
+      docker cp "$js" "kp-$s-mongo:/tmp/seed.js"
+      docker exec "kp-$s-mongo" mongosh --quiet kiwi /tmp/seed.js
+    fi
+    if [ -f "$sql" ]; then docker exec -i "kp-$s-pg" psql -X -q -v ON_ERROR_STOP=1 -U kiwi -d kiwi_lb < "$sql"; fi
+  done
+  # Python's interest-item seed has a duplicate name and crashes an empty database; Rust's skips it.
+  docker exec kp-a-mongo mongosh --quiet kiwi --eval "$PLACEHOLDER" >/dev/null
+  twin_py a
+  docker run -d --name kp-b-rs --network kiwi-parity-b --memory 1g "${TWIN_ENV[@]}" "${AREA_ENV[@]}" -e RUST_OWNS= \
+    -e KIWI_BIND=0.0.0.0:8000 -e PY_UPSTREAM=http://api-py:8000 -e FORWARDED_ALLOW_IPS='*' \
+    "${TWIN_MOUNTS[@]}" "$RS_IMG" kiwi-server >/dev/null
+  fresh_wait
+  docker restart kp-a-py kp-b-rs >/dev/null
+  fresh_wait
+  echo "fresh twin booted twice; next: $0 twin-state $a"
+}
+
 twin_down() {
   docker rm -fv "${TWIN[@]}" >/dev/null 2>&1 || true
   docker network rm kiwi-parity-a kiwi-parity-b >/dev/null 2>&1 || true
@@ -333,6 +377,11 @@ twin_all() {
   for a in "$@"; do
     a=$(area "$a")
     echo "======== $a"
+    if [ -f "$HERE/$a.fresh" ]; then
+      twin_fresh "$a"
+      twin_state "$a" || rc=1
+      continue
+    fi
     twin_up "$(moved_loops "$a")" "$a"
     twin_seed "$a"
     twin_run "$a" || rc=1
@@ -352,7 +401,8 @@ case "$cmd" in
   twin-seed) [ $# = 1 ] || { echo "usage: $0 twin-seed AREA" >&2; exit 2; }; twin_seed "$1" ;;
   twin-run) [ $# -ge 1 ] || { echo "usage: $0 twin-run AREA|SPEC..." >&2; exit 2; }; twin_run "$@" ;;
   twin-state) [ $# = 1 ] || { echo "usage: $0 twin-state AREA" >&2; exit 2; }; twin_state "$1" ;;
+  twin-fresh) [ $# = 1 ] || { echo "usage: $0 twin-fresh AREA" >&2; exit 2; }; twin_fresh "$1" ;;
   twin-down) twin_down ;;
   twin) [ $# -ge 1 ] || { echo "usage: $0 twin AREA..." >&2; exit 2; }; twin_all "$@" ;;
-  *) echo "usage: $0 up|seed FILE...|run SPEC...|down|twin-up|twin-seed AREA|twin-run AREA...|twin-state AREA|twin-down|twin AREA..." >&2; exit 2 ;;
+  *) echo "usage: $0 up|seed FILE...|run SPEC...|down|twin-up|twin-seed AREA|twin-run AREA...|twin-state AREA|twin-fresh AREA|twin-down|twin AREA..." >&2; exit 2 ;;
 esac

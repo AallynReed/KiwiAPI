@@ -25,17 +25,6 @@ use crate::{error::method_not_allowed, state::AppState};
 
 const HUB: &str = "/v1/modpacks/hub/projects/{handle}/{slug}";
 
-/// The startup `backfill_modpack_handles` (idempotent, so Python running it
-/// too is harmless).
-pub fn start(state: &AppState) {
-    let state = state.clone();
-    tokio::spawn(async move {
-        if let Err(e) = service::backfill_handles(&state).await {
-            tracing::warn!("modpacks: owner_handle backfill failed: {}", e.message);
-        }
-    });
-}
-
 pub fn router() -> Router<AppState> {
     use routes as r;
     let allow = |m: &'static str| move || async move { method_not_allowed(m) };

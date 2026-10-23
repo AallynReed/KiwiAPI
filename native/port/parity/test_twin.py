@@ -212,8 +212,9 @@ class BsonTests(unittest.TestCase):
 
 # --------------------------------------------------------------- fake stores
 
-def fake_mongo(collections):
+def fake_mongo(collections, indexes=None):
     received = []
+    indexes = indexes or {}
 
     class Handler(socketserver.BaseRequestHandler):
         def handle(self):
@@ -233,6 +234,12 @@ def fake_mongo(collections):
                                         "ns": "kiwi." + cmd["find"]}, "ok": 1.0}
                 elif "getMore" in cmd:
                     reply = {"cursor": {"nextBatch": collections[cmd["collection"]][1:], "id": Int64(0)}, "ok": 1.0}
+                elif "listCollections" in cmd:
+                    batch = [{"name": c, "type": "collection", "options": {}, "info": {"uuid": ObjectId()}}
+                             for c in indexes]
+                    reply = {"cursor": {"firstBatch": batch, "id": Int64(0)}, "ok": 1.0}
+                elif "listIndexes" in cmd:
+                    reply = {"cursor": {"firstBatch": indexes[cmd["listIndexes"]], "id": Int64(0)}, "ok": 1.0}
                 else:
                     reply = {"ok": 0.0, "errmsg": "no such command"}
                 payload = struct.pack("<I", 0) + b"\x00" + bson.encode(reply)
@@ -260,7 +267,8 @@ def fake_postgres(rows_by_table):
                     return
                 sql = payload[:-1].decode()
                 received.append(sql)
-                table = sql.split(" FROM ")[1].split()[0]
+                schema = sql.startswith("SELECT row_to_json(t)::text FROM (\n")
+                table = "<schema>" if schema else sql.split(" FROM ")[1].split()[0]
                 if table not in rows_by_table:
                     sock.sendall(msg(b"E", b"SERROR\x00Mrelation does not exist\x00\x00") + msg(b"Z", b"I"))
                     continue
@@ -329,8 +337,8 @@ class StateDiffTests(unittest.TestCase):
             s.server_close()
         self.tmp.cleanup()
 
-    def stack(self, mongo, pg, redis):
-        m, m_seen = fake_mongo(mongo)
+    def stack(self, mongo, pg, redis, indexes=None):
+        m, m_seen = fake_mongo(mongo, indexes)
         p, p_seen = fake_postgres(pg)
         r = fake_redis(redis)
         self.servers += [m, p, r]
@@ -398,6 +406,34 @@ class StateDiffTests(unittest.TestCase):
         rc, out = quiet(statediff.main, [self.state(spec), "--a", *a, "--b", *b])
         self.assertEqual(rc, 1)
         self.assertIn("needs a mask", out)
+
+    def test_schema_sections(self):
+        def specs(ttl):
+            return {"users": [{"v": 2, "key": {"_id": 1}, "name": "_id_"},
+                              {"v": 2, "key": {"email": 1}, "name": "email_1", "unique": True}],
+                    "sessions": [{"v": 2, "key": {"expires_at": 1}, "name": "expires_at_ttl",
+                                  "expireAfterSeconds": ttl},
+                                 {"v": 2, "key": {"_id": 1}, "name": "_id_"}]}
+
+        def schema(default):
+            return [{"kind": "column", "label": "board.uuid", "def": {"attnum": 1, "type": "integer"}},
+                    {"kind": "index", "label": "board_pkey", "def": {"table": "board", "def": default}}]
+
+        spec = {"mongo_indexes": [{"collection": "*"}], "pg_schema": [{"schema": "public"}]}
+        a, m_seen, p_seen = self.stack({}, {"<schema>": schema("CREATE UNIQUE INDEX board_pkey")}, {}, specs(0))
+        b_specs = specs(0)
+        b_specs["users"].reverse()
+        b, _, _ = self.stack({}, {"<schema>": schema("CREATE UNIQUE INDEX board_pkey")}, {}, b_specs)
+        rc, out = quiet(statediff.main, [self.state(spec), "--a", *a, "--b", *b])
+        self.assertEqual(rc, 0, out)
+        self.assertIn("OK    mongo_indexes *  (6 vs 6)", out)
+        self.assertEqual(m_seen[1], {"listIndexes": "sessions", "$db": "kiwi"})
+        self.assertIn("WHERE n.nspname = 'public'", p_seen[0])
+        c, _, _ = self.stack({}, {"<schema>": schema("CREATE INDEX board_pkey")}, {}, specs(60))
+        rc, out = quiet(statediff.main, [self.state(spec), "--a", *a, "--b", *c])
+        self.assertEqual(rc, 1, out)
+        self.assertIn("~ index sessions.expires_at_ttl", out)
+        self.assertIn("~ index board_pkey", out)
 
     def test_bad_spec_and_store_errors(self):
         a, _, _ = self.stack(*self.stores())
