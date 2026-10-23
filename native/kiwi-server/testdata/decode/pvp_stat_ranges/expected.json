@@ -1,0 +1,543 @@
+{
+ "modes": {
+  "pvp": {
+   "MaxHealth": {
+    "scale": 1,
+    "out": [
+     0.0,
+     40000.0
+    ],
+    "knee": 15000.0,
+    "sqrt": 5.8,
+    "curve": true,
+    "floor": true,
+    "cap": 52000.0
+   },
+   "PhysicalDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.666,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "SpellDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.574,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "MovementSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     110.0
+    ],
+    "knee": 60.0,
+    "sqrt": 6.46,
+    "curve": true,
+    "floor": true,
+    "cap": 140.0
+   },
+   "CriticalHitChance": {
+    "scale": 0.1,
+    "out": [
+     0.0,
+     750.0
+    ],
+    "knee": 100.0,
+    "sqrt": 17.58,
+    "curve": true,
+    "floor": true,
+    "cap": 900.0
+   },
+   "CriticalHitDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 50.0,
+    "sqrt": 1.581,
+    "curve": true,
+    "floor": true,
+    "cap": 195.0
+   },
+   "HealthRegen_controller": {
+    "scale": 1,
+    "out": [
+     0.0,
+     3000.0
+    ],
+    "knee": 250.0,
+    "sqrt": 21.209,
+    "curve": true,
+    "floor": true,
+    "cap": 4000.0
+   },
+   "AttackSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     140.0
+    ],
+    "knee": 100.0,
+    "sqrt": 4.512,
+    "curve": true,
+    "floor": false,
+    "cap": 170.0
+   },
+   "EnergyRegen_controller": {
+    "scale": 1,
+    "out": [
+     0.0,
+     200.0
+    ],
+    "knee": 100.0,
+    "sqrt": 3.454,
+    "curve": true,
+    "floor": false,
+    "cap": 260.0
+   },
+   "MaxEnergy": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 100.0,
+    "sqrt": 7.906,
+    "curve": true,
+    "floor": false,
+    "cap": 195.0
+   },
+   "Jump": {
+    "scale": 1,
+    "out": [
+     0.0,
+     4.0
+    ],
+    "knee": 0.0,
+    "sqrt": 1.0,
+    "curve": false,
+    "floor": true,
+    "cap": 0.0
+   }
+  },
+  "battleroyale": {
+   "MaxHealth": {
+    "scale": 1,
+    "out": [
+     0.0,
+     40000.0
+    ],
+    "knee": 15000.0,
+    "sqrt": 5.8,
+    "curve": true,
+    "floor": true,
+    "cap": 52000.0
+   },
+   "PhysicalDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.666,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "SpellDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     600.0
+    ],
+    "knee": 168.0,
+    "sqrt": 0.574,
+    "curve": true,
+    "floor": true,
+    "cap": 780.0
+   },
+   "MovementSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     110.0
+    ],
+    "knee": 60.0,
+    "sqrt": 6.46,
+    "curve": true,
+    "floor": true,
+    "cap": 140.0
+   },
+   "CriticalHitChance": {
+    "scale": 0.1,
+    "out": [
+     0.0,
+     750.0
+    ],
+    "knee": 100.0,
+    "sqrt": 17.58,
+    "curve": true,
+    "floor": true,
+    "cap": 900.0
+   },
+   "CriticalHitDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 50.0,
+    "sqrt": 1.581,
+    "curve": true,
+    "floor": true,
+    "cap": 195.0
+   },
+   "HealthRegen_controller": {
+    "scale": 1,
+    "out": [
+     0.0,
+     3000.0
+    ],
+    "knee": 250.0,
+    "sqrt": 21.209,
+    "curve": true,
+    "floor": true,
+    "cap": 4000.0
+   },
+   "AttackSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     140.0
+    ],
+    "knee": 100.0,
+    "sqrt": 4.512,
+    "curve": true,
+    "floor": false,
+    "cap": 170.0
+   },
+   "Jump": {
+    "scale": 1,
+    "out": [
+     0.0,
+     4.0
+    ],
+    "knee": 0.0,
+    "sqrt": 1.0,
+    "curve": false,
+    "floor": true,
+    "cap": 0.0
+   },
+   "MaxEnergy": {
+    "scale": 1,
+    "out": [
+     100.0,
+     100.0
+    ],
+    "knee": 100.0,
+    "sqrt": 0.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "EnergyRegen_controller": {
+    "scale": 1,
+    "out": [
+     100.0,
+     100.0
+    ],
+    "knee": 100.0,
+    "sqrt": 0.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   }
+  },
+  "bloodstone": {
+   "MaxHealth": {
+    "scale": 1,
+    "out": [
+     0.0,
+     40000.0
+    ],
+    "knee": 15000.0,
+    "sqrt": 180.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "PhysicalDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     12000.0
+    ],
+    "knee": 3000.0,
+    "sqrt": 60.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "SpellDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     12000.0
+    ],
+    "knee": 3000.0,
+    "sqrt": 60.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "MovementSpeed": {
+    "scale": 1,
+    "out": [
+     0.0,
+     110.0
+    ],
+    "knee": 80.0,
+    "sqrt": 8.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "CriticalHitChance": {
+    "scale": 0.1,
+    "out": [
+     0.0,
+     25.0
+    ],
+    "knee": 10.0,
+    "sqrt": 0.4,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   },
+   "CriticalHitDamage": {
+    "scale": 1,
+    "out": [
+     0.0,
+     150.0
+    ],
+    "knee": 50.0,
+    "sqrt": 5.0,
+    "curve": true,
+    "floor": true,
+    "cap": 0.0
+   }
+  }
+ },
+ "roles": [
+  {
+   "key": "Tank",
+   "name": "Tank",
+   "classes": [
+    [
+     "candybarbarian",
+     "Candy Barbarian"
+    ],
+    [
+     "spirittank",
+     "Revenant"
+    ],
+    [
+     "knight",
+     "Knight"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 1.15
+    },
+    {
+     "stat": "OutgoingDamageMod",
+     "label": "Outgoing damage",
+     "op": "multiply",
+     "value": 0.9
+    }
+   ]
+  },
+  {
+   "key": "Assassin",
+   "name": "Assassin",
+   "classes": [
+    [
+     "shadowhunter",
+     "Shadow Hunter"
+    ],
+    [
+     "neonninja",
+     "Neon Ninja"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 0.85
+    },
+    {
+     "stat": "OutgoingDamageMod",
+     "label": "Outgoing damage",
+     "op": "multiply",
+     "value": 1.12
+    }
+   ]
+  },
+  {
+   "key": "Skirmisher",
+   "name": "Skirmisher",
+   "classes": [
+    [
+     "lunarlancer",
+     "Lunar Lancer"
+    ],
+    [
+     "adventurer",
+     "Boomeranger"
+    ],
+    [
+     "crimefighter",
+     "Vanguardian"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "MovementSpeed",
+     "label": "Movement Speed",
+     "op": "multiply",
+     "value": 1.08
+    },
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 0.95
+    }
+   ]
+  },
+  {
+   "key": "Mage",
+   "name": "Mage",
+   "classes": [
+    [
+     "icemage",
+     "Ice Sage"
+    ],
+    [
+     "dracolyte",
+     "Dracolyte"
+    ],
+    [
+     "tombraiser",
+     "Tomb Raiser"
+    ],
+    [
+     "faetrickster",
+     "Fae Trickster"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "SpellDamage",
+     "label": "Magic Damage",
+     "op": "multiply",
+     "value": 1.15
+    },
+    {
+     "stat": null,
+     "label": "Cooldown",
+     "op": "multiply",
+     "value": 1.2
+    }
+   ]
+  },
+  {
+   "key": "Support",
+   "name": "Support",
+   "classes": [
+    [
+     "chloromancer",
+     "Chloromancer"
+    ],
+    [
+     "bard",
+     "Bard"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "HealDoneMultiplier",
+     "label": "Healing done",
+     "op": "multiply",
+     "value": 0.9
+    },
+    {
+     "stat": null,
+     "label": "Cooldown",
+     "op": "multiply",
+     "value": 1.15
+    }
+   ]
+  },
+  {
+   "key": "RangedDPS",
+   "name": "Ranged DPS",
+   "classes": [
+    [
+     "gunslinger",
+     "Gunslinger"
+    ],
+    [
+     "piratelord",
+     "Pirate Captain"
+    ],
+    [
+     "dinotamer",
+     "Dino Tamer"
+    ],
+    [
+     "solarion",
+     "Solarion"
+    ]
+   ],
+   "modifiers": [
+    {
+     "stat": "CriticalHitDamage",
+     "label": "Critical Damage",
+     "op": "multiply",
+     "value": 1.15
+    },
+    {
+     "stat": "MaxHealth",
+     "label": "Maximum Health",
+     "op": "multiply",
+     "value": 0.92
+    }
+   ]
+  }
+ ],
+ "role_modes": [
+  "pvp"
+ ]
+}

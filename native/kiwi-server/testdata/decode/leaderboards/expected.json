@@ -1,0 +1,3286 @@
+{
+ "categories": [
+  {
+   "id": 4,
+   "name": "",
+   "boards": [
+    1,
+    20,
+    100,
+    999,
+    31000,
+    31001,
+    31002,
+    31003
+   ]
+  },
+  {
+   "id": 5,
+   "name": "",
+   "boards": [
+    3,
+    4,
+    6,
+    9,
+    10,
+    11,
+    13,
+    16,
+    17,
+    14,
+    15,
+    18,
+    21005,
+    21004,
+    21012,
+    30001,
+    30002,
+    30003,
+    30012,
+    30013,
+    30022,
+    30023,
+    30032,
+    30033,
+    30004,
+    32000,
+    33001,
+    33002
+   ]
+  },
+  {
+   "id": 6,
+   "name": "",
+   "boards": [
+    1000,
+    1001,
+    1002,
+    1003,
+    1004,
+    1005,
+    1006,
+    1007,
+    1008,
+    1009,
+    1010,
+    1011,
+    1012,
+    1013,
+    1014,
+    1015,
+    1016,
+    1017,
+    1100
+   ]
+  },
+  {
+   "id": 8,
+   "name": "",
+   "boards": [
+    2004,
+    2014,
+    2024,
+    2001,
+    2011,
+    2021,
+    2002,
+    2003,
+    2012,
+    2013,
+    2022,
+    2023,
+    2300,
+    2301,
+    2302,
+    2303,
+    2304,
+    2305,
+    2306,
+    2307,
+    2308,
+    2309,
+    2310,
+    2311,
+    2312,
+    2313,
+    2314,
+    2315,
+    2316,
+    2317,
+    2400,
+    2401,
+    2402,
+    2403,
+    2404,
+    2405,
+    2406,
+    2407,
+    2408,
+    2409,
+    2410,
+    2411,
+    2412,
+    2413,
+    2414,
+    2415,
+    2416,
+    2417
+   ]
+  },
+  {
+   "id": 9,
+   "name": "",
+   "boards": [
+    4000,
+    4001,
+    4002,
+    4003,
+    4004,
+    4005,
+    4006,
+    4007,
+    4008,
+    4009,
+    4010,
+    4011,
+    4012,
+    4013,
+    4014,
+    4015,
+    4016,
+    4017
+   ]
+  },
+  {
+   "id": 10,
+   "name": "",
+   "boards": [
+    50000,
+    5000,
+    5001,
+    5002,
+    5003,
+    5004,
+    5005,
+    5006,
+    5007,
+    5008,
+    5009,
+    5010,
+    5011,
+    5012,
+    5013,
+    5014,
+    5015,
+    5016,
+    5017
+   ]
+  }
+ ],
+ "boards": [
+  {
+   "id": -1,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_spikewalker_normal.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -2,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_prophet_normal.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -3,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_pinata_normal.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -4,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_luna_normal.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -5,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_spikewalker_hard.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -6,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_prophet_hard.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -7,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_pinata_hard.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -8,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_luna_hard.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -9,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_spikewalker_ultra.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -10,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_prophet_ultra.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -11,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_pinata_ultra.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -12,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_luna_ultra.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -13,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_hydra_normal.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -14,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_hydra_hard.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -15,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_hydra_ultra.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -16,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_dreadnought_normal.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -17,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_dreadnought_hard.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": -18,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_dreadnought_ultra.png",
+   "kind": "Tower",
+   "resets": "weekly"
+  },
+  {
+   "id": 2001,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_challenge_depth.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 113
+   }
+  },
+  {
+   "id": 2002,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_challenge_speed_3.png",
+   "kind": "DelveThreeTier",
+   "resets": "weekly"
+  },
+  {
+   "id": 2003,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_challenge_speed_3.png",
+   "kind": "DelveThreeTier",
+   "resets": "weekly"
+  },
+  {
+   "id": 2004,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_challenge_depth.png",
+   "kind": "DelveDepth",
+   "resets": "weekly"
+  },
+  {
+   "id": 2011,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_private_depth.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 110
+   }
+  },
+  {
+   "id": 2012,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_private_speed_3.png",
+   "kind": "DelveThreeTier",
+   "resets": "weekly"
+  },
+  {
+   "id": 2013,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_private_speed_3.png",
+   "kind": "DelveThreeTier",
+   "resets": "weekly"
+  },
+  {
+   "id": 2014,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_private_depth.png",
+   "kind": "DelveDepth",
+   "resets": "weekly"
+  },
+  {
+   "id": 2021,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_public_depth.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 109
+   }
+  },
+  {
+   "id": 2022,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_public_speed_3.png",
+   "kind": "DelveThreeTier",
+   "resets": "weekly"
+  },
+  {
+   "id": 2023,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_public_speed_3.png",
+   "kind": "DelveThreeTier",
+   "resets": "weekly"
+  },
+  {
+   "id": 2024,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_public_depth.png",
+   "kind": "DelveDepth",
+   "resets": "weekly"
+  },
+  {
+   "id": 2300,
+   "name": "",
+   "icon": "ui/ability_icons/ico_knight_retribution_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "knight"
+  },
+  {
+   "id": 2301,
+   "name": "",
+   "icon": "ui/ability_icons/ico_gunslinger_luckyshot_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "gunslinger"
+  },
+  {
+   "id": 2302,
+   "name": "",
+   "icon": "ui/ability_icons/ico_faetrickster_egoblast.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "faetrickster"
+  },
+  {
+   "id": 2303,
+   "name": "",
+   "icon": "ui/ability_icons/ico_dracolyte_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "dracolyte"
+  },
+  {
+   "id": 2304,
+   "name": "",
+   "icon": "ui/ability_icons/ico_neon_ninja_shiningstar.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "neonninja"
+  },
+  {
+   "id": 2305,
+   "name": "",
+   "icon": "ui/ability_icons/ico_barbarian_passive_02.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "candybarbarian"
+  },
+  {
+   "id": 2306,
+   "name": "",
+   "icon": "ui/ability_icons/ico_icemage_passive_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "icemage"
+  },
+  {
+   "id": 2307,
+   "name": "",
+   "icon": "ui/ability_icons/icon_shadowhunter_darkwhispers.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "shadowhunter"
+  },
+  {
+   "id": 2308,
+   "name": "",
+   "icon": "ui/ability_icons/icon_pirate_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "piratelord"
+  },
+  {
+   "id": 2309,
+   "name": "",
+   "icon": "ui/ability_icons/icon_adventurer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "adventurer"
+  },
+  {
+   "id": 2310,
+   "name": "",
+   "icon": "ui/ability_icons/icon_tombraiser_passive_soulbuff.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "tombraiser"
+  },
+  {
+   "id": 2311,
+   "name": "",
+   "icon": "ui/ability_icons/icon_lunarlancer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "lunarlancer"
+  },
+  {
+   "id": 2312,
+   "name": "",
+   "icon": "ui/ability_icons/icon_revenant_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "spirittank"
+  },
+  {
+   "id": 2313,
+   "name": "",
+   "icon": "ui/ability_icons/icon_chloromancer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "chloromancer"
+  },
+  {
+   "id": 2314,
+   "name": "",
+   "icon": "ui/ability_icons/icon_dinotamer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "dinotamer"
+  },
+  {
+   "id": 2315,
+   "name": "",
+   "icon": "ui/ability_icons/ico_vanguardian_ranged_transformmelee_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "crimefighter"
+  },
+  {
+   "id": 2316,
+   "name": "",
+   "icon": "ui/ability_icons/icon_bard_melody.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "bard"
+  },
+  {
+   "id": 2317,
+   "name": "",
+   "icon": "ui/ability_icons/icon_solarion_A_divineRadiance.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "solarion"
+  },
+  {
+   "id": 2400,
+   "name": "",
+   "icon": "ui/ability_icons/ico_knight_retribution_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "knight"
+  },
+  {
+   "id": 2401,
+   "name": "",
+   "icon": "ui/ability_icons/ico_gunslinger_luckyshot_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "gunslinger"
+  },
+  {
+   "id": 2402,
+   "name": "",
+   "icon": "ui/ability_icons/ico_faetrickster_egoblast.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "faetrickster"
+  },
+  {
+   "id": 2403,
+   "name": "",
+   "icon": "ui/ability_icons/ico_dracolyte_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "dracolyte"
+  },
+  {
+   "id": 2404,
+   "name": "",
+   "icon": "ui/ability_icons/ico_neon_ninja_shiningstar.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "neonninja"
+  },
+  {
+   "id": 2405,
+   "name": "",
+   "icon": "ui/ability_icons/ico_barbarian_passive_02.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "candybarbarian"
+  },
+  {
+   "id": 2406,
+   "name": "",
+   "icon": "ui/ability_icons/ico_icemage_passive_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "icemage"
+  },
+  {
+   "id": 2407,
+   "name": "",
+   "icon": "ui/ability_icons/icon_shadowhunter_darkwhispers.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "shadowhunter"
+  },
+  {
+   "id": 2408,
+   "name": "",
+   "icon": "ui/ability_icons/icon_pirate_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "piratelord"
+  },
+  {
+   "id": 2409,
+   "name": "",
+   "icon": "ui/ability_icons/icon_adventurer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "adventurer"
+  },
+  {
+   "id": 2410,
+   "name": "",
+   "icon": "ui/ability_icons/icon_tombraiser_passive_soulbuff.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "tombraiser"
+  },
+  {
+   "id": 2411,
+   "name": "",
+   "icon": "ui/ability_icons/icon_lunarlancer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "lunarlancer"
+  },
+  {
+   "id": 2412,
+   "name": "",
+   "icon": "ui/ability_icons/icon_revenant_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "spirittank"
+  },
+  {
+   "id": 2413,
+   "name": "",
+   "icon": "ui/ability_icons/icon_chloromancer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "chloromancer"
+  },
+  {
+   "id": 2414,
+   "name": "",
+   "icon": "ui/ability_icons/icon_dinotamer_passive.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "dinotamer"
+  },
+  {
+   "id": 2415,
+   "name": "",
+   "icon": "ui/ability_icons/ico_vanguardian_ranged_transformmelee_01.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "crimefighter"
+  },
+  {
+   "id": 2416,
+   "name": "",
+   "icon": "ui/ability_icons/icon_bard_melody.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "bard"
+  },
+  {
+   "id": 2417,
+   "name": "",
+   "icon": "ui/ability_icons/icon_solarion_A_divineRadiance.png",
+   "kind": "delveclassdepth",
+   "resets": "weekly",
+   "class": "solarion"
+  },
+  {
+   "id": 100,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_total_mastery.png",
+   "kind": "Composite",
+   "resets": "never",
+   "combines": [
+    1,
+    20
+   ],
+   "composition": "sum"
+  },
+  {
+   "id": 1,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_trove_mastery.png",
+   "kind": "MetaExperience",
+   "resets": "never"
+  },
+  {
+   "id": 3,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_enemies_killed.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 1
+   }
+  },
+  {
+   "id": 4,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_quest.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 7
+   }
+  },
+  {
+   "id": 6,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_PVP.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 25
+   }
+  },
+  {
+   "id": 9,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_boxes.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 12
+   }
+  },
+  {
+   "id": 10,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_flux_earned.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 41
+   }
+  },
+  {
+   "id": 11,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_glim_collected.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 40
+   }
+  },
+  {
+   "id": 13,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_infinium_mined.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 39
+   }
+  },
+  {
+   "id": 14,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_invaders.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 34
+   }
+  },
+  {
+   "id": 15,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_loot_collector.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 10
+   }
+  },
+  {
+   "id": 16,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_pinatas_looted.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 36
+   }
+  },
+  {
+   "id": 17,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_pinatas_thrown.png",
+   "kind": "PlayerMetric",
+   "resets": "never",
+   "metric": {
+    "id": 35
+   }
+  },
+  {
+   "id": 18,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_XP.png",
+   "kind": "xpallclasses",
+   "resets": "never"
+  },
+  {
+   "id": 999,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_meta_power.png",
+   "kind": "Composite",
+   "resets": "never",
+   "combines": [
+    1000,
+    1001,
+    1002,
+    1003,
+    1004,
+    1005,
+    1006,
+    1007,
+    1008,
+    1009,
+    1010,
+    1011,
+    1012,
+    1013,
+    1014,
+    1015,
+    1016,
+    1017
+   ],
+   "composition": "sum"
+  },
+  {
+   "id": 1000,
+   "name": "",
+   "icon": "ui/ability_icons/ico_knight_retribution_01.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "knight"
+  },
+  {
+   "id": 1001,
+   "name": "",
+   "icon": "ui/ability_icons/ico_gunslinger_luckyshot_01.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "gunslinger"
+  },
+  {
+   "id": 1002,
+   "name": "",
+   "icon": "ui/ability_icons/ico_faetrickster_egoblast.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "faetrickster"
+  },
+  {
+   "id": 1003,
+   "name": "",
+   "icon": "ui/ability_icons/ico_dracolyte_passive.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "dracolyte"
+  },
+  {
+   "id": 1004,
+   "name": "",
+   "icon": "ui/ability_icons/ico_neon_ninja_shiningstar.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "neonninja"
+  },
+  {
+   "id": 1005,
+   "name": "",
+   "icon": "ui/ability_icons/ico_barbarian_passive_02.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "candybarbarian"
+  },
+  {
+   "id": 1006,
+   "name": "",
+   "icon": "ui/ability_icons/ico_icemage_passive_01.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "icemage"
+  },
+  {
+   "id": 1007,
+   "name": "",
+   "icon": "ui/ability_icons/icon_shadowhunter_darkwhispers.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "shadowhunter"
+  },
+  {
+   "id": 1008,
+   "name": "",
+   "icon": "ui/ability_icons/icon_pirate_passive.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "piratelord"
+  },
+  {
+   "id": 1009,
+   "name": "",
+   "icon": "ui/ability_icons/icon_adventurer_passive.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "adventurer"
+  },
+  {
+   "id": 1010,
+   "name": "",
+   "icon": "ui/ability_icons/icon_tombraiser_passive_soulbuff.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "tombraiser"
+  },
+  {
+   "id": 1011,
+   "name": "",
+   "icon": "ui/ability_icons/icon_lunarlancer_passive.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "lunarlancer"
+  },
+  {
+   "id": 1012,
+   "name": "",
+   "icon": "ui/ability_icons/icon_revenant_passive.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "spirittank"
+  },
+  {
+   "id": 1013,
+   "name": "",
+   "icon": "ui/ability_icons/icon_chloromancer_passive.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "chloromancer"
+  },
+  {
+   "id": 1014,
+   "name": "",
+   "icon": "ui/ability_icons/icon_dinotamer_passive.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "dinotamer"
+  },
+  {
+   "id": 1015,
+   "name": "",
+   "icon": "ui/ability_icons/ico_vanguardian_ranged_transformmelee_01.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "crimefighter"
+  },
+  {
+   "id": 1016,
+   "name": "",
+   "icon": "ui/ability_icons/icon_bard_melody.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "bard"
+  },
+  {
+   "id": 1017,
+   "name": "",
+   "icon": "ui/ability_icons/icon_solarion_A_divineRadiance.png",
+   "kind": "PowerRankClass",
+   "resets": "never",
+   "class": "solarion"
+  },
+  {
+   "id": 1100,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_club_pr.png",
+   "kind": "ClubPowerRank",
+   "resets": "weekly"
+  },
+  {
+   "id": 10003,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_enemies_killed.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 1
+   }
+  },
+  {
+   "id": 10004,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_quest.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 7
+   }
+  },
+  {
+   "id": 10006,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_PVP.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 25
+   }
+  },
+  {
+   "id": 10009,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_boxes.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 12
+   }
+  },
+  {
+   "id": 10011,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_glim_collected.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 40
+   }
+  },
+  {
+   "id": 10012,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_infinium_mined.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 39
+   }
+  },
+  {
+   "id": 10013,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_loot_collector.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 10
+   }
+  },
+  {
+   "id": 10019,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_experience.png",
+   "kind": "xpallclasses",
+   "resets": "weekly"
+  },
+  {
+   "id": 21001,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_dungeons.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 44
+   }
+  },
+  {
+   "id": 21002,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_dungeons.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 45
+   }
+  },
+  {
+   "id": 21004,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_worldboss.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 49
+   }
+  },
+  {
+   "id": 21005,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_experience.png",
+   "kind": "xpallclasses",
+   "resets": "weekly"
+  },
+  {
+   "id": 21006,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_spikewalker_flawless.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 56
+   }
+  },
+  {
+   "id": 21007,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_prophet_flawless.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 55
+   }
+  },
+  {
+   "id": 21008,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_pinata_flawless.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 54
+   }
+  },
+  {
+   "id": 21009,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_luna_flawless.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 53
+   }
+  },
+  {
+   "id": 21010,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_hydra_flawless.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 52
+   }
+  },
+  {
+   "id": 21011,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_st_dreadnought_flawless.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 51
+   }
+  },
+  {
+   "id": 21012,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_club_xp.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 50
+   }
+  },
+  {
+   "id": 20,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_geode_mastery.png",
+   "kind": "GeodeMetaExperience",
+   "resets": "never"
+  },
+  {
+   "id": 30001,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_geode_adventures.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 70
+   }
+  },
+  {
+   "id": 30002,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_geode_pvp_wins.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 74
+   }
+  },
+  {
+   "id": 30003,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_geode_pvp_kills.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 73
+   }
+  },
+  {
+   "id": 30004,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_geode_egg.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 82
+   }
+  },
+  {
+   "id": 30005,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_geode_pvp_highestdamage.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 85
+   }
+  },
+  {
+   "id": 30012,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_deathmatch_wins.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 140
+   }
+  },
+  {
+   "id": 30013,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_deathmatch_kills.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 141
+   }
+  },
+  {
+   "id": 30015,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_deathmatch_highestdamage.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 142
+   }
+  },
+  {
+   "id": 30022,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_teamdeathmatch_wins.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 143
+   }
+  },
+  {
+   "id": 30023,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_teamdeathmatch_kills.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 144
+   }
+  },
+  {
+   "id": 30025,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_teamdeathmatch_highestdamage.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 145
+   }
+  },
+  {
+   "id": 30032,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_ctf_gameswon.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 146
+   }
+  },
+  {
+   "id": 30033,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_ctf_captured.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 23
+   }
+  },
+  {
+   "id": 30035,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_pvp_ctf_returns.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 24
+   }
+  },
+  {
+   "id": 31000,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_meta_vale.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 106
+   }
+  },
+  {
+   "id": 31001,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_meta_pinata.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 107
+   }
+  },
+  {
+   "id": 31002,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_meta_trove.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 108
+   }
+  },
+  {
+   "id": 31003,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_meta_donations.png",
+   "kind": "Composite",
+   "resets": "never",
+   "combines": [
+    31000,
+    31001,
+    31002
+   ],
+   "composition": "sum"
+  },
+  {
+   "id": 31004,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_snowfest2023.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 132
+   }
+  },
+  {
+   "id": 31005,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_bunfest2024.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 132
+   }
+  },
+  {
+   "id": 31006,
+   "name": "",
+   "icon": "ui/leaderboard_icons/learboard_icon_sunfest2024.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 132
+   }
+  },
+  {
+   "id": 31007,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_community_donation.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 132
+   }
+  },
+  {
+   "id": 31008,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_soccer2026.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 132
+   }
+  },
+  {
+   "id": 32000,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_crystal_weapon.png",
+   "kind": "PlayerMetric",
+   "resets": "daily",
+   "metric": {
+    "id": 115
+   }
+  },
+  {
+   "id": 4000,
+   "name": "",
+   "icon": "ui/ability_icons/ico_knight_retribution_01.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "knight",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4001,
+   "name": "",
+   "icon": "ui/ability_icons/ico_gunslinger_luckyshot_01.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "gunslinger",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4002,
+   "name": "",
+   "icon": "ui/ability_icons/ico_faetrickster_egoblast.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "faetrickster",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4003,
+   "name": "",
+   "icon": "ui/ability_icons/ico_dracolyte_passive.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "dracolyte",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4004,
+   "name": "",
+   "icon": "ui/ability_icons/ico_neon_ninja_shiningstar.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "neonninja",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4005,
+   "name": "",
+   "icon": "ui/ability_icons/ico_barbarian_passive_02.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "candybarbarian",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4006,
+   "name": "",
+   "icon": "ui/ability_icons/ico_icemage_passive_01.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "icemage",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4007,
+   "name": "",
+   "icon": "ui/ability_icons/icon_shadowhunter_darkwhispers.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "shadowhunter",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4008,
+   "name": "",
+   "icon": "ui/ability_icons/icon_pirate_passive.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "piratelord",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4009,
+   "name": "",
+   "icon": "ui/ability_icons/icon_adventurer_passive.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "adventurer",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4010,
+   "name": "",
+   "icon": "ui/ability_icons/icon_tombraiser_passive_soulbuff.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "tombraiser",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4011,
+   "name": "",
+   "icon": "ui/ability_icons/icon_lunarlancer_passive.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "lunarlancer",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4012,
+   "name": "",
+   "icon": "ui/ability_icons/icon_revenant_passive.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "spirittank",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4013,
+   "name": "",
+   "icon": "ui/ability_icons/icon_chloromancer_passive.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "chloromancer",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4014,
+   "name": "",
+   "icon": "ui/ability_icons/icon_dinotamer_passive.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "dinotamer",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4015,
+   "name": "",
+   "icon": "ui/ability_icons/ico_vanguardian_ranged_transformmelee_01.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "crimefighter",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4016,
+   "name": "",
+   "icon": "ui/ability_icons/icon_bard_melody.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "bard",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 4017,
+   "name": "",
+   "icon": "ui/ability_icons/icon_solarion_A_divineRadiance.png",
+   "kind": "MetricCollection",
+   "resets": "weekly",
+   "class": "solarion",
+   "points": [
+    {
+     "id": 1,
+     "points": 0.05
+    },
+    {
+     "id": 5,
+     "points": 0.002
+    },
+    {
+     "id": 43,
+     "points": 8.0
+    },
+    {
+     "id": 44,
+     "points": 1.0
+    },
+    {
+     "id": 45,
+     "points": 3.0
+    },
+    {
+     "id": 49,
+     "points": 0.3
+    },
+    {
+     "id": 69,
+     "points": 8.0
+    },
+    {
+     "id": 70,
+     "points": 3.0
+    },
+    {
+     "id": 71,
+     "points": 5.0
+    },
+    {
+     "id": 73,
+     "points": 0.25
+    },
+    {
+     "id": 74,
+     "points": 5.0
+    },
+    {
+     "id": 82,
+     "points": 5.0
+    },
+    {
+     "id": 86,
+     "points": 1.0
+    },
+    {
+     "id": 102,
+     "points": 0.05
+    },
+    {
+     "id": 103,
+     "points": 0.05
+    },
+    {
+     "id": 104,
+     "points": 5.0
+    },
+    {
+     "id": 115,
+     "points": 7.0
+    },
+    {
+     "id": 111,
+     "points": 12.0
+    },
+    {
+     "id": 112,
+     "points": 17.0
+    },
+    {
+     "id": 114,
+     "points": 22.0
+    }
+   ]
+  },
+  {
+   "id": 50000,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_all.png",
+   "kind": "playermetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 119
+   }
+  },
+  {
+   "id": 5000,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_knight.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "knight",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5001,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_gunslinger.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "gunslinger",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5002,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_faetrickster.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "faetrickster",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5003,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_dracolyte.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "dracolyte",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5004,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_neonninja.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "neonninja",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5005,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_barbarian.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "candybarbarian",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5006,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_icemage.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "icemage",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5007,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_shadowhunter.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "shadowhunter",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5008,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_pirate.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "piratelord",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5009,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_boomeranger.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "adventurer",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5010,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_tombraiser.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "tombraiser",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5011,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_lunarlancer.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "lunarlancer",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5012,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_revenant.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "spirittank",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5013,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_chloromancer.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "chloromancer",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5014,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_dinotamer.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "dinotamer",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5015,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_vanguardian.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "crimefighter",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5016,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_bard.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "bard",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 5017,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_paragon_solarion.png",
+   "kind": "classmetric",
+   "resets": "weekly",
+   "class": "solarion",
+   "metric": {
+    "id": 118
+   }
+  },
+  {
+   "id": 33001,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_pinzophone_received.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 129
+   }
+  },
+  {
+   "id": 33002,
+   "name": "",
+   "icon": "ui/leaderboard_icons/icon_leaderboard_stats_pinzophone_sent.png",
+   "kind": "PlayerMetric",
+   "resets": "weekly",
+   "metric": {
+    "id": 130
+   }
+  }
+ ]
+}

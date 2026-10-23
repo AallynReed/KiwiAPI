@@ -1,0 +1,1028 @@
+[
+    {
+        "class": "Bard",
+        "game_folder": "bard",
+        "name": "Personal Song",
+        "description": "Sing yourself a little song when you head into battle. When attacking gain Jubilant, Peaceful, and Battle song buffs in that order.",
+        "icon": "ui/ability_icons/icon_bard_subclass.png",
+        "prefab": "abilities/subclass/bard/bard",
+        "base": {
+            "effects": [
+                {
+                    "name": "Periodic Spawner",
+                    "prefab": "abilities/subclass/bard/periodic_spawner",
+                    "component": 158,
+                    "duration": 8.0
+                },
+                {
+                    "name": "Battle Tag",
+                    "prefab": "abilities/subclass/bard/battle_tag",
+                    "component": 233,
+                    "duration": 5.0
+                },
+                {
+                    "name": "Peaceful Tag",
+                    "prefab": "abilities/subclass/bard/peaceful_tag",
+                    "component": 233,
+                    "duration": 5.0
+                },
+                {
+                    "name": "Jubiliant Tag",
+                    "prefab": "abilities/subclass/bard/jubiliant_tag",
+                    "component": 233,
+                    "duration": 5.0
+                },
+                {
+                    "name": "Jubiliant Spawner",
+                    "prefab": "abilities/subclass/bard/jubiliant_spawner",
+                    "component": 46,
+                    "duration": 3.0
+                },
+                {
+                    "name": "Peaceful Spawner",
+                    "prefab": "abilities/subclass/bard/peaceful_spawner",
+                    "component": 46,
+                    "duration": 3.0
+                },
+                {
+                    "name": "Battle Spawner",
+                    "prefab": "abilities/subclass/bard/battle_spawner",
+                    "component": 46,
+                    "duration": 3.0
+                }
+            ],
+            "triggers": [
+                {
+                    "prefab": "abilities/subclass/bard/personal_song_trigger",
+                    "on": [
+                        "damage_dealt"
+                    ],
+                    "chance": 1.0,
+                    "cooldown": 15.0
+                }
+            ]
+        },
+        "tiers": [
+            {
+                "threshold": 0,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 1",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_1",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 1",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_1",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 2.0,
+                                        "percent": true,
+                                        "amount": 0.02
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 2.0,
+                                        "percent": true,
+                                        "amount": 0.02
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 4999
+                    },
+                    {
+                        "name": "Peaceful Effect Tier 1",
+                        "prefab": "abilities/subclass/bard/peaceful_effect_tier_1",
+                        "effects": [
+                            {
+                                "name": "Peaceful Effect Tier 1",
+                                "prefab": "abilities/subclass/bard/peaceful_effect_tier_1",
+                                "component": 281,
+                                "duration": 3.0,
+                                "life_leech": 0.1
+                            }
+                        ],
+                        "until": 4999
+                    },
+                    {
+                        "name": "Battle Effect Tier 1",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_1",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 1",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_1",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 2.0,
+                                        "percent": true,
+                                        "amount": 0.02
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 2.0,
+                                        "percent": true,
+                                        "amount": 0.02
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 4999
+                    }
+                ]
+            },
+            {
+                "threshold": 5000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 2",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_2",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 2",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_2",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 4.0,
+                                        "percent": true,
+                                        "amount": 0.04
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 4.0,
+                                        "percent": true,
+                                        "amount": 0.04
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 9999
+                    },
+                    {
+                        "name": "Peaceful Effect Tier 2",
+                        "prefab": "abilities/subclass/bard/peaceful_effect_tier_2",
+                        "effects": [
+                            {
+                                "name": "Peaceful Effect Tier 2",
+                                "prefab": "abilities/subclass/bard/peaceful_effect_tier_2",
+                                "component": 281,
+                                "duration": 3.0,
+                                "life_leech": 0.15
+                            }
+                        ],
+                        "until": 9999
+                    },
+                    {
+                        "name": "Battle Effect Tier 2",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_2",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 2",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_2",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 4.0,
+                                        "percent": true,
+                                        "amount": 0.04
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 4.0,
+                                        "percent": true,
+                                        "amount": 0.04
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 9999
+                    }
+                ]
+            },
+            {
+                "threshold": 10000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 3",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_3",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 3",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_3",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 6.0,
+                                        "percent": true,
+                                        "amount": 0.06
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 6.0,
+                                        "percent": true,
+                                        "amount": 0.06
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 14999
+                    },
+                    {
+                        "name": "Peaceful Effect Tier 3",
+                        "prefab": "abilities/subclass/bard/peaceful_effect_tier_3",
+                        "effects": [
+                            {
+                                "name": "Peaceful Effect Tier 3",
+                                "prefab": "abilities/subclass/bard/peaceful_effect_tier_3",
+                                "component": 281,
+                                "duration": 3.0,
+                                "life_leech": 0.2
+                            }
+                        ],
+                        "until": 14999
+                    },
+                    {
+                        "name": "Battle Effect Tier 3",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_3",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 3",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_3",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 6.0,
+                                        "percent": true,
+                                        "amount": 0.06
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 6.0,
+                                        "percent": true,
+                                        "amount": 0.06
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 14999
+                    }
+                ]
+            },
+            {
+                "threshold": 15000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 4",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_4",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 4",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_4",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 8.0,
+                                        "percent": true,
+                                        "amount": 0.08
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 8.0,
+                                        "percent": true,
+                                        "amount": 0.08
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 19999
+                    },
+                    {
+                        "name": "Peaceful Effect Tier 4",
+                        "prefab": "abilities/subclass/bard/peaceful_effect_tier_4",
+                        "effects": [
+                            {
+                                "name": "Peaceful Effect Tier 4",
+                                "prefab": "abilities/subclass/bard/peaceful_effect_tier_4",
+                                "component": 281,
+                                "duration": 3.0,
+                                "life_leech": 0.25
+                            }
+                        ],
+                        "until": 19999
+                    },
+                    {
+                        "name": "Battle Effect Tier 4",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_4",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 4",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_4",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 8.0,
+                                        "percent": true,
+                                        "amount": 0.08
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 8.0,
+                                        "percent": true,
+                                        "amount": 0.08
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 19999
+                    }
+                ]
+            },
+            {
+                "threshold": 20000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 5",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_5",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 5",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_5",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 10.0,
+                                        "percent": true,
+                                        "amount": 0.1
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 10.0,
+                                        "percent": true,
+                                        "amount": 0.1
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 24999
+                    },
+                    {
+                        "name": "Peaceful Effect Tier 5",
+                        "prefab": "abilities/subclass/bard/peaceful_effect_tier_5",
+                        "effects": [
+                            {
+                                "name": "Peaceful Effect Tier 5",
+                                "prefab": "abilities/subclass/bard/peaceful_effect_tier_5",
+                                "component": 281,
+                                "duration": 3.0,
+                                "life_leech": 0.3
+                            }
+                        ],
+                        "until": 24999
+                    },
+                    {
+                        "name": "Battle Effect Tier 5",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_5",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 5",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_5",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 10.0,
+                                        "percent": true,
+                                        "amount": 0.1
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 10.0,
+                                        "percent": true,
+                                        "amount": 0.1
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 24999
+                    }
+                ]
+            },
+            {
+                "threshold": 25000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 6",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_6",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 6",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_6",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 12.0,
+                                        "percent": true,
+                                        "amount": 0.12
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 12.0,
+                                        "percent": true,
+                                        "amount": 0.12
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 29999
+                    },
+                    {
+                        "name": "Peaceful Effect Tier 6",
+                        "prefab": "abilities/subclass/bard/peaceful_effect_tier_6",
+                        "effects": [
+                            {
+                                "name": "Peaceful Effect Tier 6",
+                                "prefab": "abilities/subclass/bard/peaceful_effect_tier_6",
+                                "component": 281,
+                                "duration": 3.0,
+                                "life_leech": 0.4
+                            }
+                        ],
+                        "until": 29999
+                    },
+                    {
+                        "name": "Battle Effect Tier 6",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_6",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 6",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_6",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 12.0,
+                                        "percent": true,
+                                        "amount": 0.12
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 12.0,
+                                        "percent": true,
+                                        "amount": 0.12
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 29999
+                    }
+                ]
+            },
+            {
+                "threshold": 30000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 7",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_7",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 7",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_7",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 15.0,
+                                        "percent": true,
+                                        "amount": 0.15
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 15.0,
+                                        "percent": true,
+                                        "amount": 0.15
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 34999
+                    },
+                    {
+                        "name": "Peaceful Effect Tier 7",
+                        "prefab": "abilities/subclass/bard/peaceful_effect_tier_7",
+                        "effects": [
+                            {
+                                "name": "Peaceful Effect Tier 7",
+                                "prefab": "abilities/subclass/bard/peaceful_effect_tier_7",
+                                "component": 281,
+                                "duration": 3.0,
+                                "life_leech": 0.5
+                            }
+                        ],
+                        "until": 34999
+                    },
+                    {
+                        "name": "Battle Effect Tier 7",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_7",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 7",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_7",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 15.0,
+                                        "percent": true,
+                                        "amount": 0.15
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 15.0,
+                                        "percent": true,
+                                        "amount": 0.15
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 34999
+                    }
+                ]
+            },
+            {
+                "threshold": 35000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 8",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_8",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 8",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_8",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 17.5,
+                                        "percent": true,
+                                        "amount": 0.175
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 17.5,
+                                        "percent": true,
+                                        "amount": 0.175
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 39999
+                    },
+                    {
+                        "name": "Battle Effect Tier 8",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_8",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 8",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_8",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 17.5,
+                                        "percent": true,
+                                        "amount": 0.175
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 17.5,
+                                        "percent": true,
+                                        "amount": 0.175
+                                    }
+                                ]
+                            }
+                        ],
+                        "until": 39999
+                    }
+                ]
+            },
+            {
+                "threshold": 40000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Jubiliant Effect Tier 9",
+                        "prefab": "abilities/subclass/bard/jubiliant_effect_tier_9",
+                        "effects": [
+                            {
+                                "name": "Jubiliant Effect Tier 9",
+                                "prefab": "abilities/subclass/bard/jubiliant_effect_tier_9",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_MovementSpeedBonus",
+                                        "name": "Movement Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 20.0,
+                                        "percent": true,
+                                        "amount": 0.2
+                                    },
+                                    {
+                                        "stat": "$Stat_EnergyRegenBonus_controller",
+                                        "name": "Energy Regen Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 20.0,
+                                        "percent": true,
+                                        "amount": 0.2
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Battle Effect Tier 9",
+                        "prefab": "abilities/subclass/bard/battle_effect_tier_9",
+                        "effects": [
+                            {
+                                "name": "Battle Effect Tier 9",
+                                "prefab": "abilities/subclass/bard/battle_effect_tier_9",
+                                "component": 136,
+                                "stats": [
+                                    {
+                                        "stat": "$Stat_AttackSpeedBonus",
+                                        "name": "Attack Speed Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 20.0,
+                                        "percent": true,
+                                        "amount": 0.2
+                                    },
+                                    {
+                                        "stat": "$Stat_CriticalHitDamageBonus",
+                                        "name": "Critical Damage Bonus",
+                                        "op": "MultiplySum",
+                                        "value": 20.0,
+                                        "percent": true,
+                                        "amount": 0.2
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Fae Companion",
+        "description": "A fae companion that provides healing when you are low on life.",
+        "icon": "ui/ability_icons/icon_subclass_adventurer.png",
+        "prefab": "abilities/subclass/adventurer/adventurer",
+        "tiers": [
+            {
+                "threshold": 0,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier1",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier1",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier1",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier1",
+                                "max_health_percent": 0.3
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier1",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 4999
+                    }
+                ]
+            },
+            {
+                "threshold": 5000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier2",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier2",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier2",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier2",
+                                "max_health_percent": 0.32
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier2",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 9999
+                    }
+                ]
+            },
+            {
+                "threshold": 10000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier3",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier3",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier3",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier3",
+                                "max_health_percent": 0.34
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier3",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 14999
+                    }
+                ]
+            },
+            {
+                "threshold": 15000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier4",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier4",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier4",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier4",
+                                "max_health_percent": 0.36
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier4",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 19999
+                    }
+                ]
+            },
+            {
+                "threshold": 20000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier5",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier5",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier5",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier5",
+                                "max_health_percent": 0.38
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier5",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 24999
+                    }
+                ]
+            },
+            {
+                "threshold": 25000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier6",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier6",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier6",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier6",
+                                "max_health_percent": 0.4
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier6",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 29999
+                    }
+                ]
+            },
+            {
+                "threshold": 30000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier7",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier7",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier7",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier7",
+                                "max_health_percent": 0.42
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier7",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 34999
+                    }
+                ]
+            },
+            {
+                "threshold": 35000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier8",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier8",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier7",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier7",
+                                "max_health_percent": 0.42
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier8",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ],
+                        "until": 39999
+                    }
+                ]
+            },
+            {
+                "threshold": 40000,
+                "threshold_kind": "subclass_power_rank",
+                "parts": [
+                    {
+                        "name": "Adventurer Effect Tier9",
+                        "prefab": "abilities/subclass/adventurer/adventurer_effect_tier9",
+                        "healing": [
+                            {
+                                "name": "Adventurer Effect Heal Tier7",
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_heal_tier7",
+                                "max_health_percent": 0.42
+                            }
+                        ],
+                        "triggers": [
+                            {
+                                "prefab": "abilities/subclass/adventurer/adventurer_effect_spawn_heal_tier9",
+                                "on": [
+                                    "health_below"
+                                ],
+                                "chance": 1.0,
+                                "cooldown": 30.0,
+                                "health": 0.2
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

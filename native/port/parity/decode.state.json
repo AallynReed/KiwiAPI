@@ -1,0 +1,8 @@
+{
+ "mongo": [
+  {"collection": "decoder_runs", "sort": ["name", "trigger"], "mask": ["_id", "started_at", "finished_at", "traceback"]}
+ ],
+ "redis": [
+  {"pattern": "kiwi:decode:*"}
+ ]
+}

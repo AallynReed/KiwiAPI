@@ -108,7 +108,7 @@ pub async fn file_response(
     filename: &str,
     req_headers: &HeaderMap,
 ) -> Result<Response, ApiError> {
-    file_response_cached(path, media_type, filename, "no-store", req_headers).await
+    file_response_with(path, media_type, Some(filename), "no-store", req_headers).await
 }
 
 /// [`file_response`] with another `Cache-Control`.
@@ -116,6 +116,17 @@ pub async fn file_response_cached(
     path: &Path,
     media_type: &str,
     filename: &str,
+    cache_control: &str,
+    req_headers: &HeaderMap,
+) -> Result<Response, ApiError> {
+    file_response_with(path, media_type, Some(filename), cache_control, req_headers).await
+}
+
+/// `FileResponse(path, media_type=..., filename=..., headers={"Cache-Control": cache_control})`.
+pub async fn file_response_with(
+    path: &Path,
+    media_type: &str,
+    filename: Option<&str>,
     cache_control: &str,
     req_headers: &HeaderMap,
 ) -> Result<Response, ApiError> {
@@ -131,11 +142,15 @@ pub async fn file_response_cached(
         (header::CACHE_CONTROL, hv(cache_control)?),
         (header::CONTENT_TYPE, hv(&ctype)?),
         (header::ACCEPT_RANGES, HeaderValue::from_static("bytes")),
-        (header::CONTENT_DISPOSITION, hv(&content_disposition(filename))?),
+    ];
+    if let Some(filename) = filename {
+        headers.push((header::CONTENT_DISPOSITION, hv(&content_disposition(filename))?));
+    }
+    headers.extend([
         (header::CONTENT_LENGTH, HeaderValue::from(size)),
         (header::LAST_MODIFIED, hv(&last_modified)?),
         (header::ETAG, hv(&etag)?),
-    ];
+    ]);
     let get = |name: &str| req_headers.get(name).map(|v| request_id::latin1(v.as_bytes()));
     let use_range = |if_range: &str| !if_range.starts_with("W/") && (if_range == last_modified || if_range == etag);
     let ranges = match get("range") {

@@ -1,0 +1,242 @@
+{
+ "classes": {
+  "adventurer": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/adventurer/revamp/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/basic_attack_bow",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/basic_attack_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/boomerang",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/boomerang_bow",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/boomerang_melee",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/passive_dummy",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/fairy_familiar",
+       "name": ""
+      }
+     ],
+     "costume": "skins/adventurer_lvl1",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl1[ylva]"
+     ]
+    },
+    {
+     "level": 3,
+     "abilities": [
+      {
+       "ref": "abilities/adventurer/revamp/bomb",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/bomb_bow",
+       "name": ""
+      },
+      {
+       "ref": "abilities/adventurer/revamp/bomb_melee",
+       "name": ""
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "abilities": [
+      {
+       "ref": "abilities/adventurer/revamp/random_throw",
+       "name": ""
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/adventurer_lvl2",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl2[ylva]"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/adventurer_lvl3",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl3[evilagician]"
+     ]
+    },
+    {
+     "level": 30,
+     "costume": "skins/adventurer_lvl4",
+     "styles": [
+      "bp:equipment_helm_adventurer_lvl4[ylva]"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": ""
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/adventurer",
+      "count": 1,
+      "name": ""
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  },
+  "bard": {
+   "levels": [
+    {
+     "level": 1,
+     "abilities": [
+      {
+       "ref": "abilities/bard/basic_attack",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/basic_attack_01",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/basic_attack_02",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/basic_attack_03",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/nimble_dance",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/passive",
+       "name": ""
+      }
+     ],
+     "costume": "skins/bard_lvl1",
+     "styles": [
+      "bp:equipment_helm_bard_lvl1"
+     ]
+    },
+    {
+     "level": 3,
+     "abilities": [
+      {
+       "ref": "abilities/bard/singing_crystal",
+       "name": ""
+      }
+     ]
+    },
+    {
+     "level": 5,
+     "abilities": [
+      {
+       "ref": "abilities/bard/ultimate_song",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/epic_riff",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/battle_song",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/jubilant_song",
+       "name": ""
+      },
+      {
+       "ref": "abilities/bard/peaceful_song",
+       "name": ""
+      }
+     ]
+    },
+    {
+     "level": 10,
+     "costume": "skins/bard_lvl2",
+     "styles": [
+      "bp:equipment_helm_bard_lvl2"
+     ]
+    },
+    {
+     "level": 20,
+     "costume": "skins/bard_lvl3",
+     "styles": [
+      "bp:equipment_helm_bard_lvl3"
+     ]
+    },
+    {
+     "level": 30,
+     "costume": "skins/bard_lvl4",
+     "styles": [
+      "bp:equipment_helm_bard_lvl4"
+     ]
+    }
+   ],
+   "paragon": {
+    "levels": 169,
+    "every": [
+     {
+      "ref": "item/currency/prestige/basic",
+      "count": 1,
+      "name": ""
+     },
+     {
+      "ref": "item/consumable/prestige_basic_level",
+      "count": 1,
+      "name": ""
+     }
+    ],
+    "prime": [
+     {
+      "ref": "item/currency/prestige/bard",
+      "count": 1,
+      "name": ""
+     },
+     {
+      "ref": "item/consumable/prestige_prime_level",
+      "count": 1,
+      "name": ""
+     }
+    ]
+   }
+  }
+ }
+}

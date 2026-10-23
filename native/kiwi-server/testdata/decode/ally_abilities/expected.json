@@ -1,0 +1,88 @@
+[
+    {
+        "slug": "ball_bee",
+        "name": "ball_bee",
+        "description": "",
+        "prefab": "collections/pet/ball_bee",
+        "stats": [
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 7.0,
+                "amount": 7.0
+            },
+            {
+                "name": "Flask Capacity",
+                "stat": "$Stat_MaxFlasks",
+                "op": "Add",
+                "value": 2.0,
+                "amount": 2.0
+            }
+        ],
+        "abilities": [],
+        "group": "Event Vault"
+    },
+    {
+        "slug": "ball_cat_calico",
+        "name": "ball_cat_calico",
+        "description": "",
+        "prefab": "collections/pet/ball_cat_calico",
+        "stats": [
+            {
+                "name": "Magic Find",
+                "stat": "$Stat_MagicFind",
+                "op": "Add",
+                "value": 50.0,
+                "amount": 50.0
+            },
+            {
+                "name": "Jump",
+                "stat": "$Stat_Jump",
+                "op": "Add",
+                "value": 9.0,
+                "amount": 9.0
+            },
+            {
+                "name": "Superstition",
+                "stat": "$Stat_Superstition",
+                "op": "Add",
+                "value": 7.0,
+                "amount": 7.0
+            }
+        ],
+        "abilities": [],
+        "group": "Streamer Dream 4"
+    },
+    {
+        "slug": "ball_snowbird",
+        "name": "ball_snowbird",
+        "description": "",
+        "prefab": "collections/pet/ball_snowbird",
+        "stats": [
+            {
+                "name": "Light",
+                "stat": "$Stat_Light",
+                "op": "Add",
+                "value": 450.0,
+                "amount": 450.0
+            },
+            {
+                "name": "Incoming Damage",
+                "stat": "$Stat_IncomingDamageMod",
+                "op": "Multiply",
+                "value": 8.0,
+                "amount": 0.92
+            },
+            {
+                "name": "Experience Boost Bonus",
+                "stat": "$Stat_ExperienceBoostBonus",
+                "op": "MultiplySum",
+                "value": 1.0,
+                "amount": 0.01
+            }
+        ],
+        "abilities": [],
+        "group": "Tiny Quests"
+    }
+]

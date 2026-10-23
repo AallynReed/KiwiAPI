@@ -1,0 +1,34 @@
+//! One module per `app/trove/decode/<name>.py` decoder.
+
+pub mod ally_abilities;
+pub mod badges;
+pub mod chat_commands;
+pub mod class_abilities;
+pub mod class_levels;
+pub mod class_rewards;
+pub mod collectibles;
+pub mod companions;
+pub mod cosmetics;
+pub mod daily_bonuses;
+pub mod delve_modifiers;
+pub mod fish;
+pub mod gear;
+pub mod gem_abilities;
+pub mod gem_upgrades;
+pub mod items;
+pub mod leaderboards;
+pub mod lootbox_odds;
+pub mod mastery;
+pub mod mementos;
+pub mod mount_abilities;
+pub mod npcs;
+pub mod placeables;
+pub mod pvp_powerups;
+pub mod pvp_stat_ranges;
+pub mod quests;
+pub mod recipes;
+pub mod ring_abilities;
+pub mod subclass_abilities;
+pub mod titles;
+pub mod upgrade_trees;
+pub mod worlds;

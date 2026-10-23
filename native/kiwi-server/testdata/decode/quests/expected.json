@@ -1,0 +1,2333 @@
+{
+    "limits": [
+        {
+            "type": "ClubMemberAdventure",
+            "active": 5,
+            "daily_rewards": 20
+        },
+        {
+            "type": "NPCAdventure",
+            "active": 3,
+            "daily_rewards": 20
+        },
+        {
+            "type": "GeodeNPCAdventure",
+            "active": 1,
+            "daily_rewards": 5
+        },
+        {
+            "type": "CrystallogyAdventure",
+            "active": 0
+        }
+    ],
+    "groups": [
+        {
+            "slug": "adventurecrystal-auto",
+            "name": "Adventurecrystal Auto",
+            "source": "adventurecrystal_auto",
+            "type": "RepeatableEvent",
+            "entries": [
+                {
+                    "slug": "adv_auto_24hour_keyfrag_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/delvekey_01_fragment"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 86400
+                },
+                {
+                    "slug": "adv_auto_24hour_ore_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/ore_cinnabar"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_rare"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_sky"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_uncommon"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_common"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_fire"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_ice"
+                            },
+                            {
+                                "prefab": "item/crafting/ancientgears"
+                            },
+                            {
+                                "prefab": "item/crafting/blazine"
+                            },
+                            {
+                                "prefab": "item/crafting/builderite"
+                            },
+                            {
+                                "prefab": "item/crafting/chronozine"
+                            },
+                            {
+                                "prefab": "item/crafting/everlight"
+                            },
+                            {
+                                "prefab": "item/crafting/geminite"
+                            },
+                            {
+                                "prefab": "item/crafting/gleamstone"
+                            },
+                            {
+                                "prefab": "item/crafting/lunarium"
+                            },
+                            {
+                                "prefab": "item/crafting/mightstone"
+                            },
+                            {
+                                "prefab": "item/crafting/moonstone"
+                            },
+                            {
+                                "prefab": "item/crafting/quirkstone"
+                            },
+                            {
+                                "prefab": "item/crafting/sparkzite"
+                            },
+                            {
+                                "prefab": "item/crafting/veridium"
+                            },
+                            {
+                                "prefab": "item/crafting/nitro_glitterine"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_gl_lower"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_gl_upper"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_lichen"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_rune"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_deep"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 86400
+                },
+                {
+                    "slug": "adv_auto_24hour_gemupgrades_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 30
+                        },
+                        "goal": 1
+                    },
+                    "time_limit": 86400
+                },
+                {
+                    "slug": "adv_auto_24hour_adventure_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "adventurecompleted",
+                        "goal": 1,
+                        "activity_types": [
+                            "ClubMemberAdventure",
+                            "ClubNonMemberAdventure",
+                            "NPCAdventure",
+                            "GeodeNPCAdventure",
+                            "CrystallogyAdventure"
+                        ]
+                    },
+                    "time_limit": 86400
+                },
+                {
+                    "slug": "adv_auto_24hour_challenge_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 43
+                        },
+                        "goal": 1
+                    },
+                    "time_limit": 86400
+                },
+                {
+                    "slug": "adv_auto_24hour_dungeons_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "goal": 1
+                    },
+                    "time_limit": 86400
+                },
+                {
+                    "slug": "adv_auto_24hour_magicfind_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 8
+                        },
+                        "goal": 1
+                    },
+                    "time_limit": 86400
+                }
+            ]
+        },
+        {
+            "slug": "adventurecrystal-auto-events",
+            "name": "Adventurecrystal Auto Events",
+            "source": "adventurecrystal_auto_events",
+            "type": "Event",
+            "entries": [
+                {
+                    "slug": "adv_auto_invite_bunfest_npcs",
+                    "name": "Invite Bunfest",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_sunfest_npcs",
+                    "name": "Invite Sunfest",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_shadoeve_npcs",
+                    "name": "Invite ShadoEve",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_duck_npcs",
+                    "name": "Invite Duck",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_snowfest_npcs",
+                    "name": "Invite Snowfest",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_heckbug_npcs",
+                    "name": "Invite Heckbug",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_rib_roast",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_icecream",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_patrol_pasta",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_egg_rolls",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_moonlight_juice",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_corned_beef",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_green_beans",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_corn_cob",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_deviled_eggs",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_tater_totes",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_side_stuffing",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_dinosaur_npcs",
+                    "name": "Invite Dinoboy NPCS",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_cowboy_npcs",
+                    "name": "Invite Dinoboy NPCS",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_ninja_npcs",
+                    "name": "Invite Dinoboy NPCS",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_pirate_npcs",
+                    "name": "Invite Dinoboy NPCS",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_fae_npcs",
+                    "name": "Invite Dinoboy NPCS",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_undead_npcs",
+                    "name": "Invite Dinoboy NPCS",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_pinzo_npcs",
+                    "name": "Invite Dinoboy NPCS",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_dinosly",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_sheriffsly",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                },
+                {
+                    "slug": "adv_auto_invite_stqubes",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    }
+                }
+            ]
+        },
+        {
+            "slug": "adventures",
+            "name": "Adventures",
+            "source": "adventures",
+            "type": "ClubMemberAdventure",
+            "entries": [
+                {
+                    "slug": "test_adventure",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/warpseed"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_medieval_highlands_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "highlands"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_permafrost_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "tundra"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_cursed_vale_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "undead"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_desert_frontier_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "frontier"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_fae_forest_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "fae"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_candoria_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "candy"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_neon_city_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "neon city"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_jurassic_jungle_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "Jurassic Jungle"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_dragonfire_peaks_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "dragon"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_forbidden_spires_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "Forbidden Spires"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_treasure_isles_short_dungeons_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "treasure_isles_flood",
+                                "Treasure Isles"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_hub_world_unique_BR_damage_win",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "objectivesetany",
+                        "match": "any",
+                        "objectives": [
+                            {
+                                "kind": "metric",
+                                "metric": {
+                                    "id": 85
+                                },
+                                "goal": 100000
+                            },
+                            {
+                                "kind": "metric",
+                                "metric": {
+                                    "id": 74
+                                },
+                                "goal": 1
+                            }
+                        ]
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_sea_of_regret_boot_unique_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 11
+                        },
+                        "goal": 25
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_sky_realm_unique_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "npcs": [
+                            {
+                                "prefab": "npc/giant_radiant"
+                            }
+                        ],
+                        "goal": 20
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_delves_unique_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 116
+                        },
+                        "goal": 3
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_drowned_world_unique_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/lootbox/gems/tier3_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier4_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier5_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier6_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier7_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier8_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier9_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier10_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier11_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier12_blue"
+                            }
+                        ],
+                        "goal": 25
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_cursed_skylands_unique_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/lootbox/gems/tier5_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier6_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier7_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier8_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier9_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier10_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier11_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier12_yellow"
+                            }
+                        ],
+                        "goal": 25
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_igneous_islands_unique_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/lootbox/gems/tier7_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier8_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier9_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier10_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier11_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier12_red"
+                            }
+                        ],
+                        "goal": 25
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_geode_surface_unique_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/lootbox/gems/tier8_opal"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier9_opal"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier10_opal"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier11_opal"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier12_opal"
+                            }
+                        ],
+                        "goal": 25
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_trove_world_unique_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/lootbox/chaoschest_notrade"
+                            },
+                            {
+                                "prefab": "item/lootbox/chaoschest_gold_notrade"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_ganda_wonder_unique_magicfind_new",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 8
+                        },
+                        "goal": 50
+                    },
+                    "time_limit": 64800
+                }
+            ]
+        },
+        {
+            "slug": "augustlp-daily-adventures",
+            "name": "Augustlp Daily Adventures",
+            "source": "augustlp_daily_adventures",
+            "type": "RepeatableEvent",
+            "entries": [
+                {
+                    "slug": "adv_daily_august2021_collect_stars",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/event_august2021_star"
+                            }
+                        ],
+                        "goal": 30
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                }
+            ]
+        },
+        {
+            "slug": "bomberroyale-daily-adventures",
+            "name": "Bomberroyale Daily Adventures",
+            "source": "bomberroyale_daily_adventures",
+            "type": "NPCAdventure",
+            "entries": [
+                {
+                    "slug": "adv_daily_bomberroyale_earn_coins",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/currency/coin_bomb_current"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                }
+            ]
+        },
+        {
+            "slug": "bunfest-daily-adventures",
+            "name": "Bunfest Daily Adventures",
+            "source": "bunfest_daily_adventures",
+            "type": "RepeatableEvent",
+            "entries": [
+                {
+                    "slug": "adv_daily_bunfest2021_egg",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "trigger",
+                        "triggers": [
+                            "bunfest_plant_pickup_trigger"
+                        ],
+                        "goal": 5
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_bunfest2021_dungeon",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "quests": [
+                            "quest_bunfest_kill_golem_bunfest",
+                            "quest_bunfest_kill_golem_eggman"
+                        ],
+                        "goal": 3
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_bunfest2021_donation",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "craftingcomplete",
+                        "recipes": [
+                            "recipe_item_consumable_donation_auto_2021"
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_bunfest2023_egghunt",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "quests": [
+                            "quest_spawn_bunfest_eggs"
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                }
+            ]
+        },
+        {
+            "slug": "cm-club-adventures",
+            "name": "CM Club Adventures",
+            "source": "cm_club_adventures",
+            "type": "NPCAdventure",
+            "entries": [
+                {
+                    "slug": "adv_daily_xmas_club_sock",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_xmas_club_gnome_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_xmas_club_elfsly_donate",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "craftingcomplete",
+                        "stations": [
+                            {
+                                "prefab": "placeable/crafting/events/2025/xmas_club_donations_interactive"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                }
+            ]
+        },
+        {
+            "slug": "crystallogy-adventures",
+            "name": "Crystallogy Adventures",
+            "source": "crystallogy_adventures",
+            "type": "CrystallogyAdventure",
+            "entries": [
+                {
+                    "slug": "adv_crystallogy_simple_01_boss_kills",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "goal": 10
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_simple_02_mine_flame",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 64
+                        },
+                        "goal": 70
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_simple_03_3star_complete",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 45
+                        },
+                        "goal": 3
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_simple_04_shapestone_mined",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 37
+                        },
+                        "goal": 400
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_simple_05_npc_kills",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "goal": 40
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_advanced_01_trove_ore_mined",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/ore_fire"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_uncommon"
+                            },
+                            {
+                                "prefab": "item/crafting/ore_rare"
+                            }
+                        ],
+                        "goal": 1600
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_advanced_02_cinnabar_acquired",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/ore_cinnabar"
+                            }
+                        ],
+                        "goal": 700
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_advanced_03_all_gemboxes_acquired",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/lootbox/gems/tier3_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier4_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier5_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier6_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier7_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier8_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier9_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier10_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier11_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier12_blue"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier5_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier6_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier7_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier8_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier9_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier10_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier11_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier12_yellow"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier7_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier8_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier9_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier10_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier11_red"
+                            },
+                            {
+                                "prefab": "item/lootbox/gems/tier12_red"
+                            }
+                        ],
+                        "goal": 20
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_crystallogy_advanced_04_boss_kills",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "goal": 30
+                    },
+                    "time_limit": 64800
+                }
+            ]
+        },
+        {
+            "slug": "depths-threads",
+            "name": "Depths Threads",
+            "source": "depths_threads",
+            "type": "Expertise",
+            "entries": [
+                {
+                    "slug": "depths_adventure_thread_prereq",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "requestworld",
+                        "world_type": "Adventure"
+                    }
+                },
+                {
+                    "slug": "depths_adventure_thread_00",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/depths/outpost_saltwater_sam"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_saltwatersam.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "goal": 200,
+                        "npc_tags": [
+                            "depths_gear"
+                        ]
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_saltwatersam.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_02",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/depths/outpost_ice_mage"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_03",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/chocolatealgae"
+                            },
+                            {
+                                "prefab": "item/crafting/cinnabark"
+                            },
+                            {
+                                "prefab": "item/crafting/coralair"
+                            },
+                            {
+                                "prefab": "item/crafting/coralfire"
+                            },
+                            {
+                                "prefab": "item/crafting/coralwater"
+                            },
+                            {
+                                "prefab": "item/crafting/coralcursed"
+                            },
+                            {
+                                "prefab": "item/crafting/deepcoolant"
+                            },
+                            {
+                                "prefab": "item/crafting/deepmana"
+                            },
+                            {
+                                "prefab": "item/crafting/deepmold"
+                            },
+                            {
+                                "prefab": "item/crafting/driedseaweed"
+                            },
+                            {
+                                "prefab": "item/crafting/frostlichen"
+                            },
+                            {
+                                "prefab": "item/crafting/irradiantrunefrag"
+                            },
+                            {
+                                "prefab": "item/crafting/pyriccore"
+                            },
+                            {
+                                "prefab": "item/crafting/coralpetrified"
+                            },
+                            {
+                                "prefab": "item/crafting/pyriteseashell"
+                            }
+                        ],
+                        "goal": 100
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_04",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "quests": [
+                            "quest_maxuber_fivestar_kraken",
+                            "quest_maxuber_fivestar_colosseum"
+                        ],
+                        "goal": 25
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_saltwatersam.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_05",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/depths/outpost_ice_mage"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_06",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "placeable/matchmaker/t2/depths"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_07",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/delve/workbench_caverns_depths_kraken_herald"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_08",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "craftingcomplete",
+                        "recipes": [
+                            "recipe_item_consumable_depths_herald_tribute"
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_09",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "npcs": [
+                            {
+                                "prefab": "effects/depths/dungeon_egg"
+                            }
+                        ],
+                        "goal": 200
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_saltwatersam.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_10",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "placeable/matchmaker/t2/depths_kraken"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_saltwatersam.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_11",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "quests": [
+                            "delve_boss_depths_kraken"
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_saltwatersam.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_12",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/depths/outpost_saltwater_sam"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_saltwatersam.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_13",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/depths/outpost_ice_mage"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_14",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/ore_lichen"
+                            }
+                        ],
+                        "goal": 250
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_15",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "craftingcomplete",
+                        "recipes": [
+                            "recipe_item_consumable_depths_fishfood_water_depths"
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_16",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "trigger",
+                        "triggers": [
+                            "fishfood_depths_trigger"
+                        ],
+                        "goal": 5
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                },
+                {
+                    "slug": "depths_adventure_thread_17",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/depths/outpost_ice_mage"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_freshwater_fran.dds"
+                }
+            ]
+        },
+        {
+            "slug": "elysian-initiation-daily-adventures",
+            "name": "Elysian Initiation Daily Adventures",
+            "source": "elysian_initiation_daily_adventures",
+            "type": "RepeatableEvent",
+            "entries": [
+                {
+                    "slug": "adv_daily_august2025_defeat_enemies",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "goal": 100
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true,
+                    "icon": "ui/npc_quest_icons/qubesly_shadowknight_questicon.dds"
+                },
+                {
+                    "slug": "adv_daily_august2025_delve",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "Delve Objective"
+                            ]
+                        },
+                        "goal": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true,
+                    "icon": "ui/npc_quest_icons/npc_quest_moon_acolyte.dds"
+                },
+                {
+                    "slug": "adv_daily_august2025_endurance",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 45
+                        },
+                        "goal": 10
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true,
+                    "icon": "ui/npc_quest_icons/npc_quest_rowan.dds"
+                }
+            ]
+        },
+        {
+            "slug": "event-daily-adventures",
+            "name": "Event Daily Adventures",
+            "source": "event_daily_adventures",
+            "type": "RepeatableEvent",
+            "entries": [
+                {
+                    "slug": "adv_daily_september2020_meta",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 10
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_september2021_fae",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 10
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_september2021_undead",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 10
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_october2021_get_duke",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 10
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_october2021_get_gnasher",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 10
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_october2021_get_butter",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 10
+                    },
+                    "time_limit": 64800
+                },
+                {
+                    "slug": "adv_daily_september2022_post_cowboy_signs",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "trigger",
+                        "triggers": [
+                            "post_signs_trigger_cowboy"
+                        ],
+                        "goal": 3
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_september2022_post_dino_signs",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "trigger",
+                        "triggers": [
+                            "post_signs_trigger_dino"
+                        ],
+                        "goal": 3
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_septemeber2022_defeat_jurassic_dungeons",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "Jurassic Jungle"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_septemeber2022_defeat_jurassic_enemies",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "goal": 50,
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "Jurassic Jungle"
+                            ]
+                        }
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_septemeber2022_defeat_frontier_dungeons",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "frontier"
+                            ]
+                        },
+                        "goal": 15
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_septemeber2022_defeat_frontier_enemies",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "goal": 50,
+                        "requirement": {
+                            "kind": "zonetag",
+                            "tags": [
+                                "frontier"
+                            ]
+                        }
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_july2023_defeat_cake_enemies",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "npcs": [
+                            {
+                                "prefab": "npc/events/2023/soulthief_cake_pineapple"
+                            },
+                            {
+                                "prefab": "npc/events/2023/soulthief_cake_carrot"
+                            },
+                            {
+                                "prefab": "npc/events/2023/crab_cake_strawberry"
+                            },
+                            {
+                                "prefab": "npc/events/2023/crab_cake_chocolate"
+                            },
+                            {
+                                "prefab": "npc/events/2023/biped_cake_bundt"
+                            },
+                            {
+                                "prefab": "npc/events/2023/biped_cake_icecream"
+                            },
+                            {
+                                "prefab": "npc/events/2023/mimic_cakeoven"
+                            },
+                            {
+                                "prefab": "npc/events/2023/punchbot_cake_sprinkles_boss"
+                            }
+                        ],
+                        "goal": 25
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_july2023_defeat_cake_dungeons",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "quests": [
+                            "quest_sunfest_kill_punchbot_cake_sprinkles"
+                        ],
+                        "goal": 10
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_july2023_defeat_sunfest_delves",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "npcs": [
+                            {
+                                "prefab": "npc/delve/boss/events/giant_chuck_pinzo"
+                            },
+                            {
+                                "prefab": "npc/delve/boss/events/triceratops_carys"
+                            },
+                            {
+                                "prefab": "npc/delve/boss/events/triceratops_panatea"
+                            },
+                            {
+                                "prefab": "npc/delve/boss/events/triceratops_tysorion"
+                            },
+                            {
+                                "prefab": "npc/delve/boss/events/boot_pinzo"
+                            }
+                        ],
+                        "goal": 3
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_july2026_clear_cake_dungeons",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "quest",
+                        "quests": [
+                            "quest_sunfest_kill_punchbot_cake_sprinkles"
+                        ],
+                        "goal": 15
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_july2026_synthesize_somber_soul",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "craftingcomplete",
+                        "recipes": [
+                            "recipe_event_july2026_adv_daily_carys_synthesize_soul"
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_july2026_kill_shadows",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "npckilled",
+                        "npcs": [
+                            {
+                                "prefab": "npc/events/2025/july_shadowy_invader"
+                            }
+                        ],
+                        "goal": 15
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                },
+                {
+                    "slug": "adv_daily_school_of_fish_homework",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "trigger",
+                        "triggers": [
+                            "school_fish_daily_trigger"
+                        ],
+                        "goal": 5
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true,
+                    "icon": "ui/npc_quest_icons/npc_quest_qubesly_graduate.dds"
+                }
+            ]
+        },
+        {
+            "slug": "expertise-fluxion",
+            "name": "Expertise Fluxion",
+            "source": "expertise_fluxion",
+            "type": "Expertise",
+            "thread": "expertise_fluxion",
+            "entries": [
+                {
+                    "slug": "expertise_fluxion_00_adventurecompleted",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "adventurecompleted",
+                        "adventures": [
+                            {
+                                "id": "golden_thread_22_quest"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "step": 1
+                },
+                {
+                    "slug": "expertise_fluxion_01",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 50
+                    },
+                    "step": 2
+                },
+                {
+                    "slug": "expertise_fluxion_02",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/biped_fluxion"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "step": 3
+                },
+                {
+                    "slug": "expertise_fluxion_03",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 131
+                        },
+                        "goal": 1
+                    },
+                    "step": 4
+                },
+                {
+                    "slug": "expertise_fluxion_04",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/crafting/dragoncoin"
+                            }
+                        ],
+                        "goal": 10
+                    },
+                    "step": 5
+                },
+                {
+                    "slug": "expertise_fluxion_05",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/biped_fluxion"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "step": 6
+                }
+            ]
+        },
+        {
+            "slug": "expertise-gearcrafting",
+            "name": "Expertise Gearcrafting",
+            "source": "expertise_gearcrafting",
+            "type": "Expertise",
+            "thread": "expertise_gearcrafting",
+            "entries": [
+                {
+                    "slug": "expertise_gearcrafting_goldenthread_adventurecompleted_req",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "adventurecompleted",
+                        "adventures": [
+                            {
+                                "id": "golden_thread_22_quest"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "step": 1
+                },
+                {
+                    "slug": "expertise_gearcrafting_00_interact",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/hub/merchant_gearcrafting"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "step": 2
+                },
+                {
+                    "slug": "expertise_gearcrafting_01_pureforged",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/hat"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/face"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_melee"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_pistol"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_staff"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_bow"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_spear"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_fist"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_gearcrafting.dds",
+                    "step": 3
+                },
+                {
+                    "slug": "expertise_gearcrafting_02_maxskill",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "professionrank",
+                        "rank": 250,
+                        "professions": [
+                            "Gearcrafting"
+                        ]
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_gearcrafting.dds",
+                    "step": 4
+                },
+                {
+                    "slug": "expertise_gearcrafting_03_interact_terminus",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "placeable/crafting/workbench_gearcrafting_progression_interactive"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_gearcrafting.dds",
+                    "step": 5
+                },
+                {
+                    "slug": "expertise_gearcrafting_04_pureforged",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/hat"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/face"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_melee"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_pistol"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_staff"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_bow"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_spear"
+                            },
+                            {
+                                "prefab": "item/consumable/gearcrafting/vault/weapon_fist"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_gearcrafting.dds",
+                    "step": 6
+                }
+            ]
+        },
+        {
+            "slug": "expertise-marketplace",
+            "name": "Expertise Marketplace",
+            "source": "expertise_marketplace",
+            "type": "Expertise",
+            "thread": "expertise_marketplace",
+            "entries": [
+                {
+                    "slug": "expertise_marketplace_00_adventurecompleted",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "adventurecompleted",
+                        "adventures": [
+                            {
+                                "id": "expertise_gems_45"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "step": 1
+                },
+                {
+                    "slug": "expertise_marketplace_01_mastery",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "mastery",
+                        "level": 20
+                    },
+                    "step": 2
+                },
+                {
+                    "slug": "expertise_marketplace_02_interact",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "interacted",
+                        "targets": [
+                            {
+                                "prefab": "npc/hub/market_scriptable_01"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_merchant.dds",
+                    "step": 3
+                },
+                {
+                    "slug": "expertise_marketplace_03_metric",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 20
+                        },
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_merchant.dds",
+                    "step": 4
+                },
+                {
+                    "slug": "expertise_marketplace_04_metric",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 19
+                        },
+                        "goal": 1
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_merchant.dds",
+                    "step": 5
+                },
+                {
+                    "slug": "expertise_marketplace_05_metric",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "metric",
+                        "metric": {
+                            "id": 19
+                        },
+                        "goal": 3
+                    },
+                    "icon": "ui/npc_quest_icons/npc_quest_merchant.dds",
+                    "step": 6
+                }
+            ]
+        },
+        {
+            "slug": "expertise-shadow-tower",
+            "name": "Expertise Shadow Tower",
+            "source": "expertise_shadow_tower",
+            "type": "Expertise",
+            "entries": [
+                {
+                    "slug": "event_top1_2017_00",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "classlevel",
+                        "level": 10
+                    }
+                }
+            ]
+        },
+        {
+            "slug": "expertise-test",
+            "name": "Expertise Test",
+            "source": "expertise_test",
+            "type": "Expertise",
+            "entries": [
+                {
+                    "slug": "test_1",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "classlevel",
+                        "level": 5
+                    }
+                },
+                {
+                    "slug": "test_3",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "classlevel",
+                        "level": 6
+                    }
+                },
+                {
+                    "slug": "test_7",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "objectivesetany",
+                        "match": "any",
+                        "objectives": [
+                            {
+                                "kind": "tomelevel",
+                                "goal": 1
+                            },
+                            {
+                                "kind": "jump",
+                                "goal": 1
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "slug": "pvp-daily-adventures",
+            "name": "PVP Daily Adventures",
+            "source": "pvp_daily_adventures",
+            "type": "NPCAdventure",
+            "entries": [
+                {
+                    "slug": "adv_daily_pvp_earn_coins",
+                    "name": "",
+                    "description": "",
+                    "objective": {
+                        "kind": "itemacquired",
+                        "items": [
+                            {
+                                "prefab": "item/currency/coin_pvp_current"
+                            }
+                        ],
+                        "goal": 1
+                    },
+                    "time_limit": 64800,
+                    "daily_reset": true
+                }
+            ]
+        }
+    ]
+}

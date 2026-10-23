@@ -1,0 +1,2741 @@
+[
+    {
+        "id": "emoji_happytears_mirror",
+        "name": "(\":"
+    },
+    {
+        "id": "emoji_smile_mirror",
+        "name": "(:"
+    },
+    {
+        "id": "emoji_cry_mirror",
+        "name": ")':"
+    },
+    {
+        "id": "emoji_angrytears_mirror",
+        "name": ")':<"
+    },
+    {
+        "id": "emoji_frown_mirror",
+        "name": "):"
+    },
+    {
+        "id": "emoji_angry_mirror",
+        "name": "):<"
+    },
+    {
+        "id": "lootbox_titles_asterisks",
+        "name": "*****"
+    },
+    {
+        "id": "lootbox_titles_chan_suffix",
+        "name": "-chan"
+    },
+    {
+        "id": "lootbox_titles_kun_suffix",
+        "name": "-kun"
+    },
+    {
+        "id": "lootbox_titles_sama_suffix",
+        "name": "-sama"
+    },
+    {
+        "id": "lootbox_titles_san_suffix",
+        "name": "-san"
+    },
+    {
+        "id": "lootbox_titles_5asterisk",
+        "name": "5*"
+    },
+    {
+        "id": "lootbox_titles_5star_prefix",
+        "name": "5-Star"
+    },
+    {
+        "id": "emoji_happytears",
+        "name": ":\")"
+    },
+    {
+        "id": "emoji_cry",
+        "name": ":'("
+    },
+    {
+        "id": "emoji_frown",
+        "name": ":("
+    },
+    {
+        "id": "emoji_smile",
+        "name": ":)"
+    },
+    {
+        "id": "emoji_annoyed",
+        "name": ":/"
+    },
+    {
+        "id": "emoji_cat",
+        "name": ":3"
+    },
+    {
+        "id": "emoji_tongue",
+        "name": ":P"
+    },
+    {
+        "id": "emoji_unamused",
+        "name": ":|"
+    },
+    {
+        "id": "metric_hearts_total_2",
+        "name": "<3",
+        "description": "Obtained for having sent 1,000+ Heart-a-Phones and having received 1,000+ Heart-a-Phones"
+    },
+    {
+        "id": "emoji_angrytears",
+        "name": ">:'("
+    },
+    {
+        "id": "emoji_angry",
+        "name": ">:("
+    },
+    {
+        "id": "developer",
+        "name": "[DEV]",
+        "description": "Trove Developer Privilege Level Required"
+    },
+    {
+        "id": "gamemaster",
+        "name": "[GM]",
+        "description": "Trove GameMaster Privilege Level Required"
+    },
+    {
+        "id": "emoji_annoyed_mirror",
+        "name": "\\:"
+    },
+    {
+        "id": "biome_isletreasure_admiral",
+        "name": "Admiral"
+    },
+    {
+        "id": "metric_itemsfished_1_prefix",
+        "name": "Angler"
+    },
+    {
+        "id": "biome_undead_arisen",
+        "name": "Arisen"
+    },
+    {
+        "id": "dragon_twoheads_lightdark",
+        "name": ", Arms of the Goddess",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Jhorondir, Arms of the Goddess."
+    },
+    {
+        "id": "events_aug2025_desc",
+        "name": "Awarded to Trovians who completed the Trials of the Elysian Initiation."
+    },
+    {
+        "id": "soccer_2026_10",
+        "name": "Ball Boy"
+    },
+    {
+        "id": "trovepoly_firstout",
+        "name": "Bankrupt",
+        "description": "First out in a Trovepoly game. Better luck next time!"
+    },
+    {
+        "id": "storepack_battle_prefix",
+        "name": "Battler"
+    },
+    {
+        "id": "events_sunfest_2024_beachlover",
+        "name": "Beach Lover"
+    },
+    {
+        "id": "storepack_costume_meta",
+        "name": ", Best-Dressed",
+        "description": "Obtained for owning the Blitz and Glitz, To the Nines, Shadow's Eve Pack, Glamorous Guises, Whimsical Wardrobe, and Excellent Ensemble store products"
+    },
+    {
+        "id": "metric_worldbosses_1",
+        "name": ", Big Game Hunter",
+        "description": "Obtained for having defeated 1000+ WORLD BOSS creatures"
+    },
+    {
+        "id": "entitlement_community_blocktasticbuilder_prefix",
+        "name": "Blocktastic Builder"
+    },
+    {
+        "id": "metric_boxes_2",
+        "name": "Box Master",
+        "description": "Obtained for having opened 200,000+ Lootboxes"
+    },
+    {
+        "id": "events_bunfest_2024_champion",
+        "name": ", Bunfest Champion"
+    },
+    {
+        "id": "soccer_2026_01",
+        "name": "Captain"
+    },
+    {
+        "id": "soccer_2026_05",
+        "name": "Center Back"
+    },
+    {
+        "id": "lootbox_titles_deepestchallengedelve_suffix",
+        "name": ", Challenge Delver ({0})"
+    },
+    {
+        "id": "metric_delve_challenge_2",
+        "name": "Challenger",
+        "description": "Obtained for having defeated depth 180+ in a Challenge Delve."
+    },
+    {
+        "id": "metric_delve_challenge_1",
+        "name": "Challenger of the Depths,",
+        "description": "Obtained for having defeated depth 150+ in a Challenge Delve."
+    },
+    {
+        "id": "metric_delve_public_1",
+        "name": ", Champion of the Depths",
+        "description": "Obtained for having defeated depth 150+ in a Public Delve."
+    },
+    {
+        "id": "lootbox_chaos_chaotic",
+        "name": "Chaotic"
+    },
+    {
+        "id": "lootbox_chaos_chaotic_evil",
+        "name": "Chaotic Evil"
+    },
+    {
+        "id": "lootbox_chaos_chaotic_good",
+        "name": "Chaotic Good"
+    },
+    {
+        "id": "lootbox_chaos_chaotic_neutral",
+        "name": "Chaotic Neutral"
+    },
+    {
+        "id": "dragon_starlight_03",
+        "name": ", Charter of the Constellations",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Stellaurion, Charter of the Constellations."
+    },
+    {
+        "id": "devgrant_cheesy",
+        "name": "Cheesy"
+    },
+    {
+        "id": "dragon_luxion_lands",
+        "name": ", Chief Venture Official",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Lord Primalux, Chief Venture Official."
+    },
+    {
+        "id": "events_bunfest_2024_chocoaddict",
+        "name": ", Chocolate Addict"
+    },
+    {
+        "id": "events_sunfest_2024_pinzosbestfriend",
+        "name": ", Chuck Pinzo's Best Friend"
+    },
+    {
+        "id": "events_sunfest_2024_pinzosworstenemy",
+        "name": ", Chuck Pinzo's Worst Enemy"
+    },
+    {
+        "id": "meta_class_classy",
+        "name": "Classy"
+    },
+    {
+        "id": "soccer_2026_12",
+        "name": "Coach"
+    },
+    {
+        "id": "storepack_collector_prefix",
+        "name": "Collector"
+    },
+    {
+        "id": "devgrant_communitymanager",
+        "name": "Community Manager"
+    },
+    {
+        "id": "devgrant_contentcreator",
+        "name": "Content Creator"
+    },
+    {
+        "id": "entitlement_community_craftycreator_prefix",
+        "name": "Crafty Creator"
+    },
+    {
+        "id": "storepack_creator_prefix",
+        "name": "Creator"
+    },
+    {
+        "id": "devgrant_customersupport",
+        "name": "Customer Support"
+    },
+    {
+        "id": "emoji_tongue_mirror",
+        "name": "d:"
+    },
+    {
+        "id": "meta_metalevel_500_dancerintheclouds",
+        "name": ", Dancer in the Clouds"
+    },
+    {
+        "id": "metric_delve_public_2",
+        "name": "Deep Delver",
+        "description": "Obtained for having defeated depth 180+ in a Public Delve."
+    },
+    {
+        "id": "soccer_2026_03",
+        "name": "Defender"
+    },
+    {
+        "id": "metric_delve_compound_1_prefix",
+        "name": "Delver"
+    },
+    {
+        "id": "biome_frontier_deputy",
+        "name": "Deputy"
+    },
+    {
+        "id": "lootbox_titles_detector_prefix",
+        "name": "Detector"
+    },
+    {
+        "id": "devgrant_developerhelper",
+        "name": "Developer Helper"
+    },
+    {
+        "id": "biome_neon_digital",
+        "name": "Digital"
+    },
+    {
+        "id": "dragon_amperium",
+        "name": ", Dissent’s Roar",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Rhom-10, Dissent\\u2019s Roar."
+    },
+    {
+        "id": "meta_metalevel_700_dragonmagrider",
+        "name": ", Dragon Magrider"
+    },
+    {
+        "id": "entitlement_community_dragonwhisperer_prefix",
+        "name": "Dragon Whisperer"
+    },
+    {
+        "id": "storepack_dragonhoard_dragonhoarder",
+        "name": "Dragonhoarder"
+    },
+    {
+        "id": "entitlement_community_dreamdancer_prefix",
+        "name": "Dream Dancer"
+    },
+    {
+        "id": "storepack_costume06",
+        "name": ", Dressed for Excellence",
+        "description": "Obtained for owning the Excellent Ensembles store product"
+    },
+    {
+        "id": "storepack_costume02",
+        "name": ", Dressed to the Nines",
+        "description": "Obtained for owning the To the Nines store product"
+    },
+    {
+        "id": "lootbox_titles_duck_bearer_prefix",
+        "name": "Duck Bearer"
+    },
+    {
+        "id": "lootbox_titles_duck_supporter_prefix",
+        "name": "Duck Supporter"
+    },
+    {
+        "id": "meta_alignment",
+        "name": "Dungeon Master",
+        "description": "Obtained for having all 9 Alignment titles"
+    },
+    {
+        "id": "metric_quests_2",
+        "name": "Dungeon Runner",
+        "description": "Obtained for defeating 10,000+ Dungeon Bosses or Skull Piles"
+    },
+    {
+        "id": "entitlement_community_edgyeggy_prefix",
+        "name": "Edgy Eggy"
+    },
+    {
+        "id": "events_bunfest_2024_egghunter",
+        "name": "Egg Hunter"
+    },
+    {
+        "id": "metric_companioneggsfound_1",
+        "name": "Egg Seeker",
+        "description": "Obtained for finding 1,000+ Geode Companion Eggs"
+    },
+    {
+        "id": "metric_companioneggsfound_2",
+        "name": "Eggxcited",
+        "description": "Obtained for defeating 3,000+ Geode Companion Eggs"
+    },
+    {
+        "id": "events_aug2025_elysianknight",
+        "name": "Elysian Knight"
+    },
+    {
+        "id": "events_bunfest_2024_enemyofeggland",
+        "name": ", Enemy of Eggland"
+    },
+    {
+        "id": "generic_chase_fabulous_prefix",
+        "name": "Fabulous"
+    },
+    {
+        "id": "entitlement_fallen_to_rise_again_suffix",
+        "name": ", Fallen to Rise Again"
+    },
+    {
+        "id": "generic_chase_fashionable",
+        "name": "Fashionable"
+    },
+    {
+        "id": "storepack_costume03",
+        "name": "Fashionista",
+        "description": "Obtained for owning the Shadow's Eve Pack store product"
+    },
+    {
+        "id": "lootbox_titles_finder_prefix",
+        "name": "Finder"
+    },
+    {
+        "id": "biome_isletreasure_firstmate",
+        "name": "First Mate"
+    },
+    {
+        "id": "dragon_goldblue",
+        "name": ", Flame of Enlightenment",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Inora, Flame of Enlightenment"
+    },
+    {
+        "id": "storepack_piratelord",
+        "name": "Fleet Admiral",
+        "description": "Obtained for owning the Pirate Pack store products"
+    },
+    {
+        "id": "expertise_fluxion",
+        "name": ", Fluxion Expert",
+        "description": "Obtained for completing the FLUXION EXPERTISE questline"
+    },
+    {
+        "id": "devgrant_friendofcheese",
+        "name": ", Friend of Cheese"
+    },
+    {
+        "id": "devgrant_friendofpan",
+        "name": ", Friend of Pan"
+    },
+    {
+        "id": "dragon_sol",
+        "name": ", Fringe of the Ever-Pyre",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Circumsolae, Fringe of the Ever-Pyr."
+    },
+    {
+        "id": "dragon_ice",
+        "name": ", Galenor's Pride",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Wyntegra, Galenor's Pride."
+    },
+    {
+        "id": "soccer_2026_02",
+        "name": "Goalkeeper"
+    },
+    {
+        "id": "events_sunfest_2024_grillmaster",
+        "name": "Grill Master"
+    },
+    {
+        "id": "generic_hatastic_04",
+        "name": "Hatastic Hat Having"
+    },
+    {
+        "id": "generic_hatastic_02",
+        "name": ", Haver of the Hatastic Hat"
+    },
+    {
+        "id": "metric_revives_1_prefix",
+        "name": "Healer"
+    },
+    {
+        "id": "dragon_gemred",
+        "name": ", Heart of the Flame",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Za'Hadeen, Heart of the Flame"
+    },
+    {
+        "id": "events_bunfest_2024_hopper",
+        "name": "Hopper"
+    },
+    {
+        "id": "dragon_constellations",
+        "name": ", Host of Starfire",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Almakhestia, Host of Starfire."
+    },
+    {
+        "id": "lootbox_titles_pvpbattleroyaleenemykills_suffix",
+        "name": ", Hunter of Trovians ({0})"
+    },
+    {
+        "id": "lootbox_titles_hydrochoerus_prefix",
+        "name": "Hydrochoerus"
+    },
+    {
+        "id": "lootbox_titles_hyper_weekly_prefix",
+        "name": "Hyper-"
+    },
+    {
+        "id": "lootbox_titles_invaderskilled_suffix",
+        "name": ", Invader Defense ({0})"
+    },
+    {
+        "id": "storepack_dinotamer",
+        "name": "Jurassic Wrangler",
+        "description": "Obtained for owning the Prehistoric Pack store products"
+    },
+    {
+        "id": "dragon_artdeco",
+        "name": ", Keeper of Histories",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Aurym, Keeper of Histories."
+    },
+    {
+        "id": "meta_metalevel_300_king",
+        "name": "King"
+    },
+    {
+        "id": "dragon_mastery_03",
+        "name": ", King of Dragons",
+        "male": ", King of Dragons",
+        "female": ", Queen of Dragons",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Valkizer, King of Dragons."
+    },
+    {
+        "id": "meta_metalevel_300_kingofdragons",
+        "name": ", King of Dragons"
+    },
+    {
+        "id": "events_aug2025_knightofelysia",
+        "name": ", Knight of Elysia"
+    },
+    {
+        "id": "biome_highlands_lady",
+        "name": "Lady"
+    },
+    {
+        "id": "store_lawful_evil",
+        "name": "Lawful Evil"
+    },
+    {
+        "id": "store_lawful_good",
+        "name": "Lawful Good"
+    },
+    {
+        "id": "store_lawful_neutral",
+        "name": "Lawful Neutral"
+    },
+    {
+        "id": "biome_highlands_lord",
+        "name": "Lord"
+    },
+    {
+        "id": "metric_hearts_total_1",
+        "name": "Lovely",
+        "description": "Obtained for having sent 100+ Heart-a-Phones and having received 100+ Heart-a-Phones"
+    },
+    {
+        "id": "events_stqubeslick_2024_lucky",
+        "name": "Lucky"
+    },
+    {
+        "id": "dragon_resistor",
+        "name": ", Luminary of Hope",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Hoshizora, Luminary of Hope"
+    },
+    {
+        "id": "lootbox_titles_incrementor_alltime_suffix",
+        "name": ", M.N.G.U. GOAT: {0}"
+    },
+    {
+        "id": "events_stqubeslick_2024_madam",
+        "name": "Madam"
+    },
+    {
+        "id": "metric_marketplace_usage",
+        "name": "Market Maker",
+        "description": "Obtained for having 20,000+ MARKETPLACE PURCHASES and 20,000+ MARKETPLACE SALES"
+    },
+    {
+        "id": "expertise_marketplace",
+        "name": ", Marketplace Expert",
+        "description": "Obtained for completing the MARKETPLACE EXPERTISE questline"
+    },
+    {
+        "id": "meta_martialarts",
+        "name": ", Martial Arts Master",
+        "description": "Obtained for reaching 200 skill in Martial Arts"
+    },
+    {
+        "id": "meta_metalevel_500_master",
+        "name": "Master"
+    },
+    {
+        "id": "metric_crystallogy",
+        "name": ", Master Crystallogist",
+        "description": "Obtained for reaching 300 skill in Crystallogy"
+    },
+    {
+        "id": "metric_gardening",
+        "name": ", Master Gardener",
+        "description": "Obtained for reaching 300 skill in Gardening"
+    },
+    {
+        "id": "entitlement_dungeonmaster_suffix",
+        "name": ", Master of Dungeons"
+    },
+    {
+        "id": "meta_mysticism",
+        "name": ", Master of the Mystic Arts",
+        "description": "Obtained for reaching 200 skill in Mysticism"
+    },
+    {
+        "id": "metric_ringcrafting",
+        "name": ", Master Ring Crafter",
+        "description": "Obtained for reaching 300 skill in Ring Crafting"
+    },
+    {
+        "id": "metric_runecrafting",
+        "name": ", Master Rune Crafter",
+        "description": "Obtained for reaching 250 skill in Rune Crafting"
+    },
+    {
+        "id": "biome_isletreasure_mate",
+        "name": "Mate"
+    },
+    {
+        "id": "biome_isletreasure_matey",
+        "name": "Matey"
+    },
+    {
+        "id": "lootbox_titles_mecha_weekly_prefix",
+        "name": "Mecha-"
+    },
+    {
+        "id": "metric_revives_2_prefix",
+        "name": "Medic"
+    },
+    {
+        "id": "lootbox_titles_mega_weekly_prefix",
+        "name": "Mega-"
+    },
+    {
+        "id": "storepack_mengerie",
+        "name": "Menagerist"
+    },
+    {
+        "id": "events_october_2024_meow_suffix",
+        "name": ", meow!"
+    },
+    {
+        "id": "events_october_2024_meow_prefix",
+        "name": "Meow,"
+    },
+    {
+        "id": "soccer_2026_04",
+        "name": "Midfielder"
+    },
+    {
+        "id": "lootbox_mining_miner_prefix",
+        "name": "Miner"
+    },
+    {
+        "id": "meta_metalevel_500_mistress",
+        "name": "Mistress"
+    },
+    {
+        "id": "devgrant_moderator",
+        "name": "Moderator"
+    },
+    {
+        "id": "biome_dragon_molten",
+        "name": "Molten"
+    },
+    {
+        "id": "meta_metalevel_200_monarch",
+        "name": "Monarch"
+    },
+    {
+        "id": "trovepoly_winner",
+        "name": "Monopolist",
+        "description": "Winner of a Trovepoly game!"
+    },
+    {
+        "id": "generic_mr",
+        "name": "Mr."
+    },
+    {
+        "id": "generic_mrs",
+        "name": "Mrs."
+    },
+    {
+        "id": "generic_ms",
+        "name": "Ms."
+    },
+    {
+        "id": "storepack_bard_any",
+        "name": "Musical Warrior",
+        "description": "Obtained for owning the Bard Pack or Super Bard Pack store products"
+    },
+    {
+        "id": "generic_mx",
+        "name": "Mx."
+    },
+    {
+        "id": "dragon_flora",
+        "name": ", Nature's Beckoning",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Petallura, Nature's Beckoning"
+    },
+    {
+        "id": "store_neutral_evil",
+        "name": "Neutral Evil"
+    },
+    {
+        "id": "store_neutral_good",
+        "name": "Neutral Good"
+    },
+    {
+        "id": "manual_numbercruncher",
+        "name": "Number Cruncher",
+        "description": "Personal title of our favorite community data-scientist: Sly"
+    },
+    {
+        "id": "events_stqubeslick_2024_olucky",
+        "name": "O'Lucky"
+    },
+    {
+        "id": "dragon_pumpkin",
+        "name": "o-Lantern",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Drak-o-Lantern."
+    },
+    {
+        "id": "events_september2026_tastemaker_desc",
+        "name": "Obtained during the 'Great Grape Debate' event."
+    },
+    {
+        "id": "events_capybara_ybarra_desc",
+        "name": "Obtained during the 'Marquitillo Missing' event."
+    },
+    {
+        "id": "events_bunfest_2024_champion_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_chocoaddict_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_eggcentric_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_egghunter_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_enemyofeggland_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_hopper_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_knightly_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_ser_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_theegghunter_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_bunfest_2024_thehoppy_desc",
+        "name": "Obtained during the Bunfest 2024 Event."
+    },
+    {
+        "id": "events_october_2024_desc",
+        "name": "Obtained during the October 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_lucky_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_madam_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_olucky_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_saint_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_sir_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_thegreen_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_theunlucky_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_stqubeslick_2024_unlucky_desc",
+        "name": "Obtained during the St. Qubeslick 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_beachlover_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_grillmaster_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_housecarys_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_housepanatea_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_housetysorion_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_patissier_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_pinzosbestfriend_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_pinzosworstenemy_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_sandcastleguard_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_sandcastleking_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_serialcakedevourer_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_surfinglegend_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_tfnpeddler_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "events_sunfest_2024_thesandcovered_desc",
+        "name": "Obtained during the Sunfest 2024 Event."
+    },
+    {
+        "id": "lootbox_titles_generic",
+        "name": "Obtained from the Terrific Title Trove"
+    },
+    {
+        "id": "lootbox_titles_generic_hour",
+        "name": "Obtained from the Terrific Title Trove\nLasts for one hour"
+    },
+    {
+        "id": "lootbox_titles_generic_weekly",
+        "name": "Obtained from the Terrific Title Trove\nLasts for the duration of the current week"
+    },
+    {
+        "id": "lootbox_chaos_generic",
+        "name": "Obtained rarely from Chaos Chests"
+    },
+    {
+        "id": "lootbox_crystal_generic",
+        "name": "Obtained rarely from Greater Crystal Caches"
+    },
+    {
+        "id": "lootbox_dragon_generic",
+        "name": "Obtained rarely from Greater Dragon Caches"
+    },
+    {
+        "id": "lootbox_geodian_generic",
+        "name": "Obtained rarely from Greater Geodian Topside Caches"
+    },
+    {
+        "id": "lootbox_wonder_generic",
+        "name": "Obtained rarely from Toves of Wonder"
+    },
+    {
+        "id": "collection_mount_raptor_birdkamiyg",
+        "name": "of Calm Conviction",
+        "description": "Obtained for having Kami of Calm Conviction unlocked"
+    },
+    {
+        "id": "events_sunfest_2024_housecarys",
+        "name": " of House Carys"
+    },
+    {
+        "id": "events_sunfest_2024_housepanatea",
+        "name": " of House Panatea"
+    },
+    {
+        "id": "events_sunfest_2024_housetysorion",
+        "name": " of House Tysorion"
+    },
+    {
+        "id": "meta_metalevel_400_lucielle",
+        "name": "of Lucielle"
+    },
+    {
+        "id": "biome_spires_ancientempire",
+        "name": "of the Ancient Empire"
+    },
+    {
+        "id": "metric_delve_private_2",
+        "name": "of the Deep",
+        "description": "Obtained for having defeated depth 180+ in a Private Delve."
+    },
+    {
+        "id": "storepack_dragonhoard_ofthedragonshoard",
+        "name": "of the Dragon's Hoard"
+    },
+    {
+        "id": "dragonbug_beecat",
+        "name": "of the Honeybreeze",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Yzzuli of the Honeybreeze."
+    },
+    {
+        "id": "dragon_moontouched",
+        "name": "of the Moonlight Menace",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Spirit of the Moonlight Menace."
+    },
+    {
+        "id": "collection_mount_raptor_birdice",
+        "name": "of the North Wind",
+        "description": "Obtained for having Illuri of the North Wind unlocked"
+    },
+    {
+        "id": "entitlement_voucher_ofthepack_suffix",
+        "name": "of the Pack"
+    },
+    {
+        "id": "metric_itemsfished_3_suffix",
+        "name": "of the Sea"
+    },
+    {
+        "id": "dog_dracorgi_red",
+        "name": "of the Western Peaks",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Tanbleddyn of the Western Peaks"
+    },
+    {
+        "id": "meta_zodiac",
+        "name": "of the Zodiac"
+    },
+    {
+        "id": "zodiac_meta",
+        "name": "of the Zodiac"
+    },
+    {
+        "id": "lootbox_titles_ofyore_suffix",
+        "name": "of Yore"
+    },
+    {
+        "id": "metric_itemsfished_3_prefix",
+        "name": "Old Trovian",
+        "male": "Old Man",
+        "female": "Old Woman"
+    },
+    {
+        "id": "lootbox_titles_omni_weekly_prefix",
+        "name": "Omni-"
+    },
+    {
+        "id": "lootbox_mining_oredigger",
+        "name": "Ore-digger"
+    },
+    {
+        "id": "lootbox_titles_owo",
+        "name": "OWO"
+    },
+    {
+        "id": "lootbox_titles_paragon_levels_suffix",
+        "name": ", Paragon of Paragons ({0})"
+    },
+    {
+        "id": "metric_pinatasthrown_2",
+        "name": "Partybringer",
+        "description": "Obtained for having thrown 20,000+ Pinatas"
+    },
+    {
+        "id": "metric_pinatasthrown_3",
+        "name": "Partygod",
+        "description": "Obtained for having thrown 50,000+ Pinatas"
+    },
+    {
+        "id": "events_sunfest_2024_patissier",
+        "name": "Patissier"
+    },
+    {
+        "id": "meta_patron_prefix",
+        "name": "Patron"
+    },
+    {
+        "id": "dragon_toyblock",
+        "name": ", Patron of Playfulness",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Ludini, Patron of Playfulness"
+    },
+    {
+        "id": "meta_patron_autumn",
+        "name": ", Patron Saint of Autumn",
+        "description": "Obtained by having active Patron status in Autumn"
+    },
+    {
+        "id": "meta_patron_spring",
+        "name": ", Patron Saint of Spring",
+        "description": "Obtained by having active Patron status in Spring"
+    },
+    {
+        "id": "meta_patron_summer",
+        "name": ", Patron Saint of Summer",
+        "description": "Obtained by having active Patron status in Summer"
+    },
+    {
+        "id": "meta_patron_winter",
+        "name": ", Patron Saint of Winter",
+        "description": "Obtained by having active Patron status in Winter"
+    },
+    {
+        "id": "entitlement_community_penguin_king_suffix",
+        "name": ", Penguin King"
+    },
+    {
+        "id": "entitlement_partner_10_year_birthday_prefix",
+        "name": "Phoenixborne"
+    },
+    {
+        "id": "soccer_2026_08",
+        "name": "Playmaker"
+    },
+    {
+        "id": "class_bard_prime_primal",
+        "name": "Primal Bard"
+    },
+    {
+        "id": "class_adventurer_prime_primal",
+        "name": "Primal Boomeranger"
+    },
+    {
+        "id": "class_candybarbarian_prime_primal",
+        "name": "Primal Candy Barbarian"
+    },
+    {
+        "id": "class_chloromancer_prime_primal",
+        "name": "Primal Chloromancer"
+    },
+    {
+        "id": "class_dinotamer_prime_primal",
+        "name": "Primal Dino Tamer"
+    },
+    {
+        "id": "class_dracolyte_prime_primal",
+        "name": "Primal Dracolyte"
+    },
+    {
+        "id": "class_faetrickster_prime_primal",
+        "name": "Primal Fae Trickster"
+    },
+    {
+        "id": "class_gunslinger_prime_primal",
+        "name": "Primal Gunslinger"
+    },
+    {
+        "id": "class_icemage_prime_primal",
+        "name": "Primal Ice Sage"
+    },
+    {
+        "id": "class_knight_prime_primal",
+        "name": "Primal Knight"
+    },
+    {
+        "id": "class_lunarlancer_prime_primal",
+        "name": "Primal Lunar Lancer"
+    },
+    {
+        "id": "class_neonninja_prime_primal",
+        "name": "Primal Neon Ninja"
+    },
+    {
+        "id": "class_piratelord_prime_primal",
+        "name": "Primal Pirate Captain"
+    },
+    {
+        "id": "class_spirittank_prime_primal",
+        "name": "Primal Revenant"
+    },
+    {
+        "id": "class_shadowhunter_prime_primal",
+        "name": "Primal Shadow Hunter"
+    },
+    {
+        "id": "class_solarion_prime_primal",
+        "name": "Primal Solarion"
+    },
+    {
+        "id": "class_tombraiser_prime_primal",
+        "name": "Primal Tomb Raiser"
+    },
+    {
+        "id": "class_crimefighter_prime_primal",
+        "name": "Primal Vanguardian"
+    },
+    {
+        "id": "dragon_winter_2015_03",
+        "name": ", Primarch of Permafrost",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Galenor, Primarch of Permafrost."
+    },
+    {
+        "id": "expertise_prestige",
+        "name": "Primary Paragon",
+        "description": "Obtained for completing the PARAGON EXPERTISE questline"
+    },
+    {
+        "id": "biome_dinosaur_primitive",
+        "name": "Primitive"
+    },
+    {
+        "id": "lootbox_titles_deepestprivatedelve_suffix",
+        "name": ", Private Delver ({0})"
+    },
+    {
+        "id": "dragon_gemopal",
+        "name": ", Progenitor of the Cosmos",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Taeryn Veernok, Progenitor of the Cosmos."
+    },
+    {
+        "id": "devgrant_ptshero",
+        "name": "PTS Hero"
+    },
+    {
+        "id": "lootbox_titles_deepestpublicdelve_suffix",
+        "name": ", Public Delver ({0})"
+    },
+    {
+        "id": "lootbox_chaos_pure_chaotic",
+        "name": "Pure Chaotic"
+    },
+    {
+        "id": "meta_metalevel_300_queen",
+        "name": "Queen"
+    },
+    {
+        "id": "metric_deaths_1",
+        "name": ", R.I.P.",
+        "description": "Obtained for having died 666+ Times"
+    },
+    {
+        "id": "soccer_2026_11",
+        "name": "Referee"
+    },
+    {
+        "id": "lootbox_titles_rescuer_prefix",
+        "name": "Rescuer"
+    },
+    {
+        "id": "lootbox_titles_deaths_suffix",
+        "name": ", Resting in Peace ({0})"
+    },
+    {
+        "id": "dragonserpent_capricorn",
+        "name": ", Risen from the Depths",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Capricorn, Risen from the Depths."
+    },
+    {
+        "id": "dragon_newyearblue",
+        "name": ", Sage of the Eastern Ranges",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Shaoran, Sage of the Eastern Ranges."
+    },
+    {
+        "id": "biome_isletreasure_sailor",
+        "name": "Sailor"
+    },
+    {
+        "id": "events_stqubeslick_2024_saint",
+        "name": "Saint"
+    },
+    {
+        "id": "biome_isletreasure_salty",
+        "name": "Salty"
+    },
+    {
+        "id": "events_sunfest_2024_sandcastleguard",
+        "name": "Sandcastle Guard"
+    },
+    {
+        "id": "events_sunfest_2024_sandcastleking",
+        "name": "Sandcastle King"
+    },
+    {
+        "id": "dragon_flux_03",
+        "name": ", Scion of the Hoard",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Luxarion, Scion of the Hoard."
+    },
+    {
+        "id": "dragon_infineon",
+        "name": ", Scourge of the Everdark",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Erimatra, Scourge of the Everdark."
+    },
+    {
+        "id": "lootbox_titles_seacher_prefix",
+        "name": "Searcher"
+    },
+    {
+        "id": "lootbox_titles_seeker_prefix",
+        "name": "Seeker"
+    },
+    {
+        "id": "devgrant_seniormoderator",
+        "name": "Senior Moderator"
+    },
+    {
+        "id": "events_bunfest_2024_ser",
+        "name": "Ser"
+    },
+    {
+        "id": "dragon_bird",
+        "name": ", Seraph of the Golden Vale",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Carys, Seraph of the Golden Vale"
+    },
+    {
+        "id": "events_sunfest_2024_serialcakedevourer",
+        "name": "Serial Cake Devourer"
+    },
+    {
+        "id": "dragon_deepsea",
+        "name": ", Shaper of the Currents",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Thallasion, Shaper of the Currents."
+    },
+    {
+        "id": "biome_frontier_sheriff",
+        "name": "Sheriff"
+    },
+    {
+        "id": "events_stqubeslick_2024_sir",
+        "name": "Sir"
+    },
+    {
+        "id": "lootbox_titles_enemy_kills_suffix",
+        "name": ", Slayer ({0})"
+    },
+    {
+        "id": "storepack_solarion_any",
+        "name": "Solar Archer",
+        "description": "Obtained for owning the Solarion Spark Pack, Solarion Ember Pack, or Solarion Flare Pack store products"
+    },
+    {
+        "id": "dragon_gemblue",
+        "name": ", Soul of the Sea",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Palashien, Soul of the Sea."
+    },
+    {
+        "id": "dragon_shpurple",
+        "name": ", Sower of the Sandsea",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Phyconidia, Sower of the Sandsea."
+    },
+    {
+        "id": "dragon_gemyellow",
+        "name": ", Spark of the Sky",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Scintilla, Spark of the Sky."
+    },
+    {
+        "id": "lootbox_titles_spotter_prefix",
+        "name": "Spotter"
+    },
+    {
+        "id": "entitlement_community_stardustcollector_prefix",
+        "name": "Stardust Collector"
+    },
+    {
+        "id": "lootbox_titles_starry_eyed_prefix",
+        "name": "Starry-Eyed"
+    },
+    {
+        "id": "dragon_pinatatrove",
+        "name": ", Steward of New Beginnings",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Tysorion, Steward of New Beginnings"
+    },
+    {
+        "id": "school_fish_01",
+        "name": "Straight-A Angler",
+        "description": "Given to those who cleared the fishing pools of every last educated fish."
+    },
+    {
+        "id": "soccer_2026_06",
+        "name": "Striker"
+    },
+    {
+        "id": "soccer_2026_09",
+        "name": "Substitute"
+    },
+    {
+        "id": "storepack_vanguardian_any_superhero",
+        "name": "Super Hero"
+    },
+    {
+        "id": "events_sunfest_2024_surfinglegend",
+        "name": ", Surfing Legend"
+    },
+    {
+        "id": "biome_candy_sweettooth",
+        "name": "Sweet-Tooth"
+    },
+    {
+        "id": "events_september2026_tastemaker",
+        "name": "Tastemaker"
+    },
+    {
+        "id": "devgrant_teamgamigo",
+        "name": "Team gamigo"
+    },
+    {
+        "id": "devgrant_teamtrove",
+        "name": "Team Trove"
+    },
+    {
+        "id": "events_sunfest_2024_tfnpeddler",
+        "name": "TFN Peddler"
+    },
+    {
+        "id": "dragon_beard_03",
+        "name": "the Ancient",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Trimach the Ancient."
+    },
+    {
+        "id": "metric_itemsfished_1_suffix",
+        "name": "the Angler"
+    },
+    {
+        "id": "lootbox_titles_anxious_suffix",
+        "name": "the Anxious"
+    },
+    {
+        "id": "zodiac_aquarius",
+        "name": "the Aquarius"
+    },
+    {
+        "id": "dragon_aquarus",
+        "name": ", the Aquarius Lord",
+        "male": ", the Aquarius Lord",
+        "female": ", the Aquarius Lady",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Aquarus, the Aquarius Lord."
+    },
+    {
+        "id": "dragon_jet",
+        "name": ", the Arc Tempest",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Xendri, the Arc Tempest."
+    },
+    {
+        "id": "zodiac_aries",
+        "name": "the Aries"
+    },
+    {
+        "id": "dragon_stainedglass",
+        "name": ", The Ashen Reborn",
+        "description": ", The Ashen Reborn"
+    },
+    {
+        "id": "entitlement_community_sept2024_down_suffix",
+        "name": ", the Ashen Reclaimer"
+    },
+    {
+        "id": "biome_giantlands_ashfallen",
+        "name": "the Ashfallen"
+    },
+    {
+        "id": "metric_magicfindtriggers_3",
+        "name": "the Auspicious",
+        "description": "Obtained after triggering MAGIC FIND for your 77,777th time"
+    },
+    {
+        "id": "lootbox_titles_aware_suffix",
+        "name": "the Aware"
+    },
+    {
+        "id": "lootbox_titles_awesome_suffix",
+        "name": "the Awesome"
+    },
+    {
+        "id": "lootbox_titles_balanced_suffix",
+        "name": "the Balanced"
+    },
+    {
+        "id": "class_bard_30",
+        "name": "the Bard"
+    },
+    {
+        "id": "storepack_battle_suffix",
+        "name": "the Battler"
+    },
+    {
+        "id": "lootbox_titles_beautiful_suffix",
+        "name": "the Beautiful"
+    },
+    {
+        "id": "lootbox_titles_maxconsecutivedaysloggedin_suffix",
+        "name": ", the Been-Around ({0})"
+    },
+    {
+        "id": "metric_deaths_3",
+        "name": ", the Bereft of Life",
+        "description": "Obtained for having died 1014+ Times"
+    },
+    {
+        "id": "biome_neon_binary",
+        "name": "the Binary"
+    },
+    {
+        "id": "metric_blocksdestroyed_1",
+        "name": "the Block Destroyer",
+        "description": "Obtained for destroying 2,000,000 blocks"
+    },
+    {
+        "id": "metric_blocksdestroyed_2",
+        "name": "the Block Stopper",
+        "description": "Obtained for destroying 10,000,000 blocks"
+    },
+    {
+        "id": "metric_blocksdestroyed_3",
+        "name": "the Blockinator",
+        "description": "Obtained for destroying 15,000,000 blocks"
+    },
+    {
+        "id": "lootbox_titles_blocky_suffix",
+        "name": "the Blocky"
+    },
+    {
+        "id": "dragon_oldblue_03",
+        "name": "the Blue",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Azorian the Blue."
+    },
+    {
+        "id": "storepack_adventurer",
+        "name": "the Bombastic",
+        "description": "Obtained for owning the Adventure Pack store products"
+    },
+    {
+        "id": "lootbox_titles_boomer_suffix",
+        "name": "the Boomer"
+    },
+    {
+        "id": "class_adventurer_30",
+        "name": "the Boomeranger"
+    },
+    {
+        "id": "lootbox_titles_brilliant_suffix",
+        "name": "the Brilliant"
+    },
+    {
+        "id": "metric_deaths_6",
+        "name": ", the Bucket Kicker",
+        "description": "Obtained for having died 1017+ Times"
+    },
+    {
+        "id": "metric_marketplacepurchases",
+        "name": "the Buyer",
+        "description": "Obtained for making 10,000 MARKETPLACE PURCHASES"
+    },
+    {
+        "id": "zodiac_cancer",
+        "name": "the Cancer"
+    },
+    {
+        "id": "class_candybarbarian_30",
+        "name": "the Candy Barbarian"
+    },
+    {
+        "id": "zodiac_capricorn",
+        "name": "the Capricorn"
+    },
+    {
+        "id": "lootbox_titles_capyfriend_suffix",
+        "name": "the Capyfriend"
+    },
+    {
+        "id": "lootbox_titles_capykin_suffix",
+        "name": "the Capykin"
+    },
+    {
+        "id": "lootbox_titles_caring_suffix",
+        "name": "the Caring"
+    },
+    {
+        "id": "events_october_2024_catdaddy_suffix",
+        "name": ", the Cat Daddy"
+    },
+    {
+        "id": "events_october_2024_catmom_suffix",
+        "name": ", the Cat Mom"
+    },
+    {
+        "id": "events_october_2024_catperson_suffix",
+        "name": ", the Cat Person"
+    },
+    {
+        "id": "dragon_newyear",
+        "name": "the Celestial Storm",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Selene the Celestial Storm."
+    },
+    {
+        "id": "dragon_chaos",
+        "name": "the Chaos Dragon",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Charl the Chaos Dragon."
+    },
+    {
+        "id": "lootbox_titles_cheeky_suffix",
+        "name": "the Cheeky"
+    },
+    {
+        "id": "meta_emoji_chiral",
+        "name": "the Chiral"
+    },
+    {
+        "id": "class_chloromancer_30",
+        "name": "the Chloromancer"
+    },
+    {
+        "id": "biome_candy_chocoholic",
+        "name": "the Chocoholic"
+    },
+    {
+        "id": "meta_class_classclown",
+        "name": "the Class Clown"
+    },
+    {
+        "id": "meta_class_theclassy",
+        "name": "the Classy"
+    },
+    {
+        "id": "biome_tundra_coldhearted",
+        "name": "the Cold-Hearted"
+    },
+    {
+        "id": "storepack_collector_suffix",
+        "name": "the Collector"
+    },
+    {
+        "id": "lootbox_titles_consistent_suffix",
+        "name": "the Consistent"
+    },
+    {
+        "id": "lootbox_titles_coward_suffix",
+        "name": "the Coward"
+    },
+    {
+        "id": "events_october_2024_catguy_suffix",
+        "name": ", the Crazy Cat Guy"
+    },
+    {
+        "id": "events_october_2024_catlady_suffix",
+        "name": ", the Crazy Cat Lady"
+    },
+    {
+        "id": "storepack_creator_suffix",
+        "name": "the Creator"
+    },
+    {
+        "id": "dragon_mechshadow",
+        "name": ", The Crucible of Souls",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Crisopeia, The Crucible of Souls."
+    },
+    {
+        "id": "meta_gearcrafting",
+        "name": ", the Crystal Shaper",
+        "description": "Obtained for reaching 250 skill in Gearcrafting"
+    },
+    {
+        "id": "storepack_cultivated",
+        "name": "the Cultivator",
+        "description": "Obtained for owning the Cultivated Collection Pack store product"
+    },
+    {
+        "id": "biome_undead_cursebreaker",
+        "name": "the Cursebreaker"
+    },
+    {
+        "id": "lootbox_titles_daredevil_suffix",
+        "name": "the Daredevil"
+    },
+    {
+        "id": "lootbox_titles_daysloggedin_suffix",
+        "name": ", the Day-Counter ({0})"
+    },
+    {
+        "id": "metric_deaths_4",
+        "name": ", the Dead",
+        "description": "Obtained for having died 1015+ Times"
+    },
+    {
+        "id": "metric_deaths_2",
+        "name": ", the Deceased",
+        "description": "Obtained for having died 1013+ Times"
+    },
+    {
+        "id": "lootbox_titles_decisive_suffix",
+        "name": "the Decisive"
+    },
+    {
+        "id": "lootbox_titles_delicate_suffix",
+        "name": "the Delicate"
+    },
+    {
+        "id": "metric_delve_compound_1_suffix",
+        "name": "the Delver"
+    },
+    {
+        "id": "lootbox_titles_demure_suffix",
+        "name": "the Demure"
+    },
+    {
+        "id": "metric_delve_private_1",
+        "name": "the Depth-seeker",
+        "description": "Obtained for having defeated depth 150+ in a Private Delve."
+    },
+    {
+        "id": "metric_enemykills_3",
+        "name": "the Destroyer",
+        "description": "Obtained for defeating 5,000,000 enemies"
+    },
+    {
+        "id": "lootbox_titles_detector_suffix",
+        "name": "the Detector"
+    },
+    {
+        "id": "devgrant_devfriend",
+        "name": "the Dev-Friend"
+    },
+    {
+        "id": "lootbox_titles_devious_suffix",
+        "name": "the Devious"
+    },
+    {
+        "id": "lootbox_mining_digger",
+        "name": "the Digger"
+    },
+    {
+        "id": "class_dinotamer_30",
+        "name": "the Dino Tamer"
+    },
+    {
+        "id": "biome_giantlands_divided",
+        "name": "the Divided"
+    },
+    {
+        "id": "class_dracolyte_30",
+        "name": "the Dracolyte"
+    },
+    {
+        "id": "lootbox_dragon_draconic",
+        "name": "the Draconic"
+    },
+    {
+        "id": "lootbox_titles_duck_bearer_suffix",
+        "name": ", the Duck Bearer"
+    },
+    {
+        "id": "lootbox_titles_duck_supporter_suffix",
+        "name": ", the Duck Supporter"
+    },
+    {
+        "id": "lootbox_titles_ducktopped_suffix",
+        "name": "the Ducktopped"
+    },
+    {
+        "id": "metric_quests_3",
+        "name": "the Dungeoneer",
+        "description": "Obtained for defeating 100,000+ Dungeon Bosses or Skull Piles"
+    },
+    {
+        "id": "dragon_darkpurple",
+        "name": ", the Dusk Shadow",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Yorinn, the Dusk Shadow."
+    },
+    {
+        "id": "lootbox_titles_eager_suffix",
+        "name": "the Eager"
+    },
+    {
+        "id": "biome_spires_earthen",
+        "name": "the Earthen"
+    },
+    {
+        "id": "lootbox_titles_efficacious_suffix",
+        "name": "the Efficacious"
+    },
+    {
+        "id": "events_bunfest_2024_theegghunter",
+        "name": ", the Egg Hunter"
+    },
+    {
+        "id": "events_bunfest_2024_eggcentric",
+        "name": ", the Egg-centric"
+    },
+    {
+        "id": "metric_companioneggsfound_3",
+        "name": "the Eggstraordinary",
+        "description": "Obtained for defeating 10,000+ Geode Companion Eggs"
+    },
+    {
+        "id": "lootbox_titles_elusive_suffix",
+        "name": "the Elusive"
+    },
+    {
+        "id": "dog_dracrogi_newyear2026",
+        "name": ", the Emberscale"
+    },
+    {
+        "id": "meta_emoji_emotive",
+        "name": "the Emotive"
+    },
+    {
+        "id": "dragon_lunar_03",
+        "name": "the Enchanting",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Syluria the Enchanting."
+    },
+    {
+        "id": "meta_titlecount",
+        "name": "the Entitled",
+        "description": "Obtained for having a specific number of titles."
+    },
+    {
+        "id": "storepack_power",
+        "name": "the Essentialist",
+        "description": "Obtained for owning the Essentials Pack store product"
+    },
+    {
+        "id": "dragon_sunseeker",
+        "name": ", the Eternal Irradiance",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Zeuztian, the Eternal Irradiance"
+    },
+    {
+        "id": "lootbox_titles_consecutivedaysloggedin_suffix",
+        "name": ", the Ever-Around ({0})"
+    },
+    {
+        "id": "metric_daysloggedin_1",
+        "name": "the Ever-Present",
+        "description": "Obtained for having 1,000 days LOGGED IN to Trove"
+    },
+    {
+        "id": "dragonlong_marshmallow",
+        "name": "the Ever-Puffed",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Raymon the Ever-Puffed"
+    },
+    {
+        "id": "metric_deaths_5",
+        "name": ", the ex-Trovian",
+        "description": "Obtained for having died 1016+ Times"
+    },
+    {
+        "id": "lootbox_geodian_exoplanetscout",
+        "name": "the Exo-Planet Scout"
+    },
+    {
+        "id": "expertise_building",
+        "name": ", the Expert Builder",
+        "description": "Obtained for completing the BUILDING EXPERTISE questline"
+    },
+    {
+        "id": "expertise_fishing",
+        "name": ", the Expert Fisher",
+        "description": "Obtained for completing the FISHING EXPERTISE questline"
+    },
+    {
+        "id": "lootbox_titles_exquisite_suffix",
+        "name": "the Exquisite"
+    },
+    {
+        "id": "generic_chase_extravagant",
+        "name": "the Extravagant"
+    },
+    {
+        "id": "lootbox_titles_fabulous_suffix",
+        "name": "the Fabulous"
+    },
+    {
+        "id": "class_faetrickster_30",
+        "name": "the Fae Trickster"
+    },
+    {
+        "id": "lootbox_titles_favored_suffix",
+        "name": "the Favored"
+    },
+    {
+        "id": "lootbox_titles_ferocious_suffix",
+        "name": "the Ferocious"
+    },
+    {
+        "id": "lootbox_titles_finder_suffix",
+        "name": "the Finder"
+    },
+    {
+        "id": "collection_mount_raptor_birdfire",
+        "name": ", the Firetamer",
+        "description": "Obtained for having Kabiri, the Firetamer unlocked"
+    },
+    {
+        "id": "metric_itemsfished_2",
+        "name": "the Fishy",
+        "description": "Obtained after FISHING UP 100,000 items"
+    },
+    {
+        "id": "dragonserpent_ashen",
+        "name": ", the Forager",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Budgiz, the Forager."
+    },
+    {
+        "id": "lootbox_titles_formidable_suffix",
+        "name": "the Formidable"
+    },
+    {
+        "id": "metric_magicfindtriggers_2",
+        "name": "the Fortunate",
+        "description": "Obtained after triggering MAGIC FIND for your 7,777th time"
+    },
+    {
+        "id": "biome_tundra_frozen",
+        "name": "the Frozen"
+    },
+    {
+        "id": "dragon_bomberroyale_sticky",
+        "name": ", the Fury",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Zyntryn, the Fury"
+    },
+    {
+        "id": "expertise_gems",
+        "name": ", the Gem Expert",
+        "description": "Obtained for completing the GEMS EXPERTISE questline"
+    },
+    {
+        "id": "zodiac_gemini",
+        "name": "the Gemini"
+    },
+    {
+        "id": "lootbox_titles_gentle_suffix",
+        "name": "the Gentle"
+    },
+    {
+        "id": "lootbox_titles_gifted_suffix",
+        "name": "the Gifted"
+    },
+    {
+        "id": "storepack_costume04",
+        "name": ", the Glamorous",
+        "description": "Obtained for owning the Glamorous Guises store product"
+    },
+    {
+        "id": "lootbox_crystal_glasscannon",
+        "name": "the Glass Cannon"
+    },
+    {
+        "id": "storepack_costume01",
+        "name": "the Glitzy",
+        "description": "Obtained for owning the Blitz and Glitz Pack store product"
+    },
+    {
+        "id": "meta_metalevel_700_goldheart",
+        "name": "the Goldheart"
+    },
+    {
+        "id": "devgrant_goodsamaritan",
+        "name": "the Good Samaritan"
+    },
+    {
+        "id": "lootbox_titles_gorgeous_suffix",
+        "name": "the Gorgeous"
+    },
+    {
+        "id": "generic_chase_grandiose",
+        "name": "the Grandiose"
+    },
+    {
+        "id": "lootbox_titles_great_suffix",
+        "name": "the Great"
+    },
+    {
+        "id": "lootbox_titles_greater_suffix",
+        "name": "the Greater"
+    },
+    {
+        "id": "lootbox_titles_greatest_suffix",
+        "name": "the Greatest"
+    },
+    {
+        "id": "events_stqubeslick_2024_thegreen",
+        "name": ", the Green"
+    },
+    {
+        "id": "dragon_block",
+        "name": ", the Guardian Beyond the Sky",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Blocktron, the Guardian Beyond the Sky"
+    },
+    {
+        "id": "class_gunslinger_30",
+        "name": "the Gunslinger"
+    },
+    {
+        "id": "lootbox_titles_handsome_suffix",
+        "name": "the Handsome"
+    },
+    {
+        "id": "dragon_christmas_2016",
+        "name": ", the Harbinger of Tidings",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Tannenbomber, the Harbinger of Tidings."
+    },
+    {
+        "id": "generic_hatastic_01",
+        "name": "the Hatastic Hat Haver"
+    },
+    {
+        "id": "generic_hatastic_03",
+        "name": "the Haver of the Hatastic Hat"
+    },
+    {
+        "id": "storepack_spirittank",
+        "name": "the Headless",
+        "description": "Obtained for owning the Raving Revenant Pack store products"
+    },
+    {
+        "id": "metric_revives_1_suffix",
+        "name": "the Healer"
+    },
+    {
+        "id": "dragon_bomber",
+        "name": ", the Herald of Battle",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Fortras, the Herald of Battle"
+    },
+    {
+        "id": "dragon_data",
+        "name": ", the Hexed",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Amatrix, the Hexed."
+    },
+    {
+        "id": "biome_highlands_highlander",
+        "name": "the Highlander"
+    },
+    {
+        "id": "lootbox_titles_hilarious_suffix",
+        "name": "the Hilarious"
+    },
+    {
+        "id": "lootbox_dragon_hoarder",
+        "name": "the Hoarder"
+    },
+    {
+        "id": "dragon_bamboo",
+        "name": ", the Hollow Spirit",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Duraveln, the Hollow Spirit."
+    },
+    {
+        "id": "lootbox_titles_honest_suffix",
+        "name": "the Honest"
+    },
+    {
+        "id": "events_bunfest_2024_thehoppy",
+        "name": ", the Hoppy"
+    },
+    {
+        "id": "lootbox_titles_humble_suffix",
+        "name": "the Humble"
+    },
+    {
+        "id": "metric_enemykills_1",
+        "name": "the Hunter",
+        "description": "Obtained for defeating 1,000,000 enemies"
+    },
+    {
+        "id": "class_icemage_30",
+        "name": "the Ice Sage"
+    },
+    {
+        "id": "dragon_friend_03",
+        "name": "the Immortal",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Disaeon the Immortal."
+    },
+    {
+        "id": "meta_metalevel_600_immortalflame",
+        "name": "the Immortal Flame"
+    },
+    {
+        "id": "meta_metalevel_900_impermeable",
+        "name": "the Impermeable"
+    },
+    {
+        "id": "lootbox_titles_impish_suffix",
+        "name": "the Impish"
+    },
+    {
+        "id": "lootbox_titles_inconsistent_suffix",
+        "name": "the Inconsistent"
+    },
+    {
+        "id": "lootbox_titles_ingenious_suffix",
+        "name": "the Ingenious"
+    },
+    {
+        "id": "lootbox_titles_innocent_suffix",
+        "name": "the Innocent"
+    },
+    {
+        "id": "dragon_blacksilver",
+        "name": ", The Ironbolt",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Erel, The Ironbolt."
+    },
+    {
+        "id": "entitlement_community_sept2024_up_suffix",
+        "name": ", the Irradiant Hero"
+    },
+    {
+        "id": "lootbox_titles_jabberwocky_suffix",
+        "name": "the Jabberwocky"
+    },
+    {
+        "id": "lootbox_titles_jaded_suffix",
+        "name": "the Jaded"
+    },
+    {
+        "id": "lootbox_titles_joyful_suffix",
+        "name": "the Joyful"
+    },
+    {
+        "id": "lootbox_titles_justok_suffix",
+        "name": "the just ok"
+    },
+    {
+        "id": "lootbox_titles_keeper_suffix",
+        "name": "the Keeper"
+    },
+    {
+        "id": "lootbox_titles_kind_suffix",
+        "name": "the Kind"
+    },
+    {
+        "id": "class_knight_30",
+        "name": "the Knight"
+    },
+    {
+        "id": "events_bunfest_2024_knightly",
+        "name": ", the Knightly"
+    },
+    {
+        "id": "lootbox_titles_kooky_suffix",
+        "name": "the Kooky"
+    },
+    {
+        "id": "lootbox_mining_lasermancer",
+        "name": "the Lasermancer"
+    },
+    {
+        "id": "zodiac_leo",
+        "name": "the Leo"
+    },
+    {
+        "id": "lootbox_titles_lethal_suffix",
+        "name": "the Lethal"
+    },
+    {
+        "id": "zodiac_libra",
+        "name": "the Libra"
+    },
+    {
+        "id": "dragon_boltblade",
+        "name": ", the Lightning Blade",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Fulguras, the Lightning Blade."
+    },
+    {
+        "id": "lootbox_titles_loopy_suffix",
+        "name": "the Loopy"
+    },
+    {
+        "id": "lootbox_titles_itemsdeconstructed_suffix",
+        "name": ", the Loot Collector ({0})"
+    },
+    {
+        "id": "lootbox_titles_loquacious_suffix",
+        "name": "the Loquacious"
+    },
+    {
+        "id": "meta_metalevel_800_lossless",
+        "name": "the Lossless"
+    },
+    {
+        "id": "metric_heartsreceived",
+        "name": ", the Loved",
+        "description": "Obtained for having received a Heart-a-Phone"
+    },
+    {
+        "id": "metric_heartssent",
+        "name": ", the Loving",
+        "description": "Obtained for sending a Heart-a-Phone"
+    },
+    {
+        "id": "metric_magicfindtriggers_1",
+        "name": "the Lucky",
+        "description": "Obtained after triggering MAGIC FIND for your 777th time"
+    },
+    {
+        "id": "class_lunarlancer_30",
+        "name": "the Lunar Lancer"
+    },
+    {
+        "id": "storepack_lunarlancer",
+        "name": "the Lunatic",
+        "description": "Obtained for owning the Lunacy Pack store products"
+    },
+    {
+        "id": "meta_metalevel_600_magnanimouse",
+        "name": ", the Magnanimouse"
+    },
+    {
+        "id": "lootbox_titles_magnetic_suffix",
+        "name": "the Magnetic"
+    },
+    {
+        "id": "lootbox_titles_magnificent_suffix",
+        "name": "the Magnificent"
+    },
+    {
+        "id": "meta_metalevel_100_masterful",
+        "name": "the Masterful"
+    },
+    {
+        "id": "metric_revives_2_suffix",
+        "name": "the Medic"
+    },
+    {
+        "id": "lootbox_titles_meek_suffix",
+        "name": "the Meek"
+    },
+    {
+        "id": "dragon_choko",
+        "name": ", the Mellower"
+    },
+    {
+        "id": "lootbox_mining_miner_suffix",
+        "name": "the Miner"
+    },
+    {
+        "id": "dragon_moonsilver",
+        "name": ", the Moonlit Muse",
+        "description": ", the Moonlit Muse"
+    },
+    {
+        "id": "meta_powerrank_mid",
+        "name": "the more Powerful"
+    },
+    {
+        "id": "meta_powerrank_max",
+        "name": "the MOST Powerful"
+    },
+    {
+        "id": "lootbox_titles_mysterious_suffix",
+        "name": "the Mysterious"
+    },
+    {
+        "id": "dragonsnake_newyear2025",
+        "name": ", the Mythical",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: She'xia, the Mythical."
+    },
+    {
+        "id": "storepack_tombraiser",
+        "name": "the Necromancer",
+        "description": "Obtained for owning the Necrofancy Pack store products"
+    },
+    {
+        "id": "dragon_neon_03",
+        "name": "the Neolord",
+        "male": "the Neolord",
+        "female": "the Neolady",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Lambent the Neolord."
+    },
+    {
+        "id": "class_neonninja_30",
+        "name": "the Neon Ninja"
+    },
+    {
+        "id": "lootbox_titles_nerdy_suffix",
+        "name": "the Nerdy"
+    },
+    {
+        "id": "lootbox_titles_nocturnal_suffix",
+        "name": "the Nocturnal"
+    },
+    {
+        "id": "biome_neon_nonbinary",
+        "name": "the Non-Binary"
+    },
+    {
+        "id": "lootbox_titles_nostalgic_suffix",
+        "name": "the Nostalgic"
+    },
+    {
+        "id": "lootbox_titles_nymph_suffix",
+        "name": "the Nymph"
+    },
+    {
+        "id": "lootbox_titles_observant_suffix",
+        "name": "the Observant"
+    },
+    {
+        "id": "metric_daysloggedin_2",
+        "name": "the Omni-Present",
+        "description": "Obtained for having 2,000 days LOGGED IN to Trove"
+    },
+    {
+        "id": "metric_pinatasthrown_1",
+        "name": "the one-Trovian Party",
+        "description": "Obtained for having thrown 10,000+ Pinatas"
+    },
+    {
+        "id": "lootbox_titles_onerous_suffix",
+        "name": "the Onerous"
+    },
+    {
+        "id": "lootbox_titles_ostentatious_suffix",
+        "name": "the Ostentatious"
+    },
+    {
+        "id": "dragon_pinata",
+        "name": ", the Partifier",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Panatea, the Partifier"
+    },
+    {
+        "id": "lootbox_titles_patient_suffix",
+        "name": "the Patient"
+    },
+    {
+        "id": "meta_patron_suffix",
+        "name": "the Patron"
+    },
+    {
+        "id": "dragon_steampunk",
+        "name": ", the Perpetual",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Vaentaera, the Perpetual."
+    },
+    {
+        "id": "class_piratelord_30",
+        "name": "the Pirate Captain"
+    },
+    {
+        "id": "zodiac_pisces",
+        "name": "the Pisces"
+    },
+    {
+        "id": "lootbox_titles_playful_suffix",
+        "name": "the Playful"
+    },
+    {
+        "id": "meta_powerrank_low",
+        "name": "the Powerful"
+    },
+    {
+        "id": "dragon_green",
+        "name": ", the Primordial Preserver",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Miraldis, the Primordial Preserver."
+    },
+    {
+        "id": "dragon_bubble",
+        "name": ", The Pristine",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Sarsaponia, The Pristine."
+    },
+    {
+        "id": "collection_mount_raptor_birdfae",
+        "name": ", the Promise of Spring",
+        "description": "Obtained for having Hadori, the Promise of Spring unlocked"
+    },
+    {
+        "id": "lootbox_titles_proud_suffix",
+        "name": "the Proud"
+    },
+    {
+        "id": "pts_default",
+        "name": "the Public Tester",
+        "description": "Only available on the Public Test Server"
+    },
+    {
+        "id": "lootbox_titles_quaint_suffix",
+        "name": "the Quaint"
+    },
+    {
+        "id": "metric_adventurescompleted_2",
+        "name": "the Quester",
+        "description": "Obtained for defeating 10,000+ Adventure Quests"
+    },
+    {
+        "id": "lootbox_titles_quick_suffix",
+        "name": "the Quick"
+    },
+    {
+        "id": "lootbox_titles_quirky_suffix",
+        "name": "the Quirky"
+    },
+    {
+        "id": "lootbox_titles_rabid_suffix",
+        "name": "the Rabid"
+    },
+    {
+        "id": "dragon_pirate",
+        "name": ", the Relentless",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Flakbeard, the Relentless"
+    },
+    {
+        "id": "lootbox_titles_rescuer_suffix",
+        "name": "the Rescuer"
+    },
+    {
+        "id": "class_spirittank_30",
+        "name": "the Revenant"
+    },
+    {
+        "id": "lootbox_titles_rude_suffix",
+        "name": "the Rude"
+    },
+    {
+        "id": "lootbox_titles_rugged_suffix",
+        "name": "the Rugged"
+    },
+    {
+        "id": "lootbox_titles_sage_suffix",
+        "name": "the Sage"
+    },
+    {
+        "id": "zodiac_sagittarius",
+        "name": "the Sagittarius"
+    },
+    {
+        "id": "events_sunfest_2024_thesandcovered",
+        "name": ", the Sand-covered"
+    },
+    {
+        "id": "lootbox_titles_sanguine_suffix",
+        "name": "the Sanguine"
+    },
+    {
+        "id": "lootbox_titles_satyr_suffix",
+        "name": "the Satyr"
+    },
+    {
+        "id": "biome_dinosaur_savage",
+        "name": "the Savage"
+    },
+    {
+        "id": "lootbox_dragon_scaled",
+        "name": "the Scaled"
+    },
+    {
+        "id": "zodiac_scorpio",
+        "name": "the Scorpio"
+    },
+    {
+        "id": "biome_isletreasure_seafarer",
+        "name": "the Seafarer"
+    },
+    {
+        "id": "lootbox_titles_seacher_suffix",
+        "name": "the Searcher"
+    },
+    {
+        "id": "lootbox_titles_seeker_suffix",
+        "name": "the Seeker"
+    },
+    {
+        "id": "metric_marketplacesales",
+        "name": "the Seller",
+        "description": "Obtained for making 10,000 MARKETPLACE SALES"
+    },
+    {
+        "id": "class_shadowhunter_30",
+        "name": "the Shadow Hunter"
+    },
+    {
+        "id": "dragon_bismuth",
+        "name": ", the Shaper's Gift",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Baesmuth, the Shaper's Gift"
+    },
+    {
+        "id": "lootbox_titles_silent_suffix",
+        "name": "the Silent"
+    },
+    {
+        "id": "dragon_spider",
+        "name": ", the Silent Spectator",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Rachnaphon, the Silent Spectator."
+    },
+    {
+        "id": "collection_mount_raptor_birdgold",
+        "name": ", the Sky Shepherd",
+        "description": "Obtained for having Ganda, the Sky Shepherd unlocked"
+    },
+    {
+        "id": "metric_enemykills_2",
+        "name": "the Slayer",
+        "description": "Obtained for defeating 2,000,000 enemies"
+    },
+    {
+        "id": "class_solarion_30",
+        "name": "the Solarion"
+    },
+    {
+        "id": "collection_mount_raptor_birdchaos",
+        "name": ", the Sower of Chaos",
+        "description": "Obtained for having Koroki, the Sower of Chaos unlocked"
+    },
+    {
+        "id": "lootbox_titles_spotter_suffix",
+        "name": "the Spotter"
+    },
+    {
+        "id": "lootbox_titles_stalwart_suffix",
+        "name": "the Stalwart"
+    },
+    {
+        "id": "lootbox_titles_starry_eyed_suffix",
+        "name": "the Starry-Eyed"
+    },
+    {
+        "id": "dragon_darkshield",
+        "name": ", the Sundered Shield",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Typhandir, the Sundered Shield."
+    },
+    {
+        "id": "metric_hartssent",
+        "name": "the Sus",
+        "description": "Obtained for having sent 5+ Hart-a-Phones"
+    },
+    {
+        "id": "biome_dragon_sweltering",
+        "name": "the Sweltering"
+    },
+    {
+        "id": "lootbox_titles_talented_suffix",
+        "name": "the Talented"
+    },
+    {
+        "id": "lootbox_titles_tasteful_suffix",
+        "name": "the Tasteful"
+    },
+    {
+        "id": "zodiac_taurus",
+        "name": "the Taurus"
+    },
+    {
+        "id": "class_tombraiser_30",
+        "name": "the Tomb Raiser"
+    },
+    {
+        "id": "lootbox_titles_tranquil_suffix",
+        "name": "the Tranquil"
+    },
+    {
+        "id": "meta_metalevel_400_transcendent",
+        "name": ", the Transcendent"
+    },
+    {
+        "id": "metric_quests_1",
+        "name": "the Trovian Dungeoneer",
+        "description": "Obtained for defeating 1,000+ Dungeon Bosses or Skull Piles"
+    },
+    {
+        "id": "metric_adventurescompleted_1",
+        "name": "the Trovian Quester",
+        "description": "Obtained for completing 1,000+ Adventure Quests"
+    },
+    {
+        "id": "dragon_twoheads_battle",
+        "name": ", the Twin Plagues",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Cy and Sanguine, the Twin Plagues."
+    },
+    {
+        "id": "lootbox_titles_ultimate_suffix",
+        "name": "the Ultimate"
+    },
+    {
+        "id": "metric_boxes_1",
+        "name": "the Unboxer",
+        "description": "Obtained for having opened 100,000+ Lootboxes"
+    },
+    {
+        "id": "lootbox_titles_boxesopened_suffix",
+        "name": ", the Unboxer ({0})"
+    },
+    {
+        "id": "lootbox_titles_underduck_suffix",
+        "name": "the Underduck"
+    },
+    {
+        "id": "lootbox_titles_underrated_suffix",
+        "name": "the Underrated"
+    },
+    {
+        "id": "dragon_balefire",
+        "name": ", the Unforgiven",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Urmhalit, the Unforgiven."
+    },
+    {
+        "id": "events_stqubeslick_2024_theunlucky",
+        "name": ", the Unlucky"
+    },
+    {
+        "id": "lootbox_titles_lootdropssincemagicfindtrigger_suffix",
+        "name": ", the Unlucky? ({0})"
+    },
+    {
+        "id": "dragon_qbthulhu",
+        "name": ", the Unwavering",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Indurion, the Unwavering."
+    },
+    {
+        "id": "lootbox_titles_upbeat_suffix",
+        "name": "the Upbeat"
+    },
+    {
+        "id": "biome_giantlands_uplifted",
+        "name": "the Uplifted"
+    },
+    {
+        "id": "lootbox_titles_vagabond_suffix",
+        "name": "the Vagabond"
+    },
+    {
+        "id": "class_crimefighter_30",
+        "name": "the Vanguardian"
+    },
+    {
+        "id": "lootbox_titles_vanilla_suffix",
+        "name": "the Vanilla"
+    },
+    {
+        "id": "lootbox_titles_venerable_suffix",
+        "name": "the Venerable"
+    },
+    {
+        "id": "biome_fae_verdant",
+        "name": "the Verdant"
+    },
+    {
+        "id": "storepack_chloromancer",
+        "name": "the Verdant Healer",
+        "description": "Obtained for owning the Flower Power Pack store products"
+    },
+    {
+        "id": "dragonserpent_vile",
+        "name": ", the Vile Martriarch",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Alyxthesius, the Vile Martriarch."
+    },
+    {
+        "id": "zodiac_virgo",
+        "name": "the Virgo"
+    },
+    {
+        "id": "dragon_bone_03",
+        "name": ", the Waiting Oblivion",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Khadavros, the Waiting Oblivion."
+    },
+    {
+        "id": "lootbox_titles_wallflower_suffix",
+        "name": "the Wallflower"
+    },
+    {
+        "id": "dragon_bomberroyale",
+        "name": ", the War Head",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Kyrothon, the War Head"
+    },
+    {
+        "id": "lootbox_titles_warm_suffix",
+        "name": "the Warm"
+    },
+    {
+        "id": "lootbox_titles_wayward_suffix",
+        "name": "the Wayward"
+    },
+    {
+        "id": "dragon_lightspear",
+        "name": ", the Wayward Spear",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Norari, the Wayward Spear."
+    },
+    {
+        "id": "expertise_tomes",
+        "name": "the Well-Read",
+        "description": "Obtained for completing the TOMES EXPERTISE questline"
+    },
+    {
+        "id": "dragonwyvern_amitola",
+        "name": ", the Winds Alight",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Amitola, the Winds Alight."
+    },
+    {
+        "id": "meta_metalevel_800_wizened",
+        "name": "the Wizened"
+    },
+    {
+        "id": "lootbox_wonder_wonderful_suffix",
+        "name": "the Wonderful"
+    },
+    {
+        "id": "lootbox_wonder_wonderous",
+        "name": "the Wonderous"
+    },
+    {
+        "id": "lootbox_titles_xfactor_suffix",
+        "name": "the X-Factor"
+    },
+    {
+        "id": "lootbox_titles_xenial_suffix",
+        "name": "the Xenial"
+    },
+    {
+        "id": "lootbox_titles_xeric_suffix",
+        "name": "the Xeric"
+    },
+    {
+        "id": "lootbox_titles_xoomer_suffix",
+        "name": "the Xoomer"
+    },
+    {
+        "id": "lootbox_titles_yeoman_suffix",
+        "name": "the Yeoman"
+    },
+    {
+        "id": "lootbox_titles_yogi_suffix",
+        "name": "the Yogi"
+    },
+    {
+        "id": "lootbox_titles_youngatheart_suffix",
+        "name": "the Young at Heart"
+    },
+    {
+        "id": "lootbox_titles_zealot_suffix",
+        "name": "the Zealot"
+    },
+    {
+        "id": "lootbox_titles_zephyr_suffix",
+        "name": "the Zephyr"
+    },
+    {
+        "id": "lootbox_titles_zoomer_suffix",
+        "name": "the Zoomer"
+    },
+    {
+        "id": "meta_class_topoftheclass",
+        "name": "Top of the Class, "
+    },
+    {
+        "id": "entitlement_translator_prefix",
+        "name": "Translator"
+    },
+    {
+        "id": "soccer_2026_champion",
+        "name": ", Trove Cup Champion 2026"
+    },
+    {
+        "id": "store_neutral_neutral",
+        "name": "True Neutral"
+    },
+    {
+        "id": "entitlement_community_twitch_title_true_trovian_suffix",
+        "name": ", True Trovian"
+    },
+    {
+        "id": "lootbox_titles_uber_weekly_prefix",
+        "name": "Uber-"
+    },
+    {
+        "id": "lootbox_titles_ultra_weekly_prefix",
+        "name": "Ultra-"
+    },
+    {
+        "id": "lootbox_titles_underduck_prefix",
+        "name": "Underduck"
+    },
+    {
+        "id": "events_stqubeslick_2024_unlucky",
+        "name": "Unlucky"
+    },
+    {
+        "id": "lootbox_titles_uwu",
+        "name": "UWU"
+    },
+    {
+        "id": "dragon_music",
+        "name": ", Voice of Dawn",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Albairn, Voice of Dawn."
+    },
+    {
+        "id": "biome_fae_warden",
+        "name": "Warden"
+    },
+    {
+        "id": "dragon_garden",
+        "name": ", Warden of the Fields",
+        "description": "Seasonally available at the DRAGON CRUCIBLE. Requires ownership of Mount: Kharamet, Warden of the Fields."
+    },
+    {
+        "id": "lootbox_titles_incrementor_weekly_suffix",
+        "name": ", Weekly M.N.G.U. {0}"
+    },
+    {
+        "id": "storepack_costume05",
+        "name": ", Whimsical Fashionista",
+        "description": "Obtained for owning the Whimsical Wardrobe store product"
+    },
+    {
+        "id": "soccer_2026_07",
+        "name": "Winger"
+    },
+    {
+        "id": "meta_metalevel_800_wizenedandfair",
+        "name": ", Wizened and Fair"
+    },
+    {
+        "id": "lootbox_wonder_wonderful_prefix",
+        "name": "Wonderful"
+    },
+    {
+        "id": "metric_adventurescompleted_3",
+        "name": "Worldwide Adventurer",
+        "description": "Obtained for defeating 100,000+ Adventure Quests"
+    },
+    {
+        "id": "events_capybara_ybarra",
+        "name": "Ybarra"
+    },
+    {
+        "id": "emoji_unamused_mirror",
+        "name": "|:"
+    }
+]

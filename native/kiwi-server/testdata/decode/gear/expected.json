@@ -1,0 +1,2419 @@
+{
+ "server_side": [
+  "The value range of every rolled Hat, Face, Weapon and Ring stat line",
+  "Which bonus stats a dropped or crafted item rolls, and how often"
+ ],
+ "rarities": [
+  {
+   "id": 0,
+   "key": "Common",
+   "family": "Common",
+   "level": null,
+   "name": "Common",
+   "required_level": 0,
+   "power_rank": 1,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 2
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 2
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 2
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 2
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 2
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 1,
+   "key": "Uncommon",
+   "family": "Uncommon",
+   "level": null,
+   "name": "Uncommon",
+   "required_level": 0,
+   "power_rank": 7,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 6
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 7
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 8
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 10
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 2,
+   "key": "Rare",
+   "family": "Rare",
+   "level": null,
+   "name": "Rare",
+   "required_level": 4,
+   "power_rank": 13,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 12
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 14
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 16
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 18
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 20
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 3,
+   "key": "Epic",
+   "family": "Epic",
+   "level": null,
+   "name": "Epic",
+   "required_level": 6,
+   "power_rank": 19,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 25
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 30
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 35
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 40
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 45
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 4,
+   "key": "Legendary",
+   "family": "Legendary",
+   "level": null,
+   "name": "Legendary",
+   "required_level": 8,
+   "power_rank": 25,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 50
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 60
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 70
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 80
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 90
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 5,
+   "key": "Relic",
+   "family": "Relic",
+   "level": null,
+   "name": "Relic",
+   "required_level": 10,
+   "power_rank": 33,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 75
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 90
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 105
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 120
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 135
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 6,
+   "key": "Resplendent",
+   "family": "Resplendent",
+   "level": null,
+   "name": "Resplendent",
+   "required_level": 10,
+   "power_rank": 43,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 100
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 120
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 140
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 160
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 180
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 7,
+   "key": "Shadow1",
+   "family": "Shadow",
+   "level": 1,
+   "name": "Shadow 1",
+   "required_level": 10,
+   "power_rank": 55,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 3
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 40
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 3
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 40
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 3
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 40
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 3
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 40
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 3
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 40
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 8,
+   "key": "Shadow2",
+   "family": "Shadow",
+   "level": 2,
+   "name": "Shadow 2",
+   "required_level": 10,
+   "power_rank": 69,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 5
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 90
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 5
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 90
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 5
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 90
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 5
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 90
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 5
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 90
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 9,
+   "key": "Shadow3",
+   "family": "Shadow",
+   "level": 3,
+   "name": "Shadow 3",
+   "required_level": 10,
+   "power_rank": 87,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 10,
+   "key": "Shadow4",
+   "family": "Shadow",
+   "level": 4,
+   "name": "Shadow 4",
+   "required_level": 10,
+   "power_rank": 115,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 16
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 16
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 16
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 16
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 16
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 110
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 11,
+   "key": "Shadow5",
+   "family": "Shadow",
+   "level": 5,
+   "name": "Shadow 5",
+   "required_level": 10,
+   "power_rank": 155,
+   "aura": {
+    "weapon": false,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 20
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 120
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 20
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 120
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 20
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 120
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 20
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 120
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 20
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 120
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 12,
+   "key": "Radiant1",
+   "family": "Radiant",
+   "level": 1,
+   "name": "Radiant 1",
+   "required_level": 10,
+   "power_rank": 210,
+   "aura": {
+    "weapon": true,
+    "hat": false
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 13,
+   "key": "Stellar1",
+   "family": "Stellar",
+   "level": 1,
+   "name": "Stellar 1",
+   "required_level": 10,
+   "power_rank": 600,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 14,
+   "key": "Radiant2",
+   "family": "Radiant",
+   "level": 2,
+   "name": "Radiant 2",
+   "required_level": 10,
+   "power_rank": 220,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 15,
+   "key": "Stellar2",
+   "family": "Stellar",
+   "level": 2,
+   "name": "Stellar 2",
+   "required_level": 10,
+   "power_rank": 615,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 16,
+   "key": "Radiant3",
+   "family": "Radiant",
+   "level": 3,
+   "name": "Radiant 3",
+   "required_level": 10,
+   "power_rank": 230,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 17,
+   "key": "Stellar3",
+   "family": "Stellar",
+   "level": 3,
+   "name": "Stellar 3",
+   "required_level": 10,
+   "power_rank": 630,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 18,
+   "key": "Radiant4",
+   "family": "Radiant",
+   "level": 4,
+   "name": "Radiant 4",
+   "required_level": 10,
+   "power_rank": 240,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 19,
+   "key": "Stellar4",
+   "family": "Stellar",
+   "level": 4,
+   "name": "Stellar 4",
+   "required_level": 10,
+   "power_rank": 645,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 20,
+   "key": "Radiant5",
+   "family": "Radiant",
+   "level": 5,
+   "name": "Radiant 5",
+   "required_level": 10,
+   "power_rank": 250,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 23
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/dragonflame",
+      "name": "dragonflame",
+      "count": 1
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 21,
+   "key": "Stellar5",
+   "family": "Stellar",
+   "level": 5,
+   "name": "Stellar 5",
+   "required_level": 10,
+   "power_rank": 660,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/eye",
+      "name": "eye",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/flux",
+      "name": "flux",
+      "count": 9999
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 22,
+   "key": "Crystal1",
+   "family": "Crystal",
+   "level": 1,
+   "name": "Crystal 1",
+   "required_level": 20,
+   "power_rank": 800,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 1
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 1
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 10
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 2
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 2
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 20
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 3
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 4
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 30
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 4
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 7
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 40
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 5
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 50
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 23,
+   "key": "Crystal2",
+   "family": "Crystal",
+   "level": 2,
+   "name": "Crystal 2",
+   "required_level": 20,
+   "power_rank": 850,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 4
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 50
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 6
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 20
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 70
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 8
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 30
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 90
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 40
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 110
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 12
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 50
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 130
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 24,
+   "key": "Crystal3",
+   "family": "Crystal",
+   "level": 3,
+   "name": "Crystal 3",
+   "required_level": 20,
+   "power_rank": 900,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 25
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 50
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 500
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 50
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 75
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 750
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 75
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 150
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 1000
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 100
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 175
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 1250
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 125
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 200
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 1500
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 25,
+   "key": "Crystal4",
+   "family": "Crystal",
+   "level": 4,
+   "name": "Crystal 4",
+   "required_level": 20,
+   "power_rank": 950,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 100
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 200
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 1000
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 150
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 250
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 1500
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 200
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 2000
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 250
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 350
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 2500
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/crystalline_core",
+      "name": "crystalline_core",
+      "count": 300
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 400
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 3000
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 26,
+   "key": "Crystal5",
+   "family": "Crystal",
+   "level": 5,
+   "name": "Crystal 5",
+   "required_level": 20,
+   "power_rank": 1000,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/gearcrafting/tempered_block_element",
+      "name": "tempered_block_element",
+      "count": 5
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 1200
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 5000
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/gearcrafting/tempered_block_element",
+      "name": "tempered_block_element",
+      "count": 10
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 2400
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 10000
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/gearcrafting/tempered_block_element",
+      "name": "tempered_block_element",
+      "count": 20
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 3800
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 12500
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/gearcrafting/tempered_block_element",
+      "name": "tempered_block_element",
+      "count": 40
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 5500
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 17500
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/gearcrafting/tempered_block_element",
+      "name": "tempered_block_element",
+      "count": 90
+     },
+     {
+      "item": "item/crafting/forge_fragment",
+      "name": "forge_fragment",
+      "count": 7500
+     },
+     {
+      "item": "item/crafting/nitro_glitterine",
+      "name": "nitro_glitterine",
+      "count": 25000
+     }
+    ]
+   },
+   "raise_cost": null
+  },
+  {
+   "id": 27,
+   "key": "Mystic1",
+   "family": "Mystic",
+   "level": 1,
+   "name": "Mystic 1",
+   "required_level": 30,
+   "power_rank": 1300,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": {
+    "1": [
+     {
+      "item": "item/crafting/deep_core",
+      "name": "deep_core",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/depths_soul",
+      "name": "depths_soul",
+      "count": 50
+     },
+     {
+      "item": "item/crafting/ore_deep",
+      "name": "ore_deep",
+      "count": 250
+     }
+    ],
+    "2": [
+     {
+      "item": "item/crafting/deep_core",
+      "name": "deep_core",
+      "count": 750
+     },
+     {
+      "item": "item/crafting/depths_soul",
+      "name": "depths_soul",
+      "count": 100
+     },
+     {
+      "item": "item/crafting/ore_deep",
+      "name": "ore_deep",
+      "count": 1000
+     }
+    ],
+    "3": [
+     {
+      "item": "item/crafting/deep_core",
+      "name": "deep_core",
+      "count": 1000
+     },
+     {
+      "item": "item/crafting/depths_soul",
+      "name": "depths_soul",
+      "count": 250
+     },
+     {
+      "item": "item/crafting/ore_deep",
+      "name": "ore_deep",
+      "count": 2500
+     }
+    ],
+    "4": [
+     {
+      "item": "item/crafting/deep_core",
+      "name": "deep_core",
+      "count": 1500
+     },
+     {
+      "item": "item/crafting/depths_soul",
+      "name": "depths_soul",
+      "count": 500
+     },
+     {
+      "item": "item/crafting/ore_deep",
+      "name": "ore_deep",
+      "count": 5000
+     }
+    ],
+    "5": [
+     {
+      "item": "item/crafting/deep_core",
+      "name": "deep_core",
+      "count": 2500
+     },
+     {
+      "item": "item/crafting/depths_soul",
+      "name": "depths_soul",
+      "count": 750
+     },
+     {
+      "item": "item/crafting/ore_deep",
+      "name": "ore_deep",
+      "count": 10000
+     }
+    ]
+   },
+   "raise_cost": [
+    {
+     "item": "item/crafting/deep_core",
+     "name": "deep_core",
+     "count": 250
+    },
+    {
+     "item": "item/crafting/depths_soul",
+     "name": "depths_soul",
+     "count": 25
+    },
+    {
+     "item": "item/crafting/ore_deep",
+     "name": "ore_deep",
+     "count": 100
+    }
+   ]
+  },
+  {
+   "id": 28,
+   "key": "Mystic2",
+   "family": "Mystic",
+   "level": 2,
+   "name": "Mystic 2",
+   "required_level": 30,
+   "power_rank": 1325,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": null,
+   "raise_cost": null
+  },
+  {
+   "id": 29,
+   "key": "Mystic3",
+   "family": "Mystic",
+   "level": 3,
+   "name": "Mystic 3",
+   "required_level": 30,
+   "power_rank": 1350,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": null,
+   "raise_cost": null
+  },
+  {
+   "id": 30,
+   "key": "Mystic4",
+   "family": "Mystic",
+   "level": 4,
+   "name": "Mystic 4",
+   "required_level": 30,
+   "power_rank": 1375,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": null,
+   "raise_cost": null
+  },
+  {
+   "id": 31,
+   "key": "Mystic5",
+   "family": "Mystic",
+   "level": 5,
+   "name": "Mystic 5",
+   "required_level": 30,
+   "power_rank": 1400,
+   "aura": {
+    "weapon": true,
+    "hat": true
+   },
+   "improve_cost": null,
+   "raise_cost": null
+  }
+ ],
+ "forge": {
+  "star_step": 0.2,
+  "max_star": 5,
+  "max_lines": 3,
+  "max_boosts_per_line": 2,
+  "pearl_multipliers": [
+   1.0,
+   1.1,
+   1.3
+  ],
+  "chaos_min_lines": 3,
+  "tome_max_reduction": 10,
+  "raise_from": "Crystal5",
+  "raise_to": "Mystic1",
+  "stations": []
+ },
+ "power_rank": {
+  "per_stat_boost": 0.0375,
+  "per_star": 0.06
+ },
+ "slots": [
+  {
+   "key": "Weapon",
+   "name": "Weapon",
+   "item_types": [
+    {
+     "key": "Gun",
+     "name": "Gun"
+    },
+    {
+     "key": "Bow",
+     "name": "Bow"
+    },
+    {
+     "key": "Staff",
+     "name": "Staff"
+    },
+    {
+     "key": "Spear",
+     "name": "Spear"
+    },
+    {
+     "key": "Fist",
+     "name": "Fist"
+    },
+    {
+     "key": "Melee",
+     "name": "Melee"
+    }
+   ]
+  },
+  {
+   "key": "Hat",
+   "name": "Hat",
+   "item_types": [
+    {
+     "key": "Hat",
+     "name": "Hat"
+    }
+   ]
+  },
+  {
+   "key": "Face",
+   "name": "Face",
+   "item_types": [
+    {
+     "key": "Face",
+     "name": "Face"
+    }
+   ]
+  },
+  {
+   "key": "Ring",
+   "name": "Ring",
+   "item_types": [
+    {
+     "key": "Ring_MaxHealth",
+     "name": "Ring_MaxHealth"
+    },
+    {
+     "key": "Ring_Lasermancy",
+     "name": "Ring_Lasermancy"
+    },
+    {
+     "key": "Ring_PhysicalDamage",
+     "name": "Ring_PhysicalDamage"
+    },
+    {
+     "key": "Ring_MagicDamage",
+     "name": "Ring_MagicDamage"
+    }
+   ]
+  },
+  {
+   "key": "Banner",
+   "name": "Banner",
+   "item_types": [
+    {
+     "key": "Banner",
+     "name": "Banner"
+    }
+   ]
+  }
+ ],
+ "named_items": [],
+ "banners": [],
+ "icons": {}
+}

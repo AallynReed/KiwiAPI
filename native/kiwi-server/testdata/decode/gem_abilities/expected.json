@@ -1,0 +1,71 @@
+[
+    {
+        "element": "Water",
+        "slug": "adventurer_swap",
+        "name": "",
+        "description": "",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "bard_attackswap",
+        "name": "",
+        "description": "",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "basic_attack_dot",
+        "name": "",
+        "description": "",
+        "tiers": [
+            109,
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "candybarbarian_swap",
+        "name": "",
+        "description": "",
+        "tiers": [
+            110,
+            111,
+            112
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "element": "Water",
+        "slug": "chloromancer",
+        "name": "",
+        "description": "",
+        "tiers": [
+            110
+        ],
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    }
+]

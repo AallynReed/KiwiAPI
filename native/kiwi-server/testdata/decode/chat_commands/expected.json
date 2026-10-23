@@ -1,0 +1,482 @@
+{
+ "commands": [
+  {
+   "command": "joinme",
+   "description": "Invites a player to join you in your world.",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "command": "friend",
+   "description": "Create a request to add another player to your friends list.",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "command": "ignore",
+   "description": "Ignores all communication from another player.",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "command": "loc",
+   "description": "Display your current XYZ coordinates in the chat window.",
+   "args": []
+  },
+  {
+   "command": "who",
+   "description": "Returns a list of players present in the current world.",
+   "args": []
+  },
+  {
+   "command": "getxp",
+   "description": "Displays your current level and the amount of XP needed to level up.",
+   "args": []
+  },
+  {
+   "command": "xp",
+   "description": "Displays your current level and the amount of XP needed to level up.",
+   "args": []
+  },
+  {
+   "command": "friendlist",
+   "description": "Opens your Friends List - default keybind is 'O'.",
+   "args": []
+  },
+  {
+   "command": "store",
+   "description": "Open the Store window - default keybind is 'N'.",
+   "args": []
+  },
+  {
+   "command": "craftui",
+   "description": "Opens your personal Crafting menu - default keybind is 'V'.",
+   "args": []
+  },
+  {
+   "command": "respawn",
+   "description": "Forces your character to respawn - WARNING! This will kill your character, resetting their magic find to 0.",
+   "args": []
+  },
+  {
+   "command": "quit",
+   "description": "Forces the game client to exit.",
+   "args": []
+  },
+  {
+   "command": "getworldid",
+   "description": "Get the World ID number for the world you are currently in.",
+   "args": []
+  },
+  {
+   "command": "joinworld",
+   "description": "Join the world with the specified World ID number.",
+   "args": [
+    "id"
+   ]
+  },
+  {
+   "command": "gotoworld",
+   "description": "Join the world with the specified World ID number.",
+   "args": [
+    "id"
+   ]
+  },
+  {
+   "command": "joinme",
+   "description": "Invites the specified player to teleport to you.",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "command": "kick",
+   "description": "Forcibly removes a player from a Shadow Dungeon or Arena you have opened.",
+   "args": [
+    "name"
+   ]
+  },
+  {
+   "command": "tutorial",
+   "description": "Teleports you to the tutorial world.",
+   "args": []
+  },
+  {
+   "command": "stats",
+   "description": "Shows you an assortment of your play-related stats.",
+   "args": []
+  },
+  {
+   "command": "1",
+   "description": "Sends a message to the Global chat channel.",
+   "args": [
+    "message"
+   ]
+  },
+  {
+   "command": "2",
+   "description": "Send a message to the World chat channel. Only players in your current world will see the message.",
+   "args": [
+    "message"
+   ]
+  },
+  {
+   "command": "join",
+   "description": "Joins the specified chat channel. You can /join Trade to join the Trade channel, for example. Chat channels you join will be assigned a number. you can then use /[number] to send a message to that channel.",
+   "args": [
+    "channelname"
+   ]
+  },
+  {
+   "command": "leave",
+   "description": "Leaves the specified chat channel. You will no longer see chat messages from that channel.",
+   "args": [
+    "channelname"
+   ]
+  },
+  {
+   "command": "say",
+   "description": "Sends a message to players with 35 blocks of your current world location",
+   "args": [
+    "message"
+   ]
+  },
+  {
+   "command": "whisper",
+   "description": "Send a message to a specific player. Only you and that player will be able to see the message. You can abbreviate this command to /w.",
+   "args": [
+    "name",
+    "message"
+   ]
+  },
+  {
+   "command": "tell",
+   "description": "Send a message to a specific player. Only you and that player will be able to see the message. You can abbreviate this command to /t.",
+   "args": [
+    "name",
+    "message"
+   ]
+  },
+  {
+   "command": "reply",
+   "description": "Send a reply to the last whisper you received. You can abbreviate this command to /r.",
+   "args": [
+    "message"
+   ]
+  },
+  {
+   "command": "sit",
+   "description": "Makes your character sit down.",
+   "args": []
+  },
+  {
+   "command": "pose",
+   "description": "Makes your character strike a pose and display their readiness for battle!",
+   "args": []
+  },
+  {
+   "command": "sleep",
+   "description": "Makes your character doze off. Activates automatically after 2 minutes of inactivity. Any action will interrupt your sleep. This command can be abbreviated to /zzz.\"",
+   "args": []
+  },
+  {
+   "command": "wave",
+   "description": "Makes your character wave their hand in greeting or farewell.",
+   "args": []
+  },
+  {
+   "command": "dance",
+   "description": "Makes your character break out their best dance moves. These are different for each class.",
+   "args": []
+  },
+  {
+   "command": "laugh",
+   "description": "Makes your character burst into laughter.",
+   "args": []
+  },
+  {
+   "command": "cry",
+   "description": "Makes your character weep bitter tears of woe.",
+   "args": []
+  },
+  {
+   "command": "shrug",
+   "description": "Makes your character shrug with indifference or doubt.",
+   "args": []
+  },
+  {
+   "command": "club",
+   "description": "Lists all available club commands. The default keybind for the club interface window is 'P'.",
+   "args": []
+  },
+  {
+   "command": "club invite",
+   "description": "Invites the designated player to join the specified club.",
+   "args": [
+    "name",
+    "clubname"
+   ]
+  },
+  {
+   "command": "club list",
+   "description": "Lists all members of all the clubs you belong to.",
+   "args": []
+  },
+  {
+   "command": "club leave",
+   "description": "Removes your character the specified club.",
+   "args": [
+    "clubname"
+   ]
+  },
+  {
+   "command": "club promote",
+   "description": "Promotes the specified player within the ranks of the specified club.",
+   "args": [
+    "name",
+    "clubname"
+   ]
+  },
+  {
+   "command": "club demote",
+   "description": "Demotes the specified player within the ranks of the specified club.",
+   "args": [
+    "name",
+    "clubname"
+   ]
+  },
+  {
+   "command": "club kick",
+   "description": "Removes the specified player from the specified club.",
+   "args": [
+    "name",
+    "clubname"
+   ]
+  },
+  {
+   "command": "club makeprimary",
+   "description": "Designates the primary club for the character. The club's name will be displayed alongside the player's name above the character model - 'name' of 'clubname'.",
+   "args": [
+    "clubname"
+   ]
+  },
+  {
+   "command": "club disband",
+   "description": "Disbands the specified club.",
+   "args": [
+    "clubname"
+   ]
+  },
+  {
+   "command": "zonerestrict",
+   "description": "Restricts the clubworld zone you are in to be require a minimum club rank to modify. This can be set to members, architects, officers, or nobody.",
+   "args": [
+    "clubrank"
+   ]
+  },
+  {
+   "command": "club log",
+   "description": "Displays a log of recent activity in the club world.",
+   "args": [
+    "clubname"
+   ]
+  },
+  {
+   "command": "hideplayer",
+   "description": "Hides your character model. Useful when you want to take screenshots.",
+   "args": []
+  },
+  {
+   "command": "showplayer",
+   "description": "Shows your character model.",
+   "args": []
+  },
+  {
+   "command": "screenshot",
+   "description": "Creates a screenshot and stores it in the Trove folder. The screenshot will not display the game UI.",
+   "args": []
+  },
+  {
+   "command": "large_screenshot",
+   "description": "Store a screenshot at twice the resolution, as 4 tiled images. You can add parameters to specify the number of tiles to split the screenshot into - eg. /large_screenshot 3 3",
+   "args": []
+  },
+  {
+   "command": "timelapse",
+   "description": "Captures screenshots over a period of time. Screenshots are captured from the position where the command is entered. Minimum parameter is 5, default is 20.",
+   "args": [
+    "seconds"
+   ]
+  },
+  {
+   "command": "showui",
+   "description": "Toggles the UI off and on. Default keybind is 'F7'. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "/mf",
+   "description": "Brings your character to the Metaforge.",
+   "args": []
+  },
+  {
+   "command": "weaponpreview",
+   "description": "Allows you to preview a weapon style from a .blueprint file. Useful for testing the appearance of a Trove Creations weapon submission on different character models.",
+   "args": [
+    "blueprint"
+   ]
+  },
+  {
+   "command": "hairpreview",
+   "description": "Allows you to preview a hairstyle from a .blueprint file. Useful for testing the appearance of a Trove Creations hairstyle submission on different character models.",
+   "args": [
+    "blueprint"
+   ]
+  },
+  {
+   "command": "hatpreview",
+   "description": "Allows you to preview a hat style from a .blueprint file. Useful for testing the appearance of a Trove Creations hat submission on different character models.",
+   "args": [
+    "blueprint"
+   ]
+  },
+  {
+   "command": "facepreview",
+   "description": "Allows you to preview a mask style from a .blueprint file. Useful for testing the appearance of a Trove Creations mask submission on different character models.",
+   "args": [
+    "blueprint"
+   ]
+  },
+  {
+   "command": "decopreview",
+   "description": "Allows you to preview a decor piece from a .blueprint file. Useful for testing the appearance of Trove Creations decor submissions. Can only be used in the Metaforge.",
+   "args": []
+  },
+  {
+   "command": "load",
+   "description": "Loads a .blueprint file into the Metaforge. You will need to specify the entire path for the file - eg. D:\\Trove\\myblueprint01.",
+   "args": [
+    "filename"
+   ]
+  },
+  {
+   "command": "save",
+   "description": "Saves the .blueprint file currently loaded into the Metaforge to the specified file. You will need to specify the entire path for the file - eg. D:\\Trove\\myblueprint01 - This command can be abbreviated to /save.",
+   "args": [
+    "filename"
+   ]
+  },
+  {
+   "command": "wadd",
+   "description": "Adds a prefab from the \\Prefabs folder to your inventory. Default amount is 1000. Can only be used in the Metaforge. Useful for population lairs and dungeons. You can also drag the .prefab files directly into the client window.",
+   "args": [
+    "prefab",
+    "amount"
+   ]
+  },
+  {
+   "command": "dungeon",
+   "description": "Loads a .dungeon file into the Metaforge. You will need to enter the entire path for the file - eg. D:\\Trove\\mydungeon.dungeon -Useful to preview and test dungeons and lairs you are working on. You can also drag the .dungeon file directly into the client window.",
+   "args": [
+    "filename"
+   ]
+  },
+  {
+   "command": "settime",
+   "description": "Sets the time of day. Parameter can be any value from 0 to 24. Useful for testing the appearance of submissions you are working under different lighting conditions.",
+   "args": [
+    "number"
+   ]
+  },
+  {
+   "command": "timelapsedungeon",
+   "description": "Show your dungeon being assembled piece by piece in the same way the game would generate it in the world. Useful troubleshoot your dungeon or lair if it is failing to generate correctly and you cannot figure out why. Requires the entire path for the file - eg. D:\\Trove\\mydungeon.dungeon",
+   "args": [
+    "filename"
+   ]
+  },
+  {
+   "command": "stoptimelapsedungeon",
+   "description": "Stop a timelapsed dungeon generation process that is currently running.",
+   "args": []
+  },
+  {
+   "command": "floodfill",
+   "description": "Replaces the targeted block and all connected blocks of the same time with the block you currently have set as active.",
+   "args": []
+  },
+  {
+   "command": "drawdistance",
+   "description": "Changes your render distance. Default is 128, but you can change this to anything from 32 to 256.",
+   "args": [
+    "value"
+   ]
+  },
+  {
+   "command": "fxenable",
+   "description": "Toggle a number of visual effects, including clouds, off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "msaa",
+   "description": "Toggle MultiSample Anti-Aliasing off or on.Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "postfxaa",
+   "description": "Toggle Fast Approximate Anti-Aliasing off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "postbloom",
+   "description": "Toggle Bloom off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "postdof",
+   "description": "Toggle Depth of Field off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "postedge",
+   "description": "Toggle black borders off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "postlensflare",
+   "description": "Toggle Lens Flare off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "shadercomplexity",
+   "description": "Toggle various shader effects off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "supersample",
+   "description": "Set overall rendering strength. Default is 1. 0 is 50%, 4 is 200%, 10 is 300%. Valid range is from 0 to 10",
+   "args": []
+  },
+  {
+   "command": "vsync",
+   "description": "Toggles vsync off or on. Values are 0 for off and 1 for true.",
+   "args": []
+  },
+  {
+   "command": "loddistance",
+   "description": "Set LOD. Default is 60. Valid range is 15 to 96.",
+   "args": [
+    "value"
+   ]
+  },
+  {
+   "command": "mastervolume",
+   "description": "Set the volume for all sounds in the game. Default is 25. Valid range is 0 to 100.",
+   "args": [
+    "value"
+   ]
+  }
+ ]
+}

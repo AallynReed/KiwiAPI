@@ -1,0 +1,132 @@
+[
+    {
+        "class": "Bard",
+        "game_folder": "bard",
+        "name": "Crystal-Teleport",
+        "description": "When using Crystal Pop teleport to your singing crystals location",
+        "slug": "test_bard_01",
+        "prefab": "abilities/mods_01/bard/ring_test_bard_01",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Bard",
+        "game_folder": "bard",
+        "name": "Melody Overload",
+        "description": "At max Melody gain a small damage boost.",
+        "slug": "melody_overload",
+        "prefab": "abilities/mods_01/bard/ring_melody_overload",
+        "prefabs": [
+            "abilities/mods_01/bard/melody_overload_buff"
+        ],
+        "stats": [
+            {
+                "stat": "$Stat_SpellDamageBonus",
+                "name": "Magic Damage Bonus",
+                "op": "MultiplySum",
+                "value": 20.0,
+                "percent": true,
+                "amount": 0.2,
+                "prefab": "abilities/mods_01/bard/melody_overload_buff"
+            }
+        ],
+        "stages": [],
+        "effects": [
+            {
+                "name": "Melody Overload Buff",
+                "prefab": "abilities/mods_01/bard/melody_overload_buff",
+                "component": 136,
+                "duration": 600.0,
+                "stats": [
+                    {
+                        "stat": "$Stat_SpellDamageBonus",
+                        "name": "Magic Damage Bonus",
+                        "op": "MultiplySum",
+                        "value": 20.0,
+                        "percent": true,
+                        "amount": 0.2
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Blast Bow",
+        "description": "Triggers an explosion on each bow attack.",
+        "slug": "blast_bow",
+        "prefab": "abilities/mods_01/adventurer/ring_blast_bow",
+        "prefabs": [
+            "abilities/mods_01/adventurer/blast_bow_effect_explosion"
+        ],
+        "stats": [],
+        "stages": [
+            {
+                "name": "Blast Bow Effect Explosion",
+                "prefab": "abilities/mods_01/adventurer/blast_bow_effect_explosion",
+                "base": 50,
+                "multiplier": 1.0,
+                "crit_damage_multiplier": 1.0,
+                "block_damage": 25,
+                "max_block_hardness": 50,
+                "max_blocks": 10000,
+                "knockback_multiplier": 1.0,
+                "min_knockback": 0.1,
+                "damage_stat": -1
+            }
+        ],
+        "proc_cooldown": 0.1
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Chicken Pack",
+        "description": "Chickens spawned from your ultimate or Bawk-Bomb class gem now explode after 6 seconds and spawn three more chickens.",
+        "slug": "chickenpack",
+        "prefab": "abilities/mods_01/adventurer/ring_chickenpack",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Cyclone",
+        "description": "Your 3rd melee attack now pulls enemies in.",
+        "slug": "cyclone",
+        "prefab": "abilities/mods_01/adventurer/ring_cyclone",
+        "prefabs": [
+            "abilities/mods_01/adventurer/cyclone_attack_aoe",
+            "abilities/mods_01/adventurer/cyclone_attack_attract_effect"
+        ],
+        "stats": [],
+        "stages": [],
+        "effects": [
+            {
+                "name": "Cyclone Attack Aoe",
+                "prefab": "abilities/mods_01/adventurer/cyclone_attack_aoe",
+                "component": 132,
+                "duration": 1.0
+            },
+            {
+                "name": "Cyclone Attack Attract Effect",
+                "prefab": "abilities/mods_01/adventurer/cyclone_attack_attract_effect",
+                "component": 287,
+                "duration": 1.0
+            }
+        ]
+    },
+    {
+        "class": "Boomeranger",
+        "game_folder": "adventurer",
+        "name": "Overstuffed Urn",
+        "description": "Your Mysterious Urn triggers an additional effect.",
+        "slug": "overstuffed",
+        "prefab": "abilities/mods_01/adventurer/ring_overstuffed",
+        "prefabs": [],
+        "stats": [],
+        "stages": []
+    }
+]

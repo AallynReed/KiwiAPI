@@ -1,0 +1,1017 @@
+{
+    "fish": [
+        {
+            "slug": "chocolate_common_02",
+            "name": "Blueberry Pie-ranha",
+            "description": "Common fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_02",
+            "blueprint": "fish_choc_rare.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "tags": [
+                "common_02"
+            ],
+            "weight": {
+                "min": 1.0,
+                "max": 20.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 1.0,
+                    "max": 19.05,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.05,
+                    "max": 19.62,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_rare_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.62,
+                    "max": 19.905,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_rare_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.905,
+                    "max": 20.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_rare_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_slug",
+            "name": "Candied Crawler",
+            "description": "Common Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_slug",
+            "blueprint": "2022/items/item_fish_chocolate_common_slug.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "pool": "chocolate",
+            "tags": [
+                "common_07",
+                "pools_chocolate_common",
+                "pool_chocolate",
+                "pool_slug"
+            ],
+            "weight": {
+                "min": 5.0,
+                "max": 40.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 5.0,
+                    "max": 38.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 38.25,
+                    "max": 39.3,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_slug_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.3,
+                    "max": 39.825,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_slug_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.825,
+                    "max": 40.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_slug_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_coral",
+            "name": "Candied Cubal",
+            "description": "Common Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_coral",
+            "blueprint": "2022/items/item_fish_chocolate_common_coral.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "pool": "chocolate",
+            "tags": [
+                "common_03",
+                "pools_chocolate_common",
+                "pool_chocolate",
+                "pool_coral"
+            ],
+            "weight": {
+                "min": 1.0,
+                "max": 20.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 1.0,
+                    "max": 19.05,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.05,
+                    "max": 19.62,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_coral_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.62,
+                    "max": 19.905,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_coral_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.905,
+                    "max": 20.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_coral_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_05",
+            "name": "Cherry Jellyfish",
+            "description": "Common fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_05",
+            "blueprint": "fish_choc_relic.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "tags": [
+                "common_05"
+            ],
+            "weight": {
+                "min": 15.0,
+                "max": 70.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 15.0,
+                    "max": 67.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 67.25,
+                    "max": 68.9,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_relic_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 68.9,
+                    "max": 69.725,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_relic_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 69.725,
+                    "max": 70.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_relic_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_frog",
+            "name": "Lollihops",
+            "description": "Common Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_frog",
+            "blueprint": "2022/items/item_fish_chocolate_common_frog.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "pool": "chocolate",
+            "tags": [
+                "common_06",
+                "pools_chocolate_common",
+                "pool_chocolate",
+                "pool_frog"
+            ],
+            "weight": {
+                "min": 1.0,
+                "max": 20.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 1.0,
+                    "max": 19.05,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.05,
+                    "max": 19.62,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_frog_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.62,
+                    "max": 19.905,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_frog_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.905,
+                    "max": 20.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_common_frog_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_01",
+            "name": "Mint Choctacoise",
+            "description": "Common fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_01",
+            "blueprint": "fish_choc_uncommon.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "tags": [
+                "common_01"
+            ],
+            "weight": {
+                "min": 1.0,
+                "max": 20.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 1.0,
+                    "max": 19.05,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.05,
+                    "max": 19.62,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_uncommon_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.62,
+                    "max": 19.905,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_uncommon_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.905,
+                    "max": 20.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_uncommon_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_03",
+            "name": "Neanderthal Plum Pike",
+            "description": "Common fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_03",
+            "blueprint": "fish_choc_epic.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "tags": [
+                "common_03"
+            ],
+            "weight": {
+                "min": 5.0,
+                "max": 40.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 5.0,
+                    "max": 38.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 38.25,
+                    "max": 39.3,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_epic_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.3,
+                    "max": 39.825,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_epic_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.825,
+                    "max": 40.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_epic_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_04",
+            "name": "Orange Marlingue",
+            "description": "Common fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_04",
+            "blueprint": "fish_choc_legendary.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "tags": [
+                "common_04"
+            ],
+            "weight": {
+                "min": 25.0,
+                "max": 120.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 25.0,
+                    "max": 115.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 115.25,
+                    "max": 118.1,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_legendary_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 118.1,
+                    "max": 119.525,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_legendary_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 119.525,
+                    "max": 120.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_legendary_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_07",
+            "name": "Reef Liquoral",
+            "description": "Common fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_07",
+            "blueprint": "fish_choc_shadow.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "tags": [
+                "common_07"
+            ],
+            "weight": {
+                "min": 15.0,
+                "max": 70.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 15.0,
+                    "max": 67.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 67.25,
+                    "max": 68.9,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_shadow_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 68.9,
+                    "max": 69.725,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_shadow_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 69.725,
+                    "max": 70.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_shadow_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_school_surgeon",
+            "name": "Smudgeon",
+            "description": "That's not a smudge! That's art!\n\nCommon Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_school_surgeon",
+            "blueprint": "2026/items/item_fish_chocolate_common_school_surgeon.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "pool": "chocolate",
+            "tags": [
+                "common_02",
+                "school_fish_common_02",
+                "pools_chocolate_common"
+            ],
+            "weight": {
+                "min": 15.0,
+                "max": 70.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 15.0,
+                    "max": 67.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 67.25,
+                    "max": 68.9,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_chocolate_common_school_surgeon_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 68.9,
+                    "max": 69.725,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_chocolate_common_school_surgeon_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 69.725,
+                    "max": 70.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_chocolate_common_school_surgeon_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_common_06",
+            "name": "Sour Skate",
+            "description": "Common fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/common_06",
+            "blueprint": "fish_choc_resplendent.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Common",
+            "collection": "Chocolate",
+            "tags": [
+                "common_06"
+            ],
+            "weight": {
+                "min": 15.0,
+                "max": 70.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 15.0,
+                    "max": 67.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 67.25,
+                    "max": 68.9,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_resplendent_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 68.9,
+                    "max": 69.725,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_resplendent_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 69.725,
+                    "max": 70.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_resplendent_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_rare_ancient",
+            "name": "Ancient Chocolurker",
+            "description": "Rare Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/rare_ancient",
+            "blueprint": "fish_choc_ancient.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Rare",
+            "collection": "Chocolate",
+            "tags": [
+                "rarefish"
+            ],
+            "weight": {
+                "min": 15.0,
+                "max": 70.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 15.0,
+                    "max": 67.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 67.25,
+                    "max": 68.9,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_ancient_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 68.9,
+                    "max": 69.725,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_ancient_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 69.725,
+                    "max": 70.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_ancient_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_rare_cottoncandy_blue",
+            "name": "Blue High Flying Cotton Candish",
+            "description": "Rare Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/rare_cottoncandy_blue",
+            "blueprint": "fish_choc_cotcandy_blue.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Rare",
+            "collection": "Chocolate",
+            "tags": [
+                "rarefish"
+            ],
+            "weight": {
+                "min": 5.0,
+                "max": 40.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 5.0,
+                    "max": 38.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 38.25,
+                    "max": 39.3,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_cotcandyblue_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.3,
+                    "max": 39.825,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_cotcandyblue_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.825,
+                    "max": 40.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_cotcandyblue_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_rare_shark",
+            "name": "Brownie",
+            "description": "Rare Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/rare_shark",
+            "blueprint": "2022/items/item_fish_chocolate_rare_shark.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Rare",
+            "collection": "Chocolate",
+            "pool": "chocolate",
+            "tags": [
+                "rarefish",
+                "pools_chocolate_rare",
+                "pool_chocolate",
+                "pool_shark"
+            ],
+            "weight": {
+                "min": 15.0,
+                "max": 70.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 15.0,
+                    "max": 67.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 67.25,
+                    "max": 68.9,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_rare_shark_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 68.9,
+                    "max": 69.725,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_rare_shark_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 69.725,
+                    "max": 70.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_rare_shark_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_rare_chocodile",
+            "name": "Chocodile",
+            "description": "Rare Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/rare_chocodile",
+            "blueprint": "fish_choc_crocodile.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Rare",
+            "collection": "Chocolate",
+            "tags": [
+                "rarefish"
+            ],
+            "weight": {
+                "min": 25.0,
+                "max": 120.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 25.0,
+                    "max": 115.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 115.25,
+                    "max": 118.1,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_crocodile_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 118.1,
+                    "max": 119.525,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_crocodile_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 119.525,
+                    "max": 120.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_crocodile_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_rare_cottoncandy_pink",
+            "name": "Pink High Flying Cotton Candish",
+            "description": "Rare Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/rare_cottoncandy_pink",
+            "blueprint": "fish_choc_cotcandy_pink.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Rare",
+            "collection": "Chocolate",
+            "tags": [
+                "rarefish"
+            ],
+            "weight": {
+                "min": 5.0,
+                "max": 40.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 5.0,
+                    "max": 38.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 38.25,
+                    "max": 39.3,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_cotcandypink_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.3,
+                    "max": 39.825,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_cotcandypink_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 39.825,
+                    "max": 40.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_cotcandypink_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_rare_octopus",
+            "name": "Popular Poptopus",
+            "description": "Rare Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/rare_octopus",
+            "blueprint": "fish_choc_poptopus.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Rare",
+            "collection": "Chocolate",
+            "tags": [
+                "rarefish"
+            ],
+            "weight": {
+                "min": 15.0,
+                "max": 70.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 15.0,
+                    "max": 67.25,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 67.25,
+                    "max": 68.9,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_poptopus_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 68.9,
+                    "max": 69.725,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_poptopus_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 69.725,
+                    "max": 70.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_poptopus_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        },
+        {
+            "slug": "chocolate_rare_gobstopper",
+            "name": "Pressurized Gobfish",
+            "description": "Rare Fish. Loot Collect it to gain resources and add it to your collection.",
+            "prefab": "item/fish/chocolate/rare_gobstopper",
+            "blueprint": "fish_choc_gobstopper.blueprint",
+            "liquid": "chocolate",
+            "rarity": "Rare",
+            "collection": "Chocolate",
+            "tags": [
+                "rarefish"
+            ],
+            "weight": {
+                "min": 1.0,
+                "max": 20.0
+            },
+            "sizes": [
+                {
+                    "size": "",
+                    "min": 1.0,
+                    "max": 19.05,
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.05,
+                    "max": 19.62,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_gobstopper_basic"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.62,
+                    "max": 19.905,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_gobstopper_silver"
+                    },
+                    "deconstruct": []
+                },
+                {
+                    "size": "",
+                    "min": 19.905,
+                    "max": 20.0,
+                    "trophy": {
+                        "name": "",
+                        "prefab": "placeable/deco/trophy_fish_choc_gobstopper_gold"
+                    },
+                    "deconstruct": []
+                }
+            ]
+        }
+    ],
+    "catch_odds": {},
+    "size_odds": {},
+    "bite_time": {},
+    "lures": []
+}

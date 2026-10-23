@@ -9,6 +9,7 @@ pub mod auth;
 pub mod cheaters;
 pub mod config;
 pub mod db;
+pub mod decode;
 pub mod dm_subs;
 pub mod drops;
 pub mod dt;

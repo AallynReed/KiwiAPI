@@ -1,0 +1,4725 @@
+[
+    {
+        "slug": "allgemstats_badge",
+        "name": "AllGemStats_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "prefab": "collections/badge/allgemstats_bronze",
+                "blueprint": "badge_gemupgrade_02_bronze.blueprint",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": true,
+                    "amount": 1
+                },
+                "rewards": [
+                    {
+                        "id": "AllGemStats_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "prefab": "collections/badge/allgemstats_silver",
+                "blueprint": "badge_gemupgrade_02_silver.blueprint",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": true,
+                    "amount": 2
+                },
+                "rewards": [
+                    {
+                        "id": "AllGemStats_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "prefab": "collections/badge/allgemstats_gold",
+                "blueprint": "badge_gemupgrade_02_gold.blueprint",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": true,
+                    "amount": 3
+                },
+                "rewards": [
+                    {
+                        "id": "AllGemStats_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "prefab": "collections/badge/allgemstats_platinum",
+                "blueprint": "badge_gemupgrade_02_platinum.blueprint",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": true,
+                    "amount": 5
+                },
+                "rewards": [
+                    {
+                        "id": "AllGemStats_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "prefab": "collections/badge/allgemstats_diamond",
+                "blueprint": "badge_gemupgrade_02_diamond.blueprint",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": true,
+                    "amount": 7
+                },
+                "rewards": [
+                    {
+                        "id": "AllGemStats_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "prefab": "collections/badge/allgemstats_obsidian",
+                "blueprint": "badge_gemupgrade_02_obsidian.blueprint",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": true,
+                    "amount": 9
+                },
+                "rewards": [
+                    {
+                        "id": "AllGemStats_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "badge_expertise_gems",
+        "name": "badge_expertise_gems",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "none"
+                },
+                "rewards": [
+                    {
+                        "id": "expertise_gems"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "blocks_badge",
+        "name": "blocks_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "prefab": "collections/badge/blocks_bronze",
+                "blueprint": "badge_blocks_bronze.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 5,
+                    "amount": 1000
+                },
+                "rewards": [
+                    {
+                        "id": "blocks_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "prefab": "collections/badge/blocks_silver",
+                "blueprint": "badge_blocks_silver.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 5,
+                    "amount": 25000
+                },
+                "rewards": [
+                    {
+                        "id": "blocks_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "prefab": "collections/badge/blocks_gold",
+                "blueprint": "badge_blocks_gold.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 5,
+                    "amount": 500000
+                },
+                "rewards": [
+                    {
+                        "id": "blocks_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "prefab": "collections/badge/blocks_platinum",
+                "blueprint": "badge_blocks_platinum.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 5,
+                    "amount": 2000000
+                },
+                "rewards": [
+                    {
+                        "id": "blocks_platinum"
+                    },
+                    {
+                        "id": "blocks_helm"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "boxesopened_badge",
+        "name": "boxesopened_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "prefab": "collections/badge/boxesopened_bronze",
+                "blueprint": "badge_boxesopened_bronze.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 12,
+                    "amount": 50
+                },
+                "rewards": [
+                    {
+                        "id": "boxesopened_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "prefab": "collections/badge/boxesopened_silver",
+                "blueprint": "badge_boxesopened_silver.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 12,
+                    "amount": 300
+                },
+                "rewards": [
+                    {
+                        "id": "boxesopened_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "prefab": "collections/badge/boxesopened_gold",
+                "blueprint": "badge_boxesopened_gold.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 12,
+                    "amount": 1000
+                },
+                "rewards": [
+                    {
+                        "id": "boxesopened_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "prefab": "collections/badge/boxesopened_platinum",
+                "blueprint": "badge_boxesopened_platinum.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 12,
+                    "amount": 2500
+                },
+                "rewards": [
+                    {
+                        "id": "boxesopened_platinum"
+                    },
+                    {
+                        "id": "boxesopened_helm"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "prefab": "collections/badge/boxesopened_diamond",
+                "blueprint": "badge_boxesopened_diamond.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 12,
+                    "amount": 6000
+                },
+                "rewards": [
+                    {
+                        "id": "boxesopened_diamond"
+                    },
+                    {
+                        "id": "boxesopened_mount"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "prefab": "collections/badge/boxesopened_obsidian",
+                "blueprint": "badge_boxesopened_obsidian.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 12,
+                    "amount": 12000
+                },
+                "rewards": [
+                    {
+                        "id": "boxesopened_obsidian"
+                    },
+                    {
+                        "id": "boxesopened_wings"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "consecutive_badge",
+        "name": "consecutive_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "prefab": "collections/badge/consecutive_bronze",
+                "blueprint": "badge_consecutive_bronze.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 15,
+                    "amount": 2
+                },
+                "rewards": [
+                    {
+                        "id": "consecutive_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "prefab": "collections/badge/consecutive_silver",
+                "blueprint": "badge_consecutive_silver.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 15,
+                    "amount": 3
+                },
+                "rewards": [
+                    {
+                        "id": "consecutive_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "prefab": "collections/badge/consecutive_gold",
+                "blueprint": "badge_consecutive_gold.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 15,
+                    "amount": 7
+                },
+                "rewards": [
+                    {
+                        "id": "consecutive_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "prefab": "collections/badge/consecutive_platinum",
+                "blueprint": "badge_consecutive_platinum.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 15,
+                    "amount": 15
+                },
+                "rewards": [
+                    {
+                        "id": "consecutive_platinum"
+                    },
+                    {
+                        "id": "consecutive_helm"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "prefab": "collections/badge/consecutive_diamond",
+                "blueprint": "badge_consecutive_diamond.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 15,
+                    "amount": 30
+                },
+                "rewards": [
+                    {
+                        "id": "consecutive_diamond"
+                    },
+                    {
+                        "id": "consecutive_mount"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "prefab": "collections/badge/consecutive_obsidian",
+                "blueprint": "badge_consecutive_obsidian.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 15,
+                    "amount": 45
+                },
+                "rewards": [
+                    {
+                        "id": "consecutive_obsidian"
+                    },
+                    {
+                        "id": "consecutive_wings"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "days_badge",
+        "name": "days_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "prefab": "collections/badge/days_bronze",
+                "blueprint": "badge_days_bronze.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 13,
+                    "amount": 7
+                },
+                "rewards": [
+                    {
+                        "id": "days_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 13,
+                    "amount": 30
+                },
+                "rewards": [
+                    {
+                        "id": "days_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 13,
+                    "amount": 60
+                },
+                "rewards": [
+                    {
+                        "id": "days_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 13,
+                    "amount": 120
+                },
+                "rewards": [
+                    {
+                        "id": "days_platinum"
+                    },
+                    {
+                        "id": "days_helm"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "prefab": "collections/badge/days_diamond",
+                "blueprint": "badge_days_diamond.blueprint",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 13,
+                    "amount": 180
+                },
+                "rewards": [
+                    {
+                        "id": "days_diamond"
+                    },
+                    {
+                        "id": "days_mount"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 13,
+                    "amount": 240
+                },
+                "rewards": [
+                    {
+                        "id": "days_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "delve_badge",
+        "name": "delve_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 111,
+                    "amount": 9
+                },
+                "rewards": [
+                    {
+                        "id": "delve_bronze"
+                    },
+                    {
+                        "id": "delve_private_openers"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 111,
+                    "amount": 50
+                },
+                "rewards": [
+                    {
+                        "id": "delve_silver"
+                    },
+                    {
+                        "id": "delve_food_t01"
+                    },
+                    {
+                        "id": "delve_cache_gold"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 112,
+                    "amount": 9
+                },
+                "rewards": [
+                    {
+                        "id": "delve_gold"
+                    },
+                    {
+                        "id": "delve_keys_5"
+                    },
+                    {
+                        "id": "delve_challenge_openers"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 112,
+                    "amount": 250
+                },
+                "rewards": [
+                    {
+                        "id": "delve_platinum"
+                    },
+                    {
+                        "id": "delve_food_t02"
+                    },
+                    {
+                        "id": "delve_cache_gold_2"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 114,
+                    "amount": 9
+                },
+                "rewards": [
+                    {
+                        "id": "delve_diamond"
+                    },
+                    {
+                        "id": "delve_keys_10"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 114,
+                    "amount": 500
+                },
+                "rewards": [
+                    {
+                        "id": "delve_obsidian"
+                    },
+                    {
+                        "id": "delve_delve_food_t03"
+                    },
+                    {
+                        "id": "delve_wallet_expansion_badge"
+                    },
+                    {
+                        "id": "delve_cache_gold_3"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_beard_badge",
+        "name": "dragon_beard_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 5,
+                    "amount": 1,
+                    "dragon": "beard",
+                    "soul_items": [
+                        "item/dragon/soul_beard",
+                        "item/dragon/soul_beard_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_beard_bronze"
+                    },
+                    {
+                        "id": "dragon_beard_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 5,
+                    "amount": 5,
+                    "dragon": "beard",
+                    "soul_items": [
+                        "item/dragon/soul_beard",
+                        "item/dragon/soul_beard_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_beard_silver"
+                    },
+                    {
+                        "id": "dragon_beard_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 5,
+                    "amount": 10,
+                    "dragon": "beard",
+                    "soul_items": [
+                        "item/dragon/soul_beard",
+                        "item/dragon/soul_beard_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_beard_gold"
+                    },
+                    {
+                        "id": "dragon_beard_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 5,
+                    "amount": 25,
+                    "dragon": "beard",
+                    "soul_items": [
+                        "item/dragon/soul_beard",
+                        "item/dragon/soul_beard_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_beard_plat"
+                    },
+                    {
+                        "id": "dragon_beard_melee"
+                    },
+                    {
+                        "id": "dragon_beard_pistol"
+                    },
+                    {
+                        "id": "dragon_beard_staff"
+                    },
+                    {
+                        "id": "dragon_beard_bow"
+                    },
+                    {
+                        "id": "dragon_beard_stave"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 5,
+                    "amount": 50,
+                    "dragon": "beard",
+                    "soul_items": [
+                        "item/dragon/soul_beard",
+                        "item/dragon/soul_beard_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_beard_diamond"
+                    },
+                    {
+                        "id": "dragon_beard_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 5,
+                    "amount": 90,
+                    "dragon": "beard",
+                    "soul_items": [
+                        "item/dragon/soul_beard",
+                        "item/dragon/soul_beard_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_beard_obsidian"
+                    },
+                    {
+                        "id": "dragon_beard_mount_03"
+                    },
+                    {
+                        "id": "dragon_beard_aura"
+                    }
+                ]
+            },
+            {
+                "rank": 6,
+                "tier": "trovium",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 5,
+                    "amount": 100,
+                    "dragon": "beard",
+                    "soul_items": [
+                        "item/dragon/soul_beard",
+                        "item/dragon/soul_beard_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_beard_trovium"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_bone_badge",
+        "name": "dragon_bone_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 7,
+                    "amount": 1,
+                    "dragon": "bone",
+                    "soul_items": [
+                        "item/dragon/soul_bone",
+                        "item/dragon/soul_bone_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_bone_bronze"
+                    },
+                    {
+                        "id": "dragon_bone_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 7,
+                    "amount": 5,
+                    "dragon": "bone",
+                    "soul_items": [
+                        "item/dragon/soul_bone",
+                        "item/dragon/soul_bone_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_bone_silver"
+                    },
+                    {
+                        "id": "dragon_bone_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 7,
+                    "amount": 10,
+                    "dragon": "bone",
+                    "soul_items": [
+                        "item/dragon/soul_bone",
+                        "item/dragon/soul_bone_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_bone_gold"
+                    },
+                    {
+                        "id": "dragon_bone_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 7,
+                    "amount": 25,
+                    "dragon": "bone",
+                    "soul_items": [
+                        "item/dragon/soul_bone",
+                        "item/dragon/soul_bone_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_bone_plat"
+                    },
+                    {
+                        "id": "dragon_bone_melee"
+                    },
+                    {
+                        "id": "dragon_bone_pistol"
+                    },
+                    {
+                        "id": "dragon_bone_staff"
+                    },
+                    {
+                        "id": "dragon_bone_bow"
+                    },
+                    {
+                        "id": "dragon_bone_spear"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 7,
+                    "amount": 50,
+                    "dragon": "bone",
+                    "soul_items": [
+                        "item/dragon/soul_bone",
+                        "item/dragon/soul_bone_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_bone_diamond"
+                    },
+                    {
+                        "id": "dragon_bone_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 7,
+                    "amount": 75,
+                    "dragon": "bone",
+                    "soul_items": [
+                        "item/dragon/soul_bone",
+                        "item/dragon/soul_bone_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_bone_obsidian"
+                    },
+                    {
+                        "id": "dragon_bone_aura"
+                    }
+                ]
+            },
+            {
+                "rank": 6,
+                "tier": "trovium",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 7,
+                    "amount": 100,
+                    "dragon": "bone",
+                    "soul_items": [
+                        "item/dragon/soul_bone",
+                        "item/dragon/soul_bone_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_bone_trovium"
+                    },
+                    {
+                        "id": "dragon_bone_mount_03"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_flux_badge",
+        "name": "dragon_flux_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 10,
+                    "amount": 1,
+                    "dragon": "flux",
+                    "soul_items": [
+                        "item/dragon/soul_flux",
+                        "item/dragon/soul_flux_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_flux_bronze"
+                    },
+                    {
+                        "id": "dragon_flux_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 10,
+                    "amount": 5,
+                    "dragon": "flux",
+                    "soul_items": [
+                        "item/dragon/soul_flux",
+                        "item/dragon/soul_flux_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_flux_silver"
+                    },
+                    {
+                        "id": "dragon_flux_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 10,
+                    "amount": 10,
+                    "dragon": "flux",
+                    "soul_items": [
+                        "item/dragon/soul_flux",
+                        "item/dragon/soul_flux_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_flux_gold"
+                    },
+                    {
+                        "id": "dragon_flux_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 10,
+                    "amount": 25,
+                    "dragon": "flux",
+                    "soul_items": [
+                        "item/dragon/soul_flux",
+                        "item/dragon/soul_flux_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_flux_plat"
+                    },
+                    {
+                        "id": "dragon_flux_melee"
+                    },
+                    {
+                        "id": "dragon_flux_pistol"
+                    },
+                    {
+                        "id": "dragon_flux_staff"
+                    },
+                    {
+                        "id": "dragon_flux_bow"
+                    },
+                    {
+                        "id": "dragon_flux_spear"
+                    },
+                    {
+                        "id": "dragon_flux_fist"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 10,
+                    "amount": 50,
+                    "dragon": "flux",
+                    "soul_items": [
+                        "item/dragon/soul_flux",
+                        "item/dragon/soul_flux_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_flux_diamond"
+                    },
+                    {
+                        "id": "dragon_flux_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 10,
+                    "amount": 75,
+                    "dragon": "flux",
+                    "soul_items": [
+                        "item/dragon/soul_flux",
+                        "item/dragon/soul_flux_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_flux_obsidian"
+                    },
+                    {
+                        "id": "dragon_flux_aura"
+                    }
+                ]
+            },
+            {
+                "rank": 6,
+                "tier": "trovium",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 10,
+                    "amount": 100,
+                    "dragon": "flux",
+                    "soul_items": [
+                        "item/dragon/soul_flux",
+                        "item/dragon/soul_flux_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_flux_trovium"
+                    },
+                    {
+                        "id": "dragon_flux_mount_03"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_lunar_badge",
+        "name": "dragon_lunar_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 6,
+                    "amount": 1,
+                    "dragon": "lunar",
+                    "soul_items": [
+                        "item/dragon/soul_lunar",
+                        "item/dragon/soul_lunar_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_lunar_bronze"
+                    },
+                    {
+                        "id": "dragon_lunar_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 6,
+                    "amount": 5,
+                    "dragon": "lunar",
+                    "soul_items": [
+                        "item/dragon/soul_lunar",
+                        "item/dragon/soul_lunar_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_lunar_silver"
+                    },
+                    {
+                        "id": "dragon_lunar_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 6,
+                    "amount": 10,
+                    "dragon": "lunar",
+                    "soul_items": [
+                        "item/dragon/soul_lunar",
+                        "item/dragon/soul_lunar_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_lunar_gold"
+                    },
+                    {
+                        "id": "dragon_lunar_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 6,
+                    "amount": 25,
+                    "dragon": "lunar",
+                    "soul_items": [
+                        "item/dragon/soul_lunar",
+                        "item/dragon/soul_lunar_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_lunar_plat"
+                    },
+                    {
+                        "id": "dragon_lunar_melee"
+                    },
+                    {
+                        "id": "dragon_lunar_pistol"
+                    },
+                    {
+                        "id": "dragon_lunar_staff"
+                    },
+                    {
+                        "id": "dragon_lunar_bow"
+                    },
+                    {
+                        "id": "dragon_lunar_spear"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 6,
+                    "amount": 50,
+                    "dragon": "lunar",
+                    "soul_items": [
+                        "item/dragon/soul_lunar",
+                        "item/dragon/soul_lunar_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_lunar_diamond"
+                    },
+                    {
+                        "id": "dragon_lunar_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 6,
+                    "amount": 75,
+                    "dragon": "lunar",
+                    "soul_items": [
+                        "item/dragon/soul_lunar",
+                        "item/dragon/soul_lunar_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_lunar_obsidian"
+                    },
+                    {
+                        "id": "dragon_lunar_aura"
+                    }
+                ]
+            },
+            {
+                "rank": 6,
+                "tier": "trovium",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 6,
+                    "amount": 100,
+                    "dragon": "lunar",
+                    "soul_items": [
+                        "item/dragon/soul_lunar",
+                        "item/dragon/soul_lunar_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_lunar_trovium"
+                    },
+                    {
+                        "id": "dragon_lunar_mount_03"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_neon_badge",
+        "name": "dragon_neon_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 4,
+                    "amount": 1,
+                    "dragon": "neon",
+                    "soul_items": [
+                        "item/dragon/soul_neon",
+                        "item/dragon/soul_neon_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_neon_bronze"
+                    },
+                    {
+                        "id": "dragon_neon_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 4,
+                    "amount": 5,
+                    "dragon": "neon",
+                    "soul_items": [
+                        "item/dragon/soul_neon",
+                        "item/dragon/soul_neon_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_neon_silver"
+                    },
+                    {
+                        "id": "dragon_neon_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 4,
+                    "amount": 10,
+                    "dragon": "neon",
+                    "soul_items": [
+                        "item/dragon/soul_neon",
+                        "item/dragon/soul_neon_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_neon_gold"
+                    },
+                    {
+                        "id": "dragon_neon_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 4,
+                    "amount": 25,
+                    "dragon": "neon",
+                    "soul_items": [
+                        "item/dragon/soul_neon",
+                        "item/dragon/soul_neon_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_neon_plat"
+                    },
+                    {
+                        "id": "dragon_neon_melee"
+                    },
+                    {
+                        "id": "dragon_neon_pistol"
+                    },
+                    {
+                        "id": "dragon_neon_staff"
+                    },
+                    {
+                        "id": "dragon_neon_bow"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 4,
+                    "amount": 50,
+                    "dragon": "neon",
+                    "soul_items": [
+                        "item/dragon/soul_neon",
+                        "item/dragon/soul_neon_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_neon_diamond"
+                    },
+                    {
+                        "id": "dragon_neon_mount_02"
+                    },
+                    {
+                        "id": "dragon_neon_vfx"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 4,
+                    "amount": 90,
+                    "dragon": "neon",
+                    "soul_items": [
+                        "item/dragon/soul_neon",
+                        "item/dragon/soul_neon_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_neon_obsidian"
+                    },
+                    {
+                        "id": "dragon_neon_mount_03"
+                    }
+                ]
+            },
+            {
+                "rank": 6,
+                "tier": "trovium",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 4,
+                    "amount": 100,
+                    "dragon": "neon",
+                    "soul_items": [
+                        "item/dragon/soul_neon",
+                        "item/dragon/soul_neon_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_neon_trovium"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_newyear_badge",
+        "name": "dragon_newyear_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "none"
+                },
+                "rewards": []
+            }
+        ]
+    },
+    {
+        "slug": "dragon_oldblue_badge",
+        "name": "dragon_oldblue_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 3,
+                    "amount": 1,
+                    "dragon": "oldblue",
+                    "soul_items": [
+                        "item/dragon/soul_oldblue",
+                        "item/dragon/soul_oldblue_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_oldblue_bronze"
+                    },
+                    {
+                        "id": "dragon_oldblue_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 3,
+                    "amount": 5,
+                    "dragon": "oldblue",
+                    "soul_items": [
+                        "item/dragon/soul_oldblue",
+                        "item/dragon/soul_oldblue_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_oldblue_silver"
+                    },
+                    {
+                        "id": "dragon_oldblue_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 3,
+                    "amount": 15,
+                    "dragon": "oldblue",
+                    "soul_items": [
+                        "item/dragon/soul_oldblue",
+                        "item/dragon/soul_oldblue_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_oldblue_gold"
+                    },
+                    {
+                        "id": "dragon_oldblue_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 3,
+                    "amount": 30,
+                    "dragon": "oldblue",
+                    "soul_items": [
+                        "item/dragon/soul_oldblue",
+                        "item/dragon/soul_oldblue_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_oldblue_plat_v2"
+                    },
+                    {
+                        "id": "dragon_oldblue_mount_03"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 3,
+                    "amount": 40,
+                    "dragon": "oldblue",
+                    "soul_items": [
+                        "item/dragon/soul_oldblue",
+                        "item/dragon/soul_oldblue_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_oldblue_diamond"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_starlight_badge",
+        "name": "dragon_starlight_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 9,
+                    "amount": 1,
+                    "dragon": "starlight",
+                    "soul_items": [
+                        "item/dragon/soul_starlight",
+                        "item/dragon/soul_starlight_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_starlight_bronze"
+                    },
+                    {
+                        "id": "dragon_starlight_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 9,
+                    "amount": 5,
+                    "dragon": "starlight",
+                    "soul_items": [
+                        "item/dragon/soul_starlight",
+                        "item/dragon/soul_starlight_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_starlight_silver"
+                    },
+                    {
+                        "id": "dragon_starlight_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 9,
+                    "amount": 10,
+                    "dragon": "starlight",
+                    "soul_items": [
+                        "item/dragon/soul_starlight",
+                        "item/dragon/soul_starlight_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_starlight_gold"
+                    },
+                    {
+                        "id": "dragon_starlight_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 9,
+                    "amount": 25,
+                    "dragon": "starlight",
+                    "soul_items": [
+                        "item/dragon/soul_starlight",
+                        "item/dragon/soul_starlight_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_starlight_plat"
+                    },
+                    {
+                        "id": "dragon_starlight_melee"
+                    },
+                    {
+                        "id": "dragon_starlight_pistol"
+                    },
+                    {
+                        "id": "dragon_starlight_staff"
+                    },
+                    {
+                        "id": "dragon_starlight_bow"
+                    },
+                    {
+                        "id": "dragon_starlight_spear"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 9,
+                    "amount": 50,
+                    "dragon": "starlight",
+                    "soul_items": [
+                        "item/dragon/soul_starlight",
+                        "item/dragon/soul_starlight_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_starlight_diamond"
+                    },
+                    {
+                        "id": "dragon_starlight_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 9,
+                    "amount": 75,
+                    "dragon": "starlight",
+                    "soul_items": [
+                        "item/dragon/soul_starlight",
+                        "item/dragon/soul_starlight_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_starlight_obsidian"
+                    },
+                    {
+                        "id": "dragon_starlight_aura"
+                    }
+                ]
+            },
+            {
+                "rank": 6,
+                "tier": "trovium",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 9,
+                    "amount": 100,
+                    "dragon": "starlight",
+                    "soul_items": [
+                        "item/dragon/soul_starlight",
+                        "item/dragon/soul_starlight_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_starlight_trovium"
+                    },
+                    {
+                        "id": "dragon_starlight_mount_03"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dragon_winter_2015_badge",
+        "name": "dragon_winter_2015_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 8,
+                    "amount": 1,
+                    "dragon": "winter_2015",
+                    "soul_items": [
+                        "item/dragon/soul_winter_2015",
+                        "item/dragon/soul_winter_2015_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_winter_2015_bronze"
+                    },
+                    {
+                        "id": "dragon_winter_2015_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 8,
+                    "amount": 5,
+                    "dragon": "winter_2015",
+                    "soul_items": [
+                        "item/dragon/soul_winter_2015",
+                        "item/dragon/soul_winter_2015_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_winter_2015_silver"
+                    },
+                    {
+                        "id": "dragon_winter_2015_pet"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 8,
+                    "amount": 10,
+                    "dragon": "winter_2015",
+                    "soul_items": [
+                        "item/dragon/soul_winter_2015",
+                        "item/dragon/soul_winter_2015_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_winter_2015_gold"
+                    },
+                    {
+                        "id": "dragon_winter_2015_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 8,
+                    "amount": 25,
+                    "dragon": "winter_2015",
+                    "soul_items": [
+                        "item/dragon/soul_winter_2015",
+                        "item/dragon/soul_winter_2015_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_winter_2015_plat"
+                    },
+                    {
+                        "id": "dragon_winter_2015_melee"
+                    },
+                    {
+                        "id": "dragon_winter_2015_pistol"
+                    },
+                    {
+                        "id": "dragon_winter_2015_staff"
+                    },
+                    {
+                        "id": "dragon_winter_2015_bow"
+                    },
+                    {
+                        "id": "dragon_winter_2015_spear"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 8,
+                    "amount": 50,
+                    "dragon": "winter_2015",
+                    "soul_items": [
+                        "item/dragon/soul_winter_2015",
+                        "item/dragon/soul_winter_2015_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_winter_2015_diamond"
+                    },
+                    {
+                        "id": "dragon_winter_2015_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 8,
+                    "amount": 75,
+                    "dragon": "winter_2015",
+                    "soul_items": [
+                        "item/dragon/soul_winter_2015",
+                        "item/dragon/soul_winter_2015_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_winter_2015_obsidian"
+                    },
+                    {
+                        "id": "dragon_winter_2015_aura"
+                    }
+                ]
+            },
+            {
+                "rank": 6,
+                "tier": "trovium",
+                "requirement": {
+                    "kind": "dragonsouls",
+                    "dragon_id": 8,
+                    "amount": 100,
+                    "dragon": "winter_2015",
+                    "soul_items": [
+                        "item/dragon/soul_winter_2015",
+                        "item/dragon/soul_winter_2015_notrade"
+                    ]
+                },
+                "rewards": [
+                    {
+                        "id": "dragon_winter_2015_trovium"
+                    },
+                    {
+                        "id": "dragon_winter_2015_mount_03"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dreadnought_hard_badge",
+        "name": "dreadnought_hard_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 1,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_hard_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 5,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_hard_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 10,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_hard_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 50,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_hard_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 100,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_hard_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 300,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_hard_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    },
+                    {
+                        "id": "10_Titan_Souls"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dreadnought_normal_badge",
+        "name": "dreadnought_normal_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 1,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_normal_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 5,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_normal_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 10,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_normal_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 50,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_normal_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 100,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_normal_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 300,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_normal_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    },
+                    {
+                        "id": "5_Titan_Souls"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "dreadnought_ultra_badge",
+        "name": "dreadnought_ultra_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 1,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_ultra_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 5,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_ultra_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 10,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_ultra_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 50,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_ultra_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 100,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_ultra_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_dreadnought.prefab",
+                    "amount": 300,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "dreadnought_ultra_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    },
+                    {
+                        "id": "30_Titan_Souls"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "fishing_badge",
+        "name": "fishing_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 11,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "fishing_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 11,
+                    "amount": 500
+                },
+                "rewards": [
+                    {
+                        "id": "fishing_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 11,
+                    "amount": 1000
+                },
+                "rewards": [
+                    {
+                        "id": "fishing_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 11,
+                    "amount": 2000
+                },
+                "rewards": [
+                    {
+                        "id": "fishing_platinum"
+                    },
+                    {
+                        "id": "fishing_pole_v2"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 11,
+                    "amount": 5000
+                },
+                "rewards": [
+                    {
+                        "id": "fishing_diamond"
+                    },
+                    {
+                        "id": "fishing_clipper"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 11,
+                    "amount": 15000
+                },
+                "rewards": [
+                    {
+                        "id": "fishing_obsidian"
+                    },
+                    {
+                        "id": "fishing_wings_v2"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "friends_badge",
+        "name": "friends_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "friends",
+                    "amount": 1
+                },
+                "rewards": [
+                    {
+                        "id": "friends_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "friends",
+                    "amount": 5
+                },
+                "rewards": [
+                    {
+                        "id": "friends_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "friends",
+                    "amount": 25
+                },
+                "rewards": [
+                    {
+                        "id": "friends_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "garden_compost_badge",
+        "name": "garden_compost_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 105,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "garden_compost_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 105,
+                    "amount": 1000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_compost_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 105,
+                    "amount": 10000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_compost_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    },
+                    {
+                        "id": "garden_compost_mount_summer"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 105,
+                    "amount": 100000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_compost_platinum"
+                    },
+                    {
+                        "id": "garden_compost_mount_autumn"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 105,
+                    "amount": 500000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_compost_diamond"
+                    },
+                    {
+                        "id": "garden_compost_mount_winter"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 105,
+                    "amount": 1000000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_compost_obsidian"
+                    },
+                    {
+                        "id": "garden_compost_mount_spring"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "garden_harvest_badge",
+        "name": "garden_harvest_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 103,
+                    "amount": 5
+                },
+                "rewards": [
+                    {
+                        "id": "garden_harvest_bronze"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 103,
+                    "amount": 50
+                },
+                "rewards": [
+                    {
+                        "id": "garden_harvest_silver"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "garden_harvest_pet_apple"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 103,
+                    "amount": 500
+                },
+                "rewards": [
+                    {
+                        "id": "garden_harvest_gold"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 103,
+                    "amount": 5000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_harvest_platinum"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 103,
+                    "amount": 10000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_harvest_diamond"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 103,
+                    "amount": 15000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_harvest_obsidian"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "garden_harvest_pet_iguana"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "garden_recipe_badge",
+        "name": "garden_recipe_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "none"
+                },
+                "rewards": [
+                    {
+                        "id": "garden_recipe"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_250"
+                    },
+                    {
+                        "id": "garden_recipe_random"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "garden_water_badge",
+        "name": "garden_water_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 102,
+                    "amount": 10
+                },
+                "rewards": [
+                    {
+                        "id": "garden_water_bronze"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 102,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "garden_water_silver"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 102,
+                    "amount": 1000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_water_gold"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "garden_water_pet_bat"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 102,
+                    "amount": 10000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_water_platinum"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 102,
+                    "amount": 25000
+                },
+                "rewards": [
+                    {
+                        "id": "garden_water_diamond"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "garden_water_hat_can"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "none"
+                },
+                "rewards": [
+                    {
+                        "id": "garden_water_obsidian"
+                    },
+                    {
+                        "id": "gardening_consumables_5"
+                    },
+                    {
+                        "id": "garden_water_mount_dolphin"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "hero_unlocked_badge",
+        "name": "hero_unlocked_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "entitlementUnlocked",
+                    "entitlement": "PLAYERCLASS_CRIMEFIGHTER"
+                },
+                "rewards": [
+                    {
+                        "id": "hero_unlocked_badge"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "hydra_hard_badge",
+        "name": "hydra_hard_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 1,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_hard_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 5,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_hard_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 10,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_hard_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 50,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_hard_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 100,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_hard_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 300,
+                    "difficulty_id": 1,
+                    "difficulty": "Hard"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_hard_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    },
+                    {
+                        "id": "5_Titan_Souls"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "hydra_normal_badge",
+        "name": "hydra_normal_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 1,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_normal_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 5,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_normal_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 10,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_normal_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 50,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_normal_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 100,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_normal_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 300,
+                    "difficulty_id": 0,
+                    "difficulty": "Normal"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_normal_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "hydra_ultra_badge",
+        "name": "hydra_ultra_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 1,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_ultra_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 5,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_ultra_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 10,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_ultra_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 50,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_ultra_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 100,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_ultra_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "STBossKilled",
+                    "boss": "quest/shadow_tower_boss_hydra.prefab",
+                    "amount": 300,
+                    "difficulty_id": 2,
+                    "difficulty": "Ultra"
+                },
+                "rewards": [
+                    {
+                        "id": "hydra_ultra_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    },
+                    {
+                        "id": "10_Titan_Souls"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "leviathan_badge",
+        "name": "leviathan_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 115,
+                    "amount": 1
+                },
+                "rewards": [
+                    {
+                        "id": "leviathan_bronze"
+                    },
+                    {
+                        "id": "leviathan_consumable"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 115,
+                    "amount": 10
+                },
+                "rewards": [
+                    {
+                        "id": "leviathan_silver"
+                    },
+                    {
+                        "id": "leviathan_consumable"
+                    },
+                    {
+                        "id": "leviathan_lobster_helm"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 115,
+                    "amount": 50
+                },
+                "rewards": [
+                    {
+                        "id": "leviathan_gold"
+                    },
+                    {
+                        "id": "leviathan_consumable"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 115,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "leviathan_platinum"
+                    },
+                    {
+                        "id": "leviathan_consumable"
+                    },
+                    {
+                        "id": "leviathan_manta_helm"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 115,
+                    "amount": 250
+                },
+                "rewards": [
+                    {
+                        "id": "leviathan_diamond"
+                    },
+                    {
+                        "id": "leviathan_consumable"
+                    },
+                    {
+                        "id": "leviathan_perma_torch"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 115,
+                    "amount": 500
+                },
+                "rewards": [
+                    {
+                        "id": "leviathan_obsidian"
+                    },
+                    {
+                        "id": "leviathan_consumable"
+                    },
+                    {
+                        "id": "leviathan_jellyfish_helm"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "loy_badge",
+        "name": "loy_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "loyalty",
+                    "amount": 50
+                },
+                "rewards": [
+                    {
+                        "id": "loy_bronze"
+                    },
+                    {
+                        "id": "loy_bronze_crown"
+                    },
+                    {
+                        "id": "loy_bronze_mount"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "loyalty",
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "loy_silver"
+                    },
+                    {
+                        "id": "loy_silver_crown"
+                    },
+                    {
+                        "id": "loy_silver_mount"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "loyalty",
+                    "amount": 200
+                },
+                "rewards": [
+                    {
+                        "id": "loy_gold"
+                    },
+                    {
+                        "id": "loy_gold_crown"
+                    },
+                    {
+                        "id": "loy_gold_mount"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "loyalty",
+                    "amount": 1000
+                },
+                "rewards": [
+                    {
+                        "id": "loy_platinum"
+                    },
+                    {
+                        "id": "loy_platinum_crown"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "prestige_levels_multi_class_badge",
+        "name": "prestige_levels_multi_class_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "minprestigelevelsacrossclasses",
+                    "paragon_level": 10,
+                    "classes": 2
+                },
+                "rewards": [
+                    {
+                        "id": "prestige_levels_multi_class_bronze"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_1"
+                    },
+                    {
+                        "id": "prestige_pinata_10"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "minprestigelevelsacrossclasses",
+                    "paragon_level": 20,
+                    "classes": 4
+                },
+                "rewards": [
+                    {
+                        "id": "prestige_levels_multi_class_silver"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_2"
+                    },
+                    {
+                        "id": "prestige_pinata_15"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "minprestigelevelsacrossclasses",
+                    "paragon_level": 40,
+                    "classes": 6
+                },
+                "rewards": [
+                    {
+                        "id": "prestige_levels_multi_class_gold"
+                    },
+                    {
+                        "id": "item_crafting_prestige_collection"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_5"
+                    },
+                    {
+                        "id": "prestige_pinata_20"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "prestige_levels_total_badge",
+        "name": "prestige_levels_total_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 119,
+                    "amount": 10
+                },
+                "rewards": [
+                    {
+                        "id": "prestige_levels_total_bronze"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_1"
+                    },
+                    {
+                        "id": "prestige_pinata_10"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 119,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "prestige_levels_total_silver"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_2"
+                    },
+                    {
+                        "id": "prestige_pinata_15"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 119,
+                    "amount": 500
+                },
+                "rewards": [
+                    {
+                        "id": "prestige_levels_total_gold"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_5"
+                    },
+                    {
+                        "id": "item_crafting_prestige_collection"
+                    },
+                    {
+                        "id": "prestige_pinata_20"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "quest_badge",
+        "name": "quest_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 7,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "quest_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 7,
+                    "amount": 500
+                },
+                "rewards": [
+                    {
+                        "id": "quest_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 7,
+                    "amount": 1000
+                },
+                "rewards": [
+                    {
+                        "id": "quest_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 7,
+                    "amount": 5000
+                },
+                "rewards": [
+                    {
+                        "id": "quest_platinum"
+                    },
+                    {
+                        "id": "quest_helm"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 7,
+                    "amount": 12000
+                },
+                "rewards": [
+                    {
+                        "id": "quest_diamond"
+                    },
+                    {
+                        "id": "quest_mount_v2"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 7,
+                    "amount": 25000
+                },
+                "rewards": [
+                    {
+                        "id": "quest_obsidian"
+                    },
+                    {
+                        "id": "quest_wings"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "rampage_badge",
+        "name": "rampage_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 69,
+                    "amount": 1
+                },
+                "rewards": [
+                    {
+                        "id": "badge_rampage_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 69,
+                    "amount": 10
+                },
+                "rewards": [
+                    {
+                        "id": "badge_rampage_silver"
+                    },
+                    {
+                        "id": "cubits_10"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 69,
+                    "amount": 50
+                },
+                "rewards": [
+                    {
+                        "id": "badge_rampage_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 69,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "badge_rampage_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 69,
+                    "amount": 150
+                },
+                "rewards": [
+                    {
+                        "id": "badge_rampage_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 69,
+                    "amount": 200
+                },
+                "rewards": [
+                    {
+                        "id": "badge_rampage_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "referral_badge",
+        "name": "referral_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "referafriend",
+                    "amount": 1
+                },
+                "rewards": [
+                    {
+                        "id": "referral_bronze"
+                    },
+                    {
+                        "id": "referral_pet_dragon"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "referafriend",
+                    "amount": 3
+                },
+                "rewards": [
+                    {
+                        "id": "referral_silver"
+                    },
+                    {
+                        "id": "referral_pet_qubesly"
+                    },
+                    {
+                        "id": "referral_helm"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "referafriend",
+                    "amount": 5
+                },
+                "rewards": [
+                    {
+                        "id": "referral_gold"
+                    },
+                    {
+                        "id": "referral_dragon_mount_01"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "referafriend",
+                    "amount": 10
+                },
+                "rewards": [
+                    {
+                        "id": "referral_platinum"
+                    },
+                    {
+                        "id": "referral_dragon_mount_02"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "referafriend",
+                    "amount": 30
+                },
+                "rewards": [
+                    {
+                        "id": "referral_diamond"
+                    },
+                    {
+                        "id": "referral_dragon_mount_03"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "singlegemstat_badge",
+        "name": "SingleGemStat_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": false,
+                    "amount": 1
+                },
+                "rewards": [
+                    {
+                        "id": "SingleGemStat_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": false,
+                    "amount": 3
+                },
+                "rewards": [
+                    {
+                        "id": "SingleGemStat_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": false,
+                    "amount": 6
+                },
+                "rewards": [
+                    {
+                        "id": "SingleGemStat_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": false,
+                    "amount": 9
+                },
+                "rewards": [
+                    {
+                        "id": "SingleGemStat_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": false,
+                    "amount": 18
+                },
+                "rewards": [
+                    {
+                        "id": "SingleGemStat_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "UpgradeGems",
+                    "all_stats": false,
+                    "amount": 27
+                },
+                "rewards": [
+                    {
+                        "id": "SingleGemStat_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "subclass_badge",
+        "name": "subclass_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "SubClassEquipped",
+                    "level": 0,
+                    "power_rank": 22
+                },
+                "rewards": [
+                    {
+                        "id": "subclass_bronze"
+                    },
+                    {
+                        "id": "cubits_25"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "SubClassEquipped",
+                    "level": 5,
+                    "power_rank": 5000
+                },
+                "rewards": [
+                    {
+                        "id": "subclass_silver"
+                    },
+                    {
+                        "id": "cubits_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "SubClassEquipped",
+                    "level": 10,
+                    "power_rank": 10000
+                },
+                "rewards": [
+                    {
+                        "id": "subclass_gold"
+                    },
+                    {
+                        "id": "cubits_250"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "SubClassEquipped",
+                    "level": 15,
+                    "power_rank": 15000
+                },
+                "rewards": [
+                    {
+                        "id": "subclass_platinum"
+                    },
+                    {
+                        "id": "cubits_350"
+                    }
+                ]
+            },
+            {
+                "rank": 4,
+                "tier": "diamond",
+                "requirement": {
+                    "kind": "SubClassEquipped",
+                    "level": 20,
+                    "power_rank": 20000
+                },
+                "rewards": [
+                    {
+                        "id": "subclass_diamond"
+                    },
+                    {
+                        "id": "cubits_500"
+                    }
+                ]
+            },
+            {
+                "rank": 5,
+                "tier": "obsidian",
+                "requirement": {
+                    "kind": "SubClassEquipped",
+                    "level": 30,
+                    "power_rank": 25000
+                },
+                "rewards": [
+                    {
+                        "id": "subclass_obsidian"
+                    },
+                    {
+                        "id": "cubits_750"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "tinyquest_buffed_pets_badge",
+        "name": "tinyquest_buffed_pets_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "tinyquestconcurrentbuffedpets",
+                    "allies": 1
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_buffed_pets_bronze"
+                    },
+                    {
+                        "id": "tinyquest_voucher_100"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "tinyquestconcurrentbuffedpets",
+                    "allies": 6
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_buffed_pets_silver"
+                    },
+                    {
+                        "id": "tinyquest_voucher_250"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "tinyquestconcurrentbuffedpets",
+                    "allies": 18
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_buffed_pets_gold"
+                    },
+                    {
+                        "id": "tinyquest_voucher_500"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    },
+                    {
+                        "id": "tinyquest_store_token_legendary"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "tinyquest_pet_levels_badge",
+        "name": "tinyquest_pet_levels_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "tinyquesttotalpetsoflevel",
+                    "ally_level": 10,
+                    "allies": 1
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_pet_levels_bronze"
+                    },
+                    {
+                        "id": "tinyquest_voucher_100"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "tinyquesttotalpetsoflevel",
+                    "ally_level": 20,
+                    "allies": 5
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_pet_levels_silver"
+                    },
+                    {
+                        "id": "tinyquest_voucher_250"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "tinyquesttotalpetsoflevel",
+                    "ally_level": 30,
+                    "allies": 10
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_pet_levels_gold"
+                    },
+                    {
+                        "id": "tinyquest_voucher_500"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    },
+                    {
+                        "id": "tinyquest_store_token_legendary"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "tinyquesttotalpetsoflevel",
+                    "ally_level": 30,
+                    "allies": 25
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_pet_levels_platinum"
+                    },
+                    {
+                        "id": "tinyquest_voucher_750"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    },
+                    {
+                        "id": "tinyquest_store_token_legendary"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "tinyquest_total_quests_badge",
+        "name": "tinyquest_total_quests_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 137,
+                    "amount": 50
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_total_quests_bronze"
+                    },
+                    {
+                        "id": "tinyquest_voucher_100"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 137,
+                    "amount": 500
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_total_quests_silver"
+                    },
+                    {
+                        "id": "tinyquest_voucher_250"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 137,
+                    "amount": 1500
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_total_quests_gold"
+                    },
+                    {
+                        "id": "tinyquest_voucher_500"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    },
+                    {
+                        "id": "tinyquest_store_token_legendary"
+                    }
+                ]
+            },
+            {
+                "rank": 3,
+                "tier": "platinum",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 137,
+                    "amount": 5000
+                },
+                "rewards": [
+                    {
+                        "id": "tinyquest_total_quests_platinum"
+                    },
+                    {
+                        "id": "tinyquest_voucher_750"
+                    },
+                    {
+                        "id": "tinyquest_insta_100"
+                    },
+                    {
+                        "id": "tinyquest_store_token_legendary"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "slug": "upgradetree_total_badge",
+        "name": "upgradetree_total_badge",
+        "description": "",
+        "category": "",
+        "tags": [],
+        "ranks": [
+            {
+                "rank": 0,
+                "tier": "bronze",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 120,
+                    "amount": 10
+                },
+                "rewards": [
+                    {
+                        "id": "upgradetree_total_bronze"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_1"
+                    },
+                    {
+                        "id": "prestige_pinata_10"
+                    }
+                ]
+            },
+            {
+                "rank": 1,
+                "tier": "silver",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 120,
+                    "amount": 25
+                },
+                "rewards": [
+                    {
+                        "id": "upgradetree_total_silver"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_2"
+                    },
+                    {
+                        "id": "prestige_pinata_15"
+                    }
+                ]
+            },
+            {
+                "rank": 2,
+                "tier": "gold",
+                "requirement": {
+                    "kind": "metric",
+                    "metric_id": 120,
+                    "amount": 100
+                },
+                "rewards": [
+                    {
+                        "id": "upgradetree_total_gold"
+                    },
+                    {
+                        "id": "item_lootbox_prestige_prime_5"
+                    },
+                    {
+                        "id": "item_crafting_prestige_collection"
+                    },
+                    {
+                        "id": "prestige_pinata_20"
+                    }
+                ]
+            }
+        ]
+    }
+]

@@ -1,0 +1,30 @@
+{
+    "categories": [
+        {
+            "id": "Hidden",
+            "name": "Hidden",
+            "counted": false,
+            "entries": 3
+        },
+        {
+            "id": "DelveCreature",
+            "name": "Creature Mementos",
+            "counted": true,
+            "entries": 131
+        },
+        {
+            "id": "DelveBoss",
+            "name": "Boss Mementos",
+            "counted": true,
+            "entries": 62
+        },
+        {
+            "id": "DelveBiome",
+            "name": "Biome Mementos",
+            "counted": true,
+            "entries": 18
+        }
+    ],
+    "adventure": {},
+    "mementos": []
+}

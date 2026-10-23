@@ -527,6 +527,13 @@ fn read_object(data: &[u8], start: usize, end: usize, sections: Option<i128>, bu
     result
 }
 
+/// `read_object(data, start, end, sections)` on its own (`None` where Python
+/// raises WireError, or the budget or nesting limit stopped it).
+pub fn read_object_span(data: &[u8], start: usize, end: usize, sections: Option<i128>, budget: u64) -> Option<V> {
+    let mut budget = budget;
+    read_object(data, start, end.min(data.len()), sections, &mut budget).ok()
+}
+
 fn entity(data: &[u8], sections: &HashMap<i128, i128>, budget: &mut u64) -> R<Option<Prefab>> {
     let head = Reader::new(data, data.len(), 0);
     let Ok((tid, p)) = head.zz(0, 35) else { return Ok(None) };

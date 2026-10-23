@@ -1,0 +1,490 @@
+[
+    {
+        "name": "Boomeranger",
+        "game_folder": "adventurer",
+        "abilities": [
+            {
+                "name": "Boomerangs!!!!",
+                "description": "Throws three boomerangs that returns after hitting an enemy or wall. If caught the player will gain increased attack and movement speed for a short time. Boomerangs have a chance to stun. This ability has a stock of 4.",
+                "prefab": "abilities/adventurer/revamp/boomerang_bow",
+                "icon": "icon_adventurer_boomerang",
+                "type": "Active",
+                "active": true,
+                "energy": 0,
+                "cooldown": 25.0,
+                "stages": [
+                    {
+                        "name": "Boomerang Bullet Bow",
+                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_bow",
+                        "base": 50,
+                        "multiplier": 6.5,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 4,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 0.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Boomerang Bullet Bow",
+                        "prefab": "abilities/adventurer/revamp/boomerang_bullet_bow",
+                        "base": 20,
+                        "multiplier": 6.5,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 4,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 0.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Boomerang Effect Movementspeed Buff",
+                        "prefab": "abilities/adventurer/revamp/boomerang_effect_movementspeed_buff",
+                        "component": 136,
+                        "duration": 6.5,
+                        "stats": [
+                            {
+                                "stat": "$Stat_MovementSpeed",
+                                "name": "Movement Speed",
+                                "op": "Add",
+                                "value": 30.0,
+                                "percent": false,
+                                "amount": 30.0
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Boomerang Effect Attackspeed Buff",
+                        "prefab": "abilities/adventurer/revamp/boomerang_effect_attackspeed_buff",
+                        "component": 136,
+                        "duration": 6.5,
+                        "stats": [
+                            {
+                                "stat": "$Stat_PhysicalDamage",
+                                "name": "Physical Damage",
+                                "op": "Multiply",
+                                "value": 30.0,
+                                "percent": true,
+                                "amount": 1.3
+                            }
+                        ]
+                    }
+                ],
+                "vfx": []
+            },
+            {
+                "name": "Boomerang of the Wind",
+                "description": "Throws a large boomerang that deals damage to enemies it passes through. If caught the player will gain increased attack and movement speed for a short time. Additionally, catching the Boomerang will reduce cooldowns. The Boomerang has a chance to stun.",
+                "prefab": "abilities/adventurer/revamp/boomerang_melee",
+                "icon": "icon_adventurer_boomerang",
+                "type": "Active",
+                "active": true,
+                "energy": 0,
+                "cooldown": 10.0,
+                "stages": [
+                    {
+                        "name": "Boomerang Damage Effect Melee",
+                        "prefab": "abilities/adventurer/revamp/boomerang_damage_effect_melee",
+                        "base": 12,
+                        "multiplier": 10.0,
+                        "crit_damage_multiplier": 1.0,
+                        "knockback_multiplier": 1.0,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Boomerang Damage Effect Melee",
+                        "prefab": "abilities/adventurer/revamp/boomerang_damage_effect_melee",
+                        "component": 156,
+                        "duration": 0.5
+                    }
+                ],
+                "vfx": []
+            },
+            {
+                "name": "Final Fairy",
+                "description": "Boomeranger can equip ether a bow or sword. Basic attacks and abilities change based on what weapon the Boomeranger has equipped. With the Bow equipped basic attacks will shoot Fire Arrows, Ice Arrows, and Bomb Arrows in that order. Fire Arrows deal damage over time, Ice slow enemies, and bomb arrows deal damage in an area. Every 3rd Bow attack provides a cooldown reduction. With the Sword Equipped every 3rd attack summons a cyclone at your location dealing damage over time for a short time and grants the Boomeranger a damage reduction buff. Additionally, a fairy companion will heal the Boomeranger at low health.",
+                "prefab": "abilities/adventurer/revamp/passive_dummy",
+                "icon": "icon_adventurer_passive",
+                "type": "Passive",
+                "active": true,
+                "stages": [
+                    {
+                        "name": "Basic Attack Melee Third Combo",
+                        "prefab": "abilities/adventurer/revamp/basic_attack_melee_third_combo",
+                        "base": 50,
+                        "multiplier": 4.5,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 1,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 1.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "stability_ignore": 0.1,
+                        "damage_type": 4,
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Basic Melee Cyclone Damage",
+                        "prefab": "abilities/adventurer/revamp/basic_melee_cyclone_damage",
+                        "base": 0,
+                        "multiplier": 2.5,
+                        "crit_damage_multiplier": 1.0,
+                        "damage_type": 4,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [
+                    {
+                        "name": "Passive Effect Heal",
+                        "prefab": "abilities/adventurer/revamp/passive_effect_heal",
+                        "max_health_percent": 0.5
+                    }
+                ],
+                "effects": [
+                    {
+                        "name": "Basic Attack Melee Third Combo",
+                        "prefab": "abilities/adventurer/revamp/basic_attack_melee_third_combo",
+                        "component": 315,
+                        "duration": 0.5
+                    },
+                    {
+                        "name": "Boomerang Effect Stun",
+                        "prefab": "abilities/adventurer/revamp/boomerang_effect_stun",
+                        "component": 242,
+                        "duration": 1.0
+                    },
+                    {
+                        "name": "Basic Melee Effect Stats",
+                        "prefab": "abilities/adventurer/revamp/basic_melee_effect_stats",
+                        "component": 131,
+                        "duration": 6.0,
+                        "stats": [
+                            {
+                                "stat": "$Stat_IncomingDamageMod",
+                                "name": "Incoming Damage",
+                                "op": "Multiply",
+                                "value": -50.0,
+                                "percent": true,
+                                "amount": 0.5
+                            },
+                            {
+                                "stat": "$Stat_StabilityBonus",
+                                "name": "Stability Bonus",
+                                "op": "MultiplySum",
+                                "value": 100.0,
+                                "percent": true,
+                                "amount": 1.0
+                            },
+                            {
+                                "stat": "$Stat_Stability",
+                                "name": "Stability",
+                                "op": "Add",
+                                "value": 150.0,
+                                "percent": false,
+                                "amount": 150.0
+                            },
+                            {
+                                "stat": "$Stat_HealthRegen_controller",
+                                "name": "Health Regen",
+                                "op": "Multiply",
+                                "value": 50.0,
+                                "percent": true,
+                                "amount": 1.5
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Passive Effect Shield",
+                        "prefab": "abilities/adventurer/revamp/passive_effect_shield",
+                        "component": 131,
+                        "duration": 5.0,
+                        "stats": [
+                            {
+                                "stat": "$Stat_IncomingDamageMod",
+                                "name": "Incoming Damage",
+                                "op": "Add",
+                                "value": -100.0,
+                                "percent": true,
+                                "amount": -1.0
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Passive Effect Npc Hide",
+                        "prefab": "abilities/adventurer/revamp/passive_effect_npc_hide",
+                        "component": 332,
+                        "duration": 200.0
+                    }
+                ],
+                "vfx": []
+            },
+            {
+                "name": "Big Bomb",
+                "description": "Throws a timed bomb for big damage and causes knockback to enemies damaged by it.",
+                "prefab": "abilities/adventurer/revamp/bomb_bow",
+                "icon": "icon_adventurer_bomb",
+                "type": "Active",
+                "active": true,
+                "energy": 0.0,
+                "cooldown": 20.0,
+                "stages": [
+                    {
+                        "name": "Bomb Effect Bomb Trigger Bow",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_bomb_trigger_bow",
+                        "base": 0,
+                        "multiplier": 0.5,
+                        "max_health_percent": 100.0,
+                        "crit_damage_multiplier": 1.0,
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Bomb Effect Explosion Bow",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_explosion_bow",
+                        "base": 50,
+                        "multiplier": 8.5,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 10000,
+                        "max_block_hardness": 500,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 3.0,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "stability_ignore": 0.5,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Bomb Effect Bomb Trigger Bow",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_bomb_trigger_bow",
+                        "component": 156,
+                        "duration": 0.1
+                    }
+                ],
+                "vfx": []
+            },
+            {
+                "name": "Tiny Bombs",
+                "description": "Throws out small, timed bombs that explodes dealing damage to targets. This ability has a stock of 5.",
+                "prefab": "abilities/adventurer/revamp/bomb_melee",
+                "icon": "icon_adventurer_bomb",
+                "type": "Upgrade",
+                "active": true,
+                "energy": 0.0,
+                "cooldown": 20.0,
+                "stages": [
+                    {
+                        "name": "Bomb Effect Bomb Trigger Melee",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_bomb_trigger_melee",
+                        "base": 0,
+                        "multiplier": 0.5,
+                        "max_health_percent": 100.0,
+                        "crit_damage_multiplier": 1.0,
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Bomb Effect Explosion Melee",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_explosion_melee",
+                        "base": 50,
+                        "multiplier": 3.5,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 1250,
+                        "max_block_hardness": 500,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 1.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "stability_ignore": 0.5,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Bomb Effect Bomb Trigger Melee",
+                        "prefab": "abilities/adventurer/revamp/bomb_effect_bomb_trigger_melee",
+                        "component": 156,
+                        "duration": 0.1
+                    }
+                ],
+                "vfx": []
+            },
+            {
+                "name": "Mysterious Urn",
+                "description": "Throws a mysterious urn for area damage and a random bonus.",
+                "prefab": "abilities/adventurer/revamp/random_throw",
+                "icon": "icon_adventurer_urn",
+                "type": "Active",
+                "active": true,
+                "energy": 0.0,
+                "cooldown": 30.0,
+                "stages": [
+                    {
+                        "name": "Random Throw Effect Explosion",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_explosion",
+                        "base": 25,
+                        "multiplier": 8.0,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 35,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 2.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "stability_ignore": 0.5,
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Random Throw Effect Bomb Explosion",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_bomb_explosion",
+                        "base": 25,
+                        "multiplier": 6.5,
+                        "crit_damage_multiplier": 1.0,
+                        "block_damage": 35,
+                        "max_block_hardness": 200,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 1.5,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "stability_ignore": 0.5,
+                        "damage_stat": -1
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Melee",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_melee",
+                        "base": 0,
+                        "multiplier": 1.0,
+                        "crit_damage_multiplier": 1.0,
+                        "max_block_hardness": 500,
+                        "max_blocks": 10000,
+                        "knockback_multiplier": 0.25,
+                        "knockback": 1.0,
+                        "min_knockback": 0.1,
+                        "damage_stat": -1
+                    }
+                ],
+                "healing": [],
+                "effects": [
+                    {
+                        "name": "Random Throw Effect Minion Mod",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_mod",
+                        "component": 136,
+                        "stats": [
+                            {
+                                "stat": "$Stat_OutgoingDamageMod",
+                                "name": "Damage",
+                                "op": "Add",
+                                "value": 100.0,
+                                "percent": true,
+                                "amount": 1.0
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Mod Big Chicken",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_mod_big_chicken",
+                        "component": 136,
+                        "stats": [
+                            {
+                                "stat": "$Stat_OutgoingDamageMod",
+                                "name": "Damage",
+                                "op": "Add",
+                                "value": 1.775,
+                                "percent": false,
+                                "amount": 1.775
+                            },
+                            {
+                                "stat": "$Stat_MaxHealth",
+                                "name": "Maximum Health",
+                                "op": "Multiply",
+                                "value": 75.0,
+                                "percent": true,
+                                "amount": 1.75
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Mod Phoenix",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_mod_phoenix",
+                        "component": 136,
+                        "stats": [
+                            {
+                                "stat": "$Stat_OutgoingDamageMod",
+                                "name": "Damage",
+                                "op": "Add",
+                                "value": 100.0,
+                                "percent": true,
+                                "amount": 1.0
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Random Throw Effect Minion Chuck Pinzo Mod",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_minion_chuck_pinzo_mod",
+                        "component": 136,
+                        "stats": [
+                            {
+                                "stat": "$Stat_OutgoingDamageMod",
+                                "name": "Damage",
+                                "op": "Add",
+                                "value": 1.2,
+                                "percent": false,
+                                "amount": 1.2
+                            }
+                        ]
+                    }
+                ],
+                "vfx": []
+            },
+            {
+                "name": "Doubloon",
+                "description": "",
+                "prefab": "abilities/adventurer/revamp/random_throw_effect_energy_powerup",
+                "icon": "",
+                "type": "",
+                "active": true,
+                "stages": [],
+                "healing": [
+                    {
+                        "name": "Random Throw Effect Heal Powerup Effect",
+                        "prefab": "abilities/adventurer/revamp/random_throw_effect_heal_powerup_effect",
+                        "max_health_percent": 0.1
+                    }
+                ],
+                "effects": [],
+                "vfx": []
+            },
+            {
+                "name": "Basic Attack",
+                "description": "",
+                "icon": "icon_styles_gun",
+                "type": "Active",
+                "stages": [
+                    {
+                        "name": "Sword",
+                        "base": 300,
+                        "multiplier": 1.7
+                    },
+                    {
+                        "name": "Bow",
+                        "base": 250,
+                        "multiplier": 1.4
+                    }
+                ],
+                "active": false
+            }
+        ]
+    }
+]

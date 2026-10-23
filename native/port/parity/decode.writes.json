@@ -1,0 +1,22 @@
+[
+ {"name": "status_before", "path": "/admin/gamedata", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "run_unauth", "method": "POST", "path": "/admin/gamedata/run?name=titles"},
+ {"name": "run_unknown", "method": "POST", "path": "/admin/gamedata/run?name=nope",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "run_bad_flag", "method": "POST", "path": "/admin/gamedata/run?name=titles&allow_shrink=maybe",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "run_titles", "method": "POST", "path": "/admin/gamedata/run?name=titles",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_after_titles", "sleep": 5, "path": "/admin/gamedata", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
+  "mask": ["decoders[15].last.started_at", "decoders[15].last.finished_at", "decoders[15].last.duration_ms",
+           "decoders[15].last.traceback"]},
+ {"name": "run_class_levels_shrink", "method": "POST", "path": "/admin/gamedata/run?name=class_levels&allow_shrink=true",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "status_after_class_levels", "sleep": 5, "path": "/admin/gamedata", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"},
+  "mask": ["decoders[0].last.started_at", "decoders[0].last.finished_at", "decoders[0].last.duration_ms",
+           "decoders[0].last.traceback", "decoders[15].last.started_at", "decoders[15].last.finished_at",
+           "decoders[15].last.duration_ms", "decoders[15].last.traceback"]},
+ {"name": "run_insignia_goes_to_python", "method": "POST", "path": "/admin/gamedata/run?name=insignia",
+  "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "pending_badge", "sleep": 5, "path": "/admin/pending", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}}
+]
