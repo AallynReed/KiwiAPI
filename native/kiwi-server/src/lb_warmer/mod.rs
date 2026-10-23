@@ -42,6 +42,7 @@ pub fn reset_memos() {
     crate::activity::class::reset_caches();
     crate::routes::lb_names::renames::reset_guard();
     crate::routes::lb_names::duplicates::reset_guard();
+    crate::lbread::store::reset_charts();
 }
 
 /// Drives `make()`'s future on a blocking-pool thread, so the CPU a pass or a

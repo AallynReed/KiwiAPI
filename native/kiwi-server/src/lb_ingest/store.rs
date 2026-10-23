@@ -338,7 +338,9 @@ pub async fn write_snapshot(pool: &Pool, boards: &[Board<'_>], anchor: i64) -> P
     tx.batch_execute(ENTRY_INSERT).await.map_err(pg_err)?;
     exec(&*tx, CASE_COLLISIONS, &[anchor]).await?;
     exec(&*tx, &fold_sql("player_board_agg"), &[anchor]).await?;
-    tx.commit().await.map_err(pg_err)?;
+    let committed = tx.commit().await;
+    crate::lbread::store::entries_written();
+    committed.map_err(pg_err)?;
     Ok(Written { boards: boards.len(), entries, cleared })
 }
 
@@ -414,7 +416,9 @@ pub async fn reset_all(pool: &Pool, drop_boards: bool) -> PgResult<ResetTally> {
         boards = fetch_i64(&*tx, "SELECT count(*) FROM board", &[]).await?.unwrap_or(0);
         tx.batch_execute("TRUNCATE board, board_contest").await.map_err(pg_err)?;
     }
-    tx.commit().await.map_err(pg_err)?;
+    let committed = tx.commit().await;
+    crate::lbread::store::entries_written();
+    committed.map_err(pg_err)?;
     Ok(ResetTally { entries, estimates, boards })
 }
 

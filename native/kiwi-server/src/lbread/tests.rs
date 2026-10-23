@@ -594,3 +594,27 @@ async fn routing_matches_starlette() {
         assert_eq!(send(method, path).await.status(), status, "{path}");
     }
 }
+
+#[test]
+fn warm_chart_rows_are_reused_only_while_nothing_changed() {
+    use super::store::{Chart, reusable_rows};
+    let meta = |id: i64, rank: i64| TopMeta { player_id: id, player_name: format!("P{id}"), rank };
+    let row = |id: i64, at: i64| SeriesRow { player_id: id, created_at: at, rank: 1, score: at as f64 };
+    let top = vec![meta(7, 1), meta(9, 2)];
+    let series = TopSeries {
+        anchors: vec![100, 200, 300],
+        top: top.clone(),
+        rows: vec![row(7, 100), row(9, 100), row(7, 200), row(9, 300), row(7, 300)],
+    };
+    let chart = Chart { writes: 4, window_start: 50, series };
+
+    let kept = reusable_rows(&chart, 4, 150, &[200, 300], &top).unwrap();
+    assert_eq!(kept, vec![row(7, 200), row(9, 300), row(7, 300)]);
+    assert_eq!(reusable_rows(&chart, 4, 50, &[100, 200, 300], &top).unwrap().len(), 5);
+    assert!(reusable_rows(&chart, 5, 150, &[200, 300], &top).is_none());
+    assert!(reusable_rows(&chart, 4, 40, &[100, 200, 300], &top).is_none());
+    assert!(reusable_rows(&chart, 4, 150, &[200, 300, 400], &top).is_none());
+    assert!(reusable_rows(&chart, 4, 150, &[300], &top).is_none());
+    assert!(reusable_rows(&chart, 4, 150, &[200, 300], &[meta(9, 1), meta(7, 2)]).is_none());
+    assert!(reusable_rows(&chart, 4, 150, &[200, 300], &[meta(7, 1), meta(9, 3)]).is_none());
+}

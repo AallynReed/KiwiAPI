@@ -3,7 +3,14 @@
 //! the skip scans and orderings are what keep these under the statement
 //! timeout on the cold tier.
 
-use std::{collections::HashMap, future::Future};
+use std::{
+    collections::HashMap,
+    future::Future,
+    sync::{
+        LazyLock, Mutex,
+        atomic::{AtomicU64, Ordering},
+    },
+};
 
 use anyhow::Context;
 use kiwi_core::lbread::{effective_reset_kind, is_player_board, trove_day_start};
@@ -129,6 +136,10 @@ pub trait Source: Sync {
         names: &[String],
     ) -> impl Future<Output = Res<HashMap<String, (i64, f64)>>> + Send;
     fn board_top_series(&self, uuid: i32, window_start: i64, top: i64) -> impl Future<Output = Res<TopSeries>> + Send;
+    /// `board_top_series` for the warmer, which may reuse its previous rows.
+    fn warm_top_series(&self, uuid: i32, window_start: i64, top: i64) -> impl Future<Output = Res<TopSeries>> + Send {
+        self.board_top_series(uuid, window_start, top)
+    }
 }
 
 /// Python `str.lower()`.
@@ -253,6 +264,101 @@ impl Live<'_> {
     ) -> Res<Option<T>> {
         Ok(self.query(sql, params).await?.first().map(|r| r.try_get::<_, Option<T>>(0)).transpose()?.flatten())
     }
+}
+
+/// Writes to `entry` or `player` this process has committed (ingest, anchor
+/// delete, reset): the only writers, so an unchanged count means the rows a
+/// chart read before are still the rows Postgres holds.
+static WRITES: AtomicU64 = AtomicU64::new(0);
+
+pub fn entries_written() {
+    WRITES.fetch_add(1, Ordering::SeqCst);
+}
+
+/// The warmer's last chart read per board.
+pub(super) struct Chart {
+    pub writes: u64,
+    pub window_start: i64,
+    pub series: TopSeries,
+}
+
+/// `chart`'s rows still inside a window from `window_start`, when nothing has
+/// been written since it was read and the window has the same anchors and top.
+pub(super) fn reusable_rows(
+    chart: &Chart,
+    writes: u64,
+    window_start: i64,
+    anchors: &[i64],
+    top: &[TopMeta],
+) -> Option<Vec<SeriesRow>> {
+    let same = chart.writes == writes
+        && chart.window_start <= window_start
+        && chart.series.top == top
+        && chart.series.anchors.iter().filter(|&&a| a >= window_start).eq(anchors.iter());
+    same.then(|| chart.series.rows.iter().filter(|r| r.created_at >= window_start).cloned().collect())
+}
+
+fn charts() -> std::sync::MutexGuard<'static, HashMap<i32, Chart>> {
+    static CHARTS: LazyLock<Mutex<HashMap<i32, Chart>>> = LazyLock::new(Default::default);
+    CHARTS.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+pub fn reset_charts() {
+    charts().clear();
+}
+
+/// The chart's anchors and the latest anchor's top rows.
+async fn series_head(
+    client: &deadpool_postgres::Client,
+    uuid: i32,
+    window_start: i64,
+    top: i64,
+) -> Res<(Vec<i64>, Vec<TopMeta>)> {
+    let stmt = client.prepare_cached(SERIES_ANCHORS).await?;
+    let anchors = client
+        .query(&stmt, &[&uuid, &window_start])
+        .await?
+        .iter()
+        .map(|r| Ok(r.try_get::<_, i64>(0)?))
+        .collect::<Res<Vec<i64>>>()?;
+    let Some(&latest) = anchors.last() else { return Ok((anchors, Vec::new())) };
+    let stmt = client.prepare_cached(SERIES_TOP).await?;
+    let top = client
+        .query(&stmt, &[&uuid, &latest, &top])
+        .await?
+        .iter()
+        .map(|r| {
+            Ok(TopMeta {
+                player_id: r.try_get("player_id")?,
+                player_name: r.try_get("player_name")?,
+                rank: i64::from(r.try_get::<_, i32>("rank")?),
+            })
+        })
+        .collect::<Res<Vec<_>>>()?;
+    Ok((anchors, top))
+}
+
+async fn series_rows(
+    client: &deadpool_postgres::Client,
+    uuid: i32,
+    window_start: i64,
+    top: &[TopMeta],
+) -> Res<Vec<SeriesRow>> {
+    let ids: Vec<i64> = top.iter().map(|m| m.player_id).collect();
+    let stmt = client.prepare_cached(SERIES_ROWS).await?;
+    client
+        .query(&stmt, &[&uuid, &window_start, &ids])
+        .await?
+        .iter()
+        .map(|r| {
+            Ok(SeriesRow {
+                player_id: r.try_get("player_id")?,
+                created_at: r.try_get("created_at")?,
+                rank: i64::from(r.try_get::<_, i32>("rank")?),
+                score: r.try_get("score")?,
+            })
+        })
+        .collect()
 }
 
 /// `list_boards_at`'s rows. Boards sharing a category and name come back in
@@ -389,45 +495,28 @@ impl Source for Live<'_> {
 
     async fn board_top_series(&self, uuid: i32, window_start: i64, top: i64) -> Res<TopSeries> {
         let client = self.client().await?;
-        let stmt = client.prepare_cached(SERIES_ANCHORS).await?;
-        let anchors = client
-            .query(&stmt, &[&uuid, &window_start])
-            .await?
-            .iter()
-            .map(|r| Ok(r.try_get::<_, i64>(0)?))
-            .collect::<Res<Vec<i64>>>()?;
-        let Some(&latest) = anchors.last() else { return Ok(TopSeries::default()) };
-        let stmt = client.prepare_cached(SERIES_TOP).await?;
-        let top = client
-            .query(&stmt, &[&uuid, &latest, &top])
-            .await?
-            .iter()
-            .map(|r| {
-                Ok(TopMeta {
-                    player_id: r.try_get("player_id")?,
-                    player_name: r.try_get("player_name")?,
-                    rank: i64::from(r.try_get::<_, i32>("rank")?),
-                })
-            })
-            .collect::<Res<Vec<_>>>()?;
+        let (anchors, top) = series_head(&client, uuid, window_start, top).await?;
         if top.is_empty() {
             return Ok(TopSeries { anchors, top, rows: Vec::new() });
         }
-        let ids: Vec<i64> = top.iter().map(|m| m.player_id).collect();
-        let stmt = client.prepare_cached(SERIES_ROWS).await?;
-        let rows = client
-            .query(&stmt, &[&uuid, &window_start, &ids])
-            .await?
-            .iter()
-            .map(|r| {
-                Ok(SeriesRow {
-                    player_id: r.try_get("player_id")?,
-                    created_at: r.try_get("created_at")?,
-                    rank: i64::from(r.try_get::<_, i32>("rank")?),
-                    score: r.try_get("score")?,
-                })
-            })
-            .collect::<Res<Vec<_>>>()?;
+        let rows = series_rows(&client, uuid, window_start, &top).await?;
         Ok(TopSeries { anchors, top, rows })
+    }
+
+    async fn warm_top_series(&self, uuid: i32, window_start: i64, top: i64) -> Res<TopSeries> {
+        let writes = WRITES.load(Ordering::SeqCst);
+        let client = self.client().await?;
+        let (anchors, top) = series_head(&client, uuid, window_start, top).await?;
+        if top.is_empty() {
+            return Ok(TopSeries { anchors, top, rows: Vec::new() });
+        }
+        let reused = charts().get(&uuid).and_then(|c| reusable_rows(c, writes, window_start, &anchors, &top));
+        let rows = match reused {
+            Some(rows) => rows,
+            None => series_rows(&client, uuid, window_start, &top).await?,
+        };
+        let series = TopSeries { anchors, top, rows };
+        charts().insert(uuid, Chart { writes, window_start, series: series.clone() });
+        Ok(series)
     }
 }

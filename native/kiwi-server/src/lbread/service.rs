@@ -147,10 +147,23 @@ fn point_value(p: &Point) -> Value {
 /// `board_history`: the current top-`top` players' trajectories over `days`
 /// days, with the synthetic reset-zero cliffs.
 pub async fn board_history<S: Source>(src: &S, uuid: i32, days: i64, top: i64, now: i64) -> Res<Value> {
+    history(src, uuid, days, top, now, false).await
+}
+
+/// [`board_history`] as the warmer computes it ([`Source::warm_top_series`]).
+pub async fn warm_board_history<S: Source>(src: &S, uuid: i32, days: i64, top: i64, now: i64) -> Res<Value> {
+    history(src, uuid, days, top, now, true).await
+}
+
+async fn history<S: Source>(src: &S, uuid: i32, days: i64, top: i64, now: i64, warm: bool) -> Res<Value> {
     let days = days.clamp(1, 30);
     let top = top.clamp(1, 20);
     let window_start = now - days * DAY;
-    let ts = src.board_top_series(uuid, window_start, top).await?;
+    let ts = if warm {
+        src.warm_top_series(uuid, window_start, top).await?
+    } else {
+        src.board_top_series(uuid, window_start, top).await?
+    };
     let shell = |anchors: &[i64], series: Vec<Value>| {
         json!({"uuid": uuid, "days": days, "window_start": window_start, "window_end": now,
                "anchors": anchors, "series": series})

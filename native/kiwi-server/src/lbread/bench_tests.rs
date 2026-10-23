@@ -7,7 +7,8 @@
 //!   POSTGRES_DSN=postgresql://postgres:bench@127.0.0.1:5439/postgres KIWI_BENCH_SCRATCH=1 \
 //!     cargo test -p kiwi-server --release lbread_warmer_bench -- --ignored --nocapture
 //!
-//! KIWI_BENCH_SCALE (default 1, ~3.6M rows) multiplies the board sizes.
+//! KIWI_BENCH_SCALE (default 1, ~3.6M rows) multiplies the board sizes; each
+//! capture is stored player by player, or board by board with KIWI_BENCH_LAYOUT=board.
 
 use std::time::Instant;
 
@@ -17,7 +18,7 @@ use serde_json::Value;
 
 use super::{
     Live, service,
-    store::{self, SeriesRow, Source, TopMeta, TopSeries},
+    store::{self, SeriesRow, TopMeta, TopSeries},
 };
 use crate::{config::Settings, lb_ingest::store::partition_ddl, state::AppState};
 
@@ -93,7 +94,7 @@ async fn buffers(c: &Client, sql: &str, params: &[i64]) -> i64 {
     p["Shared Hit Blocks"].as_i64().unwrap_or(0) + p["Shared Read Blocks"].as_i64().unwrap_or(0)
 }
 
-async fn seed(c: &Client, now: i64, scale: i64) -> Vec<i64> {
+async fn seed(c: &Client, now: i64, scale: i64, board_major: bool) -> Vec<i64> {
     c.batch_execute("DROP TABLE IF EXISTS entry, board, board_contest, player CASCADE").await.unwrap();
     c.batch_execute(include_str!("../startup/leaderboards.sql")).await.unwrap();
     let today = trove_day_start(now);
@@ -121,13 +122,14 @@ async fn seed(c: &Client, now: i64, scale: i64) -> Vec<i64> {
          CROSS JOIN generate_series(1, {BOARDS}) b
          CROSS JOIN LATERAL (SELECT (200 + (b * 97) % 1600) * {scale} AS sz) s
          CROSS JOIN LATERAL generate_series(1, s.sz) k
-         ORDER BY a.anchor, 5;
+         ORDER BY a.anchor, {order};
          INSERT INTO entry (board_uuid, anchor, rank, score, player_id)
          SELECT 3, a.anchor, (200 + 291) * {scale} + 1, 0, ((2 + 3 * 211 + a.k * 3) % {players}) + 1
          FROM bench_anchors a;
          INSERT INTO board_contest (board_uuid, anchor, type) SELECT 5, max(anchor), 'weekly' FROM bench_anchors;
          DROP TABLE bench_anchors;",
         list = anchors.iter().map(i64::to_string).collect::<Vec<_>>().join(","),
+        order = if board_major { "1, 3" } else { "5" },
     );
     c.batch_execute(&sql).await.unwrap();
     c.batch_execute("VACUUM ANALYZE entry").await.unwrap();
@@ -135,13 +137,19 @@ async fn seed(c: &Client, now: i64, scale: i64) -> Vec<i64> {
     anchors
 }
 
-async fn histories(state: &AppState, now: i64) -> (usize, f64) {
+async fn histories(state: &AppState, now: i64, warm: bool) -> (usize, f64) {
     let live = Live(state);
     let t = Instant::now();
     let n = stream::iter(1..=BOARDS)
         .map(|uuid| {
             let live = &live;
-            async move { service::board_history(live, uuid, 7, 5, now).await.unwrap() }
+            async move {
+                if warm {
+                    service::warm_board_history(live, uuid, 7, 5, now).await.unwrap()
+                } else {
+                    service::board_history(live, uuid, 7, 5, now).await.unwrap()
+                }
+            }
         })
         .buffer_unordered(6)
         .count()
@@ -165,7 +173,8 @@ async fn lbread_warmer_bench() {
 
     let now = chrono::Utc::now().timestamp();
     let t = Instant::now();
-    let caps = seed(&c, now, scale).await;
+    let board_major = std::env::var("KIWI_BENCH_LAYOUT").as_deref() == Ok("board");
+    let caps = seed(&c, now, scale, board_major).await;
     let rows: i64 = c.query_one("SELECT count(*) FROM entry", &[]).await.unwrap().get(0);
     println!("seeded {rows} entries, {} captures, {BOARDS} boards in {:.1}s", caps.len(), t.elapsed().as_secs_f64());
 
@@ -211,21 +220,53 @@ async fn lbread_warmer_bench() {
         println!("board list, {what}: {ms:.1} ms, {buf} buffers");
     }
 
+    let ids: Vec<i64> =
+        top_series(&c, store::SERIES_ANCHORS, big, ws, 5).await.top.iter().map(|m| m.player_id).collect();
+    let plan = c
+        .simple_query(&format!(
+            "EXPLAIN {}",
+            store::SERIES_ROWS.replace("$1", &big.to_string()).replace("$2", &ws.to_string()).replace(
+                "$3",
+                &format!("ARRAY[{}]::bigint[]", ids.iter().map(i64::to_string).collect::<Vec<_>>().join(","))
+            )
+        ))
+        .await
+        .unwrap();
+    println!("chart rows plan, board {big}:");
+    for m in &plan {
+        if let tokio_postgres::SimpleQueryMessage::Row(r) = m {
+            println!("  {}", r.get(0).unwrap_or(""));
+        }
+    }
+
     let shared = state.clone();
     let custom = state.with_pg(crate::db::pg_pool(8, Some("-c plan_cache_mode=force_custom_plan")).unwrap().unwrap());
     let mode: String = custom.pg().get().await.unwrap().query_one("SHOW plan_cache_mode", &[]).await.unwrap().get(0);
     assert_eq!(mode, "force_custom_plan");
     for (what, s) in [("shared pool", &shared), ("warmer pool", &custom)] {
-        histories(s, now).await;
-        let (n, ms) = histories(s, now).await;
+        histories(s, now, false).await;
+        let (n, ms) = histories(s, now, false).await;
         println!("board_history x{n} (6 at a time), {what}: {ms:.1} ms");
     }
-    let l = Live(&custom);
-    let t = Instant::now();
-    let boards = l.list_boards_at(newest).await.unwrap();
-    println!(
-        "list_boards_at via the warmer pool: {} boards in {:.1} ms",
-        boards.len(),
-        t.elapsed().as_secs_f64() * 1000.0
-    );
+
+    store::reset_charts();
+    let (n, first) = histories(&custom, now, true).await;
+    let (_, again) = histories(&custom, now + 1800, true).await;
+    println!("warmer charts x{n}: {first:.1} ms reading every board, {again:.1} ms half an hour later");
+    let live = Live(&custom);
+    let later = now + 6 * 3600;
+    for uuid in 1..=BOARDS {
+        let reused = service::warm_board_history(&live, uuid, 7, 5, later).await.unwrap();
+        assert_eq!(reused, service::board_history(&live, uuid, 7, 5, later).await.unwrap(), "board {uuid}");
+    }
+    let edited = caps[caps.len() - 3];
+    c.batch_execute(&format!("UPDATE entry SET score = score + 1 WHERE board_uuid = 1 AND anchor = {edited}"))
+        .await
+        .unwrap();
+    let stale = service::warm_board_history(&live, 1, 7, 5, later).await.unwrap();
+    assert_ne!(stale, service::board_history(&live, 1, 7, 5, later).await.unwrap(), "the edit is not in the chart");
+    store::entries_written();
+    let fresh = service::warm_board_history(&live, 1, 7, 5, later).await.unwrap();
+    assert_eq!(fresh, service::board_history(&live, 1, 7, 5, later).await.unwrap());
+    println!("reused charts match fresh reads; a recorded write forces a fresh read");
 }

@@ -274,9 +274,14 @@ pub async fn warm_board_histories<S: Source, K: Kv>(
     let warmed = stream::iter(uuids)
         .map(|uuid| async move {
             let res = async {
-                let payload =
-                    service::board_history(src, i32::try_from(uuid)?, BHIST_DEFAULT_DAYS, BHIST_DEFAULT_TOP, now())
-                        .await?;
+                let payload = service::warm_board_history(
+                    src,
+                    i32::try_from(uuid)?,
+                    BHIST_DEFAULT_DAYS,
+                    BHIST_DEFAULT_TOP,
+                    now(),
+                )
+                .await?;
                 set_board_history(kv, uuid, BHIST_DEFAULT_DAYS, BHIST_DEFAULT_TOP, &payload).await;
                 anyhow::Ok(())
             }
