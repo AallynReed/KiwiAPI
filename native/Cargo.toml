@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["kiwi-core", "kiwi-pil", "kiwi-py", "kiwi-server"]
+members = ["kiwi-core", "kiwi-pil", "kiwi-py", "kiwi-server", "kiwi-zlib"]
 
 [profile.release]
 lto = true

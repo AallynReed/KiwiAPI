@@ -3,7 +3,7 @@ and png::encode_rgba): what Image Studio's renderer calls besides drawing.
 
 Writes native/kiwi-pil/testdata/ops.json. Run from the repo root with the
 production-pinned venv:
-    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_pil_ops_fixtures.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/linux_png.py run native/port/parity/gen_pil_ops_fixtures.py
 """
 
 from __future__ import annotations

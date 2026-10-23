@@ -1,11 +1,12 @@
 """Golden fixtures for kiwi-server's Image Studio (src/images), from the repo root:
-    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_images_fixtures.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/linux_png.py run native/port/parity/gen_images_fixtures.py
 Writes native/kiwi-server/testdata/images/golden.json.
 
 Renders run the real app/images/render.py with og_image's font lists pointed at
 the DejaVu files in kiwi-pil/testdata/fonts. The model cases build the stored
 document and the DTO the create and update paths produce (Beanie's encoder,
-pydantic's dump), the binding list is service.bindings(), and the sniff cases
+pydantic's dump; PUT answers reloaded_dto, since save() merges the stored
+document back), the binding list is service.bindings(), and the sniff cases
 call the hub store's sniff_image. The clock is frozen.
 """
 import asyncio

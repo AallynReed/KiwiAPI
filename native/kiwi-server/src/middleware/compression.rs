@@ -5,11 +5,9 @@
 //! OS byte 3 as on Linux), Content-Length dropped, `Vary: Accept-Encoding`
 //! merged. Everything else passes untouched, without that Vary.
 //!
-//! The deflate stream comes from zlib itself (libz-sys, built from source):
-//! zlib-rs picks different matches at level 5, so its bytes differ from
-//! CPython's.
+//! The deflate stream is classic zlib's (kiwi-zlib): zlib-rs picks different
+//! matches at level 5, so its bytes differ from CPython's.
 
-use std::os::raw::{c_int, c_void};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -22,12 +20,11 @@ use axum::{
 };
 use bytes::Bytes;
 use http_body::{Body as _, Frame, SizeHint};
-use libz_sys as z;
 
 use super::headers::add_vary;
 
 const MIN_BYTES: u64 = 1024;
-const LEVEL: c_int = 5;
+const LEVEL: i32 = 5;
 const GZIP_HEADER: [u8; 10] = [0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 3];
 
 const COMPRESSIBLE: [&str; 13] = [
@@ -91,7 +88,7 @@ pub async fn compression(req: Request, next: Next) -> Response {
     if !is_compressible(&res) {
         return res;
     }
-    let Some(z) = Deflate::new() else { return res };
+    let Some(z) = kiwi_zlib::compressobj(LEVEL, -15, 8, kiwi_zlib::Z_DEFAULT_STRATEGY) else { return res };
     let (mut parts, body) = res.into_parts();
     parts.headers.insert(header::CONTENT_ENCODING, HeaderValue::from_static("gzip"));
     add_vary(&mut parts.headers, &["Accept-Encoding"]);
@@ -99,128 +96,11 @@ pub async fn compression(req: Request, next: Next) -> Response {
     Response::from_parts(parts, Body::new(GzipBody { inner: body, z, crc: 0, len: 0, started: false, done: false }))
 }
 
-unsafe extern "C" fn zalloc(_: *mut c_void, items: z::uInt, size: z::uInt) -> *mut c_void {
-    unsafe { libc_calloc(items as usize, size as usize) }
-}
-
-unsafe extern "C" fn zfree(_: *mut c_void, ptr: *mut c_void) {
-    unsafe { libc_free(ptr) }
-}
-
-unsafe extern "C" {
-    #[link_name = "calloc"]
-    fn libc_calloc(n: usize, size: usize) -> *mut c_void;
-    #[link_name = "free"]
-    fn libc_free(ptr: *mut c_void);
-}
-
-/// A raw deflate stream (`compressobj(5, DEFLATED, -15)`).
-struct Deflate(Box<z::z_stream>);
-
-// The stream is owned by one body and zlib keeps no thread-local state.
-unsafe impl Send for Deflate {}
-
-/// `zlib.compressobj(level, DEFLATED, -15)` over all of `data`, flushed.
-pub fn deflate_raw(data: &[u8], level: c_int) -> Option<Vec<u8>> {
-    let mut d = Deflate::with_level(level)?;
-    let mut out = Vec::with_capacity(data.len() / 2 + 64);
-    d.run(data, true, &mut out).then_some(out)
-}
-
-impl Deflate {
-    fn new() -> Option<Self> {
-        Self::with_level(LEVEL)
-    }
-
-    fn with_level(level: c_int) -> Option<Self> {
-        let mut strm = Box::new(z::z_stream {
-            next_in: std::ptr::null_mut(),
-            avail_in: 0,
-            total_in: 0,
-            next_out: std::ptr::null_mut(),
-            avail_out: 0,
-            total_out: 0,
-            msg: std::ptr::null_mut(),
-            state: std::ptr::null_mut(),
-            zalloc,
-            zfree,
-            opaque: std::ptr::null_mut(),
-            data_type: 0,
-            adler: 0,
-            reserved: 0,
-        });
-        let rc = unsafe {
-            z::deflateInit2_(
-                &mut *strm,
-                level,
-                z::Z_DEFLATED,
-                -15,
-                8,
-                z::Z_DEFAULT_STRATEGY,
-                z::zlibVersion(),
-                std::mem::size_of::<z::z_stream>() as c_int,
-            )
-        };
-        (rc == z::Z_OK).then_some(Deflate(strm))
-    }
-
-    /// Python `compress(data)` (finish = false) or `flush(Z_FINISH)`.
-    fn run(&mut self, input: &[u8], finish: bool, out: &mut Vec<u8>) -> bool {
-        let flush = if finish { z::Z_FINISH } else { z::Z_NO_FLUSH };
-        let mut rest = input;
-        loop {
-            let (chunk, tail) = rest.split_at(rest.len().min(1 << 30));
-            rest = tail;
-            self.0.next_in = chunk.as_ptr() as *mut _;
-            self.0.avail_in = chunk.len() as z::uInt;
-            loop {
-                out.reserve(chunk.len() / 2 + 4096);
-                let spare = (out.capacity() - out.len()).min(u32::MAX as usize);
-                self.0.next_out = unsafe { out.as_mut_ptr().add(out.len()) };
-                self.0.avail_out = spare as z::uInt;
-                let rc = unsafe { z::deflate(&mut *self.0, flush) };
-                let written = spare - self.0.avail_out as usize;
-                unsafe { out.set_len(out.len() + written) };
-                match rc {
-                    z::Z_STREAM_END => break,
-                    z::Z_OK | z::Z_BUF_ERROR => {}
-                    _ => return false,
-                }
-                if !finish && self.0.avail_in == 0 && self.0.avail_out != 0 {
-                    break;
-                }
-            }
-            if rest.is_empty() {
-                break;
-            }
-        }
-        self.0.next_in = std::ptr::null_mut();
-        self.0.next_out = std::ptr::null_mut();
-        true
-    }
-}
-
-impl Drop for Deflate {
-    fn drop(&mut self) {
-        unsafe { z::deflateEnd(&mut *self.0) };
-    }
-}
-
-// zlib's checksum type is c_ulong: u32 on Windows, u64 on Linux.
-#[allow(clippy::useless_conversion, clippy::unnecessary_cast)]
-fn crc32(crc: u32, data: &[u8]) -> u32 {
-    let mut crc = std::os::raw::c_ulong::from(crc);
-    for chunk in data.chunks(1 << 30) {
-        crc = unsafe { z::crc32(crc, chunk.as_ptr(), chunk.len() as z::uInt) };
-    }
-    crc as u32
-}
-
 pin_project_lite::pin_project! {
     struct GzipBody {
         #[pin]
         inner: Body,
-        z: Deflate,
+        z: kiwi_zlib::Deflate,
         crc: u32,
         len: u64,
         started: bool,
@@ -246,11 +126,14 @@ impl http_body::Body for GzipBody {
             match polled {
                 Some(Ok(frame)) => {
                     let Ok(data) = frame.into_data() else { continue };
-                    *this.crc = crc32(*this.crc, &data);
+                    let mut crc = crc32fast::Hasher::new_with_initial(*this.crc);
+                    crc.update(&data);
+                    *this.crc = crc.finalize();
                     *this.len += data.len() as u64;
-                    if !this.z.run(&data, false, &mut out) {
+                    let Some(z) = this.z.compress(&data) else {
                         return Poll::Ready(Some(Err(axum::Error::new("deflate failed"))));
-                    }
+                    };
+                    out.extend(z);
                     if !out.is_empty() {
                         *this.started = true;
                         return Poll::Ready(Some(Ok(Frame::data(out.into()))));
@@ -260,9 +143,10 @@ impl http_body::Body for GzipBody {
                 None => {
                     *this.started = true;
                     *this.done = true;
-                    if !this.z.run(&[], true, &mut out) {
+                    let Some(z) = this.z.flush(kiwi_zlib::Z_FINISH) else {
                         return Poll::Ready(Some(Err(axum::Error::new("deflate failed"))));
-                    }
+                    };
+                    out.extend(z);
                     out.extend_from_slice(&this.crc.to_le_bytes());
                     out.extend_from_slice(&(*this.len as u32).to_le_bytes());
                     return Poll::Ready(Some(Ok(Frame::data(out.into()))));

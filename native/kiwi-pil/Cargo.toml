@@ -5,8 +5,8 @@ edition = "2024"
 
 [dependencies]
 crc32fast = "1.5.0"
+kiwi-zlib = { version = "0.1.0", path = "../kiwi-zlib" }
 png = "0.18.1"
-zlib-rs = { version = "0.6.8", default-features = false, features = ["rust-allocator"] }
 
 [build-dependencies]
 cc = "1.9.0"

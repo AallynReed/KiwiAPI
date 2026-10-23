@@ -4,10 +4,11 @@ Mounts the real ``stats_router`` (scope dependencies overridden, the real error
 handlers and request-id middleware) and records what it answers for the repo
 baseline and for hand-made gamedata directories (``store.BASELINE_DIR`` and the
 stats dir pointed at each case). PNG bodies are recorded as the SHA-256 of
-their decoded RGBA pixels: only pixels must match Pillow, not encoder bytes.
+their decoded RGBA pixels; ``sigil.png_sha256`` pins each sigil's bytes as
+Pillow on Linux writes them (hence linux_png.py).
 
 Run from the repo root with the production-pinned venv:
-    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_stats_fixtures.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/linux_png.py run native/port/parity/gen_stats_fixtures.py
 Writes native/kiwi-server/testdata/stats/golden.json.
 """
 
@@ -155,11 +156,13 @@ SIGIL_QUERIES = [
 
 def sigil_section() -> dict:
     data = store.load("insignia.json")
-    tiers = {}
+    tiers, png = {}, {}
     for s in range(len(data["power_rank"])):
         for w in range(len(data["mastery"])):
             tiers[f"{s},{w}"] = pixels_sha(stats._sigil(s, w))
-    return {"queries": {q: call("GET", f"/v1/stats/sigil?{q}") for q in SIGIL_QUERIES}, "tiers": tiers}
+            png[f"{s},{w}"] = hashlib.sha256(stats._sigil(s, w)).hexdigest()
+    return {"queries": {q: call("GET", f"/v1/stats/sigil?{q}") for q in SIGIL_QUERIES}, "tiers": tiers,
+            "png_sha256": png}
 
 
 def composite_section() -> str:

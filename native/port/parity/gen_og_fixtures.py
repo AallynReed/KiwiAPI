@@ -12,7 +12,7 @@ reproduces this zlib-ng 2.3.3 stream). Production's Linux wheel deflates the
 same pixels into a different stream; see the area notes.
 
 Run from the repo root with the production-pinned venv:
-    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_og_fixtures.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/linux_png.py run native/port/parity/gen_og_fixtures.py
 """
 
 from __future__ import annotations

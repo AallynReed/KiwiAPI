@@ -1,6 +1,6 @@
 """Golden fixtures for SWF and audio (app/trove/swf, app/trove/audio and their
 /site routes), from the repo root:
-    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_media_fixtures.py
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/linux_png.py run native/port/parity/gen_media_fixtures.py
 Writes native/kiwi-server/testdata/media/: golden.json, synthetic movies and a
 synthetic bank, plus a few small real files (E:/Trove; regenerate only with
 them present).

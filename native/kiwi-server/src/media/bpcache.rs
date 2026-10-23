@@ -154,18 +154,9 @@ pub fn encode(payload: &Value) -> Vec<u8> {
     gzip(body.as_bytes(), mtime)
 }
 
-/// CPython's `gzip.compress(data, 6, mtime=mtime)`: the simple header (no
-/// name, XFL 0, OS 255), zlib's own level-6 deflate (the zlib wrapper of
-/// `compress2` stripped: the stream inside is the same), CRC32 and size.
+/// CPython's `gzip.compress(data, 6, mtime=mtime)`.
 pub fn gzip(data: &[u8], mtime: u32) -> Vec<u8> {
-    let mut out = vec![0x1f, 0x8b, 8, 0];
-    out.extend_from_slice(&mtime.to_le_bytes());
-    out.extend_from_slice(&[0, 255]);
-    let z = super::pil::py_zlib_compress(data);
-    out.extend_from_slice(&z[2..z.len() - 4]);
-    out.extend_from_slice(&crc32fast::hash(data).to_le_bytes());
-    out.extend_from_slice(&(data.len() as u32).to_le_bytes());
-    out
+    kiwi_zlib::gzip_compress(data, 6, mtime).expect("deflate")
 }
 
 /// `Cached.payload()`: the JSON body of a stored blob.

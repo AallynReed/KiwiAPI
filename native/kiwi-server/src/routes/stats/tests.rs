@@ -152,6 +152,7 @@ fn sigil_every_tier() {
         let (s, w) = key.split_once(',').unwrap();
         let png = render_sigil(data.as_deref(), s.parse().unwrap(), w.parse().unwrap()).unwrap();
         assert_eq!(pixels(&png), want.as_str().unwrap(), "tier {key}");
+        assert_eq!(sha(&png), golden()["sigil"]["png_sha256"][key].as_str().unwrap(), "tier {key} bytes");
     }
 }
 

@@ -1,8 +1,9 @@
 //! `img.save(fp, "PNG", optimize=True)` for an "RGB" or "RGBA" image (and the
-//! plain `img.save` an "RGBA" image gets): `ZipEncode.c`'s
-//! filter choice, zlib level 9 / memLevel 9 / Z_FILTERED, IDAT chunks of
-//! `ImageFile.MAXBLOCK` bytes. zlib-rs emits the same stream as zlib-ng 2.3.3
-//! does in Pillow's Windows wheel.
+//! plain `img.save` an "RGBA" image gets): `ZipEncode.c`'s filter choice and
+//! deflate calls (level 9 with optimize, else 6; memLevel 9; Z_FILTERED), one
+//! IDAT per encoder buffer of `max(MAXBLOCK, width * 4)` bytes. The deflate is
+//! classic zlib, as in Pillow's Linux wheels (the Windows wheel's zlib-ng
+//! picks other matches).
 
 const MAXBLOCK: usize = 65536;
 
@@ -123,81 +124,45 @@ fn chunk(out: &mut Vec<u8>, kind: &[u8; 4], data: &[u8]) {
     out.extend_from_slice(&h.finalize().to_be_bytes());
 }
 
-/// A complete PNG for 8-bit RGB pixels.
+/// A complete PNG for 8-bit RGB pixels (`optimize=True`).
 pub fn encode_rgb(rgb: &[u8], width: usize, height: usize) -> Vec<u8> {
-    encode(rgb, width, height, 3, 9, true)
+    encode(rgb, width, height, 3, true, None)
 }
 
 /// `img.save(fp, "PNG")` for an "RGBA" image (default level, no optimize).
 pub fn encode_rgba(rgba: &[u8], width: usize, height: usize) -> Vec<u8> {
-    encode(rgba, width, height, 4, 6, false)
+    encode(rgba, width, height, 4, false, None)
 }
 
 /// `img.save(fp, "PNG", optimize=True)` for an "RGBA" image.
 pub fn encode_rgba_optimized(rgba: &[u8], width: usize, height: usize) -> Vec<u8> {
-    encode(rgba, width, height, 4, 9, true)
+    encode(rgba, width, height, 4, true, None)
 }
 
-/// `ZipEncode.c`'s stream: one `deflate(Z_NO_FLUSH)` per filtered row, then
-/// `Z_FINISH` (zlib-ng's medium levels depend on how the input arrives).
-fn deflate_rows(raw: &[u8], row: usize, level: i32) -> Vec<u8> {
-    let cfg = zlib_rs::DeflateConfig {
-        level,
-        method: zlib_rs::Method::Deflated,
-        window_bits: 15,
-        mem_level: 9,
-        strategy: zlib_rs::Strategy::Filtered,
-    };
-    let mut d = zlib_rs::Deflate::new_with_config(cfg);
-    let mut out = Vec::with_capacity(raw.len() / 2 + 64);
-    let mut buf = vec![0u8; MAXBLOCK];
-    let mut run = |input: &[u8], flush: zlib_rs::DeflateFlush, out: &mut Vec<u8>| {
-        let mut pos = 0;
-        loop {
-            let (in0, out0) = (d.total_in(), d.total_out());
-            let status = d.compress(&input[pos..], &mut buf, flush);
-            pos += (d.total_in() - in0) as usize;
-            let made = (d.total_out() - out0) as usize;
-            out.extend_from_slice(&buf[..made]);
-            let done = match flush {
-                zlib_rs::DeflateFlush::Finish => matches!(status, Ok(zlib_rs::Status::StreamEnd)),
-                _ => pos >= input.len() && made < buf.len(),
-            };
-            if done || status.is_err() {
-                break;
-            }
-        }
-    };
-    for r in raw.chunks(row.max(1)) {
-        run(r, zlib_rs::DeflateFlush::NoFlush, &mut out);
-    }
-    run(&[], zlib_rs::DeflateFlush::Finish, &mut out);
-    out
+/// [`encode_rgba`] of an image whose `info` carries `icc_profile`: an iCCP
+/// chunk (CPython's `zlib.compress`) before the pixels.
+pub fn encode_rgba_icc(rgba: &[u8], width: usize, height: usize, icc: Option<&[u8]>) -> Vec<u8> {
+    encode(rgba, width, height, 4, false, icc)
 }
 
-fn encode(px: &[u8], width: usize, height: usize, bpp: usize, level: i32, optimize: bool) -> Vec<u8> {
+fn encode(px: &[u8], width: usize, height: usize, bpp: usize, optimize: bool, icc: Option<&[u8]>) -> Vec<u8> {
     let raw = filter_rows_bpp(px, width, height, bpp, optimize);
-    let z = if optimize {
-        let cfg = zlib_rs::DeflateConfig {
-            level,
-            method: zlib_rs::Method::Deflated,
-            window_bits: 15,
-            mem_level: 9,
-            strategy: zlib_rs::Strategy::Filtered,
-        };
-        let mut buf = vec![0u8; zlib_rs::compress_bound(raw.len())];
-        zlib_rs::compress_slice(&mut buf, &raw, cfg).0.to_vec()
-    } else {
-        deflate_rows(&raw, width * bpp + 1, level)
-    };
-    let mut out = Vec::with_capacity(z.len() + 64);
+    let level = if optimize { 9 } else { 6 };
+    let bufsize = MAXBLOCK.max(width * 4);
+    let parts = kiwi_zlib::zip_encode(&raw, width * bpp + 1, level, kiwi_zlib::Z_FILTERED, bufsize).expect("deflate");
+    let mut out = Vec::with_capacity(parts.iter().map(Vec::len).sum::<usize>() + 128);
     out.extend_from_slice(b"\x89PNG\r\n\x1a\n");
     let mut ihdr = Vec::with_capacity(13);
     ihdr.extend_from_slice(&(width as u32).to_be_bytes());
     ihdr.extend_from_slice(&(height as u32).to_be_bytes());
     ihdr.extend_from_slice(&[8, if bpp == 4 { 6 } else { 2 }, 0, 0, 0]);
     chunk(&mut out, b"IHDR", &ihdr);
-    for part in z.chunks(MAXBLOCK) {
+    if let Some(icc) = icc.filter(|p| !p.is_empty()) {
+        let mut data = b"ICC Profile\0\0".to_vec();
+        data.extend(kiwi_zlib::compress(icc, -1, 15).expect("deflate"));
+        chunk(&mut out, b"iCCP", &data);
+    }
+    for part in &parts {
         chunk(&mut out, b"IDAT", part);
     }
     chunk(&mut out, b"IEND", &[]);

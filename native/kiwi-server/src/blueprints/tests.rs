@@ -285,8 +285,8 @@ fn thumbnails() {
     let renders = load("render.json");
     for case in renders["renders"].as_array().unwrap() {
         let (name, dim) = (s(&case["file"]), case["dim"].as_u64().unwrap() as usize);
-        let got =
-            kiwi_core::voxel::render_thumbnail(&input(name), dim).map(|px| kiwi_pil::png::encode_rgba_optimized(&px, dim, dim));
+        let got = kiwi_core::voxel::render_thumbnail(&input(name), dim)
+            .map(|px| kiwi_pil::png::encode_rgba_optimized(&px, dim, dim));
         let Some(png) = case["png"].as_str() else {
             match got {
                 Ok(_) => bad.push(format!("{name}: rendered, want {}", case["error"])),

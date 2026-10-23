@@ -8,7 +8,7 @@ pub mod jpeg;
 mod png;
 pub mod resample;
 
-pub use self::png::{encode as encode_png, py_zlib_compress};
+pub use self::png::encode as encode_png;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Mode {

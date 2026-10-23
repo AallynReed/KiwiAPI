@@ -1,5 +1,5 @@
 """Golden fixtures for the Blueprint Editor and voxel renderer port, from the repo root:
-    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/gen_blueprints_fixtures.py [E:/Trove/blueprints]
+    S:/Desktop/Projects/.venvs/trove-prod/Scripts/python.exe native/port/parity/linux_png.py run native/port/parity/gen_blueprints_fixtures.py [E:/Trove/blueprints]
 
 Writes native/kiwi-server/testdata/blueprints/: the input blueprints (bp/, a few
 small game files plus synthetic ones), engine.json (every editor function over

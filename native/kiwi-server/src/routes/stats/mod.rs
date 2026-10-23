@@ -284,7 +284,7 @@ fn render_sigil(data: Option<&Value>, shield: usize, wings: usize) -> Option<Vec
         imaging::decode_png(&b64decode(b64)?).ok()
     };
     let out = imaging::alpha_composite(&layer("mastery", wings)?, &layer("power_rank", shield)?).ok()?;
-    imaging::encode_png(&out).ok()
+    Some(kiwi_pil::png::encode_rgba(&out.pixels, out.width as usize, out.height as usize))
 }
 
 /// `sigil_png(power_rank, mastery)` as the route answers it.

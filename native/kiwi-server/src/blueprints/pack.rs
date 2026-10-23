@@ -3,22 +3,13 @@
 
 use serde_json::{Map, Value};
 
-use crate::{middleware::compression::deflate_raw, pyjson};
+use kiwi_zlib::deflate_raw;
+
+use crate::pyjson;
 
 /// `gzip.compress(data, level, mtime=mtime)`.
 pub fn gzip(data: &[u8], level: i32, mtime: u32) -> Option<Vec<u8>> {
-    let mut out = vec![0x1f, 0x8b, 8, 0];
-    out.extend_from_slice(&mtime.to_le_bytes());
-    out.push(match level {
-        9 => 2,
-        1 => 4,
-        _ => 0,
-    });
-    out.push(255);
-    out.extend(deflate_raw(data, level)?);
-    out.extend_from_slice(&crc32fast::hash(data).to_le_bytes());
-    out.extend_from_slice(&(data.len() as u32).to_le_bytes());
-    Some(out)
+    kiwi_zlib::gzip_compress(data, level, mtime)
 }
 
 /// `gzip.decompress`.

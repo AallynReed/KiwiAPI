@@ -1413,6 +1413,7 @@ dependencies = [
  "flate2",
  "gif",
  "image-webp",
+ "kiwi-zlib",
  "mozjpeg",
  "png",
  "regex",
@@ -1432,10 +1433,10 @@ dependencies = [
  "base64 0.22.1",
  "cc",
  "crc32fast",
+ "kiwi-zlib",
  "png",
  "serde_json",
  "sha2",
- "zlib-rs",
 ]
 
 [[package]]
@@ -1477,8 +1478,8 @@ dependencies = [
  "indexmap",
  "kiwi-core",
  "kiwi-pil",
+ "kiwi-zlib",
  "lettre",
- "libz-sys",
  "lzma-rust2",
  "md-5",
  "memchr",
@@ -1510,7 +1511,15 @@ dependencies = [
  "tracing-subscriber",
  "unicode-normalization",
  "webpki-roots",
- "zlib-rs",
+]
+
+[[package]]
+name = "kiwi-zlib"
+version = "0.1.0"
+dependencies = [
+ "libz-sys",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]
@@ -1612,7 +1621,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85bc9657773828b90eeb625adff10eeac83cc21bbfd8e23a03eaa8a33c9e28d9"
 dependencies = [
  "cc",
- "libc",
  "pkg-config",
  "vcpkg",
 ]

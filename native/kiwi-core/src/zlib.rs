@@ -1,7 +1,9 @@
 //! zlib with CPython's semantics. `inflate` is `decompressobj`: trailing bytes
 //! after the stream are ignored and a truncated stream yields what it decoded.
+//! Deflate is classic zlib (kiwi-zlib), whose bytes are CPython's; inflate is
+//! zlib-rs, whose output is the same.
 
-use flate2::{Compress, Compression, Decompress, FlushCompress, FlushDecompress, Status};
+use flate2::{Decompress, FlushDecompress, Status};
 
 pub struct Inflated {
     pub data: Vec<u8>,
@@ -58,34 +60,20 @@ pub fn inflate_exact(input: &[u8], buf: &mut [u8]) -> Option<bool> {
     }
 }
 
-/// `compressobj(level)`, fed `chunk`-sized `compress()` calls, then
+/// `zlib.compress(data, level)`; with a `chunk` shorter than the input, or
+/// `sync`, `compressobj(level)` fed `chunk`-sized `compress()` calls, then
 /// `flush(Z_FINISH)`, or `flush(Z_SYNC_FLUSH)` when `sync` (the `.tmod` stream).
 pub fn deflate(input: &[u8], level: u32, chunk: usize, sync: bool) -> Option<Vec<u8>> {
-    let mut c = Compress::new(Compression::new(level), true);
-    let mut out = Vec::with_capacity(input.len() / 2 + 64);
-    let mut feed = |data: &[u8], flush: FlushCompress, out: &mut Vec<u8>| -> Option<()> {
-        let start = c.total_in();
-        loop {
-            // Room for a whole call: a flush that fills the buffer exactly would be
-            // repeated, and zlib-rs (unlike zlib) emits the repeat.
-            let room = data.len() + data.len() / 8 + (1 << 17);
-            if out.capacity() - out.len() < room {
-                out.reserve(room);
-            }
-            let status = c.compress_vec(&data[(c.total_in() - start) as usize..], out, flush).ok()?;
-            if status == Status::StreamEnd {
-                return Some(());
-            }
-            let drained = (c.total_in() - start) as usize == data.len() && out.len() < out.capacity();
-            if drained && !matches!(flush, FlushCompress::Finish) {
-                return Some(());
-            }
-        }
-    };
-    for part in input.chunks(chunk.max(1)) {
-        feed(part, FlushCompress::None, &mut out)?;
+    let level = i32::try_from(level).ok()?;
+    if !sync && chunk >= input.len() {
+        return kiwi_zlib::compress(input, level, 15);
     }
-    feed(&[], if sync { FlushCompress::Sync } else { FlushCompress::Finish }, &mut out)?;
+    let mut z = kiwi_zlib::compressobj(level, 15, 8, kiwi_zlib::Z_DEFAULT_STRATEGY)?;
+    let mut out = Vec::with_capacity(input.len() / 2 + 64);
+    for part in input.chunks(chunk.max(1)) {
+        out.extend(z.compress(part)?);
+    }
+    out.extend(z.flush(if sync { kiwi_zlib::Z_SYNC_FLUSH } else { kiwi_zlib::Z_FINISH })?);
     Some(out)
 }
 
@@ -106,17 +94,9 @@ pub fn gzip_file(data: &[u8], level: u32, basename: &str, mtime: u32) -> Option<
         out.extend_from_slice(&fname);
         out.push(0);
     }
-    let mut c = Compress::new(Compression::new(level), false);
-    out.reserve(data.len() / 3 + 64);
-    loop {
-        if out.capacity() - out.len() < 1 << 16 {
-            out.reserve(1 << 20);
-        }
-        let consumed = c.total_in() as usize;
-        if c.compress_vec(&data[consumed..], &mut out, FlushCompress::Finish).ok()? == Status::StreamEnd {
-            break;
-        }
-    }
+    let mut z = kiwi_zlib::compressobj(i32::try_from(level).ok()?, -15, 8, kiwi_zlib::Z_DEFAULT_STRATEGY)?;
+    out.extend(z.compress(data)?);
+    out.extend(z.flush(kiwi_zlib::Z_FINISH)?);
     let mut crc = flate2::Crc::new();
     crc.update(data);
     out.extend_from_slice(&crc.sum().to_le_bytes());
