@@ -60,7 +60,7 @@ async fn web_app() -> Router {
     vars.extend([
         ("SITE_ROOT".into(), repo().join("site").to_string_lossy().into_owned()),
         ("GEOIP_DIR".into(), geo.to_string_lossy().into_owned()),
-        ("GAMEDATA_DIR".into(), repo().join("app/trove/gamedata").to_string_lossy().into_owned()),
+        ("GAMEDATA_DIR".into(), repo().join("assets/gamedata").to_string_lossy().into_owned()),
         ("INTERNAL_API_URL".into(), closed_port()),
         ("PY_UPSTREAM".into(), closed_port()),
     ]);

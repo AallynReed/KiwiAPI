@@ -1,14 +1,7 @@
-//! `app/trove/decode/registry.py`: the decoders in Python's order, their file
-//! formats, and what identifies a version of each one's code.
+//! The decoders in Python's order, their file formats, and the version of each
+//! one's code.
 
-use std::{
-    collections::BTreeMap,
-    path::{Path, PathBuf},
-    sync::OnceLock,
-};
-
-use regex::Regex;
-use sha1::{Digest, Sha1};
+use std::path::{Path, PathBuf};
 
 use super::{
     decoders as d,
@@ -59,6 +52,9 @@ impl Ctx {
 
 pub struct Decoder {
     pub name: &'static str,
+    /// Recorded on every run; a build reruns when it changes. Bump it by hand
+    /// when the decoder's output changes.
+    pub code_version: &'static str,
     pub title: &'static str,
     pub output: &'static str,
     pub prefixes: &'static [&'static str],
@@ -93,9 +89,10 @@ pub fn count_key(key: &'static str) -> impl Fn(&J) -> Option<usize> {
 }
 
 macro_rules! dec {
-    ($name:literal, $title:literal, $output:literal, [$($p:literal),*], $indent:expr, $nl:expr, $build:expr, $count:expr) => {
+    ($name:literal, $version:literal, $title:literal, $output:literal, [$($p:literal),*], $indent:expr, $nl:expr, $build:expr, $count:expr) => {
         Decoder {
             name: $name,
+            code_version: $version,
             title: $title,
             output: $output,
             prefixes: &[$($p),*],
@@ -111,6 +108,7 @@ macro_rules! dec {
 pub static DECODERS: &[Decoder] = &[
     dec!(
         "class_levels",
+        "62b68e79fbc9",
         "Class levels",
         "classes.json",
         ["prefabs/class/"],
@@ -121,6 +119,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "class_abilities",
+        "59196671d7f8",
         "Class abilities",
         "class_abilities.json",
         ["prefabs/class/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/"],
@@ -131,6 +130,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "ally_abilities",
+        "26efbf0cfd4b",
         "Ally abilities",
         "ally_abilities.json",
         ["prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/"],
@@ -141,6 +141,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "gem_abilities",
+        "5f20faa90b7a",
         "Gem abilities",
         "gem_abilities.json",
         ["prefabs/item/gem/large/", "prefabs/abilities/", "prefabs/class/", "prefabs/sfx/", "languages/en/"],
@@ -151,6 +152,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "ring_abilities",
+        "955f7e5ae34a",
         "Ring abilities",
         "ring_abilities.json",
         ["prefabs/abilities/", "prefabs/class/", "prefabs/sfx/", "languages/en/"],
@@ -161,6 +163,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "mount_abilities",
+        "b49eb4ed6e3d",
         "Mount abilities",
         "mount_abilities.json",
         ["prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/"],
@@ -171,6 +174,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "pvp_stat_ranges",
+        "5119a17aeff7",
         "PvP stat curves",
         "pvp.json",
         ["prefabs/pvp/data/stats/"],
@@ -181,6 +185,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "delve_modifiers",
+        "7e4146b97192",
         "Delve modifiers",
         "delve_modifiers.json",
         ["prefabs/placeable/deco/delve/", "prefabs/abilities/delve/", "languages/en/"],
@@ -191,6 +196,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "companions",
+        "7c81fd9f7764",
         "Companions",
         "companions.json",
         ["prefabs/collections/", "prefabs/item/", "prefabs/upgrade/", "prefabs/abilities/", "languages/en/"],
@@ -201,6 +207,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "badges",
+        "e0915cb030a8",
         "Badges",
         "badges.json",
         ["prefabs/", "languages/en/", "Trove_x64.exe"],
@@ -211,6 +218,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "fish",
+        "7a9bc082b9cb",
         "Fish",
         "fish.json",
         [
@@ -231,6 +239,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "mementos",
+        "88105931bf21",
         "Mementos",
         "mementos.json",
         [
@@ -248,11 +257,20 @@ pub static DECODERS: &[Decoder] = &[
         d::mementos::build,
         |j| j.get("mementos").map(J::len)
     ),
-    dec!("recipes", "Recipes", "recipes.json", ["prefabs/", "languages/en/"], None, true, d::recipes::build, |j| Some(
-        j.get("recipes").map_or(0, J::len)
-    )),
+    dec!(
+        "recipes",
+        "2f1ba6f31d72",
+        "Recipes",
+        "recipes.json",
+        ["prefabs/", "languages/en/"],
+        None,
+        true,
+        d::recipes::build,
+        |j| Some(j.get("recipes").map_or(0, J::len))
+    ),
     dec!(
         "collectibles",
+        "db45f070aafc",
         "Wings, boats, sails and auras",
         "collectibles.json",
         ["prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/", "particles/VFX/Particles/"],
@@ -263,6 +281,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "cosmetics",
+        "e0afe740003d",
         "Costumes and styles",
         "cosmetics.json",
         ["prefabs/skins/", "prefabs/loot/", "prefabs/collections/", "prefabs/equipment/", "languages/en/"],
@@ -271,9 +290,20 @@ pub static DECODERS: &[Decoder] = &[
         d::cosmetics::build,
         d::cosmetics::count
     ),
-    dec!("titles", "Titles", "titles.json", ["languages/en/"], Some(4), false, d::titles::build, count_len),
+    dec!(
+        "titles",
+        "bebad39bf1af",
+        "Titles",
+        "titles.json",
+        ["languages/en/"],
+        Some(4),
+        false,
+        d::titles::build,
+        count_len
+    ),
     dec!(
         "npcs",
+        "a04f7d5830bf",
         "NPCs and bosses",
         "npcs.json",
         [
@@ -291,6 +321,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "placeables",
+        "3ef46efa98d1",
         "Blocks and placeables",
         "placeables.json",
         [
@@ -315,6 +346,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "quests",
+        "bdcd852e2ef4",
         "Quests and Adventures",
         "quests.json",
         ["prefabs/", "languages/en/", "Trove_x64.exe"],
@@ -325,6 +357,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "worlds",
+        "ea604a032d1a",
         "Worlds, biomes and dungeons",
         "worlds.json",
         [
@@ -343,6 +376,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "subclass_abilities",
+        "ff535a44fe0e",
         "Subclass abilities",
         "subclass_abilities.json",
         ["prefabs/class/", "prefabs/abilities/subclass/", "languages/en/"],
@@ -353,6 +387,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "daily_bonuses",
+        "415aae8c0a79",
         "Daily bonuses",
         "daily_bonuses.json",
         ["prefabs/loot/", "ui/", "languages/en/"],
@@ -363,6 +398,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "leaderboards",
+        "f800e09eebfd",
         "Leaderboards",
         "leaderboards.json",
         ["prefabs/leaderboard/", "languages/en/", "Trove_x64.exe"],
@@ -373,6 +409,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "gem_upgrades",
+        "42996d587383",
         "Gem upgrades",
         "gem_upgrades.json",
         ["prefabs/gems/meta/", "prefabs/item/gem/", "prefabs/item/crafting/", "languages/en/"],
@@ -383,6 +420,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "upgrade_trees",
+        "f972574c2bd3",
         "Upgrade trees",
         "upgrade_trees.json",
         [
@@ -398,11 +436,20 @@ pub static DECODERS: &[Decoder] = &[
         d::upgrade_trees::build,
         count_upgrade_trees
     ),
-    dec!("items", "Items", "items.json", ["prefabs/", "languages/en/"], None, true, d::items::build, |j| j
-        .get("items")
-        .map(J::len)),
+    dec!(
+        "items",
+        "fa7f2bc3493e",
+        "Items",
+        "items.json",
+        ["prefabs/", "languages/en/"],
+        None,
+        true,
+        d::items::build,
+        |j| j.get("items").map(J::len)
+    ),
     dec!(
         "mastery",
+        "5bcabbd0121e",
         "Mastery",
         "mastery.json",
         ["prefabs/meta/", "prefabs/claim/", "prefabs/collections/", "prefabs/item/", "languages/en/"],
@@ -413,6 +460,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "class_rewards",
+        "ddae06d7e506",
         "Class rewards",
         "class_rewards.json",
         ["prefabs/class/", "prefabs/claim/", "prefabs/abilities/", "prefabs/item/", "languages/en/"],
@@ -423,6 +471,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "lootbox_odds",
+        "bc3365605457",
         "Lootbox odds",
         "lootbox_odds.json",
         ["languages/en/"],
@@ -433,6 +482,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "pvp_powerups",
+        "5e98944a4145",
         "PvP power-ups",
         "pvp_powerups.json",
         ["prefabs/pvp/", "prefabs/abilities/", "prefabs/effects/", "prefabs/sfx/", "languages/en/"],
@@ -443,6 +493,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "chat_commands",
+        "73e6a1a67571",
         "Chat commands",
         "chat_commands.json",
         ["prefabs/"],
@@ -453,6 +504,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "insignia",
+        "a288ae0567d3",
         "Sigils",
         "insignia.json",
         ["prefabs/meta/insignia.binfab", "ui/nameplate.swf"],
@@ -463,6 +515,7 @@ pub static DECODERS: &[Decoder] = &[
     ),
     dec!(
         "gear",
+        "1150e62f42c0",
         "Gear",
         "gear.json",
         [
@@ -518,95 +571,4 @@ fn count_class_rewards(j: &J) -> Option<usize> {
 
 pub fn get(name: &str) -> Option<&'static Decoder> {
     DECODERS.iter().find(|d| d.name == name)
-}
-
-/// Where the Python decoder sources live, next to the repo baseline.
-pub fn source_dir(baseline: &Path) -> PathBuf {
-    baseline.parent().map_or_else(|| PathBuf::from("app/trove/decode"), |p| p.join("decode"))
-}
-
-/// The package modules `code_version` reads but `_uses` would not find.
-const ALWAYS: [&str; 4] = ["common", "wire", "fields", "ability"];
-/// `app.trove.decode` modules loaded in the API process (`_uses` only follows those).
-fn loaded(name: &str) -> bool {
-    !matches!(name, "view" | "__main__" | "__init__")
-}
-
-fn import_re() -> &'static Regex {
-    static R: OnceLock<Regex> = OnceLock::new();
-    R.get_or_init(|| {
-        Regex::new(
-            r"(?m)^[ \t]*from[ \t]+app\.trove\.decode(\.[A-Za-z_][A-Za-z0-9_]*)?[ \t]+import[ \t]+(\([^)]*\)|[^\n]*)",
-        )
-        .expect("regex")
-    })
-}
-
-/// The `app.trove.decode` modules a source file imports (`ast.ImportFrom` nodes).
-fn imports(source: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    for cap in import_re().captures_iter(source) {
-        match cap.get(1) {
-            Some(m) => out.push(m.as_str()[1..].to_owned()),
-            None => {
-                let names = cap.get(2).map_or("", |m| m.as_str());
-                for part in names.trim_matches(|c| c == '(' || c == ')').split(',') {
-                    let part = part.split('#').next().unwrap_or("").trim();
-                    if let Some(n) = part.split_whitespace().next() {
-                        out.push(n.to_owned());
-                    }
-                }
-            }
-        }
-    }
-    out
-}
-
-/// `registry.code_version(module)`: sha1 of the decoder's source plus everything
-/// it uses from the package, first 12 hex digits. CRLF reads as LF, so a
-/// Windows checkout hashes like the server's.
-pub fn code_version(name: &str, src: &Path) -> Option<String> {
-    let read = |m: &str| {
-        std::fs::read(src.join(format!("{m}.py"))).ok().map(|b| {
-            let mut out = Vec::with_capacity(b.len());
-            for (i, &c) in b.iter().enumerate() {
-                if !(c == b'\r' && b.get(i + 1) == Some(&b'\n')) {
-                    out.push(c);
-                }
-            }
-            out
-        })
-    };
-    let mut found: BTreeMap<String, ()> = BTreeMap::new();
-    let mut stack = vec![name.to_owned()];
-    while let Some(m) = stack.pop() {
-        let text = String::from_utf8_lossy(&read(&m)?).into_owned();
-        for dep in imports(&text) {
-            if loaded(&dep) && src.join(format!("{dep}.py")).is_file() && !found.contains_key(&dep) {
-                found.insert(dep.clone(), ());
-                stack.push(dep);
-            }
-        }
-    }
-    let mut order: Vec<String> = Vec::new();
-    for m in std::iter::once(name.to_owned()).chain(ALWAYS.iter().map(|s| (*s).to_owned())).chain(found.into_keys()) {
-        if !order.contains(&m) {
-            order.push(m);
-        }
-    }
-    let mut h = Sha1::new();
-    for m in &order {
-        h.update(read(m)?);
-    }
-    Some(hex::encode(h.finalize())[..12].to_owned())
-}
-
-/// The version recorded on a run: Python's hash while its sources ship, else
-/// this build's.
-pub fn version_of(name: &str, src: &Path) -> String {
-    code_version(name, src).unwrap_or_else(|| {
-        let mut h = Sha1::new();
-        h.update(format!("kiwi-server:{name}:{}", env!("CARGO_PKG_VERSION")).as_bytes());
-        hex::encode(h.finalize())[..12].to_owned()
-    })
 }

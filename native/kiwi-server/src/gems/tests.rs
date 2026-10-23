@@ -16,7 +16,7 @@ use super::*;
 use crate::{pyjson, validation::Params};
 
 fn store() -> Gamedata {
-    Gamedata::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata"), None)
+    Gamedata::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata"), None)
 }
 
 fn fixture(name: &str) -> Value {

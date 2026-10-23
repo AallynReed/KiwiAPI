@@ -50,7 +50,7 @@ fn asset() -> String {
 
 fn gamedata() -> &'static Gamedata {
     static G: OnceLock<Gamedata> = OnceLock::new();
-    G.get_or_init(|| Gamedata::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata"), None))
+    G.get_or_init(|| Gamedata::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata"), None))
 }
 
 // --- slash commands ------------------------------------------------------------------------

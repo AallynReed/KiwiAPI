@@ -1,13 +1,10 @@
 //! The Dockerfile against the paths the binaries read: the `rust` image must
-//! carry every file they open under app/ (at the same path below /app) and put
-//! OCR's library and models where the engine looks.
+//! carry every file they open under assets/ (at the same path below /app) and
+//! put OCR's library and models where the engine looks.
 
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashMap, path::PathBuf};
 
-use crate::{decode::registry, gamedata, i18n, media::audio, ocr::engine, og, rigs, web::geo};
+use crate::{gamedata, i18n, media::audio, ocr::engine, og, rigs, web::geo};
 
 fn repo() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -137,12 +134,11 @@ fn copy_sources_exist_and_are_not_ignored() {
 fn rust_image_carries_every_runtime_file() {
     let df = dockerfile();
     let stage = &df.stages["rust"];
-    assert!(stage.iter().any(|i| i == "WORKDIR /app"), "the binaries resolve app/ from /app");
+    assert!(stage.iter().any(|i| i == "WORKDIR /app"), "the binaries resolve assets/ from /app");
     let copies = copies(stage);
     for (sources, dest) in &copies {
         for src in sources {
             let src = src.trim_end_matches('/');
-            assert_ne!(src, "app", "the rust image copies only what it reads from app/");
             // A directory's contents land in dest; a file (or glob) lands in dest/ by name.
             let same_path = if repo().join(src).is_dir() || !dest.ends_with('/') {
                 dest.trim_end_matches('/') == src
@@ -152,8 +148,6 @@ fn rust_image_carries_every_runtime_file() {
             assert!(same_path, "COPY {src} {dest}: not at the same path below /app");
         }
     }
-    let decode = registry::source_dir(Path::new(gamedata::BASELINE_DIR)).to_string_lossy().replace('\\', "/");
-    let decoder = format!("{decode}/registry.py");
     let needed = [
         gamedata::BASELINE_DIR,
         rigs::RIG_DIR,
@@ -161,9 +155,9 @@ fn rust_image_carries_every_runtime_file() {
         i18n::BOT_LOCALES,
         og::i18n::BOT_DIR,
         geo::PAGE_PATH,
-        decoder.as_str(),
     ];
     for path in needed {
+        assert!(path.starts_with("assets/"), "{path} is outside assets/");
         assert!(
             copies.iter().any(|(sources, _)| sources.iter().any(|s| covers(s, path))),
             "the rust image does not COPY {path}"
@@ -178,8 +172,6 @@ fn ocr_and_tzdata_paths_match_the_image() {
     let version = &df.args["ORT_VERSION"];
     assert_eq!(rust["KIWI_ORT_DYLIB"].replace("${ORT_VERSION}", version), engine::DEFAULT_DYLIB);
     assert_eq!(rust["KIWI_OCR_MODEL_DIR"], engine::DEFAULT_MODELS);
-    let pinned = read("requirements.txt");
-    assert!(pinned.lines().any(|l| l.trim() == format!("onnxruntime=={version}")), "ORT_VERSION is not Python's pin");
     let fetch = df.stages["fetch"].join("\n");
     for model in [engine::DET, engine::CLS, engine::REC] {
         assert!(fetch.contains(&format!("  {model}\"")), "{model} is not fetched with a checksum");

@@ -109,7 +109,7 @@ fn rig_dir() -> PathBuf {
     } else {
         std::env::current_dir().unwrap_or_default()
     };
-    root.join("app/trove/mods_hub/rigs")
+    root.join(crate::rigs::RIG_DIR)
 }
 
 /// `animations_for(name)` when `has_baked_rig(name)`, else `None`.

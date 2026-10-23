@@ -410,8 +410,8 @@ def gem_cases() -> list[dict]:
             rec(k["name"], k["method"], path, raw=k["request"], ct=k.get("content_type", "application/json"))
         else:
             rec(k["name"], k["method"], path)
-    foods = json.loads((ROOT / "app/trove/gamedata/builds/food.json").read_text(encoding="utf-8"))
-    allies = json.loads((ROOT / "app/trove/gamedata/builds/ally.json").read_text(encoding="utf-8"))
+    foods = json.loads((ROOT / "assets/gamedata/builds/food.json").read_text(encoding="utf-8"))
+    allies = json.loads((ROOT / "assets/gamedata/builds/ally.json").read_text(encoding="utf-8"))
     extra = [
         {"build_type": "Health", "character": "Knight", "subclass": "Bard"},
         {"build_type": "Health", "character": "Revenant", "subclass": "Gunslinger", "food": "fishing_phys_3_base"},

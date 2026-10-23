@@ -128,14 +128,6 @@ fn baseline(settings: &Settings) -> PathBuf {
     Gamedata::global(settings).baseline_dir().to_path_buf()
 }
 
-fn source_dir(settings: &Settings) -> PathBuf {
-    registry::source_dir(&baseline(settings))
-}
-
-pub fn code_version(settings: &Settings, name: &str) -> String {
-    registry::version_of(name, &source_dir(settings))
-}
-
 /// `(UpdateBranch.current_ordinal, current_version)`, `(0, None)` without one.
 pub async fn patch(state: &AppState, branch: &str) -> anyhow::Result<(i64, Option<String>)> {
     let Some(d) = state.mongo().collection::<Document>("update_branches").find_one(doc! {"branch": branch}).await?
@@ -169,7 +161,7 @@ async fn needs_run(state: &AppState, d: &Decoder, ordinal: i64) -> anyhow::Resul
     if interrupted(&last, dt::now()) {
         return Ok(true);
     }
-    Ok(last.ordinal != ordinal || last.code_version != code_version(state.settings(), d.name))
+    Ok(last.ordinal != ordinal || last.code_version != d.code_version)
 }
 
 /// The post-sync hook: rebuild whatever is out of date for the live branch.
@@ -334,7 +326,7 @@ async fn run_one(
         trigger: trigger.to_owned(),
         ordinal,
         version_tag: tag,
-        code_version: code_version(settings, d.name),
+        code_version: d.code_version.to_owned(),
         started_at: dt::now(),
         finished_at: None,
         ok: None,
@@ -452,7 +444,7 @@ pub async fn status(state: &AppState) -> anyhow::Result<Value> {
         let serving = if store.path(d.output) != store.baseline_dir().join(d.output) { "rebuild" } else { "repo copy" };
         rows.push(json!({
             "name": d.name, "title": d.title, "output": d.output,
-            "state": state_of(last.as_ref(), now), "code_version": code_version(settings, d.name),
+            "state": state_of(last.as_ref(), now), "code_version": d.code_version,
             "serving": serving, "last": run_dto(last.as_ref()), "last_ok": run_dto(good.as_ref()),
         }));
     }

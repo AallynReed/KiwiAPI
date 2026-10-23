@@ -3979,7 +3979,7 @@ async function renderCodexes() {
 }
 
 // --- Game data (master) ------------------------------------------------------
-// app/trove/decode rebuilds app/trove/gamedata/*.json after every live patch. A
+// The decoders rebuild assets/gamedata/*.json after every live patch. A
 // decoder that fails keeps serving its previous file; this tab shows which, why,
 // and reruns them once fixed.
 

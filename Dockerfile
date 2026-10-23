@@ -160,17 +160,9 @@ ENV KIWI_ORT_DYLIB=/opt/onnxruntime/lib/libonnxruntime.so.${ORT_VERSION} \
     KIWI_OCR_MODEL_DIR=/opt/rapidocr/models \
     KIWI_TZDATA_DIR=/opt/tzdata/zoneinfo
 
-# Everything the binaries read from app/ (relative to /app): the game data
-# baseline, the decoder sources code_version hashes, the Vorbis codebooks, the
-# baked rigs, the bot's locale overlay and the regional maintenance page.
-# site/ is bind-mounted.
+# The data files the binaries read, relative to /app (assets/). site/ is bind-mounted.
 WORKDIR /app
-COPY app/trove/gamedata app/trove/gamedata
-COPY app/trove/mods_hub/rigs app/trove/mods_hub/rigs
-COPY app/trove/decode/*.py app/trove/decode/
-COPY app/trove/audio/packed_codebooks_aoTuV_603.bin app/trove/audio/
-COPY app/locales app/locales
-COPY app/geo_maintenance/maintenance.html app/geo_maintenance/
+COPY assets assets
 
 COPY --from=native /out/ /usr/local/bin/
 

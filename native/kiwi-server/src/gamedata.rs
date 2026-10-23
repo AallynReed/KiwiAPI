@@ -1,5 +1,5 @@
 //! Decoded game data, read like `app/trove/decode/store.py`: a file rebuilt
-//! into `GAMEDATA_DIR` wins over the repo baseline (`app/trove/gamedata`),
+//! into `GAMEDATA_DIR` wins over the repo baseline (`assets/gamedata`),
 //! and every load is keyed on the files' mtimes, so a rebuild is picked up
 //! without a restart.
 //!
@@ -23,7 +23,7 @@ use serde_json::Value;
 use crate::{config::Settings, pyjson};
 
 /// The repo baseline, relative to the working directory (`/app` in the image).
-pub const BASELINE_DIR: &str = "app/trove/gamedata";
+pub const BASELINE_DIR: &str = "assets/gamedata";
 
 /// Each file's resolved path and mtime (`None` when it can't be stat'ed).
 pub type Signature = Vec<(PathBuf, Option<SystemTime>)>;

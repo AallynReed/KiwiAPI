@@ -41,7 +41,7 @@ use crate::{
 };
 
 pub const MAX_ZIP_BYTES: usize = 512 * 1024 * 1024;
-pub const CODEBOOKS_FILE: &str = "app/trove/audio/packed_codebooks_aoTuV_603.bin";
+pub const CODEBOOKS_FILE: &str = "assets/audio/packed_codebooks_aoTuV_603.bin";
 
 pub fn router() -> Router<AppState> {
     Router::new()

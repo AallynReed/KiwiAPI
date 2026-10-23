@@ -249,7 +249,7 @@ def keys_from_js() -> tuple[dict[str, set[str]], dict[str, int]]:
 # out of the source array rather than copied here, so the two cannot drift apart.
 _VOCAB_LISTS = [("site/static/mods_project.js", "MOD_CATEGORIES")]
 # The PvP calculator's role names and modifier labels come from this data file.
-_PVP_JSON = "app/trove/gamedata/pvp.json"
+_PVP_JSON = "assets/gamedata/pvp.json"
 
 
 def dynamic_vocab() -> dict[str, set[str]]:

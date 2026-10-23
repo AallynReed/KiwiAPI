@@ -20,7 +20,7 @@ use crate::{
 };
 
 fn store() -> Gamedata {
-    Gamedata::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata"), None)
+    Gamedata::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata"), None)
 }
 
 fn render(reply: Reply) -> (u16, String) {

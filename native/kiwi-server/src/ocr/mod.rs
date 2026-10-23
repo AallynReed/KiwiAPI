@@ -47,7 +47,7 @@ pub fn vocab() -> Option<&'static Vocab> {
     static V: OnceLock<Option<Vocab>> = OnceLock::new();
     V.get_or_init(|| {
         #[cfg(test)]
-        let raw = include_str!("../../../../app/trove/gamedata/character_stats.json").to_owned();
+        let raw = include_str!("../../../../assets/gamedata/character_stats.json").to_owned();
         #[cfg(not(test))]
         let raw =
             std::fs::read_to_string(std::path::Path::new(crate::gamedata::BASELINE_DIR).join("character_stats.json"))

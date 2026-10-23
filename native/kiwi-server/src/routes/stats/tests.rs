@@ -37,7 +37,7 @@ fn golden() -> &'static Value {
 
 fn baseline() -> &'static Gamedata {
     static G: OnceLock<Gamedata> = OnceLock::new();
-    G.get_or_init(|| Gamedata::new(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata"), None))
+    G.get_or_init(|| Gamedata::new(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata"), None))
 }
 
 fn sha(bytes: &[u8]) -> String {
@@ -294,7 +294,7 @@ async fn coefficient_json_error_answers_before_auth() {
 #[tokio::test]
 #[ignore]
 async fn sigil_end_to_end() {
-    let repo_gamedata = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata");
+    let repo_gamedata = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata");
     // SAFETY: set before the settings are read; ignored tests run on their own.
     unsafe { std::env::set_var("GAMEDATA_DIR", repo_gamedata) };
     let resp = app()

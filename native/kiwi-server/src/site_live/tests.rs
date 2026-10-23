@@ -25,7 +25,7 @@ pub fn fixture(name: &str) -> Value {
 }
 
 fn gamedata_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata")
 }
 
 fn s(v: &Value) -> &str {

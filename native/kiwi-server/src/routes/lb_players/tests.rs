@@ -35,7 +35,7 @@ fn core_cases(key: &str) -> &'static [Value] {
 
 fn baseline() -> &'static Gamedata {
     static G: OnceLock<Gamedata> = OnceLock::new();
-    G.get_or_init(|| Gamedata::new(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata"), None))
+    G.get_or_init(|| Gamedata::new(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata"), None))
 }
 
 fn i(v: &Value) -> i64 {

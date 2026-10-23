@@ -1,4 +1,4 @@
-//! Creature rigs: the baked rig data shipped in `app/trove/mods_hub/rigs`
+//! Creature rigs: the baked rig data shipped in `assets/rigs`
 //! (`assembly.py`), the live prefab binding map (`rig_index.py`), the clip
 //! and graph routes, and the Blueprint Editor's model projects.
 
@@ -31,7 +31,7 @@ use crate::{
 };
 
 /// The baked rigs, relative to the working directory (`/app` in the image).
-pub const RIG_DIR: &str = "app/trove/mods_hub/rigs";
+pub const RIG_DIR: &str = "assets/rigs";
 
 pub fn rig_dir() -> PathBuf {
     let p = PathBuf::from(RIG_DIR);

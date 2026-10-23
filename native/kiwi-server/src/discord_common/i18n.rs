@@ -93,7 +93,7 @@ fn load(path: &Path) -> Catalog {
 }
 
 /// The per-language catalogs under one repo root (`site/static/locales`, then
-/// the `app/locales` overlay), each read once.
+/// the `assets/locales` overlay), each read once.
 pub struct Catalogs {
     site: PathBuf,
     overlay: PathBuf,
@@ -103,7 +103,7 @@ pub struct Catalogs {
 impl Catalogs {
     pub fn new(root: impl AsRef<Path>) -> Self {
         let root = root.as_ref();
-        Self::with_dirs(root.join("site/static/locales"), root.join("app/locales"))
+        Self::with_dirs(root.join("site/static/locales"), root.join("assets/locales"))
     }
 
     pub fn with_dirs(site: impl Into<PathBuf>, overlay: impl Into<PathBuf>) -> Self {

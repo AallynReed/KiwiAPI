@@ -1,6 +1,6 @@
 //! `app/i18n.py`'s `t()` for the cards: the site catalog
 //! (`site/static/locales/<lang>.json`) under the bot overlay
-//! (`app/locales/<lang>.json`), keyed by whitespace-normalised English, then
+//! (`assets/locales/<lang>.json`), keyed by whitespace-normalised English, then
 //! `str.format` with the English fallback.
 
 use std::{
@@ -20,7 +20,7 @@ use super::{
 };
 
 pub const SITE_DIR: &str = "site/static/locales";
-pub const BOT_DIR: &str = "app/locales";
+pub const BOT_DIR: &str = "assets/locales";
 
 type Catalog = Arc<HashMap<String, String>>;
 type CatalogKey = (PathBuf, PathBuf, String);

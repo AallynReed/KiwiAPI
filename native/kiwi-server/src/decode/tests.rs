@@ -12,7 +12,7 @@ fn repo() -> PathBuf {
 }
 
 fn baseline() -> PathBuf {
-    repo().join("app/trove/gamedata")
+    repo().join("assets/gamedata")
 }
 
 fn testdata() -> PathBuf {
@@ -36,17 +36,6 @@ fn python_equality() {
     assert_eq!(J::Bool(true), J::Int(1));
     assert_ne!(J::Str("1".into()), J::Int(1));
     assert_eq!(obj! {"a" => 1, "b" => 2}, obj! {"b" => 2.0, "a" => true});
-}
-
-#[test]
-fn code_versions_match_python() {
-    let want: serde_json::Value =
-        serde_json::from_slice(&std::fs::read(testdata().join("code_versions.json")).expect("code_versions.json"))
-            .expect("json");
-    let src = registry::source_dir(&baseline());
-    for d in DECODERS {
-        assert_eq!(registry::code_version(d.name, &src).as_deref(), want[d.name].as_str(), "{}", d.name);
-    }
 }
 
 /// Every fixture tree under testdata/decode/<name>[@case]/game, against the

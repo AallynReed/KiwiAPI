@@ -36,10 +36,8 @@ fn data(name: &str) -> Vec<u8> {
 }
 
 fn codebooks() -> Vec<u8> {
-    std::fs::read(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/audio/packed_codebooks_aoTuV_603.bin"),
-    )
-    .expect("codebook library")
+    std::fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets/audio/packed_codebooks_aoTuV_603.bin"))
+        .expect("codebook library")
 }
 
 fn sha(b: &[u8]) -> String {

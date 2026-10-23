@@ -76,7 +76,7 @@ fn fingerprint() -> String {
         let name = name.as_str().expect("name");
         h.update(name.as_bytes());
         h.update([0u8]);
-        h.update(std::fs::read(repo().join("app/trove/gamedata").join(name)).expect("gamedata"));
+        h.update(std::fs::read(repo().join("assets/gamedata").join(name)).expect("gamedata"));
     }
     hex::encode(h.finalize())
 }
@@ -153,7 +153,7 @@ async fn rig(scenario: &str) -> Rig {
     vars.extend([
         ("SITE_ROOT".into(), root.join("site").to_string_lossy().into_owned()),
         ("GEOIP_DIR".into(), geo.to_string_lossy().into_owned()),
-        ("GAMEDATA_DIR".into(), root.join("app/trove/gamedata").to_string_lossy().into_owned()),
+        ("GAMEDATA_DIR".into(), root.join("assets/gamedata").to_string_lossy().into_owned()),
         ("INTERNAL_API_URL".into(), api),
         ("PY_UPSTREAM".into(), "http://127.0.0.1:9".into()),
     ]);

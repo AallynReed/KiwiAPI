@@ -1,6 +1,6 @@
 //! `app/i18n.py`: the bot's server-side translations. English is the key; a
 //! language's catalog is the site's `site/static/locales/<lang>.json` with the
-//! bot overlay `app/locales/<lang>.json` on top, keyed by whitespace-collapsed
+//! bot overlay `assets/locales/<lang>.json` on top, keyed by whitespace-collapsed
 //! English. The language is passed explicitly ([`Lang`]) instead of a context var.
 
 #[cfg(test)]
@@ -34,7 +34,7 @@ pub const LANGS: [(&str, &str); 10] = [
 ];
 
 pub const SITE_LOCALES: &str = "site/static/locales";
-pub const BOT_LOCALES: &str = "app/locales";
+pub const BOT_LOCALES: &str = "assets/locales";
 
 /// The supported code equal to `code`, if any.
 pub fn supported(code: &str) -> Option<&'static str> {

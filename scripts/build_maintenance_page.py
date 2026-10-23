@@ -1,4 +1,4 @@
-"""Draw the voxel construction island into app/geo_maintenance/maintenance.html.
+"""Draw the voxel construction island into assets/maintenance.html.
 
 Same projection and face shading as the homepage island (home_voxel.js isoSVG).
 Rerun after editing the scene: python scripts/build_maintenance_page.py [other pages]
@@ -13,7 +13,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-PAGE = Path(__file__).resolve().parent.parent / "app" / "geo_maintenance" / "maintenance.html"
+PAGE = Path(__file__).resolve().parent.parent / "assets" / "maintenance.html"
 S = 14
 SHADE = (0x16, 0x12, 0x1E)
 LEFT, RIGHT = 0.8, 0.63

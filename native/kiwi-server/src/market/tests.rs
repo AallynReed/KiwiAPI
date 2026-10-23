@@ -408,7 +408,7 @@ fn fixture_app(fx: Arc<Fixture>) -> Router {
         .route(
             "/site/tomes",
             get(|State(fx): Fx| async move {
-                let raw = crate::gamedata::read_json(std::path::Path::new("../../app/trove/gamedata/tomes.json"))
+                let raw = crate::gamedata::read_json(std::path::Path::new("../../assets/gamedata/tomes.json"))
                     .expect("tomes.json");
                 let table = tomes::parse_table(&raw).expect("tome table");
                 site(tomes::valued(&fx, &table).await, 120)

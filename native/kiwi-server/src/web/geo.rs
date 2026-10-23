@@ -35,7 +35,7 @@ const CHECK_EVERY: Duration = Duration::from_secs(60);
 
 /// The page `scripts/build_maintenance_page.py` builds, relative to the working
 /// directory (`/app` in the image).
-pub const PAGE_PATH: &str = "app/geo_maintenance/maintenance.html";
+pub const PAGE_PATH: &str = "assets/maintenance.html";
 const CSP: &str = "default-src 'none'; style-src 'self' 'unsafe-inline'; font-src 'self'; \
 img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 const TTL: Duration = Duration::from_secs(30);

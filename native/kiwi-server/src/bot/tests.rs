@@ -34,7 +34,7 @@ pub(super) fn golden() -> &'static Value {
 
 pub(super) fn bot_catalogs() -> &'static Catalogs {
     static C: OnceLock<Catalogs> = OnceLock::new();
-    C.get_or_init(|| Catalogs::with_dirs("../../no-site-in-the-bot-container", "../../app/locales"))
+    C.get_or_init(|| Catalogs::with_dirs("../../no-site-in-the-bot-container", "../../assets/locales"))
 }
 
 pub(super) fn ext_doc(v: &Value) -> Document {
@@ -517,7 +517,7 @@ fn embed_round_trip() {
 
 #[test]
 fn translations() {
-    let site = Catalogs::with_dirs("../../site/static/locales", "../../app/locales");
+    let site = Catalogs::with_dirs("../../site/static/locales", "../../assets/locales");
     for (cases, cats) in [("t_bot", bot_catalogs()), ("t_site", &site)] {
         for c in golden()[cases].as_array().unwrap() {
             let tr = cats.tr(c["lang"].as_str());

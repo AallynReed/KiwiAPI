@@ -69,7 +69,7 @@ fn zones_match_python() {
 fn misc_functions_match_python() {
     let src = source();
     let fx = load("misc.json");
-    let software = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../app/trove/gamedata/modding_software.json");
+    let software = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets/gamedata/modding_software.json");
     assert_eq!(pyjson::pydantic(&modding_software(&software).unwrap()), fx["software"].as_str().unwrap());
     assert_eq!(pyjson::pydantic(&time::timezones()), fx["timezones"].as_str().unwrap());
     for r in fx["now"].as_array().unwrap() {
@@ -270,7 +270,7 @@ mod http {
     }
 
     /// Needs throwaway stores (MONGO_URI / MONGO_DB / REDIS_URL) and the repo
-    /// as the working directory for `app/trove/gamedata`:
+    /// as the working directory for `assets/gamedata`:
     /// `cargo test -p kiwi-server misc_store_roundtrip -- --ignored`.
     #[tokio::test]
     #[ignore = "writes to MONGO_URI / REDIS_URL"]

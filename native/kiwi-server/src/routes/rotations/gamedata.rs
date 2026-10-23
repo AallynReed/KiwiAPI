@@ -1,4 +1,4 @@
-//! The baseline JSON `server_time._load` reads (`app/trove/gamedata/{daily_buffs,
+//! The baseline JSON `server_time._load` reads (`assets/gamedata/{daily_buffs,
 //! weekly_buffs,biomes}.json`, cached for the process; a missing or broken file
 //! is `{}`), and the response models that project it.
 
