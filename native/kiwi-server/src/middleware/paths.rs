@@ -1,6 +1,5 @@
-//! Path classes and CSP strings of `app/core/middleware.py` and `app/core/csp.py`,
-//! byte for byte. A new site page goes in `PAGE_PATHS` (and in Python's copy
-//! while it still runs).
+//! Path classes and CSP strings (ported byte for byte from the old Python
+//! middleware). A new site page goes in `PAGE_PATHS` or `PAGE_PREFIXES`.
 
 pub const PAGE_PATHS: [&str; 56] = [
     "/",
