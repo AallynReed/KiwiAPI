@@ -1,0 +1,34 @@
+{
+ "mongo": [
+  {
+   "collection": "guild_configs",
+   "sort": [
+    "guild_id"
+   ],
+   "mask": [
+    "updated_at"
+   ]
+  },
+  {
+   "collection": "clubs",
+   "sort": [
+    "name"
+   ]
+  },
+  {
+   "collection": "bot_command_usage",
+   "sort": [
+    "_id"
+   ],
+   "mask": [
+    "last_used_at"
+   ]
+  },
+  {
+   "collection": "site_users",
+   "sort": [
+    "username"
+   ]
+  }
+ ]
+}

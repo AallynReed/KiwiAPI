@@ -111,6 +111,19 @@ fn store(state: &AppState) -> &'static Gamedata {
     Gamedata::global(state.settings())
 }
 
+/// `evaluate_gem(...)["result"]` as JSON, for the `/gem` slash command.
+pub fn evaluate_json(
+    gd: &Gamedata,
+    tier: i64,
+    gem_type: i64,
+    level: i64,
+    stats: &[StatInput],
+    auto_guess: bool,
+) -> Result<Value, GemError> {
+    let data = data::gems(gd);
+    evaluator::evaluate(&data.up, tier, gem_type, level, stats, auto_guess).map(|e| wire::evaluation_json(&e))
+}
+
 thread_local! {
     static RNG: RefCell<Option<PyRandom>> = const { RefCell::new(None) };
 }
