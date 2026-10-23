@@ -42,6 +42,6 @@ impl AppState {
     pub fn with_pg(&self, pg: deadpool_postgres::Pool) -> AppState {
         let i = &self.inner;
         let db = Db { pg: Some(pg), ..i.db.clone() };
-        AppState { inner: Arc::new(Inner { settings: i.settings.clone(), db, upstream: i.upstream.clone() }) }
+        AppState { inner: Arc::new(Inner { settings: i.settings.clone(), db }) }
     }
 }
