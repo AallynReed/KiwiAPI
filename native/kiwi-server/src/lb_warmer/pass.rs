@@ -97,24 +97,12 @@ async fn soft<T>(what: &str, fut: impl std::future::Future<Output = anyhow::Resu
 /// non-fatal), the page snapshot, the publish, the board charts, the day list
 /// and the cold-tier drip. `last_cold` is `_last_cold_tier_ts`.
 pub async fn warm_all<O: Ops>(ops: &O, last_cold: &mut f64) -> anyhow::Result<()> {
-    let mut steps: Vec<(&str, f64)> = Vec::new();
-    let mut t = std::time::Instant::now();
-    let mut lap = |name: &'static str, steps: &mut Vec<(&str, f64)>| {
-        steps.push((name, t.elapsed().as_secs_f64()));
-        t = std::time::Instant::now();
-    };
     let res = soft("cheater/cluster detection", ops.detect()).await;
-    lap("detect", &mut steps);
     soft("activity estimate", ops.activity()).await;
-    lap("activity", &mut steps);
     soft("class activity estimate", ops.class_activity()).await;
-    lap("class_activity", &mut steps);
     soft("rename detection", ops.renames()).await;
-    lap("renames", &mut steps);
     soft("duplicate detection", ops.duplicates()).await;
-    lap("duplicates", &mut steps);
     guarded(ops.warm_cache()).await?;
-    lap("cache", &mut steps);
     let mut anchor = res.as_deref().and_then(|r| match r {
         Value::Object(m) => m.get("anchor").and_then(Value::as_i64),
         _ => None,
@@ -128,13 +116,8 @@ pub async fn warm_all<O: Ops>(ops: &O, last_cold: &mut f64) -> anyhow::Result<()
             tracing::info!("leaderboards warmer: pre-warmed {n} board-history charts");
         }
     }
-    lap("histories", &mut steps);
     soft("day-list warm", ops.warm_days()).await;
-    lap("days", &mut steps);
     tier_cold(ops, last_cold).await;
-    lap("cold", &mut steps);
-    let parts: Vec<String> = steps.iter().map(|(n, s)| format!("{n} {s:.2}s")).collect();
-    tracing::info!("leaderboards warmer: steps {}", parts.join(", "));
     Ok(())
 }
 
