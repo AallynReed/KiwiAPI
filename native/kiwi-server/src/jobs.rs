@@ -105,6 +105,14 @@ pub fn start(state: &AppState) {
     crate::dm_subs::start_jobs(state);
     crate::email::worker::start(state);
     crate::maintenance::start(state);
+    crate::archiver::set_decode_hook(|st, branch| {
+        Box::pin(async move { crate::decode::runner::ensure_built(&st, &branch).await })
+    });
+    crate::archiver::set_codex_hook(|st, _store, summary| {
+        Box::pin(async move {
+            crate::codexes::after_sync(&st, &summary.branch, summary.changed, summary.ordinal).await.map(|_| ())
+        })
+    });
     crate::archiver::start(state);
 }
 
