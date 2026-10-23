@@ -446,6 +446,9 @@ fn decisions_and_sorts() {
         store::sort_keys(),
         "name, -name, category, -category, mastery, -mastery, mastery_geode, -mastery_geode, power_rank, -power_rank, indexed_at, -indexed_at, stat_value, -stat_value"
     );
-    assert!(super::defers("/v1/codexes/{codex_type}", &"/v1/codexes/rend%65r?x=1".parse().unwrap()));
-    assert!(!super::defers("/v1/codexes/{codex_type}", &"/v1/codexes/mount".parse().unwrap()));
+    let t = crate::starlette::Table::api();
+    let get = axum::http::Method::GET;
+    let any = "/v1/codexes/{codex_type}";
+    assert!(crate::starlette::defers(t, any, &get, &"/v1/codexes/rend%65r?x=1".parse().unwrap()));
+    assert!(!crate::starlette::defers(t, any, &get, &"/v1/codexes/mount".parse().unwrap()));
 }

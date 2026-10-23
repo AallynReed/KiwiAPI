@@ -527,14 +527,12 @@ async fn route_precedence() {
 }
 
 #[test]
-fn defers_to_python() {
+fn encoded_literals_route_like_starlette() {
     let uri = |p: &str| p.parse::<Uri>().unwrap();
-    let rel = "/v1/mods/hub/projects/{handle}/{slug}/releases";
-    assert!(!super::defers(rel, &uri("/v1/mods/hub/projects/a/b/releases")));
+    let t = crate::starlette::Table::api();
     let any = "/v1/mods/{handle}/{slug}";
-    assert!(super::defers(any, &uri("/v1/mods/hub/creator-links")));
-    assert!(!super::defers(any, &uri("/v1/mods/hub/xyz")));
-    assert!(!super::defers("/v1/mods/hub/projects", &uri("/v1/mods/hub/projects")));
+    assert!(crate::starlette::defers(t, any, &Method::GET, &uri("/v1/mods/hub/creator-l%69nks")));
+    assert!(!crate::starlette::defers(t, any, &Method::GET, &uri("/v1/mods/hub/xyz")));
 }
 
 #[test]

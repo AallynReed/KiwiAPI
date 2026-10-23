@@ -61,12 +61,6 @@ pub fn router() -> Router<AppState> {
         .route("/admin/codexes/status", get(admin::status))
 }
 
-/// `/v1/codexes/render` matches `/{codex_type}` here, but Python routes it to
-/// the renderer, which is not ported.
-pub fn defers(matched: &str, uri: &axum::http::Uri) -> bool {
-    matched == "/v1/codexes/{codex_type}" && scope_path(uri) == "/v1/codexes/render"
-}
-
 pub const BRANCHES: [&str; 2] = ["live-us", "pts"];
 pub const DEFAULT_BRANCH: &str = "live-us";
 

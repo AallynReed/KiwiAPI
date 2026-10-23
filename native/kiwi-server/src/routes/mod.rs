@@ -1,7 +1,8 @@
 //! Route registry. Each ported feature area adds one module here and one
-//! `.merge(...)` line in `ported()`. Anything not matched falls through to the
-//! Python app. Port a path with every method Python serves on it: a method
-//! missing here is a 405, not a trip to Python.
+//! `.merge(...)` line in `ported()`. What no ported route serves is answered
+//! the way Starlette would ([`crate::starlette`]), or by the Python app until
+//! `KIWI_NATIVE_FALLBACK` is on. Port a path with every method Python serves
+//! on it: a method missing here is a 405, not a trip to Python.
 
 pub mod btt;
 pub mod lb_names;
@@ -18,11 +19,17 @@ use std::{net::SocketAddr, sync::Arc};
 use axum::{
     Router,
     extract::{ConnectInfo, MatchedPath, Request, State},
+    http::Method,
     middleware::{Next, from_fn_with_state},
     response::Response,
 };
 
-use crate::{middleware, proxy::proxy, state::AppState};
+use crate::{
+    middleware,
+    proxy::proxy,
+    starlette::{self, Table},
+    state::AppState,
+};
 
 /// Routes answered in Rust.
 fn ported() -> Router<AppState> {
@@ -82,22 +89,13 @@ fn ported() -> Router<AppState> {
         .merge(crate::discord::router())
 }
 
-/// A param route can own only some values of its segment (Starlette's
-/// `{uuid:int}` next to literals Python still serves), and a body route some
-/// bodies (portal emails needing Unicode/IDNA): the rest go to Python after
-/// routing but before the ported stack has touched the request.
+/// A body route can own only some bodies (portal emails needing
+/// Unicode/IDNA), a render route only what it can draw: the rest go to Python
+/// after routing but before the ported stack has touched the request.
 async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: Next) -> Response {
     let matched = req.extensions().get::<MatchedPath>().cloned();
-    let mut defer = matched.as_ref().is_some_and(|m| {
-        let m = m.as_str();
-        crate::lbread::defers(m, req.method(), req.uri().path())
-            || crate::events::defers(m)
-            || crate::codexes::defers(m, req.uri())
-            || crate::mods_catalog::defers(m, req.uri())
-            || crate::mods_git::defers(m, req.uri())
-            || crate::discord::defers(m, req.uri().path())
-    });
-    if !defer && let Some(m) = &matched {
+    let mut defer = false;
+    if let Some(m) = &matched {
         defer = crate::blueprints::defers(&state, m.as_str(), req.uri()).await
             || crate::mod_releases::defers(&state, m.as_str(), req.uri()).await;
     }
@@ -118,6 +116,21 @@ async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: 
     next.run(req).await
 }
 
+/// Proxy mode only: what Starlette would route elsewhere (an int segment that
+/// isn't one, a method another route owns, ...) and the event stream while
+/// Python feeds it. OPTIONS stays here: the CORS layers answer it before any
+/// routing, in both stacks.
+async fn proxy_defers(State(state): State<AppState>, req: Request, next: Next) -> Response {
+    let defer = req.extensions().get::<MatchedPath>().is_some_and(|m| {
+        crate::events::defers(m.as_str())
+            || (req.method() != Method::OPTIONS && starlette::defers(Table::api(), m.as_str(), req.method(), req.uri()))
+    });
+    if defer && let Some(&ConnectInfo(peer)) = req.extensions().get::<ConnectInfo<SocketAddr>>() {
+        return proxy(State(state), ConnectInfo(peer), req).await;
+    }
+    next.run(req).await
+}
+
 /// axum matches the raw path, Starlette the decoded one, so a `%2F` (a `/`
 /// once decoded, which can change the route or trigger a slash redirect)
 /// always goes to Python. So does an empty segment (`//`): axum binds it to a
@@ -132,13 +145,32 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
     next.run(req).await
 }
 
+/// The API app; `KIWI_NATIVE_FALLBACK` picks [`app_with`]'s mode.
 pub fn app(state: AppState) -> Router {
+    app_with(state, starlette::native_enabled())
+}
+
+/// `native`: every request is answered here, Starlette's way where no ported
+/// route serves it. Otherwise those go to Python (`PY_UPSTREAM`).
+pub fn app_with(state: AppState, native: bool) -> Router {
     // Kill switch: send everything to Python without redeploying.
     let proxy_all = std::env::var("KIWI_PROXY_ALL").is_ok_and(|v| matches!(v.trim(), "1" | "true" | "yes" | "on"));
-    let routes = if proxy_all { Router::new() } else { ported() };
     let mw = Arc::new(middleware::Mw::from_state(&state));
+    let table = Table::api();
+    if native && !proxy_all {
+        let routes = ported()
+            .method_not_allowed_fallback(middleware::errors::method_not_allowed)
+            .fallback(move |req: Request| starlette::fallback(table, req))
+            .layer(from_fn_with_state(table, starlette::gate));
+        let inner = middleware::wrap(routes, mw, Some(state.clone()))
+            .layer(from_fn_with_state(state.clone(), defer_to_python))
+            .with_state(state);
+        return middleware::outer(inner).layer(from_fn_with_state(table, starlette::rewrite));
+    }
+    let routes = if proxy_all { Router::new() } else { ported() };
     let inner = middleware::wrap(routes, mw, Some(state.clone()))
         .layer(from_fn_with_state(state.clone(), defer_to_python))
+        .layer(from_fn_with_state(state.clone(), proxy_defers))
         .fallback(proxy)
         .layer(from_fn_with_state(state.clone(), encoded_slash))
         .with_state(state);

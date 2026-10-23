@@ -2,7 +2,7 @@
 //! writes and the pure permission math) and `site_auth.oauth.fetch_discord_guilds`.
 //! Every call goes through [`Rest`], so tests answer from a fake.
 
-use std::{collections::HashSet, sync::OnceLock, time::Duration};
+use std::{collections::HashSet, fmt::Display, sync::OnceLock, time::Duration};
 
 use serde_json::{Map, Value, json};
 
@@ -38,6 +38,46 @@ impl RestError {
 }
 
 pub type RResult<T> = Result<T, RestError>;
+
+/// A Python `int` path value: an `i64`, or the digits of one past it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Snowflake {
+    Id(i64),
+    Big(String),
+}
+
+impl Snowflake {
+    /// From a value pydantic already took as an `int`.
+    pub fn parse(raw: &str) -> Snowflake {
+        if let Ok(v) = crate::validation::str_as_int(raw)
+            && let Ok(v) = i64::try_from(v)
+        {
+            return Snowflake::Id(v);
+        }
+        let t = raw.trim();
+        let t = t.split_once('.').map_or(t, |(whole, _)| whole);
+        let (neg, digits) = match t.strip_prefix('-') {
+            Some(d) => (true, d),
+            None => (false, t.strip_prefix('+').unwrap_or(t)),
+        };
+        let digits: String = digits.chars().filter(|&c| c != '_').collect();
+        let digits = digits.trim_start_matches('0');
+        Snowflake::Big(match (digits.is_empty(), neg) {
+            (true, _) => "0".to_owned(),
+            (false, true) => format!("-{digits}"),
+            (false, false) => digits.to_owned(),
+        })
+    }
+}
+
+impl Display for Snowflake {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Snowflake::Id(i) => write!(f, "{i}"),
+            Snowflake::Big(s) => f.write_str(s),
+        }
+    }
+}
 
 /// The HTTP layer: a bot-token GET (404 is `None`), a body-less write, the
 /// cached bot user id and the user-token guild list.
@@ -341,8 +381,13 @@ pub struct MemberCtx {
     pub role_ids: HashSet<i64>,
 }
 
-/// `guild_member_context`: `None` when they aren't a member.
-pub async fn guild_member_context<R: Rest>(r: &R, guild_id: i64, user_id: i64) -> RResult<Option<MemberCtx>> {
+/// `guild_member_context`: `None` when they aren't a member. `guild_id` is any
+/// Python int (`Snowflake` for one past `i64`).
+pub async fn guild_member_context<R: Rest, G: Display + Sync>(
+    r: &R,
+    guild_id: G,
+    user_id: i64,
+) -> RResult<Option<MemberCtx>> {
     let guild = r.get(&format!("/guilds/{guild_id}"), 15).await?;
     let member = r.get(&format!("/guilds/{guild_id}/members/{user_id}"), 15).await?;
     let (Some(guild), Some(member)) = (guild.filter(pyval::truthy), member.filter(pyval::truthy)) else {
@@ -393,18 +438,24 @@ pub async fn guild_members<R: Rest>(r: &R, guild_id: i64) -> RResult<Vec<Value>>
 }
 
 /// `guild_member`.
-pub async fn guild_member<R: Rest>(r: &R, guild_id: i64, user_id: i64) -> RResult<Option<Value>> {
+pub async fn guild_member<R: Rest>(r: &R, guild_id: i64, user_id: &Snowflake) -> RResult<Option<Value>> {
     r.get(&format!("/guilds/{guild_id}/members/{user_id}"), 15).await
 }
 
-pub async fn add_member_role<R: Rest>(r: &R, guild_id: i64, user_id: i64, role_id: i64, reason: &str) -> RResult<()> {
+pub async fn add_member_role<R: Rest>(
+    r: &R,
+    guild_id: i64,
+    user_id: &Snowflake,
+    role_id: i64,
+    reason: &str,
+) -> RResult<()> {
     r.send("PUT", &format!("/guilds/{guild_id}/members/{user_id}/roles/{role_id}"), Some(reason)).await
 }
 
 pub async fn remove_member_role<R: Rest>(
     r: &R,
     guild_id: i64,
-    user_id: i64,
+    user_id: &Snowflake,
     role_id: i64,
     reason: &str,
 ) -> RResult<()> {

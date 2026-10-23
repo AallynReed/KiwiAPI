@@ -99,6 +99,12 @@ fn parse_host(v: &str) -> Option<&str> {
     port_ok.then_some(host)
 }
 
+/// A Host value Starlette 1.9 builds URLs from (`parse_host_header` with a
+/// valid port); its `authority` is then the value itself.
+pub fn valid_host(v: &str) -> bool {
+    parse_host(v).is_some()
+}
+
 /// `request.url.hostname`: the Host header (else the URI authority) as
 /// Starlette 1.9 accepts it, lowercased up to any `%`. `None` where Starlette
 /// falls back to the server address, which is never one of our hosts.

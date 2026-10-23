@@ -3,7 +3,8 @@
 //! collector, robots/sitemap, `/gamedata/{name}` and every page whose view
 //! model is plain. Anything else (the server-rendered first paints of
 //! `app/site/ssr.py`) is proxied to the Python website (`PY_WEB_UPSTREAM`,
-//! the `web-py` service), exactly as kiwi-server fronts api-py.
+//! the `web-py` service), exactly as kiwi-server fronts api-py, until
+//! `KIWI_NATIVE_FALLBACK` answers it the way Starlette would.
 //!
 //! Stack, outer to inner: client address -> static gzip -> request id ->
 //! security -> regional maintenance gate -> HEAD as GET -> route.
@@ -46,6 +47,7 @@ use tower::ServiceBuilder;
 use crate::config::Settings;
 use crate::middleware::{self, Mw, MwConfig, errors, head, request_id, security};
 use crate::proxy::proxy;
+use crate::starlette::{self, Table};
 use crate::state::AppState;
 
 /// Everything the website's routes and layers share.
@@ -148,6 +150,7 @@ impl FromRequestParts<Arc<Web>> for Gate {
 
 fn ported(web: Arc<Web>) -> Router<AppState> {
     let static_root = web.static_root.clone();
+    let files = any(move |req: Request| static_files::serve(static_root.clone(), req));
     Router::new()
         .merge(pages::router())
         .merge(live::router())
@@ -158,7 +161,8 @@ fn ported(web: Arc<Web>) -> Router<AppState> {
         .route("/s", post(pageviews::collect))
         .route("/health", get(pages::health))
         .route("/gamedata/{name}", get(pages::gamedata))
-        .route("/static/{*path}", any(move |req: Request| static_files::serve(static_root.clone(), req)))
+        .route("/static/", files.clone())
+        .route("/static/{*path}", files)
         .with_state(web)
 }
 
@@ -173,9 +177,17 @@ async fn encoded_slash(State(state): State<AppState>, req: Request, next: Next) 
     next.run(req).await
 }
 
-/// The website app. `KIWI_PROXY_ALL` sends every request to Python.
+/// The website app. `KIWI_PROXY_ALL` sends every request to Python,
+/// `KIWI_NATIVE_FALLBACK` none ([`app_with`]).
 pub fn app(state: AppState, web: Arc<Web>) -> Router {
+    app_with(state, web, crate::starlette::native_enabled())
+}
+
+/// `native`: what no ported route serves is answered the way Starlette would,
+/// never proxied.
+pub fn app_with(state: AppState, web: Arc<Web>, native: bool) -> Router {
     let proxy_all = std::env::var("KIWI_PROXY_ALL").is_ok_and(|v| matches!(v.trim(), "1" | "true" | "yes" | "on"));
+    let native = native && !proxy_all;
     let routes = if proxy_all { Router::new() } else { ported(web.clone()) };
     let trusted = middleware::forwarded::TrustedHosts::parse(
         &std::env::var("FORWARDED_ALLOW_IPS").unwrap_or_else(|_| "127.0.0.1".into()),
@@ -195,6 +207,16 @@ pub fn app(state: AppState, web: Arc<Web>) -> Router {
         .layer(from_fn_with_state(web.clone(), geo::gate))
         .layer(from_fn(head::head_as_get))
         .layer(DefaultBodyLimit::disable());
+    if native {
+        let table = Table::web();
+        let inner = routes
+            .method_not_allowed_fallback(errors::method_not_allowed)
+            .fallback(move |req: Request| starlette::fallback(table, req))
+            .layer(from_fn_with_state(table, starlette::gate))
+            .layer(stack)
+            .with_state(state);
+        return middleware::outer(inner).layer(from_fn_with_state(table, starlette::rewrite));
+    }
     let inner = routes
         .method_not_allowed_fallback(errors::method_not_allowed)
         .layer(stack)

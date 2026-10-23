@@ -82,17 +82,9 @@ pub fn router() -> Router<AppState> {
         .route(&format!("{S}/placement"), get(site_placement).fallback(na("GET")))
         .route(&format!("{S}/raw/{{commit_ref}}/{{*path}}"), get(site_raw).fallback(na("GET")))
         .route(&format!("{S}/archive"), get(site_archive).fallback(na("GET")))
-}
-
-/// For `routes::defer_to_python`: Starlette's `{slug}.git` matches only a
-/// segment ending in `.git` with something before it.
-pub fn defers(matched: &str, uri: &Uri) -> bool {
-    if !matched.starts_with("/git/mods/") {
-        return false;
-    }
-    let path = scope_path(uri);
-    let seg = path.split('/').nth(4).unwrap_or("");
-    !(seg.len() > 4 && seg.ends_with(".git"))
+        // `{path:path}` also matches nothing at all; `{*path}` doesn't.
+        .route(&format!("{P}/raw/{{commit_ref}}/"), get(v1_raw).fallback(na("GET")))
+        .route(&format!("{S}/raw/{{commit_ref}}/"), get(site_raw).fallback(na("GET")))
 }
 
 fn segments(uri: &Uri) -> Vec<String> {

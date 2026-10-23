@@ -252,13 +252,15 @@ services:
     # kiwi-server (native/kiwi-server) answers the routes ported to Rust and proxies
     # everything else to api-py. It resolves the visitor from X-Forwarded-For exactly
     # as uvicorn did (only FORWARDED_ALLOW_IPS may set it) and hands Python just that
-    # address. KIWI_PROXY_ALL=1 in .env sends every route to Python again.
+    # address. KIWI_PROXY_ALL=1 in .env sends every route to Python again;
+    # KIWI_NATIVE_FALLBACK=1 sends nothing there (unmatched paths answered like Starlette).
     environment:
       <<: *api-environment
       KIWI_BIND: 0.0.0.0:8000
       PY_UPSTREAM: http://api-py:8000
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
       KIWI_PROXY_ALL: ${KIWI_PROXY_ALL:-}
+      KIWI_NATIVE_FALLBACK: ${KIWI_NATIVE_FALLBACK:-}
       RUST_LOG: ${RUST_LOG:-info}
     depends_on:
       mongo:
@@ -373,7 +375,7 @@ services:
   # See app/web/. Reverse-proxied: trove.aallyn.net -> host :15547 -> container :8000.
   # kiwi-web (native/kiwi-server, bin kiwi-web) answers the pages ported to Rust and
   # proxies the rest to web-py, the way api fronts api-py. KIWI_WEB_PROXY_ALL=1 in
-  # .env sends every website request to Python again.
+  # .env sends every website request to Python again; KIWI_WEB_NATIVE_FALLBACK=1 none.
   web:
     image: trove-app:latest   # built by the api service (same image, different command)
     restart: unless-stopped
@@ -385,6 +387,7 @@ services:
       PY_WEB_UPSTREAM: http://web-py:8000
       FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
       KIWI_PROXY_ALL: ${KIWI_WEB_PROXY_ALL:-}
+      KIWI_NATIVE_FALLBACK: ${KIWI_WEB_NATIVE_FALLBACK:-}
       RUST_LOG: ${RUST_LOG:-info}
     depends_on:
       # Soft dep (started, not healthy), like the bot - internal_get fails

@@ -748,11 +748,39 @@ async fn dashboard_routes_match_python() {
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
 
-#[test]
-fn defers_big_ints_to_python() {
-    let m = "/v1/site-auth/discord/guilds/{guild_id}";
-    assert!(dashboard::defers(m, "/v1/site-auth/discord/guilds/99999999999999999999"));
-    assert!(!dashboard::defers(m, "/v1/site-auth/discord/guilds/4242"));
-    assert!(!dashboard::defers(m, "/v1/site-auth/discord/guilds/abc"));
-    assert!(!dashboard::defers("/v1/gems/lookups", "/v1/gems/lookups"));
+/// Guild ids past `i64` against the Python handlers' answers
+/// (testdata/routing/golden.json, gen_routing_fixtures.py).
+#[tokio::test]
+async fn big_guild_ids_answer_like_python() {
+    let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("testdata/routing/golden.json");
+    let golden: Value = serde_json::from_str(&std::fs::read_to_string(p).unwrap()).unwrap();
+    for c in golden["discord_big"].as_array().unwrap() {
+        let mut world = c["world"].clone();
+        world["bad"] = json!([]);
+        let deps = FakeDeps::new(world, &json!({}));
+        let user = site_user(c["linked"].as_bool().unwrap().then_some(312345678901234567));
+        let params: Vec<(String, String)> = c["params"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|kv| (kv[0].as_str().unwrap().to_owned(), kv[1].as_str().unwrap().to_owned()))
+            .collect();
+        let route = c["route"].as_str().unwrap();
+        let err = dashboard::big_guild(&deps, &user, route, &params).await.expect("a big guild id");
+        let want = &c["want"];
+        assert_eq!(err.status.as_u16() as u64, want["status"].as_u64().unwrap(), "{route} {}", c["world"]);
+        if want["status"] != 500 {
+            assert_eq!(
+                (err.code, err.message.as_str()),
+                (want["code"].as_str().unwrap(), want["message"].as_str().unwrap())
+            );
+        }
+    }
+    let small = vec![("guild_id".to_owned(), "4242".to_owned())];
+    let deps = FakeDeps::new(json!({"paths": {}, "errors": {}, "bad": []}), &json!({}));
+    assert!(dashboard::big_guild(&deps, &site_user(None), "/guilds/{guild_id}", &small).await.is_none());
+    use super::rest::Snowflake;
+    assert_eq!(Snowflake::parse(" -0_09223372036854775809.00 "), Snowflake::Big("-9223372036854775809".into()));
+    assert_eq!(Snowflake::parse("-9223372036854775808"), Snowflake::Id(i64::MIN));
+    assert_eq!(Snowflake::parse("+0012"), Snowflake::Id(12));
 }

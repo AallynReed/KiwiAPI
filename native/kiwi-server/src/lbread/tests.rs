@@ -23,7 +23,7 @@ use tower::ServiceExt;
 
 use super::{
     cache::{Kv, py_int},
-    defers, parse_uuid,
+    parse_uuid,
     routes::*,
     store::{Board, BoardRow, EntryRow, Res, SeriesRow, Source, TopEntry, TopMeta, TopSeries},
 };
@@ -530,19 +530,26 @@ fn uuid_segments() {
     assert!(!icon_name_ok("Icon") && !icon_name_ok("a-b") && !icon_name_ok("\n") && !icon_name_ok("a\n\n"));
 }
 
-#[test]
-fn defer_rules() {
-    let get = Method::GET;
-    assert!(!defers("/v1/leaderboards/{uuid}", &get, "/v1/leaderboards/1000"));
-    assert!(!defers("/v1/leaderboards/{uuid}", &Method::HEAD, "/v1/leaderboards/1000"));
-    assert!(!defers("/site/leaderboards/{uuid}/entries", &get, "/site/leaderboards/7/entries"));
-    assert!(defers("/v1/leaderboards/{uuid}", &Method::POST, "/v1/leaderboards/insert"));
-    assert!(defers("/v1/leaderboards/{uuid}", &Method::POST, "/v1/leaderboards/1000"));
-    assert!(defers("/v1/leaderboards/{uuid}", &get, "/v1/leaderboards/cheaters"));
-    assert!(defers("/v1/leaderboards/{uuid}/history", &get, "/v1/leaderboards/renames/history"));
-    assert!(defers("/site/leaderboards/{uuid}/history", &get, "/site/leaderboards/activity/history"));
-    assert!(defers("/v1/leaderboards/{uuid}", &get, "/v1/leaderboards/9999999999"));
-    assert!(!defers("/v1/leaderboards/timestamps", &Method::POST, "/v1/leaderboards/timestamps"));
+/// A board id past int32 still runs what Python runs before its first query.
+#[tokio::test]
+async fn past_int32_runs_the_steps_before_the_query() {
+    let case = json!({
+        "path": "past int32", "redis_before": {}, "calls": [], "redis_mode": "up", "now_us": 1_800_000_000_000_000i64,
+        "settings": {"leaderboards_archive_query_threshold_days": 30, "leaderboards_anon_retention_days": 7},
+    });
+    let fake = Fake::new(&case);
+    let q = EntriesQ { created_at: 7, limit: 10, offset: 0 };
+    let r = v1_entries_any(&fake, token(), None, &q).await.unwrap_err().into_response();
+    assert_eq!(r.status(), StatusCode::BAD_REQUEST);
+    let q = EntriesQ { created_at: 4102444800, limit: 10, offset: 0 };
+    let r = site_entries_any(&fake, None, &q).await.unwrap_err().into_response();
+    assert_eq!(r.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    let q = EntriesQ { created_at: 100, limit: 10, offset: 0 };
+    let r = site_entries_any(&fake, None, &q).await.unwrap_err().into_response();
+    assert_eq!(r.status(), StatusCode::FORBIDDEN);
+    let r = v1_history_any(&fake, token(), None, &HistoryQ { days: 1, top: 5 }).await.unwrap_err().into_response();
+    assert_eq!(r.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    assert!(fake.sets.lock().unwrap().is_empty() && fake.archive_keys.lock().unwrap().is_empty());
 }
 
 /// A stand-in for api-py that answers every request with `py` and keeps its request lines.
@@ -574,7 +581,8 @@ async fn deferred_requests_reach_python_untouched() {
     let upstream = Client::builder(TokioExecutor::new()).build_http();
     let db = crate::db::Db { mongo: None, redis: None, pg: None };
     let state = crate::state::AppState { inner: Arc::new(crate::state::Inner { settings, db, upstream }) };
-    let app = crate::routes::app(state);
+    let app = crate::routes::app_with(state.clone(), false);
+    let native = crate::routes::app_with(state, true);
     let peer: SocketAddr = "203.0.113.9:5000".parse().unwrap();
     let send = |method: Method, path: &'static str| {
         let app = app.clone();
@@ -588,12 +596,10 @@ async fn deferred_requests_reach_python_untouched() {
         (Method::POST, "/v1/leaderboards/warm"),
         (Method::POST, "/v1/leaderboards/delete-anchor"),
         (Method::POST, "/v1/leaderboards/reingest-backlog"),
-        (Method::POST, "/v1/leaderboards/1000"),
-        (Method::GET, "/v1/leaderboards/%31"),
-        (Method::GET, "/v1/leaderboards/2147483648"),
+        (Method::GET, "/v1/leaderboards/cheaters%2F"),
+        (Method::GET, "/v1/leaderboards/abc"),
         (Method::GET, "/v1/leaderboards/"),
         (Method::GET, "/v1/leaderboards/1000/"),
-        (Method::GET, "/site/leaderboards/nope/health"),
     ] {
         let resp = send(method.clone(), path).await;
         assert_eq!(resp.headers().get("x-upstream").map(|v| v.to_str().unwrap()), Some("py"), "{method} {path}");
@@ -609,10 +615,30 @@ async fn deferred_requests_reach_python_untouched() {
         ("/v1/leaderboards", StatusCode::UNAUTHORIZED),
         ("/site/leaderboards/1000/entries", StatusCode::UNPROCESSABLE_ENTITY),
         ("/site/leaderboards/timestamps?limit=0", StatusCode::UNPROCESSABLE_ENTITY),
+        ("/v1/leaderboards/%31", StatusCode::UNAUTHORIZED),
+        ("/v1/leaderboards/2147483648", StatusCode::UNAUTHORIZED),
+        ("/site/leaderboards/nope/health", StatusCode::UNPROCESSABLE_ENTITY),
     ] {
         let resp = send(Method::GET, path).await;
         assert_eq!(resp.status(), status, "{path}");
         assert_eq!(resp.headers()["x-content-type-options"], "nosniff", "{path}");
+    }
+    let resp = send(Method::POST, "/v1/leaderboards/1000").await;
+    assert_eq!((resp.status(), &resp.headers()["allow"]), (StatusCode::METHOD_NOT_ALLOWED, &"GET".parse().unwrap()));
+    // Python's unhandled 500 skips the security headers.
+    let resp = send(Method::GET, "/site/leaderboards/2147483648/health").await;
+    assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    assert!(resp.headers().get("x-upstream").is_none());
+    for (method, path, status) in [
+        (Method::POST, "/v1/leaderboards/1000", StatusCode::METHOD_NOT_ALLOWED),
+        (Method::GET, "/v1/leaderboards/abc", StatusCode::NOT_FOUND),
+        (Method::GET, "/v1/leaderboards/", StatusCode::TEMPORARY_REDIRECT),
+        (Method::GET, "/v1/leaderboards/1000/", StatusCode::TEMPORARY_REDIRECT),
+        (Method::GET, "/v1/leaderboards/cheaters%2F", StatusCode::TEMPORARY_REDIRECT),
+    ] {
+        let req = Request::builder().method(method).uri(path).extension(ConnectInfo(peer)).body(Body::empty()).unwrap();
+        let resp = native.clone().oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), status, "native {path}");
     }
     assert_eq!(seen.lock().unwrap().len(), before, "Rust-owned requests reached Python");
 }

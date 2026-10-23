@@ -1,6 +1,6 @@
 //! The Rust server for Kiwi API. It answers every route it has been ported to
-//! and proxies everything else to the Python app (`PY_UPSTREAM`) until nothing
-//! is left there. See `native/PORT_PLAN.md`.
+//! and, unless `KIWI_NATIVE_FALLBACK` is on, proxies everything else to the
+//! Python app (`PY_UPSTREAM`). See `native/PORT_PLAN.md`.
 
 pub mod activity;
 pub mod admin;
@@ -67,6 +67,7 @@ pub mod routes;
 pub mod runtime_config;
 pub mod site_auth;
 pub mod site_live;
+pub mod starlette;
 pub mod state;
 pub mod tools;
 pub mod updates;

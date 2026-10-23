@@ -1,0 +1,5292 @@
+{
+ "api": [
+  {
+   "name": "nf_json",
+   "method": "GET",
+   "path": "/v1/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_json"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "93"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_json"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1uZl9qc29uIn19"
+  },
+  {
+   "name": "nf_html",
+   "method": "GET",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_html"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_html"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiBkaXI9Imx0ciI+PGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UGFnZSBub3QgZm91bmQgwrcgQmV0dGVyIFRyb3ZlIFRvb2xzPC90aXRsZT4KPG1ldGEgbmFtZT0icm9ib3RzIiBjb250ZW50PSJub2luZGV4Ij4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMwYTBlMTQiPjxtZXRhIG5hbWU9ImNvbG9yLXNjaGVtZSIgY29udGVudD0iZGFyayI+CjxsaW5rIHJlbD0iaWNvbiIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBSm9FbEVRVlI0MnJXWGFXeGMxM1hIZi9lK054dG5oc3R3cDRhYk5scUtKR3V6WkltU0dVbTJaRVZCVWhRT25HWkI2aGhKaTlpZis2RUZyRThGMms5cEd6UkZZaU9wN1RRdDBNUTJtaXEySWptSklzdVJKWXVSdFpDVVNJc1VsK0d1bVNGbm4zZnY2UWNOQTFsVmtyWkpML0R3SHQ2N2VPZC8vdWZjL3puSDRmKzJWT1VlQTQ0RGVXQUMwSUR3Lzd3VTREUkNCRGdmQ3JqaU9Ib0NhSzU4MDM5b2d3N2dWaTRIOEN1bDhQbDhENGNDUHRtN3RhTjRZTmRxQVU0b3BWYjIvNjkrL3RzOFZWb3A2emlPMVZwYnBiVW9wWXlJYkxIVy92T2hSOWMwYlZuZjRqUTFWSnVoVy9NOXhaSTNxcFM2WEFGcmZ4OEFEbUMxMWxpUlExYmtTMWJrQ1JGcEU1R3RmcC96dzA5K2ZFUG43aTBkU2hDdGxDYVROeVRtVXBzN08za3huYVpjQ1lYenUzTENmWkJ4cFpRSmhVS3R1Vnp1NitzNk9wNCs5b2tES0VjeE1UWEQxZXREN0Z4Znc4TTliVGFkS2VpQTN3Y2xUemZHSWhJSkI5ZE9UOXZWU3BVSEtvYXRpS3l3S2Y4VEFMcENjVjh1bDN2MTgwZVB0di81Wno5ak5oL2NLcUtFUUNDb2Z2TG1DZDc5MlJ0Nk9WZlNLSVdqb1ZnMmlJRGYxWkxKRmw0QmdrQUtlQVA0SnBEN1RTRGMrejNYV2g4TEJRS3YvZVd6WC9ZZjJybkxLN2pHWFVqZXdTdDdoS3JDcE5KcFFBajRYVHpQbyt4WjVwSjVsRktxS2h5bXBxWm1SM01zaWxJd05adnNIVS9NZndZNEFxUWZCTUs1SitGa3g0NGR2cG1abWJmKyt2bm42dy92MmVOTnpNeTZvVmlZaHJZR3JMWFUxOWVDOHZIanQ5NEdzY3luaTR6UFpGaElaaWxabDlhMlZjU2JxMjMzOW0yaXEyTzJzekZhenVmeW5jbDBCcVhVNlFjbDU4cVpWU0xDcFV1WE9sb2JHbHEzOWZUSVFpcmxHbXZ3Qi8yZ3dPLzM4OTFYLzUxQ3FjeW5uL29DZytNWnhtZVdXVXdYS2VPbktoQkFsVE5rU2xiM1BmMjAvdUt6WDNZOEhYYTdPMXN0OEdRbEY4ejlJVmdCNExpT0k4RHVoN3E2L0tGQXdJb0laYy9EOWJ0RXdsWDg2TVJwR3RvZjVwMExnK3grWkN2Zit1YmZjL0RnNDFqbDBOSFN5Skp5Q05ZMVU2WGg3RXN2VVY1ZVpocFF2ME1YVndDVXYvYmM0WUJTSE55OGJoMnU2NHF4RmhIQjBYZTNYQmtZNXBmdm51UEVteWZKNWZKVVI4Tk1KR2FJUlVKTWVvcGp6LzBGKy9jZklkSytqdW1KY1Y3NnpuZG9sTHdkRzUvV3dKdS9TYVJXQU96NHhqZmVHaExoVDNvNk95a1VpNjR4NXE0U0FTTEMza2QzOHVLTDN5YmVFbU5WV3l2SjFCTEpaQXFsTmRHbU9EMmhJQjhNMzhUZjNrM0JIOEMvT0dldlhyenFHeG1mdVFEOHJZaW9CNFhBdVF1TUw2MXByM3NxR3E1eWp2WWVVblhWTlhqR1lvMVEwMUJIeWJGRVFnRzJiWG1Jcnp6ek9iUldCUHgrcmw0ZllueHlrbmgxTGYwalk0eGxzMWh0OFM5TTIwaXdUcjF6NmNwN2ZYMTkrMjdmdmwxY0ViZi9kZ3lWVW9oSW9haythby91VzIvZUgzeGIzMG8wWWEybFdDclFmK3NzbnVReDVSSlZWVUgrNWZaMTlqeDJoTzNidC9ESkp3NXkvY29nODNNVExPUkhjZXBpNUJORHJHMXNrVnhPTkRCOTVzeVptT1BvT1d2RlZsaTQveGdxZ01aaXlYeHUyNFkycWtKRzV3cUxHTHVFZG5KZ2MvaVV4ZTlUaUMzakZkSmN1WHlKV0ZNSDI3WnZwWndxTUhEekprM1ZVV0ppcUttcDVSTkhEdXVxV0pqbFRIWkRLcjM4MVdLeHRMc2lUQ1AzbFBLUDFQVnUxM0dHano2MjBkblFYUytSS3A4eVZsYWs4ZGVReTZVaWp1TWdZdkZGNDdTMHREQjZveDhSUXk0WHBIZnZVZFp2VzRQUDUrQTZEbzdyc0xpWTRxZS9PTTgvL05NckxDd205eGxqem9tSXM1SVB6bDBOSUhYOHVEenArblM3RWNmbThpWHRHY3Q4TWsvSkNPVlNrWHcrU3lTMkNvT2Y3TklDeTZrWkV1TTNDRmRWNGZjSE1EYURpa1RwM2JzSHNSWXJZSXdsRkF6S3hvYjIwcVVQcmprajQrTm5ISzJ2VkFEWUZTbldXbUdBNlZYMWNYTDVaY25taXdUU1Bvenh1Sk5jSXQ3ZXhmWkhEdkxGWjc5R2JVMGRwMC84SzBvTWJpRE14Wi8vQUVVZUpWQVhDVEo0YzR5QVR4R3Jxd1dnV0N5cDJaRUpONWxhVXNDZENwdHlieTJ3S0FVaTNYOTA0REJ6eVZuMWk4dm55R1F5eEJyYitKdmpmMGROYll5ZE8zZHkrZkpsdWpvN2VlcnpmOGJvNURnMTFiWDBYN3JJek9oNWd2NjdVdnp5OTEvamlZL3Y1cTNUNTlDTzVndFBIV01rbDlNTDZSUkFvcUtJSHdFZ2xaZEJSeXVPN1R1bzFxM3E0c09sSlB1UGZZb0RmWDFrTXNzTURkMmdyYTJWZi92K2E0d3NESERxZ3gralRZRFM4RHhSRGRsc2tUV2JFanovek5NMHR6WGlHVVBJNXljeE1DbWxVbG5OSjVOM2dESHVZMERmRFlFQ1NHWHplV3VNSjVGSWhMNGpSOW5YdTVmUjBTbGNOOGppNGpMQlVKUzYyaGhuM2o5SGRXdVlBbVZLQnNKVm1vNzFscVhKSkFPL3ZNR3BILzZNT2drU3lmckpMdWFrZjNDSWJENC9kL3o0OFhURjJZOVVRMGRyYlVWa2c4OTFldy92M2wwdW9kU1NHOWFyMnRwNC9mV1RaREtHam81bWhvY25XTDJta3h0RHQ2bXVpdUhORmppMm9aZDRoNSs2am1FdWpwWklxaXQwZDZ4RithSjgrOFMzK00vejU5WHBYMTAwanVNMG5EcDVhalB3ZW9VQitiVTJpd2loVU9qYXdJY2Y5cjUzOVdwWGFpbWpWYWpSWnJLaWFtdGlKQkxUK1AyYXlhbFordCsvaEVubkNabzZObFczMHJQckhjSnRJd3hkOTdpV0VEclhsTml6S1U1TFN6Vmp5LzNvVUlGTis5ZHBmMHRjelE0bk5oclBmQS9Gd2txN3R0S3pLYy96bHZ2NitsNStyNy8vU3YvZ1FLQllLbXo0Mk1lMmx1UHhMcGFYbHlTYkxkcEN2c1IvL09CVmRXdG1tcW41QkI5T3pkSlFMWkxNcEpRMWx0dnpRUUkxOVlnTWNtM3NBcE5MTWFLdUllQVR4cVljazU2YVY2VkNxWFhIamgxdlRFOVBXMERVZmFJa1dtdU1NWTVTNnFlN2R1MS9iUFBtN1RRM3QzTDc5aTErY3ZJTjZocWE1WkU5QjlUQzNDeWo0d2s1OXZCREtscGxPVEh5TGtTaU5LMnVCOGVIQ0dpZlMvVE9FTVhGMVdUeVVabE9US2diQXhmeHlzWHVTa0xxZTFzeUFiRFcrcFJTNVhnOC91U0ZDMmVmdTNEaDdQYkswSEVUT0JUdlhyOE9WTmxZVkRtLzVINzlleTlhUnp2RjFYczJobXFyWGF3b1FrR04xaDYyWE9UbnAyWlkzOVZEWTB1WStma0FXaWtQOE4wdnhRK2FDVVJYZWdFUlFTbU5VaHdCdmx2ZjBOeHFySkJjbkV0YXpGOWgrZVAxai9ZOEh1dHVOSjJOQlNjQURJOEZDVFg2S0N3djA2SnpaTklkTXBYSXFLRnI1OVBHZUQzQTdQME1jQjhieWxxN2tpTWlZalJ3RXRnME41dm9CV0toMEtxM0M0WEVwQ0M3TWtzbDIrVmtSS1l6akMrc3dlWmRGaklwcVEwdmtzN1hxMHd4SUdLWGxESGVIU0M1WXVlM3pYRUNlSldpWVN2UEdyaWpsUHFSVXVybGZINXE4b1VYWHREQVlIYXBvRU1xTDdNTGRmWk9KbVRGd2VTemVWVXFvbExwZ1BIS1luMkJvRlZLeFFELzd6MmMzak1yS21DalV2cDZmVk5RMXE3cmxJMWI5a3U4czBlMDQrYjhmcDFzYkdxVnp0V2JwYnFtWG9CWDd1M0cxQjlvV2hZZ0FEd09QQU8wQTllQmZ3VG1nRDhGMWdKbmdaY3JiQUxJZndIWjJvcmZSTm9PQ3dBQUFBQkpSVTVFcmtKZ2dnPT0iIHR5cGU9ImltYWdlL3BuZyI+CjxzdHlsZT4KICA6cm9vdHstLWJnOiMwYTBlMTQ7LS1jYXJkOiMxMTE2MWY7LS1saW5lOiMyMjJjM2E7LS10ZXh0OiNlNmViZjI7LS1zb2Z0OiM5YWE2Yjg7LS1tdXRlOiM4YTk0YTY7LS1ibHVlOiM1NjljZmZ9CiAgKntib3gtc2l6aW5nOmJvcmRlci1ib3h9CiAgYm9keXttYXJnaW46MDttaW4taGVpZ2h0OjEwMHZoO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7cGFkZGluZzozMnB4OwogICAgYmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoMTIwMHB4IDYwMHB4IGF0IDUwJSAtMTAlLHJnYmEoODYsMTU2LDI1NSwuMTApLHRyYW5zcGFyZW50KSx2YXIoLS1iZyk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTonSW50ZXInLHN5c3RlbS11aSxzYW5zLXNlcmlmfQogIC5uZnttYXgtd2lkdGg6NTIwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CiAgLm5mLWNvZGV7Zm9udDo3MDAgY2xhbXAoNXJlbSwxOHZ3LDlyZW0pLzEgJ1NwYWNlIEdyb3Rlc2snLCdJbnRlcicsc2Fucy1zZXJpZjtsZXR0ZXItc3BhY2luZzotLjA0ZW07CiAgICBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzU2OWNmZiwjYTA2YmZmIDYwJSwjZmY1ZTdlKTstd2Via2l0LWJhY2tncm91bmQtY2xpcDp0ZXh0OwogICAgYmFja2dyb3VuZC1jbGlwOnRleHQ7Y29sb3I6dHJhbnNwYXJlbnQ7bWFyZ2luOjB9CiAgLm5mLXRpdGxle2ZvbnQ6NzAwIDEuNXJlbSAnU3BhY2UgR3JvdGVzaycsJ0ludGVyJyxzYW5zLXNlcmlmO21hcmdpbjo2cHggMCAxMHB4fQogIC5uZi10ZXh0e2NvbG9yOnZhcigtLXNvZnQpO2xpbmUtaGVpZ2h0OjEuNjttYXJnaW46MCAwIDI2cHh9CiAgLm5mLWFjdGlvbnN7ZGlzcGxheTpmbGV4O2dhcDoxMnB4O2p1c3RpZnktY29udGVudDpjZW50ZXI7ZmxleC13cmFwOndyYXB9CiAgLm5mLWJ0bntkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3RleHQtZGVjb3JhdGlvbjpub25lO2JvcmRlci1yYWRpdXM6MTBweDsKICAgIHBhZGRpbmc6MTFweCAyMHB4O2ZvbnQtd2VpZ2h0OjYwMDtmb250LXNpemU6Ljk1cmVtO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO3RyYW5zaXRpb246Ym9yZGVyLWNvbG9yIC4xNXMsdHJhbnNmb3JtIC4xMnN9CiAgLm5mLWJ0bjpob3Zlcntib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7dHJhbnNmb3JtOnRyYW5zbGF0ZVkoLTFweCl9CiAgLm5mLWJ0bi1wcmltYXJ5e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNTY5Y2ZmLCM0YTdmZTApO2JvcmRlci1jb2xvcjp0cmFuc3BhcmVudDtjb2xvcjojMDQxMjFmfQogIC5uZi1tYXJre2NvbG9yOnZhcigtLW11dGUpO2ZvbnQtc2l6ZTouODJyZW07bWFyZ2luLXRvcDozMHB4O2xldHRlci1zcGFjaW5nOi4wNGVtO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KPC9zdHlsZT48L2hlYWQ+Cjxib2R5PjxtYWluIGNsYXNzPSJuZiI+CiAgPHAgY2xhc3M9Im5mLWNvZGUiPjQwNDwvcD4KICA8aDEgY2xhc3M9Im5mLXRpdGxlIj5UaGlzIHBhZ2Ugd2FuZGVyZWQgb2ZmPC9oMT4KICA8cCBjbGFzcz0ibmYtdGV4dCI+VGhlIHBhZ2UgeW91J3JlIGxvb2tpbmcgZm9yIGRvZXNuJ3QgZXhpc3QsIG1vdmVkLCBvciBuZXZlciBkaWQuIExldCdzIGdldCB5b3UgYmFjayB0byBzb2xpZCBncm91bmQuPC9wPgogIDxkaXYgY2xhc3M9Im5mLWFjdGlvbnMiPgogICAgPGEgY2xhc3M9Im5mLWJ0biBuZi1idG4tcHJpbWFyeSIgaHJlZj0iLyI+JmxhcnI7IEJhY2sgaG9tZTwvYT4KICAgIDxhIGNsYXNzPSJuZi1idG4iIGhyZWY9Ii9tb2RzIj5Ccm93c2UgdGhlIE1vZHMgSHViPC9hPgogIDwvZGl2PgogIDxwIGNsYXNzPSJuZi1tYXJrIj5CZXR0ZXIgVHJvdmUgVG9vbHM8L3A+CjwvbWFpbj48L2JvZHk+PC9odG1sPg=="
+  },
+  {
+   "name": "nf_html_v1",
+   "method": "GET",
+   "path": "/v1/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_html_v1"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "96"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_html_v1"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1uZl9odG1sX3YxIn19"
+  },
+  {
+   "name": "nf_head_html",
+   "method": "HEAD",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_head_html"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_head_html"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "nf_post",
+   "method": "POST",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_post"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "93"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_post"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1uZl9wb3N0In19"
+  },
+  {
+   "name": "nf_options",
+   "method": "OPTIONS",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_options"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "96"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_options"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1uZl9vcHRpb25zIn19"
+  },
+  {
+   "name": "nf_cors",
+   "method": "GET",
+   "path": "/v1/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_cors"
+    ],
+    [
+     "Origin",
+     "https://docs.aallyn.net"
+    ],
+    [
+     "Accept-Encoding",
+     "gzip"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "93"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_cors"
+    ],
+    [
+     "access-control-allow-credentials",
+     "true"
+    ],
+    [
+     "access-control-expose-headers",
+     "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition"
+    ],
+    [
+     "access-control-allow-origin",
+     "https://docs.aallyn.net"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1uZl9jb3JzIn19"
+  },
+  {
+   "name": "nf_root",
+   "method": "GET",
+   "path": "/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_root"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_root"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiBkaXI9Imx0ciI+PGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UGFnZSBub3QgZm91bmQgwrcgQmV0dGVyIFRyb3ZlIFRvb2xzPC90aXRsZT4KPG1ldGEgbmFtZT0icm9ib3RzIiBjb250ZW50PSJub2luZGV4Ij4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMwYTBlMTQiPjxtZXRhIG5hbWU9ImNvbG9yLXNjaGVtZSIgY29udGVudD0iZGFyayI+CjxsaW5rIHJlbD0iaWNvbiIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBSm9FbEVRVlI0MnJXWGFXeGMxM1hIZi9lK054dG5oc3R3cDRhYk5scUtKR3V6WkltU0dVbTJaRVZCVWhRT25HWkI2aGhKaTlpZis2RUZyRThGMms5cEd6UkZZaU9wN1RRdDBNUTJtaXEySWptSklzdVJKWXVSdFpDVVNJc1VsK0d1bVNGbm4zZnY2UWNOQTFsVmtyWkpML0R3SHQ2N2VPZC8vdWZjL3puSDRmKzJWT1VlQTQ0RGVXQUMwSUR3Lzd3VTREUkNCRGdmQ3JqaU9Ib0NhSzU4MDM5b2d3N2dWaTRIOEN1bDhQbDhENGNDUHRtN3RhTjRZTmRxQVU0b3BWYjIvNjkrL3RzOFZWb3A2emlPMVZwYnBiVW9wWXlJYkxIVy92T2hSOWMwYlZuZjRqUTFWSnVoVy9NOXhaSTNxcFM2WEFGcmZ4OEFEbUMxMWxpUlExYmtTMWJrQ1JGcEU1R3RmcC96dzA5K2ZFUG43aTBkU2hDdGxDYVROeVRtVXBzN08za3huYVpjQ1lYenUzTENmWkJ4cFpRSmhVS3R1Vnp1NitzNk9wNCs5b2tES0VjeE1UWEQxZXREN0Z4Znc4TTliVGFkS2VpQTN3Y2xUemZHSWhJSkI5ZE9UOXZWU3BVSEtvYXRpS3l3S2Y4VEFMcENjVjh1bDN2MTgwZVB0di81Wno5ak5oL2NLcUtFUUNDb2Z2TG1DZDc5MlJ0Nk9WZlNLSVdqb1ZnMmlJRGYxWkxKRmw0QmdrQUtlQVA0SnBEN1RTRGMrejNYV2g4TEJRS3YvZVd6WC9ZZjJybkxLN2pHWFVqZXdTdDdoS3JDcE5KcFFBajRYVHpQbyt4WjVwSjVsRktxS2h5bXBxWm1SM01zaWxJd05adnNIVS9NZndZNEFxUWZCTUs1SitGa3g0NGR2cG1abWJmKyt2bm42dy92MmVOTnpNeTZvVmlZaHJZR3JMWFUxOWVDOHZIanQ5NEdzY3luaTR6UFpGaElaaWxabDlhMlZjU2JxMjMzOW0yaXEyTzJzekZhenVmeW5jbDBCcVhVNlFjbDU4cVpWU0xDcFV1WE9sb2JHbHEzOWZUSVFpcmxHbXZ3Qi8yZ3dPLzM4OTFYLzUxQ3FjeW5uL29DZytNWnhtZVdXVXdYS2VPbktoQkFsVE5rU2xiM1BmMjAvdUt6WDNZOEhYYTdPMXN0OEdRbEY4ejlJVmdCNExpT0k4RHVoN3E2L0tGQXdJb0laYy9EOWJ0RXdsWDg2TVJwR3RvZjVwMExnK3grWkN2Zit1YmZjL0RnNDFqbDBOSFN5Skp5Q05ZMVU2WGg3RXN2VVY1ZVpocFF2ME1YVndDVXYvYmM0WUJTSE55OGJoMnU2NHF4RmhIQjBYZTNYQmtZNXBmdm51UEVteWZKNWZKVVI4Tk1KR2FJUlVKTWVvcGp6LzBGKy9jZklkSytqdW1KY1Y3NnpuZG9sTHdkRzUvV3dKdS9TYVJXQU96NHhqZmVHaExoVDNvNk95a1VpNjR4NXE0U0FTTEMza2QzOHVLTDN5YmVFbU5WV3l2SjFCTEpaQXFsTmRHbU9EMmhJQjhNMzhUZjNrM0JIOEMvT0dldlhyenFHeG1mdVFEOHJZaW9CNFhBdVF1TUw2MXByM3NxR3E1eWp2WWVVblhWTlhqR1lvMVEwMUJIeWJGRVFnRzJiWG1Jcnp6ek9iUldCUHgrcmw0ZllueHlrbmgxTGYwalk0eGxzMWh0OFM5TTIwaXdUcjF6NmNwN2ZYMTkrMjdmdmwxY0ViZi9kZ3lWVW9oSW9haythby91VzIvZUgzeGIzMG8wWWEybFdDclFmK3NzbnVReDVSSlZWVUgrNWZaMTlqeDJoTzNidC9ESkp3NXkvY29nODNNVExPUkhjZXBpNUJORHJHMXNrVnhPTkRCOTVzeVptT1BvT1d2RlZsaTQveGdxZ01aaXlYeHUyNFkycWtKRzV3cUxHTHVFZG5KZ2MvaVV4ZTlUaUMzakZkSmN1WHlKV0ZNSDI3WnZwWndxTUhEekprM1ZVV0ppcUttcDVSTkhEdXVxV0pqbFRIWkRLcjM4MVdLeHRMc2lUQ1AzbFBLUDFQVnUxM0dHano2MjBkblFYUytSS3A4eVZsYWs4ZGVReTZVaWp1TWdZdkZGNDdTMHREQjZveDhSUXk0WHBIZnZVZFp2VzRQUDUrQTZEbzdyc0xpWTRxZS9PTTgvL05NckxDd205eGxqem9tSXM1SVB6bDBOSUhYOHVEenArblM3RWNmbThpWHRHY3Q4TWsvSkNPVlNrWHcrU3lTMkNvT2Y3TklDeTZrWkV1TTNDRmRWNGZjSE1EYURpa1RwM2JzSHNSWXJZSXdsRkF6S3hvYjIwcVVQcmprajQrTm5ISzJ2VkFEWUZTbldXbUdBNlZYMWNYTDVaY25taXdUU1Bvenh1Sk5jSXQ3ZXhmWkhEdkxGWjc5R2JVMGRwMC84SzBvTWJpRE14Wi8vQUVVZUpWQVhDVEo0YzR5QVR4R3Jxd1dnV0N5cDJaRUpONWxhVXNDZENwdHlieTJ3S0FVaTNYOTA0REJ6eVZuMWk4dm55R1F5eEJyYitKdmpmMGROYll5ZE8zZHkrZkpsdWpvN2VlcnpmOGJvNURnMTFiWDBYN3JJek9oNWd2NjdVdnp5OTEvamlZL3Y1cTNUNTlDTzVndFBIV01rbDlNTDZSUkFvcUtJSHdFZ2xaZEJSeXVPN1R1bzFxM3E0c09sSlB1UGZZb0RmWDFrTXNzTURkMmdyYTJWZi92K2E0d3NESERxZ3gralRZRFM4RHhSRGRsc2tUV2JFanovek5NMHR6WGlHVVBJNXljeE1DbWxVbG5OSjVOM2dESHVZMERmRFlFQ1NHWHplV3VNSjVGSWhMNGpSOW5YdTVmUjBTbGNOOGppNGpMQlVKUzYyaGhuM2o5SGRXdVlBbVZLQnNKVm1vNzFscVhKSkFPL3ZNR3BILzZNT2drU3lmckpMdWFrZjNDSWJENC9kL3o0OFhURjJZOVVRMGRyYlVWa2c4OTFldy92M2wwdW9kU1NHOWFyMnRwNC9mV1RaREtHam81bWhvY25XTDJta3h0RHQ2bXVpdUhORmppMm9aZDRoNSs2am1FdWpwWklxaXQwZDZ4RithSjgrOFMzK00vejU5WHBYMTAwanVNMG5EcDVhalB3ZW9VQitiVTJpd2loVU9qYXdJY2Y5cjUzOVdwWGFpbWpWYWpSWnJLaWFtdGlKQkxUK1AyYXlhbFordCsvaEVubkNabzZObFczMHJQckhjSnRJd3hkOTdpV0VEclhsTml6S1U1TFN6Vmp5LzNvVUlGTis5ZHBmMHRjelE0bk5oclBmQS9Gd2txN3R0S3pLYy96bHZ2NitsNStyNy8vU3YvZ1FLQllLbXo0Mk1lMmx1UHhMcGFYbHlTYkxkcEN2c1IvL09CVmRXdG1tcW41QkI5T3pkSlFMWkxNcEpRMWx0dnpRUUkxOVlnTWNtM3NBcE5MTWFLdUllQVR4cVljazU2YVY2VkNxWFhIamgxdlRFOVBXMERVZmFJa1dtdU1NWTVTNnFlN2R1MS9iUFBtN1RRM3QzTDc5aTErY3ZJTjZocWE1WkU5QjlUQzNDeWo0d2s1OXZCREtscGxPVEh5TGtTaU5LMnVCOGVIQ0dpZlMvVE9FTVhGMVdUeVVabE9US2diQXhmeHlzWHVTa0xxZTFzeUFiRFcrcFJTNVhnOC91U0ZDMmVmdTNEaDdQYkswSEVUT0JUdlhyOE9WTmxZVkRtLzVINzlleTlhUnp2RjFYczJobXFyWGF3b1FrR04xaDYyWE9UbnAyWlkzOVZEWTB1WStma0FXaWtQOE4wdnhRK2FDVVJYZWdFUlFTbU5VaHdCdmx2ZjBOeHFySkJjbkV0YXpGOWgrZVAxai9ZOEh1dHVOSjJOQlNjQURJOEZDVFg2S0N3djA2SnpaTklkTXBYSXFLRnI1OVBHZUQzQTdQME1jQjhieWxxN2tpTWlZalJ3RXRnME41dm9CV0toMEtxM0M0WEVwQ0M3TWtzbDIrVmtSS1l6akMrc3dlWmRGaklwcVEwdmtzN1hxMHd4SUdLWGxESGVIU0M1WXVlM3pYRUNlSldpWVN2UEdyaWpsUHFSVXVybGZINXE4b1VYWHREQVlIYXBvRU1xTDdNTGRmWk9KbVRGd2VTemVWVXFvbExwZ1BIS1luMkJvRlZLeFFELzd6MmMzak1yS21DalV2cDZmVk5RMXE3cmxJMWI5a3U4czBlMDQrYjhmcDFzYkdxVnp0V2JwYnFtWG9CWDd1M0cxQjlvV2hZZ0FEd09QQU8wQTllQmZ3VG1nRDhGMWdKbmdaY3JiQUxJZndIWjJvcmZSTm9PQ3dBQUFBQkpSVTVFcmtKZ2dnPT0iIHR5cGU9ImltYWdlL3BuZyI+CjxzdHlsZT4KICA6cm9vdHstLWJnOiMwYTBlMTQ7LS1jYXJkOiMxMTE2MWY7LS1saW5lOiMyMjJjM2E7LS10ZXh0OiNlNmViZjI7LS1zb2Z0OiM5YWE2Yjg7LS1tdXRlOiM4YTk0YTY7LS1ibHVlOiM1NjljZmZ9CiAgKntib3gtc2l6aW5nOmJvcmRlci1ib3h9CiAgYm9keXttYXJnaW46MDttaW4taGVpZ2h0OjEwMHZoO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7cGFkZGluZzozMnB4OwogICAgYmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoMTIwMHB4IDYwMHB4IGF0IDUwJSAtMTAlLHJnYmEoODYsMTU2LDI1NSwuMTApLHRyYW5zcGFyZW50KSx2YXIoLS1iZyk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTonSW50ZXInLHN5c3RlbS11aSxzYW5zLXNlcmlmfQogIC5uZnttYXgtd2lkdGg6NTIwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CiAgLm5mLWNvZGV7Zm9udDo3MDAgY2xhbXAoNXJlbSwxOHZ3LDlyZW0pLzEgJ1NwYWNlIEdyb3Rlc2snLCdJbnRlcicsc2Fucy1zZXJpZjtsZXR0ZXItc3BhY2luZzotLjA0ZW07CiAgICBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzU2OWNmZiwjYTA2YmZmIDYwJSwjZmY1ZTdlKTstd2Via2l0LWJhY2tncm91bmQtY2xpcDp0ZXh0OwogICAgYmFja2dyb3VuZC1jbGlwOnRleHQ7Y29sb3I6dHJhbnNwYXJlbnQ7bWFyZ2luOjB9CiAgLm5mLXRpdGxle2ZvbnQ6NzAwIDEuNXJlbSAnU3BhY2UgR3JvdGVzaycsJ0ludGVyJyxzYW5zLXNlcmlmO21hcmdpbjo2cHggMCAxMHB4fQogIC5uZi10ZXh0e2NvbG9yOnZhcigtLXNvZnQpO2xpbmUtaGVpZ2h0OjEuNjttYXJnaW46MCAwIDI2cHh9CiAgLm5mLWFjdGlvbnN7ZGlzcGxheTpmbGV4O2dhcDoxMnB4O2p1c3RpZnktY29udGVudDpjZW50ZXI7ZmxleC13cmFwOndyYXB9CiAgLm5mLWJ0bntkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3RleHQtZGVjb3JhdGlvbjpub25lO2JvcmRlci1yYWRpdXM6MTBweDsKICAgIHBhZGRpbmc6MTFweCAyMHB4O2ZvbnQtd2VpZ2h0OjYwMDtmb250LXNpemU6Ljk1cmVtO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO3RyYW5zaXRpb246Ym9yZGVyLWNvbG9yIC4xNXMsdHJhbnNmb3JtIC4xMnN9CiAgLm5mLWJ0bjpob3Zlcntib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7dHJhbnNmb3JtOnRyYW5zbGF0ZVkoLTFweCl9CiAgLm5mLWJ0bi1wcmltYXJ5e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNTY5Y2ZmLCM0YTdmZTApO2JvcmRlci1jb2xvcjp0cmFuc3BhcmVudDtjb2xvcjojMDQxMjFmfQogIC5uZi1tYXJre2NvbG9yOnZhcigtLW11dGUpO2ZvbnQtc2l6ZTouODJyZW07bWFyZ2luLXRvcDozMHB4O2xldHRlci1zcGFjaW5nOi4wNGVtO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KPC9zdHlsZT48L2hlYWQ+Cjxib2R5PjxtYWluIGNsYXNzPSJuZiI+CiAgPHAgY2xhc3M9Im5mLWNvZGUiPjQwNDwvcD4KICA8aDEgY2xhc3M9Im5mLXRpdGxlIj5UaGlzIHBhZ2Ugd2FuZGVyZWQgb2ZmPC9oMT4KICA8cCBjbGFzcz0ibmYtdGV4dCI+VGhlIHBhZ2UgeW91J3JlIGxvb2tpbmcgZm9yIGRvZXNuJ3QgZXhpc3QsIG1vdmVkLCBvciBuZXZlciBkaWQuIExldCdzIGdldCB5b3UgYmFjayB0byBzb2xpZCBncm91bmQuPC9wPgogIDxkaXYgY2xhc3M9Im5mLWFjdGlvbnMiPgogICAgPGEgY2xhc3M9Im5mLWJ0biBuZi1idG4tcHJpbWFyeSIgaHJlZj0iLyI+JmxhcnI7IEJhY2sgaG9tZTwvYT4KICAgIDxhIGNsYXNzPSJuZi1idG4iIGhyZWY9Ii9tb2RzIj5Ccm93c2UgdGhlIE1vZHMgSHViPC9hPgogIDwvZGl2PgogIDxwIGNsYXNzPSJuZi1tYXJrIj5CZXR0ZXIgVHJvdmUgVG9vbHM8L3A+CjwvbWFpbj48L2JvZHk+PC9odG1sPg=="
+  },
+  {
+   "name": "nf_html_gzip",
+   "method": "GET",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_html_gzip"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ],
+    [
+     "Accept-Encoding",
+     "gzip"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-nf_html_gzip"
+    ],
+    [
+     "vary",
+     "Origin, Accept-Encoding"
+    ],
+    [
+     "content-encoding",
+     "gzip"
+    ]
+   ],
+   "body_b64": "H4sIAAAAAAAAA5VYWXOjyJZ+71+hcUVPdQ1WsSOwXRUhQBsI0AYCvbEk+75Dxf1d931+2SDbVe2+fSdixhEWZObJs37nkCdf/oNXuItxWM38Oom///Zyf8xiM/W+PYD0YeYE5beHuC4fvr/4wHQmggTU5sz2zbIC9bcH9bKe09Pi62xqJuDbQxuALs/K+mFmZ2kN0omqC5za/+aANrDB/HXwOAvSoA7MeF7ZZgy+oQ8T6zqoY/D9YHpglmb1zM2a1Jn99z9nLKhrUM4uZdaC2SXL4uoFfqP97aPgMrOyuvogNs2C1AH9w1/Jah8kYG5ncVZ+oP2EmAhAib+a8ko0aXjf8YHWMcvozjQO0mhWgvjbQzCtPcz8Erj31dp8CpLJCjhPvWfLrABFPAYaq5w6RNx42XL6k8+qv1K96Y27D5cetzSmBzuCtESmFyFbxaujdiKw8qqb195GcX3rwgCS+zr1q7rLCdOS40IUNs142yXnjZpgt5XGqv5RSTc3lvJ9IWACF6JW63JFr7GIyTfjaW0ESr64HGtEOmJJUGC7MBF2VXMSjOZU3zj1vKvUGNo0yXmdprjbUkdbXqKxFpU3YQ/z3bamFkBxYLhxbXhMt4QLYZqigiVB8OC65JAd38GLTiX4E8fynsuVYaBsM84USRrBmczrFp4WEFuaa2L6ENM8YXOHOlnUpkwYslMsVSLLNQuDKQaC64rWtCynxkBBtdzKLTXLjWFn7bdXuFX8E2Mjlpa6RHhENaHxr7DE9LcdXuRnSl+uS7enl3zCoWgcnI6oFZ2nf+60zlfkpnZzeOwQBnJXh3QRIM7Z5+qYMy/ycEnUvFooeNSn5s3mDH1s8D3n3tg+vx0FXxXrRhsbCqooJScgJot4cWX30kXnUVDzi3XvdrTEWBfTEUGwxDs7vozuZufvBJZxlAvTaudc3YqZWQfi0IkufVnuc87W6CbGW5RGwKFuYfI2MqHsw7ZYiKsjx2Vuu084Z8Fgp5pSNPcs7q5hpnlYsONd9LYX1jHBetFSBMsDIeT84nLmbWjE9atP79mj2MLgOuqw4WJluhcX4UZXQ9Cd64UvllwuC/lxGRL6ZTxkUH8jc4GM15Nkf0jy4paccKkK4l0n39pqq8KS2xnEsji6rCSSArSOeoJw2jy5JZYLQW2aUh3cYkCWR2mgMi0w/NLYlHtdRRnA0e02rBliU9lDGhDj4bb2d7cgvsWMiWn22SowHGcSbEKmglXj2hwbd0jtGGELXZ2wGJN0cdPOey5XG12JM2sTFzjjXnbHoIw3SduxMOZ1CozTDKrDJMoVk5wUzjgPkm59Aq5XtdNFoKSizy7jixydYws/uBgCN+Ko4wa91c2FglY1vTnGa3pkdprHEvtA2dF84y8KChbXy26X7W42zDNWvepinaakU76pM5fMkb0H9dCNa12osaYE4T0CDWNE3p4HQRg42UBVSvcXq6pVNRLc/PzYIpKudZzawpZNGOx5Kw+05WMNRRT92t+yiA5wnY0MMnfbtDmsksEVSFdQT7QsCRtzd1IFCWR5OMLIGoJtd+eIUNgkgq0tqDF1snjfORsSvnZCA5/N03WpjEQfumDj7/0LnlHKEKkBRfRkQZyXk1/xyMHpRtzjgwVWiaxdh1ZA2b1wWxax7GwShcf8HUtLOH1x8Qhnp0SGlQ1o9XIsNn3iNkeeLo0gYwl92RwbaU+heYlXxaYgh7A1gJrqmqyHGyNDjwjKbgdrvTp6G8zSk105jqNina7soYfKmHCNtB+i1Ef3LhIaRB9XqF/TZ0bCkKC7lOhI2fnC1VEGwhZuG6P2ynJhxxs0NfN3mRlBZgY3VwwGW7y3cCRDDBOLr1x5dKGqSptjT54ETVO3EOneUCbsMV/BrRrmBaEjB9jOPBqXLnvltLVBHpCszJcbtIq0XpF5liGr4ZYoh0y5tmstDgi49wpPugWD3jcYYWBFJGzIrthv9s3KSQXPhgO1B8wl4PBw7Qh2ow/CdS1tscWtzW9dIW35UYhwTb0KQSEmOXmSt3zTFFchjC/bGy+WOI1exb7eV8GFO+DxQTygB61B8c0mHCkMcdKjfoZOYk4PWmxGtAOOA6UGYSN5RrteE4szUvMslfX06TgQer51W9W5tVficCChJcVni7LaBwZRAFiRaBiWpXLPdQnTx+GYJbuK3B3GCcm7rU43/JhD6Xmxst2EDvR6Y9e0FMECp2jnSO+g83DGuExxF/KOG6jotmoknFs7GuHaW4k3+SC65LhVbauTURq7Ll4vR7HPLAwp1EMZRiEByelWxFptyRvrc3q9Jpslpemore/Jm50mU/TPh2zsG0G2d/UC9O5ty7f79W3BbCwVcXIEpkUkk6yAl/obDC9XKhC0pc5dBMImhuWl35RFd/Wu3JBPH01BJmNTrTiHy+vBGrBOXKoBrjMIwbPjoKVoQLfpsDkOPVtakNCGLuLIljE4Cu4MkCvETZgtAChHl7YykvdQ1NIRfVHuRsUnvZZaqO04MCgcBgbckgV+IRlOIb36sL1KUcxMKXI6LbNC3G27lRffHPY0NMri0mRogRdEpcTCoTm4RsZPWI+kqpJ4B/PKqVy6cAuZRFfxW77weii8GPyZ5vsT78RVdLlaq6kqjLKE1KMebNTDjhym7xSXxGqcygIp4x6/bQyEd3ljxZ03+giujSSQ652/J8ITk+oN6Z6Qc2zLdBgQ4Z5VhTOF+X6Kh8zWuTbGMtFEthK0JFugcaELwlKBW2mTb2FKUrzoPLilsG/MyMW5ncUTsAOPBK1f1pjBqEfEKS1Vi7ypUIPpe4HHSJM55/OGMUuszgnYvV4m1G/CjEz8zE6veyyJ+pqvqaQJmq28DgMsuzmET0JUmKyaML/tiqBGHKpfQ6ZAQ/QZhyR4JBk911EEmfIASfmcNMNDBzKVhSwVC7rAV5XQ7Ha2y5Qkzlxz3QySUDPD060UAzOpA4HdX6ADZg5mfINqCPZXacrdMkqOrzhSHsqtLdS7rneYRXBd8aUey8EoquT+PGrhAOOZulvLEOPkLlLb45FIZb88uEt43UXFoq7FUZxOUXHbUlBMQuUChs8t7B1F1hCTkcAkgMXNod/nph4PZ2vv5FxbnWBYYTXnWidJkZIsyyijIxz3t72UC0c0rtvxeNyhjOFJdoJXy1zeS6bY7MAE+8KwI5IyNUrjCl3fhj7aXlbM4YrwqmvuomvSSJJBnqkCLJwGha3DIZnOiniN7xdMgEJ2u5MpvzDJ24phmQuHc0NIdBHJtCwvxnmsXLbDPjoHsog1LA223CZwz/BFWUn6Gr1eBvU2kYietezdfqj05hztC4BWw9Lir1B+OpO6R8PNec1hwG1w3l8cLBHZri4Ke5m+L7SiybGh8QlMbhcMGBjzNLZrVK8wPylK3eyyY7SRUZ/CdOWSTolt4IzGG0hjQG60vAbRgZaRtj9CJqeedOCtTsdzIqt+x7Zx6yJyX5QCa6er2hzXjA+BAxrC03mgqRtZwGT2bC/5Hb3mLjolcl2LUMJ4k3eOlOu7QlyXJHPYAB5fLg6IZLO0NcTFIgqkwAhP3ar2EJlsM/Yq+ohY4Byhr3KOW0hRFWOQFp1EYww5qOrAzVmHu7w4Im1ULfQC6frdRtRjfgu2Z440GoCP+ooDwjUwzu1hUwZhfChOalPG7pYs6EzV9ZpfGlszz1ZSsV9Ie8e9KUJyWXfgPAJNLaYDQe4dtqKRYmy21sT+yMOLEbPxUCrFhAvVNqdcTT6ixaKMd6jFRA1dIQAhIIt2c7SyNoU21tfpLF4kesbqiwbfoCyTXX3DW/KdclgqyJIBrNtdEo+n16gnpN7NLq3lfud22xuWle5JzhSuu7c9rHBSyVUZCZ7nffv2MKuHfGq7fjVP9yarqod7ozebPZVZVv+Yzy3v6b1Ze57PbbN0nj6hKEqh7jScOjLw9AnDJnvMaViDvn76BChgudg0rDJ3GjKmSVn0NEyaeiKmTYYwqWloxc00JCnGdt1/TPL+64eV9fMqGIPUe7Ky0gHlfJq5L1mZM/xIzNIL0ifkOQnSuQ8Cz6+fpkLT+s9OUOWxOTx5ZeA8T29T0xvUIKme7Kl9BOVzbjrOnSmO5f3zxG5iaNqRV9773afSdO5tsXd/TuR/oBiC5P2Mev016xmJ/D6bo8jvj6VnmX/Q1CNKUo8YST5+RZEvj3VpplVultPOL4+tWf5x99eXNyGv3ezT2+TdM1+e3amjnbtmEsTD0+fdXbfPj9VQTbrOm+CxmljNK1AGr+74mrqTyf1b+/5EYpM6z3cuczMOvPTdtHfCqbt2wI8796cFgszs2EzyP8gSJI8o3XaPzPT2BUZnn8/55JvZpsxqUEWfH3+p8Evwc/za+s8nk+y7x+ZfEQIkf/PZPexm+cFnOOkA7/E9mI+fTISyXHfy4e+Pn1yXBAvw5XneASsK6vmfbOZ2HORPd5v+VcCHlTcnfnDz808c/LT99WbiT+PRr3fD/y+2vjOipjhP2yb//uI4Cf7xMXp3IH95vlv9C3hfqV+KTLsx6s/dpl0HWVr9+IlKNwb9s2fmT+gdfmFT1YE7zN8vN35C9E4078qJ6v7zk5VVp7/YBOmr/FdurxD4K8bvAuifEHGAnZXmXY2nNEvB83s23cPVVE93U988/jMxUHTywSvCXhHavdk4pcDbeMpJ8PSVufv1ndXTfUOVxYEze/PQXbf/FfYfkPM2fa8iX55fgxq8avmu4OvW2VeUrN4Sy83KZBpi1QeHPPlZC8ofH3e8c70XlHeu941voInNGhh/zCd9v3xgMs/LqeiVw4//B6gJc+EC5MvzXyR/BObbzCeEQDH0ZwrPJynRX7B0r4JfPvqVxu5+fQPTvM7yJ/weiH9JxLc8fA3unwY2eQ5K26zAP357gd/q9gv8fm14L5nfXxIzSO/loKq+PaTuw72sv+R/TrzWjYfvBEK8wPnroo9+WH3NrIfvFz+oJqh4YNaZ6WQ6cGaZ606S0L/xuyt43wDe6Ies+VyCWZxl0WTEbFJ65mSgSj/XM9AHVf04S6ZgOo+zaSEFU1hnTuB8ne1B/bmaeaC+M3gtC7M6e4fbW7C+/tTXCdoP4t9T79XOadH8sDQFffbX2P+8P4Qfvv9nbJbl84y9S/KzBLzA5r9n8WtPkjmTGLbMugrM6sleaZqYbRvrfesLPGn2N/ckrxeZ/+56dbLmBb5Ha4rgW+jg1wvi/wEbAN4nMBYAAA=="
+  },
+  {
+   "name": "nf_preflight",
+   "method": "OPTIONS",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_preflight"
+    ],
+    [
+     "Origin",
+     "https://docs.aallyn.net"
+    ],
+    [
+     "Access-Control-Request-Method",
+     "GET"
+    ]
+   ],
+   "status": 200,
+   "response_headers": [
+    [
+     "vary",
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
+    ],
+    [
+     "access-control-allow-methods",
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
+    ],
+    [
+     "access-control-max-age",
+     "600"
+    ],
+    [
+     "access-control-allow-credentials",
+     "true"
+    ],
+    [
+     "access-control-allow-origin",
+     "https://docs.aallyn.net"
+    ],
+    [
+     "content-length",
+     "2"
+    ],
+    [
+     "content-type",
+     "text/plain; charset=utf-8"
+    ]
+   ],
+   "body_b64": "T0s="
+  },
+  {
+   "name": "nf_preflight_evil",
+   "method": "OPTIONS",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-nf_preflight_evil"
+    ],
+    [
+     "Origin",
+     "https://evil.example"
+    ],
+    [
+     "Access-Control-Request-Method",
+     "GET"
+    ]
+   ],
+   "status": 400,
+   "response_headers": [
+    [
+     "vary",
+     "Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"
+    ],
+    [
+     "access-control-allow-methods",
+     "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY"
+    ],
+    [
+     "access-control-max-age",
+     "600"
+    ],
+    [
+     "access-control-allow-credentials",
+     "true"
+    ],
+    [
+     "content-length",
+     "22"
+    ],
+    [
+     "content-type",
+     "text/plain; charset=utf-8"
+    ]
+   ],
+   "body_b64": "RGlzYWxsb3dlZCBDT1JTIG9yaWdpbg=="
+  },
+  {
+   "name": "slash_health",
+   "method": "GET",
+   "path": "/health/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_health"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/health"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_health"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_health_query",
+   "method": "GET",
+   "path": "/health/?a=1&b=%20c&d='x'&e=[1]&f=%2F",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_health_query"
+    ],
+    [
+     "Origin",
+     "https://docs.aallyn.net"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/health?a=1&b=%20c&d='x'&e=[1]&f=%2F"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_health_query"
+    ],
+    [
+     "access-control-allow-credentials",
+     "true"
+    ],
+    [
+     "access-control-expose-headers",
+     "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition"
+    ],
+    [
+     "access-control-allow-origin",
+     "https://docs.aallyn.net"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_many",
+   "method": "GET",
+   "path": "/health///",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_many"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/health"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_many"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_https",
+   "method": "GET",
+   "path": "/config/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_https"
+    ],
+    [
+     "X-Forwarded-Proto",
+     "https"
+    ]
+   ],
+   "scheme": "https",
+   "peer": "127.0.0.1",
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://kiwi-parity/config"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_https"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_host_port",
+   "method": "GET",
+   "path": "/health/",
+   "headers": [
+    [
+     "X-Request-ID",
+     "rt-slash_host_port"
+    ],
+    [
+     "Host",
+     "Kiwi.Example:0443"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://Kiwi.Example:0443/health"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_host_port"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_add",
+   "method": "GET",
+   "path": "/v1/leaderboards/5/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_add"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/v1/leaderboards/5"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_add"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_unicode",
+   "method": "GET",
+   "path": "/v1/leaderboards/renames/%C3%A9%20x/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_unicode"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/v1/leaderboards/renames/%C3%A9%20x"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_unicode"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_encoded",
+   "method": "GET",
+   "path": "/health%2F",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_encoded"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/health"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_encoded"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_docs",
+   "method": "GET",
+   "path": "/docs/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_docs"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/docs"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_docs"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_head",
+   "method": "HEAD",
+   "path": "/health/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_head"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/health"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_head"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_post",
+   "method": "POST",
+   "path": "/health/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_post"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/health"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_post"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "slash_git",
+   "method": "GET",
+   "path": "/git/mods/a/b.git/info/refs/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-slash_git"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/git/mods/a/b.git/info/refs"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-slash_git"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "int_word",
+   "method": "GET",
+   "path": "/v1/leaderboards/abc",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-int_word"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "94"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-int_word"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1pbnRfd29yZCJ9fQ=="
+  },
+  {
+   "name": "int_word_slash",
+   "method": "GET",
+   "path": "/v1/leaderboards/abc/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-int_word_slash"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "100"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-int_word_slash"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1pbnRfd29yZF9zbGFzaCJ9fQ=="
+  },
+  {
+   "name": "int_word_entries",
+   "method": "GET",
+   "path": "/v1/leaderboards/abc/entries?created_at=1",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-int_word_entries"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "102"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-int_word_entries"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1pbnRfd29yZF9lbnRyaWVzIn19"
+  },
+  {
+   "name": "int_signed",
+   "method": "GET",
+   "path": "/v1/leaderboards/+5",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-int_signed"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "96"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-int_signed"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1pbnRfc2lnbmVkIn19"
+  },
+  {
+   "name": "int_post",
+   "method": "POST",
+   "path": "/v1/leaderboards/5",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-int_post"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "112"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-int_post"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1pbnRfcG9zdCJ9fQ=="
+  },
+  {
+   "name": "int_delete",
+   "method": "DELETE",
+   "path": "/v1/leaderboards/5/health",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-int_delete"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "114"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-int_delete"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1pbnRfZGVsZXRlIn19"
+  },
+  {
+   "name": "git_no_suffix",
+   "method": "GET",
+   "path": "/git/mods/a/b/info/refs",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-git_no_suffix"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "99"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-git_no_suffix"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1naXRfbm9fc3VmZml4In19"
+  },
+  {
+   "name": "git_bare_suffix",
+   "method": "GET",
+   "path": "/git/mods/a/.git/info/refs",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-git_bare_suffix"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "101"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-git_bare_suffix"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1naXRfYmFyZV9zdWZmaXgifX0="
+  },
+  {
+   "name": "git_post_refs",
+   "method": "POST",
+   "path": "/git/mods/a/b.git/info/refs",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-git_post_refs"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "117"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-git_post_refs"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1naXRfcG9zdF9yZWZzIn19"
+  },
+  {
+   "name": "method_put",
+   "method": "PUT",
+   "path": "/health",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-method_put"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "114"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-method_put"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1tZXRob2RfcHV0In19"
+  },
+  {
+   "name": "method_options",
+   "method": "OPTIONS",
+   "path": "/health",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-method_options"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "118"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-method_options"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1tZXRob2Rfb3B0aW9ucyJ9fQ=="
+  },
+  {
+   "name": "method_cors",
+   "method": "DELETE",
+   "path": "/health",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-method_cors"
+    ],
+    [
+     "Origin",
+     "https://docs.aallyn.net"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "115"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-method_cors"
+    ],
+    [
+     "access-control-allow-credentials",
+     "true"
+    ],
+    [
+     "access-control-expose-headers",
+     "X-Request-ID, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After, X-Dressing-Dropped, Content-Disposition"
+    ],
+    [
+     "access-control-allow-origin",
+     "https://docs.aallyn.net"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1tZXRob2RfY29ycyJ9fQ=="
+  },
+  {
+   "name": "method_head_post_only",
+   "method": "HEAD",
+   "path": "/v1/leaderboards/insert",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-method_head_post_only"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "POST"
+    ],
+    [
+     "content-length",
+     "125"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-method_head_post_only"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "empty_segment",
+   "method": "GET",
+   "path": "/v1//stats",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-empty_segment"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "99"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-empty_segment"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1lbXB0eV9zZWdtZW50In19"
+  },
+  {
+   "name": "empty_param",
+   "method": "GET",
+   "path": "/v1/leaderboards//entries",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-empty_param"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "97"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-empty_param"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1lbXB0eV9wYXJhbSJ9fQ=="
+  },
+  {
+   "name": "leading_double",
+   "method": "GET",
+   "path": "//health",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-leading_double"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "100"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-leading_double"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1sZWFkaW5nX2RvdWJsZSJ9fQ=="
+  },
+  {
+   "name": "decoded_literal",
+   "method": "GET",
+   "path": "/h%65alth",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-decoded_literal"
+    ]
+   ],
+   "status": 200,
+   "response_headers": [
+    [
+     "content-length",
+     "15"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-decoded_literal"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJzdGF0dXMiOiJvayJ9"
+  },
+  {
+   "name": "decoded_slash_split",
+   "method": "GET",
+   "path": "/v1/leaderboards%2F5",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-decoded_slash_split"
+    ]
+   ],
+   "status": 401,
+   "response_headers": [
+    [
+     "www-authenticate",
+     "Bearer"
+    ],
+    [
+     "content-length",
+     "122"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-decoded_slash_split"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2F1dGhlbnRpY2F0ZWQiLCJtZXNzYWdlIjoiQVBJIHRva2VuIHJlcXVpcmVkIiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJ0LWRlY29kZWRfc2xhc2hfc3BsaXQifX0="
+  },
+  {
+   "name": "newline_literal",
+   "method": "GET",
+   "path": "/health%0A",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-newline_literal"
+    ]
+   ],
+   "status": 200,
+   "response_headers": [
+    [
+     "content-length",
+     "15"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-newline_literal"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJzdGF0dXMiOiJvayJ9"
+  },
+  {
+   "name": "newline_slash",
+   "method": "GET",
+   "path": "/health/%0A",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-newline_slash"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "99"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-newline_slash"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1uZXdsaW5lX3NsYXNoIn19"
+  },
+  {
+   "name": "events_head",
+   "method": "HEAD",
+   "path": "/v1/events/stream",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-events_head"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "115"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-events_head"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "events_head_slash",
+   "method": "HEAD",
+   "path": "/v1/events/stream/",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-events_head_slash"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://kiwi-parity/v1/events/stream"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-events_head_slash"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "events_head_other",
+   "method": "HEAD",
+   "path": "/v1/events/nope",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-events_head_other"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "103"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-events_head_other"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "events_post",
+   "method": "POST",
+   "path": "/v1/events/stream",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-events_post"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "115"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-events_post"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC1ldmVudHNfcG9zdCJ9fQ=="
+  },
+  {
+   "name": "site_lb_word",
+   "method": "GET",
+   "path": "/site/leaderboards/abc/entries",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_word"
+    ]
+   ],
+   "status": 422,
+   "response_headers": [
+    [
+     "content-length",
+     "339"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_word"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoidmFsaWRhdGlvbl9lcnJvciIsIm1lc3NhZ2UiOiJSZXF1ZXN0IHZhbGlkYXRpb24gZmFpbGVkIiwiZGV0YWlscyI6W3sidHlwZSI6ImludF9wYXJzaW5nIiwibG9jIjpbInBhdGgiLCJ1dWlkIl0sIm1zZyI6IklucHV0IHNob3VsZCBiZSBhIHZhbGlkIGludGVnZXIsIHVuYWJsZSB0byBwYXJzZSBzdHJpbmcgYXMgYW4gaW50ZWdlciIsImlucHV0IjoiYWJjIn0seyJ0eXBlIjoibWlzc2luZyIsImxvYyI6WyJxdWVyeSIsImNyZWF0ZWRfYXQiXSwibXNnIjoiRmllbGQgcmVxdWlyZWQiLCJpbnB1dCI6bnVsbH1dLCJyZXF1ZXN0X2lkIjoicnQtc2l0ZV9sYl93b3JkIn19"
+  },
+  {
+   "name": "site_lb_word_query",
+   "method": "GET",
+   "path": "/site/leaderboards/1.5/entries?created_at=x&limit=0",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_word_query"
+    ]
+   ],
+   "status": 422,
+   "response_headers": [
+    [
+     "content-length",
+     "535"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_word_query"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoidmFsaWRhdGlvbl9lcnJvciIsIm1lc3NhZ2UiOiJSZXF1ZXN0IHZhbGlkYXRpb24gZmFpbGVkIiwiZGV0YWlscyI6W3sidHlwZSI6ImludF9wYXJzaW5nIiwibG9jIjpbInBhdGgiLCJ1dWlkIl0sIm1zZyI6IklucHV0IHNob3VsZCBiZSBhIHZhbGlkIGludGVnZXIsIHVuYWJsZSB0byBwYXJzZSBzdHJpbmcgYXMgYW4gaW50ZWdlciIsImlucHV0IjoiMS41In0seyJ0eXBlIjoiaW50X3BhcnNpbmciLCJsb2MiOlsicXVlcnkiLCJjcmVhdGVkX2F0Il0sIm1zZyI6IklucHV0IHNob3VsZCBiZSBhIHZhbGlkIGludGVnZXIsIHVuYWJsZSB0byBwYXJzZSBzdHJpbmcgYXMgYW4gaW50ZWdlciIsImlucHV0IjoieCJ9LHsidHlwZSI6ImdyZWF0ZXJfdGhhbl9lcXVhbCIsImxvYyI6WyJxdWVyeSIsImxpbWl0Il0sIm1zZyI6IklucHV0IHNob3VsZCBiZSBncmVhdGVyIHRoYW4gb3IgZXF1YWwgdG8gMSIsImlucHV0IjoiMCIsImN0eCI6eyJnZSI6MX19XSwicmVxdWVzdF9pZCI6InJ0LXNpdGVfbGJfd29yZF9xdWVyeSJ9fQ=="
+  },
+  {
+   "name": "site_lb_health_word",
+   "method": "GET",
+   "path": "/site/leaderboards/%20/health",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_health_word"
+    ]
+   ],
+   "status": 422,
+   "response_headers": [
+    [
+     "content-length",
+     "260"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_health_word"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoidmFsaWRhdGlvbl9lcnJvciIsIm1lc3NhZ2UiOiJSZXF1ZXN0IHZhbGlkYXRpb24gZmFpbGVkIiwiZGV0YWlscyI6W3sidHlwZSI6ImludF9wYXJzaW5nIiwibG9jIjpbInBhdGgiLCJ1dWlkIl0sIm1zZyI6IklucHV0IHNob3VsZCBiZSBhIHZhbGlkIGludGVnZXIsIHVuYWJsZSB0byBwYXJzZSBzdHJpbmcgYXMgYW4gaW50ZWdlciIsImlucHV0IjoiICJ9XSwicmVxdWVzdF9pZCI6InJ0LXNpdGVfbGJfaGVhbHRoX3dvcmQifX0="
+  },
+  {
+   "name": "site_lb_history_word",
+   "method": "GET",
+   "path": "/site/leaderboards/1e3/history?days=99",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_history_word"
+    ]
+   ],
+   "status": 422,
+   "response_headers": [
+    [
+     "content-length",
+     "391"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_history_word"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoidmFsaWRhdGlvbl9lcnJvciIsIm1lc3NhZ2UiOiJSZXF1ZXN0IHZhbGlkYXRpb24gZmFpbGVkIiwiZGV0YWlscyI6W3sidHlwZSI6ImludF9wYXJzaW5nIiwibG9jIjpbInBhdGgiLCJ1dWlkIl0sIm1zZyI6IklucHV0IHNob3VsZCBiZSBhIHZhbGlkIGludGVnZXIsIHVuYWJsZSB0byBwYXJzZSBzdHJpbmcgYXMgYW4gaW50ZWdlciIsImlucHV0IjoiMWUzIn0seyJ0eXBlIjoibGVzc190aGFuX2VxdWFsIiwibG9jIjpbInF1ZXJ5IiwiZGF5cyJdLCJtc2ciOiJJbnB1dCBzaG91bGQgYmUgbGVzcyB0aGFuIG9yIGVxdWFsIHRvIDMwIiwiaW5wdXQiOiI5OSIsImN0eCI6eyJsZSI6MzB9fV0sInJlcXVlc3RfaWQiOiJydC1zaXRlX2xiX2hpc3Rvcnlfd29yZCJ9fQ=="
+  },
+  {
+   "name": "site_lb_big_entries",
+   "method": "GET",
+   "path": "/site/leaderboards/99999999999999999999999/entries?created_at=4102444800",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_big_entries"
+    ]
+   ],
+   "status": 500,
+   "response_headers": [
+    [
+     "content-length",
+     "122"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_big_entries"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiaW50ZXJuYWxfZXJyb3IiLCJtZXNzYWdlIjoiSW50ZXJuYWwgc2VydmVyIGVycm9yIiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJ0LXNpdGVfbGJfYmlnX2VudHJpZXMifX0="
+  },
+  {
+   "name": "site_lb_big_history",
+   "method": "GET",
+   "path": "/site/leaderboards/2147483648/history",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_big_history"
+    ]
+   ],
+   "status": 500,
+   "response_headers": [
+    [
+     "content-length",
+     "122"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_big_history"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiaW50ZXJuYWxfZXJyb3IiLCJtZXNzYWdlIjoiSW50ZXJuYWwgc2VydmVyIGVycm9yIiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJ0LXNpdGVfbGJfYmlnX2hpc3RvcnkifX0="
+  },
+  {
+   "name": "site_lb_big_health",
+   "method": "GET",
+   "path": "/site/leaderboards/-99999999999999999999999/health",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_big_health"
+    ]
+   ],
+   "status": 500,
+   "response_headers": [
+    [
+     "content-length",
+     "121"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_big_health"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiaW50ZXJuYWxfZXJyb3IiLCJtZXNzYWdlIjoiSW50ZXJuYWwgc2VydmVyIGVycm9yIiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJ0LXNpdGVfbGJfYmlnX2hlYWx0aCJ9fQ=="
+  },
+  {
+   "name": "site_lb_big_guarded",
+   "method": "GET",
+   "path": "/site/leaderboards/2147483648/entries?created_at=100",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-site_lb_big_guarded"
+    ]
+   ],
+   "status": 403,
+   "response_headers": [
+    [
+     "content-length",
+     "140"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-site_lb_big_guarded"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoiZm9yYmlkZGVuIiwibWVzc2FnZSI6IkNhcHR1cmVzIG9sZGVyIHRoYW4gNyBkYXlzIGFyZW4ndCBhdmFpbGFibGUuIiwiZGV0YWlscyI6bnVsbCwicmVxdWVzdF9pZCI6InJ0LXNpdGVfbGJfYmlnX2d1YXJkZWQifX0="
+  },
+  {
+   "name": "discord_big_anon",
+   "method": "GET",
+   "path": "/v1/site-auth/discord/guilds/99999999999999999999999",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-discord_big_anon"
+    ]
+   ],
+   "status": 401,
+   "response_headers": [
+    [
+     "www-authenticate",
+     "Bearer"
+    ],
+    [
+     "content-length",
+     "124"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-discord_big_anon"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2F1dGhlbnRpY2F0ZWQiLCJtZXNzYWdlIjoiQXV0aGVudGljYXRpb24gcmVxdWlyZWQiLCJkZXRhaWxzIjpudWxsLCJyZXF1ZXN0X2lkIjoicnQtZGlzY29yZF9iaWdfYW5vbiJ9fQ=="
+  },
+  {
+   "name": "discord_word_anon",
+   "method": "GET",
+   "path": "/v1/site-auth/discord/guilds/abc/clubs",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-discord_word_anon"
+    ]
+   ],
+   "status": 401,
+   "response_headers": [
+    [
+     "www-authenticate",
+     "Bearer"
+    ],
+    [
+     "content-length",
+     "125"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-discord_word_anon"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2F1dGhlbnRpY2F0ZWQiLCJtZXNzYWdlIjoiQXV0aGVudGljYXRpb24gcmVxdWlyZWQiLCJkZXRhaWxzIjpudWxsLCJyZXF1ZXN0X2lkIjoicnQtZGlzY29yZF93b3JkX2Fub24ifX0="
+  },
+  {
+   "name": "api_static",
+   "method": "GET",
+   "path": "/static/app.js",
+   "headers": [
+    [
+     "Host",
+     "kiwi-parity"
+    ],
+    [
+     "X-Request-ID",
+     "rt-api_static"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-api_static"
+    ],
+    [
+     "vary",
+     "Origin"
+    ]
+   ],
+   "body_b64": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiBkaXI9Imx0ciI+PGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UGFnZSBub3QgZm91bmQgwrcgQmV0dGVyIFRyb3ZlIFRvb2xzPC90aXRsZT4KPG1ldGEgbmFtZT0icm9ib3RzIiBjb250ZW50PSJub2luZGV4Ij4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMwYTBlMTQiPjxtZXRhIG5hbWU9ImNvbG9yLXNjaGVtZSIgY29udGVudD0iZGFyayI+CjxsaW5rIHJlbD0iaWNvbiIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBSm9FbEVRVlI0MnJXWGFXeGMxM1hIZi9lK054dG5oc3R3cDRhYk5scUtKR3V6WkltU0dVbTJaRVZCVWhRT25HWkI2aGhKaTlpZis2RUZyRThGMms5cEd6UkZZaU9wN1RRdDBNUTJtaXEySWptSklzdVJKWXVSdFpDVVNJc1VsK0d1bVNGbm4zZnY2UWNOQTFsVmtyWkpML0R3SHQ2N2VPZC8vdWZjL3puSDRmKzJWT1VlQTQ0RGVXQUMwSUR3Lzd3VTREUkNCRGdmQ3JqaU9Ib0NhSzU4MDM5b2d3N2dWaTRIOEN1bDhQbDhENGNDUHRtN3RhTjRZTmRxQVU0b3BWYjIvNjkrL3RzOFZWb3A2emlPMVZwYnBiVW9wWXlJYkxIVy92T2hSOWMwYlZuZjRqUTFWSnVoVy9NOXhaSTNxcFM2WEFGcmZ4OEFEbUMxMWxpUlExYmtTMWJrQ1JGcEU1R3RmcC96dzA5K2ZFUG43aTBkU2hDdGxDYVROeVRtVXBzN08za3huYVpjQ1lYenUzTENmWkJ4cFpRSmhVS3R1Vnp1NitzNk9wNCs5b2tES0VjeE1UWEQxZXREN0Z4Znc4TTliVGFkS2VpQTN3Y2xUemZHSWhJSkI5ZE9UOXZWU3BVSEtvYXRpS3l3S2Y4VEFMcENjVjh1bDN2MTgwZVB0di81Wno5ak5oL2NLcUtFUUNDb2Z2TG1DZDc5MlJ0Nk9WZlNLSVdqb1ZnMmlJRGYxWkxKRmw0QmdrQUtlQVA0SnBEN1RTRGMrejNYV2g4TEJRS3YvZVd6WC9ZZjJybkxLN2pHWFVqZXdTdDdoS3JDcE5KcFFBajRYVHpQbyt4WjVwSjVsRktxS2h5bXBxWm1SM01zaWxJd05adnNIVS9NZndZNEFxUWZCTUs1SitGa3g0NGR2cG1abWJmKyt2bm42dy92MmVOTnpNeTZvVmlZaHJZR3JMWFUxOWVDOHZIanQ5NEdzY3luaTR6UFpGaElaaWxabDlhMlZjU2JxMjMzOW0yaXEyTzJzekZhenVmeW5jbDBCcVhVNlFjbDU4cVpWU0xDcFV1WE9sb2JHbHEzOWZUSVFpcmxHbXZ3Qi8yZ3dPLzM4OTFYLzUxQ3FjeW5uL29DZytNWnhtZVdXVXdYS2VPbktoQkFsVE5rU2xiM1BmMjAvdUt6WDNZOEhYYTdPMXN0OEdRbEY4ejlJVmdCNExpT0k4RHVoN3E2L0tGQXdJb0laYy9EOWJ0RXdsWDg2TVJwR3RvZjVwMExnK3grWkN2Zit1YmZjL0RnNDFqbDBOSFN5Skp5Q05ZMVU2WGg3RXN2VVY1ZVpocFF2ME1YVndDVXYvYmM0WUJTSE55OGJoMnU2NHF4RmhIQjBYZTNYQmtZNXBmdm51UEVteWZKNWZKVVI4Tk1KR2FJUlVKTWVvcGp6LzBGKy9jZklkSytqdW1KY1Y3NnpuZG9sTHdkRzUvV3dKdS9TYVJXQU96NHhqZmVHaExoVDNvNk95a1VpNjR4NXE0U0FTTEMza2QzOHVLTDN5YmVFbU5WV3l2SjFCTEpaQXFsTmRHbU9EMmhJQjhNMzhUZjNrM0JIOEMvT0dldlhyenFHeG1mdVFEOHJZaW9CNFhBdVF1TUw2MXByM3NxR3E1eWp2WWVVblhWTlhqR1lvMVEwMUJIeWJGRVFnRzJiWG1Jcnp6ek9iUldCUHgrcmw0ZllueHlrbmgxTGYwalk0eGxzMWh0OFM5TTIwaXdUcjF6NmNwN2ZYMTkrMjdmdmwxY0ViZi9kZ3lWVW9oSW9haythby91VzIvZUgzeGIzMG8wWWEybFdDclFmK3NzbnVReDVSSlZWVUgrNWZaMTlqeDJoTzNidC9ESkp3NXkvY29nODNNVExPUkhjZXBpNUJORHJHMXNrVnhPTkRCOTVzeVptT1BvT1d2RlZsaTQveGdxZ01aaXlYeHUyNFkycWtKRzV3cUxHTHVFZG5KZ2MvaVV4ZTlUaUMzakZkSmN1WHlKV0ZNSDI3WnZwWndxTUhEekprM1ZVV0ppcUttcDVSTkhEdXVxV0pqbFRIWkRLcjM4MVdLeHRMc2lUQ1AzbFBLUDFQVnUxM0dHano2MjBkblFYUytSS3A4eVZsYWs4ZGVReTZVaWp1TWdZdkZGNDdTMHREQjZveDhSUXk0WHBIZnZVZFp2VzRQUDUrQTZEbzdyc0xpWTRxZS9PTTgvL05NckxDd205eGxqem9tSXM1SVB6bDBOSUhYOHVEenArblM3RWNmbThpWHRHY3Q4TWsvSkNPVlNrWHcrU3lTMkNvT2Y3TklDeTZrWkV1TTNDRmRWNGZjSE1EYURpa1RwM2JzSHNSWXJZSXdsRkF6S3hvYjIwcVVQcmprajQrTm5ISzJ2VkFEWUZTbldXbUdBNlZYMWNYTDVaY25taXdUU1Bvenh1Sk5jSXQ3ZXhmWkhEdkxGWjc5R2JVMGRwMC84SzBvTWJpRE14Wi8vQUVVZUpWQVhDVEo0YzR5QVR4R3Jxd1dnV0N5cDJaRUpONWxhVXNDZENwdHlieTJ3S0FVaTNYOTA0REJ6eVZuMWk4dm55R1F5eEJyYitKdmpmMGROYll5ZE8zZHkrZkpsdWpvN2VlcnpmOGJvNURnMTFiWDBYN3JJek9oNWd2NjdVdnp5OTEvamlZL3Y1cTNUNTlDTzVndFBIV01rbDlNTDZSUkFvcUtJSHdFZ2xaZEJSeXVPN1R1bzFxM3E0c09sSlB1UGZZb0RmWDFrTXNzTURkMmdyYTJWZi92K2E0d3NESERxZ3gralRZRFM4RHhSRGRsc2tUV2JFanovek5NMHR6WGlHVVBJNXljeE1DbWxVbG5OSjVOM2dESHVZMERmRFlFQ1NHWHplV3VNSjVGSWhMNGpSOW5YdTVmUjBTbGNOOGppNGpMQlVKUzYyaGhuM2o5SGRXdVlBbVZLQnNKVm1vNzFscVhKSkFPL3ZNR3BILzZNT2drU3lmckpMdWFrZjNDSWJENC9kL3o0OFhURjJZOVVRMGRyYlVWa2c4OTFldy92M2wwdW9kU1NHOWFyMnRwNC9mV1RaREtHam81bWhvY25XTDJta3h0RHQ2bXVpdUhORmppMm9aZDRoNSs2am1FdWpwWklxaXQwZDZ4RithSjgrOFMzK00vejU5WHBYMTAwanVNMG5EcDVhalB3ZW9VQitiVTJpd2loVU9qYXdJY2Y5cjUzOVdwWGFpbWpWYWpSWnJLaWFtdGlKQkxUK1AyYXlhbFordCsvaEVubkNabzZObFczMHJQckhjSnRJd3hkOTdpV0VEclhsTml6S1U1TFN6Vmp5LzNvVUlGTis5ZHBmMHRjelE0bk5oclBmQS9Gd2txN3R0S3pLYy96bHZ2NitsNStyNy8vU3YvZ1FLQllLbXo0Mk1lMmx1UHhMcGFYbHlTYkxkcEN2c1IvL09CVmRXdG1tcW41QkI5T3pkSlFMWkxNcEpRMWx0dnpRUUkxOVlnTWNtM3NBcE5MTWFLdUllQVR4cVljazU2YVY2VkNxWFhIamgxdlRFOVBXMERVZmFJa1dtdU1NWTVTNnFlN2R1MS9iUFBtN1RRM3QzTDc5aTErY3ZJTjZocWE1WkU5QjlUQzNDeWo0d2s1OXZCREtscGxPVEh5TGtTaU5LMnVCOGVIQ0dpZlMvVE9FTVhGMVdUeVVabE9US2diQXhmeHlzWHVTa0xxZTFzeUFiRFcrcFJTNVhnOC91U0ZDMmVmdTNEaDdQYkswSEVUT0JUdlhyOE9WTmxZVkRtLzVINzlleTlhUnp2RjFYczJobXFyWGF3b1FrR04xaDYyWE9UbnAyWlkzOVZEWTB1WStma0FXaWtQOE4wdnhRK2FDVVJYZWdFUlFTbU5VaHdCdmx2ZjBOeHFySkJjbkV0YXpGOWgrZVAxai9ZOEh1dHVOSjJOQlNjQURJOEZDVFg2S0N3djA2SnpaTklkTXBYSXFLRnI1OVBHZUQzQTdQME1jQjhieWxxN2tpTWlZalJ3RXRnME41dm9CV0toMEtxM0M0WEVwQ0M3TWtzbDIrVmtSS1l6akMrc3dlWmRGaklwcVEwdmtzN1hxMHd4SUdLWGxESGVIU0M1WXVlM3pYRUNlSldpWVN2UEdyaWpsUHFSVXVybGZINXE4b1VYWHREQVlIYXBvRU1xTDdNTGRmWk9KbVRGd2VTemVWVXFvbExwZ1BIS1luMkJvRlZLeFFELzd6MmMzak1yS21DalV2cDZmVk5RMXE3cmxJMWI5a3U4czBlMDQrYjhmcDFzYkdxVnp0V2JwYnFtWG9CWDd1M0cxQjlvV2hZZ0FEd09QQU8wQTllQmZ3VG1nRDhGMWdKbmdaY3JiQUxJZndIWjJvcmZSTm9PQ3dBQUFBQkpSVTVFcmtKZ2dnPT0iIHR5cGU9ImltYWdlL3BuZyI+CjxzdHlsZT4KICA6cm9vdHstLWJnOiMwYTBlMTQ7LS1jYXJkOiMxMTE2MWY7LS1saW5lOiMyMjJjM2E7LS10ZXh0OiNlNmViZjI7LS1zb2Z0OiM5YWE2Yjg7LS1tdXRlOiM4YTk0YTY7LS1ibHVlOiM1NjljZmZ9CiAgKntib3gtc2l6aW5nOmJvcmRlci1ib3h9CiAgYm9keXttYXJnaW46MDttaW4taGVpZ2h0OjEwMHZoO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7cGFkZGluZzozMnB4OwogICAgYmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoMTIwMHB4IDYwMHB4IGF0IDUwJSAtMTAlLHJnYmEoODYsMTU2LDI1NSwuMTApLHRyYW5zcGFyZW50KSx2YXIoLS1iZyk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTonSW50ZXInLHN5c3RlbS11aSxzYW5zLXNlcmlmfQogIC5uZnttYXgtd2lkdGg6NTIwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CiAgLm5mLWNvZGV7Zm9udDo3MDAgY2xhbXAoNXJlbSwxOHZ3LDlyZW0pLzEgJ1NwYWNlIEdyb3Rlc2snLCdJbnRlcicsc2Fucy1zZXJpZjtsZXR0ZXItc3BhY2luZzotLjA0ZW07CiAgICBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzU2OWNmZiwjYTA2YmZmIDYwJSwjZmY1ZTdlKTstd2Via2l0LWJhY2tncm91bmQtY2xpcDp0ZXh0OwogICAgYmFja2dyb3VuZC1jbGlwOnRleHQ7Y29sb3I6dHJhbnNwYXJlbnQ7bWFyZ2luOjB9CiAgLm5mLXRpdGxle2ZvbnQ6NzAwIDEuNXJlbSAnU3BhY2UgR3JvdGVzaycsJ0ludGVyJyxzYW5zLXNlcmlmO21hcmdpbjo2cHggMCAxMHB4fQogIC5uZi10ZXh0e2NvbG9yOnZhcigtLXNvZnQpO2xpbmUtaGVpZ2h0OjEuNjttYXJnaW46MCAwIDI2cHh9CiAgLm5mLWFjdGlvbnN7ZGlzcGxheTpmbGV4O2dhcDoxMnB4O2p1c3RpZnktY29udGVudDpjZW50ZXI7ZmxleC13cmFwOndyYXB9CiAgLm5mLWJ0bntkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3RleHQtZGVjb3JhdGlvbjpub25lO2JvcmRlci1yYWRpdXM6MTBweDsKICAgIHBhZGRpbmc6MTFweCAyMHB4O2ZvbnQtd2VpZ2h0OjYwMDtmb250LXNpemU6Ljk1cmVtO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO3RyYW5zaXRpb246Ym9yZGVyLWNvbG9yIC4xNXMsdHJhbnNmb3JtIC4xMnN9CiAgLm5mLWJ0bjpob3Zlcntib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7dHJhbnNmb3JtOnRyYW5zbGF0ZVkoLTFweCl9CiAgLm5mLWJ0bi1wcmltYXJ5e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNTY5Y2ZmLCM0YTdmZTApO2JvcmRlci1jb2xvcjp0cmFuc3BhcmVudDtjb2xvcjojMDQxMjFmfQogIC5uZi1tYXJre2NvbG9yOnZhcigtLW11dGUpO2ZvbnQtc2l6ZTouODJyZW07bWFyZ2luLXRvcDozMHB4O2xldHRlci1zcGFjaW5nOi4wNGVtO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KPC9zdHlsZT48L2hlYWQ+Cjxib2R5PjxtYWluIGNsYXNzPSJuZiI+CiAgPHAgY2xhc3M9Im5mLWNvZGUiPjQwNDwvcD4KICA8aDEgY2xhc3M9Im5mLXRpdGxlIj5UaGlzIHBhZ2Ugd2FuZGVyZWQgb2ZmPC9oMT4KICA8cCBjbGFzcz0ibmYtdGV4dCI+VGhlIHBhZ2UgeW91J3JlIGxvb2tpbmcgZm9yIGRvZXNuJ3QgZXhpc3QsIG1vdmVkLCBvciBuZXZlciBkaWQuIExldCdzIGdldCB5b3UgYmFjayB0byBzb2xpZCBncm91bmQuPC9wPgogIDxkaXYgY2xhc3M9Im5mLWFjdGlvbnMiPgogICAgPGEgY2xhc3M9Im5mLWJ0biBuZi1idG4tcHJpbWFyeSIgaHJlZj0iLyI+JmxhcnI7IEJhY2sgaG9tZTwvYT4KICAgIDxhIGNsYXNzPSJuZi1idG4iIGhyZWY9Ii9tb2RzIj5Ccm93c2UgdGhlIE1vZHMgSHViPC9hPgogIDwvZGl2PgogIDxwIGNsYXNzPSJuZi1tYXJrIj5CZXR0ZXIgVHJvdmUgVG9vbHM8L3A+CjwvbWFpbj48L2JvZHk+PC9odG1sPg=="
+  }
+ ],
+ "web": [
+  {
+   "name": "web_nf_html",
+   "method": "GET",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_nf_html"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_nf_html"
+    ]
+   ],
+   "body_b64": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiBkaXI9Imx0ciI+PGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UGFnZSBub3QgZm91bmQgwrcgQmV0dGVyIFRyb3ZlIFRvb2xzPC90aXRsZT4KPG1ldGEgbmFtZT0icm9ib3RzIiBjb250ZW50PSJub2luZGV4Ij4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMwYTBlMTQiPjxtZXRhIG5hbWU9ImNvbG9yLXNjaGVtZSIgY29udGVudD0iZGFyayI+CjxsaW5rIHJlbD0iaWNvbiIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBSm9FbEVRVlI0MnJXWGFXeGMxM1hIZi9lK054dG5oc3R3cDRhYk5scUtKR3V6WkltU0dVbTJaRVZCVWhRT25HWkI2aGhKaTlpZis2RUZyRThGMms5cEd6UkZZaU9wN1RRdDBNUTJtaXEySWptSklzdVJKWXVSdFpDVVNJc1VsK0d1bVNGbm4zZnY2UWNOQTFsVmtyWkpML0R3SHQ2N2VPZC8vdWZjL3puSDRmKzJWT1VlQTQ0RGVXQUMwSUR3Lzd3VTREUkNCRGdmQ3JqaU9Ib0NhSzU4MDM5b2d3N2dWaTRIOEN1bDhQbDhENGNDUHRtN3RhTjRZTmRxQVU0b3BWYjIvNjkrL3RzOFZWb3A2emlPMVZwYnBiVW9wWXlJYkxIVy92T2hSOWMwYlZuZjRqUTFWSnVoVy9NOXhaSTNxcFM2WEFGcmZ4OEFEbUMxMWxpUlExYmtTMWJrQ1JGcEU1R3RmcC96dzA5K2ZFUG43aTBkU2hDdGxDYVROeVRtVXBzN08za3huYVpjQ1lYenUzTENmWkJ4cFpRSmhVS3R1Vnp1NitzNk9wNCs5b2tES0VjeE1UWEQxZXREN0Z4Znc4TTliVGFkS2VpQTN3Y2xUemZHSWhJSkI5ZE9UOXZWU3BVSEtvYXRpS3l3S2Y4VEFMcENjVjh1bDN2MTgwZVB0di81Wno5ak5oL2NLcUtFUUNDb2Z2TG1DZDc5MlJ0Nk9WZlNLSVdqb1ZnMmlJRGYxWkxKRmw0QmdrQUtlQVA0SnBEN1RTRGMrejNYV2g4TEJRS3YvZVd6WC9ZZjJybkxLN2pHWFVqZXdTdDdoS3JDcE5KcFFBajRYVHpQbyt4WjVwSjVsRktxS2h5bXBxWm1SM01zaWxJd05adnNIVS9NZndZNEFxUWZCTUs1SitGa3g0NGR2cG1abWJmKyt2bm42dy92MmVOTnpNeTZvVmlZaHJZR3JMWFUxOWVDOHZIanQ5NEdzY3luaTR6UFpGaElaaWxabDlhMlZjU2JxMjMzOW0yaXEyTzJzekZhenVmeW5jbDBCcVhVNlFjbDU4cVpWU0xDcFV1WE9sb2JHbHEzOWZUSVFpcmxHbXZ3Qi8yZ3dPLzM4OTFYLzUxQ3FjeW5uL29DZytNWnhtZVdXVXdYS2VPbktoQkFsVE5rU2xiM1BmMjAvdUt6WDNZOEhYYTdPMXN0OEdRbEY4ejlJVmdCNExpT0k4RHVoN3E2L0tGQXdJb0laYy9EOWJ0RXdsWDg2TVJwR3RvZjVwMExnK3grWkN2Zit1YmZjL0RnNDFqbDBOSFN5Skp5Q05ZMVU2WGg3RXN2VVY1ZVpocFF2ME1YVndDVXYvYmM0WUJTSE55OGJoMnU2NHF4RmhIQjBYZTNYQmtZNXBmdm51UEVteWZKNWZKVVI4Tk1KR2FJUlVKTWVvcGp6LzBGKy9jZklkSytqdW1KY1Y3NnpuZG9sTHdkRzUvV3dKdS9TYVJXQU96NHhqZmVHaExoVDNvNk95a1VpNjR4NXE0U0FTTEMza2QzOHVLTDN5YmVFbU5WV3l2SjFCTEpaQXFsTmRHbU9EMmhJQjhNMzhUZjNrM0JIOEMvT0dldlhyenFHeG1mdVFEOHJZaW9CNFhBdVF1TUw2MXByM3NxR3E1eWp2WWVVblhWTlhqR1lvMVEwMUJIeWJGRVFnRzJiWG1Jcnp6ek9iUldCUHgrcmw0ZllueHlrbmgxTGYwalk0eGxzMWh0OFM5TTIwaXdUcjF6NmNwN2ZYMTkrMjdmdmwxY0ViZi9kZ3lWVW9oSW9haythby91VzIvZUgzeGIzMG8wWWEybFdDclFmK3NzbnVReDVSSlZWVUgrNWZaMTlqeDJoTzNidC9ESkp3NXkvY29nODNNVExPUkhjZXBpNUJORHJHMXNrVnhPTkRCOTVzeVptT1BvT1d2RlZsaTQveGdxZ01aaXlYeHUyNFkycWtKRzV3cUxHTHVFZG5KZ2MvaVV4ZTlUaUMzakZkSmN1WHlKV0ZNSDI3WnZwWndxTUhEekprM1ZVV0ppcUttcDVSTkhEdXVxV0pqbFRIWkRLcjM4MVdLeHRMc2lUQ1AzbFBLUDFQVnUxM0dHano2MjBkblFYUytSS3A4eVZsYWs4ZGVReTZVaWp1TWdZdkZGNDdTMHREQjZveDhSUXk0WHBIZnZVZFp2VzRQUDUrQTZEbzdyc0xpWTRxZS9PTTgvL05NckxDd205eGxqem9tSXM1SVB6bDBOSUhYOHVEenArblM3RWNmbThpWHRHY3Q4TWsvSkNPVlNrWHcrU3lTMkNvT2Y3TklDeTZrWkV1TTNDRmRWNGZjSE1EYURpa1RwM2JzSHNSWXJZSXdsRkF6S3hvYjIwcVVQcmprajQrTm5ISzJ2VkFEWUZTbldXbUdBNlZYMWNYTDVaY25taXdUU1Bvenh1Sk5jSXQ3ZXhmWkhEdkxGWjc5R2JVMGRwMC84SzBvTWJpRE14Wi8vQUVVZUpWQVhDVEo0YzR5QVR4R3Jxd1dnV0N5cDJaRUpONWxhVXNDZENwdHlieTJ3S0FVaTNYOTA0REJ6eVZuMWk4dm55R1F5eEJyYitKdmpmMGROYll5ZE8zZHkrZkpsdWpvN2VlcnpmOGJvNURnMTFiWDBYN3JJek9oNWd2NjdVdnp5OTEvamlZL3Y1cTNUNTlDTzVndFBIV01rbDlNTDZSUkFvcUtJSHdFZ2xaZEJSeXVPN1R1bzFxM3E0c09sSlB1UGZZb0RmWDFrTXNzTURkMmdyYTJWZi92K2E0d3NESERxZ3gralRZRFM4RHhSRGRsc2tUV2JFanovek5NMHR6WGlHVVBJNXljeE1DbWxVbG5OSjVOM2dESHVZMERmRFlFQ1NHWHplV3VNSjVGSWhMNGpSOW5YdTVmUjBTbGNOOGppNGpMQlVKUzYyaGhuM2o5SGRXdVlBbVZLQnNKVm1vNzFscVhKSkFPL3ZNR3BILzZNT2drU3lmckpMdWFrZjNDSWJENC9kL3o0OFhURjJZOVVRMGRyYlVWa2c4OTFldy92M2wwdW9kU1NHOWFyMnRwNC9mV1RaREtHam81bWhvY25XTDJta3h0RHQ2bXVpdUhORmppMm9aZDRoNSs2am1FdWpwWklxaXQwZDZ4RithSjgrOFMzK00vejU5WHBYMTAwanVNMG5EcDVhalB3ZW9VQitiVTJpd2loVU9qYXdJY2Y5cjUzOVdwWGFpbWpWYWpSWnJLaWFtdGlKQkxUK1AyYXlhbFordCsvaEVubkNabzZObFczMHJQckhjSnRJd3hkOTdpV0VEclhsTml6S1U1TFN6Vmp5LzNvVUlGTis5ZHBmMHRjelE0bk5oclBmQS9Gd2txN3R0S3pLYy96bHZ2NitsNStyNy8vU3YvZ1FLQllLbXo0Mk1lMmx1UHhMcGFYbHlTYkxkcEN2c1IvL09CVmRXdG1tcW41QkI5T3pkSlFMWkxNcEpRMWx0dnpRUUkxOVlnTWNtM3NBcE5MTWFLdUllQVR4cVljazU2YVY2VkNxWFhIamgxdlRFOVBXMERVZmFJa1dtdU1NWTVTNnFlN2R1MS9iUFBtN1RRM3QzTDc5aTErY3ZJTjZocWE1WkU5QjlUQzNDeWo0d2s1OXZCREtscGxPVEh5TGtTaU5LMnVCOGVIQ0dpZlMvVE9FTVhGMVdUeVVabE9US2diQXhmeHlzWHVTa0xxZTFzeUFiRFcrcFJTNVhnOC91U0ZDMmVmdTNEaDdQYkswSEVUT0JUdlhyOE9WTmxZVkRtLzVINzlleTlhUnp2RjFYczJobXFyWGF3b1FrR04xaDYyWE9UbnAyWlkzOVZEWTB1WStma0FXaWtQOE4wdnhRK2FDVVJYZWdFUlFTbU5VaHdCdmx2ZjBOeHFySkJjbkV0YXpGOWgrZVAxai9ZOEh1dHVOSjJOQlNjQURJOEZDVFg2S0N3djA2SnpaTklkTXBYSXFLRnI1OVBHZUQzQTdQME1jQjhieWxxN2tpTWlZalJ3RXRnME41dm9CV0toMEtxM0M0WEVwQ0M3TWtzbDIrVmtSS1l6akMrc3dlWmRGaklwcVEwdmtzN1hxMHd4SUdLWGxESGVIU0M1WXVlM3pYRUNlSldpWVN2UEdyaWpsUHFSVXVybGZINXE4b1VYWHREQVlIYXBvRU1xTDdNTGRmWk9KbVRGd2VTemVWVXFvbExwZ1BIS1luMkJvRlZLeFFELzd6MmMzak1yS21DalV2cDZmVk5RMXE3cmxJMWI5a3U4czBlMDQrYjhmcDFzYkdxVnp0V2JwYnFtWG9CWDd1M0cxQjlvV2hZZ0FEd09QQU8wQTllQmZ3VG1nRDhGMWdKbmdaY3JiQUxJZndIWjJvcmZSTm9PQ3dBQUFBQkpSVTVFcmtKZ2dnPT0iIHR5cGU9ImltYWdlL3BuZyI+CjxzdHlsZT4KICA6cm9vdHstLWJnOiMwYTBlMTQ7LS1jYXJkOiMxMTE2MWY7LS1saW5lOiMyMjJjM2E7LS10ZXh0OiNlNmViZjI7LS1zb2Z0OiM5YWE2Yjg7LS1tdXRlOiM4YTk0YTY7LS1ibHVlOiM1NjljZmZ9CiAgKntib3gtc2l6aW5nOmJvcmRlci1ib3h9CiAgYm9keXttYXJnaW46MDttaW4taGVpZ2h0OjEwMHZoO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7cGFkZGluZzozMnB4OwogICAgYmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoMTIwMHB4IDYwMHB4IGF0IDUwJSAtMTAlLHJnYmEoODYsMTU2LDI1NSwuMTApLHRyYW5zcGFyZW50KSx2YXIoLS1iZyk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTonSW50ZXInLHN5c3RlbS11aSxzYW5zLXNlcmlmfQogIC5uZnttYXgtd2lkdGg6NTIwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CiAgLm5mLWNvZGV7Zm9udDo3MDAgY2xhbXAoNXJlbSwxOHZ3LDlyZW0pLzEgJ1NwYWNlIEdyb3Rlc2snLCdJbnRlcicsc2Fucy1zZXJpZjtsZXR0ZXItc3BhY2luZzotLjA0ZW07CiAgICBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzU2OWNmZiwjYTA2YmZmIDYwJSwjZmY1ZTdlKTstd2Via2l0LWJhY2tncm91bmQtY2xpcDp0ZXh0OwogICAgYmFja2dyb3VuZC1jbGlwOnRleHQ7Y29sb3I6dHJhbnNwYXJlbnQ7bWFyZ2luOjB9CiAgLm5mLXRpdGxle2ZvbnQ6NzAwIDEuNXJlbSAnU3BhY2UgR3JvdGVzaycsJ0ludGVyJyxzYW5zLXNlcmlmO21hcmdpbjo2cHggMCAxMHB4fQogIC5uZi10ZXh0e2NvbG9yOnZhcigtLXNvZnQpO2xpbmUtaGVpZ2h0OjEuNjttYXJnaW46MCAwIDI2cHh9CiAgLm5mLWFjdGlvbnN7ZGlzcGxheTpmbGV4O2dhcDoxMnB4O2p1c3RpZnktY29udGVudDpjZW50ZXI7ZmxleC13cmFwOndyYXB9CiAgLm5mLWJ0bntkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3RleHQtZGVjb3JhdGlvbjpub25lO2JvcmRlci1yYWRpdXM6MTBweDsKICAgIHBhZGRpbmc6MTFweCAyMHB4O2ZvbnQtd2VpZ2h0OjYwMDtmb250LXNpemU6Ljk1cmVtO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO3RyYW5zaXRpb246Ym9yZGVyLWNvbG9yIC4xNXMsdHJhbnNmb3JtIC4xMnN9CiAgLm5mLWJ0bjpob3Zlcntib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7dHJhbnNmb3JtOnRyYW5zbGF0ZVkoLTFweCl9CiAgLm5mLWJ0bi1wcmltYXJ5e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNTY5Y2ZmLCM0YTdmZTApO2JvcmRlci1jb2xvcjp0cmFuc3BhcmVudDtjb2xvcjojMDQxMjFmfQogIC5uZi1tYXJre2NvbG9yOnZhcigtLW11dGUpO2ZvbnQtc2l6ZTouODJyZW07bWFyZ2luLXRvcDozMHB4O2xldHRlci1zcGFjaW5nOi4wNGVtO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KPC9zdHlsZT48L2hlYWQ+Cjxib2R5PjxtYWluIGNsYXNzPSJuZiI+CiAgPHAgY2xhc3M9Im5mLWNvZGUiPjQwNDwvcD4KICA8aDEgY2xhc3M9Im5mLXRpdGxlIj5UaGlzIHBhZ2Ugd2FuZGVyZWQgb2ZmPC9oMT4KICA8cCBjbGFzcz0ibmYtdGV4dCI+VGhlIHBhZ2UgeW91J3JlIGxvb2tpbmcgZm9yIGRvZXNuJ3QgZXhpc3QsIG1vdmVkLCBvciBuZXZlciBkaWQuIExldCdzIGdldCB5b3UgYmFjayB0byBzb2xpZCBncm91bmQuPC9wPgogIDxkaXYgY2xhc3M9Im5mLWFjdGlvbnMiPgogICAgPGEgY2xhc3M9Im5mLWJ0biBuZi1idG4tcHJpbWFyeSIgaHJlZj0iLyI+JmxhcnI7IEJhY2sgaG9tZTwvYT4KICAgIDxhIGNsYXNzPSJuZi1idG4iIGhyZWY9Ii9tb2RzIj5Ccm93c2UgdGhlIE1vZHMgSHViPC9hPgogIDwvZGl2PgogIDxwIGNsYXNzPSJuZi1tYXJrIj5CZXR0ZXIgVHJvdmUgVG9vbHM8L3A+CjwvbWFpbj48L2JvZHk+PC9odG1sPg=="
+  },
+  {
+   "name": "web_nf_json",
+   "method": "GET",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_nf_json"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "97"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_nf_json"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfbmZfanNvbiJ9fQ=="
+  },
+  {
+   "name": "web_nf_post",
+   "method": "POST",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_nf_post"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "97"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_nf_post"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfbmZfcG9zdCJ9fQ=="
+  },
+  {
+   "name": "web_slash_page",
+   "method": "GET",
+   "path": "/terms/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_slash_page"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/terms"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_slash_page"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_slash_page_https",
+   "method": "GET",
+   "path": "/terms/?x=1",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_slash_page_https"
+    ],
+    [
+     "X-Forwarded-Proto",
+     "https"
+    ]
+   ],
+   "scheme": "https",
+   "peer": "127.0.0.1",
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "https://trove.aallyn.net/terms?x=1"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_slash_page_https"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_slash_param",
+   "method": "GET",
+   "path": "/swf-docs/abc/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_slash_param"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/swf-docs/abc"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_slash_param"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_static_bare",
+   "method": "GET",
+   "path": "/static",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_static_bare"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/static/"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_static_bare"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_static_bare_head",
+   "method": "HEAD",
+   "path": "/static?v=1",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_static_bare_head"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/static/?v=1"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_static_bare_head"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_static_dir",
+   "method": "GET",
+   "path": "/static/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_static_dir"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_static_dir"
+    ]
+   ],
+   "body_b64": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiBkaXI9Imx0ciI+PGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UGFnZSBub3QgZm91bmQgwrcgQmV0dGVyIFRyb3ZlIFRvb2xzPC90aXRsZT4KPG1ldGEgbmFtZT0icm9ib3RzIiBjb250ZW50PSJub2luZGV4Ij4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMwYTBlMTQiPjxtZXRhIG5hbWU9ImNvbG9yLXNjaGVtZSIgY29udGVudD0iZGFyayI+CjxsaW5rIHJlbD0iaWNvbiIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBSm9FbEVRVlI0MnJXWGFXeGMxM1hIZi9lK054dG5oc3R3cDRhYk5scUtKR3V6WkltU0dVbTJaRVZCVWhRT25HWkI2aGhKaTlpZis2RUZyRThGMms5cEd6UkZZaU9wN1RRdDBNUTJtaXEySWptSklzdVJKWXVSdFpDVVNJc1VsK0d1bVNGbm4zZnY2UWNOQTFsVmtyWkpML0R3SHQ2N2VPZC8vdWZjL3puSDRmKzJWT1VlQTQ0RGVXQUMwSUR3Lzd3VTREUkNCRGdmQ3JqaU9Ib0NhSzU4MDM5b2d3N2dWaTRIOEN1bDhQbDhENGNDUHRtN3RhTjRZTmRxQVU0b3BWYjIvNjkrL3RzOFZWb3A2emlPMVZwYnBiVW9wWXlJYkxIVy92T2hSOWMwYlZuZjRqUTFWSnVoVy9NOXhaSTNxcFM2WEFGcmZ4OEFEbUMxMWxpUlExYmtTMWJrQ1JGcEU1R3RmcC96dzA5K2ZFUG43aTBkU2hDdGxDYVROeVRtVXBzN08za3huYVpjQ1lYenUzTENmWkJ4cFpRSmhVS3R1Vnp1NitzNk9wNCs5b2tES0VjeE1UWEQxZXREN0Z4Znc4TTliVGFkS2VpQTN3Y2xUemZHSWhJSkI5ZE9UOXZWU3BVSEtvYXRpS3l3S2Y4VEFMcENjVjh1bDN2MTgwZVB0di81Wno5ak5oL2NLcUtFUUNDb2Z2TG1DZDc5MlJ0Nk9WZlNLSVdqb1ZnMmlJRGYxWkxKRmw0QmdrQUtlQVA0SnBEN1RTRGMrejNYV2g4TEJRS3YvZVd6WC9ZZjJybkxLN2pHWFVqZXdTdDdoS3JDcE5KcFFBajRYVHpQbyt4WjVwSjVsRktxS2h5bXBxWm1SM01zaWxJd05adnNIVS9NZndZNEFxUWZCTUs1SitGa3g0NGR2cG1abWJmKyt2bm42dy92MmVOTnpNeTZvVmlZaHJZR3JMWFUxOWVDOHZIanQ5NEdzY3luaTR6UFpGaElaaWxabDlhMlZjU2JxMjMzOW0yaXEyTzJzekZhenVmeW5jbDBCcVhVNlFjbDU4cVpWU0xDcFV1WE9sb2JHbHEzOWZUSVFpcmxHbXZ3Qi8yZ3dPLzM4OTFYLzUxQ3FjeW5uL29DZytNWnhtZVdXVXdYS2VPbktoQkFsVE5rU2xiM1BmMjAvdUt6WDNZOEhYYTdPMXN0OEdRbEY4ejlJVmdCNExpT0k4RHVoN3E2L0tGQXdJb0laYy9EOWJ0RXdsWDg2TVJwR3RvZjVwMExnK3grWkN2Zit1YmZjL0RnNDFqbDBOSFN5Skp5Q05ZMVU2WGg3RXN2VVY1ZVpocFF2ME1YVndDVXYvYmM0WUJTSE55OGJoMnU2NHF4RmhIQjBYZTNYQmtZNXBmdm51UEVteWZKNWZKVVI4Tk1KR2FJUlVKTWVvcGp6LzBGKy9jZklkSytqdW1KY1Y3NnpuZG9sTHdkRzUvV3dKdS9TYVJXQU96NHhqZmVHaExoVDNvNk95a1VpNjR4NXE0U0FTTEMza2QzOHVLTDN5YmVFbU5WV3l2SjFCTEpaQXFsTmRHbU9EMmhJQjhNMzhUZjNrM0JIOEMvT0dldlhyenFHeG1mdVFEOHJZaW9CNFhBdVF1TUw2MXByM3NxR3E1eWp2WWVVblhWTlhqR1lvMVEwMUJIeWJGRVFnRzJiWG1Jcnp6ek9iUldCUHgrcmw0ZllueHlrbmgxTGYwalk0eGxzMWh0OFM5TTIwaXdUcjF6NmNwN2ZYMTkrMjdmdmwxY0ViZi9kZ3lWVW9oSW9haythby91VzIvZUgzeGIzMG8wWWEybFdDclFmK3NzbnVReDVSSlZWVUgrNWZaMTlqeDJoTzNidC9ESkp3NXkvY29nODNNVExPUkhjZXBpNUJORHJHMXNrVnhPTkRCOTVzeVptT1BvT1d2RlZsaTQveGdxZ01aaXlYeHUyNFkycWtKRzV3cUxHTHVFZG5KZ2MvaVV4ZTlUaUMzakZkSmN1WHlKV0ZNSDI3WnZwWndxTUhEekprM1ZVV0ppcUttcDVSTkhEdXVxV0pqbFRIWkRLcjM4MVdLeHRMc2lUQ1AzbFBLUDFQVnUxM0dHano2MjBkblFYUytSS3A4eVZsYWs4ZGVReTZVaWp1TWdZdkZGNDdTMHREQjZveDhSUXk0WHBIZnZVZFp2VzRQUDUrQTZEbzdyc0xpWTRxZS9PTTgvL05NckxDd205eGxqem9tSXM1SVB6bDBOSUhYOHVEenArblM3RWNmbThpWHRHY3Q4TWsvSkNPVlNrWHcrU3lTMkNvT2Y3TklDeTZrWkV1TTNDRmRWNGZjSE1EYURpa1RwM2JzSHNSWXJZSXdsRkF6S3hvYjIwcVVQcmprajQrTm5ISzJ2VkFEWUZTbldXbUdBNlZYMWNYTDVaY25taXdUU1Bvenh1Sk5jSXQ3ZXhmWkhEdkxGWjc5R2JVMGRwMC84SzBvTWJpRE14Wi8vQUVVZUpWQVhDVEo0YzR5QVR4R3Jxd1dnV0N5cDJaRUpONWxhVXNDZENwdHlieTJ3S0FVaTNYOTA0REJ6eVZuMWk4dm55R1F5eEJyYitKdmpmMGROYll5ZE8zZHkrZkpsdWpvN2VlcnpmOGJvNURnMTFiWDBYN3JJek9oNWd2NjdVdnp5OTEvamlZL3Y1cTNUNTlDTzVndFBIV01rbDlNTDZSUkFvcUtJSHdFZ2xaZEJSeXVPN1R1bzFxM3E0c09sSlB1UGZZb0RmWDFrTXNzTURkMmdyYTJWZi92K2E0d3NESERxZ3gralRZRFM4RHhSRGRsc2tUV2JFanovek5NMHR6WGlHVVBJNXljeE1DbWxVbG5OSjVOM2dESHVZMERmRFlFQ1NHWHplV3VNSjVGSWhMNGpSOW5YdTVmUjBTbGNOOGppNGpMQlVKUzYyaGhuM2o5SGRXdVlBbVZLQnNKVm1vNzFscVhKSkFPL3ZNR3BILzZNT2drU3lmckpMdWFrZjNDSWJENC9kL3o0OFhURjJZOVVRMGRyYlVWa2c4OTFldy92M2wwdW9kU1NHOWFyMnRwNC9mV1RaREtHam81bWhvY25XTDJta3h0RHQ2bXVpdUhORmppMm9aZDRoNSs2am1FdWpwWklxaXQwZDZ4RithSjgrOFMzK00vejU5WHBYMTAwanVNMG5EcDVhalB3ZW9VQitiVTJpd2loVU9qYXdJY2Y5cjUzOVdwWGFpbWpWYWpSWnJLaWFtdGlKQkxUK1AyYXlhbFordCsvaEVubkNabzZObFczMHJQckhjSnRJd3hkOTdpV0VEclhsTml6S1U1TFN6Vmp5LzNvVUlGTis5ZHBmMHRjelE0bk5oclBmQS9Gd2txN3R0S3pLYy96bHZ2NitsNStyNy8vU3YvZ1FLQllLbXo0Mk1lMmx1UHhMcGFYbHlTYkxkcEN2c1IvL09CVmRXdG1tcW41QkI5T3pkSlFMWkxNcEpRMWx0dnpRUUkxOVlnTWNtM3NBcE5MTWFLdUllQVR4cVljazU2YVY2VkNxWFhIamgxdlRFOVBXMERVZmFJa1dtdU1NWTVTNnFlN2R1MS9iUFBtN1RRM3QzTDc5aTErY3ZJTjZocWE1WkU5QjlUQzNDeWo0d2s1OXZCREtscGxPVEh5TGtTaU5LMnVCOGVIQ0dpZlMvVE9FTVhGMVdUeVVabE9US2diQXhmeHlzWHVTa0xxZTFzeUFiRFcrcFJTNVhnOC91U0ZDMmVmdTNEaDdQYkswSEVUT0JUdlhyOE9WTmxZVkRtLzVINzlleTlhUnp2RjFYczJobXFyWGF3b1FrR04xaDYyWE9UbnAyWlkzOVZEWTB1WStma0FXaWtQOE4wdnhRK2FDVVJYZWdFUlFTbU5VaHdCdmx2ZjBOeHFySkJjbkV0YXpGOWgrZVAxai9ZOEh1dHVOSjJOQlNjQURJOEZDVFg2S0N3djA2SnpaTklkTXBYSXFLRnI1OVBHZUQzQTdQME1jQjhieWxxN2tpTWlZalJ3RXRnME41dm9CV0toMEtxM0M0WEVwQ0M3TWtzbDIrVmtSS1l6akMrc3dlWmRGaklwcVEwdmtzN1hxMHd4SUdLWGxESGVIU0M1WXVlM3pYRUNlSldpWVN2UEdyaWpsUHFSVXVybGZINXE4b1VYWHREQVlIYXBvRU1xTDdNTGRmWk9KbVRGd2VTemVWVXFvbExwZ1BIS1luMkJvRlZLeFFELzd6MmMzak1yS21DalV2cDZmVk5RMXE3cmxJMWI5a3U4czBlMDQrYjhmcDFzYkdxVnp0V2JwYnFtWG9CWDd1M0cxQjlvV2hZZ0FEd09QQU8wQTllQmZ3VG1nRDhGMWdKbmdaY3JiQUxJZndIWjJvcmZSTm9PQ3dBQUFBQkpSVTVFcmtKZ2dnPT0iIHR5cGU9ImltYWdlL3BuZyI+CjxzdHlsZT4KICA6cm9vdHstLWJnOiMwYTBlMTQ7LS1jYXJkOiMxMTE2MWY7LS1saW5lOiMyMjJjM2E7LS10ZXh0OiNlNmViZjI7LS1zb2Z0OiM5YWE2Yjg7LS1tdXRlOiM4YTk0YTY7LS1ibHVlOiM1NjljZmZ9CiAgKntib3gtc2l6aW5nOmJvcmRlci1ib3h9CiAgYm9keXttYXJnaW46MDttaW4taGVpZ2h0OjEwMHZoO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7cGFkZGluZzozMnB4OwogICAgYmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoMTIwMHB4IDYwMHB4IGF0IDUwJSAtMTAlLHJnYmEoODYsMTU2LDI1NSwuMTApLHRyYW5zcGFyZW50KSx2YXIoLS1iZyk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTonSW50ZXInLHN5c3RlbS11aSxzYW5zLXNlcmlmfQogIC5uZnttYXgtd2lkdGg6NTIwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CiAgLm5mLWNvZGV7Zm9udDo3MDAgY2xhbXAoNXJlbSwxOHZ3LDlyZW0pLzEgJ1NwYWNlIEdyb3Rlc2snLCdJbnRlcicsc2Fucy1zZXJpZjtsZXR0ZXItc3BhY2luZzotLjA0ZW07CiAgICBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzU2OWNmZiwjYTA2YmZmIDYwJSwjZmY1ZTdlKTstd2Via2l0LWJhY2tncm91bmQtY2xpcDp0ZXh0OwogICAgYmFja2dyb3VuZC1jbGlwOnRleHQ7Y29sb3I6dHJhbnNwYXJlbnQ7bWFyZ2luOjB9CiAgLm5mLXRpdGxle2ZvbnQ6NzAwIDEuNXJlbSAnU3BhY2UgR3JvdGVzaycsJ0ludGVyJyxzYW5zLXNlcmlmO21hcmdpbjo2cHggMCAxMHB4fQogIC5uZi10ZXh0e2NvbG9yOnZhcigtLXNvZnQpO2xpbmUtaGVpZ2h0OjEuNjttYXJnaW46MCAwIDI2cHh9CiAgLm5mLWFjdGlvbnN7ZGlzcGxheTpmbGV4O2dhcDoxMnB4O2p1c3RpZnktY29udGVudDpjZW50ZXI7ZmxleC13cmFwOndyYXB9CiAgLm5mLWJ0bntkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3RleHQtZGVjb3JhdGlvbjpub25lO2JvcmRlci1yYWRpdXM6MTBweDsKICAgIHBhZGRpbmc6MTFweCAyMHB4O2ZvbnQtd2VpZ2h0OjYwMDtmb250LXNpemU6Ljk1cmVtO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO3RyYW5zaXRpb246Ym9yZGVyLWNvbG9yIC4xNXMsdHJhbnNmb3JtIC4xMnN9CiAgLm5mLWJ0bjpob3Zlcntib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7dHJhbnNmb3JtOnRyYW5zbGF0ZVkoLTFweCl9CiAgLm5mLWJ0bi1wcmltYXJ5e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNTY5Y2ZmLCM0YTdmZTApO2JvcmRlci1jb2xvcjp0cmFuc3BhcmVudDtjb2xvcjojMDQxMjFmfQogIC5uZi1tYXJre2NvbG9yOnZhcigtLW11dGUpO2ZvbnQtc2l6ZTouODJyZW07bWFyZ2luLXRvcDozMHB4O2xldHRlci1zcGFjaW5nOi4wNGVtO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KPC9zdHlsZT48L2hlYWQ+Cjxib2R5PjxtYWluIGNsYXNzPSJuZiI+CiAgPHAgY2xhc3M9Im5mLWNvZGUiPjQwNDwvcD4KICA8aDEgY2xhc3M9Im5mLXRpdGxlIj5UaGlzIHBhZ2Ugd2FuZGVyZWQgb2ZmPC9oMT4KICA8cCBjbGFzcz0ibmYtdGV4dCI+VGhlIHBhZ2UgeW91J3JlIGxvb2tpbmcgZm9yIGRvZXNuJ3QgZXhpc3QsIG1vdmVkLCBvciBuZXZlciBkaWQuIExldCdzIGdldCB5b3UgYmFjayB0byBzb2xpZCBncm91bmQuPC9wPgogIDxkaXYgY2xhc3M9Im5mLWFjdGlvbnMiPgogICAgPGEgY2xhc3M9Im5mLWJ0biBuZi1idG4tcHJpbWFyeSIgaHJlZj0iLyI+JmxhcnI7IEJhY2sgaG9tZTwvYT4KICAgIDxhIGNsYXNzPSJuZi1idG4iIGhyZWY9Ii9tb2RzIj5Ccm93c2UgdGhlIE1vZHMgSHViPC9hPgogIDwvZGl2PgogIDxwIGNsYXNzPSJuZi1tYXJrIj5CZXR0ZXIgVHJvdmUgVG9vbHM8L3A+CjwvbWFpbj48L2JvZHk+PC9odG1sPg=="
+  },
+  {
+   "name": "web_static_dir_json",
+   "method": "GET",
+   "path": "/static/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_static_dir_json"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "105"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_static_dir_json"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfc3RhdGljX2Rpcl9qc29uIn19"
+  },
+  {
+   "name": "web_static_post",
+   "method": "POST",
+   "path": "/static/app.js",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_static_post"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET, HEAD"
+    ],
+    [
+     "content-length",
+     "119"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_static_post"
+    ],
+    [
+     "vary",
+     "Accept-Encoding"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfc3RhdGljX3Bvc3QifX0="
+  },
+  {
+   "name": "web_method_post",
+   "method": "POST",
+   "path": "/terms",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_method_post"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "119"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_method_post"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfbWV0aG9kX3Bvc3QifX0="
+  },
+  {
+   "name": "web_method_options",
+   "method": "OPTIONS",
+   "path": "/terms",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_method_options"
+    ]
+   ],
+   "status": 405,
+   "response_headers": [
+    [
+     "allow",
+     "GET"
+    ],
+    [
+     "content-length",
+     "122"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_method_options"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibWV0aG9kX25vdF9hbGxvd2VkIiwibWVzc2FnZSI6Ik1ldGhvZCBOb3QgQWxsb3dlZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfbWV0aG9kX29wdGlvbnMifX0="
+  },
+  {
+   "name": "web_decoded_slash",
+   "method": "GET",
+   "path": "/t%65rms/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_decoded_slash"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/terms"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_decoded_slash"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_encoded_split",
+   "method": "GET",
+   "path": "/swf-docs/a%2Fb",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_encoded_split"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "103"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_encoded_split"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfZW5jb2RlZF9zcGxpdCJ9fQ=="
+  },
+  {
+   "name": "web_double",
+   "method": "GET",
+   "path": "//terms",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_double"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_double"
+    ]
+   ],
+   "body_b64": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiBkaXI9Imx0ciI+PGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UGFnZSBub3QgZm91bmQgwrcgQmV0dGVyIFRyb3ZlIFRvb2xzPC90aXRsZT4KPG1ldGEgbmFtZT0icm9ib3RzIiBjb250ZW50PSJub2luZGV4Ij4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMwYTBlMTQiPjxtZXRhIG5hbWU9ImNvbG9yLXNjaGVtZSIgY29udGVudD0iZGFyayI+CjxsaW5rIHJlbD0iaWNvbiIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBSm9FbEVRVlI0MnJXWGFXeGMxM1hIZi9lK054dG5oc3R3cDRhYk5scUtKR3V6WkltU0dVbTJaRVZCVWhRT25HWkI2aGhKaTlpZis2RUZyRThGMms5cEd6UkZZaU9wN1RRdDBNUTJtaXEySWptSklzdVJKWXVSdFpDVVNJc1VsK0d1bVNGbm4zZnY2UWNOQTFsVmtyWkpML0R3SHQ2N2VPZC8vdWZjL3puSDRmKzJWT1VlQTQ0RGVXQUMwSUR3Lzd3VTREUkNCRGdmQ3JqaU9Ib0NhSzU4MDM5b2d3N2dWaTRIOEN1bDhQbDhENGNDUHRtN3RhTjRZTmRxQVU0b3BWYjIvNjkrL3RzOFZWb3A2emlPMVZwYnBiVW9wWXlJYkxIVy92T2hSOWMwYlZuZjRqUTFWSnVoVy9NOXhaSTNxcFM2WEFGcmZ4OEFEbUMxMWxpUlExYmtTMWJrQ1JGcEU1R3RmcC96dzA5K2ZFUG43aTBkU2hDdGxDYVROeVRtVXBzN08za3huYVpjQ1lYenUzTENmWkJ4cFpRSmhVS3R1Vnp1NitzNk9wNCs5b2tES0VjeE1UWEQxZXREN0Z4Znc4TTliVGFkS2VpQTN3Y2xUemZHSWhJSkI5ZE9UOXZWU3BVSEtvYXRpS3l3S2Y4VEFMcENjVjh1bDN2MTgwZVB0di81Wno5ak5oL2NLcUtFUUNDb2Z2TG1DZDc5MlJ0Nk9WZlNLSVdqb1ZnMmlJRGYxWkxKRmw0QmdrQUtlQVA0SnBEN1RTRGMrejNYV2g4TEJRS3YvZVd6WC9ZZjJybkxLN2pHWFVqZXdTdDdoS3JDcE5KcFFBajRYVHpQbyt4WjVwSjVsRktxS2h5bXBxWm1SM01zaWxJd05adnNIVS9NZndZNEFxUWZCTUs1SitGa3g0NGR2cG1abWJmKyt2bm42dy92MmVOTnpNeTZvVmlZaHJZR3JMWFUxOWVDOHZIanQ5NEdzY3luaTR6UFpGaElaaWxabDlhMlZjU2JxMjMzOW0yaXEyTzJzekZhenVmeW5jbDBCcVhVNlFjbDU4cVpWU0xDcFV1WE9sb2JHbHEzOWZUSVFpcmxHbXZ3Qi8yZ3dPLzM4OTFYLzUxQ3FjeW5uL29DZytNWnhtZVdXVXdYS2VPbktoQkFsVE5rU2xiM1BmMjAvdUt6WDNZOEhYYTdPMXN0OEdRbEY4ejlJVmdCNExpT0k4RHVoN3E2L0tGQXdJb0laYy9EOWJ0RXdsWDg2TVJwR3RvZjVwMExnK3grWkN2Zit1YmZjL0RnNDFqbDBOSFN5Skp5Q05ZMVU2WGg3RXN2VVY1ZVpocFF2ME1YVndDVXYvYmM0WUJTSE55OGJoMnU2NHF4RmhIQjBYZTNYQmtZNXBmdm51UEVteWZKNWZKVVI4Tk1KR2FJUlVKTWVvcGp6LzBGKy9jZklkSytqdW1KY1Y3NnpuZG9sTHdkRzUvV3dKdS9TYVJXQU96NHhqZmVHaExoVDNvNk95a1VpNjR4NXE0U0FTTEMza2QzOHVLTDN5YmVFbU5WV3l2SjFCTEpaQXFsTmRHbU9EMmhJQjhNMzhUZjNrM0JIOEMvT0dldlhyenFHeG1mdVFEOHJZaW9CNFhBdVF1TUw2MXByM3NxR3E1eWp2WWVVblhWTlhqR1lvMVEwMUJIeWJGRVFnRzJiWG1Jcnp6ek9iUldCUHgrcmw0ZllueHlrbmgxTGYwalk0eGxzMWh0OFM5TTIwaXdUcjF6NmNwN2ZYMTkrMjdmdmwxY0ViZi9kZ3lWVW9oSW9haythby91VzIvZUgzeGIzMG8wWWEybFdDclFmK3NzbnVReDVSSlZWVUgrNWZaMTlqeDJoTzNidC9ESkp3NXkvY29nODNNVExPUkhjZXBpNUJORHJHMXNrVnhPTkRCOTVzeVptT1BvT1d2RlZsaTQveGdxZ01aaXlYeHUyNFkycWtKRzV3cUxHTHVFZG5KZ2MvaVV4ZTlUaUMzakZkSmN1WHlKV0ZNSDI3WnZwWndxTUhEekprM1ZVV0ppcUttcDVSTkhEdXVxV0pqbFRIWkRLcjM4MVdLeHRMc2lUQ1AzbFBLUDFQVnUxM0dHano2MjBkblFYUytSS3A4eVZsYWs4ZGVReTZVaWp1TWdZdkZGNDdTMHREQjZveDhSUXk0WHBIZnZVZFp2VzRQUDUrQTZEbzdyc0xpWTRxZS9PTTgvL05NckxDd205eGxqem9tSXM1SVB6bDBOSUhYOHVEenArblM3RWNmbThpWHRHY3Q4TWsvSkNPVlNrWHcrU3lTMkNvT2Y3TklDeTZrWkV1TTNDRmRWNGZjSE1EYURpa1RwM2JzSHNSWXJZSXdsRkF6S3hvYjIwcVVQcmprajQrTm5ISzJ2VkFEWUZTbldXbUdBNlZYMWNYTDVaY25taXdUU1Bvenh1Sk5jSXQ3ZXhmWkhEdkxGWjc5R2JVMGRwMC84SzBvTWJpRE14Wi8vQUVVZUpWQVhDVEo0YzR5QVR4R3Jxd1dnV0N5cDJaRUpONWxhVXNDZENwdHlieTJ3S0FVaTNYOTA0REJ6eVZuMWk4dm55R1F5eEJyYitKdmpmMGROYll5ZE8zZHkrZkpsdWpvN2VlcnpmOGJvNURnMTFiWDBYN3JJek9oNWd2NjdVdnp5OTEvamlZL3Y1cTNUNTlDTzVndFBIV01rbDlNTDZSUkFvcUtJSHdFZ2xaZEJSeXVPN1R1bzFxM3E0c09sSlB1UGZZb0RmWDFrTXNzTURkMmdyYTJWZi92K2E0d3NESERxZ3gralRZRFM4RHhSRGRsc2tUV2JFanovek5NMHR6WGlHVVBJNXljeE1DbWxVbG5OSjVOM2dESHVZMERmRFlFQ1NHWHplV3VNSjVGSWhMNGpSOW5YdTVmUjBTbGNOOGppNGpMQlVKUzYyaGhuM2o5SGRXdVlBbVZLQnNKVm1vNzFscVhKSkFPL3ZNR3BILzZNT2drU3lmckpMdWFrZjNDSWJENC9kL3o0OFhURjJZOVVRMGRyYlVWa2c4OTFldy92M2wwdW9kU1NHOWFyMnRwNC9mV1RaREtHam81bWhvY25XTDJta3h0RHQ2bXVpdUhORmppMm9aZDRoNSs2am1FdWpwWklxaXQwZDZ4RithSjgrOFMzK00vejU5WHBYMTAwanVNMG5EcDVhalB3ZW9VQitiVTJpd2loVU9qYXdJY2Y5cjUzOVdwWGFpbWpWYWpSWnJLaWFtdGlKQkxUK1AyYXlhbFordCsvaEVubkNabzZObFczMHJQckhjSnRJd3hkOTdpV0VEclhsTml6S1U1TFN6Vmp5LzNvVUlGTis5ZHBmMHRjelE0bk5oclBmQS9Gd2txN3R0S3pLYy96bHZ2NitsNStyNy8vU3YvZ1FLQllLbXo0Mk1lMmx1UHhMcGFYbHlTYkxkcEN2c1IvL09CVmRXdG1tcW41QkI5T3pkSlFMWkxNcEpRMWx0dnpRUUkxOVlnTWNtM3NBcE5MTWFLdUllQVR4cVljazU2YVY2VkNxWFhIamgxdlRFOVBXMERVZmFJa1dtdU1NWTVTNnFlN2R1MS9iUFBtN1RRM3QzTDc5aTErY3ZJTjZocWE1WkU5QjlUQzNDeWo0d2s1OXZCREtscGxPVEh5TGtTaU5LMnVCOGVIQ0dpZlMvVE9FTVhGMVdUeVVabE9US2diQXhmeHlzWHVTa0xxZTFzeUFiRFcrcFJTNVhnOC91U0ZDMmVmdTNEaDdQYkswSEVUT0JUdlhyOE9WTmxZVkRtLzVINzlleTlhUnp2RjFYczJobXFyWGF3b1FrR04xaDYyWE9UbnAyWlkzOVZEWTB1WStma0FXaWtQOE4wdnhRK2FDVVJYZWdFUlFTbU5VaHdCdmx2ZjBOeHFySkJjbkV0YXpGOWgrZVAxai9ZOEh1dHVOSjJOQlNjQURJOEZDVFg2S0N3djA2SnpaTklkTXBYSXFLRnI1OVBHZUQzQTdQME1jQjhieWxxN2tpTWlZalJ3RXRnME41dm9CV0toMEtxM0M0WEVwQ0M3TWtzbDIrVmtSS1l6akMrc3dlWmRGaklwcVEwdmtzN1hxMHd4SUdLWGxESGVIU0M1WXVlM3pYRUNlSldpWVN2UEdyaWpsUHFSVXVybGZINXE4b1VYWHREQVlIYXBvRU1xTDdNTGRmWk9KbVRGd2VTemVWVXFvbExwZ1BIS1luMkJvRlZLeFFELzd6MmMzak1yS21DalV2cDZmVk5RMXE3cmxJMWI5a3U4czBlMDQrYjhmcDFzYkdxVnp0V2JwYnFtWG9CWDd1M0cxQjlvV2hZZ0FEd09QQU8wQTllQmZ3VG1nRDhGMWdKbmdaY3JiQUxJZndIWjJvcmZSTm9PQ3dBQUFBQkpSVTVFcmtKZ2dnPT0iIHR5cGU9ImltYWdlL3BuZyI+CjxzdHlsZT4KICA6cm9vdHstLWJnOiMwYTBlMTQ7LS1jYXJkOiMxMTE2MWY7LS1saW5lOiMyMjJjM2E7LS10ZXh0OiNlNmViZjI7LS1zb2Z0OiM5YWE2Yjg7LS1tdXRlOiM4YTk0YTY7LS1ibHVlOiM1NjljZmZ9CiAgKntib3gtc2l6aW5nOmJvcmRlci1ib3h9CiAgYm9keXttYXJnaW46MDttaW4taGVpZ2h0OjEwMHZoO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7cGFkZGluZzozMnB4OwogICAgYmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoMTIwMHB4IDYwMHB4IGF0IDUwJSAtMTAlLHJnYmEoODYsMTU2LDI1NSwuMTApLHRyYW5zcGFyZW50KSx2YXIoLS1iZyk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTonSW50ZXInLHN5c3RlbS11aSxzYW5zLXNlcmlmfQogIC5uZnttYXgtd2lkdGg6NTIwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CiAgLm5mLWNvZGV7Zm9udDo3MDAgY2xhbXAoNXJlbSwxOHZ3LDlyZW0pLzEgJ1NwYWNlIEdyb3Rlc2snLCdJbnRlcicsc2Fucy1zZXJpZjtsZXR0ZXItc3BhY2luZzotLjA0ZW07CiAgICBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzU2OWNmZiwjYTA2YmZmIDYwJSwjZmY1ZTdlKTstd2Via2l0LWJhY2tncm91bmQtY2xpcDp0ZXh0OwogICAgYmFja2dyb3VuZC1jbGlwOnRleHQ7Y29sb3I6dHJhbnNwYXJlbnQ7bWFyZ2luOjB9CiAgLm5mLXRpdGxle2ZvbnQ6NzAwIDEuNXJlbSAnU3BhY2UgR3JvdGVzaycsJ0ludGVyJyxzYW5zLXNlcmlmO21hcmdpbjo2cHggMCAxMHB4fQogIC5uZi10ZXh0e2NvbG9yOnZhcigtLXNvZnQpO2xpbmUtaGVpZ2h0OjEuNjttYXJnaW46MCAwIDI2cHh9CiAgLm5mLWFjdGlvbnN7ZGlzcGxheTpmbGV4O2dhcDoxMnB4O2p1c3RpZnktY29udGVudDpjZW50ZXI7ZmxleC13cmFwOndyYXB9CiAgLm5mLWJ0bntkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3RleHQtZGVjb3JhdGlvbjpub25lO2JvcmRlci1yYWRpdXM6MTBweDsKICAgIHBhZGRpbmc6MTFweCAyMHB4O2ZvbnQtd2VpZ2h0OjYwMDtmb250LXNpemU6Ljk1cmVtO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO3RyYW5zaXRpb246Ym9yZGVyLWNvbG9yIC4xNXMsdHJhbnNmb3JtIC4xMnN9CiAgLm5mLWJ0bjpob3Zlcntib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7dHJhbnNmb3JtOnRyYW5zbGF0ZVkoLTFweCl9CiAgLm5mLWJ0bi1wcmltYXJ5e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNTY5Y2ZmLCM0YTdmZTApO2JvcmRlci1jb2xvcjp0cmFuc3BhcmVudDtjb2xvcjojMDQxMjFmfQogIC5uZi1tYXJre2NvbG9yOnZhcigtLW11dGUpO2ZvbnQtc2l6ZTouODJyZW07bWFyZ2luLXRvcDozMHB4O2xldHRlci1zcGFjaW5nOi4wNGVtO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KPC9zdHlsZT48L2hlYWQ+Cjxib2R5PjxtYWluIGNsYXNzPSJuZiI+CiAgPHAgY2xhc3M9Im5mLWNvZGUiPjQwNDwvcD4KICA8aDEgY2xhc3M9Im5mLXRpdGxlIj5UaGlzIHBhZ2Ugd2FuZGVyZWQgb2ZmPC9oMT4KICA8cCBjbGFzcz0ibmYtdGV4dCI+VGhlIHBhZ2UgeW91J3JlIGxvb2tpbmcgZm9yIGRvZXNuJ3QgZXhpc3QsIG1vdmVkLCBvciBuZXZlciBkaWQuIExldCdzIGdldCB5b3UgYmFjayB0byBzb2xpZCBncm91bmQuPC9wPgogIDxkaXYgY2xhc3M9Im5mLWFjdGlvbnMiPgogICAgPGEgY2xhc3M9Im5mLWJ0biBuZi1idG4tcHJpbWFyeSIgaHJlZj0iLyI+JmxhcnI7IEJhY2sgaG9tZTwvYT4KICAgIDxhIGNsYXNzPSJuZi1idG4iIGhyZWY9Ii9tb2RzIj5Ccm93c2UgdGhlIE1vZHMgSHViPC9hPgogIDwvZGl2PgogIDxwIGNsYXNzPSJuZi1tYXJrIj5CZXR0ZXIgVHJvdmUgVG9vbHM8L3A+CjwvbWFpbj48L2JvZHk+PC9odG1sPg=="
+  },
+  {
+   "name": "web_empty_param",
+   "method": "GET",
+   "path": "/drop/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_empty_param"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "101"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; style-src 'self' 'unsafe-inline' https://hcaptcha.com https://*.hcaptcha.com; font-src 'self' data:; img-src 'self' data: blob: https:; media-src 'self' blob: https://api.aallyn.net; connect-src 'self' https://api.aallyn.net https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; frame-src https://challenges.cloudflare.com https://hcaptcha.com https://*.hcaptcha.com; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "cache-control",
+     "no-cache"
+    ],
+    [
+     "x-request-id",
+     "rt-web_empty_param"
+    ]
+   ],
+   "body_b64": "eyJlcnJvciI6eyJjb2RlIjoibm90X2ZvdW5kIiwibWVzc2FnZSI6Ik5vdCBGb3VuZCIsImRldGFpbHMiOm51bGwsInJlcXVlc3RfaWQiOiJydC13ZWJfZW1wdHlfcGFyYW0ifX0="
+  },
+  {
+   "name": "web_gamedata_slash",
+   "method": "GET",
+   "path": "/gamedata/pvp.json/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_gamedata_slash"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/gamedata/pvp.json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_gamedata_slash"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_health_slash",
+   "method": "GET",
+   "path": "/health/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_health_slash"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/health"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_health_slash"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_robots_slash",
+   "method": "GET",
+   "path": "/robots.txt/",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_robots_slash"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/robots.txt"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_robots_slash"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_events_head",
+   "method": "HEAD",
+   "path": "/v1/events/stream",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_events_head"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "101"
+    ],
+    [
+     "content-type",
+     "application/json"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_events_head"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_head_nf",
+   "method": "HEAD",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_head_nf"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_head_nf"
+    ]
+   ],
+   "body_b64": ""
+  },
+  {
+   "name": "web_nf_gzip",
+   "method": "GET",
+   "path": "/nope",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_nf_gzip"
+    ],
+    [
+     "Accept",
+     "text/html,application/xhtml+xml,*/*;q=0.8"
+    ],
+    [
+     "Accept-Encoding",
+     "gzip"
+    ]
+   ],
+   "status": 404,
+   "response_headers": [
+    [
+     "content-length",
+     "5680"
+    ],
+    [
+     "content-type",
+     "text/html; charset=utf-8"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_nf_gzip"
+    ]
+   ],
+   "body_b64": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIiBkaXI9Imx0ciI+PGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij48bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEiPgo8dGl0bGU+UGFnZSBub3QgZm91bmQgwrcgQmV0dGVyIFRyb3ZlIFRvb2xzPC90aXRsZT4KPG1ldGEgbmFtZT0icm9ib3RzIiBjb250ZW50PSJub2luZGV4Ij4KPG1ldGEgbmFtZT0idGhlbWUtY29sb3IiIGNvbnRlbnQ9IiMwYTBlMTQiPjxtZXRhIG5hbWU9ImNvbG9yLXNjaGVtZSIgY29udGVudD0iZGFyayI+CjxsaW5rIHJlbD0iaWNvbiIgaHJlZj0iZGF0YTppbWFnZS9wbmc7YmFzZTY0LGlWQk9SdzBLR2dvQUFBQU5TVWhFVWdBQUFDQUFBQUFnQ0FZQUFBQnplbnIwQUFBSm9FbEVRVlI0MnJXWGFXeGMxM1hIZi9lK054dG5oc3R3cDRhYk5scUtKR3V6WkltU0dVbTJaRVZCVWhRT25HWkI2aGhKaTlpZis2RUZyRThGMms5cEd6UkZZaU9wN1RRdDBNUTJtaXEySWptSklzdVJKWXVSdFpDVVNJc1VsK0d1bVNGbm4zZnY2UWNOQTFsVmtyWkpML0R3SHQ2N2VPZC8vdWZjL3puSDRmKzJWT1VlQTQ0RGVXQUMwSUR3Lzd3VTREUkNCRGdmQ3JqaU9Ib0NhSzU4MDM5b2d3N2dWaTRIOEN1bDhQbDhENGNDUHRtN3RhTjRZTmRxQVU0b3BWYjIvNjkrL3RzOFZWb3A2emlPMVZwYnBiVW9wWXlJYkxIVy92T2hSOWMwYlZuZjRqUTFWSnVoVy9NOXhaSTNxcFM2WEFGcmZ4OEFEbUMxMWxpUlExYmtTMWJrQ1JGcEU1R3RmcC96dzA5K2ZFUG43aTBkU2hDdGxDYVROeVRtVXBzN08za3huYVpjQ1lYenUzTENmWkJ4cFpRSmhVS3R1Vnp1NitzNk9wNCs5b2tES0VjeE1UWEQxZXREN0Z4Znc4TTliVGFkS2VpQTN3Y2xUemZHSWhJSkI5ZE9UOXZWU3BVSEtvYXRpS3l3S2Y4VEFMcENjVjh1bDN2MTgwZVB0di81Wno5ak5oL2NLcUtFUUNDb2Z2TG1DZDc5MlJ0Nk9WZlNLSVdqb1ZnMmlJRGYxWkxKRmw0QmdrQUtlQVA0SnBEN1RTRGMrejNYV2g4TEJRS3YvZVd6WC9ZZjJybkxLN2pHWFVqZXdTdDdoS3JDcE5KcFFBajRYVHpQbyt4WjVwSjVsRktxS2h5bXBxWm1SM01zaWxJd05adnNIVS9NZndZNEFxUWZCTUs1SitGa3g0NGR2cG1abWJmKyt2bm42dy92MmVOTnpNeTZvVmlZaHJZR3JMWFUxOWVDOHZIanQ5NEdzY3luaTR6UFpGaElaaWxabDlhMlZjU2JxMjMzOW0yaXEyTzJzekZhenVmeW5jbDBCcVhVNlFjbDU4cVpWU0xDcFV1WE9sb2JHbHEzOWZUSVFpcmxHbXZ3Qi8yZ3dPLzM4OTFYLzUxQ3FjeW5uL29DZytNWnhtZVdXVXdYS2VPbktoQkFsVE5rU2xiM1BmMjAvdUt6WDNZOEhYYTdPMXN0OEdRbEY4ejlJVmdCNExpT0k4RHVoN3E2L0tGQXdJb0laYy9EOWJ0RXdsWDg2TVJwR3RvZjVwMExnK3grWkN2Zit1YmZjL0RnNDFqbDBOSFN5Skp5Q05ZMVU2WGg3RXN2VVY1ZVpocFF2ME1YVndDVXYvYmM0WUJTSE55OGJoMnU2NHF4RmhIQjBYZTNYQmtZNXBmdm51UEVteWZKNWZKVVI4Tk1KR2FJUlVKTWVvcGp6LzBGKy9jZklkSytqdW1KY1Y3NnpuZG9sTHdkRzUvV3dKdS9TYVJXQU96NHhqZmVHaExoVDNvNk95a1VpNjR4NXE0U0FTTEMza2QzOHVLTDN5YmVFbU5WV3l2SjFCTEpaQXFsTmRHbU9EMmhJQjhNMzhUZjNrM0JIOEMvT0dldlhyenFHeG1mdVFEOHJZaW9CNFhBdVF1TUw2MXByM3NxR3E1eWp2WWVVblhWTlhqR1lvMVEwMUJIeWJGRVFnRzJiWG1Jcnp6ek9iUldCUHgrcmw0ZllueHlrbmgxTGYwalk0eGxzMWh0OFM5TTIwaXdUcjF6NmNwN2ZYMTkrMjdmdmwxY0ViZi9kZ3lWVW9oSW9haythby91VzIvZUgzeGIzMG8wWWEybFdDclFmK3NzbnVReDVSSlZWVUgrNWZaMTlqeDJoTzNidC9ESkp3NXkvY29nODNNVExPUkhjZXBpNUJORHJHMXNrVnhPTkRCOTVzeVptT1BvT1d2RlZsaTQveGdxZ01aaXlYeHUyNFkycWtKRzV3cUxHTHVFZG5KZ2MvaVV4ZTlUaUMzakZkSmN1WHlKV0ZNSDI3WnZwWndxTUhEekprM1ZVV0ppcUttcDVSTkhEdXVxV0pqbFRIWkRLcjM4MVdLeHRMc2lUQ1AzbFBLUDFQVnUxM0dHano2MjBkblFYUytSS3A4eVZsYWs4ZGVReTZVaWp1TWdZdkZGNDdTMHREQjZveDhSUXk0WHBIZnZVZFp2VzRQUDUrQTZEbzdyc0xpWTRxZS9PTTgvL05NckxDd205eGxqem9tSXM1SVB6bDBOSUhYOHVEenArblM3RWNmbThpWHRHY3Q4TWsvSkNPVlNrWHcrU3lTMkNvT2Y3TklDeTZrWkV1TTNDRmRWNGZjSE1EYURpa1RwM2JzSHNSWXJZSXdsRkF6S3hvYjIwcVVQcmprajQrTm5ISzJ2VkFEWUZTbldXbUdBNlZYMWNYTDVaY25taXdUU1Bvenh1Sk5jSXQ3ZXhmWkhEdkxGWjc5R2JVMGRwMC84SzBvTWJpRE14Wi8vQUVVZUpWQVhDVEo0YzR5QVR4R3Jxd1dnV0N5cDJaRUpONWxhVXNDZENwdHlieTJ3S0FVaTNYOTA0REJ6eVZuMWk4dm55R1F5eEJyYitKdmpmMGROYll5ZE8zZHkrZkpsdWpvN2VlcnpmOGJvNURnMTFiWDBYN3JJek9oNWd2NjdVdnp5OTEvamlZL3Y1cTNUNTlDTzVndFBIV01rbDlNTDZSUkFvcUtJSHdFZ2xaZEJSeXVPN1R1bzFxM3E0c09sSlB1UGZZb0RmWDFrTXNzTURkMmdyYTJWZi92K2E0d3NESERxZ3gralRZRFM4RHhSRGRsc2tUV2JFanovek5NMHR6WGlHVVBJNXljeE1DbWxVbG5OSjVOM2dESHVZMERmRFlFQ1NHWHplV3VNSjVGSWhMNGpSOW5YdTVmUjBTbGNOOGppNGpMQlVKUzYyaGhuM2o5SGRXdVlBbVZLQnNKVm1vNzFscVhKSkFPL3ZNR3BILzZNT2drU3lmckpMdWFrZjNDSWJENC9kL3o0OFhURjJZOVVRMGRyYlVWa2c4OTFldy92M2wwdW9kU1NHOWFyMnRwNC9mV1RaREtHam81bWhvY25XTDJta3h0RHQ2bXVpdUhORmppMm9aZDRoNSs2am1FdWpwWklxaXQwZDZ4RithSjgrOFMzK00vejU5WHBYMTAwanVNMG5EcDVhalB3ZW9VQitiVTJpd2loVU9qYXdJY2Y5cjUzOVdwWGFpbWpWYWpSWnJLaWFtdGlKQkxUK1AyYXlhbFordCsvaEVubkNabzZObFczMHJQckhjSnRJd3hkOTdpV0VEclhsTml6S1U1TFN6Vmp5LzNvVUlGTis5ZHBmMHRjelE0bk5oclBmQS9Gd2txN3R0S3pLYy96bHZ2NitsNStyNy8vU3YvZ1FLQllLbXo0Mk1lMmx1UHhMcGFYbHlTYkxkcEN2c1IvL09CVmRXdG1tcW41QkI5T3pkSlFMWkxNcEpRMWx0dnpRUUkxOVlnTWNtM3NBcE5MTWFLdUllQVR4cVljazU2YVY2VkNxWFhIamgxdlRFOVBXMERVZmFJa1dtdU1NWTVTNnFlN2R1MS9iUFBtN1RRM3QzTDc5aTErY3ZJTjZocWE1WkU5QjlUQzNDeWo0d2s1OXZCREtscGxPVEh5TGtTaU5LMnVCOGVIQ0dpZlMvVE9FTVhGMVdUeVVabE9US2diQXhmeHlzWHVTa0xxZTFzeUFiRFcrcFJTNVhnOC91U0ZDMmVmdTNEaDdQYkswSEVUT0JUdlhyOE9WTmxZVkRtLzVINzlleTlhUnp2RjFYczJobXFyWGF3b1FrR04xaDYyWE9UbnAyWlkzOVZEWTB1WStma0FXaWtQOE4wdnhRK2FDVVJYZWdFUlFTbU5VaHdCdmx2ZjBOeHFySkJjbkV0YXpGOWgrZVAxai9ZOEh1dHVOSjJOQlNjQURJOEZDVFg2S0N3djA2SnpaTklkTXBYSXFLRnI1OVBHZUQzQTdQME1jQjhieWxxN2tpTWlZalJ3RXRnME41dm9CV0toMEtxM0M0WEVwQ0M3TWtzbDIrVmtSS1l6akMrc3dlWmRGaklwcVEwdmtzN1hxMHd4SUdLWGxESGVIU0M1WXVlM3pYRUNlSldpWVN2UEdyaWpsUHFSVXVybGZINXE4b1VYWHREQVlIYXBvRU1xTDdNTGRmWk9KbVRGd2VTemVWVXFvbExwZ1BIS1luMkJvRlZLeFFELzd6MmMzak1yS21DalV2cDZmVk5RMXE3cmxJMWI5a3U4czBlMDQrYjhmcDFzYkdxVnp0V2JwYnFtWG9CWDd1M0cxQjlvV2hZZ0FEd09QQU8wQTllQmZ3VG1nRDhGMWdKbmdaY3JiQUxJZndIWjJvcmZSTm9PQ3dBQUFBQkpSVTVFcmtKZ2dnPT0iIHR5cGU9ImltYWdlL3BuZyI+CjxzdHlsZT4KICA6cm9vdHstLWJnOiMwYTBlMTQ7LS1jYXJkOiMxMTE2MWY7LS1saW5lOiMyMjJjM2E7LS10ZXh0OiNlNmViZjI7LS1zb2Z0OiM5YWE2Yjg7LS1tdXRlOiM4YTk0YTY7LS1ibHVlOiM1NjljZmZ9CiAgKntib3gtc2l6aW5nOmJvcmRlci1ib3h9CiAgYm9keXttYXJnaW46MDttaW4taGVpZ2h0OjEwMHZoO2Rpc3BsYXk6Z3JpZDtwbGFjZS1pdGVtczpjZW50ZXI7cGFkZGluZzozMnB4OwogICAgYmFja2dyb3VuZDpyYWRpYWwtZ3JhZGllbnQoMTIwMHB4IDYwMHB4IGF0IDUwJSAtMTAlLHJnYmEoODYsMTU2LDI1NSwuMTApLHRyYW5zcGFyZW50KSx2YXIoLS1iZyk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTonSW50ZXInLHN5c3RlbS11aSxzYW5zLXNlcmlmfQogIC5uZnttYXgtd2lkdGg6NTIwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CiAgLm5mLWNvZGV7Zm9udDo3MDAgY2xhbXAoNXJlbSwxOHZ3LDlyZW0pLzEgJ1NwYWNlIEdyb3Rlc2snLCdJbnRlcicsc2Fucy1zZXJpZjtsZXR0ZXItc3BhY2luZzotLjA0ZW07CiAgICBiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzU2OWNmZiwjYTA2YmZmIDYwJSwjZmY1ZTdlKTstd2Via2l0LWJhY2tncm91bmQtY2xpcDp0ZXh0OwogICAgYmFja2dyb3VuZC1jbGlwOnRleHQ7Y29sb3I6dHJhbnNwYXJlbnQ7bWFyZ2luOjB9CiAgLm5mLXRpdGxle2ZvbnQ6NzAwIDEuNXJlbSAnU3BhY2UgR3JvdGVzaycsJ0ludGVyJyxzYW5zLXNlcmlmO21hcmdpbjo2cHggMCAxMHB4fQogIC5uZi10ZXh0e2NvbG9yOnZhcigtLXNvZnQpO2xpbmUtaGVpZ2h0OjEuNjttYXJnaW46MCAwIDI2cHh9CiAgLm5mLWFjdGlvbnN7ZGlzcGxheTpmbGV4O2dhcDoxMnB4O2p1c3RpZnktY29udGVudDpjZW50ZXI7ZmxleC13cmFwOndyYXB9CiAgLm5mLWJ0bntkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O3RleHQtZGVjb3JhdGlvbjpub25lO2JvcmRlci1yYWRpdXM6MTBweDsKICAgIHBhZGRpbmc6MTFweCAyMHB4O2ZvbnQtd2VpZ2h0OjYwMDtmb250LXNpemU6Ljk1cmVtO2JvcmRlcjoxcHggc29saWQgdmFyKC0tbGluZSk7CiAgICBjb2xvcjp2YXIoLS10ZXh0KTtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO3RyYW5zaXRpb246Ym9yZGVyLWNvbG9yIC4xNXMsdHJhbnNmb3JtIC4xMnN9CiAgLm5mLWJ0bjpob3Zlcntib3JkZXItY29sb3I6dmFyKC0tYmx1ZSk7dHJhbnNmb3JtOnRyYW5zbGF0ZVkoLTFweCl9CiAgLm5mLWJ0bi1wcmltYXJ5e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjNTY5Y2ZmLCM0YTdmZTApO2JvcmRlci1jb2xvcjp0cmFuc3BhcmVudDtjb2xvcjojMDQxMjFmfQogIC5uZi1tYXJre2NvbG9yOnZhcigtLW11dGUpO2ZvbnQtc2l6ZTouODJyZW07bWFyZ2luLXRvcDozMHB4O2xldHRlci1zcGFjaW5nOi4wNGVtO3RleHQtdHJhbnNmb3JtOnVwcGVyY2FzZX0KPC9zdHlsZT48L2hlYWQ+Cjxib2R5PjxtYWluIGNsYXNzPSJuZiI+CiAgPHAgY2xhc3M9Im5mLWNvZGUiPjQwNDwvcD4KICA8aDEgY2xhc3M9Im5mLXRpdGxlIj5UaGlzIHBhZ2Ugd2FuZGVyZWQgb2ZmPC9oMT4KICA8cCBjbGFzcz0ibmYtdGV4dCI+VGhlIHBhZ2UgeW91J3JlIGxvb2tpbmcgZm9yIGRvZXNuJ3QgZXhpc3QsIG1vdmVkLCBvciBuZXZlciBkaWQuIExldCdzIGdldCB5b3UgYmFjayB0byBzb2xpZCBncm91bmQuPC9wPgogIDxkaXYgY2xhc3M9Im5mLWFjdGlvbnMiPgogICAgPGEgY2xhc3M9Im5mLWJ0biBuZi1idG4tcHJpbWFyeSIgaHJlZj0iLyI+JmxhcnI7IEJhY2sgaG9tZTwvYT4KICAgIDxhIGNsYXNzPSJuZi1idG4iIGhyZWY9Ii9tb2RzIj5Ccm93c2UgdGhlIE1vZHMgSHViPC9hPgogIDwvZGl2PgogIDxwIGNsYXNzPSJuZi1tYXJrIj5CZXR0ZXIgVHJvdmUgVG9vbHM8L3A+CjwvbWFpbj48L2JvZHk+PC9odG1sPg=="
+  },
+  {
+   "name": "web_static_bare_gzip",
+   "method": "GET",
+   "path": "/static",
+   "headers": [
+    [
+     "Host",
+     "trove.aallyn.net"
+    ],
+    [
+     "X-Request-ID",
+     "rt-web_static_bare_gzip"
+    ],
+    [
+     "Accept-Encoding",
+     "gzip"
+    ]
+   ],
+   "status": 307,
+   "response_headers": [
+    [
+     "content-length",
+     "0"
+    ],
+    [
+     "location",
+     "http://trove.aallyn.net/static/"
+    ],
+    [
+     "x-content-type-options",
+     "nosniff"
+    ],
+    [
+     "referrer-policy",
+     "strict-origin-when-cross-origin"
+    ],
+    [
+     "strict-transport-security",
+     "max-age=31536000; includeSubDomains"
+    ],
+    [
+     "permissions-policy",
+     "geolocation=(), microphone=(), camera=()"
+    ],
+    [
+     "x-frame-options",
+     "DENY"
+    ],
+    [
+     "content-security-policy",
+     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; frame-ancestors 'none'"
+    ],
+    [
+     "x-request-id",
+     "rt-web_static_bare_gzip"
+    ]
+   ],
+   "body_b64": ""
+  }
+ ],
+ "web_env": {
+  "APP_URL": "https://trove.aallyn.net",
+  "API_URL": "https://api.aallyn.net",
+  "INTERNAL_KEY": "routing-fixture-internal-key",
+  "SECRET_KEY": "routing-fixture-secret"
+ },
+ "pyint": [
+  [
+   "5",
+   "5"
+  ],
+  [
+   "+5",
+   "5"
+  ],
+  [
+   "-5",
+   "-5"
+  ],
+  [
+   " 7 ",
+   "7"
+  ],
+  [
+   "0005",
+   "5"
+  ],
+  [
+   "1_000",
+   "1000"
+  ],
+  [
+   "1__0",
+   "int_parsing"
+  ],
+  [
+   "1.0",
+   "1"
+  ],
+  [
+   "1.5",
+   "int_parsing"
+  ],
+  [
+   "1e3",
+   "int_parsing"
+  ],
+  [
+   "",
+   "int_parsing"
+  ],
+  [
+   " ",
+   "int_parsing"
+  ],
+  [
+   "٣",
+   "int_parsing"
+  ],
+  [
+   "-0",
+   "0"
+  ],
+  [
+   "2147483647",
+   "2147483647"
+  ],
+  [
+   "2147483648",
+   "2147483648"
+  ],
+  [
+   "-2147483649",
+   "-2147483649"
+  ],
+  [
+   "99999999999999999999999",
+   "99999999999999999999999"
+  ],
+  [
+   "0x10",
+   "int_parsing"
+  ],
+  [
+   "1_",
+   "int_parsing"
+  ],
+  [
+   "_1",
+   "int_parsing"
+  ],
+  [
+   "+",
+   "int_parsing"
+  ],
+  [
+   "1.",
+   "int_parsing"
+  ],
+  [
+   ".0",
+   "int_parsing"
+  ]
+ ],
+ "discord_big": [
+  {
+   "world": {
+    "paths": {},
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}",
+   "linked": false,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 403,
+    "code": "forbidden",
+    "message": "Link your Discord account (sign in with Discord) to manage the bot."
+   }
+  },
+  {
+   "world": {
+    "paths": {},
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 403,
+    "code": "forbidden",
+    "message": "You're not a member of this server (or the bot isn't in it)."
+   }
+  },
+  {
+   "world": {
+    "paths": {},
+    "errors": {
+     "/guilds/99999999999999999999": "DISCORD_BOT_TOKEN is not configured."
+    }
+   },
+   "route": "/guilds/{guild_id}",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 502,
+    "code": "internal_error",
+    "message": "Couldn't reach Discord: DISCORD_BOT_TOKEN is not configured."
+   }
+  },
+  {
+   "world": {
+    "paths": {
+     "/guilds/99999999999999999999": {
+      "id": "99999999999999999999",
+      "owner_id": "1",
+      "roles": [
+       {
+        "id": "99999999999999999999",
+        "permissions": "0"
+       }
+      ]
+     },
+     "/guilds/99999999999999999999/members/312345678901234567": {
+      "user": {
+       "id": "312345678901234567"
+      },
+      "roles": []
+     }
+    },
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 500
+   }
+  },
+  {
+   "world": {
+    "paths": {
+     "/guilds/99999999999999999999": {
+      "id": "99999999999999999999",
+      "owner_id": "1",
+      "roles": [
+       {
+        "id": "99999999999999999999",
+        "permissions": "0"
+       }
+      ]
+     },
+     "/guilds/99999999999999999999/members/312345678901234567": {
+      "user": {
+       "id": "312345678901234567"
+      },
+      "roles": []
+     }
+    },
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}/clubs",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 500
+   }
+  },
+  {
+   "world": {
+    "paths": {
+     "/guilds/99999999999999999999": {
+      "id": "99999999999999999999",
+      "owner_id": "1",
+      "roles": [
+       {
+        "id": "99999999999999999999",
+        "permissions": "0"
+       }
+      ]
+     },
+     "/guilds/99999999999999999999/members/312345678901234567": {
+      "user": {
+       "id": "312345678901234567"
+      },
+      "roles": []
+     }
+    },
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}/permissions",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 403,
+    "code": "forbidden",
+    "message": "Only the server owner or Manage-Server admins can change who can configure the bot."
+   }
+  },
+  {
+   "world": {
+    "paths": {
+     "/guilds/99999999999999999999": {
+      "id": "99999999999999999999",
+      "owner_id": "312345678901234567",
+      "roles": [
+       {
+        "id": "99999999999999999999",
+        "permissions": "0"
+       }
+      ]
+     },
+     "/guilds/99999999999999999999/members/312345678901234567": {
+      "user": {
+       "id": "312345678901234567"
+      },
+      "roles": []
+     },
+     "/guilds/99999999999999999999/roles": []
+    },
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}/permissions",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 500
+   }
+  },
+  {
+   "world": {
+    "paths": {
+     "/guilds/99999999999999999999": {
+      "id": "99999999999999999999",
+      "owner_id": "312345678901234567",
+      "roles": [
+       {
+        "id": "99999999999999999999",
+        "permissions": "0"
+       }
+      ]
+     },
+     "/guilds/99999999999999999999/members/312345678901234567": {
+      "user": {
+       "id": "312345678901234567"
+      },
+      "roles": []
+     }
+    },
+    "errors": {
+     "/guilds/99999999999999999999/roles": "GET /guilds/99999999999999999999/roles -> 400: bad"
+    }
+   },
+   "route": "/guilds/{guild_id}/permissions",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ]
+   ],
+   "want": {
+    "status": 502,
+    "code": "internal_error",
+    "message": "Couldn't reach Discord: GET /guilds/99999999999999999999/roles -> 400: bad"
+   }
+  },
+  {
+   "world": {
+    "paths": {},
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}/announcements/{key}/template",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ],
+    [
+     "key",
+     "nope"
+    ]
+   ],
+   "want": {
+    "status": 404,
+    "code": "not_found",
+    "message": "Unknown announcement type."
+   }
+  },
+  {
+   "world": {
+    "paths": {},
+    "errors": {}
+   },
+   "route": "/guilds/{guild_id}/clubs/{club_id}/roster/{member_id}/{action}",
+   "linked": true,
+   "params": [
+    [
+     "guild_id",
+     "+99999999999999999999"
+    ],
+    [
+     "club_id",
+     "c"
+    ],
+    [
+     "member_id",
+     "5"
+    ],
+    [
+     "action",
+     "fly"
+    ]
+   ],
+   "want": {
+    "status": 404,
+    "code": "not_found",
+    "message": "Unknown roster action."
+   }
+  }
+ ]
+}

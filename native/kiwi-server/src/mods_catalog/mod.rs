@@ -21,11 +21,10 @@ mod tests;
 
 use axum::{
     Router,
-    http::Uri,
     routing::{delete, get, patch, post},
 };
 
-use crate::{error, middleware::pyurl::scope_path, state::AppState};
+use crate::{error, state::AppState};
 
 const PROJECT: &str = "/v1/mods/hub/projects/{handle}/{slug}";
 
@@ -72,14 +71,4 @@ pub fn router() -> Router<AppState> {
         .route("/site/mods/projects/{handle}/{slug}", get(site_project).fallback(na("GET")))
         .route("/site/mods/projects/{handle}/{slug}/releases", get(site_releases).fallback(na("GET")))
         .route("/site/mods/projects/{handle}/{slug}/forks", get(site_forks).fallback(na("GET")))
-}
-
-/// For `routes::defer_to_python`: the `POST` on the releases path belongs to
-/// the release component, and `/v1/mods/hub/creator-links` (caught here by
-/// `/v1/mods/{handle}/{slug}`) to the creator-link one.
-pub fn defers(matched: &str, uri: &Uri) -> bool {
-    match matched {
-        "/v1/mods/{handle}/{slug}" => scope_path(uri) == "/v1/mods/hub/creator-links",
-        _ => false,
-    }
 }

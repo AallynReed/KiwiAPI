@@ -845,9 +845,14 @@ async fn routes_answer_before_any_store() {
     let settings = crate::config::Settings::from_vars([("PY_UPSTREAM", "http://127.0.0.1:9")]).unwrap();
     let upstream = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new()).build_http();
     let db = crate::db::Db { mongo: None, redis: None, pg: None };
-    let app = crate::routes::app(crate::state::AppState {
-        inner: std::sync::Arc::new(crate::state::Inner { settings, db, upstream }),
-    });
+    let state = crate::state::AppState { inner: std::sync::Arc::new(crate::state::Inner { settings, db, upstream }) };
+    let app = crate::routes::app_with(state.clone(), false);
+    for path in ["/git/mods/a/b/info/refs?service=git-upload-pack", "/git/mods/a/.git/info/refs"] {
+        let peer = axum::extract::ConnectInfo(std::net::SocketAddr::from(([127, 0, 0, 1], 50000)));
+        let req = axum::http::Request::builder().uri(path).extension(peer).body(Body::empty()).unwrap();
+        let resp = crate::routes::app_with(state.clone(), true).oneshot(req).await.unwrap();
+        assert_eq!(resp.status().as_u16(), 404, "native {path}");
+    }
     let cases = [
         ("PUT", "/v1/mods/hub/me/git-tokens", 405, Some("GET")),
         ("GET", "/v1/mods/hub/me/git-tokens/abc", 405, Some("DELETE")),
@@ -875,12 +880,13 @@ async fn routes_answer_before_any_store() {
 }
 
 #[test]
-fn defers_non_git_segments() {
-    let uri = |p: &str| p.parse::<axum::http::Uri>().unwrap();
-    let m = "/git/mods/{handle}/{slug}/info/refs";
-    assert!(!super::defers(m, &uri("/git/mods/a/b.git/info/refs")));
-    assert!(super::defers(m, &uri("/git/mods/a/b/info/refs")));
-    assert!(super::defers(m, &uri("/git/mods/a/.git/info/refs")));
-    assert!(!super::defers(m, &uri("/git/mods/a/b%2Egit/info/refs")));
-    assert!(!super::defers("/v1/mods/hub/me/git-tokens", &uri("/v1/mods/hub/me/git-tokens")));
+fn non_git_segments_route_like_starlette() {
+    use crate::starlette::{Outcome, Table};
+    let t = Table::api();
+    let get = axum::http::Method::GET;
+    assert!(matches!(t.resolve(&get, "/git/mods/a/b.git/info/refs"), Outcome::Full(_)));
+    assert_eq!(t.resolve(&get, "/git/mods/a/b/info/refs"), Outcome::NotFound);
+    assert_eq!(t.resolve(&get, "/git/mods/a/.git/info/refs"), Outcome::NotFound);
+    assert!(matches!(t.resolve(&axum::http::Method::POST, "/git/mods/a/b.git/info/refs"), Outcome::Partial(_)));
+    assert!(matches!(t.resolve(&get, "/v1/mods/hub/projects/a/b/raw/main/"), Outcome::Full(_)));
 }

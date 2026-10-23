@@ -23,7 +23,7 @@ use super::{
         CLUB_RANKS, CLUBS, Club, GUILD_CONFIGS, GuildConfig, MAX_CLUBS_PER_GUILD, MarketWatchItem, demote_rank,
         promote_rank, rank_label, reconcile, reconcile_club,
     },
-    rest::{self, MemberCtx, PERM_ADMINISTRATOR, PERM_MANAGE_GUILD, Rest, RestError, Snapshot},
+    rest::{self, MemberCtx, PERM_ADMINISTRATOR, PERM_MANAGE_GUILD, Rest, RestError, Snapshot, Snowflake},
 };
 use crate::{
     admin::path_params,
@@ -36,8 +36,6 @@ use crate::{
     state::AppState,
     validation::{BodyInput, Field, FromBody, FromParams, Params, read_body},
 };
-
-const PREFIX: &str = "/v1/site-auth/discord";
 
 /// `CAPABILITIES`.
 pub const CAPABILITIES: [(&str, &str); 3] = [
@@ -138,7 +136,11 @@ fn live_ids(snap: &Snapshot, guild_id: i64) -> Result<(HashSet<i64>, HashSet<i64
     Ok((channels, roles))
 }
 
-async fn member_ctx<D: Deps>(deps: &D, guild_id: i64, user: &SiteUser) -> Result<MemberCtx, ApiError> {
+async fn member_ctx<D: Deps, G: std::fmt::Display + Sync>(
+    deps: &D,
+    guild_id: G,
+    user: &SiteUser,
+) -> Result<MemberCtx, ApiError> {
     let Some(uid) = user.discord_id.filter(|i| *i != 0) else {
         return Err(ApiError::forbidden("Link your Discord account (sign in with Discord) to manage the bot."));
     };
@@ -401,11 +403,17 @@ impl FromBody for PermissionsUpdate {
 
 // --- path parameters -------------------------------------------------------------------
 
+/// `guild_id: int`: pydantic takes any size; one past `i64` never reaches the
+/// route logic ([`big_guild`]).
+fn guild_param(p: &mut Params<'_>) -> i64 {
+    p.path("guild_id").int().saturating().required()
+}
+
 pub struct GuildPath(pub i64);
 
 impl FromParams for GuildPath {
     fn from_params(p: &mut Params<'_>) -> Self {
-        GuildPath(p.path("guild_id").int().required())
+        GuildPath(guild_param(p))
     }
 }
 
@@ -413,7 +421,7 @@ pub struct KeyPath(pub i64, pub String);
 
 impl FromParams for KeyPath {
     fn from_params(p: &mut Params<'_>) -> Self {
-        let g = p.path("guild_id").int().required();
+        let g = guild_param(p);
         KeyPath(g, p.path("key").str().required())
     }
 }
@@ -422,7 +430,7 @@ pub struct ClubPath(pub i64, pub String);
 
 impl FromParams for ClubPath {
     fn from_params(p: &mut Params<'_>) -> Self {
-        let g = p.path("guild_id").int().required();
+        let g = guild_param(p);
         ClubPath(g, p.path("club_id").str().required())
     }
 }
@@ -430,19 +438,58 @@ impl FromParams for ClubPath {
 pub struct ActionPath {
     pub guild_id: i64,
     pub club_id: String,
-    pub member_id: i64,
+    pub member_id: Snowflake,
     pub action: String,
 }
 
 impl FromParams for ActionPath {
     fn from_params(p: &mut Params<'_>) -> Self {
-        ActionPath {
-            guild_id: p.path("guild_id").int().required(),
-            club_id: p.path("club_id").str().required(),
-            member_id: p.path("member_id").int().required(),
-            action: p.path("action").str().required(),
+        let guild_id = guild_param(p);
+        let club_id = p.path("club_id").str().required();
+        let n = p.path("member_id").int().saturating().required();
+        let member_id = match n {
+            i64::MAX | i64::MIN => Snowflake::parse(&p.path("member_id").str().required()),
+            n => Snowflake::Id(n),
+        };
+        ActionPath { guild_id, club_id, member_id, action: p.path("action").str().required() }
+    }
+}
+
+/// A `guild_id` past `i64` (`route` is the matched template): Python checks
+/// what it checks before `_member_ctx`, asks Discord about the guild, and then
+/// fails on its first Mongo query, which refuses an int that wide.
+pub async fn big_guild<D: Deps>(
+    deps: &D,
+    user: &SiteUser,
+    route: &str,
+    params: &[(String, String)],
+) -> Option<ApiError> {
+    let param = |name: &str| params.iter().find(|(k, _)| k == name).map(|(_, v)| v.as_str());
+    let g @ Snowflake::Big(_) = Snowflake::parse(param("guild_id")?) else { return None };
+    if route.ends_with("/template") {
+        let key = param("key").unwrap_or_default();
+        if announcements::by_key(key).is_none() || !contexts::has_customization(key) {
+            return Some(ApiError::not_found("Unknown announcement type."));
         }
     }
+    if route.ends_with("/{action}") && !matches!(param("action"), Some("promote" | "demote")) {
+        return Some(ApiError::not_found("Unknown roster action."));
+    }
+    let ctx = match member_ctx(deps, &g, user).await {
+        Ok(ctx) => ctx,
+        Err(e) => return Some(e),
+    };
+    if route.ends_with("/permissions") {
+        if !ctx.is_admin {
+            return Some(ApiError::forbidden(
+                "Only the server owner or Manage-Server admins can change who can configure the bot.",
+            ));
+        }
+        if let Err(e) = deps.get(&format!("/guilds/{g}/roles"), 15).await {
+            return Some(discord_err(e));
+        }
+    }
+    Some(internal(format!("guild_id {g} is past what Mongo stores")))
 }
 
 /// Path parameters (Starlette-decoded) as FastAPI validates them.
@@ -468,6 +515,10 @@ pub fn validate_parts<P: FromParams, B: FromBody>(
     }
 }
 
+fn matched(parts: &axum::http::request::Parts) -> &str {
+    parts.extensions.get::<axum::extract::MatchedPath>().map_or("", |m| m.as_str())
+}
+
 /// The site user, then path parameters, FastAPI's order.
 pub struct Authed<P>(pub SiteUser, pub P);
 
@@ -477,7 +528,11 @@ impl<P: FromParams + Send> FromRequestParts<AppState> for Authed<P> {
     async fn from_request_parts(parts: &mut axum::http::request::Parts, state: &AppState) -> Result<Self, Response> {
         let CurrentSiteUser(user) =
             CurrentSiteUser::from_request_parts(parts, state).await.map_err(IntoResponse::into_response)?;
-        let value = validate_path(path_params(parts), &parts.headers).map_err(IntoResponse::into_response)?;
+        let params = path_params(parts);
+        let value = validate_path(params.clone(), &parts.headers).map_err(IntoResponse::into_response)?;
+        if let Some(e) = big_guild(&Live::new(state), &user, matched(parts), &params).await {
+            return Err(e.into_response());
+        }
         Ok(Authed(user, value))
     }
 }
@@ -494,7 +549,11 @@ impl<P: FromParams + Send, B: FromBody + Send> FromRequest<AppState> for AuthedB
         let body = read_body(&parts.headers, body).await.map_err(IntoResponse::into_response)?;
         let CurrentSiteUser(user) =
             CurrentSiteUser::from_request_parts(&mut parts, state).await.map_err(IntoResponse::into_response)?;
-        let (p, b) = validate_parts(path_params(&parts), &parts.headers, &body).map_err(IntoResponse::into_response)?;
+        let params = path_params(&parts);
+        let (p, b) = validate_parts(params.clone(), &parts.headers, &body).map_err(IntoResponse::into_response)?;
+        if let Some(e) = big_guild(&Live::new(state), &user, matched(&parts), &params).await {
+            return Err(e.into_response());
+        }
         Ok(AuthedBody(user, p, b))
     }
 }
@@ -529,19 +588,6 @@ pub fn router() -> Router<AppState> {
             post(roster_action_h).fallback(nm("POST")),
         )
         .route("/v1/site-auth/discord/guilds/{guild_id}/permissions", put(set_permissions_h).fallback(nm("PUT")))
-}
-
-/// For `routes::defer_to_python`: an int path value pydantic takes but `i64`
-/// can't hold goes to Python.
-pub fn defers(matched: &str, path: &str) -> bool {
-    if !matched.starts_with(PREFIX) {
-        return false;
-    }
-    let decoded = percent_encoding::percent_decode_str(path).decode_utf8_lossy();
-    matched.split('/').zip(decoded.split('/')).any(|(t, v)| {
-        matches!(t, "{guild_id}" | "{member_id}")
-            && matches!(crate::validation::str_as_int(v), Ok(i) if i64::try_from(i).is_err())
-    })
 }
 
 fn reply(r: Res) -> Response {
@@ -1287,7 +1333,7 @@ pub async fn roster_action<D: Deps>(deps: &D, user: &SiteUser, p: &ActionPath) -
     if linked.is_empty() {
         return Err(ApiError::bad_request("This club has no rank roles linked yet."));
     }
-    let member = rest::guild_member(deps, p.guild_id, p.member_id)
+    let member = rest::guild_member(deps, p.guild_id, &p.member_id)
         .await
         .map_err(raw_err)?
         .ok_or_else(|| ApiError::not_found("That member is no longer in this server."))?;
@@ -1309,7 +1355,7 @@ pub async fn roster_action<D: Deps>(deps: &D, user: &SiteUser, p: &ActionPath) -
     let reason = format!("Kiwi club {}: {current} -> {target} (dashboard)", p.action);
     let applied: rest::RResult<()> = async {
         if !held.contains(&target_role) {
-            rest::add_member_role(deps, p.guild_id, p.member_id, target_role, &reason).await?;
+            rest::add_member_role(deps, p.guild_id, &p.member_id, target_role, &reason).await?;
         }
         for rank in CLUB_RANKS {
             if let Some(&rid) = club.role_links.get(rank)
@@ -1317,7 +1363,7 @@ pub async fn roster_action<D: Deps>(deps: &D, user: &SiteUser, p: &ActionPath) -
                 && rid != target_role
                 && held.contains(&rid)
             {
-                rest::remove_member_role(deps, p.guild_id, p.member_id, rid, &reason).await?;
+                rest::remove_member_role(deps, p.guild_id, &p.member_id, rid, &reason).await?;
             }
         }
         Ok(())

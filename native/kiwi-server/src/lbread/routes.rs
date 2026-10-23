@@ -26,6 +26,7 @@ use crate::{
     auth::{Public, Rejection, RequireScope, scopes},
     error::ApiError,
     features::{self, RequireFeature, py_truthy},
+    middleware::pyurl::scope_path,
     pyjson::{self, PyJson},
     ratelimit::{self, RateLimitInfo},
     state::AppState,
@@ -194,6 +195,29 @@ impl FromParams for HistoryQ {
     }
 }
 
+/// The `/site` routes' `uuid: int` path parameter (pydantic, before the
+/// query), `None` past int32.
+pub struct SiteUuid(pub Option<i32>);
+
+fn site_uuid(p: &mut Params<'_>) -> Option<i32> {
+    i32::try_from(p.path("uuid").int().saturating().required()).ok()
+}
+
+impl FromParams for SiteUuid {
+    fn from_params(p: &mut Params<'_>) -> Self {
+        SiteUuid(site_uuid(p))
+    }
+}
+
+pub struct SiteQ<T>(pub Option<i32>, pub T);
+
+impl<T: FromParams> FromParams for SiteQ<T> {
+    fn from_params(p: &mut Params<'_>) -> Self {
+        let uuid = site_uuid(p);
+        SiteQ(uuid, T::from_params(p))
+    }
+}
+
 // --- /v1 endpoints --------------------------------------------------------------
 
 pub async fn v1_timestamps<B: Backend>(b: &B, limit: i64) -> Reply {
@@ -229,6 +253,38 @@ pub async fn v1_history<B: Backend>(b: &B, token_id: &str, uuid: i32, q: &Histor
     let payload = cache::get_board_history(b, b, uuid, q.days, q.top, now).await.map_err(internal)?;
     let body = service::history_v1(&payload).map_err(internal)?;
     Ok((archive, pydantic(&body)).into_response())
+}
+
+/// A board id past the `INTEGER` column: Python reaches the first query that
+/// binds it and asyncpg refuses the argument.
+fn past_int32() -> Rejection {
+    internal(anyhow::anyhow!("board uuid out of int32 range"))
+}
+
+/// `uuid` is `None` past int32: the steps before the first query still run.
+pub async fn v1_entries_any<B: Backend>(b: &B, token_id: &str, uuid: Option<i32>, q: &EntriesQ) -> Reply {
+    let Some(uuid) = uuid else {
+        let anchor = lb_timestamp(q.created_at, secs(b.now_us()))?;
+        archive_limit(b, token_id, anchor).await?;
+        return Err(past_int32());
+    };
+    v1_entries(b, token_id, uuid, q).await
+}
+
+pub async fn v1_history_any<B: Backend>(b: &B, token_id: &str, uuid: Option<i32>, q: &HistoryQ) -> Reply {
+    let Some(uuid) = uuid else {
+        archive_limit(b, token_id, secs(b.now_us()) - q.days * DAY).await?;
+        return Err(past_int32());
+    };
+    v1_history(b, token_id, uuid, q).await
+}
+
+pub async fn site_entries_any<B: Backend>(b: &B, uuid: Option<i32>, q: &EntriesQ) -> Reply {
+    let Some(uuid) = uuid else {
+        guard_archive(b, q.created_at).await?;
+        return Err(past_int32());
+    };
+    site_entries(b, uuid, q).await
 }
 
 pub async fn v1_health<B: Backend>(b: &B, uuid: i32) -> Reply {
@@ -419,10 +475,10 @@ impl FromRequestParts<AppState> for SiteLbOn {
     }
 }
 
-/// The board id of a `.../leaderboards/{uuid}/...` path (the router only
-/// lets canonical ints through, see [`super::defers`]).
+/// The board id of a `/v1/leaderboards/{uuid:int}/...` path (Starlette's
+/// `[0-9]+` on the decoded path, see [`crate::starlette`]), `None` past int32.
 pub fn uuid_of(uri: &Uri) -> Option<i32> {
-    uri.path().split('/').nth(3).and_then(parse_uuid)
+    scope_path(uri).split('/').nth(3).and_then(parse_uuid)
 }
 
 fn with_limit(info: RateLimitInfo, reply: Reply) -> Response {
@@ -434,10 +490,6 @@ fn with_limit(info: RateLimitInfo, reply: Reply) -> Response {
 
 fn reply(r: Reply) -> Response {
     r.unwrap_or_else(IntoResponse::into_response)
-}
-
-fn bad_path() -> Response {
-    ApiError::http(StatusCode::NOT_FOUND, None).into_response()
 }
 
 pub fn router() -> Router<AppState> {
@@ -479,7 +531,7 @@ async fn h_v1_boards(
 }
 
 async fn h_v1_board(_: LbOn, State(state): State<AppState>, RequireScope(ctx): Scoped, uri: Uri) -> Response {
-    let Some(uuid) = uuid_of(&uri) else { return bad_path() };
+    let Some(uuid) = uuid_of(&uri) else { return past_int32().into_response() };
     with_limit(ctx.rate_limit, v1_board(&Live(&state), uuid).await)
 }
 
@@ -490,8 +542,7 @@ async fn h_v1_entries(
     uri: Uri,
     Query(q): Query<EntriesQ>,
 ) -> Response {
-    let Some(uuid) = uuid_of(&uri) else { return bad_path() };
-    with_limit(ctx.rate_limit, v1_entries(&Live(&state), &ctx.token.id.to_hex(), uuid, &q).await)
+    with_limit(ctx.rate_limit, v1_entries_any(&Live(&state), &ctx.token.id.to_hex(), uuid_of(&uri), &q).await)
 }
 
 async fn h_v1_history(
@@ -501,12 +552,11 @@ async fn h_v1_history(
     uri: Uri,
     Query(q): Query<HistoryQ>,
 ) -> Response {
-    let Some(uuid) = uuid_of(&uri) else { return bad_path() };
-    with_limit(ctx.rate_limit, v1_history(&Live(&state), &ctx.token.id.to_hex(), uuid, &q).await)
+    with_limit(ctx.rate_limit, v1_history_any(&Live(&state), &ctx.token.id.to_hex(), uuid_of(&uri), &q).await)
 }
 
 async fn h_v1_health(_: LbOn, State(state): State<AppState>, RequireScope(ctx): Scoped, uri: Uri) -> Response {
-    let Some(uuid) = uuid_of(&uri) else { return bad_path() };
+    let Some(uuid) = uuid_of(&uri) else { return past_int32().into_response() };
     with_limit(ctx.rate_limit, v1_health(&Live(&state), uuid).await)
 }
 
@@ -538,19 +588,22 @@ async fn h_site_records(_: SiteLbOn, State(state): State<AppState>) -> Response 
     reply(site_records(&Live(&state)).await)
 }
 
-async fn h_site_entries(_: SiteLbOn, State(state): State<AppState>, uri: Uri, Query(q): Query<EntriesQ>) -> Response {
-    let Some(uuid) = uuid_of(&uri) else { return bad_path() };
-    reply(site_entries(&Live(&state), uuid, &q).await)
+async fn h_site_entries(_: SiteLbOn, State(state): State<AppState>, Query(q): Query<SiteQ<EntriesQ>>) -> Response {
+    reply(site_entries_any(&Live(&state), q.0, &q.1).await)
 }
 
-async fn h_site_history(_: SiteLbOn, State(state): State<AppState>, uri: Uri, Query(q): Query<HistoryQ>) -> Response {
-    let Some(uuid) = uuid_of(&uri) else { return bad_path() };
-    reply(site_history(&Live(&state), uuid, &q).await)
+async fn h_site_history(_: SiteLbOn, State(state): State<AppState>, Query(q): Query<SiteQ<HistoryQ>>) -> Response {
+    match q.0 {
+        Some(uuid) => reply(site_history(&Live(&state), uuid, &q.1).await),
+        None => past_int32().into_response(),
+    }
 }
 
-async fn h_site_health(_: SiteLbOn, State(state): State<AppState>, uri: Uri) -> Response {
-    let Some(uuid) = uuid_of(&uri) else { return bad_path() };
-    reply(site_health(&Live(&state), uuid).await)
+async fn h_site_health(_: SiteLbOn, State(state): State<AppState>, Query(SiteUuid(uuid)): Query<SiteUuid>) -> Response {
+    match uuid {
+        Some(uuid) => reply(site_health(&Live(&state), uuid).await),
+        None => past_int32().into_response(),
+    }
 }
 
 /// The `{name}` segment as Starlette routes it: percent-decoded, bad UTF-8 replaced.

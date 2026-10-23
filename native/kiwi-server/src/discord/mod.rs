@@ -47,11 +47,6 @@ pub fn router() -> Router<AppState> {
         .merge(dashboard::router())
 }
 
-/// For `routes::defer_to_python`.
-pub fn defers(matched: &str, path: &str) -> bool {
-    dashboard::defers(matched, path)
-}
-
 /// `bytes.fromhex`: hex pairs, ASCII whitespace allowed between them.
 pub fn fromhex(s: &str) -> Option<Vec<u8>> {
     let b = s.as_bytes();

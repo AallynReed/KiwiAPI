@@ -31,14 +31,21 @@ pub fn router() -> Router<AppState> {
     Router::new().route(STREAM_PATH, get(stream::stream))
 }
 
-/// The stream stays with Python until this process runs the listener that
-/// feeds it (`RUST_OWNS=event_listener` switches Python's off).
+/// Whether this process feeds its own streams: always once nothing is proxied,
+/// else when `RUST_OWNS=event_listener` switched Python's listener off.
+pub fn listener_runs() -> bool {
+    jobs::owns(LISTENER) || crate::starlette::native_enabled()
+}
+
+/// Proxy mode: the stream stays with Python until this process runs the listener.
 pub fn defers(route: &str) -> bool {
-    route == STREAM_PATH && !jobs::owns(LISTENER)
+    route == STREAM_PATH && !listener_runs()
 }
 
 pub fn start_jobs(state: &AppState) {
-    jobs::spawn(state, LISTENER, bus::listen);
+    if listener_runs() {
+        tokio::spawn(bus::listen(state.clone()));
+    }
     jobs::spawn(state, "event_watch", bus::watch);
     jobs::spawn(state, "event_scheduler", scheduler::run);
 }
