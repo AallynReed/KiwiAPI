@@ -8,7 +8,8 @@ use serde_json::{Map, Value};
 use super::{
     W,
     activity::{BG, MUTE, TEXT, rgba},
-    text::{Fonts, Text},
+    i18n::{Arg, Locale, Tr},
+    text::Fonts,
 };
 use crate::features::py_truthy;
 
@@ -79,54 +80,59 @@ fn text_of(v: &Value) -> Result<String, ImageError> {
 }
 
 /// `_rel`: "in 2h 14m" / "now" / "—".
-pub fn rel(ts: Option<&Value>, now: i64) -> Result<String, ImageError> {
+pub fn rel(tr: &Tr, ts: Option<&Value>, now: i64) -> Result<String, ImageError> {
     let Some(ts) = ts.filter(|v| py_truthy(v)) else { return Ok("—".into()) };
     let delta = int_of(ts)? - now;
     if delta <= 0 {
-        return Ok("now".into());
+        return Ok(tr.t("now"));
     }
     let (days, rem) = (delta / 86_400, delta % 86_400);
     let (hours, rem) = (rem / 3600, rem % 3600);
     let mins = rem / 60;
-    Ok(if days > 0 {
-        format!("in {days}d {hours}h")
+    if days > 0 {
+        tr.tf("in {d}d {h}h", &[("d", Arg::Int(days)), ("h", Arg::Int(hours))])
     } else if hours > 0 {
-        format!("in {hours}h {mins}m")
+        tr.tf("in {h}h {m}m", &[("h", Arg::Int(hours)), ("m", Arg::Int(mins))])
     } else {
-        format!("in {mins}m")
-    })
+        tr.tf("in {m}m", &[("m", Arg::Int(mins))])
+    }
 }
 
 /// `_rel_coarse` over `countdown_bucket`.
-pub fn rel_coarse(ts: Option<&Value>, now: i64) -> Result<String, ImageError> {
+pub fn rel_coarse(tr: &Tr, ts: Option<&Value>, now: i64) -> Result<String, ImageError> {
     let Some(ts) = ts.filter(|v| py_truthy(v)) else { return Ok("—".into()) };
     let rem = int_of(ts)? - now;
-    Ok(if rem <= 0 {
-        "now".into()
+    if rem <= 0 {
+        Ok(tr.t("now"))
     } else if rem < 3600 {
-        format!("in {}m", rem / 60)
+        tr.tf("in {m}m", &[("m", Arg::Int(rem / 60))])
     } else if rem < 86_400 {
-        format!("in {}h", rem / 3600)
+        tr.tf("in {h}h", &[("h", Arg::Int(rem / 3600))])
     } else {
-        format!("in {}d", rem / 86_400)
-    })
+        tr.tf("in {d}d", &[("d", Arg::Int(rem / 86_400))])
+    }
 }
 
-type Rel = fn(Option<&Value>, i64) -> Result<String, ImageError>;
+type Rel = fn(&Tr, Option<&Value>, i64) -> Result<String, ImageError>;
+
+/// `t(text, when=rel(ts))`.
+fn when(tr: &Tr, text: &str, rel: Rel, ts: Option<&Value>, now: i64) -> Result<String, ImageError> {
+    tr.tf(text, &[("when", Arg::Str(&rel(tr, ts, now)?))])
+}
 
 /// `_merchant_lines` (and the announcement's copy of it).
-fn merchant_lines(m: &Value, now: i64, rel: Rel) -> Result<(String, String), ImageError> {
+fn merchant_lines(tr: &Tr, m: &Value, now: i64, rel: Rel) -> Result<(String, String), ImageError> {
     if truthy(get(m, "active")?) {
-        let mut head = "Here now".to_owned();
+        let mut head = tr.t("Here now");
         if let Some(stage) = get(m, "state")?.filter(|s| py_truthy(s))
             && *stage != Value::String("away".into())
         {
             head.push_str(" · ");
             head.push_str(&str_of(stage));
         }
-        return Ok((head, format!("Leaves {}", rel(get(m, "ends_at")?, now)?)));
+        return Ok((head, when(tr, "Leaves {when}", rel, get(m, "ends_at")?, now)?));
     }
-    Ok(("Away".into(), format!("Arrives {}", rel(get(m, "starts_at")?, now)?)))
+    Ok((tr.t("Away"), when(tr, "Arrives {when}", rel, get(m, "starts_at")?, now)?))
 }
 
 fn st_color(st: &Value) -> [u8; 3] {
@@ -168,10 +174,18 @@ fn status_overall(status: Option<&Value>) -> Result<Value, ImageError> {
 
 /// The board as RGBA pixels. `data` holds the service dicts under
 /// challenge/chaos/biomes/corruxion/fluxion/server/status.
-pub fn draw_board(lib: &Library, fonts: &Fonts, data: &Value, now: i64, hhmm: &str) -> Result<Rgba, ImageError> {
+pub fn draw_board(
+    lib: &Library,
+    fonts: &Fonts,
+    loc: &Locale,
+    data: &Value,
+    now: i64,
+    hhmm: &str,
+) -> Result<Rgba, ImageError> {
     let mut img = Rgba::new(W, super::H, rgba(BG, 255));
     let mut d = Draw::new(&mut img);
-    let mut tx = Text::new(lib, fonts);
+    let mut tx = loc.text(lib, fonts);
+    let tr = &loc.tr;
     let m = 56.0;
     let overall = status_overall(data.get("status"))?;
     let oc = st_color(&overall);
@@ -181,7 +195,7 @@ pub fn draw_board(lib: &Library, fonts: &Fonts, data: &Value, now: i64, hhmm: &s
     tx.fit_text(
         &mut d,
         (m + 30.0, 50.0),
-        "TROVE NOW · LIVE",
+        &tr.t("TROVE NOW · LIVE"),
         1200 - 56 - (56 + 30),
         24,
         rgba(MUTE, 255),
@@ -189,7 +203,8 @@ pub fn draw_board(lib: &Library, fonts: &Fonts, data: &Value, now: i64, hhmm: &s
         false,
         None,
     )?;
-    tx.fit_text(&mut d, (m, 84.0), st_overall(&overall), 1200 - 2 * 56, 60, rgba(oc, 255), true, false, Some(38))?;
+    let headline = tr.t(st_overall(&overall));
+    tx.fit_text(&mut d, (m, 84.0), &headline, 1200 - 2 * 56, 60, rgba(oc, 255), true, false, Some(38))?;
 
     let cur = data.get("challenge").ok_or(bad("challenge"))?;
     let challenge_on = truthy(get(cur, "active")?) && truthy(get(cur, "name")?);
@@ -198,9 +213,9 @@ pub fn draw_board(lib: &Library, fonts: &Fonts, data: &Value, now: i64, hhmm: &s
             Value::Object(o) => o.get("name").ok_or(bad("name"))?,
             _ => return Err(bad("challenge")),
         };
-        (text_of(name)?, format!("Ends {}", rel(get(cur, "ends_at")?, now)?))
+        (text_of(name)?, when(tr, "Ends {when}", rel, get(cur, "ends_at")?, now)?)
     } else if truthy(get(cur, "active")?) {
-        ("No Challenge".to_owned(), "Starting…".to_owned())
+        (tr.t("No Challenge"), tr.t("Starting…"))
     } else {
         let interval = if truthy(get(cur, "is_friday_window")?) { 1800 } else { 3600 };
         let starts = match get(cur, "starts_at")?.filter(|v| py_truthy(v)) {
@@ -208,15 +223,15 @@ pub fn draw_board(lib: &Library, fonts: &Fonts, data: &Value, now: i64, hhmm: &s
             None => 0,
         };
         let nxt = starts + interval;
-        let sub = if nxt != 0 { format!("Next {}", rel(Some(&Value::from(nxt)), now)?) } else { String::new() };
-        ("No Challenge".to_owned(), sub)
+        let sub = if nxt != 0 { when(tr, "Next {when}", rel, Some(&Value::from(nxt)), now)? } else { String::new() };
+        (tr.t("No Challenge"), sub)
     };
 
     let chaos = data.get("chaos").ok_or(bad("chaos"))?;
     let item = get(&or_empty(get(chaos, "item")?), "name")?.cloned();
     let (chaos_val, chaos_sub) = match item.as_ref().filter(|v| py_truthy(v)) {
-        Some(name) => (text_of(name)?, format!("Rotates {}", rel(get(chaos, "ends_at")?, now)?)),
-        None => ("—".to_owned(), "Not relayed yet".to_owned()),
+        Some(name) => (text_of(name)?, when(tr, "Rotates {when}", rel, get(chaos, "ends_at")?, now)?),
+        None => ("—".to_owned(), tr.t("Not relayed yet")),
     };
 
     let biomes = data.get("biomes").ok_or(bad("biomes"))?;
@@ -232,17 +247,17 @@ pub fn draw_board(lib: &Library, fonts: &Fonts, data: &Value, now: i64, hhmm: &s
             }
         }
     }
-    let biome_rotate = format!("rotates {}", rel(get(biomes, "ends_at")?, now)?);
+    let biome_rotate = when(tr, "rotates {when}", rel, get(biomes, "ends_at")?, now)?;
 
     let s = data.get("server").ok_or(bad("server"))?;
     let need = |k: &str| match s {
         Value::Object(o) => o.get(k).ok_or(bad("KeyError")),
         _ => Err(bad("server")),
     };
-    let reset_val = format!("Daily {}", rel(Some(need("daily_reset_at")?), now)?);
-    let reset_sub = format!("Weekly {}", rel(Some(need("weekly_reset_at")?), now)?);
-    let (cx_val, cx_sub) = merchant_lines(data.get("corruxion").ok_or(bad("corruxion"))?, now, rel)?;
-    let (fx_val, fx_sub) = merchant_lines(data.get("fluxion").ok_or(bad("fluxion"))?, now, rel)?;
+    let reset_val = when(tr, "Daily {when}", rel, Some(need("daily_reset_at")?), now)?;
+    let reset_sub = when(tr, "Weekly {when}", rel, Some(need("weekly_reset_at")?), now)?;
+    let (cx_val, cx_sub) = merchant_lines(tr, data.get("corruxion").ok_or(bad("corruxion"))?, now, rel)?;
+    let (fx_val, fx_sub) = merchant_lines(tr, data.get("fluxion").ok_or(bad("fluxion"))?, now, rel)?;
     let values = [
         Some((ch_val, ch_sub)),
         Some((chaos_val, chaos_sub)),
@@ -297,13 +312,14 @@ pub fn draw_board(lib: &Library, fonts: &Fonts, data: &Value, now: i64, hhmm: &s
                 tx.fit_text(&mut d, (xf + 26.0, yf + 84.0), sub, cw - 52, 23, rgba(MUTE, 255), false, false, None)?;
             }
         }
-        tx.fit_text(&mut d, (xf + 26.0, yf + 16.0), title, 90.max(title_max), 20, rgba(MUTE, 255), true, false, None)?;
+        let title = tr.t(title);
+        tx.fit_text(&mut d, (xf + 26.0, yf + 16.0), &title, 90.max(title_max), 20, rgba(MUTE, 255), true, false, None)?;
     }
 
     let h = super::H as f64;
     tx.draw(&mut d, (m, h - 46.0), "trove.aallyn.net", 23, false, rgba(MUTE, 255))?;
     let lw = tx.w("trove.aallyn.net", 23, false)?;
-    let fr = format!("Updated {hhmm} UTC");
+    let fr = tr.tf("Updated {time} UTC", &[("time", Arg::Str(hhmm))])?;
     tx.fit_text(
         &mut d,
         (W as f64 - m, h - 46.0),
@@ -394,6 +410,7 @@ pub fn sources(kind: &str) -> &'static [&'static str] {
         "fluxion" => &["fluxion"],
         "luxion" => &["luxion"],
         "server_status" => &["status"],
+        "game_update" => &["game_update"],
         _ => &[],
     }
 }
@@ -415,28 +432,35 @@ fn names_of(cur: &Value) -> Result<Vec<String>, ImageError> {
 }
 
 /// `_announcement_content(kind)` over `data` (the sources it names): the
-/// title, accent and lines (headline first). `game_update` is not handled.
-pub fn announcement_content(kind: &str, data: &Value, now: i64) -> Result<(String, [u8; 3], Vec<String>), ImageError> {
-    let mut title = match ann_title(kind) {
+/// title, accent and lines (headline first). `game_update` is the newest
+/// archived live-us version as `{version_tag, files_added, files_modified,
+/// files_removed}`, or null.
+pub fn announcement_content(
+    tr: &Tr,
+    kind: &str,
+    data: &Value,
+    now: i64,
+) -> Result<(String, [u8; 3], Vec<String>), ImageError> {
+    let mut title = tr.t(&match ann_title(kind) {
         Some(t) => t.to_owned(),
         None => py_title(&kind.replace('_', " ")),
-    };
+    });
     let mut accent = ann_accent(kind);
     let src = |k: &str| data.get(k).ok_or(bad("missing source"));
     let mut lines: Vec<String> = Vec::new();
     if kind == "hourly_challenge" || kind.starts_with("challenge_") {
         let c = src("challenge")?;
         let sub = if truthy(get(c, "active")?) {
-            format!("Ends {}", rel_coarse(get(c, "ends_at")?, now)?)
+            when(tr, "Ends {when}", rel_coarse, get(c, "ends_at")?, now)?
         } else {
-            format!("Next window {}", rel_coarse(get(c, "starts_at")?, now)?)
+            when(tr, "Next window {when}", rel_coarse, get(c, "starts_at")?, now)?
         };
         lines.push(match get(c, "name")?.filter(|v| py_truthy(v)) {
             Some(n) => text_of(n)?,
-            None => "No capture yet".into(),
+            None => tr.t("No capture yet"),
         });
         if let Some(t) = get(c, "type")?.filter(|v| py_truthy(v)) {
-            lines.push(format!("{} challenge", py_title(&text_of(t)?)));
+            lines.push(tr.tf("{type} challenge", &[("type", Arg::Str(&py_title(&text_of(t)?)))])?);
         }
         lines.push(sub);
     } else if kind == "chaos_chest" {
@@ -444,15 +468,15 @@ pub fn announcement_content(kind: &str, data: &Value, now: i64) -> Result<(Strin
         match get(&or_empty(get(c, "item")?), "name")?.filter(|v| py_truthy(v)) {
             Some(item) => {
                 lines.push(text_of(item)?);
-                lines.push(format!("Rotates {}", rel_coarse(get(c, "ends_at")?, now)?));
+                lines.push(when(tr, "Rotates {when}", rel_coarse, get(c, "ends_at")?, now)?);
             }
-            None => lines.push("Not relayed yet".into()),
+            None => lines.push(tr.t("Not relayed yet")),
         }
     } else if kind == "daily_bonuses" {
         let d = or_empty(get(&or_empty(Some(src("daily")?)), "current")?);
         lines.push(match get(&d, "name")?.filter(|v| py_truthy(v)) {
             Some(n) => text_of(n)?,
-            None => "Daily bonus".into(),
+            None => tr.t("Daily bonus"),
         });
         if let Some(Value::Array(b)) = get(&d, "normal_buffs")?.filter(|v| py_truthy(v)) {
             for x in b.iter().take(2) {
@@ -461,15 +485,15 @@ pub fn announcement_content(kind: &str, data: &Value, now: i64) -> Result<(Strin
         }
         let server = src("server")?;
         let reset = server.get("daily_reset_at").ok_or(bad("KeyError"))?;
-        lines.push(format!("Resets {}", rel_coarse(Some(reset), now)?));
+        lines.push(when(tr, "Resets {when}", rel_coarse, Some(reset), now)?);
     } else if kind == "longshade" || kind == "wild_mana" {
         let cur = or_empty(get(src(if kind == "longshade" { "biomes" } else { "wild_mana" })?, "current")?);
         let names = names_of(&cur)?;
-        let rotate = format!("Rotates {}", rel_coarse(get(&cur, "ends_at")?, now)?);
+        let rotate = when(tr, "Rotates {when}", rel_coarse, get(&cur, "ends_at")?, now)?;
         let shown = if names.is_empty() { vec!["—".to_owned()] } else { names };
         if kind == "longshade" {
-            title = "Long Shade Rotation".into();
-            lines.push("D15 Biomes".into());
+            title = tr.t("Long Shade Rotation");
+            lines.push(tr.t("D15 Biomes"));
         }
         lines.extend(shown);
         lines.push(rotate);
@@ -486,11 +510,11 @@ pub fn announcement_content(kind: &str, data: &Value, now: i64) -> Result<(Strin
         };
         lines.push(match name {
             Some(n) => text_of(&n)?,
-            None => "Stampy event".into(),
+            None => tr.t("Stampy event"),
         });
-        lines.push(format!("Ends {}", rel_coarse(get(&cur, "ends_at")?, now)?));
+        lines.push(when(tr, "Ends {when}", rel_coarse, get(&cur, "ends_at")?, now)?);
     } else if kind == "corruxion" || kind == "fluxion" {
-        let (a, b) = merchant_lines(src(kind)?, now, rel_coarse)?;
+        let (a, b) = merchant_lines(tr, src(kind)?, now, rel_coarse)?;
         lines.push(a);
         lines.push(b);
     } else if kind == "luxion" {
@@ -499,29 +523,43 @@ pub fn announcement_content(kind: &str, data: &Value, now: i64) -> Result<(Strin
             let win = get(m, "current_window")?.filter(|v| py_truthy(v));
             let nxt = get(m, "next_window")?.filter(|v| py_truthy(v));
             if let Some(win) = win {
-                lines.push("Rotation open".into());
-                lines.push(format!("Closes {}", rel_coarse(get(win, "ends_at")?, now)?));
+                lines.push(tr.t("Rotation open"));
+                lines.push(when(tr, "Closes {when}", rel_coarse, get(win, "ends_at")?, now)?);
             } else if let Some(nxt) = nxt {
-                lines.push("Trials started".into());
-                lines.push(format!("Next rotation {}", rel_coarse(get(nxt, "starts_at")?, now)?));
+                lines.push(tr.t("Trials started"));
+                lines.push(when(tr, "Next rotation {when}", rel_coarse, get(nxt, "starts_at")?, now)?);
             } else {
-                lines.push("Trials started".into());
-                lines.push(format!("Ends {}", rel_coarse(get(m, "ends_at")?, now)?));
+                lines.push(tr.t("Trials started"));
+                lines.push(when(tr, "Ends {when}", rel_coarse, get(m, "ends_at")?, now)?);
             }
         } else {
-            lines.push("Away".into());
-            lines.push("Returns every ~4 weeks".into());
+            lines.push(tr.t("Away"));
+            lines.push(tr.t("Returns every ~4 weeks"));
         }
     } else if kind == "server_status" {
         let s = or_empty(Some(src("status")?));
         let overall = hashable(get(&s, "overall")?.cloned().unwrap_or_else(|| "unknown".into()))?;
         accent = st_color(&overall);
         let envs = or_empty(get(&s, "environments")?);
-        lines.push(st_overall(&overall).into());
+        lines.push(tr.t(st_overall(&overall)));
         for (lbl, k) in [("EU", "eu"), ("US", "us"), ("PTS", "pts")] {
             let env = or_empty(get(&envs, k)?);
             let st = hashable(get(&env, "status")?.cloned().unwrap_or_else(|| "unknown".into()))?;
-            lines.push(format!("{lbl}: {}", st_label(&st)));
+            lines.push(format!("{lbl}: {}", tr.t(st_label(&st))));
+        }
+    } else if kind == "game_update" {
+        match src("game_update")? {
+            Value::Null => lines.push(tr.t("No update archived yet")),
+            v => {
+                let n = |k: &str| v.get(k).and_then(Value::as_i64).ok_or(bad("version"));
+                lines.push(text_of(v.get("version_tag").ok_or(bad("version"))?)?);
+                let args = [
+                    ("a", Arg::Int(n("files_added")?)),
+                    ("m", Arg::Int(n("files_modified")?)),
+                    ("r", Arg::Int(n("files_removed")?)),
+                ];
+                lines.push(tr.tf("{a} added, {m} modified, {r} removed", &args)?);
+            }
         }
     }
     Ok((title, accent, lines))
@@ -531,6 +569,7 @@ pub fn announcement_content(kind: &str, data: &Value, now: i64) -> Result<(Strin
 pub fn draw_announcement(
     lib: &Library,
     fonts: &Fonts,
+    loc: &Locale,
     title: &str,
     accent: [u8; 3],
     lines: &[String],
@@ -538,7 +577,7 @@ pub fn draw_announcement(
 ) -> Result<Rgba, ImageError> {
     let mut img = Rgba::new(ANN_W, ANN_H, rgba(BG, 255));
     let mut d = Draw::new(&mut img);
-    let mut tx = Text::new(lib, fonts);
+    let mut tx = loc.text(lib, fonts);
     let m = 64.0;
     let acc: Ink = rgba(accent, 255);
     d.rectangle([0.0, 0.0, ANN_W as f64, 6.0], Some(acc), None, 1)?;
@@ -564,7 +603,7 @@ pub fn draw_announcement(
     let h = ANN_H as f64;
     tx.draw(&mut d, (m, h - 46.0), "trove.aallyn.net", 23, false, rgba(MUTE, 255))?;
     let lw = tx.w("trove.aallyn.net", 23, false)?;
-    let fr = format!("Updated {hhmm} UTC");
+    let fr = loc.tr.tf("Updated {time} UTC", &[("time", Arg::Str(hhmm))])?;
     tx.fit_text(
         &mut d,
         (ANN_W as f64 - m, h - 46.0),

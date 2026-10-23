@@ -44,10 +44,18 @@ impl TextBox {
 impl<'a> Font<'a> {
     /// `ImageFont.truetype(font_bytes, size)` (face index 0).
     pub fn new(lib: &'a Library, data: &'a [u8], size: f32) -> Result<Self, FtError> {
-        let face = Face::new(lib, data, 0, size)?;
+        Ok(Self::from_face(Face::new(lib, data, 0, size)?))
+    }
+
+    /// `ImageFont.truetype(path, size)` (face index 0, read from disk).
+    pub fn open(lib: &'a Library, path: &std::path::Path, size: f32) -> Result<Self, FtError> {
+        Ok(Self::from_face(Face::open(lib, path, 0, size)?))
+    }
+
+    fn from_face(face: Face<'a>) -> Self {
         let kerning = face.has_kerning();
         let (ascender, _) = face.size_metrics();
-        Ok(Font { face, kerning, ascender })
+        Font { face, kerning, ascender }
     }
 
     /// `text_layout_fallback`, including its kerning quirk: the kerning delta is

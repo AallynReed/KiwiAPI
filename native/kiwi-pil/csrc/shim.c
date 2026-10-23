@@ -41,15 +41,11 @@ void kp_lib_free(kp_lib *l) {
     free(l);
 }
 
-/* _imagingft.c getfont(): memory face plus a nominal size request of size*64. */
-int kp_face_new(kp_lib *l, const unsigned char *data, long len, long index, float size, FT_Face *out) {
-    FT_Face face;
+/* _imagingft.c getfont(): the face plus a nominal size request of size*64. */
+static int kp_face_size(FT_Face face, float size, FT_Face *out) {
     FT_Size_RequestRec req;
     FT_Long width;
-    int e = FT_New_Memory_Face(l->lib, data, len, index, &face);
-    if (e) {
-        return e;
-    }
+    int e;
     width = size * 64;
     req.type = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width = width;
@@ -63,6 +59,18 @@ int kp_face_new(kp_lib *l, const unsigned char *data, long len, long index, floa
     }
     *out = face;
     return 0;
+}
+
+int kp_face_new(kp_lib *l, const unsigned char *data, long len, long index, float size, FT_Face *out) {
+    FT_Face face;
+    int e = FT_New_Memory_Face(l->lib, data, len, index, &face);
+    return e ? e : kp_face_size(face, size, out);
+}
+
+int kp_face_open(kp_lib *l, const char *path, long index, float size, FT_Face *out) {
+    FT_Face face;
+    int e = FT_New_Face(l->lib, path, index, &face);
+    return e ? e : kp_face_size(face, size, out);
 }
 
 void kp_face_free(FT_Face face) {

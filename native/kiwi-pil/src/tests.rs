@@ -123,6 +123,37 @@ fn textbbox_matches_pillow() {
     );
 }
 
+/// CFF (static and CFF2, in TTCs) and auto-hinted TrueType faces, opened from
+/// disk like `ImageFont.truetype(path, size)`.
+#[test]
+fn faces_match_pillow() {
+    use sha2::{Digest, Sha256};
+    let lib = Library::new().unwrap();
+    let rows: Value = serde_json::from_slice(&std::fs::read(testdata("faces.json")).unwrap()).unwrap();
+    let (mut bad, mut total) = (Vec::new(), 0);
+    for r in rows.as_array().unwrap() {
+        let path = testdata("fonts").join(r["face"].as_str().unwrap());
+        let text = r["text"].as_str().unwrap();
+        for d in r["draws"].as_array().unwrap() {
+            let size = d[0].as_i64().unwrap();
+            let mut f = Font::open(&lib, &path, size as f32).unwrap();
+            let want = quad(&d[1]);
+            let mut im = Rgba::new((want[2] as usize + 24).max(1), (want[3] as usize + 24).max(1), [13, 17, 23, 255]);
+            let b = Draw::new(&mut im).textbbox((0.0, 0.0), text, &f).unwrap();
+            let x = if size % 2 == 1 { 10.5 } else { 10.0 };
+            Draw::new(&mut im).text((x, 11.0), text, &mut f, [230, 237, 243, 210]).unwrap();
+            let raw: Vec<u8> = im.data.iter().flatten().copied().collect();
+            let sha: String = Sha256::digest(&raw).iter().take(8).map(|b| format!("{b:02x}")).collect();
+            total += 1;
+            if [b.0, b.1, b.2, b.3] != want || sha != d[2].as_str().unwrap() {
+                bad.push(format!("{} {size} {text:?}: bbox {b:?} vs {want:?}", r["face"]));
+            }
+        }
+    }
+    assert!(total > 3000, "{total}");
+    assert!(bad.is_empty(), "{} of {total} differ: {:#?}", bad.len(), &bad[..bad.len().min(20)]);
+}
+
 #[test]
 fn png_filters_and_chunks() {
     let mut im = Rgba::new(70, 40, [13, 17, 23, 255]);

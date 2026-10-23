@@ -10,12 +10,14 @@ use kiwi_pil::{Draw, ImageError, Library, Rgba};
 use serde_json::{Map, Value};
 
 use super::{
-    H, SiteGate, W,
+    H, LangQuery, SiteGate, W,
     activity::{BG, MUTE, TEXT, rgba},
-    cache_get, cache_put, draw_blocking, png_reply,
-    text::{Fonts, Text},
+    cache_get, cache_put, draw_blocking,
+    i18n::{Arg, Locale, Tr},
+    normalize_lang, png_reply,
+    text::Fonts,
 };
-use crate::{error::ApiError, routes::trove_status, state::AppState};
+use crate::{error::ApiError, routes::trove_status, state::AppState, validation::Query};
 
 const UPTIME_DAYS: i64 = 30;
 
@@ -73,22 +75,22 @@ pub fn fixed2(x: f64) -> String {
 }
 
 /// The footer's "Checked …" text from `checked_at` (falsy: "Live status").
-fn checked_text(ca: Option<&Value>, now: i64) -> Result<String, ImageError> {
+fn checked_text(tr: &Tr, ca: Option<&Value>, now: i64) -> Result<String, ImageError> {
     let ca = match ca {
-        None | Some(Value::Null) | Some(Value::Bool(false)) => return Ok("Live status".into()),
+        None | Some(Value::Null) | Some(Value::Bool(false)) => return Ok(tr.t("Live status")),
         Some(Value::Bool(true)) => 1,
         Some(Value::Number(n)) => match n.as_i64() {
-            Some(0) => return Ok("Live status".into()),
+            Some(0) => return Ok(tr.t("Live status")),
             Some(i) => i,
             None => {
                 let f = n.as_f64().unwrap_or(0.0);
                 if f == 0.0 {
-                    return Ok("Live status".into());
+                    return Ok(tr.t("Live status"));
                 }
                 f.trunc() as i64
             }
         },
-        Some(Value::String(s)) if s.is_empty() => return Ok("Live status".into()),
+        Some(Value::String(s)) if s.is_empty() => return Ok(tr.t("Live status")),
         Some(Value::String(s)) => {
             s.trim().parse::<i64>().map_err(|_| ImageError::Value("invalid literal for int()"))?
         }
@@ -96,26 +98,28 @@ fn checked_text(ca: Option<&Value>, now: i64) -> Result<String, ImageError> {
     };
     let ago = (now - ca).max(0);
     let rel = if ago < 60 {
-        format!("{ago}s ago")
+        tr.tf("{n}s ago", &[("n", Arg::Int(ago))])?
     } else if ago < 3600 {
-        format!("{}m ago", ago / 60)
+        tr.tf("{n}m ago", &[("n", Arg::Int(ago / 60))])?
     } else {
-        format!("{}h ago", ago / 3600)
+        tr.tf("{n}h ago", &[("n", Arg::Int(ago / 3600))])?
     };
-    Ok(format!("Checked {rel}"))
+    tr.tf("Checked {rel}", &[("rel", Arg::Str(&rel))])
 }
 
 /// The card as RGBA pixels. `uptimes` are eu, us, pts.
 pub fn draw(
     lib: &Library,
     fonts: &Fonts,
+    loc: &Locale,
     payload: &Value,
     uptimes: [Option<f64>; 3],
     now: i64,
 ) -> Result<Rgba, ImageError> {
     let mut img = Rgba::new(W, H, rgba(BG, 255));
     let mut d = Draw::new(&mut img);
-    let mut tx = Text::new(lib, fonts);
+    let mut tx = loc.text(lib, fonts);
+    let tr = &loc.tr;
     let m = 64.0;
     let overall = key_of(payload.get("overall"), "unknown")?;
     let oc = st_color(&overall);
@@ -126,7 +130,7 @@ pub fn draw(
     tx.fit_text(
         &mut d,
         (m + 28.0, cy - 16.0),
-        "TROVE PC SERVER STATUS",
+        &tr.t("TROVE PC SERVER STATUS"),
         1200 - 64 - (64 + 28),
         26,
         rgba(MUTE, 255),
@@ -145,8 +149,8 @@ pub fn draw(
             }
         }
     }
-    let overall_text = if partial { "Partial outage" } else { st_overall(&overall) };
-    tx.fit_text(&mut d, (m, 118.0), overall_text, 1200 - 2 * 64, 86, rgba(oc, 255), true, false, Some(46))?;
+    let overall_text = tr.t(if partial { "Partial outage" } else { st_overall(&overall) });
+    tx.fit_text(&mut d, (m, 118.0), &overall_text, 1200 - 2 * 64, 86, rgba(oc, 255), true, false, Some(46))?;
 
     let (gap, y0, ch) = (28, 330, 170);
     let cw = (1200 - 2 * 64 - 2 * gap) / 3;
@@ -164,10 +168,12 @@ pub fn draw(
         )?;
         d.ellipse([xf + 30.0, yf + 32.0, xf + 52.0, yf + 54.0], Some(rgba(sc, 255)), None, 1)?;
         tx.draw(&mut d, (xf + 66.0, yf + 22.0), label, 40, true, rgba(TEXT, 255))?;
-        tx.fit_text(&mut d, (xf + 30.0, yf + 80.0), st_label(&st), cw - 60, 30, rgba(sc, 255), false, false, None)?;
+        let label = tr.t(st_label(&st));
+        tx.fit_text(&mut d, (xf + 30.0, yf + 80.0), &label, cw - 60, 30, rgba(sc, 255), false, false, None)?;
+        let days = ("days", Arg::Int(UPTIME_DAYS));
         let up_txt = match uptimes[i] {
-            Some(u) => format!("{}% · {UPTIME_DAYS}d uptime", fixed2(u * 100.0)),
-            None => format!("uptime n/a · {UPTIME_DAYS}d"),
+            Some(u) => tr.tf("{pct}% · {days}d uptime", &[("pct", Arg::Str(&fixed2(u * 100.0))), days])?,
+            None => tr.tf("uptime n/a · {days}d", &[days])?,
         };
         tx.fit_text(&mut d, (xf + 30.0, yf + 124.0), &up_txt, cw - 60, 23, rgba(MUTE, 255), false, false, None)?;
     }
@@ -175,7 +181,7 @@ pub fn draw(
     let site = "trove.aallyn.net/status";
     tx.draw(&mut d, (m, H as f64 - 54.0), site, 24, false, rgba(MUTE, 255))?;
     let lw = tx.w(site, 24, false)?;
-    let fr = checked_text(payload.get("checked_at"), now)?;
+    let fr = checked_text(tr, payload.get("checked_at"), now)?;
     tx.fit_text(
         &mut d,
         (W as f64 - m, H as f64 - 54.0),
@@ -196,18 +202,23 @@ async fn uptime(state: &AppState, env: &'static str) -> Option<f64> {
     kiwi_core::status::history(env, UPTIME_DAYS, trove_status::unix_now(), &rows).uptime
 }
 
-/// `GET /status/og.png` (English; other languages stay in Python).
-pub async fn og(_: SiteGate, State(state): State<AppState>) -> Response {
-    let key = "status:en";
-    if let Some(png) = cache_get(key, 45.0) {
+/// `GET /status/og.png?lang=`.
+pub async fn og(_: SiteGate, State(state): State<AppState>, Query(q): Query<LangQuery>) -> Response {
+    let lang = normalize_lang(&q.lang).to_owned();
+    let key = format!("status:{lang}");
+    if let Some(png) = cache_get(&key, 45.0) {
         return png_reply(Some(png), "public, max-age=60");
     }
     let payload = super::data::status(&state).await;
     let uptimes = [uptime(&state, "eu").await, uptime(&state, "us").await, uptime(&state, "pts").await];
     let now = trove_status::unix_now();
-    let png = draw_blocking("status OG image", move |lib, fonts| draw(lib, fonts, &payload, uptimes, now)).await;
+    let png = draw_blocking("status OG image", move |lib, fonts| {
+        let loc = Locale::load(&lang)?;
+        draw(lib, fonts, &loc, &payload, uptimes, now)
+    })
+    .await;
     if let Some(png) = &png {
-        cache_put(key, png.clone());
+        cache_put(&key, png.clone());
     }
     png_reply(png, "public, max-age=60")
 }

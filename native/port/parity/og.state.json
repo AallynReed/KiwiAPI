@@ -1,0 +1,6 @@
+{
+ "redis": [
+  {"pattern": "board:img:*", "mask_ttl": true},
+  {"pattern": "announce:img:*", "mask_ttl": true}
+ ]
+}

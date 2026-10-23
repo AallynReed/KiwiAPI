@@ -1,12 +1,12 @@
 //! Server-rendered social cards (`app/site/og_image.py` and its routes in
-//! `app/site/router.py`), drawn pixel-exact to Pillow 13 through kiwi-pil.
-//!
-//! Only English renders here: a `lang` that resolves to another language goes
-//! to Python (`defers`), as does every card while DejaVu is not on disk.
+//! `app/site/router.py`), drawn pixel-exact to Pillow 13 through kiwi-pil, in
+//! every site language (`i18n`) and down `_font`'s whole fallback chain.
 
 pub mod activity;
 pub mod board;
 pub mod data;
+pub mod i18n;
+pub mod pyformat;
 pub mod pymath;
 pub mod status;
 #[cfg(test)]
@@ -22,7 +22,7 @@ use axum::{
     Router,
     body::Body,
     extract::{FromRequestParts, State},
-    http::{HeaderValue, StatusCode, Uri, header, request::Parts},
+    http::{HeaderValue, StatusCode, header, request::Parts},
     response::{IntoResponse, Response},
     routing::get,
 };
@@ -39,7 +39,7 @@ pub const W: usize = 1200;
 pub const H: usize = 630;
 
 /// `i18n.LANGS`.
-const SUPPORTED: [&str; 10] = ["en", "fr", "de", "pt-PT", "es", "ru", "ja", "ko", "zh-CN", "th"];
+pub const SUPPORTED: [&str; 10] = ["en", "fr", "de", "pt-PT", "es", "ru", "ja", "ko", "zh-CN", "th"];
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -55,22 +55,13 @@ pub fn normalize_lang(lang: &str) -> &str {
     if SUPPORTED.contains(&lang) { lang } else { "en" }
 }
 
-/// The last `name` in the query string, decoded like Starlette's.
-fn query_last(uri: &Uri, name: &str) -> Option<String> {
-    let q = uri.query()?;
-    form_urlencoded::parse(q.as_bytes()).filter(|(k, _)| k == name).map(|(_, v)| v.into_owned()).last()
+pub struct LangQuery {
+    pub lang: String,
 }
 
-/// For `routes::defer_to_python`: cards Rust can't draw like Python would.
-pub fn defers(matched: &str, uri: &Uri) -> bool {
-    let other_lang = || normalize_lang(&query_last(uri, "lang").unwrap_or_else(|| "en".into())) != "en";
-    match matched {
-        "/activity/og.png" => text::fonts().is_none(),
-        "/status/og.png" | "/board.png" => text::fonts().is_none() || other_lang(),
-        "/announce.png" => {
-            text::fonts().is_none() || other_lang() || query_last(uri, "kind").as_deref() == Some("game_update")
-        }
-        _ => false,
+impl FromParams for LangQuery {
+    fn from_params(p: &mut Params<'_>) -> Self {
+        LangQuery { lang: p.query("lang").str().default("en".into()) }
     }
 }
 
@@ -194,7 +185,7 @@ where
         + Send
         + 'static,
 {
-    let fonts = text::fonts()?;
+    let fonts = text::card_fonts();
     tokio::task::spawn_blocking(move || {
         let lib = kiwi_pil::Library::new().map_err(kiwi_pil::ImageError::from)?;
         f(&lib, fonts).map(|img| encode(&img))
@@ -252,10 +243,11 @@ fn now_us() -> i64 {
     crate::dt::now().timestamp_micros()
 }
 
-/// `GET /board.png` (English; `v` is only the bot's cache-buster).
-async fn board_png(_: SiteGate, State(state): State<AppState>) -> Response {
+/// `GET /board.png?lang=` (`v` is only the bot's cache-buster).
+async fn board_png(_: SiteGate, State(state): State<AppState>, Query(q): Query<LangQuery>) -> Response {
+    let lang = normalize_lang(&q.lang).to_owned();
     let (now, minute, hhmm) = clock();
-    let key = format!("board:img:{minute}:en");
+    let key = format!("board:img:{minute}:{lang}");
     if let Some(png) = redis_png(&state, &key).await {
         return png_reply(Some(png), "public, max-age=60");
     }
@@ -266,7 +258,11 @@ async fn board_png(_: SiteGate, State(state): State<AppState>) -> Response {
             return png_reply(None, "public, max-age=60");
         }
     };
-    let png = draw_blocking("board image", move |lib, fonts| board::draw_board(lib, fonts, &data, now, &hhmm)).await;
+    let png = draw_blocking("board image", move |lib, fonts| {
+        let loc = i18n::Locale::load(&lang)?;
+        board::draw_board(lib, fonts, &loc, &data, now, &hhmm)
+    })
+    .await;
     if let Some(png) = &png {
         redis_put_png(&state, &key, png).await;
     }
@@ -275,27 +271,39 @@ async fn board_png(_: SiteGate, State(state): State<AppState>) -> Response {
 
 pub struct AnnounceQuery {
     pub kind: String,
+    pub lang: String,
 }
 
 impl FromParams for AnnounceQuery {
     fn from_params(p: &mut Params<'_>) -> Self {
-        AnnounceQuery { kind: p.query("kind").str().required() }
+        AnnounceQuery { kind: p.query("kind").str().required(), lang: p.query("lang").str().default("en".into()) }
     }
 }
 
-/// `GET /announce.png?kind=` (English; `game_update` stays in Python).
+/// `GET /announce.png?kind=&lang=`.
 async fn announce_png(_: SiteGate, State(state): State<AppState>, Query(q): Query<AnnounceQuery>) -> Response {
+    let lang = normalize_lang(&q.lang).to_owned();
     let (now, minute, hhmm) = clock();
-    let key = format!("announce:img:{}:{minute}:en", q.kind);
+    let key = format!("announce:img:{}:{minute}:{lang}", q.kind);
     if let Some(png) = redis_png(&state, &key).await {
         return png_reply(Some(png), "public, max-age=60");
     }
     let kind = q.kind;
-    let content = match data::announcement(&state, &kind, now_us()).await {
-        Ok(d) => board::announcement_content(&kind, &d, now).map_err(|e| anyhow::anyhow!("{e}")),
+    let loc = match tokio::task::spawn_blocking(move || i18n::Locale::load(&lang)).await {
+        Ok(Ok(loc)) => Ok(loc),
+        Ok(Err(e)) => Err(anyhow::anyhow!("{e}")),
+        Err(e) => Err(anyhow::anyhow!("{e}")),
+    };
+    let content = match loc {
+        Ok(loc) => match data::announcement(&state, &kind, now_us()).await {
+            Ok(d) => board::announcement_content(&loc.tr, &kind, &d, now)
+                .map(|c| (loc, c))
+                .map_err(|e| anyhow::anyhow!("{e}")),
+            Err(e) => Err(e),
+        },
         Err(e) => Err(e),
     };
-    let (title, accent, lines) = match content {
+    let (loc, (title, accent, lines)) = match content {
         Ok(c) => c,
         Err(e) => {
             tracing::error!("announcement image render failed for {kind}: {e:#}");
@@ -303,7 +311,7 @@ async fn announce_png(_: SiteGate, State(state): State<AppState>, Query(q): Quer
         }
     };
     let png = draw_blocking("announcement image", move |lib, fonts| {
-        board::draw_announcement(lib, fonts, &title, accent, &lines, &hhmm)
+        board::draw_announcement(lib, fonts, &loc, &title, accent, &lines, &hhmm)
     })
     .await;
     if let Some(png) = &png {

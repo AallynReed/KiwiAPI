@@ -29,6 +29,13 @@ unsafe extern "C" {
         size: f32,
         out: *mut *mut c_void,
     ) -> c_int;
+    fn kp_face_open(
+        lib: *mut c_void,
+        path: *const std::ffi::c_char,
+        index: c_long,
+        size: f32,
+        out: *mut *mut c_void,
+    ) -> c_int;
     fn kp_face_free(face: *mut c_void);
     fn kp_has_kerning(face: *mut c_void) -> c_int;
     fn kp_size_metrics(face: *mut c_void, ascender: *mut c_long, descender: *mut c_long);
@@ -113,6 +120,15 @@ impl<'a> Face<'a> {
         check(unsafe {
             kp_face_new(lib.raw.as_ptr(), data.as_ptr(), data.len() as c_long, index as c_long, size, &mut raw)
         })?;
+        Ok(Face { raw: NonNull::new(raw).ok_or(FtError(-1))?, lib, _data: PhantomData })
+    }
+
+    /// A face read from `path` (`FT_New_Face`), as `ImageFont.truetype(path, size)`
+    /// opens it.
+    pub fn open(lib: &'a Library, path: &std::path::Path, index: i64, size: f32) -> Result<Self, FtError> {
+        let path = path.to_str().and_then(|p| std::ffi::CString::new(p).ok()).ok_or(FtError(1))?;
+        let mut raw = std::ptr::null_mut();
+        check(unsafe { kp_face_open(lib.raw.as_ptr(), path.as_ptr(), index as c_long, size, &mut raw) })?;
         Ok(Face { raw: NonNull::new(raw).ok_or(FtError(-1))?, lib, _data: PhantomData })
     }
 

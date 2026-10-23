@@ -77,6 +77,20 @@ pub async fn status(state: &AppState) -> Value {
     trove_status::shared_snapshot(state).await.unwrap_or_else(trove_status::unknown_snapshot)
 }
 
+/// `updates_read.latest_version("live-us")`: what the `game_update` banner draws.
+pub async fn game_update(state: &AppState) -> anyhow::Result<Value> {
+    use crate::events::sources;
+    Ok(match sources::latest_version(sources::mongo(state)?).await? {
+        None => Value::Null,
+        Some(v) => json!({
+            "version_tag": v.version_tag,
+            "files_added": v.files_added,
+            "files_modified": v.files_modified,
+            "files_removed": v.files_removed,
+        }),
+    })
+}
+
 /// Everything `render_board_image` gathers.
 pub async fn board(state: &AppState, now_us: i64) -> anyhow::Result<Value> {
     let challenge = challenge(state, now_us).await?;
@@ -112,6 +126,7 @@ pub async fn announcement(state: &AppState, kind: &str, now_us: i64) -> anyhow::
             "fluxion" => bodies::fluxion(now_us),
             "luxion" => luxion(state, now_us).await?,
             "status" => status(state).await,
+            "game_update" => game_update(state).await?,
             _ => Value::Null,
         };
         out.insert((*src).to_owned(), v);
