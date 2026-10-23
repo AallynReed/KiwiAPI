@@ -1,0 +1,226 @@
+{
+"codex_rows": [
+{
+"name": "Gánda Ünicorn",
+"codex_type": "mount",
+"category": "Mounts",
+"blueprint": "mount_ganda_?x&y"
+},
+{
+"name": "",
+"codex_type": "ally",
+"category": null,
+"blueprint": null
+},
+{
+"name": "Item / x",
+"codex_type": "item",
+"category": "",
+"blueprint": ""
+},
+{
+"name": "Ring",
+"codex_type": "recipe",
+"category": "Crafting",
+"blueprint": "a b"
+}
+],
+"codex": {
+"collections": [
+{
+"name": "Gánda Ünicorn",
+"path": "/codexes#type=mount&q=G%C3%A1nda%20%C3%9Cnicorn",
+"detail": "Mounts",
+"kind": "mount",
+"image": "/site/codexes/render?dim=64&blueprint=mount_ganda_%3Fx%26y"
+},
+{
+"name": "",
+"path": "/codexes#type=ally&q=",
+"detail": "",
+"kind": "ally",
+"image": null
+}
+],
+"items": [
+{
+"name": "Item / x",
+"path": "/codexes#type=item&q=Item%20%2F%20x",
+"detail": "",
+"kind": "item",
+"image": null
+}
+],
+"recipes": [
+{
+"name": "Gánda Ünicorn",
+"path": "/codexes#type=mount&q=G%C3%A1nda%20%C3%9Cnicorn",
+"detail": "Mounts",
+"kind": "mount",
+"image": "/site/codexes/render?dim=64&blueprint=mount_ganda_%3Fx%26y"
+},
+{
+"name": "",
+"path": "/codexes#type=ally&q=",
+"detail": "",
+"kind": "ally",
+"image": null
+},
+{
+"name": "Item / x",
+"path": "/codexes#type=item&q=Item%20%2F%20x",
+"detail": "",
+"kind": "item",
+"image": null
+},
+{
+"name": "Ring",
+"path": "/codexes#type=recipe&q=Ring",
+"detail": "Crafting",
+"kind": "recipe",
+"image": "/site/codexes/render?dim=64&blueprint=a%20b"
+}
+],
+"styles": [
+{
+"name": "Gánda Ünicorn",
+"path": "/codexes#type=mount&q=G%C3%A1nda%20%C3%9Cnicorn",
+"detail": "Mounts",
+"kind": "mount",
+"image": "/site/codexes/render?dim=64&blueprint=mount_ganda_%3Fx%26y"
+},
+{
+"name": "",
+"path": "/codexes#type=ally&q=",
+"detail": "",
+"kind": "ally",
+"image": null
+},
+{
+"name": "Item / x",
+"path": "/codexes#type=item&q=Item%20%2F%20x",
+"detail": "",
+"kind": "item",
+"image": null
+},
+{
+"name": "Ring",
+"path": "/codexes#type=recipe&q=Ring",
+"detail": "Crafting",
+"kind": "recipe",
+"image": "/site/codexes/render?dim=64&blueprint=a%20b"
+}
+]
+},
+"names": [
+"Bob",
+"a b",
+"x/y?z",
+"Ünï",
+"100%"
+],
+"players": [
+[
+{
+"name": "a b",
+"path": "/player/a%20b",
+"detail": "",
+"kind": "player"
+},
+{
+"name": "x/y?z",
+"path": "/player/x%2Fy%3Fz",
+"detail": "",
+"kind": "player"
+}
+],
+5
+],
+"cards": [
+{
+"handle": "h",
+"slug": "s",
+"title": "T",
+"owner_username": "O",
+"banner_sha": "abc",
+"preview_sha": "def"
+},
+{
+"handle": "h",
+"slug": "s2",
+"title": "",
+"owner_username": null,
+"banner_sha": null,
+"preview_sha": "p q"
+},
+{
+"handle": "",
+"slug": "s3",
+"title": "X"
+},
+{
+"handle": "h",
+"slug": null
+},
+{
+"handle": "stray",
+"slug": "z",
+"title": "Z",
+"owner_username": "",
+"banner_sha": "",
+"preview_sha": null
+}
+],
+"mods": [
+[
+{
+"name": "T",
+"path": "/mods/h/s",
+"detail": "O",
+"kind": "mod",
+"image": "/site/mods/image/abc?w=200"
+},
+{
+"name": "s2",
+"path": "/mods/h/s2",
+"detail": "h",
+"kind": "mod",
+"image": "/site/mods/image/p%20q?w=200"
+},
+{
+"name": "Z",
+"path": "/mods/stray/z",
+"detail": "stray",
+"kind": "mod",
+"image": null
+}
+],
+42
+],
+"modpacks": [
+[
+{
+"name": "T",
+"path": "/modpacks/h/s",
+"detail": "O",
+"kind": "modpack",
+"image": "/site/mods/image/abc?w=200"
+},
+{
+"name": "s2",
+"path": "/modpacks/h/s2",
+"detail": "h",
+"kind": "modpack",
+"image": "/site/mods/image/p%20q?w=200"
+},
+{
+"name": "Z",
+"path": "/modpacks/stray/z",
+"detail": "stray",
+"kind": "modpack",
+"image": null
+}
+],
+42
+]
+}

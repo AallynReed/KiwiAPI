@@ -79,7 +79,10 @@ fn focus_counts(remaining_percent: f64, values: &[f64], keys: &[&str]) -> [i64; 
 /// `_build_focus_plan(...)["totals"]`: per option, the counts for every container.
 fn focus_plan(display_progress: f64, containers: i64) -> Vec<FocusCost> {
     let current = py_round(display_progress * 100.0, 2);
-    let remaining = py_max(0.0, 100.0 - current);
+    totals(py_max(0.0, 100.0 - current), containers)
+}
+
+fn totals(remaining: f64, containers: i64) -> Vec<FocusCost> {
     FOCUS_OPTIONS
         .iter()
         .map(|&(key, label, values, keys)| {
@@ -97,6 +100,23 @@ fn focus_plan(display_progress: f64, containers: i64) -> Vec<FocusCost> {
             FocusCost { key, label, counts, recipe_totals }
         })
         .collect()
+}
+
+/// `_build_focus_plan(...)` in full: the rounded remaining percent, the counts
+/// for one container per option, and the totals for every container.
+#[derive(Clone, Debug, PartialEq)]
+pub struct FocusBreakdown {
+    pub remaining_percent: f64,
+    pub per_container: Vec<(&'static str, [i64; 3])>,
+    pub totals: Vec<FocusCost>,
+}
+
+/// The focus plan from its `current_percent` (`round(display * 100, 2)`).
+pub fn focus_breakdown(current_percent: f64, containers: i64) -> FocusBreakdown {
+    let remaining = py_max(0.0, 100.0 - current_percent);
+    let per_container =
+        FOCUS_OPTIONS.iter().map(|&(key, _, values, keys)| (key, focus_counts(remaining, values, keys))).collect();
+    FocusBreakdown { remaining_percent: py_round(remaining, 2), per_container, totals: totals(remaining, containers) }
 }
 
 #[derive(Clone, Debug, PartialEq)]

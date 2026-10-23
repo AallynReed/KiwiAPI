@@ -1,0 +1,122 @@
+{
+"news": [
+{
+"url": "https://n/1",
+"title": "Patch",
+"author": "Team Trove",
+"summary": "s",
+"category": "News",
+"categories": [
+"News",
+"Patch"
+],
+"image": null,
+"published_at": "2026-10-22T11:00:00+00:00"
+},
+{
+"url": "https://n/2",
+"title": "Sälé",
+"author": "A",
+"summary": "",
+"category": "Shop",
+"categories": [],
+"image": "https://i/2.png",
+"published_at": "2026-10-21T11:00:00.250000+00:00"
+},
+{
+"url": "https://n/3",
+"title": "x",
+"author": "A",
+"summary": "",
+"category": "News",
+"categories": [
+"News"
+],
+"image": null,
+"published_at": null
+}
+],
+"news_body": "{\"items\":[{\"title\":\"Patch\",\"url\":\"https://n/1\",\"author\":\"Team Trove\",\"summary\":\"s\",\"category\":\"News\",\"categories\":[\"News\",\"Patch\"],\"image\":null,\"published_at\":\"2026-10-22T11:00:00+00:00\"},{\"title\":\"Sälé\",\"url\":\"https://n/2\",\"author\":\"A\",\"summary\":\"\",\"category\":\"Shop\",\"categories\":[],\"image\":\"https://i/2.png\",\"published_at\":\"2026-10-21T11:00:00.250000+00:00\"},{\"title\":\"x\",\"url\":\"https://n/3\",\"author\":\"A\",\"summary\":\"\",\"category\":\"News\",\"categories\":[\"News\"],\"image\":null,\"published_at\":null}]}",
+"news_cache": "public, max-age=300",
+"videos": [
+{
+"platform": "youtube",
+"items": [
+{
+"title": "Vid",
+"url": "https://y/1",
+"channel": "C",
+"video_id": "1",
+"published_at": "2026-10-20",
+"thumbnail_url": null,
+"views": 12,
+"ratio": 0.5
+},
+{
+"title": "Ünï",
+"url": "https://y/2",
+"channel": "C2",
+"nested": {
+"a": [
+1,
+2.25,
+null,
+true
+]
+}
+}
+],
+"fetched_at": "2026-10-22T05:06:07.891000+00:00",
+"body": "{\"platform\":\"youtube\",\"items\":[{\"title\":\"Vid\",\"url\":\"https://y/1\",\"channel\":\"C\",\"video_id\":\"1\",\"published_at\":\"2026-10-20\",\"thumbnail_url\":null,\"views\":12,\"ratio\":0.5},{\"title\":\"Ünï\",\"url\":\"https://y/2\",\"channel\":\"C2\",\"nested\":{\"a\":[1,2.25,null,true]}}],\"fetched_at\":\"2026-10-22T05:06:07.891000+00:00\"}"
+},
+{
+"platform": "twitch",
+"items": [],
+"fetched_at": "2026-10-22T00:00:00+00:00",
+"body": "{\"platform\":\"twitch\",\"items\":[],\"fetched_at\":\"2026-10-22T00:00:00+00:00\"}"
+},
+{
+"platform": "bogus",
+"items": [],
+"fetched_at": null,
+"body": "{\"platform\":\"youtube\",\"items\":[],\"fetched_at\":null}"
+}
+],
+"events": [
+{
+"event_id": "e1",
+"name": "Ongoing",
+"url": "https://t/e1",
+"category": "Event",
+"image": null,
+"icon": "i",
+"lookup": "l",
+"starts_at": 1761000000,
+"ends_at": 1762000000
+},
+{
+"event_id": "e2",
+"name": "Soon",
+"url": "",
+"category": "Sale",
+"image": "img",
+"icon": null,
+"lookup": null,
+"starts_at": 1762000000,
+"ends_at": 1763000000
+},
+{
+"event_id": "e3",
+"name": "Past",
+"url": "",
+"category": "Event",
+"image": null,
+"icon": null,
+"lookup": null,
+"starts_at": 1700000000,
+"ends_at": 1700000001
+}
+],
+"now": 1761500000,
+"event_rows": "[{\"event_id\":\"e1\",\"name\":\"Ongoing\",\"url\":\"https://t/e1\",\"category\":\"Event\",\"image\":null,\"icon\":\"i\",\"starts_at\":1761000000,\"ends_at\":1762000000,\"status\":\"ongoing\",\"seconds_until\":500000},{\"event_id\":\"e2\",\"name\":\"Soon\",\"url\":\"\",\"category\":\"Sale\",\"image\":\"img\",\"icon\":null,\"starts_at\":1762000000,\"ends_at\":1763000000,\"status\":\"upcoming\",\"seconds_until\":500000},{\"event_id\":\"e3\",\"name\":\"Past\",\"url\":\"\",\"category\":\"Event\",\"image\":null,\"icon\":null,\"starts_at\":1700000000,\"ends_at\":1700000001,\"status\":\"ended\",\"seconds_until\":0}]"
+}

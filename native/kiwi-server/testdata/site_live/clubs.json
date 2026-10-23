@@ -1,0 +1,164 @@
+[
+{
+"name": "ranked",
+"clubs": [
+{
+"name": "  Alpha ",
+"description": "a",
+"banner_url": null,
+"avatar_url": "av",
+"discord_url": null,
+"website_url": "w"
+},
+{
+"name": "beta",
+"description": null,
+"banner_url": "b",
+"avatar_url": null,
+"discord_url": "d",
+"website_url": null
+},
+{
+"name": "Zed",
+"description": null,
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+},
+{
+"name": "aardvark",
+"description": null,
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+},
+{
+"name": "Gamma",
+"description": "g",
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+}
+],
+"entries": [
+[
+"GAMMA",
+1
+],
+[
+"alpha",
+3
+],
+[
+" gamma ",
+9
+],
+[
+"",
+4
+],
+[
+"",
+5
+]
+],
+"body": "{\"items\":[{\"name\":\"Gamma\",\"rank\":1,\"description\":\"g\",\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null},{\"name\":\"  Alpha \",\"rank\":3,\"description\":\"a\",\"banner_url\":null,\"avatar_url\":\"av\",\"discord_url\":null,\"website_url\":\"w\"},{\"name\":\"aardvark\",\"rank\":null,\"description\":null,\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null},{\"name\":\"beta\",\"rank\":null,\"description\":null,\"banner_url\":\"b\",\"avatar_url\":null,\"discord_url\":\"d\",\"website_url\":null},{\"name\":\"Zed\",\"rank\":null,\"description\":null,\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null}],\"count\":5}"
+},
+{
+"name": "no board",
+"clubs": [
+{
+"name": "  Alpha ",
+"description": "a",
+"banner_url": null,
+"avatar_url": "av",
+"discord_url": null,
+"website_url": "w"
+},
+{
+"name": "beta",
+"description": null,
+"banner_url": "b",
+"avatar_url": null,
+"discord_url": "d",
+"website_url": null
+},
+{
+"name": "Zed",
+"description": null,
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+},
+{
+"name": "aardvark",
+"description": null,
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+},
+{
+"name": "Gamma",
+"description": "g",
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+}
+],
+"entries": [],
+"body": "{\"items\":[{\"name\":\"  Alpha \",\"rank\":null,\"description\":\"a\",\"banner_url\":null,\"avatar_url\":\"av\",\"discord_url\":null,\"website_url\":\"w\"},{\"name\":\"aardvark\",\"rank\":null,\"description\":null,\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null},{\"name\":\"beta\",\"rank\":null,\"description\":null,\"banner_url\":\"b\",\"avatar_url\":null,\"discord_url\":\"d\",\"website_url\":null},{\"name\":\"Gamma\",\"rank\":null,\"description\":\"g\",\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null},{\"name\":\"Zed\",\"rank\":null,\"description\":null,\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null}],\"count\":5}"
+},
+{
+"name": "pg down",
+"clubs": [
+{
+"name": "  Alpha ",
+"description": "a",
+"banner_url": null,
+"avatar_url": "av",
+"discord_url": null,
+"website_url": "w"
+},
+{
+"name": "beta",
+"description": null,
+"banner_url": "b",
+"avatar_url": null,
+"discord_url": "d",
+"website_url": null
+},
+{
+"name": "Zed",
+"description": null,
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+},
+{
+"name": "aardvark",
+"description": null,
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+},
+{
+"name": "Gamma",
+"description": "g",
+"banner_url": null,
+"avatar_url": null,
+"discord_url": null,
+"website_url": null
+}
+],
+"entries": [],
+"body": "{\"items\":[{\"name\":\"  Alpha \",\"rank\":null,\"description\":\"a\",\"banner_url\":null,\"avatar_url\":\"av\",\"discord_url\":null,\"website_url\":\"w\"},{\"name\":\"aardvark\",\"rank\":null,\"description\":null,\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null},{\"name\":\"beta\",\"rank\":null,\"description\":null,\"banner_url\":\"b\",\"avatar_url\":null,\"discord_url\":\"d\",\"website_url\":null},{\"name\":\"Gamma\",\"rank\":null,\"description\":\"g\",\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null},{\"name\":\"Zed\",\"rank\":null,\"description\":null,\"banner_url\":null,\"avatar_url\":null,\"discord_url\":null,\"website_url\":null}],\"count\":5}"
+}
+]

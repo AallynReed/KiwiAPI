@@ -1,0 +1,175 @@
+[
+{
+"name": "ok",
+"tags": [
+{
+"name": "v1.1",
+"commit": {
+"sha": "s2"
+}
+},
+{
+"name": "v1.0",
+"commit": {
+"sha": "s4"
+}
+}
+],
+"commits": [
+{
+"sha": "s1",
+"commit": {
+"message": "feat(x): change 1\n\nbody"
+},
+"html_url": "https://c/1"
+},
+{
+"sha": "s2",
+"commit": {
+"message": "feat(x): change 2\n\nbody"
+},
+"html_url": "https://c/2"
+},
+{
+"sha": "s3",
+"commit": {
+"message": "feat(x): change 3\n\nbody"
+},
+"html_url": "https://c/3"
+},
+{
+"sha": "s4",
+"commit": {
+"message": "feat(x): change 4\n\nbody"
+},
+"html_url": "https://c/4"
+},
+{
+"sha": "s5",
+"commit": {
+"message": "feat(x): change 5\n\nbody"
+},
+"html_url": "https://c/5"
+}
+],
+"body": "{\"repo\":\"AallynReed/KiwiAPI\",\"repo_url\":\"https://github.com/AallynReed/KiwiAPI\",\"groups\":[{\"version\":\"Unreleased\",\"commits\":[{\"sha\":\"s1\",\"short_sha\":\"s1\",\"message\":\"feat(x): change 1\",\"type\":\"feat\",\"url\":\"https://c/1\"}]},{\"version\":\"v1.1\",\"commits\":[{\"sha\":\"s2\",\"short_sha\":\"s2\",\"message\":\"feat(x): change 2\",\"type\":\"feat\",\"url\":\"https://c/2\"},{\"sha\":\"s3\",\"short_sha\":\"s3\",\"message\":\"feat(x): change 3\",\"type\":\"feat\",\"url\":\"https://c/3\"}]},{\"version\":\"v1.0\",\"commits\":[{\"sha\":\"s4\",\"short_sha\":\"s4\",\"message\":\"feat(x): change 4\",\"type\":\"feat\",\"url\":\"https://c/4\"},{\"sha\":\"s5\",\"short_sha\":\"s5\",\"message\":\"feat(x): change 5\",\"type\":\"feat\",\"url\":\"https://c/5\"}]}],\"rate_limited\":false}",
+"cached": "{\"repo\": \"AallynReed/KiwiAPI\", \"repo_url\": \"https://github.com/AallynReed/KiwiAPI\", \"groups\": [{\"version\": \"Unreleased\", \"commits\": [{\"sha\": \"s1\", \"short_sha\": \"s1\", \"message\": \"feat(x): change 1\", \"type\": \"feat\", \"url\": \"https://c/1\"}]}, {\"version\": \"v1.1\", \"commits\": [{\"sha\": \"s2\", \"short_sha\": \"s2\", \"message\": \"feat(x): change 2\", \"type\": \"feat\", \"url\": \"https://c/2\"}, {\"sha\": \"s3\", \"short_sha\": \"s3\", \"message\": \"feat(x): change 3\", \"type\": \"feat\", \"url\": \"https://c/3\"}]}, {\"version\": \"v1.0\", \"commits\": [{\"sha\": \"s4\", \"short_sha\": \"s4\", \"message\": \"feat(x): change 4\", \"type\": \"feat\", \"url\": \"https://c/4\"}, {\"sha\": \"s5\", \"short_sha\": \"s5\", \"message\": \"feat(x): change 5\", \"type\": \"feat\", \"url\": \"https://c/5\"}]}], \"rate_limited\": false}"
+},
+{
+"name": "rate limited",
+"tags": [
+{
+"name": "v1.1",
+"commit": {
+"sha": "s2"
+}
+},
+{
+"name": "v1.0",
+"commit": {
+"sha": "s4"
+}
+}
+],
+"commits": {
+"message": "API rate limit exceeded for 1.2.3.4."
+},
+"body": "{\"repo\":\"AallynReed/KiwiAPI\",\"repo_url\":\"https://github.com/AallynReed/KiwiAPI\",\"groups\":[],\"rate_limited\":true}",
+"cached": "{\"repo\": \"AallynReed/KiwiAPI\", \"repo_url\": \"https://github.com/AallynReed/KiwiAPI\", \"groups\": [], \"rate_limited\": true}"
+},
+{
+"name": "tags failed",
+"tags": null,
+"commits": [
+{
+"sha": "s1",
+"commit": {
+"message": "feat(x): change 1\n\nbody"
+},
+"html_url": "https://c/1"
+},
+{
+"sha": "s2",
+"commit": {
+"message": "feat(x): change 2\n\nbody"
+},
+"html_url": "https://c/2"
+},
+{
+"sha": "s3",
+"commit": {
+"message": "feat(x): change 3\n\nbody"
+},
+"html_url": "https://c/3"
+},
+{
+"sha": "s4",
+"commit": {
+"message": "feat(x): change 4\n\nbody"
+},
+"html_url": "https://c/4"
+},
+{
+"sha": "s5",
+"commit": {
+"message": "feat(x): change 5\n\nbody"
+},
+"html_url": "https://c/5"
+}
+],
+"body": "{\"repo\":\"AallynReed/KiwiAPI\",\"repo_url\":\"https://github.com/AallynReed/KiwiAPI\",\"groups\":[{\"version\":\"Unreleased\",\"commits\":[{\"sha\":\"s1\",\"short_sha\":\"s1\",\"message\":\"feat(x): change 1\",\"type\":\"feat\",\"url\":\"https://c/1\"},{\"sha\":\"s2\",\"short_sha\":\"s2\",\"message\":\"feat(x): change 2\",\"type\":\"feat\",\"url\":\"https://c/2\"},{\"sha\":\"s3\",\"short_sha\":\"s3\",\"message\":\"feat(x): change 3\",\"type\":\"feat\",\"url\":\"https://c/3\"},{\"sha\":\"s4\",\"short_sha\":\"s4\",\"message\":\"feat(x): change 4\",\"type\":\"feat\",\"url\":\"https://c/4\"},{\"sha\":\"s5\",\"short_sha\":\"s5\",\"message\":\"feat(x): change 5\",\"type\":\"feat\",\"url\":\"https://c/5\"}]}],\"rate_limited\":false}",
+"cached": "{\"repo\": \"AallynReed/KiwiAPI\", \"repo_url\": \"https://github.com/AallynReed/KiwiAPI\", \"groups\": [{\"version\": \"Unreleased\", \"commits\": [{\"sha\": \"s1\", \"short_sha\": \"s1\", \"message\": \"feat(x): change 1\", \"type\": \"feat\", \"url\": \"https://c/1\"}, {\"sha\": \"s2\", \"short_sha\": \"s2\", \"message\": \"feat(x): change 2\", \"type\": \"feat\", \"url\": \"https://c/2\"}, {\"sha\": \"s3\", \"short_sha\": \"s3\", \"message\": \"feat(x): change 3\", \"type\": \"feat\", \"url\": \"https://c/3\"}, {\"sha\": \"s4\", \"short_sha\": \"s4\", \"message\": \"feat(x): change 4\", \"type\": \"feat\", \"url\": \"https://c/4\"}, {\"sha\": \"s5\", \"short_sha\": \"s5\", \"message\": \"feat(x): change 5\", \"type\": \"feat\", \"url\": \"https://c/5\"}]}], \"rate_limited\": false}"
+},
+{
+"name": "both failed",
+"tags": null,
+"commits": null,
+"body": "{\"repo\":\"AallynReed/KiwiAPI\",\"repo_url\":\"https://github.com/AallynReed/KiwiAPI\",\"groups\":[],\"rate_limited\":false}",
+"cached": "{\"repo\": \"AallynReed/KiwiAPI\", \"repo_url\": \"https://github.com/AallynReed/KiwiAPI\", \"groups\": [], \"rate_limited\": false}"
+},
+{
+"name": "tags dict",
+"tags": {
+"message": "x"
+},
+"commits": [
+{
+"sha": "s1",
+"commit": {
+"message": "feat(x): change 1\n\nbody"
+},
+"html_url": "https://c/1"
+},
+{
+"sha": "s2",
+"commit": {
+"message": "feat(x): change 2\n\nbody"
+},
+"html_url": "https://c/2"
+},
+{
+"sha": "s3",
+"commit": {
+"message": "feat(x): change 3\n\nbody"
+},
+"html_url": "https://c/3"
+},
+{
+"sha": "s4",
+"commit": {
+"message": "feat(x): change 4\n\nbody"
+},
+"html_url": "https://c/4"
+},
+{
+"sha": "s5",
+"commit": {
+"message": "feat(x): change 5\n\nbody"
+},
+"html_url": "https://c/5"
+}
+],
+"body": "{\"repo\":\"AallynReed/KiwiAPI\",\"repo_url\":\"https://github.com/AallynReed/KiwiAPI\",\"groups\":[{\"version\":\"Unreleased\",\"commits\":[{\"sha\":\"s1\",\"short_sha\":\"s1\",\"message\":\"feat(x): change 1\",\"type\":\"feat\",\"url\":\"https://c/1\"},{\"sha\":\"s2\",\"short_sha\":\"s2\",\"message\":\"feat(x): change 2\",\"type\":\"feat\",\"url\":\"https://c/2\"},{\"sha\":\"s3\",\"short_sha\":\"s3\",\"message\":\"feat(x): change 3\",\"type\":\"feat\",\"url\":\"https://c/3\"},{\"sha\":\"s4\",\"short_sha\":\"s4\",\"message\":\"feat(x): change 4\",\"type\":\"feat\",\"url\":\"https://c/4\"},{\"sha\":\"s5\",\"short_sha\":\"s5\",\"message\":\"feat(x): change 5\",\"type\":\"feat\",\"url\":\"https://c/5\"}]}],\"rate_limited\":false}",
+"cached": "{\"repo\": \"AallynReed/KiwiAPI\", \"repo_url\": \"https://github.com/AallynReed/KiwiAPI\", \"groups\": [{\"version\": \"Unreleased\", \"commits\": [{\"sha\": \"s1\", \"short_sha\": \"s1\", \"message\": \"feat(x): change 1\", \"type\": \"feat\", \"url\": \"https://c/1\"}, {\"sha\": \"s2\", \"short_sha\": \"s2\", \"message\": \"feat(x): change 2\", \"type\": \"feat\", \"url\": \"https://c/2\"}, {\"sha\": \"s3\", \"short_sha\": \"s3\", \"message\": \"feat(x): change 3\", \"type\": \"feat\", \"url\": \"https://c/3\"}, {\"sha\": \"s4\", \"short_sha\": \"s4\", \"message\": \"feat(x): change 4\", \"type\": \"feat\", \"url\": \"https://c/4\"}, {\"sha\": \"s5\", \"short_sha\": \"s5\", \"message\": \"feat(x): change 5\", \"type\": \"feat\", \"url\": \"https://c/5\"}]}], \"rate_limited\": false}"
+}
+]

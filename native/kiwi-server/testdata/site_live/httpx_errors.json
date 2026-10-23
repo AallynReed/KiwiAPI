@@ -1,0 +1,54 @@
+[
+{
+"code": 403,
+"location": null,
+"url": "https://api.github.com/repos/o/r/releases?per_page=100",
+"message": "Client error '403 Forbidden' for url 'https://api.github.com/repos/o/r/releases?per_page=100'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403"
+},
+{
+"code": 404,
+"location": null,
+"url": "https://api.github.com/repos/o/r/releases?per_page=100",
+"message": "Client error '404 Not Found' for url 'https://api.github.com/repos/o/r/releases?per_page=100'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404"
+},
+{
+"code": 500,
+"location": null,
+"url": "https://api.github.com/repos/o/r/releases?per_page=100",
+"message": "Server error '500 Internal Server Error' for url 'https://api.github.com/repos/o/r/releases?per_page=100'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+},
+{
+"code": 429,
+"location": null,
+"url": "https://api.github.com/repos/o/r/releases?per_page=100",
+"message": "Client error '429 Too Many Requests' for url 'https://api.github.com/repos/o/r/releases?per_page=100'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429"
+},
+{
+"code": 599,
+"location": null,
+"url": "https://api.github.com/repos/o/r/releases?per_page=100",
+"message": "Server error '599 ' for url 'https://api.github.com/repos/o/r/releases?per_page=100'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/599"
+},
+{
+"code": 302,
+"location": "https://x/y",
+"url": "https://api.github.com/repos/o/r/releases?per_page=100",
+"message": "Redirect response '302 Found' for url 'https://api.github.com/repos/o/r/releases?per_page=100'\nRedirect location: 'https://x/y'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/302"
+},
+{
+"body": "",
+"message": "Expecting value: line 1 column 1 (char 0)"
+},
+{
+"body": "  x",
+"message": "Expecting value: line 1 column 3 (char 2)"
+},
+{
+"body": "{\n  \"a\": 1,\n  oops}",
+"message": "Expecting property name enclosed in double quotes: line 3 column 3 (char 14)"
+},
+{
+"body": "[1, 2",
+"message": "Expecting ',' delimiter: line 1 column 6 (char 5)"
+}
+]

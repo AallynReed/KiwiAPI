@@ -1,0 +1,74 @@
+{
+"mods": [
+{
+"handle": "h",
+"slug": "m0",
+"updated_at": "2026-10-01T00:00:00+00:00"
+},
+{
+"handle": "h",
+"slug": "m1",
+"updated_at": "2026-10-02T00:00:00+00:00"
+},
+{
+"handle": "h",
+"slug": "m2",
+"updated_at": "2026-10-03T00:00:00+00:00"
+},
+{
+"handle": "a&b",
+"slug": "<x>",
+"updated_at": null
+},
+{
+"handle": "",
+"slug": "nope"
+},
+{
+"handle": "stray",
+"slug": "s",
+"updated_at": ""
+}
+],
+"modders": [
+{
+"handle": "h",
+"updated_at": "2026-10-03T00:00:00+00:00"
+},
+{
+"handle": "q",
+"updated_at": null
+}
+],
+"packs": [
+{
+"handle": "h",
+"slug": "p",
+"updated_at": "2026-10-04T00:00:00.500000+00:00"
+}
+],
+"base": "https://trove.aallyn.net",
+"cases": [
+{
+"name": "all on",
+"flags": {},
+"body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url><loc>https://trove.aallyn.net/</loc></url>\n  <url><loc>https://trove.aallyn.net/app</loc></url>\n  <url><loc>https://trove.aallyn.net/browse</loc></url>\n  <url><loc>https://trove.aallyn.net/documentation</loc></url>\n  <url><loc>https://trove.aallyn.net/swf-docs</loc></url>\n  <url><loc>https://trove.aallyn.net/support</loc></url>\n  <url><loc>https://trove.aallyn.net/terms</loc></url>\n  <url><loc>https://trove.aallyn.net/privacy</loc></url>\n  <url><loc>https://trove.aallyn.net/accessibility</loc></url>\n  <url><loc>https://trove.aallyn.net/changelog</loc></url>\n  <url><loc>https://trove.aallyn.net/commands</loc></url>\n  <url><loc>https://trove.aallyn.net/classes</loc></url>\n  <url><loc>https://trove.aallyn.net/star-chart</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-simulator</loc></url>\n  <url><loc>https://trove.aallyn.net/gems-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/abilities</loc></url>\n  <url><loc>https://trove.aallyn.net/guides</loc></url>\n  <url><loc>https://trove.aallyn.net/allies</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-tools</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-evaluator</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-builds</loc></url>\n  <url><loc>https://trove.aallyn.net/calculators</loc></url>\n  <url><loc>https://trove.aallyn.net/zakros-ui-stats</loc></url>\n  <url><loc>https://trove.aallyn.net/fishing-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/gear-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/loot-collector-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/dressing-room</loc></url>\n  <url><loc>https://trove.aallyn.net/sound-studio</loc></url>\n  <url><loc>https://trove.aallyn.net/mod-workshop</loc></url>\n  <url><loc>https://trove.aallyn.net/blueprint-editor</loc></url>\n  <url><loc>https://trove.aallyn.net/leaderboards</loc></url>\n  <url><loc>https://trove.aallyn.net/activity</loc></url>\n  <url><loc>https://trove.aallyn.net/class-activity</loc></url>\n  <url><loc>https://trove.aallyn.net/updates</loc></url>\n  <url><loc>https://trove.aallyn.net/market</loc></url>\n  <url><loc>https://trove.aallyn.net/tomes</loc></url>\n  <url><loc>https://trove.aallyn.net/community-sites</loc></url>\n  <url><loc>https://trove.aallyn.net/store</loc></url>\n  <url><loc>https://trove.aallyn.net/codexes</loc></url>\n  <url><loc>https://trove.aallyn.net/codexes/crafting</loc></url>\n  <url><loc>https://trove.aallyn.net/status</loc></url>\n  <url><loc>https://trove.aallyn.net/giveaways</loc></url>\n  <url><loc>https://trove.aallyn.net/clubs</loc></url>\n  <url><loc>https://trove.aallyn.net/server-time</loc></url>\n  <url><loc>https://trove.aallyn.net/calendar</loc></url>\n  <url><loc>https://trove.aallyn.net/streams</loc></url>\n  <url><loc>https://trove.aallyn.net/releases</loc></url>\n  <url><loc>https://trove.aallyn.net/mods</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/why</loc></url>\n  <url><loc>https://trove.aallyn.net/modpacks</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/h/m0</loc><lastmod>2026-10-01T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/h/m1</loc><lastmod>2026-10-02T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/h/m2</loc><lastmod>2026-10-03T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/a&amp;b/&lt;x&gt;</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/stray/s</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/h</loc><lastmod>2026-10-03T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/q</loc></url>\n  <url><loc>https://trove.aallyn.net/modpacks/h/p</loc><lastmod>2026-10-04T00:00:00.500000+00:00</lastmod></url>\n</urlset>\n"
+},
+{
+"name": "mods off",
+"flags": {
+"feature_mods_hub_enabled": false
+},
+"body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url><loc>https://trove.aallyn.net/</loc></url>\n  <url><loc>https://trove.aallyn.net/app</loc></url>\n  <url><loc>https://trove.aallyn.net/browse</loc></url>\n  <url><loc>https://trove.aallyn.net/documentation</loc></url>\n  <url><loc>https://trove.aallyn.net/swf-docs</loc></url>\n  <url><loc>https://trove.aallyn.net/support</loc></url>\n  <url><loc>https://trove.aallyn.net/terms</loc></url>\n  <url><loc>https://trove.aallyn.net/privacy</loc></url>\n  <url><loc>https://trove.aallyn.net/accessibility</loc></url>\n  <url><loc>https://trove.aallyn.net/changelog</loc></url>\n  <url><loc>https://trove.aallyn.net/commands</loc></url>\n  <url><loc>https://trove.aallyn.net/classes</loc></url>\n  <url><loc>https://trove.aallyn.net/star-chart</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-simulator</loc></url>\n  <url><loc>https://trove.aallyn.net/gems-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/abilities</loc></url>\n  <url><loc>https://trove.aallyn.net/guides</loc></url>\n  <url><loc>https://trove.aallyn.net/allies</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-tools</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-evaluator</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-builds</loc></url>\n  <url><loc>https://trove.aallyn.net/calculators</loc></url>\n  <url><loc>https://trove.aallyn.net/zakros-ui-stats</loc></url>\n  <url><loc>https://trove.aallyn.net/fishing-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/gear-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/loot-collector-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/dressing-room</loc></url>\n  <url><loc>https://trove.aallyn.net/sound-studio</loc></url>\n  <url><loc>https://trove.aallyn.net/mod-workshop</loc></url>\n  <url><loc>https://trove.aallyn.net/blueprint-editor</loc></url>\n  <url><loc>https://trove.aallyn.net/leaderboards</loc></url>\n  <url><loc>https://trove.aallyn.net/activity</loc></url>\n  <url><loc>https://trove.aallyn.net/class-activity</loc></url>\n  <url><loc>https://trove.aallyn.net/updates</loc></url>\n  <url><loc>https://trove.aallyn.net/market</loc></url>\n  <url><loc>https://trove.aallyn.net/tomes</loc></url>\n  <url><loc>https://trove.aallyn.net/community-sites</loc></url>\n  <url><loc>https://trove.aallyn.net/store</loc></url>\n  <url><loc>https://trove.aallyn.net/codexes</loc></url>\n  <url><loc>https://trove.aallyn.net/codexes/crafting</loc></url>\n  <url><loc>https://trove.aallyn.net/status</loc></url>\n  <url><loc>https://trove.aallyn.net/giveaways</loc></url>\n  <url><loc>https://trove.aallyn.net/clubs</loc></url>\n  <url><loc>https://trove.aallyn.net/server-time</loc></url>\n  <url><loc>https://trove.aallyn.net/calendar</loc></url>\n  <url><loc>https://trove.aallyn.net/streams</loc></url>\n  <url><loc>https://trove.aallyn.net/releases</loc></url>\n</urlset>\n"
+},
+{
+"name": "some off",
+"flags": {
+"feature_market_enabled": false,
+"feature_dressing_room_enabled": false,
+"feature_star_chart_enabled": false
+},
+"body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url><loc>https://trove.aallyn.net/</loc></url>\n  <url><loc>https://trove.aallyn.net/app</loc></url>\n  <url><loc>https://trove.aallyn.net/browse</loc></url>\n  <url><loc>https://trove.aallyn.net/documentation</loc></url>\n  <url><loc>https://trove.aallyn.net/swf-docs</loc></url>\n  <url><loc>https://trove.aallyn.net/support</loc></url>\n  <url><loc>https://trove.aallyn.net/terms</loc></url>\n  <url><loc>https://trove.aallyn.net/privacy</loc></url>\n  <url><loc>https://trove.aallyn.net/accessibility</loc></url>\n  <url><loc>https://trove.aallyn.net/changelog</loc></url>\n  <url><loc>https://trove.aallyn.net/commands</loc></url>\n  <url><loc>https://trove.aallyn.net/classes</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-simulator</loc></url>\n  <url><loc>https://trove.aallyn.net/gems-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/abilities</loc></url>\n  <url><loc>https://trove.aallyn.net/guides</loc></url>\n  <url><loc>https://trove.aallyn.net/allies</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-tools</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-evaluator</loc></url>\n  <url><loc>https://trove.aallyn.net/gem-builds</loc></url>\n  <url><loc>https://trove.aallyn.net/calculators</loc></url>\n  <url><loc>https://trove.aallyn.net/zakros-ui-stats</loc></url>\n  <url><loc>https://trove.aallyn.net/fishing-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/gear-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/loot-collector-guide</loc></url>\n  <url><loc>https://trove.aallyn.net/sound-studio</loc></url>\n  <url><loc>https://trove.aallyn.net/mod-workshop</loc></url>\n  <url><loc>https://trove.aallyn.net/blueprint-editor</loc></url>\n  <url><loc>https://trove.aallyn.net/leaderboards</loc></url>\n  <url><loc>https://trove.aallyn.net/activity</loc></url>\n  <url><loc>https://trove.aallyn.net/class-activity</loc></url>\n  <url><loc>https://trove.aallyn.net/updates</loc></url>\n  <url><loc>https://trove.aallyn.net/tomes</loc></url>\n  <url><loc>https://trove.aallyn.net/community-sites</loc></url>\n  <url><loc>https://trove.aallyn.net/store</loc></url>\n  <url><loc>https://trove.aallyn.net/codexes</loc></url>\n  <url><loc>https://trove.aallyn.net/codexes/crafting</loc></url>\n  <url><loc>https://trove.aallyn.net/status</loc></url>\n  <url><loc>https://trove.aallyn.net/giveaways</loc></url>\n  <url><loc>https://trove.aallyn.net/clubs</loc></url>\n  <url><loc>https://trove.aallyn.net/server-time</loc></url>\n  <url><loc>https://trove.aallyn.net/calendar</loc></url>\n  <url><loc>https://trove.aallyn.net/streams</loc></url>\n  <url><loc>https://trove.aallyn.net/releases</loc></url>\n  <url><loc>https://trove.aallyn.net/mods</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/why</loc></url>\n  <url><loc>https://trove.aallyn.net/modpacks</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/h/m0</loc><lastmod>2026-10-01T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/h/m1</loc><lastmod>2026-10-02T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/h/m2</loc><lastmod>2026-10-03T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/a&amp;b/&lt;x&gt;</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/stray/s</loc></url>\n  <url><loc>https://trove.aallyn.net/mods/h</loc><lastmod>2026-10-03T00:00:00+00:00</lastmod></url>\n  <url><loc>https://trove.aallyn.net/mods/q</loc></url>\n  <url><loc>https://trove.aallyn.net/modpacks/h/p</loc><lastmod>2026-10-04T00:00:00.500000+00:00</lastmod></url>\n</urlset>\n"
+}
+]
+}

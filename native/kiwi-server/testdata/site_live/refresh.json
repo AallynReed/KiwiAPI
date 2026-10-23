@@ -1,0 +1,35 @@
+[
+{
+"name": "ok",
+"releases": 3,
+"releases_error": null,
+"changelog": {
+"groups": 4,
+"rate_limited": false
+},
+"changelog_error": null,
+"downloads_ok": true,
+"body": "{\"releases\":3,\"changelog\":4,\"errors\":[],\"rate_limited\":false,\"latest\":{\"release/windows\":\"v1.8.0\",\"release/linux\":\"v1.9.0\",\"release/android\":\"v1.8.0\",\"beta/windows\":\"v2.0.0-beta.1\"},\"downloads\":22,\"ok\":true}"
+},
+{
+"name": "releases fail",
+"releases": null,
+"releases_error": "Client error '403 Forbidden' for url 'x'",
+"changelog": {
+"groups": 0,
+"rate_limited": true
+},
+"changelog_error": null,
+"downloads_ok": true,
+"body": "{\"releases\":null,\"changelog\":0,\"errors\":[\"releases: Client error '403 Forbidden' for url 'x'\"],\"rate_limited\":true,\"latest\":{\"release/windows\":\"v1.8.0\",\"release/linux\":\"v1.9.0\",\"release/android\":\"v1.8.0\",\"beta/windows\":\"v2.0.0-beta.1\"},\"downloads\":22,\"ok\":false}"
+},
+{
+"name": "both fail",
+"releases": null,
+"releases_error": "a",
+"changelog": null,
+"changelog_error": "b",
+"downloads_ok": false,
+"body": "{\"releases\":null,\"changelog\":null,\"errors\":[\"releases: a\",\"changelog: b\"],\"latest\":{\"release/windows\":\"v1.8.0\",\"release/linux\":\"v1.9.0\",\"release/android\":\"v1.8.0\",\"beta/windows\":\"v2.0.0-beta.1\"},\"downloads\":null,\"ok\":false}"
+}
+]

@@ -1,0 +1,169 @@
+{
+"releases": [
+{
+"release_id": 9,
+"tag_name": "v2.0.0-beta.1",
+"name": "Beta",
+"body": "b",
+"html_url": "https://g/9",
+"prerelease": true,
+"published_at": "2026-10-20T10:00:00.123000+00:00",
+"fetched_at": "2026-10-21T00:00:00+00:00",
+"assets": [
+{
+"name": "BTT-2.0.0.msi",
+"url": "u1",
+"size": 10,
+"content_type": "application/x-msi",
+"download_count": 3
+}
+]
+},
+{
+"release_id": 8,
+"tag_name": "v1.9.0",
+"name": "",
+"body": "",
+"html_url": "https://g/8",
+"prerelease": false,
+"published_at": "2026-10-10T10:00:00+00:00",
+"fetched_at": "2026-10-21T00:00:00+00:00",
+"assets": [
+{
+"name": "btt.AppImage",
+"url": "u2",
+"size": 20,
+"content_type": null,
+"download_count": 0
+},
+{
+"name": "btt_1.9.0_amd64.deb",
+"url": "u3",
+"size": 21,
+"content_type": "x",
+"download_count": 7
+},
+{
+"name": "notes.txt",
+"url": "u4",
+"size": 1,
+"content_type": "text/plain",
+"download_count": 1,
+"extra": 1.5
+}
+]
+},
+{
+"release_id": 7,
+"tag_name": "v1.8.0",
+"name": "Ünï",
+"body": "x",
+"html_url": "https://g/7",
+"prerelease": false,
+"published_at": "2026-09-01T00:00:00+00:00",
+"fetched_at": "2026-10-21T00:00:00+00:00",
+"assets": [
+{
+"name": "BTT-Setup-1.8.0.exe",
+"url": "u5",
+"size": 30,
+"content_type": "a",
+"download_count": 9
+},
+{
+"name": "btt-1.8.0.apk",
+"url": "u6",
+"size": 31,
+"content_type": "b",
+"download_count": 2
+}
+]
+}
+],
+"latest": [
+{
+"channel": "release",
+"status": 200,
+"body": "{\"channel\":\"release\",\"platforms\":{\"windows\":{\"platform\":\"windows\",\"tag_name\":\"v1.8.0\",\"published_at\":\"2026-09-01T00:00:00+00:00\",\"html_url\":\"https://g/7\",\"assets\":[{\"name\":\"BTT-Setup-1.8.0.exe\",\"url\":\"u5\",\"size\":30,\"content_type\":\"a\",\"download_count\":9}]},\"linux\":{\"platform\":\"linux\",\"tag_name\":\"v1.9.0\",\"published_at\":\"2026-10-10T10:00:00+00:00\",\"html_url\":\"https://g/8\",\"assets\":[{\"name\":\"btt.AppImage\",\"url\":\"u2\",\"size\":20,\"content_type\":null,\"download_count\":0},{\"name\":\"btt_1.9.0_amd64.deb\",\"url\":\"u3\",\"size\":21,\"content_type\":\"x\",\"download_count\":7}]},\"android\":{\"platform\":\"android\",\"tag_name\":\"v1.8.0\",\"published_at\":\"2026-09-01T00:00:00+00:00\",\"html_url\":\"https://g/7\",\"assets\":[{\"name\":\"btt-1.8.0.apk\",\"url\":\"u6\",\"size\":31,\"content_type\":\"b\",\"download_count\":2}]}}}",
+"cache_control": "public, max-age=180"
+},
+{
+"channel": "beta",
+"status": 200,
+"body": "{\"channel\":\"beta\",\"platforms\":{\"windows\":{\"platform\":\"windows\",\"tag_name\":\"v2.0.0-beta.1\",\"published_at\":\"2026-10-20T10:00:00.123000+00:00\",\"html_url\":\"https://g/9\",\"assets\":[{\"name\":\"BTT-2.0.0.msi\",\"url\":\"u1\",\"size\":10,\"content_type\":\"application/x-msi\",\"download_count\":3}]},\"linux\":null,\"android\":null}}",
+"cache_control": "public, max-age=180"
+},
+{
+"channel": "nope",
+"status": 200,
+"body": "{\"channel\":\"release\",\"platforms\":{\"windows\":{\"platform\":\"windows\",\"tag_name\":\"v1.8.0\",\"published_at\":\"2026-09-01T00:00:00+00:00\",\"html_url\":\"https://g/7\",\"assets\":[{\"name\":\"BTT-Setup-1.8.0.exe\",\"url\":\"u5\",\"size\":30,\"content_type\":\"a\",\"download_count\":9}]},\"linux\":{\"platform\":\"linux\",\"tag_name\":\"v1.9.0\",\"published_at\":\"2026-10-10T10:00:00+00:00\",\"html_url\":\"https://g/8\",\"assets\":[{\"name\":\"btt.AppImage\",\"url\":\"u2\",\"size\":20,\"content_type\":null,\"download_count\":0},{\"name\":\"btt_1.9.0_amd64.deb\",\"url\":\"u3\",\"size\":21,\"content_type\":\"x\",\"download_count\":7}]},\"android\":{\"platform\":\"android\",\"tag_name\":\"v1.8.0\",\"published_at\":\"2026-09-01T00:00:00+00:00\",\"html_url\":\"https://g/7\",\"assets\":[{\"name\":\"btt-1.8.0.apk\",\"url\":\"u6\",\"size\":31,\"content_type\":\"b\",\"download_count\":2}]}}}",
+"cache_control": "public, max-age=180"
+},
+{
+"channel": "",
+"status": 200,
+"body": "{\"channel\":\"release\",\"platforms\":{\"windows\":{\"platform\":\"windows\",\"tag_name\":\"v1.8.0\",\"published_at\":\"2026-09-01T00:00:00+00:00\",\"html_url\":\"https://g/7\",\"assets\":[{\"name\":\"BTT-Setup-1.8.0.exe\",\"url\":\"u5\",\"size\":30,\"content_type\":\"a\",\"download_count\":9}]},\"linux\":{\"platform\":\"linux\",\"tag_name\":\"v1.9.0\",\"published_at\":\"2026-10-10T10:00:00+00:00\",\"html_url\":\"https://g/8\",\"assets\":[{\"name\":\"btt.AppImage\",\"url\":\"u2\",\"size\":20,\"content_type\":null,\"download_count\":0},{\"name\":\"btt_1.9.0_amd64.deb\",\"url\":\"u3\",\"size\":21,\"content_type\":\"x\",\"download_count\":7}]},\"android\":{\"platform\":\"android\",\"tag_name\":\"v1.8.0\",\"published_at\":\"2026-09-01T00:00:00+00:00\",\"html_url\":\"https://g/7\",\"assets\":[{\"name\":\"btt-1.8.0.apk\",\"url\":\"u6\",\"size\":31,\"content_type\":\"b\",\"download_count\":2}]}}}",
+"cache_control": "public, max-age=180"
+}
+],
+"lists": [
+{
+"channel": null,
+"limit": 30,
+"offset": 0,
+"status": 200,
+"body": "{\"channel\":null,\"items\":[{\"tag_name\":\"v2.0.0-beta.1\",\"name\":\"Beta\",\"body\":\"b\",\"html_url\":\"https://g/9\",\"channel\":\"beta\",\"prerelease\":true,\"published_at\":\"2026-10-20T10:00:00.123000+00:00\",\"assets\":[{\"name\":\"BTT-2.0.0.msi\",\"url\":\"u1\",\"size\":10,\"content_type\":\"application/x-msi\",\"download_count\":3}]},{\"tag_name\":\"v1.9.0\",\"name\":\"\",\"body\":\"\",\"html_url\":\"https://g/8\",\"channel\":\"release\",\"prerelease\":false,\"published_at\":\"2026-10-10T10:00:00+00:00\",\"assets\":[{\"name\":\"btt.AppImage\",\"url\":\"u2\",\"size\":20,\"content_type\":null,\"download_count\":0},{\"name\":\"btt_1.9.0_amd64.deb\",\"url\":\"u3\",\"size\":21,\"content_type\":\"x\",\"download_count\":7},{\"name\":\"notes.txt\",\"url\":\"u4\",\"size\":1,\"content_type\":\"text/plain\",\"download_count\":1,\"extra\":1.5}]},{\"tag_name\":\"v1.8.0\",\"name\":\"Ünï\",\"body\":\"x\",\"html_url\":\"https://g/7\",\"channel\":\"release\",\"prerelease\":false,\"published_at\":\"2026-09-01T00:00:00+00:00\",\"assets\":[{\"name\":\"BTT-Setup-1.8.0.exe\",\"url\":\"u5\",\"size\":30,\"content_type\":\"a\",\"download_count\":9},{\"name\":\"btt-1.8.0.apk\",\"url\":\"u6\",\"size\":31,\"content_type\":\"b\",\"download_count\":2}]}],\"count\":3,\"total\":3}"
+},
+{
+"channel": "beta",
+"limit": 30,
+"offset": 0,
+"status": 200,
+"body": "{\"channel\":\"beta\",\"items\":[{\"tag_name\":\"v2.0.0-beta.1\",\"name\":\"Beta\",\"body\":\"b\",\"html_url\":\"https://g/9\",\"channel\":\"beta\",\"prerelease\":true,\"published_at\":\"2026-10-20T10:00:00.123000+00:00\",\"assets\":[{\"name\":\"BTT-2.0.0.msi\",\"url\":\"u1\",\"size\":10,\"content_type\":\"application/x-msi\",\"download_count\":3}]}],\"count\":1,\"total\":1}"
+},
+{
+"channel": "release",
+"limit": 1,
+"offset": 1,
+"status": 200,
+"body": "{\"channel\":\"release\",\"items\":[{\"tag_name\":\"v1.8.0\",\"name\":\"Ünï\",\"body\":\"x\",\"html_url\":\"https://g/7\",\"channel\":\"release\",\"prerelease\":false,\"published_at\":\"2026-09-01T00:00:00+00:00\",\"assets\":[{\"name\":\"BTT-Setup-1.8.0.exe\",\"url\":\"u5\",\"size\":30,\"content_type\":\"a\",\"download_count\":9},{\"name\":\"btt-1.8.0.apk\",\"url\":\"u6\",\"size\":31,\"content_type\":\"b\",\"download_count\":2}]}],\"count\":1,\"total\":2}"
+},
+{
+"channel": "bogus",
+"limit": 2,
+"offset": 0,
+"status": 200,
+"body": "{\"channel\":null,\"items\":[{\"tag_name\":\"v2.0.0-beta.1\",\"name\":\"Beta\",\"body\":\"b\",\"html_url\":\"https://g/9\",\"channel\":\"beta\",\"prerelease\":true,\"published_at\":\"2026-10-20T10:00:00.123000+00:00\",\"assets\":[{\"name\":\"BTT-2.0.0.msi\",\"url\":\"u1\",\"size\":10,\"content_type\":\"application/x-msi\",\"download_count\":3}]},{\"tag_name\":\"v1.9.0\",\"name\":\"\",\"body\":\"\",\"html_url\":\"https://g/8\",\"channel\":\"release\",\"prerelease\":false,\"published_at\":\"2026-10-10T10:00:00+00:00\",\"assets\":[{\"name\":\"btt.AppImage\",\"url\":\"u2\",\"size\":20,\"content_type\":null,\"download_count\":0},{\"name\":\"btt_1.9.0_amd64.deb\",\"url\":\"u3\",\"size\":21,\"content_type\":\"x\",\"download_count\":7},{\"name\":\"notes.txt\",\"url\":\"u4\",\"size\":1,\"content_type\":\"text/plain\",\"download_count\":1,\"extra\":1.5}]}],\"count\":2,\"total\":3}"
+}
+],
+"changelog": [
+{
+"doc": null,
+"status": 200,
+"body": "{\"groups\":[],\"rate_limited\":false,\"fetched_at\":null}"
+},
+{
+"doc": {
+"repo": "AallynReed/BetterTroveTools",
+"rate_limited": true,
+"fetched_at": "2026-10-22T01:02:03.456000+00:00",
+"groups": [
+{
+"version": "Unreleased",
+"commits": [
+{
+"sha": "abc",
+"short_sha": "abc",
+"message": "m",
+"type": null,
+"url": ""
+}
+]
+}
+]
+},
+"status": 200,
+"body": "{\"groups\":[{\"version\":\"Unreleased\",\"commits\":[{\"sha\":\"abc\",\"short_sha\":\"abc\",\"message\":\"m\",\"type\":null,\"url\":\"\"}]}],\"rate_limited\":true,\"fetched_at\":\"2026-10-22T01:02:03.456000+00:00\"}"
+}
+]
+}

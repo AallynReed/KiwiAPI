@@ -7,6 +7,7 @@
 //! generator ([`PyRandom`]), seeded from the OS, in Python's call order.
 
 mod data;
+pub mod site;
 mod star_chart;
 mod wire;
 

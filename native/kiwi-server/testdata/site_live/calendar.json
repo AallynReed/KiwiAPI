@@ -1,0 +1,127 @@
+[
+{
+"now_us": 1792758896789000,
+"runs": [],
+"body_sha256": "67820c97dc254a79fd99ebc9d6e54deb34729d98c9469d52820312ee0d674537",
+"body_len": 129475,
+"body_head": "{\"starts_at\":1761222896,\"ends_at\":1824294896,\"generated_at\":1792758896,\"count\":1081,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"color\":\"692e01\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Voting)\",\"starts_at\":1761044400,\"ends_at\":1761303600,\"state\":\"voting\",\"color\":\"5ca8cc\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761217200,\"ends_at\":1761303600,\"color\":\"8bc34a\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1761390000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761562800,\"ends_at\":1761649200,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Double Star Bar\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"color\":\"260375\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1761649200,\"ends_at\":1761908400,\""
+},
+{
+"now_us": 1792758896789000,
+"runs": [
+{
+"day_anchor": 1761649200,
+"first_seen": 1761650000,
+"ended": null
+},
+{
+"day_anchor": 1759000000,
+"first_seen": null,
+"ended": 1759300000
+}
+],
+"body_sha256": "92a61d33ef6ef18f9da749b95f8f2fbc99559a64b7e5702890d59b2bf4a97bed",
+"body_len": 129943,
+"body_head": "{\"starts_at\":1761222896,\"ends_at\":1824294896,\"generated_at\":1792758896,\"count\":1087,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"color\":\"692e01\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Voting)\",\"starts_at\":1761044400,\"ends_at\":1761303600,\"state\":\"voting\",\"color\":\"5ca8cc\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761217200,\"ends_at\":1761303600,\"color\":\"8bc34a\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1761390000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761562800,\"ends_at\":1761649200,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Double Star Bar\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"color\":\"260375\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1761649200,\"ends_at\":1761908400,\""
+},
+{
+"now_us": 1792839600000000,
+"runs": [],
+"body_sha256": "761d5bc7ca8d7dbaa10b6e076f5cc9a0d5ee243867f8ed027cba9949353e58d0",
+"body_len": 129246,
+"body_head": "{\"starts_at\":1761303600,\"ends_at\":1824375600,\"generated_at\":1792839600,\"count\":1079,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"color\":\"692e01\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1761390000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761562800,\"ends_at\":1761649200,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Double Star Bar\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"color\":\"260375\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1761649200,\"ends_at\":1761908400,\"state\":\"selling\",\"color\":\"02679e\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761649200,\"ends_at\":1761735600,\"color\":\"4caf50\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761735600,\"ends_at\":1761822000,"
+},
+{
+"now_us": 1792839600000000,
+"runs": [
+{
+"day_anchor": 1761649200,
+"first_seen": 1761650000,
+"ended": null
+},
+{
+"day_anchor": 1759000000,
+"first_seen": null,
+"ended": 1759300000
+}
+],
+"body_sha256": "2a8ad64e45fca29adba41dcd565cd8df4745f2028e2dee2f4c0ddf232a062c95",
+"body_len": 129714,
+"body_head": "{\"starts_at\":1761303600,\"ends_at\":1824375600,\"generated_at\":1792839600,\"count\":1085,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"color\":\"692e01\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1761390000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761562800,\"ends_at\":1761649200,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Double Star Bar\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"color\":\"260375\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1761649200,\"ends_at\":1761908400,\"state\":\"selling\",\"color\":\"02679e\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761649200,\"ends_at\":1761735600,\"color\":\"4caf50\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761735600,\"ends_at\":1761822000,"
+},
+{
+"now_us": 1792925999000000,
+"runs": [],
+"body_sha256": "7c00c765b376096d8020dc70ba7051e53ff09035c50c915e5647507331c22577",
+"body_len": 129352,
+"body_head": "{\"starts_at\":1761389999,\"ends_at\":1824461999,\"generated_at\":1792925999,\"count\":1080,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"color\":\"692e01\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1761390000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761562800,\"ends_at\":1761649200,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Double Star Bar\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"color\":\"260375\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1761649200,\"ends_at\":1761908400,\"state\":\"selling\",\"color\":\"02679e\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761649200,\"ends_at\":1761735600,\"color\":\"4caf50\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761735600,\"ends_at\":1761822000,"
+},
+{
+"now_us": 1792925999000000,
+"runs": [
+{
+"day_anchor": 1761649200,
+"first_seen": 1761650000,
+"ended": null
+},
+{
+"day_anchor": 1759000000,
+"first_seen": null,
+"ended": 1759300000
+}
+],
+"body_sha256": "30d0d3d446a60bf48d7b31a63314ea058141c5ddd0878abeb7bc16565ebe0a8d",
+"body_len": 129820,
+"body_head": "{\"starts_at\":1761389999,\"ends_at\":1824461999,\"generated_at\":1792925999,\"count\":1086,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1760958000,\"ends_at\":1761562800,\"color\":\"692e01\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761390000,\"ends_at\":1761476400,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1761390000,\"ends_at\":1761562800,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761562800,\"ends_at\":1761649200,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Double Star Bar\",\"starts_at\":1761562800,\"ends_at\":1762167600,\"color\":\"260375\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1761649200,\"ends_at\":1761908400,\"state\":\"selling\",\"color\":\"02679e\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1761649200,\"ends_at\":1761735600,\"color\":\"4caf50\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1761735600,\"ends_at\":1761822000,"
+},
+{
+"now_us": 1772938800000000,
+"runs": [],
+"body_sha256": "5250a367c230e91776d63968d20e8d8e3d5825281217c9a9331315dc0c99bba9",
+"body_len": 129548,
+"body_head": "{\"starts_at\":1741402800,\"ends_at\":1804474800,\"generated_at\":1772938800,\"count\":1082,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1740999600,\"ends_at\":1741604400,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Second Stat Reroll\",\"starts_at\":1740999600,\"ends_at\":1741604400,\"color\":\"181f79\"},{\"type\":\"corruxion\",\"name\":\"Corruxion\",\"starts_at\":1741345200,\"ends_at\":1741604400},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1741345200,\"ends_at\":1741431600,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1741431600,\"ends_at\":1741518000,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1741431600,\"ends_at\":1741604400,\"biomes\":[{\"name\":\"Medieval Highlands\",\"icon\":\"forest\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1741518000,\"ends_at\":1741604400,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1741604400,\"ends_at\":1742209200,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1741604400,\"ends_at\":1742209200,\"color\":\"692e01\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Voting)\",\"starts_at\":1741690800,\"ends_at\":1741950000,\"state\":\"voting\",\"color\":\"5ca8cc\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1741690800,\"ends_at\":1741777200,\"color\":\"8bc34a\"},{"
+},
+{
+"now_us": 1772938800000000,
+"runs": [
+{
+"day_anchor": 1761649200,
+"first_seen": 1761650000,
+"ended": null
+},
+{
+"day_anchor": 1759000000,
+"first_seen": null,
+"ended": 1759300000
+}
+],
+"body_sha256": "c121a57a041deae8ec9d2b1b3ce044aff73f3723591ac9bfc7a72065ffe61acd",
+"body_len": 130250,
+"body_head": "{\"starts_at\":1741402800,\"ends_at\":1804474800,\"generated_at\":1772938800,\"count\":1091,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1740999600,\"ends_at\":1741604400,\"biomes\":[{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"},{\"name\":\"Candoria\",\"icon\":\"candy\"}]},{\"type\":\"weekly_buff\",\"name\":\"Second Stat Reroll\",\"starts_at\":1740999600,\"ends_at\":1741604400,\"color\":\"181f79\"},{\"type\":\"corruxion\",\"name\":\"Corruxion\",\"starts_at\":1741345200,\"ends_at\":1741604400},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1741345200,\"ends_at\":1741431600,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1741431600,\"ends_at\":1741518000,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1741431600,\"ends_at\":1741604400,\"biomes\":[{\"name\":\"Medieval Highlands\",\"icon\":\"forest\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1741518000,\"ends_at\":1741604400,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1741604400,\"ends_at\":1742209200,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Fast Invasions\",\"starts_at\":1741604400,\"ends_at\":1742209200,\"color\":\"692e01\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Voting)\",\"starts_at\":1741690800,\"ends_at\":1741950000,\"state\":\"voting\",\"color\":\"5ca8cc\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1741690800,\"ends_at\":1741777200,\"color\":\"8bc34a\"},{"
+},
+{
+"now_us": 1760293800000000,
+"runs": [],
+"body_sha256": "bc298c41e2a2eb06cb56202d31daeeae6bf227be1697e34a780331476ef9d66c",
+"body_len": 129780,
+"body_head": "{\"starts_at\":1728757800,\"ends_at\":1791829800,\"generated_at\":1760293800,\"count\":1083,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1728298800,\"ends_at\":1728903600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Bonus XP\",\"starts_at\":1728298800,\"ends_at\":1728903600,\"color\":\"a14200\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1728730800,\"ends_at\":1728817200,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1728730800,\"ends_at\":1728817200,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1728730800,\"ends_at\":1728903600,\"biomes\":[{\"name\":\"Geode Topside\",\"icon\":\"dunes\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1728903600,\"ends_at\":1728990000,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1728903600,\"ends_at\":1729508400,\"biomes\":[{\"name\":\"Forbidden Spires\",\"icon\":\"spires\"},{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"}]},{\"type\":\"weekly_buff\",\"name\":\"Second Stat Reroll\",\"starts_at\":1728903600,\"ends_at\":1729508400,\"color\":\"181f79\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1728990000,\"ends_at\":1729249200,\"state\":\"selling\",\"color\":\"02679e\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1728990000,\"ends_at\":1729076400,\"color\":\"4caf50\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1729076400,\"ends_at\":"
+},
+{
+"now_us": 1760293800000000,
+"runs": [
+{
+"day_anchor": 1761649200,
+"first_seen": 1761650000,
+"ended": null
+},
+{
+"day_anchor": 1759000000,
+"first_seen": null,
+"ended": 1759300000
+}
+],
+"body_sha256": "fa3876b5ddd40d0a93727d0223f855534f2a982af8e00eb164f9fa710e4ad71d",
+"body_len": 130482,
+"body_head": "{\"starts_at\":1728757800,\"ends_at\":1791829800,\"generated_at\":1760293800,\"count\":1092,\"events\":[{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1728298800,\"ends_at\":1728903600,\"biomes\":[{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"},{\"name\":\"Neon City\",\"icon\":\"neon\"}]},{\"type\":\"weekly_buff\",\"name\":\"Bonus XP\",\"starts_at\":1728298800,\"ends_at\":1728903600,\"color\":\"a14200\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1728730800,\"ends_at\":1728817200,\"color\":\"8bc34a\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1728730800,\"ends_at\":1728817200,\"color\":\"4caf50\"},{\"type\":\"stampy\",\"name\":\"Stampy\",\"starts_at\":1728730800,\"ends_at\":1728903600,\"biomes\":[{\"name\":\"Geode Topside\",\"icon\":\"dunes\"}]},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1728903600,\"ends_at\":1728990000,\"color\":\"8bc34a\"},{\"type\":\"mana\",\"name\":\"Wild Mana\",\"starts_at\":1728903600,\"ends_at\":1729508400,\"biomes\":[{\"name\":\"Forbidden Spires\",\"icon\":\"spires\"},{\"name\":\"Dragonfire Peaks\",\"icon\":\"dragon\"},{\"name\":\"Jurassic Jungle\",\"icon\":\"dinosaur\"}]},{\"type\":\"weekly_buff\",\"name\":\"Second Stat Reroll\",\"starts_at\":1728903600,\"ends_at\":1729508400,\"color\":\"181f79\"},{\"type\":\"fluxion\",\"name\":\"Fluxion (Selling)\",\"starts_at\":1728990000,\"ends_at\":1729249200,\"state\":\"selling\",\"color\":\"02679e\"},{\"type\":\"gardening_3\",\"name\":\"3-day plants\",\"starts_at\":1728990000,\"ends_at\":1729076400,\"color\":\"4caf50\"},{\"type\":\"gardening_2\",\"name\":\"2-day plants\",\"starts_at\":1729076400,\"ends_at\":"
+}
+]

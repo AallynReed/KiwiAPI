@@ -1,0 +1,3217 @@
+{
+"variants": {
+"all": {
+"mods_hub_enabled": true,
+"market_enabled": true,
+"store_enabled": true,
+"leaderboards_enabled": true,
+"player_activity_enabled": true,
+"class_activity_enabled": true,
+"clubs_enabled": true,
+"updates_enabled": true,
+"codexes_enabled": true,
+"server_status_enabled": true,
+"giveaways_enabled": true,
+"commands_enabled": true,
+"server_time_enabled": true,
+"webhooks_enabled": true,
+"dm_subscriptions_enabled": true,
+"image_studio_enabled": true,
+"calendar_enabled": true,
+"streams_enabled": true,
+"btt_releases_enabled": true,
+"classes_enabled": true,
+"star_chart_enabled": true,
+"gem_simulator_enabled": true,
+"gem_evaluator_enabled": true,
+"gem_builds_enabled": true,
+"calculators_enabled": true,
+"gems_guide_enabled": true,
+"abilities_enabled": true,
+"guides_enabled": true,
+"allies_enabled": true,
+"gem_tools_enabled": true,
+"fishing_guide_enabled": true,
+"gear_guide_enabled": true,
+"loot_collector_guide_enabled": true,
+"dressing_room_enabled": true,
+"dressing_room_page_enabled": true,
+"sound_studio_enabled": true,
+"mod_workshop_enabled": true,
+"blueprint_editor_enabled": true,
+"tomes_enabled": true,
+"unlock_debug_enabled": true,
+"file_drops_enabled": true,
+"community_sites_enabled": true,
+"cheater_detection_enabled": true,
+"alt_clusters_enabled": true,
+"leaderboard_renames_enabled": true
+},
+"some off": {
+"mods_hub_enabled": false,
+"market_enabled": false,
+"store_enabled": true,
+"leaderboards_enabled": true,
+"player_activity_enabled": true,
+"class_activity_enabled": true,
+"clubs_enabled": true,
+"updates_enabled": false,
+"codexes_enabled": true,
+"server_status_enabled": true,
+"giveaways_enabled": true,
+"commands_enabled": true,
+"server_time_enabled": true,
+"webhooks_enabled": true,
+"dm_subscriptions_enabled": true,
+"image_studio_enabled": true,
+"calendar_enabled": true,
+"streams_enabled": true,
+"btt_releases_enabled": true,
+"classes_enabled": true,
+"star_chart_enabled": true,
+"gem_simulator_enabled": true,
+"gem_evaluator_enabled": true,
+"gem_builds_enabled": true,
+"calculators_enabled": true,
+"gems_guide_enabled": true,
+"abilities_enabled": true,
+"guides_enabled": true,
+"allies_enabled": true,
+"gem_tools_enabled": false,
+"fishing_guide_enabled": true,
+"gear_guide_enabled": true,
+"loot_collector_guide_enabled": true,
+"dressing_room_enabled": true,
+"dressing_room_page_enabled": true,
+"sound_studio_enabled": true,
+"mod_workshop_enabled": true,
+"blueprint_editor_enabled": true,
+"tomes_enabled": true,
+"unlock_debug_enabled": true,
+"file_drops_enabled": true,
+"community_sites_enabled": true,
+"cheater_detection_enabled": false,
+"alt_clusters_enabled": true,
+"leaderboard_renames_enabled": true
+},
+"no extras": {
+"mods_hub_enabled": true,
+"market_enabled": true,
+"store_enabled": true,
+"leaderboards_enabled": true,
+"player_activity_enabled": true,
+"class_activity_enabled": true,
+"clubs_enabled": true,
+"updates_enabled": true,
+"codexes_enabled": true,
+"server_status_enabled": true,
+"giveaways_enabled": true,
+"commands_enabled": true,
+"server_time_enabled": true,
+"webhooks_enabled": true,
+"dm_subscriptions_enabled": true,
+"image_studio_enabled": true,
+"calendar_enabled": true,
+"streams_enabled": true,
+"btt_releases_enabled": true,
+"classes_enabled": true,
+"star_chart_enabled": true,
+"gem_simulator_enabled": true,
+"gem_evaluator_enabled": true,
+"gem_builds_enabled": true,
+"calculators_enabled": true,
+"gems_guide_enabled": true,
+"abilities_enabled": true,
+"guides_enabled": true,
+"allies_enabled": true,
+"gem_tools_enabled": true,
+"fishing_guide_enabled": true,
+"gear_guide_enabled": true,
+"loot_collector_guide_enabled": true,
+"dressing_room_enabled": true,
+"dressing_room_page_enabled": true,
+"sound_studio_enabled": true,
+"mod_workshop_enabled": true,
+"blueprint_editor_enabled": true,
+"tomes_enabled": true,
+"unlock_debug_enabled": true,
+"file_drops_enabled": true,
+"community_sites_enabled": true
+},
+"all off": {
+"mods_hub_enabled": false,
+"market_enabled": false,
+"store_enabled": false,
+"leaderboards_enabled": false,
+"player_activity_enabled": false,
+"class_activity_enabled": false,
+"clubs_enabled": false,
+"updates_enabled": false,
+"codexes_enabled": false,
+"server_status_enabled": false,
+"giveaways_enabled": false,
+"commands_enabled": false,
+"server_time_enabled": false,
+"webhooks_enabled": false,
+"dm_subscriptions_enabled": false,
+"image_studio_enabled": false,
+"calendar_enabled": false,
+"streams_enabled": false,
+"btt_releases_enabled": false,
+"classes_enabled": false,
+"star_chart_enabled": false,
+"gem_simulator_enabled": false,
+"gem_evaluator_enabled": false,
+"gem_builds_enabled": false,
+"calculators_enabled": false,
+"gems_guide_enabled": false,
+"abilities_enabled": false,
+"guides_enabled": false,
+"allies_enabled": false,
+"gem_tools_enabled": false,
+"fishing_guide_enabled": false,
+"gear_guide_enabled": false,
+"loot_collector_guide_enabled": false,
+"dressing_room_enabled": false,
+"dressing_room_page_enabled": false,
+"sound_studio_enabled": false,
+"mod_workshop_enabled": false,
+"blueprint_editor_enabled": false,
+"tomes_enabled": false,
+"unlock_debug_enabled": false,
+"file_drops_enabled": false,
+"community_sites_enabled": false
+}
+},
+"cases": [
+{
+"variant": "all",
+"query": "market",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "Market",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "MARKET ",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "gem",
+"hits": [
+[
+"Gem Builds",
+80
+],
+[
+"Gem Evaluator",
+80
+],
+[
+"Gem Simulator",
+80
+],
+[
+"Gem Tools",
+80
+],
+[
+"Gems Guide",
+80
+],
+[
+"Gem Abilities",
+80
+],
+[
+"Abilities",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "gems",
+"hits": [
+[
+"Gems Guide",
+80
+],
+[
+"Abilities",
+25
+],
+[
+"Gem Builds",
+25
+],
+[
+"Gem Evaluator",
+25
+],
+[
+"Gem Simulator",
+25
+],
+[
+"Gem Abilities",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "abil",
+"hits": [
+[
+"Abilities",
+80
+],
+[
+"Ally Abilities",
+60
+],
+[
+"Class Abilities",
+60
+],
+[
+"Gem Abilities",
+60
+],
+[
+"Ring Abilities",
+60
+],
+[
+"Star Chart Abilities",
+60
+],
+[
+"Store Availability",
+40
+]
+]
+},
+{
+"variant": "all",
+"query": "anal",
+"hits": [
+[
+"Market Analytics",
+60
+]
+]
+},
+{
+"variant": "all",
+"query": "ganda",
+"hits": []
+},
+{
+"variant": "all",
+"query": "gánda",
+"hits": []
+},
+{
+"variant": "all",
+"query": "straße",
+"hits": []
+},
+{
+"variant": "all",
+"query": "STRASSE",
+"hits": []
+},
+{
+"variant": "all",
+"query": "server time",
+"hits": [
+[
+"Server Time",
+100
+],
+[
+"Server Status",
+20
+]
+]
+},
+{
+"variant": "all",
+"query": "time server",
+"hits": [
+[
+"Server Status",
+20
+],
+[
+"Server Time",
+20
+]
+]
+},
+{
+"variant": "all",
+"query": "a",
+"hits": [
+[
+"Abilities",
+80
+],
+[
+"Accessibility",
+80
+],
+[
+"Allies",
+80
+],
+[
+"App Releases",
+80
+],
+[
+"Ally Abilities",
+80
+],
+[
+"Alt Clusters",
+80
+],
+[
+"Class Activity",
+60
+],
+[
+"Get the App",
+60
+],
+[
+"Player Activity",
+60
+],
+[
+"Class Abilities",
+60
+],
+[
+"Gem Abilities",
+60
+],
+[
+"Market Analytics",
+60
+],
+[
+"Ring Abilities",
+60
+],
+[
+"Star Chart Abilities",
+60
+],
+[
+"Store Availability",
+60
+],
+[
+"Updates: Audio",
+60
+],
+[
+"Calculators",
+40
+],
+[
+"Calendar",
+40
+],
+[
+"Changelog",
+40
+],
+[
+"Classes",
+40
+],
+[
+"Dashboard",
+40
+],
+[
+"Gear Guide",
+40
+],
+[
+"Gem Evaluator",
+40
+],
+[
+"Gem Simulator",
+40
+],
+[
+"Giveaways",
+40
+],
+[
+"Leaderboards",
+40
+],
+[
+"Market",
+40
+],
+[
+"Modpacks",
+40
+],
+[
+"Recipe Cost Calculator",
+40
+],
+[
+"Server Status",
+40
+],
+[
+"Star Chart",
+40
+],
+[
+"Streams",
+40
+],
+[
+"Tome Values",
+40
+],
+[
+"Trove Commands",
+40
+],
+[
+"Updates",
+40
+],
+[
+"Cheaters",
+40
+],
+[
+"Market Listings",
+40
+],
+[
+"Possible Renames",
+40
+],
+[
+"Store Gallery",
+40
+],
+[
+"Stray Mods",
+40
+],
+[
+"Updates: Files",
+40
+],
+[
+"Updates: Interface",
+40
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Codexes",
+25
+],
+[
+"Community Sites",
+25
+],
+[
+"Fishing Guide",
+25
+],
+[
+"Gem Tools",
+25
+],
+[
+"Gems Guide",
+25
+],
+[
+"Guides",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Mod Workshop",
+25
+],
+[
+"Mods Hub",
+25
+],
+[
+"Sound Studio",
+25
+],
+[
+"Support",
+25
+],
+[
+"Unlock Debug",
+25
+],
+[
+"My Mods",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "",
+"hits": []
+},
+{
+"variant": "all",
+"query": "  up ",
+"hits": [
+[
+"Updates",
+80
+],
+[
+"Updates: Audio",
+80
+],
+[
+"Updates: Files",
+80
+],
+[
+"Updates: Interface",
+80
+],
+[
+"Support",
+40
+],
+[
+"Changelog",
+25
+],
+[
+"Server Status",
+25
+],
+[
+"My Mods",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "trove.exe",
+"hits": [
+[
+"Unlock Debug",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "debug console",
+"hits": [
+[
+"Unlock Debug",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "x",
+"hits": [
+[
+"Codexes",
+40
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Gems Guide",
+25
+],
+[
+"Guides",
+25
+],
+[
+"Market",
+25
+],
+[
+"Unlock Debug",
+25
+],
+[
+"Store Gallery",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "store",
+"hits": [
+[
+"Store History",
+80
+],
+[
+"Store Availability",
+80
+],
+[
+"Store Gallery",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "class",
+"hits": [
+[
+"Class Activity",
+80
+],
+[
+"Classes",
+80
+],
+[
+"Class Abilities",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "renames",
+"hits": [
+[
+"Possible Renames",
+60
+]
+]
+},
+{
+"variant": "all",
+"query": "tab",
+"hits": [
+[
+"Codexes",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "updates: files",
+"hits": [
+[
+"Updates: Files",
+100
+]
+]
+},
+{
+"variant": "all",
+"query": "mod",
+"hits": [
+[
+"Mod Workshop",
+80
+],
+[
+"Modpacks",
+80
+],
+[
+"Mods Hub",
+80
+],
+[
+"My Mods",
+60
+],
+[
+"Stray Mods",
+60
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Ring Abilities",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "Mods",
+"hits": [
+[
+"Mods Hub",
+80
+],
+[
+"My Mods",
+60
+],
+[
+"Stray Mods",
+60
+],
+[
+"Ring Abilities",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "ﬁsh",
+"hits": [
+[
+"Fishing Guide",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "Ｍarket",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "évents",
+"hits": [
+[
+"Calendar",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "calendar events",
+"hits": [
+[
+"Calendar",
+20
+]
+]
+},
+{
+"variant": "all",
+"query": "loot",
+"hits": [
+[
+"Loot Collector Rules",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "zakros",
+"hits": [
+[
+"Loot Collector Rules",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "beta",
+"hits": []
+},
+{
+"variant": "all",
+"query": "about",
+"hits": []
+},
+{
+"variant": "all",
+"query": "cheat",
+"hits": [
+[
+"Cheaters",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "alts",
+"hits": [
+[
+"Alt Clusters",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "my",
+"hits": [
+[
+"My Mods",
+80
+],
+[
+"Community Sites",
+25
+],
+[
+"Gem Evaluator",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "stray",
+"hits": [
+[
+"Stray Mods",
+80
+]
+]
+},
+{
+"variant": "all",
+"query": "guide",
+"hits": [
+[
+"Guides",
+80
+],
+[
+"Fishing Guide",
+60
+],
+[
+"Gear Guide",
+60
+],
+[
+"Gems Guide",
+60
+],
+[
+"Loot Collector Rules",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "rate my gem",
+"hits": [
+[
+"Gem Evaluator",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "ui",
+"hits": [
+[
+"Fishing Guide",
+40
+],
+[
+"Gear Guide",
+40
+],
+[
+"Gem Builds",
+40
+],
+[
+"Gems Guide",
+40
+],
+[
+"Guides",
+40
+],
+[
+"Clubs",
+25
+],
+[
+"Gem Tools",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Mod Workshop",
+25
+],
+[
+"Star Chart",
+25
+],
+[
+"Market Analytics",
+25
+],
+[
+"Updates: Interface",
+25
+]
+]
+},
+{
+"variant": "all",
+"query": "çlub",
+"hits": [
+[
+"Clubs",
+80
+]
+]
+},
+{
+"variant": "some off",
+"query": "market",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "Market",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "MARKET ",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "gem",
+"hits": [
+[
+"Gem Builds",
+80
+],
+[
+"Gem Evaluator",
+80
+],
+[
+"Gem Simulator",
+80
+],
+[
+"Gems Guide",
+80
+],
+[
+"Gem Abilities",
+80
+],
+[
+"Abilities",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "gems",
+"hits": [
+[
+"Gems Guide",
+80
+],
+[
+"Abilities",
+25
+],
+[
+"Gem Builds",
+25
+],
+[
+"Gem Evaluator",
+25
+],
+[
+"Gem Simulator",
+25
+],
+[
+"Gem Abilities",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "abil",
+"hits": [
+[
+"Abilities",
+80
+],
+[
+"Ally Abilities",
+60
+],
+[
+"Class Abilities",
+60
+],
+[
+"Gem Abilities",
+60
+],
+[
+"Ring Abilities",
+60
+],
+[
+"Star Chart Abilities",
+60
+],
+[
+"Store Availability",
+40
+]
+]
+},
+{
+"variant": "some off",
+"query": "anal",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "ganda",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "gánda",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "straße",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "STRASSE",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "server time",
+"hits": [
+[
+"Server Time",
+100
+],
+[
+"Server Status",
+20
+]
+]
+},
+{
+"variant": "some off",
+"query": "time server",
+"hits": [
+[
+"Server Status",
+20
+],
+[
+"Server Time",
+20
+]
+]
+},
+{
+"variant": "some off",
+"query": "a",
+"hits": [
+[
+"Abilities",
+80
+],
+[
+"Accessibility",
+80
+],
+[
+"Allies",
+80
+],
+[
+"App Releases",
+80
+],
+[
+"Ally Abilities",
+80
+],
+[
+"Alt Clusters",
+80
+],
+[
+"Class Activity",
+60
+],
+[
+"Get the App",
+60
+],
+[
+"Player Activity",
+60
+],
+[
+"Class Abilities",
+60
+],
+[
+"Gem Abilities",
+60
+],
+[
+"Ring Abilities",
+60
+],
+[
+"Star Chart Abilities",
+60
+],
+[
+"Store Availability",
+60
+],
+[
+"Calculators",
+40
+],
+[
+"Calendar",
+40
+],
+[
+"Changelog",
+40
+],
+[
+"Classes",
+40
+],
+[
+"Dashboard",
+40
+],
+[
+"Gear Guide",
+40
+],
+[
+"Gem Evaluator",
+40
+],
+[
+"Gem Simulator",
+40
+],
+[
+"Giveaways",
+40
+],
+[
+"Leaderboards",
+40
+],
+[
+"Recipe Cost Calculator",
+40
+],
+[
+"Server Status",
+40
+],
+[
+"Star Chart",
+40
+],
+[
+"Streams",
+40
+],
+[
+"Tome Values",
+40
+],
+[
+"Trove Commands",
+40
+],
+[
+"Possible Renames",
+40
+],
+[
+"Store Gallery",
+40
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Codexes",
+25
+],
+[
+"Community Sites",
+25
+],
+[
+"Fishing Guide",
+25
+],
+[
+"Gems Guide",
+25
+],
+[
+"Guides",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Mod Workshop",
+25
+],
+[
+"Sound Studio",
+25
+],
+[
+"Support",
+25
+],
+[
+"Unlock Debug",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "  up ",
+"hits": [
+[
+"Support",
+40
+],
+[
+"Changelog",
+25
+],
+[
+"Server Status",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "trove.exe",
+"hits": [
+[
+"Unlock Debug",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "debug console",
+"hits": [
+[
+"Unlock Debug",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "x",
+"hits": [
+[
+"Codexes",
+40
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Gems Guide",
+25
+],
+[
+"Guides",
+25
+],
+[
+"Unlock Debug",
+25
+],
+[
+"Store Gallery",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "store",
+"hits": [
+[
+"Store History",
+80
+],
+[
+"Store Availability",
+80
+],
+[
+"Store Gallery",
+80
+]
+]
+},
+{
+"variant": "some off",
+"query": "class",
+"hits": [
+[
+"Class Activity",
+80
+],
+[
+"Classes",
+80
+],
+[
+"Class Abilities",
+80
+]
+]
+},
+{
+"variant": "some off",
+"query": "renames",
+"hits": [
+[
+"Possible Renames",
+60
+]
+]
+},
+{
+"variant": "some off",
+"query": "tab",
+"hits": [
+[
+"Codexes",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "updates: files",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "mod",
+"hits": [
+[
+"Mod Workshop",
+80
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Ring Abilities",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "Mods",
+"hits": [
+[
+"Ring Abilities",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "ﬁsh",
+"hits": [
+[
+"Fishing Guide",
+80
+]
+]
+},
+{
+"variant": "some off",
+"query": "Ｍarket",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "évents",
+"hits": [
+[
+"Calendar",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "calendar events",
+"hits": [
+[
+"Calendar",
+20
+]
+]
+},
+{
+"variant": "some off",
+"query": "loot",
+"hits": [
+[
+"Loot Collector Rules",
+80
+]
+]
+},
+{
+"variant": "some off",
+"query": "zakros",
+"hits": [
+[
+"Loot Collector Rules",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "beta",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "about",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "cheat",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "alts",
+"hits": [
+[
+"Alt Clusters",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "my",
+"hits": [
+[
+"Community Sites",
+25
+],
+[
+"Gem Evaluator",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "stray",
+"hits": []
+},
+{
+"variant": "some off",
+"query": "guide",
+"hits": [
+[
+"Guides",
+80
+],
+[
+"Fishing Guide",
+60
+],
+[
+"Gear Guide",
+60
+],
+[
+"Gems Guide",
+60
+],
+[
+"Loot Collector Rules",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "rate my gem",
+"hits": [
+[
+"Gem Evaluator",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "ui",
+"hits": [
+[
+"Fishing Guide",
+40
+],
+[
+"Gear Guide",
+40
+],
+[
+"Gem Builds",
+40
+],
+[
+"Gems Guide",
+40
+],
+[
+"Guides",
+40
+],
+[
+"Clubs",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Mod Workshop",
+25
+],
+[
+"Star Chart",
+25
+]
+]
+},
+{
+"variant": "some off",
+"query": "çlub",
+"hits": [
+[
+"Clubs",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "market",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "Market",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "MARKET ",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "gem",
+"hits": [
+[
+"Gem Builds",
+80
+],
+[
+"Gem Evaluator",
+80
+],
+[
+"Gem Simulator",
+80
+],
+[
+"Gem Tools",
+80
+],
+[
+"Gems Guide",
+80
+],
+[
+"Gem Abilities",
+80
+],
+[
+"Abilities",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "gems",
+"hits": [
+[
+"Gems Guide",
+80
+],
+[
+"Abilities",
+25
+],
+[
+"Gem Builds",
+25
+],
+[
+"Gem Evaluator",
+25
+],
+[
+"Gem Simulator",
+25
+],
+[
+"Gem Abilities",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "abil",
+"hits": [
+[
+"Abilities",
+80
+],
+[
+"Ally Abilities",
+60
+],
+[
+"Class Abilities",
+60
+],
+[
+"Gem Abilities",
+60
+],
+[
+"Ring Abilities",
+60
+],
+[
+"Star Chart Abilities",
+60
+],
+[
+"Store Availability",
+40
+]
+]
+},
+{
+"variant": "no extras",
+"query": "anal",
+"hits": [
+[
+"Market Analytics",
+60
+]
+]
+},
+{
+"variant": "no extras",
+"query": "ganda",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "gánda",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "straße",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "STRASSE",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "server time",
+"hits": [
+[
+"Server Time",
+100
+],
+[
+"Server Status",
+20
+]
+]
+},
+{
+"variant": "no extras",
+"query": "time server",
+"hits": [
+[
+"Server Status",
+20
+],
+[
+"Server Time",
+20
+]
+]
+},
+{
+"variant": "no extras",
+"query": "a",
+"hits": [
+[
+"Abilities",
+80
+],
+[
+"Accessibility",
+80
+],
+[
+"Allies",
+80
+],
+[
+"App Releases",
+80
+],
+[
+"Ally Abilities",
+80
+],
+[
+"Class Activity",
+60
+],
+[
+"Get the App",
+60
+],
+[
+"Player Activity",
+60
+],
+[
+"Class Abilities",
+60
+],
+[
+"Gem Abilities",
+60
+],
+[
+"Market Analytics",
+60
+],
+[
+"Ring Abilities",
+60
+],
+[
+"Star Chart Abilities",
+60
+],
+[
+"Store Availability",
+60
+],
+[
+"Updates: Audio",
+60
+],
+[
+"Calculators",
+40
+],
+[
+"Calendar",
+40
+],
+[
+"Changelog",
+40
+],
+[
+"Classes",
+40
+],
+[
+"Dashboard",
+40
+],
+[
+"Gear Guide",
+40
+],
+[
+"Gem Evaluator",
+40
+],
+[
+"Gem Simulator",
+40
+],
+[
+"Giveaways",
+40
+],
+[
+"Leaderboards",
+40
+],
+[
+"Market",
+40
+],
+[
+"Modpacks",
+40
+],
+[
+"Recipe Cost Calculator",
+40
+],
+[
+"Server Status",
+40
+],
+[
+"Star Chart",
+40
+],
+[
+"Streams",
+40
+],
+[
+"Tome Values",
+40
+],
+[
+"Trove Commands",
+40
+],
+[
+"Updates",
+40
+],
+[
+"Market Listings",
+40
+],
+[
+"Store Gallery",
+40
+],
+[
+"Stray Mods",
+40
+],
+[
+"Updates: Files",
+40
+],
+[
+"Updates: Interface",
+40
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Codexes",
+25
+],
+[
+"Community Sites",
+25
+],
+[
+"Fishing Guide",
+25
+],
+[
+"Gem Tools",
+25
+],
+[
+"Gems Guide",
+25
+],
+[
+"Guides",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Mod Workshop",
+25
+],
+[
+"Mods Hub",
+25
+],
+[
+"Sound Studio",
+25
+],
+[
+"Support",
+25
+],
+[
+"Unlock Debug",
+25
+],
+[
+"My Mods",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "  up ",
+"hits": [
+[
+"Updates",
+80
+],
+[
+"Updates: Audio",
+80
+],
+[
+"Updates: Files",
+80
+],
+[
+"Updates: Interface",
+80
+],
+[
+"Support",
+40
+],
+[
+"Changelog",
+25
+],
+[
+"Server Status",
+25
+],
+[
+"My Mods",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "trove.exe",
+"hits": [
+[
+"Unlock Debug",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "debug console",
+"hits": [
+[
+"Unlock Debug",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "x",
+"hits": [
+[
+"Codexes",
+40
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Gems Guide",
+25
+],
+[
+"Guides",
+25
+],
+[
+"Market",
+25
+],
+[
+"Unlock Debug",
+25
+],
+[
+"Store Gallery",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "store",
+"hits": [
+[
+"Store History",
+80
+],
+[
+"Store Availability",
+80
+],
+[
+"Store Gallery",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "class",
+"hits": [
+[
+"Class Activity",
+80
+],
+[
+"Classes",
+80
+],
+[
+"Class Abilities",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "renames",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "tab",
+"hits": [
+[
+"Codexes",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "updates: files",
+"hits": [
+[
+"Updates: Files",
+100
+]
+]
+},
+{
+"variant": "no extras",
+"query": "mod",
+"hits": [
+[
+"Mod Workshop",
+80
+],
+[
+"Modpacks",
+80
+],
+[
+"Mods Hub",
+80
+],
+[
+"My Mods",
+60
+],
+[
+"Stray Mods",
+60
+],
+[
+"Blueprint Editor",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Ring Abilities",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "Mods",
+"hits": [
+[
+"Mods Hub",
+80
+],
+[
+"My Mods",
+60
+],
+[
+"Stray Mods",
+60
+],
+[
+"Ring Abilities",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "ﬁsh",
+"hits": [
+[
+"Fishing Guide",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "Ｍarket",
+"hits": [
+[
+"Market",
+100
+],
+[
+"Market Analytics",
+80
+],
+[
+"Market Listings",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "évents",
+"hits": [
+[
+"Calendar",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "calendar events",
+"hits": [
+[
+"Calendar",
+20
+]
+]
+},
+{
+"variant": "no extras",
+"query": "loot",
+"hits": [
+[
+"Loot Collector Rules",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "zakros",
+"hits": [
+[
+"Loot Collector Rules",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "beta",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "about",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "cheat",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "alts",
+"hits": []
+},
+{
+"variant": "no extras",
+"query": "my",
+"hits": [
+[
+"My Mods",
+80
+],
+[
+"Community Sites",
+25
+],
+[
+"Gem Evaluator",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "stray",
+"hits": [
+[
+"Stray Mods",
+80
+]
+]
+},
+{
+"variant": "no extras",
+"query": "guide",
+"hits": [
+[
+"Guides",
+80
+],
+[
+"Fishing Guide",
+60
+],
+[
+"Gear Guide",
+60
+],
+[
+"Gems Guide",
+60
+],
+[
+"Loot Collector Rules",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "rate my gem",
+"hits": [
+[
+"Gem Evaluator",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "ui",
+"hits": [
+[
+"Fishing Guide",
+40
+],
+[
+"Gear Guide",
+40
+],
+[
+"Gem Builds",
+40
+],
+[
+"Gems Guide",
+40
+],
+[
+"Guides",
+40
+],
+[
+"Clubs",
+25
+],
+[
+"Gem Tools",
+25
+],
+[
+"Loot Collector Rules",
+25
+],
+[
+"Mod Workshop",
+25
+],
+[
+"Star Chart",
+25
+],
+[
+"Market Analytics",
+25
+],
+[
+"Updates: Interface",
+25
+]
+]
+},
+{
+"variant": "no extras",
+"query": "çlub",
+"hits": [
+[
+"Clubs",
+80
+]
+]
+},
+{
+"variant": "all off",
+"query": "market",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "Market",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "MARKET ",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "gem",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "gems",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "abil",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "anal",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "ganda",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "gánda",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "straße",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "STRASSE",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "server time",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "time server",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "a",
+"hits": [
+[
+"Accessibility",
+80
+],
+[
+"Get the App",
+60
+],
+[
+"Changelog",
+40
+],
+[
+"Dashboard",
+40
+],
+[
+"Support",
+25
+]
+]
+},
+{
+"variant": "all off",
+"query": "",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "  up ",
+"hits": [
+[
+"Support",
+40
+],
+[
+"Changelog",
+25
+]
+]
+},
+{
+"variant": "all off",
+"query": "trove.exe",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "debug console",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "x",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "store",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "class",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "renames",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "tab",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "updates: files",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "mod",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "Mods",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "ﬁsh",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "Ｍarket",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "évents",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "calendar events",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "loot",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "zakros",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "beta",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "about",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "cheat",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "alts",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "my",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "stray",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "guide",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "rate my gem",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "ui",
+"hits": []
+},
+{
+"variant": "all off",
+"query": "çlub",
+"hits": []
+}
+],
+"nav": {
+"all": {
+"menu": [
+[
+"Live",
+[
+"Leaderboards",
+"Clubs",
+"Player Activity",
+"Class Activity",
+"Server Status",
+"Server Time",
+"Calendar"
+]
+],
+[
+"Economy",
+[
+"Market",
+"Tome Values",
+"Store History",
+"Calculators"
+]
+],
+[
+"Plan",
+[
+"Star Chart",
+"Gem Tools",
+"Dressing Room",
+"Abilities",
+"Allies"
+]
+],
+[
+"Create",
+[
+"Mods Hub",
+"Modpacks",
+"Mod Workshop",
+"Blueprint Editor",
+"Sound Studio",
+"Unlock Debug"
+]
+],
+[
+"Learn",
+[
+"Classes",
+"Trove Commands",
+"Codexes",
+"Guides",
+"Updates",
+"Streams",
+"Community Sites",
+"Giveaways",
+"App Releases"
+]
+]
+],
+"paths": [
+"/leaderboards",
+"/clubs",
+"/activity",
+"/class-activity",
+"/status",
+"/server-time",
+"/calendar",
+"/market",
+"/tomes",
+"/store",
+"/calculators",
+"/star-chart",
+"/gem-tools",
+"/dressing-room",
+"/abilities",
+"/allies",
+"/mods",
+"/modpacks",
+"/mod-workshop",
+"/blueprint-editor",
+"/sound-studio",
+"/unlock-debug",
+"/classes",
+"/commands",
+"/codexes",
+"/guides",
+"/updates",
+"/streams",
+"/community-sites",
+"/giveaways",
+"/releases"
+],
+"active": {
+"/": false,
+"": false,
+"/market": true,
+"/market/": true,
+"/mods/a/b": true,
+"/modpacks": true,
+"/marketplace": false,
+"/gem-tools": true,
+"/codexes/crafting": true,
+"/dashboard": false,
+"/abilities": true,
+"/abilities?tab=gems": false,
+"/clubs/x": true
+}
+},
+"some off": {
+"menu": [
+[
+"Live",
+[
+"Leaderboards",
+"Clubs",
+"Player Activity",
+"Class Activity",
+"Server Status",
+"Server Time",
+"Calendar"
+]
+],
+[
+"Economy",
+[
+"Tome Values",
+"Store History",
+"Calculators"
+]
+],
+[
+"Plan",
+[
+"Star Chart",
+"Dressing Room",
+"Abilities",
+"Allies"
+]
+],
+[
+"Create",
+[
+"Mod Workshop",
+"Blueprint Editor",
+"Sound Studio",
+"Unlock Debug"
+]
+],
+[
+"Learn",
+[
+"Classes",
+"Trove Commands",
+"Codexes",
+"Guides",
+"Streams",
+"Community Sites",
+"Giveaways",
+"App Releases"
+]
+]
+],
+"paths": [
+"/leaderboards",
+"/clubs",
+"/activity",
+"/class-activity",
+"/status",
+"/server-time",
+"/calendar",
+"/tomes",
+"/store",
+"/calculators",
+"/star-chart",
+"/dressing-room",
+"/abilities",
+"/allies",
+"/mod-workshop",
+"/blueprint-editor",
+"/sound-studio",
+"/unlock-debug",
+"/classes",
+"/commands",
+"/codexes",
+"/guides",
+"/streams",
+"/community-sites",
+"/giveaways",
+"/releases"
+],
+"active": {
+"/": false,
+"": false,
+"/market": false,
+"/market/": false,
+"/mods/a/b": false,
+"/modpacks": false,
+"/marketplace": false,
+"/gem-tools": false,
+"/codexes/crafting": true,
+"/dashboard": false,
+"/abilities": true,
+"/abilities?tab=gems": false,
+"/clubs/x": true
+}
+},
+"no extras": {
+"menu": [
+[
+"Live",
+[
+"Leaderboards",
+"Clubs",
+"Player Activity",
+"Class Activity",
+"Server Status",
+"Server Time",
+"Calendar"
+]
+],
+[
+"Economy",
+[
+"Market",
+"Tome Values",
+"Store History",
+"Calculators"
+]
+],
+[
+"Plan",
+[
+"Star Chart",
+"Gem Tools",
+"Dressing Room",
+"Abilities",
+"Allies"
+]
+],
+[
+"Create",
+[
+"Mods Hub",
+"Modpacks",
+"Mod Workshop",
+"Blueprint Editor",
+"Sound Studio",
+"Unlock Debug"
+]
+],
+[
+"Learn",
+[
+"Classes",
+"Trove Commands",
+"Codexes",
+"Guides",
+"Updates",
+"Streams",
+"Community Sites",
+"Giveaways",
+"App Releases"
+]
+]
+],
+"paths": [
+"/leaderboards",
+"/clubs",
+"/activity",
+"/class-activity",
+"/status",
+"/server-time",
+"/calendar",
+"/market",
+"/tomes",
+"/store",
+"/calculators",
+"/star-chart",
+"/gem-tools",
+"/dressing-room",
+"/abilities",
+"/allies",
+"/mods",
+"/modpacks",
+"/mod-workshop",
+"/blueprint-editor",
+"/sound-studio",
+"/unlock-debug",
+"/classes",
+"/commands",
+"/codexes",
+"/guides",
+"/updates",
+"/streams",
+"/community-sites",
+"/giveaways",
+"/releases"
+],
+"active": {
+"/": false,
+"": false,
+"/market": true,
+"/market/": true,
+"/mods/a/b": true,
+"/modpacks": true,
+"/marketplace": false,
+"/gem-tools": true,
+"/codexes/crafting": true,
+"/dashboard": false,
+"/abilities": true,
+"/abilities?tab=gems": false,
+"/clubs/x": true
+}
+},
+"all off": {
+"menu": [],
+"paths": [],
+"active": {
+"/": false,
+"": false,
+"/market": false,
+"/market/": false,
+"/mods/a/b": false,
+"/modpacks": false,
+"/marketplace": false,
+"/gem-tools": false,
+"/codexes/crafting": false,
+"/dashboard": false,
+"/abilities": false,
+"/abilities?tab=gems": false,
+"/clubs/x": false
+}
+}
+},
+"normalize": {
+"Gánda": "ganda",
+"ŞTRAßE": "strasse",
+"ﬁsh": "fish",
+"Ｍarket ": "market",
+" Ǆ ": "dz",
+"ﬀ": "ff",
+"İstanbul": "istanbul",
+"ΣΑΣ": "σασ"
+}
+}

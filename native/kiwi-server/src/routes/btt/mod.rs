@@ -5,6 +5,7 @@
 mod blocklist;
 mod github;
 mod releases;
+pub mod site;
 mod workshop;
 
 #[cfg(test)]

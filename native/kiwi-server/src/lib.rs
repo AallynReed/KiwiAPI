@@ -60,6 +60,7 @@ pub mod rigs;
 pub mod routes;
 pub mod runtime_config;
 pub mod site_auth;
+pub mod site_live;
 pub mod state;
 pub mod tools;
 pub mod updates;

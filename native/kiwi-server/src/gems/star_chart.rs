@@ -25,6 +25,18 @@ struct Node {
     root: bool,
     stats: Vec<NodeStat>,
     overwrites: Option<Vec<String>>,
+    name: Option<String>,
+    abilities: Vec<String>,
+}
+
+/// `parse_build_code(code)` in full, for the preview proxy.
+#[derive(Debug, Default, PartialEq)]
+pub struct Preview {
+    pub stats: Vec<(String, f64, f64)>,
+    pub abilities: Vec<String>,
+    pub paths_count: usize,
+    /// The Bounty Hunt node's name and its (physical, magic) values.
+    pub bounty: Option<(String, f64, f64)>,
 }
 
 pub struct StarChart {
@@ -117,7 +129,13 @@ impl StarChart {
                 }
             }
             let root = node.get("Type").and_then(Value::as_str) == Some("Root");
-            self.nodes.insert(path.to_owned(), Node { root, stats, overwrites });
+            let abilities = node
+                .get("Abilities")
+                .and_then(Value::as_array)
+                .map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_owned)).collect())
+                .unwrap_or_default();
+            let name = name.map(str::to_owned);
+            self.nodes.insert(path.to_owned(), Node { root, stats, overwrites, name, abilities });
             self.parents.insert(path.to_owned(), parent.map(str::to_owned));
         }
         if let Some(children) = node.get("Stars").and_then(Value::as_array) {
@@ -201,6 +219,37 @@ impl StarChart {
         }
         let decoded = String::from_utf8(a2b_base64(compact.as_bytes())?).ok()?;
         Some(decoded.split('$').filter(|p| self.nodes.contains_key(*p)).map(str::to_owned).collect())
+    }
+
+    /// Everything `parse_build_code` returns; the active paths and the
+    /// abilities set are walked in sorted order (Python's is hash order).
+    pub fn preview(&self, code: &str) -> Preview {
+        let mut out = Preview::default();
+        if code.is_empty() || self.nodes.is_empty() {
+            return out;
+        }
+        let Some(selected) = self.decode(code) else { return out };
+        out.paths_count = selected.len();
+        let chart = self.parse(code);
+        out.stats = chart.stats;
+        let mut overwrites = BTreeSet::new();
+        for path in &selected {
+            if let Some(o) = self.nodes.get(path).and_then(|n| n.overwrites.as_ref()) {
+                overwrites.extend(o.iter().cloned());
+            }
+        }
+        let mut abilities = BTreeSet::new();
+        for path in selected.iter().filter(|p| !overwrites.contains(*p)) {
+            let Some(node) = self.nodes.get(path) else { continue };
+            if out.bounty.is_none()
+                && let Some(&(physical, magic)) = self.bounty.get(path)
+            {
+                out.bounty = Some((node.name.clone().unwrap_or_default(), physical, magic));
+            }
+            abilities.extend(node.abilities.iter().cloned());
+        }
+        out.abilities = abilities.into_iter().collect();
+        out
     }
 
     /// `parse_build_code(code)`: the chart's stats (empty for an empty or

@@ -1,0 +1,21 @@
+{
+"files": [
+"b.png",
+"A.webp",
+"c.JPG",
+"d.jpeg",
+"e.gif",
+"f.txt",
+".webp",
+"g.tar.gif",
+"README",
+"h.Png",
+"z.bmp"
+],
+"dirs": [
+"sub.png"
+],
+"body": "{\"screenshots\":[\"/static/trove-screens/A.webp\",\"/static/trove-screens/b.png\",\"/static/trove-screens/c.JPG\",\"/static/trove-screens/d.jpeg\",\"/static/trove-screens/e.gif\",\"/static/trove-screens/g.tar.gif\",\"/static/trove-screens/h.Png\"],\"count\":7}",
+"cache_control": "public, max-age=60",
+"missing_root_body": "{\"screenshots\":[],\"count\":0}"
+}

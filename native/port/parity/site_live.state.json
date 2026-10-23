@@ -1,0 +1,10 @@
+{
+ "mongo": [
+  {"collection": "btt_releases", "sort": ["release_id"]},
+  {"collection": "btt_changelogs", "sort": ["repo"]},
+  {"collection": "clubs", "sort": ["name"]}
+ ],
+ "redis": [
+  {"pattern": "site:changelog"}
+ ]
+}
