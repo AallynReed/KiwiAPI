@@ -1,0 +1,8 @@
+[
+ {"name": "dress_palette", "path": "/v1/dressing/palette", "compare_headers": ["x-ratelimit-limit"]},
+ {"name": "dress_palette_head", "method": "HEAD", "path": "/v1/dressing/palette"},
+ {"name": "dress_palette_token", "path": "/v1/dressing/palette", "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"}},
+ {"name": "dress_palette_bad_token", "path": "/v1/dressing/palette", "headers": {"Authorization": "Bearer zz"}},
+ {"name": "dress_palette_query", "path": "/v1/dressing/palette?x=1"},
+ {"name": "dress_races_python", "path": "/v1/dressing/races"}
+]

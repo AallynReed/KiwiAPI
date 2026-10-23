@@ -1,0 +1,15 @@
+{
+ "mongo": [
+  {
+   "collection": "image_designs",
+   "sort": [
+    "name"
+   ],
+   "mask": [
+    "_id",
+    "created_at",
+    "updated_at"
+   ]
+  }
+ ]
+}

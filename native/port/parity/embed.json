@@ -1,0 +1,12 @@
+[
+ {"name": "embed_origins", "path": "/site/embed/allowed-origins"},
+ {"name": "embed_origins_head", "method": "HEAD", "path": "/site/embed/allowed-origins"},
+ {"name": "embed_status_bad_token", "path": "/v1/embed/tmod/not-a-token"},
+ {"name": "embed_status_unknown", "path": "/v1/embed/tmod/0000000000000000000000000000000000000000000000000000000000000000", "compare_headers": ["x-ratelimit-limit"]},
+ {"name": "embed_status_token", "path": "/v1/embed/tmod/abababababababababababababababababababababababababababababababab", "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"}, "compare_headers": ["x-ratelimit-limit"]},
+ {"name": "embed_upload_get_405", "path": "/v1/embed/tmod"},
+ {"name": "embed_viewer", "path": "/embed/viewer"},
+ {"name": "embed_viewer_params", "path": "/embed/viewer?release=abc&mode=vfx&theme=light&backdrop=hat&dress=a%3Cb%22c"},
+ {"name": "embed_viewer_422", "path": "/embed/viewer?mode=nope&backdrop=x&release=rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"},
+ {"name": "embed_viewer_site_host", "path": "/embed/viewer?game=x.pkfx", "headers": {"Host": "trove.aallyn.net"}}
+]

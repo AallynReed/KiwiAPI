@@ -1,0 +1,168 @@
+{
+"pages": [
+{
+"vars": {
+"release": "",
+"tmod": "",
+"game": "",
+"prefab": "",
+"dress": "",
+"path": "",
+"sound": "",
+"backdrop": "",
+"mode": "auto",
+"theme": "dark",
+"api_base": "",
+"app_url": "https://trove.aallyn.net"
+},
+"html": "<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"dark\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"robots\" content=\"noindex\">\n  <title>Trove preview — Kiwi API</title>\n  \n  <link rel=\"stylesheet\" href=\"/static/embed_viewer.css\">\n  <link rel=\"stylesheet\" href=\"/static/audio_player.min.css\">\n  <!-- The shared <select> replacement. Every other page gets this from the\n       navbar; this one has none, so it pulls both files in itself. The\n       component's colours resolve through --kv-* here, so it follows the\n       viewer's light/dark theme rather than assuming the main site's dark. -->\n  <link rel=\"stylesheet\" href=\"/static/dropdown.min.css\">\n  <link rel=\"icon\" href=\"/static/favicon.ico\">\n</head>\n<body>\n  <div class=\"kv-shell\"\n       data-release=\"\"\n       data-tmod=\"\"\n       data-game=\"\"\n       data-prefab=\"\"\n       data-dress=\"\"\n       data-path=\"\"\n       data-sound=\"\"\n       data-backdrop=\"\"\n       data-mode=\"auto\"\n       data-api-base=\"\"\n       data-app-url=\"https://trove.aallyn.net\">\n    <header class=\"kv-top\">\n      <span class=\"kv-title\">Loading…</span>\n      <div class=\"kv-tabs\" role=\"tablist\" aria-label=\"Preview type\" hidden></div>\n      <label class=\"kv-pick\" hidden>\n        <span class=\"kv-sr\">Choose a file to preview</span>\n        <select class=\"kv-select\"></select>\n      </label>\n      <span class=\"kv-meta\"></span>\n    </header>\n\n    <main class=\"kv-stage\" id=\"kv-stage\" role=\"tabpanel\" aria-live=\"polite\">\n      <p class=\"kv-msg\">Loading preview…</p>\n    </main>\n\n    <div class=\"kv-bar\" hidden></div>\n\n    <footer class=\"kv-foot\">\n      <span class=\"kv-hint\">Drag to rotate · scroll to zoom</span>\n      <a class=\"kv-brand\" href=\"https://trove.aallyn.net\" target=\"_blank\" rel=\"noopener\">\n        Powered by <strong>Kiwi</strong>\n      </a>\n    </footer>\n  </div>\n\n  <script src=\"/static/voxel_binary.min.js\" defer></script>\n  <script src=\"/static/voxel_mesh.min.js\" defer></script>\n  <script src=\"/static/viewer_stage.min.js\" defer></script>\n  <script src=\"/static/blueprint_viewer.min.js\" defer></script>\n  <script src=\"/static/anim_clips.min.js\" defer></script>\n  <script src=\"/static/model_viewer.min.js\" defer></script>\n  <script type=\"module\" src=\"/static/pkfx/vfx_viewer.js\"></script>\n  <script src=\"/static/audio_player.min.js\" defer></script>\n  <script src=\"/static/dropdown.min.js\" defer></script>\n  <script src=\"/static/embed_viewer.min.js\" defer></script>\n</body>\n</html>"
+},
+{
+"vars": {
+"release": "abc",
+"tmod": "",
+"game": "",
+"prefab": "",
+"dress": "knight:x:<script>&\"'",
+"path": "a/b c.pkfx",
+"sound": "12",
+"backdrop": "hat",
+"mode": "vfx",
+"theme": "light",
+"api_base": "",
+"app_url": "https://trove.aallyn.net"
+},
+"html": "<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"light\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"robots\" content=\"noindex\">\n  <title>Trove preview — Kiwi API</title>\n  \n  <link rel=\"stylesheet\" href=\"/static/embed_viewer.css\">\n  <link rel=\"stylesheet\" href=\"/static/audio_player.min.css\">\n  <!-- The shared <select> replacement. Every other page gets this from the\n       navbar; this one has none, so it pulls both files in itself. The\n       component's colours resolve through --kv-* here, so it follows the\n       viewer's light/dark theme rather than assuming the main site's dark. -->\n  <link rel=\"stylesheet\" href=\"/static/dropdown.min.css\">\n  <link rel=\"icon\" href=\"/static/favicon.ico\">\n</head>\n<body>\n  <div class=\"kv-shell\"\n       data-release=\"abc\"\n       data-tmod=\"\"\n       data-game=\"\"\n       data-prefab=\"\"\n       data-dress=\"knight:x:&lt;script&gt;&amp;&#34;&#39;\"\n       data-path=\"a/b c.pkfx\"\n       data-sound=\"12\"\n       data-backdrop=\"hat\"\n       data-mode=\"vfx\"\n       data-api-base=\"\"\n       data-app-url=\"https://trove.aallyn.net\">\n    <header class=\"kv-top\">\n      <span class=\"kv-title\">Loading…</span>\n      <div class=\"kv-tabs\" role=\"tablist\" aria-label=\"Preview type\" hidden></div>\n      <label class=\"kv-pick\" hidden>\n        <span class=\"kv-sr\">Choose a file to preview</span>\n        <select class=\"kv-select\"></select>\n      </label>\n      <span class=\"kv-meta\"></span>\n    </header>\n\n    <main class=\"kv-stage\" id=\"kv-stage\" role=\"tabpanel\" aria-live=\"polite\">\n      <p class=\"kv-msg\">Loading preview…</p>\n    </main>\n\n    <div class=\"kv-bar\" hidden></div>\n\n    <footer class=\"kv-foot\">\n      <span class=\"kv-hint\">Drag to rotate · scroll to zoom</span>\n      <a class=\"kv-brand\" href=\"https://trove.aallyn.net\" target=\"_blank\" rel=\"noopener\">\n        Powered by <strong>Kiwi</strong>\n      </a>\n    </footer>\n  </div>\n\n  <script src=\"/static/voxel_binary.min.js\" defer></script>\n  <script src=\"/static/voxel_mesh.min.js\" defer></script>\n  <script src=\"/static/viewer_stage.min.js\" defer></script>\n  <script src=\"/static/blueprint_viewer.min.js\" defer></script>\n  <script src=\"/static/anim_clips.min.js\" defer></script>\n  <script src=\"/static/model_viewer.min.js\" defer></script>\n  <script type=\"module\" src=\"/static/pkfx/vfx_viewer.js\"></script>\n  <script src=\"/static/audio_player.min.js\" defer></script>\n  <script src=\"/static/dropdown.min.js\" defer></script>\n  <script src=\"/static/embed_viewer.min.js\" defer></script>\n</body>\n</html>"
+},
+{
+"vars": {
+"release": "",
+"tmod": "",
+"game": "Ünïcode — “quotes” & <tags>",
+"prefab": "prefabs/x",
+"dress": "",
+"path": "",
+"sound": "",
+"backdrop": "",
+"mode": "audio",
+"theme": "dark",
+"api_base": "",
+"app_url": "https://trove.aallyn.net"
+},
+"html": "<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"dark\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"robots\" content=\"noindex\">\n  <title>Trove preview — Kiwi API</title>\n  \n  <link rel=\"stylesheet\" href=\"/static/embed_viewer.css\">\n  <link rel=\"stylesheet\" href=\"/static/audio_player.min.css\">\n  <!-- The shared <select> replacement. Every other page gets this from the\n       navbar; this one has none, so it pulls both files in itself. The\n       component's colours resolve through --kv-* here, so it follows the\n       viewer's light/dark theme rather than assuming the main site's dark. -->\n  <link rel=\"stylesheet\" href=\"/static/dropdown.min.css\">\n  <link rel=\"icon\" href=\"/static/favicon.ico\">\n</head>\n<body>\n  <div class=\"kv-shell\"\n       data-release=\"\"\n       data-tmod=\"\"\n       data-game=\"Ünïcode — “quotes” &amp; &lt;tags&gt;\"\n       data-prefab=\"prefabs/x\"\n       data-dress=\"\"\n       data-path=\"\"\n       data-sound=\"\"\n       data-backdrop=\"\"\n       data-mode=\"audio\"\n       data-api-base=\"\"\n       data-app-url=\"https://trove.aallyn.net\">\n    <header class=\"kv-top\">\n      <span class=\"kv-title\">Loading…</span>\n      <div class=\"kv-tabs\" role=\"tablist\" aria-label=\"Preview type\" hidden></div>\n      <label class=\"kv-pick\" hidden>\n        <span class=\"kv-sr\">Choose a file to preview</span>\n        <select class=\"kv-select\"></select>\n      </label>\n      <span class=\"kv-meta\"></span>\n    </header>\n\n    <main class=\"kv-stage\" id=\"kv-stage\" role=\"tabpanel\" aria-live=\"polite\">\n      <p class=\"kv-msg\">Loading preview…</p>\n    </main>\n\n    <div class=\"kv-bar\" hidden></div>\n\n    <footer class=\"kv-foot\">\n      <span class=\"kv-hint\">Drag to rotate · scroll to zoom</span>\n      <a class=\"kv-brand\" href=\"https://trove.aallyn.net\" target=\"_blank\" rel=\"noopener\">\n        Powered by <strong>Kiwi</strong>\n      </a>\n    </footer>\n  </div>\n\n  <script src=\"/static/voxel_binary.min.js\" defer></script>\n  <script src=\"/static/voxel_mesh.min.js\" defer></script>\n  <script src=\"/static/viewer_stage.min.js\" defer></script>\n  <script src=\"/static/blueprint_viewer.min.js\" defer></script>\n  <script src=\"/static/anim_clips.min.js\" defer></script>\n  <script src=\"/static/model_viewer.min.js\" defer></script>\n  <script type=\"module\" src=\"/static/pkfx/vfx_viewer.js\"></script>\n  <script src=\"/static/audio_player.min.js\" defer></script>\n  <script src=\"/static/dropdown.min.js\" defer></script>\n  <script src=\"/static/embed_viewer.min.js\" defer></script>\n</body>\n</html>"
+}
+],
+"tmods": [
+{
+"data": "ZwAAAAAAAAABAAMABXRpdGxlCUNhZsOpIG1vZAZhdXRob3IBeAltb2RMb2FkZXIHS2l3aUFQSQh1aS9hLnR4dAAABaiAydELFmJsdWVwcmludHMvYi5ibHVlcHJpbnQACAm378PVBHgBABQA6/9oZWxsbwAAAAAAAAAAAAAAAAAAAAAAAP//",
+"error": null
+},
+{
+"data": "c2hvcnQ=",
+"error": "file too small to be a .tmod"
+},
+{
+"data": "BQAAAAAAAAAAAAAA",
+"error": "declared header size is outside the file"
+},
+{
+"data": "DycAAAAAAAABAAAAAAAAAA==",
+"error": "declared header size is outside the file"
+},
+{
+"data": "FAAAAAAAAAABAAEAA//+/QF2AA==",
+"error": "declared header size is outside the file"
+},
+{
+"data": "HgAAAAAAAAABAAEABWFi",
+"error": "declared header size is outside the file"
+},
+{
+"data": "DgAAAAAAAAABAAAABQ==",
+"error": "declared header size is outside the file"
+},
+{
+"data": "FgAAAAAAAAABAAEAAuKCAXYAAAAAAAA=",
+"error": "malformed .tmod file: 'utf-8' codec can't decode bytes in position 0-1: unexpected end of data"
+},
+{
+"data": "GQAAAAAAAAABAAEA//////////////8B",
+"error": "declared header size is outside the file"
+},
+{
+"data": "ZwAAAAAAAAABAAMABXRpdGxlCUNhZsOpIG1vZAZhdXRob3IBeAltb2RMb2FkZXIHS2l3aUFQSQh1aS9hLnR4dAAABaiAydELFmJsdWVwcmludHMvYi5ibHVlcHJpbnQACAm373gBABQA6/9oZWxsbwAAAAAAAAAAAAAAAAAAAAAAAP//",
+"error": "the file table does not end where the declared header size says"
+},
+{
+"data": "aQAAAAAAAAABAAMABXRpdGxlCUNhZsOpIG1vZAZhdXRob3IBeAltb2RMb2FkZXIHS2l3aUFQSQh1aS9hLnR4dAAABaiAydELFmJsdWVwcmludHMvYi5ibHVlcHJpbnQACAm378PVBHgBABQA6/9oZWxsbwAAAAAAAAAAAAAAAAAAAAAAAP//",
+"error": "malformed .tmod file: 'utf-8' codec can't decode byte 0xeb in position 4: invalid continuation byte"
+},
+{
+"data": "DwAAAAAAAAABAAEABWFi",
+"error": "malformed .tmod file: index out of range"
+},
+{
+"data": "FwAAAAAAAAABAAEA/////////////wE=",
+"error": "malformed .tmod file: varint too long"
+},
+{
+"data": "DwAAAAAAAAABAAAABWFi",
+"error": "malformed .tmod file: index out of range"
+},
+{
+"data": "EQAAAAAAAAABAAEAAsOpAXY=",
+"error": null
+},
+{
+"data": "EwAAAAAAAAABAAAAAv/+AQEBAQ==",
+"error": "malformed .tmod file: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"
+}
+],
+"utf8": [
+{
+"data": "/w==",
+"error": "'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"
+},
+{
+"data": "YWKA",
+"error": "'utf-8' codec can't decode byte 0x80 in position 2: invalid start byte"
+},
+{
+"data": "wyg=",
+"error": "'utf-8' codec can't decode byte 0xc3 in position 0: invalid continuation byte"
+},
+{
+"data": "4oIo",
+"error": "'utf-8' codec can't decode bytes in position 0-1: invalid continuation byte"
+},
+{
+"data": "4oI=",
+"error": "'utf-8' codec can't decode bytes in position 0-1: unexpected end of data"
+},
+{
+"data": "8J+Y",
+"error": "'utf-8' codec can't decode bytes in position 0-2: unexpected end of data"
+},
+{
+"data": "4ICA",
+"error": "'utf-8' codec can't decode byte 0xe0 in position 0: invalid continuation byte"
+},
+{
+"data": "7aCA",
+"error": "'utf-8' codec can't decode byte 0xed in position 0: invalid continuation byte"
+},
+{
+"data": "9JCAgA==",
+"error": "'utf-8' codec can't decode byte 0xf4 in position 0: invalid continuation byte"
+},
+{
+"data": "wK8=",
+"error": "'utf-8' codec can't decode byte 0xc0 in position 0: invalid start byte"
+},
+{
+"data": "b2v4",
+"error": "'utf-8' codec can't decode byte 0xf8 in position 2: invalid start byte"
+}
+],
+"palette": "{\"columns\":6,\"hair\":[\"#7a4e24\",\"#e01b0c\",\"#d6197a\",\"#3fd016\",\"#2a46b8\",\"#1e2224\",\"#b5762a\",\"#f08010\",\"#f221c7\",\"#2fd9a8\",\"#7a18e0\",\"#8a9096\",\"#c2b24a\",\"#f2e06a\",\"#f9a8d8\",\"#3fe0f0\",\"#6e8cf0\",\"#ffffff\"],\"eyes\":[\"#7a1f1f\",\"#6b4a1f\",\"#1f5a33\",\"#1f5a9e\",\"#4a2a7a\",\"#1e2224\",\"#e01b0c\",\"#f08010\",\"#2fcf4a\",\"#5a93e8\",\"#8560c8\",\"#8a9096\",\"#f221c7\",\"#f2e020\",\"#3fe0a8\",\"#3fd8f0\",\"#a020f0\",\"#ffffff\"]}"
+}
