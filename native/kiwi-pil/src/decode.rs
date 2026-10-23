@@ -51,21 +51,29 @@ fn unpack_index(row: &[u8], width: usize, depth: u8) -> Vec<u8> {
         .collect()
 }
 
-/// The raw tRNS payload (the decoder normalises it; Pillow reads the bytes).
-fn raw_trns(data: &[u8]) -> Option<&[u8]> {
+/// The chunks before the first IDAT, CRC-checked as `PngStream` checks them
+/// (Pillow never checks an IDAT's); `Err` where `Image.open` raises.
+fn header_chunks(data: &[u8]) -> Result<Vec<(&[u8], &[u8])>, String> {
+    let mut out = Vec::new();
     let mut i = 8;
     while i + 8 <= data.len() {
         let n = u32::from_be_bytes([data[i], data[i + 1], data[i + 2], data[i + 3]]) as usize;
         let kind = &data[i + 4..i + 8];
         if kind == b"IDAT" {
-            return None;
+            return Ok(out);
         }
-        if kind == b"tRNS" {
-            return data.get(i + 8..i + 8 + n);
+        let body = data.get(i + 8..i + 8 + n).ok_or("truncated chunk")?;
+        let crc = data.get(i + 8 + n..i + 12 + n).ok_or("truncated chunk")?;
+        let mut h = crc32fast::Hasher::new();
+        h.update(kind);
+        h.update(body);
+        if h.finalize().to_be_bytes() != crc {
+            return Err("broken PNG file (bad header checksum)".into());
         }
-        i = i.checked_add(12 + n)?;
+        out.push((kind, body));
+        i += 12 + n;
     }
-    None
+    Err("no IDAT".into())
 }
 
 fn be16(s: &[u8], i: usize) -> u16 {
@@ -77,8 +85,10 @@ pub fn png_to_rgba(data: &[u8]) -> Result<Rgba, String> {
     if !png_supported(data) {
         return Err("unsupported PNG mode".into());
     }
+    let chunks = header_chunks(data)?;
     let mut dec = png::Decoder::new_with_limits(std::io::Cursor::new(data), png::Limits { bytes: usize::MAX });
     dec.set_transformations(png::Transformations::IDENTITY);
+    dec.ignore_checksums(true);
     let mut reader = dec.read_info().map_err(|e| e.to_string())?;
     let (w, h) = (reader.info().width as usize, reader.info().height as usize);
     if (w as u64) * (h as u64) > BOMB_PIXELS {
@@ -87,7 +97,7 @@ pub fn png_to_rgba(data: &[u8]) -> Result<Rgba, String> {
     let depth = reader.info().bit_depth as u8;
     let color = reader.info().color_type as u8;
     let palette = reader.info().palette.as_ref().map(|p| p.to_vec());
-    let trns = raw_trns(data).map(<[u8]>::to_vec);
+    let trns = chunks.iter().find(|(k, _)| *k == b"tRNS").map(|(_, b)| b.to_vec());
     let size = reader.output_buffer_size().ok_or("image too large")?;
     let mut buf = vec![0u8; size];
     let info = reader.next_frame(&mut buf).map_err(|e| e.to_string())?;

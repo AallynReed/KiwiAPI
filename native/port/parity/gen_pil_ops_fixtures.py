@@ -143,6 +143,11 @@ def decode_cases() -> list:
     buf = io.BytesIO()
     rand_rgba(9, 6).save(buf, "PNG")
     out.append(buf.getvalue())
+    good = raw_png(w, h, 8, 2, rand_rows(w, h, 8, 3))
+    idat = good.index(b"IDAT")
+    crc_at = idat + 4 + struct.unpack(">I", good[idat - 4:idat])[0]
+    out.append(good[:crc_at] + b"\0\0\0\0" + good[crc_at + 4:])
+    out.append(good[:29] + b"\0\0\0\0" + good[33:])
     cases = []
     for data in out:
         try:
