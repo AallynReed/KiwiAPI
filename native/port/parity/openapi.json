@@ -1,0 +1,19 @@
+[
+ {"name": "openapi", "path": "/openapi.json", "compare_headers": ["content-length"]},
+ {"name": "openapi_gzip", "path": "/openapi.json", "headers": {"Accept-Encoding": "gzip"}},
+ {"name": "openapi_gzip_raw_br", "path": "/openapi.json", "headers": {"Accept-Encoding": "br, gzip;q=0.5"}},
+ {"name": "openapi_head", "method": "HEAD", "path": "/openapi.json", "compare_headers": ["content-length"]},
+ {"name": "openapi_query", "path": "/openapi.json?v=2&x"},
+ {"name": "openapi_cors_docs", "path": "/openapi.json", "headers": {"Origin": "https://docs.aallyn.net", "Accept-Encoding": "gzip"}},
+ {"name": "openapi_cors_evil", "path": "/openapi.json", "headers": {"Origin": "https://evil.example"}},
+ {"name": "openapi_html_accept", "path": "/openapi.json", "headers": {"Accept": "text/html"}},
+ {"name": "openapi_token", "path": "/openapi.json", "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"}},
+ {"name": "openapi_jwt", "path": "/openapi.json", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "openapi_options_405", "method": "OPTIONS", "path": "/openapi.json", "compare_headers": ["allow"]},
+ {"name": "openapi_preflight", "method": "OPTIONS", "path": "/openapi.json",
+  "headers": {"Origin": "https://docs.aallyn.net", "Access-Control-Request-Method": "GET"}},
+ {"name": "openapi_trailing_slash", "path": "/openapi.json/"},
+ {"name": "openapi_api_host", "path": "/openapi.json", "headers": {"Host": "api.aallyn.net"}},
+ {"name": "docs", "path": "/docs"},
+ {"name": "redoc", "path": "/redoc"}
+]

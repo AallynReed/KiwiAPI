@@ -50,6 +50,7 @@ pub mod mods_moderation;
 pub mod mods_write_auth;
 pub mod ocr;
 pub mod og;
+pub mod openapi;
 pub mod outbound;
 pub mod portal;
 pub mod proxy;

@@ -1,5 +1,6 @@
 //! `app/main.py`'s own routes: `/health`, `/config`, `/api-info`, and the
-//! Swagger UI / ReDoc pages FastAPI registers (`/openapi.json` stays in Python).
+//! Swagger UI / ReDoc pages FastAPI registers, both reading `/openapi.json`
+//! (`crate::openapi`).
 
 use axum::{
     Router,

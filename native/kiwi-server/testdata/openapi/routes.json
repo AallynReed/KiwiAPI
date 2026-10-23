@@ -1,0 +1,4022 @@
+[
+ {
+  "path": "/docs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/docs/oauth2-redirect",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/redoc",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/signup",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/login",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/me",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/me",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/auth/verify-email",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/resend-verification",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/change-password",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/change-email",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/verify-email-change",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/forgot-password",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/reset-password",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/reset-password",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/refresh",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/logout",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/logout-all",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/sessions",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/sessions/{session_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/auth/me/export",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/delete-account",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/auth/oauth/github/start",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/oauth/github/callback",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/auth/oauth/exchange",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/discord/interactions",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/refresh",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/logout",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/logout-all",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/claim-trove-name",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/claim-trove-name",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/username-request",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/username-request",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/username-request",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/verify-trove-claim",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/trove-stats",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/sessions",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/sessions/{session_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/export",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/me/delete",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/moderation/report",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/internal/pageviews",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/internal/geo-maintenance",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/oauth/discord/start",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/oauth/discord/callback",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/oauth/exchange",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/tokens",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/tokens",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/tokens/activity",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/tokens/{token_id}/activity",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/tokens/{token_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/tokens/{token_id}/rotate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/tokens/{token_id}/revoke",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/users",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/users/{user_id}/tokens",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/users/{user_id}/tokens",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/users/{user_id}/terminate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/users/{user_id}/reactivate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/users/{user_id}/activity",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/users/{user_id}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/tokens/{token_id}/revoke",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/events",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/pending",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/activity",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/pageviews",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/pageviews/live",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/market/interest-items",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/market/interest-items",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/market/interest-items/{name}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/market/interest-items",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/admin/market/categories",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/market/categories",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/market/categories/{category_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/admin/market/categories/{category_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/market/categories/order",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/boards",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/boards/{uuid}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/rebuild-player-agg",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/rebuild-player-agg/status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/backfill-last-rise",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/backfill-last-rise/status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/tier-cold",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/leaderboards/tier-cold/status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/codexes/rebuild",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/codexes/status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/updates/backfill-modified",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/updates/backfill-modified/status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/config",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/config/{key}",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/admin/config/{key}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/ingest/log",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/discord/commands",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/discord/register-commands",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/bot/stats",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/discord/clear-guild-commands",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/supporters",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/supporters",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/supporters/{name}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/site-claims",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/site-claims/{user_id}/approve",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/site-claims/{user_id}/reject",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/supporters",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/admin/mods/reports",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/mods/reports/{report_id}/dismiss",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/mods/projects/{project_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/mods/projects/{project_id}/takedown",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/projects/{project_id}/restore",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/profiles/{profile_id}/takedown",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/profiles/{profile_id}/restore",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/stray/import",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/mods/stray/import",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/stray",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/mods/stray/{project_id}/approve",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/stray/{project_id}/reject",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/stray/assign",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/claims",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/mods/claims/{claim_id}/approve",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/claims/{claim_id}/reject",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/remix-claims",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/mods/remix-claims/{claim_id}/approve",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/mods/remix-claims/{claim_id}/reject",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/modpacks",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/modpacks/{pack_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/modpacks/{pack_id}/takedown",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/modpacks/{pack_id}/restore",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/username-requests",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/username-requests/{request_id}/approve",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/username-requests/{request_id}/reject",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/site-users",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/site-users/{user_id}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/site-users/{user_id}/deactivate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/site-users/{user_id}/activate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/site-users/{user_id}/logout",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/site-users/{user_id}/username",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/site-users/{user_id}/claimed-name",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/site-users/{user_id}/refresh-discord",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/embed/uploads",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/btt/refresh-releases",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/gamedata",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/gamedata/run",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/vault/items",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/vault/items",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/vault/items/{item_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/admin/vault/items/{item_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/vault/items/{item_id}/codes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/vault/items/{item_id}/codes",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/vault/codes/{code_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/admin/vault/codes/{code_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/giveaways",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/giveaways",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/giveaways/{giveaway_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/admin/giveaways/{giveaway_id}/draw",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/giveaways/{giveaway_id}/cancel",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/giveaways/mine",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/giveaways/me",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/giveaways/{giveaway_id}/enter",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/giveaways/ongoing",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/giveaways/upcoming",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/giveaways/ended",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/drops",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/drops",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/drops/{drop_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/admin/drops/{drop_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/admin/drops/uploads/{upload_id}/download",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/drops/uploads/{upload_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/site/drops/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/drops/{slug}/verify",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/drops/{slug}/upload",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/btt/mod-blocklist",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/btt/mod-blocklist",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/btt/mod-blocklist/{entry_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/site/custom-art/config",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/custom-art",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/custom-art",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/custom-art/{request_id}/image/{slot}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/admin/custom-art/release",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/custom-art/steam-done",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/custom-art/{request_id}/approve",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/custom-art/{request_id}/deny",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/custom-art/{request_id}/retry",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mod-stats",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/design-feedback",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/admin/design-feedback",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/supporters",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/announcements",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/announcement-meta",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/announcements/{key}/template",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/language",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/live-board",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/market-watch",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/clubs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/clubs",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/clubs/{club_id}",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/clubs/{club_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/clubs/{club_id}/roster",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/clubs/{club_id}/roster/{member_id}/{action}",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/site-auth/discord/guilds/{guild_id}/permissions",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/dm-subscriptions/events",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dm-subscriptions",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dm-subscriptions",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/dm-subscriptions/{sub_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/dm-subscriptions/{sub_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/dm-subscriptions/{sub_id}/test",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/webhooks/events",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/webhooks",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/webhooks",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/webhooks/{webhook_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/webhooks/{webhook_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/webhooks/{webhook_id}/test",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/images/bindings",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/images",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/images",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/images/upload",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/images/preview",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/images/{design_id}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/images/{design_id}",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/images/{design_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/site/images/{design_id}.png",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/secret-scanning/github",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/rotations/server-time",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/daily-buffs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/weekly-buffs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/corruxion",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/fluxion",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/luxion",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/luxion/insert",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/rotations/luxion/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/gardening",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/chaos-chest",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/chaos-chest/insert",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/rotations/chaos-chest/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/challenge/current",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/challenge/insert",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/rotations/challenge/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/calendar",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/delves/weeks",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/delves",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/biomes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/wild-mana",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/rotations/stampy",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/news",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/twitch",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/youtube",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/bilibili",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/bilibili/image",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/events",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/events/categories",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/events/upcoming",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/feeds/events/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/stats/power-rank",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/stats/magic-find",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/stats/light",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/stats/classes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/stats/classes/{tech_name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/stats/coefficient",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/stats/sigil",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/gems/lookups",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/gems/generate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/augment",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/spark",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/flare",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/level-up",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/level-costs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/gems/set-level",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/evaluate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/evaluate-simple",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/stat-range",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/gems/builds/options",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/gems/builds/calculate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/gems/builds/health-optimizer",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/misc/news-history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/software",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/timezones",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/time/now",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/time/convert",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/misc/interest-items",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/trove-status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/trove-status/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/misc/feedback",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/read",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/build",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/tags",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/profile/{handle}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/branches",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/commits",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/tree",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/raw/{commit_ref}/{path:path}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/archive",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/issues",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/issues/{number}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/compare",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/placement",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/releases",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/forks",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/download",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/blueprints",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/assembled",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/blueprint",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/rigs/{skeleton}/anim/{name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/files",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/file",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/swfs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/swf/scripts",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/inspect",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/cfgs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/cfg",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/image/{sha}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/starred",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/stats",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/profile",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/profile/avatar",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/profile/banner",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/git-tokens",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/git-tokens",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/git-tokens/{token_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/remixes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/remixes/{remix_id}/status",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/remix-claim",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/star",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/star",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/issues",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/issues/{number}/comments",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/issues/{number}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/issues/{number}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/issues/{number}/comments/{event_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/issue-notifications",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/issue-notifications/seen",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/collaborators",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/collaborators/{user_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/claim",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/projects/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/projects/{handle}/{slug}/releases",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/projects/{handle}/{slug}/commits",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/me/projects/{handle}/{slug}/placement",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/fork",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/banner",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/banner",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/previews",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/previews/{sha}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/branches",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/branches/{name}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/commits",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/releases",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/releases/upload",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}/config",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/releases/{release_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/projects/{handle}/{slug}/fix-placement",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/creator-links",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/creator-links",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/hub/creator-links/{link_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/mods",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/popular",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/lookup",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/mods/categories",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/mods/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/git/mods/{handle}/{slug}.git/info/refs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/git/mods/{handle}/{slug}.git/git-upload-pack",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/git/mods/{handle}/{slug}.git/git-receive-pack",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/download",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/me/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/banner",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/variants",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/variants/{name}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/variants/{name}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/variants/{name}/entries",
+  "methods": [
+   "PUT"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/variants/{name}/upload",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/collaborators",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/collaborators/{user_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/star",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/hub/projects/{handle}/{slug}/star",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/v1/modpacks",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/for-mod/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/modpacks/{handle}/{slug}/download",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/embed/viewer",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/manifest",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/blueprint",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/assembled",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/vfx/manifest",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/vfx/backdrop",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/audio/bank",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/audio/sound",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/allowed-origins",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/embed/vfx/asset",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/embed/tmod",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/embed/tmod/{token}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/branches",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/versions",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/changes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/tree",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/file/meta",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/file",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/file/view",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/file/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/updates/{branch}/file/compare",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/types",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/search",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/links",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/stats",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/requirements",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/upgrades",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/upgrades/{system_key}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/render",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/{codex_type}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/{codex_type}/categories",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/{codex_type}/stat-keys",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/{codex_type}/abilities",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/codexes/{codex_type}/entry",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dressing/palette",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dressing/races",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dressing/classes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dressing/options",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dressing/outfit",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dressing/image",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/dressing/model",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/btt/releases",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/btt/latest",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/btt/check",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/btt/latest/{platform}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/btt/changelog",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/btt/workshop",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/btt/mod-blocklist",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/cheaters",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/renames",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/renames/{name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/duplicates",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/duplicates/{name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/records",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/timestamps",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/{uuid:int}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/{uuid:int}/entries",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/players/{player_name}/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/players/{player_name}/profile",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/players/{player_name}/boards",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/{uuid:int}/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/{uuid:int}/health",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/players/{player_name}/series",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/insert",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/warm",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/cheaters/recompute",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/views/recompute",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/reingest-backlog",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/reingest-status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/renames-backfill",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/renames-backfill-status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/duplicates-backfill",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/duplicates-backfill-status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/reset",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/leaderboards/delete-anchor",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/market/listings",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/market/items",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/market/items/{name}/summary",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/market/insert",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/market/reset",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/store/products",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/store/categories",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/store/timeline",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/store/products/{code}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/store/insert",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/store/reset",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/activity/current",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/activity/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/activity/series",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/activity/backfill",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/class-activity/current",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/class-activity/series",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/class-activity/backfill",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/v1/events/stream",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/v1/ocr/character",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/embed/status.svg",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/robots.txt",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/BingSiteAuth.xml",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/sitemap.xml",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/gems/lookups",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/gems/evaluate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/gems/evaluate-simple",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/gems/stat-range",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/gems/builds/options",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/gems/builds/calculate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/gems/builds/health-optimizer",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/gems/parse-star-chart",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/stats/classes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/tomes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/server-time",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/rotations",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/feeds/news",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/feeds/videos",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/calendar/events",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/calendar/yearly",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/btt/latest",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/btt/releases",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/btt/changelog",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/status/og.png",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/board.png",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/announce.png",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/activity/og.png",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/items",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/item-images",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/store/products",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/store/categories",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/store/timeline",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/store/products/{code}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/store/texture",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/board-icon/{name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/stats/sigil",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/render/brdf-map.png",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/giveaways",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/listings",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/items/{name}/summary",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/items/{name}/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/analytics/timeline",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/analytics/deals",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/analytics/movers",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/analytics/overview",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/analytics/signals",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/analytics/liquidity",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/market/analytics/volume",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/types",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/categories",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/stat-keys",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/abilities",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/search",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/render",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/dressing/classes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/dressing/palette",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/dressing/races",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/dressing/options",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/dressing/model",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/dressing/image",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/dressing/render",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/entry",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/search",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/related",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/upgrades",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/codexes/crafting",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/config",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/feature-flags",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/changelog",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/clubs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/timestamps",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/days",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/boards",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/activity",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/activity/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/activity/series",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/records",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/class-activity/current",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/class-activity/series",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/trove-status",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/trove-status/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/cheaters",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/renames",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/renames/{name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/duplicates",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/duplicates/{name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/{uuid}/entries",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/players/{player_name}/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/{uuid}/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/{uuid}/health",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/players/{player_name}/profile",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/leaderboards/players/{player_name}/series",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/branches",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/versions",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/changes",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/tree",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/search",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/meta",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/view",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/blueprint",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/swf",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/swf/asset",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/swf/zip",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/bnk",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/bnk/audio",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/bnk/zip",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/vfx",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/vfx/manifest",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/vfx/asset",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/sound-studio/build",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/history",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/updates/{branch}/file/compare",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mod-workshop/inspect",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mod-workshop/build",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mod-workshop/extract",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mod-workshop/preview/blueprint",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mod-workshop/swf/scripts",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mod-workshop/preview/binfab",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mod-workshop/extract/download",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/unlock-debug",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/inspect",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/flatten",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/transform",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/export-qb",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/import-qb",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/check",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/save",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/model",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/game-model",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/blueprint-editor/model-save",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mods/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/tags",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/profile/{handle}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/modders",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/me/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/creator-token",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/creator-token",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mods/creator-token/rotate",
+  "methods": [
+   "POST"
+  ]
+ },
+ {
+  "path": "/site/mods/creator-connections/{link_id}",
+  "methods": [
+   "PATCH"
+  ]
+ },
+ {
+  "path": "/site/mods/creator-connections/{link_id}",
+  "methods": [
+   "DELETE"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/branches",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/commits",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/tree",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/placement",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/releases",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/forks",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/raw/{commit_ref}/{path:path}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/archive",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/issues",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/projects/{handle}/{slug}/issues/{number}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/notifications",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/download",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/blueprints",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/assembled",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/files",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/file",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/inspect",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/swfs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/swf/scripts",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/cfgs",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/cfg",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/rigs/{skeleton}/anim/{name}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/rigs/{skeleton}/graph",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/blueprint",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/vfx",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/vfx/manifest",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/vfx/asset",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/audio",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/audio/bank",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/releases/{release_id}/audio/sound",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/mods/image/{sha}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/modpacks/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/modpacks/me/projects",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/modpacks/projects/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/modpacks/for-mod/{handle}/{slug}",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/modpacks/projects/{handle}/{slug}/download",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/site/screenshots.json",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/openapi.json",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/api-info",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/config",
+  "methods": [
+   "GET"
+  ]
+ },
+ {
+  "path": "/health",
+  "methods": [
+   "GET"
+  ]
+ }
+]
