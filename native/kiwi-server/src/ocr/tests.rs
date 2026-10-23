@@ -16,6 +16,38 @@ fn blocks() -> &'static Value {
     G.get_or_init(|| crate::pyjson::loads(include_bytes!("../../testdata/ocr/blocks.json")).expect("fixture"))
 }
 
+/// The route's replies that settle before the models run
+/// (`testdata/tools/golden.json`, `gen_tools_fixtures.py`).
+#[tokio::test]
+async fn route_errors_match_python() {
+    use axum::response::IntoResponse;
+    use base64::{Engine, engine::general_purpose::STANDARD};
+    let g: Value = crate::pyjson::loads(include_bytes!("../../testdata/tools/golden.json")).unwrap();
+    let addr = regex::Regex::new(r"object at 0x[0-9A-Fa-f]+").unwrap();
+    for c in arr(&g["ocr_errors"]) {
+        let name = c["name"].as_str().unwrap();
+        let body = STANDARD.decode(c["req_b64"].as_str().unwrap()).unwrap();
+        let want = String::from_utf8(STANDARD.decode(c["body_b64"].as_str().unwrap()).unwrap()).unwrap();
+        let rid = serde_json::from_str::<Value>(&want).unwrap()["error"]["request_id"].as_str().unwrap().to_owned();
+        let resp = crate::request_id::scope(rid, async {
+            match kiwi_core::form::parse_form(c["req_ctype"].as_str().map(str::as_bytes), &body) {
+                Ok(items) => match super::reply(items).await {
+                    Ok(v) => crate::pyjson::PydanticJson(v).into_response(),
+                    Err(e) => e.into_response(),
+                },
+                Err(kiwi_core::form::FormError::Http(msg)) => {
+                    crate::error::ApiError::http(axum::http::StatusCode::BAD_REQUEST, Some(&msg)).into_response()
+                }
+            }
+        })
+        .await;
+        assert_eq!(u64::from(resp.status().as_u16()), c["status"].as_u64().unwrap(), "{name}: status");
+        let got = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let got = String::from_utf8(got.to_vec()).unwrap();
+        assert_eq!(addr.replace_all(&got, "object at 0x?"), addr.replace_all(&want, "object at 0x?"), "{name}: body");
+    }
+}
+
 fn arr(v: &Value) -> &Vec<Value> {
     v.as_array().unwrap_or_else(|| panic!("array: {v}"))
 }

@@ -97,14 +97,23 @@ fn ocr_row(inf: &dyn rapid::Infer, img: &Img, b: &rapid::Quad) -> Result<Vec<Str
     Ok(run(inf, &up)?.into_iter().map(|l| l.text).collect())
 }
 
+/// `engine._decode`.
+pub fn decode_upload(data: &[u8]) -> Result<Img, OcrFailure> {
+    match decode::decode_rgb(data) {
+        Ok(img) => Ok(img),
+        Err(DecodeError::Unreadable(msg)) => Err(OcrFailure::BadImage(format!("unreadable image: {msg}"))),
+        Err(DecodeError::Bomb) => Err(OcrFailure::Internal("DecompressionBombError".into())),
+    }
+}
+
 /// `service._process`: the `CharacterStatsOcr` body.
 pub fn process(inf: &dyn rapid::Infer, vocab: &Vocab, data: &[u8]) -> Result<Value, OcrFailure> {
-    let img = match decode::decode_rgb(data) {
-        Ok(img) => img,
-        Err(DecodeError::Unreadable(msg)) => return Err(OcrFailure::BadImage(format!("unreadable image: {msg}"))),
-        Err(DecodeError::Bomb) => return Err(OcrFailure::Internal("DecompressionBombError".into())),
-    };
-    let elems = run(inf, &img)?;
+    process_image(inf, vocab, &decode_upload(data)?)
+}
+
+/// `_process` after the decode (which runs before the engine is touched).
+pub fn process_image(inf: &dyn rapid::Infer, vocab: &Vocab, img: &Img) -> Result<Value, OcrFailure> {
+    let elems = run(inf, img)?;
     let lines: Vec<String> = elems.iter().map(|l| l.text.clone()).collect();
     let mut stats = text::extract(vocab, &lines);
     let mut missing: Vec<&str> =
@@ -118,7 +127,7 @@ pub fn process(inf: &dyn rapid::Infer, vocab: &Vocab, data: &[u8]) -> Result<Val
             continue;
         }
         let sd = vocab.stat_def(&key);
-        for txt in ocr_row(inf, &img, &el.boxes)? {
+        for txt in ocr_row(inf, img, &el.boxes)? {
             let Some((value, pct)) = text::parse_number(&txt) else { continue };
             if sd.is_some_and(|d| d.percent != pct) {
                 continue;
@@ -192,9 +201,11 @@ pub async fn reply(items: Vec<(String, FormValue)>) -> Result<Value, ApiError> {
         return Err(ApiError::bad_request("Empty upload - attach a screenshot in the 'file' field."));
     }
     let result = tokio::task::spawn_blocking(move || -> Result<Value, OcrFailure> {
+        let img = decode_upload(&file.data)?;
+        drop(file);
         let inf = engine::get().ok_or(OcrFailure::Unavailable)?;
         let vocab = vocab().ok_or_else(|| OcrFailure::Internal("character_stats.json".into()))?;
-        process(inf, vocab, &file.data)
+        process_image(inf, vocab, &img)
     })
     .await
     .map_err(|_| ApiError::internal())?;

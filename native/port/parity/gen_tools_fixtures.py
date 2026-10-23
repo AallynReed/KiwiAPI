@@ -331,6 +331,34 @@ def unlock_cases():
     return cases
 
 
+app.dependency_overrides[trove_router._OCR.dependency] = lambda: None
+PNG_1PX = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de0000000c4944415408d763f8ffff3f0005fe02fea7d6a4f30000000049454e44ae426082")
+
+OCR_ERRORS = [
+    ("unsupported", [("file", "a.txt", "text/plain", b"hi")]),
+    ("type_params", [("file", "a.png", "image/PNG; charset=x", PNG_1PX)]),
+    ("upper_ok_but_empty", [("file", "a.png", "IMAGE/PNG", b"")]),
+    ("empty", [("file", "a.png", "image/png", b"")]),
+    ("missing", [("other", "a.png", "image/png", PNG_1PX)]),
+    ("text_field", [("file", None, None, b"words")]),
+    ("empty_text", [("file", None, None, b"")]),
+    ("garbage", [("file", "a.png", "image/png", b"definitely not an image")]),
+    ("garbage_no_type", [("file", "a.bin", None, b"\x00\x01\x02")]),
+]
+
+
+def ocr_cases():
+    cases = []
+    for name, parts in OCR_ERRORS:
+        body, ctype = multipart(parts)
+        r = client.post("/v1/ocr/character", content=body, headers={"Content-Type": ctype})
+        cases.append({"name": name, "req_b64": base64.b64encode(body).decode(), "req_ctype": ctype, **reply(r)})
+    for name, body, ctype in [("json", b'{"file": 1}', "application/json"), ("no_boundary", b"--x--", "multipart/form-data")]:
+        r = client.post("/v1/ocr/character", content=body, headers={"Content-Type": ctype})
+        cases.append({"name": name, "req_b64": base64.b64encode(body).decode(), "req_ctype": ctype, **reply(r)})
+    return cases
+
+
 def main():
     inputs = tmod_inputs()
     golden = {
@@ -340,6 +368,7 @@ def main():
         "build": build_cases(),
         "filenames": filenames(),
         "unlock": unlock_cases(),
+        "ocr_errors": ocr_cases(),
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(golden, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
