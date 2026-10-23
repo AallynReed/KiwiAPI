@@ -1,0 +1,16 @@
+{
+ "mongo": [
+  {"collection": "site_users", "sort": ["username"],
+   "mask": ["creator_token_hash", "creator_token_prefix", "creator_token_at", "updated_at", "mod_issues_seen_at"]},
+  {"collection": "mod_creator_links", "sort": ["label", "site_user_id"],
+   "mask": ["_id", "created_at", "revoked_at", "last_used_at"]},
+  {"collection": "mod_projects", "sort": ["slug"]},
+  {"collection": "mod_issues", "sort": ["number"],
+   "mask": ["_id", "created_at", "updated_at", "last_activity_at", "closed_at", "participant_ids"]},
+  {"collection": "mod_issue_events", "sort": ["body", "kind", "author_username"],
+   "mask": ["_id", "issue_id", "created_at"]}
+ ],
+ "redis": [
+  {"pattern": "rl:mod_issue_*", "mask_ttl": true, "mask_value": true}
+ ]
+}
