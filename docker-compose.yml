@@ -318,6 +318,8 @@ services:
       # Same off-site-render base as the api (the bot builds board/announcement
       # embeds too). Empty => app_url. Set to the api host at cutover.
       ASSET_BASE_URL: ${ASSET_BASE_URL:-}
+      # rust: the kiwi-bot binary; anything else: app.bot.runner. Never both (one bot token).
+      KIWI_BOT: ${KIWI_BOT:-python}
     depends_on:
       mongo:
         condition: service_healthy
@@ -331,7 +333,7 @@ services:
     volumes:
       - ./app:/app/app
       - ./.gamedata:/data/gamedata:ro
-    command: ["python", "-m", "app.bot.runner"]
+    command: ["sh", "-c", "if [ \"$KIWI_BOT\" = rust ]; then exec kiwi-bot; fi; exec python -m app.bot.runner"]
     mem_limit: 512m
     logging:
       driver: json-file

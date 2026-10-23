@@ -16,7 +16,8 @@ RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/native/target \
     cd /native && cargo build --release --locked -p kiwi-server \
     && install -D target/release/kiwi-server /out/kiwi-server \
-    && install -D target/release/kiwi-builder /out/kiwi-builder
+    && install -D target/release/kiwi-builder /out/kiwi-builder \
+    && install -D target/release/kiwi-bot /out/kiwi-bot
 
 FROM python:3.13-slim AS app
 
@@ -78,6 +79,7 @@ COPY --from=native /wheels /tmp/wheels
 RUN pip install --no-cache-dir /tmp/wheels/*.whl && rm -rf /tmp/wheels
 
 COPY --from=native /out/kiwi-server /usr/local/bin/kiwi-server
+COPY --from=native /out/kiwi-bot /usr/local/bin/kiwi-bot
 
 COPY app ./app
 

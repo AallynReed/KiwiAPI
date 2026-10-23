@@ -124,6 +124,7 @@ See `.env.example` for the full list.
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | no | Bootstraps the master superuser on startup |
 | `SMTP_HOST` (+ `SMTP_*`, `MAIL_FROM`) | prod | Mail relay; if unset, email is logged instead of sent |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | no | Enables "Sign in with GitHub" |
+| `KIWI_BOT` | no | `rust` runs the Discord bot container on the Rust `kiwi-bot`; anything else keeps `app.bot.runner`. Only one ever runs (`docker compose up -d bot` after changing it) |
 
 ### Behind a reverse proxy
 
