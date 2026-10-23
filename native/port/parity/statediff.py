@@ -20,7 +20,11 @@ AREA.state.json (every section and key but the names is optional):
 mongo: documents in extended JSON with their field order (ObjectId {"$oid"},
 date {"$date"}, int64 {"$numberLong"}, a double keeps its decimal point), sorted
 by the ``sort`` fields and then the whole document. ``filter`` is a find filter
-({"$oid"}, {"$date"} and {"$numberLong"} values are typed). postgres: rows as
+({"$oid"}, {"$date"} and {"$numberLong"} values are typed). ``upsert_keys``
+names the fields an upsert's filter seeds: mongod 7 lays those out in absl
+hash-map order, salted per process and per table, so each stack (and each
+insert) can get its own order; they are compared in the spec's order instead.
+The ``$set`` fields after them are deterministic (lexicographic). postgres: rows as
 row_to_json in ``order_by`` order (default: the row text), ``mask`` names
 columns. redis: the keys SCAN MATCH finds for ``pattern``, each compared on
 type, TTL in seconds (only set or unset with ``mask_ttl``) and value: strings
@@ -476,8 +480,22 @@ def diff_records(title: str, a: list[tuple[str, object]], b: list[tuple[str, obj
     return bool(out)
 
 
+def upsert_order(doc: dict, keys: list[str]) -> dict:
+    """``doc`` with the fields after ``_id`` that are exactly ``keys`` (in any
+    order) put in ``keys`` order; anything else is left as it is."""
+    head = [k for k in doc if k != "_id"][:len(keys)]
+    if sorted(head) != sorted(keys):
+        return doc
+    out = {"_id": doc["_id"]} if "_id" in doc else {}
+    out.update((k, doc[k]) for k in keys)
+    out.update((k, v) for k, v in doc.items() if k not in out)
+    return out
+
+
 def mongo_records(url: str, rule: dict) -> list[tuple[str, object]]:
     docs = mongo_docs(url, rule["collection"], rule.get("filter"))
+    if rule.get("upsert_keys"):
+        docs = [upsert_order(d, rule["upsert_keys"]) for d in docs]
     for doc in docs:
         for path in rule.get("mask", []):
             mask_path(doc, path)

@@ -4,9 +4,10 @@
   {"collection": "update_versions", "sort": ["branch", "ordinal"], "mask": ["captured_at", "completed_at"],
    "filter": {"branch": "live-us"}},
   {"collection": "update_versions", "sort": ["branch", "ordinal"], "filter": {"branch": "pts"}},
-  {"collection": "update_changes", "sort": ["branch", "ordinal", "path"], "mask": ["_id"]},
-  {"collection": "update_state", "sort": ["branch", "path"], "mask": ["_id"]},
-  {"collection": "update_manifest", "sort": ["branch", "path"], "mask": ["_id"]}
+  {"collection": "update_changes", "sort": ["branch", "ordinal", "path"], "mask": ["_id"],
+   "upsert_keys": ["branch", "ordinal", "path"]},
+  {"collection": "update_state", "sort": ["branch", "path"], "mask": ["_id"], "upsert_keys": ["branch", "path"]},
+  {"collection": "update_manifest", "sort": ["branch", "path"], "mask": ["_id"], "upsert_keys": ["branch", "path"]}
  ],
  "redis": [
   {"pattern": "events:sig:game_update"}

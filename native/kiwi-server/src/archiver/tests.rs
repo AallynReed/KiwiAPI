@@ -592,8 +592,7 @@ fn pointer() -> Pointer {
     Pointer { version: s(&p["version"]).into(), content_path: s(&p["content_path"]).into(), motd: s(&p["motd"]).into() }
 }
 
-#[test]
-fn repo_write_ops() {
+fn sample_ops() -> [(&'static str, Vec<Op>); 3] {
     let sha = |c: &str| c.repeat(32);
     let (ab, cd, ef, z1) = (sha("ab"), sha("cd"), sha("ef"), sha("01"));
     let changes = vec![
@@ -612,14 +611,50 @@ fn repo_write_ops() {
         repo::delete_op("live-us", "old.tfa"),
         repo::manifest_op("live-us", "ui/archive0.tfa", "s2", 3),
     ];
+    [(repo::CHANGES, changes), (repo::STATE, state), (repo::MANIFEST, manifest)]
+}
+
+#[test]
+fn repo_write_ops() {
     let want = golden()["repo"]["ops"].as_array().unwrap();
-    for (n, (coll, ops)) in
-        [(repo::CHANGES, changes), (repo::STATE, state), (repo::MANIFEST, manifest)].iter().enumerate()
-    {
+    for (n, (coll, ops)) in sample_ops().iter().enumerate() {
         assert_eq!(want[n]["coll"], *coll);
         assert_eq!(want[n]["ordered"], false);
         assert_eq!(json!(ops.iter().map(op_json).collect::<Vec<_>>()), want[n]["ops"], "{coll}");
     }
+}
+
+/// The filter and `$set` key order pymongo sends (Value equality ignores it).
+/// What mongod stores from them: `_id`, the filter fields in its own hash
+/// order, then the `$set` fields in lexicographic order.
+#[test]
+fn repo_write_ops_keep_pymongo_key_order() {
+    fn keys(v: &Value) -> Vec<String> {
+        v.as_object().unwrap().keys().cloned().collect()
+    }
+    let want = golden()["repo"]["ops"].as_array().unwrap();
+    for (n, (coll, ops)) in sample_ops().iter().enumerate() {
+        for (op, w) in ops.iter().zip(want[n]["ops"].as_array().unwrap()) {
+            let got = op_json(op);
+            assert_eq!(keys(&got), keys(w), "{coll}");
+            for k in ["update", "set", "delete"] {
+                if let Some(v) = w.get(k) {
+                    assert_eq!(keys(&got[k]), keys(v), "{coll} {k}");
+                }
+            }
+        }
+        for cmd in repo::bulk_commands(coll, ops) {
+            for u in cmd.get_array("updates").into_iter().flatten() {
+                let u = u.as_document().unwrap();
+                assert_eq!(u.keys().collect::<Vec<_>>(), ["q", "u", "multi", "upsert"]);
+                assert_eq!(u.get_document("u").unwrap().keys().collect::<Vec<_>>(), ["$set"]);
+            }
+        }
+    }
+    let changes = &sample_ops()[0].1;
+    let Op::Update { filter, set, .. } = &changes[0] else { panic!() };
+    assert_eq!(filter.keys().collect::<Vec<_>>(), ["branch", "ordinal", "path"]);
+    assert_eq!(set.keys().collect::<Vec<_>>(), ["type", "content_sha256", "fnv_hash", "size"]);
 }
 
 #[test]

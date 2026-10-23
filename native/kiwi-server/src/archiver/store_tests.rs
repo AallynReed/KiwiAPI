@@ -51,6 +51,20 @@ fn keys(d: &Document) -> Vec<&str> {
     d.keys().map(String::as_str).collect()
 }
 
+/// An upserted document as mongod 7 lays it out: `_id`, the filter's fields
+/// in absl hash-map order (salted per process and table, so not checked),
+/// then the `$set` fields in lexicographic order.
+fn assert_upserted(d: &Document, filter: &[&str], set: &[&str]) {
+    let k = keys(d);
+    assert_eq!(k[0], "_id");
+    let mut seeded = k[1..=filter.len()].to_vec();
+    seeded.sort_unstable();
+    let mut want = filter.to_vec();
+    want.sort_unstable();
+    assert_eq!(seeded, want);
+    assert_eq!(&k[filter.len() + 1..], set);
+}
+
 #[tokio::test]
 #[ignore = "writes to MONGO_URI"]
 async fn repo_writes_like_pymongo() {
@@ -92,17 +106,18 @@ async fn repo_writes_like_pymongo() {
     r.finish_version(&b, 1, "MV-1", &p, &counts).await.unwrap();
 
     let changes = all(&state, repo::CHANGES, &b).await;
-    assert_eq!(keys(&changes[0]), ["_id", "branch", "ordinal", "path", "type", "content_sha256", "fnv_hash", "size"]);
+    assert_upserted(&changes[0], &["branch", "ordinal", "path"], &["content_sha256", "fnv_hash", "size", "type"]);
     assert_eq!(changes[0].get("fnv_hash"), Some(&Bson::Int64(4_000_000_000)));
     assert_eq!(changes[0].get("ordinal"), Some(&Bson::Int32(1)));
     let st = all(&state, repo::STATE, &b).await;
     assert_eq!(st.len(), 1);
-    assert_eq!(
-        keys(&st[0]),
-        ["_id", "branch", "path", "content_sha256", "fnv_hash", "size", "archive", "archive_index", "last_ordinal"]
+    assert_upserted(
+        &st[0],
+        &["branch", "path"],
+        &["archive", "archive_index", "content_sha256", "fnv_hash", "last_ordinal", "size"],
     );
     let man = all(&state, repo::MANIFEST, &b).await;
-    assert_eq!(keys(&man[0]), ["_id", "branch", "path", "sha1", "size"]);
+    assert_upserted(&man[0], &["branch", "path"], &["sha1", "size"]);
     let v = &all(&state, repo::VERSIONS, &b).await[0];
     assert_eq!(v.get_str("status").unwrap(), "complete");
     assert_eq!(v.get("bytes_added"), Some(&Bson::Int32(3)));
