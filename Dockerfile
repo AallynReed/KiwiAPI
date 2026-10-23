@@ -1,6 +1,30 @@
-# Rust (native/): the abi3 wheel the Python app imports, and kiwi-server, the
-# front door that answers ported routes and proxies the rest to Python.
-FROM python:3.13-slim AS native
+# Three images (compose targets):
+#   rust    (trove-rust:latest)    kiwi-server, kiwi-web and kiwi-bot on slim Debian, no Python.
+#   builder (trove-builder:latest) the rust image plus SteamCMD and TroveUI's release tooling.
+#   python  (trove-app:latest)     the Python fallback services (api-py, web-py, bot-py) until
+#                                  they are removed. It keeps the kiwi binaries so the parity
+#                                  sandbox can run both sides from one image.
+
+# onnxruntime for OCR: the same version as the onnxruntime pin in requirements.txt.
+ARG ORT_VERSION=1.26.0
+
+# Built on the release the runtime uses, so the glibc matches.
+FROM debian:trixie-slim AS native
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain 1.97.1
+ENV PATH=/root/.cargo/bin:$PATH
+COPY native /native
+# The target dir is a cache mount, so the binaries are copied out in the same step.
+RUN --mount=type=cache,target=/root/.cargo/registry \
+    --mount=type=cache,target=/native/target \
+    cd /native && cargo build --release --locked -p kiwi-server \
+    && install -D -t /out target/release/kiwi-server target/release/kiwi-web \
+       target/release/kiwi-bot target/release/kiwi-builder
+
+# kiwi-py, the abi3 wheel the Python image imports.
+FROM python:3.13-slim-trixie AS wheel
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl build-essential \
     && rm -rf /var/lib/apt/lists/* \
@@ -11,113 +35,175 @@ COPY native /native
 RUN --mount=type=cache,target=/root/.cargo/registry \
     --mount=type=cache,target=/native/target \
     cd /native/kiwi-py && maturin build --release --locked -o /wheels
-# The target dir is a cache mount, so the binary is copied out in the same step.
-RUN --mount=type=cache,target=/root/.cargo/registry \
-    --mount=type=cache,target=/native/target \
-    cd /native && cargo build --release --locked -p kiwi-server \
-    && install -D target/release/kiwi-server /out/kiwi-server \
-    && install -D target/release/kiwi-builder /out/kiwi-builder \
-    && install -D target/release/kiwi-bot /out/kiwi-bot \
-    && install -D target/release/kiwi-web /out/kiwi-web
 
-FROM python:3.13-slim AS app
+# Third-party files, each pinned by version AND sha256: these must be exactly the
+# builds that were reviewed, not whatever a release page serves on the day of a rebuild.
+FROM debian:trixie-slim AS fetch
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Keep Python lean and unbuffered for clean container logs.
+# JPEXS FFDec, the ActionScript decompiler behind the Mods Hub code view. It runs
+# over .swf files strangers upload. Bump bp_cache.SCRIPT_VERSION with it if the new
+# build's output is worth rebuilding the cached source for. The jar's manifest
+# classpath points at lib/, so the whole archive is extracted.
+ARG FFDEC_VERSION=26.2.1
+ARG FFDEC_SHA256=0333b56998a55bd83f4e0deb678a811fcdc45607582b4f5dd438309c8c3ad5ce
+RUN curl -fsSL -o /tmp/ffdec.zip \
+        "https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version${FFDEC_VERSION}/ffdec_${FFDEC_VERSION}.zip" \
+    && echo "${FFDEC_SHA256}  /tmp/ffdec.zip" | sha256sum -c - \
+    && unzip -q /tmp/ffdec.zip -d /opt/ffdec \
+    && rm /tmp/ffdec.zip \
+    && test -f /opt/ffdec/ffdec.jar
+
+ARG ORT_VERSION
+ARG ORT_SHA256=1254da24fb389cf39dc0ff3451ab48301740ffbfcbaf646849df92f80ee92c57
+RUN curl -fsSL -o /tmp/ort.tgz \
+        "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
+    && echo "${ORT_SHA256}  /tmp/ort.tgz" | sha256sum -c - \
+    && mkdir -p /opt/onnxruntime \
+    && tar xzf /tmp/ort.tgz -C /opt/onnxruntime --strip-components=1 \
+    && rm /tmp/ort.tgz \
+    && test -f "/opt/onnxruntime/lib/libonnxruntime.so.${ORT_VERSION}"
+
+# The det/cls/rec models RapidOCR 3.8.4's RapidOCR() downloads (its default_models.yaml).
+ARG RAPIDOCR_URL=https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.8.0/onnx/PP-OCRv4
+RUN mkdir -p /opt/rapidocr/models && cd /opt/rapidocr/models \
+    && curl -fsSL -o ch_PP-OCRv4_det_mobile.onnx "$RAPIDOCR_URL/det/ch_PP-OCRv4_det_mobile.onnx" \
+    && curl -fsSL -o ch_ppocr_mobile_v2.0_cls_mobile.onnx "$RAPIDOCR_URL/cls/ch_ppocr_mobile_v2.0_cls_mobile.onnx" \
+    && curl -fsSL -o ch_PP-OCRv4_rec_mobile.onnx "$RAPIDOCR_URL/rec/ch_PP-OCRv4_rec_mobile.onnx" \
+    && printf '%s\n' \
+        "d2a7720d45a54257208b1e13e36a8479894cb74155a5efe29462512d42f49da9  ch_PP-OCRv4_det_mobile.onnx" \
+        "e47acedf663230f8863ff1ab0e64dd2d82b838fceb5957146dab185a89d6215c  ch_ppocr_mobile_v2.0_cls_mobile.onnx" \
+        "48fc40f24f6d2a207a2b1091d3437eb3cc3eb6b676dc3ef9c37384005483683b  ch_PP-OCRv4_rec_mobile.onnx" \
+       | sha256sum -c -
+
+# The tzdata 2025.2 wheel's zoneinfo tree: Python's zoneinfo falls back to it for
+# keys the system tzdata lacks (US/Eastern and the other legacy names).
+ARG TZDATA_URL=https://files.pythonhosted.org/packages/5c/23/c7abc0ca0a1526a0774eca151daeb8de62ec457e77262b66b359c3c7679e/tzdata-2025.2-py2.py3-none-any.whl
+ARG TZDATA_SHA256=1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8
+RUN curl -fsSL -o /tmp/tzdata.whl "$TZDATA_URL" \
+    && echo "${TZDATA_SHA256}  /tmp/tzdata.whl" | sha256sum -c - \
+    && unzip -q /tmp/tzdata.whl 'tzdata/zoneinfo/*' -d /opt \
+    && rm /tmp/tzdata.whl \
+    && test -f /opt/tzdata/zoneinfo/US/Eastern
+
+# ---------------------------------------------------------------------------
+# The Python fallback image. Fonts for Pillow's renders (DejaVu: Latin + Cyrillic,
+# Noto Sans CJK, Noto Sans Thai in fonts-noto-core), libGL + glib for RapidOCR's
+# OpenCV, the JRE for FFDec, git.
+FROM python:3.13-slim-trixie AS python
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-# Fonts for the server-rendered images (Pillow ships no bundled font): DejaVu for
-# Latin + Cyrillic, Noto Sans CJK for Japanese/Chinese and Noto Sans Thai (in
-# fonts-noto-core) for Thai (localized board/announcement banners). Without them,
-# JA/ZH/TH glyphs render as tofu boxes.
-# Fonts (above) plus the OpenCV runtime libs RapidOCR/onnxruntime need for the
-# self-hosted character-stat OCR (libGL + glib); without them the import fails with
-# "libGL.so.1: cannot open shared object file".
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         fonts-dejavu-core fonts-noto-cjk fonts-noto-core libgl1 libglib2.0-0 \
         default-jre-headless git \
     && rm -rf /var/lib/apt/lists/*
 
-# JPEXS FFDec, the ActionScript decompiler behind the Mods Hub code view (see
-# app/trove/swf/decompile.py). The JRE above is here for this and nothing else.
-#
-# Pinned by version AND checksum: this runs over .swf files strangers upload, so
-# what lands in the image has to be exactly the build that was reviewed, not
-# whatever the release page serves on the day of a rebuild. Bump both together -
-# and bump bp_cache.SCRIPT_VERSION with them if the new build's output is worth
-# rebuilding the cached source for.
-#
-# It ships as a jar plus a lib/ tree its manifest classpath points at, so the whole
-# archive is extracted, not just the jar.
-ARG FFDEC_VERSION=26.2.1
-ARG FFDEC_SHA256=0333b56998a55bd83f4e0deb678a811fcdc45607582b4f5dd438309c8c3ad5ce
-RUN python -c 'import hashlib,io,sys,urllib.request,zipfile;v=sys.argv[1];w=sys.argv[2];u="https://github.com/jindrapetrik/jpexs-decompiler/releases/download/version"+v+"/ffdec_"+v+".zip";b=urllib.request.urlopen(u,timeout=300).read();g=hashlib.sha256(b).hexdigest();sys.exit("ffdec checksum mismatch: "+g) if g!=w else None;zipfile.ZipFile(io.BytesIO(b)).extractall("/opt/ffdec")' \
-        "$FFDEC_VERSION" "$FFDEC_SHA256" \
-    && test -f /opt/ffdec/ffdec.jar
-
-# Install dependencies first so they cache independently of source changes.
 COPY requirements.txt constraints.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -c constraints.txt
 
-# Bake the RapidOCR models into the image so the OCR endpoint needs no network
-# (and no writable cache) at runtime - otherwise the first /v1/ocr/character call
-# would download ~15 MB of ONNX models. Constructing RapidOCR() fetches them.
+# Bake the RapidOCR models so the OCR endpoint needs no network at runtime.
 RUN python -c "from rapidocr import RapidOCR; RapidOCR()"
 
-# kiwi-server's OCR (ort, load-dynamic) runs the very onnxruntime build and ONNX
-# files Python uses: the pinned wheel's own libonnxruntime and the models above.
+# kiwi-server in this image (the parity sandbox) runs the wheel's onnxruntime.
 ENV KIWI_ORT_DYLIB=/usr/local/lib/python3.13/site-packages/onnxruntime/capi/libonnxruntime.so.1.26.0 \
     KIWI_OCR_MODEL_DIR=/usr/local/lib/python3.13/site-packages/rapidocr/models
 RUN test -f "$KIWI_ORT_DYLIB" \
     && for m in ch_PP-OCRv4_det_mobile ch_ppocr_mobile_v2.0_cls_mobile ch_PP-OCRv4_rec_mobile; do \
         test -f "$KIWI_OCR_MODEL_DIR/$m.onnx" || exit 1; done
 
-COPY --from=native /wheels /tmp/wheels
+COPY --from=fetch /opt/ffdec /opt/ffdec
+
+COPY --from=wheel /wheels /tmp/wheels
 RUN pip install --no-cache-dir /tmp/wheels/*.whl && rm -rf /tmp/wheels
 
-COPY --from=native /out/kiwi-server /usr/local/bin/kiwi-server
-COPY --from=native /out/kiwi-bot /usr/local/bin/kiwi-bot
-COPY --from=native /out/kiwi-web /usr/local/bin/kiwi-web
+COPY --from=native /out/ /usr/local/bin/
 
 COPY app ./app
 
 EXPOSE 8000
 
-# The Python app on its own (compose runs kiwi-server as `api` and this as `api-py`).
-# --proxy-headers: trust X-Forwarded-For only from $FORWARDED_ALLOW_IPS (uvicorn reads
-# it; default 127.0.0.1), so request.client.host is the real client, not the proxy.
+# --proxy-headers: trust X-Forwarded-For only from $FORWARDED_ALLOW_IPS.
 # --timeout-graceful-shutdown: the endless SSE streams would otherwise hold the
-# graceful shutdown open until docker's stop timeout SIGKILLs us (see compose).
+# graceful shutdown open until docker's stop timeout SIGKILLs us.
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
      "--proxy-headers", \
      "--timeout-graceful-shutdown", "3"]
 
 # ---------------------------------------------------------------------------
-# The custom art worker, which is the app image plus SteamCMD.
+# The Rust image: api (kiwi-server), web (kiwi-web) and bot (kiwi-bot).
+# ca-certificates, netbase and tzdata are what python:slim adds to Debian; LANG
+# keeps the JVM's file-name encoding UTF-8 like there.
+FROM debian:trixie-slim AS rust
+ARG ORT_VERSION
+ENV LANG=C.UTF-8
+RUN mkdir -p /usr/share/man/man1 \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates netbase tzdata \
+        fonts-dejavu-core fonts-noto-cjk fonts-noto-core \
+        default-jre-headless git \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=fetch /opt/ffdec /opt/ffdec
+COPY --from=fetch /opt/onnxruntime/lib /opt/onnxruntime/lib
+COPY --from=fetch /opt/rapidocr/models /opt/rapidocr/models
+COPY --from=fetch /opt/tzdata/zoneinfo /opt/tzdata/zoneinfo
+ENV KIWI_ORT_DYLIB=/opt/onnxruntime/lib/libonnxruntime.so.${ORT_VERSION} \
+    KIWI_OCR_MODEL_DIR=/opt/rapidocr/models \
+    KIWI_TZDATA_DIR=/opt/tzdata/zoneinfo
+
+# Everything the binaries read from app/ (relative to /app): the game data
+# baseline, the decoder sources code_version hashes, the Vorbis codebooks, the
+# baked rigs, the bot's locale overlay and the regional maintenance page.
+# site/ is bind-mounted.
+WORKDIR /app
+COPY app/trove/gamedata app/trove/gamedata
+COPY app/trove/mods_hub/rigs app/trove/mods_hub/rigs
+COPY app/trove/decode/*.py app/trove/decode/
+COPY app/trove/audio/packed_codebooks_aoTuV_603.bin app/trove/audio/
+COPY app/locales app/locales
+COPY app/geo_maintenance/maintenance.html app/geo_maintenance/
+
+COPY --from=native /out/ /usr/local/bin/
+
+EXPOSE 8000
+CMD ["kiwi-server"]
+
+# ---------------------------------------------------------------------------
+# The custom art worker: the rust image plus SteamCMD and what TroveUI's own
+# release scripts need, since the worker runs them (custom_art.py, release.py,
+# trovesaurus.py and each mod's build.py): a Python with the pinned Pillow,
+# requests, Beautiful Soup and pydantic, and the app.trove.tmod they import.
 #
 # It is a stage here rather than its own Dockerfile so it cannot be built against
-# a stale trove-app:latest: a separate file would have to FROM the tag the api
-# service publishes, and nothing orders the two builds.
-#
-# SteamCMD is a 32-bit binary, hence the i386 architecture and lib32gcc. The
-# login is NOT baked in - it lives in the steamcmd-home volume, put there once by
-# hand, and is read from $HOME/Steam at run time.
-FROM app AS builder
+# a stale image. SteamCMD is 32-bit, hence i386 and lib32gcc. The Steam login is
+# NOT baked in: it lives in the steamcmd-home volume, read from $HOME/Steam.
+FROM rust AS builder
 
 RUN dpkg --add-architecture i386 \
     && apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl lib32gcc-s1 \
+    && apt-get install -y --no-install-recommends curl lib32gcc-s1 python3-venv \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /opt/steamcmd \
     && curl -sSLf https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz \
        | tar zxf - -C /opt/steamcmd \
     && test -x /opt/steamcmd/steamcmd.sh
 
-COPY --from=native /out/kiwi-builder /usr/local/bin/kiwi-builder
+COPY constraints.txt /tmp/constraints.txt
+RUN python3 -m venv /opt/troveui \
+    && /opt/troveui/bin/pip install --no-cache-dir -c /tmp/constraints.txt \
+        pillow requests beautifulsoup4 pydantic \
+    && rm /tmp/constraints.txt
+COPY app/__init__.py app/
+COPY app/trove/__init__.py app/trove/tmod.py app/trove/troveio.py app/trove/mod_categories.py app/trove/
+ENV KIWI_BUILDER_PYTHON=/opt/troveui/bin/python
 
-# KIWI_BUILDER=rust runs the Rust worker; anything else keeps the Python one.
-CMD ["sh", "-c", "if [ \"$KIWI_BUILDER\" = rust ]; then exec kiwi-builder; fi; exec python -m app.custom_art.builder"]
+CMD ["kiwi-builder"]

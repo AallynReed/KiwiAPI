@@ -93,17 +93,24 @@ x-web-environment: &web-environment
   DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
   DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
 
+# The Rust containers (trove-rust image) carry the few files they read from app/
+# baked in; only the Python ones (trove-app image) bind-mount ./app, so host edits
+# reach them on a recreate. Python one-offs go through api-py:
+# `docker compose exec api-py python ...`.
 x-web-volumes: &web-volumes
-  - ./app:/app/app
   # Templates + static + ~20 MB of screenshots (same bind mount the api uses).
   - ./site:/app/site:ro
   - ./.gamedata:/data/gamedata:ro
   - ./.geoip:/data/geoip
 
-x-api-volumes: &api-volumes
-  # Bind-mount the source so host edits are picked up (api-py runs it; api has it
-  # for `docker compose exec api python ...`).
+# x-web-volumes plus ./app.
+x-web-py-volumes: &web-py-volumes
   - ./app:/app/app
+  - ./site:/app/site:ro
+  - ./.gamedata:/data/gamedata:ro
+  - ./.geoip:/data/geoip
+
+x-api-volumes: &api-volumes
   # Content-addressed blob store for the game-file archive (host: ./.game_updates).
   # Many GB once enabled - kept out of git and the image build context.
   - ./.game_updates:/data/updates
@@ -124,6 +131,36 @@ x-api-volumes: &api-volumes
   # Bind-mounted so the heavy binary assets don't bake into the image; the
   # api container serves trove.aallyn.net out of this directory.
   - ./site:/app/site:ro
+
+# x-api-volumes plus ./app.
+x-api-py-volumes: &api-py-volumes
+  - ./app:/app/app
+  - ./.game_updates:/data/updates
+  - ./.gamedata:/data/gamedata
+  - ./.backlog:/data/backlog
+  - ./.mods:/data/mods
+  - ./.drops:/data/drops
+  - ./.troveui.git:/data/troveui.git:ro
+  - ./site:/app/site:ro
+
+# Shared by bot (kiwi-bot) and bot-py (app.bot.runner).
+x-bot-environment: &bot-environment
+  MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
+  MONGO_DB: ${MONGO_DB:-kiwi}
+  REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+  GAMEDATA_DIR: /data/gamedata
+  SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
+  DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+  DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+  # Read Postgres-backed data (activity) from the API over the compose network -
+  # the bot has no Postgres. Points at the api service; depends_on it below.
+  INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+  # Same off-site-render base as the api (the bot builds board/announcement
+  # embeds too). Empty => app_url. Set to the api host at cutover.
+  ASSET_BASE_URL: ${ASSET_BASE_URL:-}
+  # rust: bot runs kiwi-bot; anything else: bot-py runs app.bot.runner. The other
+  # one idles, so only one ever holds the bot token.
+  KIWI_BOT: ${KIWI_BOT:-python}
 
 services:
   mongo:
@@ -230,18 +267,16 @@ services:
       options: { max-size: "10m", max-file: "3" }
 
   api:
-    # ONE image for api + bot + web (they're the same build, different commands).
-    # Only this service builds it; bot/web just reference the tag below. Compose
-    # runs the whole build phase before creating any container, so the tag always
-    # exists by the time they start. Building it three times cost ~3x the image
-    # export on every deploy for three byte-identical 1.8 GB images.
-    # target: the Dockerfile has a second stage for the custom art worker, and a
-    # bare "build: ." would build the LAST stage - putting SteamCMD in api, bot and
-    # web as well.
+    # ONE Rust image (Dockerfile target rust, no Python) for api + web + bot, and
+    # one Python image (target python) for api-py + web-py + bot-py. Only api and
+    # api-py build them; the rest reference the tags. Compose runs the whole build
+    # phase before creating any container, so the tags always exist by the time
+    # they start. target matters: a bare "build: ." would build the LAST stage,
+    # the custom art worker with SteamCMD.
     build:
       context: .
-      target: app
-    image: trove-app:latest
+      target: rust
+    image: trove-rust:latest
     restart: unless-stopped
     # One container fronted by two hostnames at the reverse proxy, both -> :15546:
     #   api.aallyn.net -> only /v1 + /health   (production API)
@@ -284,7 +319,10 @@ services:
 
   # The Python app, now behind kiwi-server. No published port: only api reaches it.
   api-py:
-    image: trove-app:latest   # built by the api service (same image, different command)
+    build:
+      context: .
+      target: python
+    image: trove-app:latest
     restart: unless-stopped
     environment: *api-environment
     depends_on:
@@ -297,7 +335,7 @@ services:
     # Lets the container reach the host's Postfix as host.docker.internal.
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    volumes: *api-volumes
+    volumes: *api-py-volumes
     # NOTE: no --reload. It's a dev-only flag - it restarts the worker on any
     # .py change (deploys touch those constantly), which kills in-flight
     # leaderboard ingests + the cache warmer mid-pass. Use ./deploy.sh (it
@@ -324,29 +362,14 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
-  # Kiwi gateway bot (discord.py): a separate always-on process sharing the same
-  # image + Mongo as the api. Handles proactive Discord work (hourly-challenge
-  # announcements now; guild/role events later). Slash commands still go to the
-  # api's HTTP interactions endpoint - this is the gateway side only.
+  # Kiwi gateway bot: a separate always-on process sharing Mongo with the api.
+  # Handles proactive Discord work (announcements, live boards, guild/role events).
+  # Slash commands still go to the api's HTTP interactions endpoint - this is the
+  # gateway side only. KIWI_BOT picks which of bot / bot-py runs it.
   bot:
-    image: trove-app:latest   # built by the api service (same image, different command)
+    image: trove-rust:latest   # built by the api service
     restart: unless-stopped
-    environment:
-      MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
-      MONGO_DB: ${MONGO_DB:-kiwi}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
-      GAMEDATA_DIR: /data/gamedata
-      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
-      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
-      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
-      # Read Postgres-backed data (activity) from the API over the compose network -
-      # the bot has no Postgres. Points at the api service; depends_on it below.
-      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
-      # Same off-site-render base as the api (the bot builds board/announcement
-      # embeds too). Empty => app_url. Set to the api host at cutover.
-      ASSET_BASE_URL: ${ASSET_BASE_URL:-}
-      # rust: the kiwi-bot binary; anything else: app.bot.runner. Never both (one bot token).
-      KIWI_BOT: ${KIWI_BOT:-python}
+    environment: *bot-environment
     depends_on:
       mongo:
         condition: service_healthy
@@ -356,18 +379,37 @@ services:
       # internal_get calls fail gracefully if the API is briefly down.
       api:
         condition: service_started
-    # Bind-mount source like the api so a deploy = sync + recreate.
+    volumes:
+      - ./.gamedata:/data/gamedata:ro
+    command: ["sh", "-c", "if [ \"$$KIWI_BOT\" = rust ]; then exec kiwi-bot; fi; echo \"KIWI_BOT=$$KIWI_BOT: bot-py runs the bot\"; trap 'exit 0' TERM INT; sleep infinity & wait"]
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # The Python gateway bot (app.bot.runner), the fallback while KIWI_BOT is not rust.
+  bot-py:
+    image: trove-app:latest   # built by the api-py service
+    restart: unless-stopped
+    environment: *bot-environment
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
     volumes:
       - ./app:/app/app
       - ./.gamedata:/data/gamedata:ro
-    command: ["sh", "-c", "if [ \"$$KIWI_BOT\" = rust ]; then exec kiwi-bot; fi; exec python -m app.bot.runner"]
+    command: ["sh", "-c", "if [ \"$$KIWI_BOT\" != rust ]; then exec python -m app.bot.runner; fi; echo 'KIWI_BOT=rust: bot runs the bot'; trap 'exit 0' TERM INT; sleep infinity & wait"]
     mem_limit: 512m
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
   # BetterTroveTools showcase website (trove.aallyn.net) - the presentation plane,
-  # split out from the api. Same image (build: .), different entrypoint: it renders
+  # split out from the api. Same Rust image, different entrypoint: it renders
   # the HTML pages + serves /static and holds NO database connection. Server-side
   # it fetches dynamic data from the api over the compose network (OG meta, the
   # browse/clubs/support first paint, feature-flag gating, the sitemap); in the
@@ -377,7 +419,7 @@ services:
   # proxies the rest to web-py, the way api fronts api-py. KIWI_WEB_PROXY_ALL=1 in
   # .env sends every website request to Python again; KIWI_WEB_NATIVE_FALLBACK=1 none.
   web:
-    image: trove-app:latest   # built by the api service (same image, different command)
+    image: trove-rust:latest   # built by the api service
     restart: unless-stopped
     ports:
       - "${BIND_ADDR:-127.0.0.1}:15547:8000"
@@ -408,13 +450,13 @@ services:
   # --forwarded-allow-ips "*": its only peer is kiwi-web, which REPLACES
   # X-Forwarded-For with the one client it resolved. Safe only while unpublished.
   web-py:
-    image: trove-app:latest   # built by the api service (same image, different command)
+    image: trove-app:latest   # built by the api-py service
     restart: unless-stopped
     environment: *web-environment
     depends_on:
       api:
         condition: service_started
-    volumes: *web-volumes
+    volumes: *web-py-volumes
     command: ["uvicorn", "app.web.main:app", "--host", "0.0.0.0", "--port", "8000",
               "--proxy-headers", "--forwarded-allow-ips", "*", "--timeout-keep-alive", "120"]
     mem_limit: 512m
@@ -422,14 +464,14 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
-  # Custom art release worker (app/custom_art/builder.py). Builds Zakros UI Chat and
-  # Nameplate from a TroveUI checkout with the Flex SDK in ./.flex and publishes them
+  # Custom art release worker (kiwi-builder). Builds Zakros UI Chat, Nameplate and
+  # Clubs from a TroveUI checkout with the Flex SDK in ./.flex and publishes them
   # silently. ./.troveui.git is the bare repo the author pushes TroveUI to and pulls
   # the worker's commits from; ./.troveui.env holds API_TOKEN and the Trovesaurus login.
   builder:
-    # Its own image: the app image plus SteamCMD (Dockerfile stage "builder"), so
-    # the worker can push a workshop update itself instead of leaving every release
-    # for someone to send by hand.
+    # Its own image: the Rust image plus SteamCMD and TroveUI's release tooling
+    # (Dockerfile stage "builder"), so the worker can push a workshop update itself
+    # instead of leaving every release for someone to send by hand.
     build:
       context: .
       target: builder
@@ -446,6 +488,7 @@ services:
       CUSTOM_ART_WORKSPACE: /data/custom-art
       CUSTOM_ART_REMOTE: /data/troveui.git
       CUSTOM_ART_ENV_FILE: /run/troveui.env
+      # TroveUI's scripts import app.trove.tmod from here (the image carries it).
       TROVEAPI: /app
       PYTHONPATH: /app
       FFDEC: /opt/ffdec/ffdec.jar
@@ -455,13 +498,11 @@ services:
       GIT_COMMITTER_NAME: ${GIT_AUTHOR_NAME:-Aallyn}
       GIT_COMMITTER_EMAIL: ${GIT_AUTHOR_EMAIL:-support@aallyn.net}
       CUSTOM_ART_STEAM_USER: ${CUSTOM_ART_STEAM_USER:-}
-      # rust: the kiwi-builder worker; anything else: app.custom_art.builder (the image CMD picks).
-      KIWI_BUILDER: ${KIWI_BUILDER:-python}
     depends_on:
       mongo:
         condition: service_healthy
     volumes:
-      - ./app:/app/app
+      # The Chat build reads site/static/commands.json.
       - ./site:/app/site:ro
       - ./.mods:/data/mods:ro
       - ./.game_updates:/data/updates:ro

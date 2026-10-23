@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Write parity on Zakros. Run from /opt/trove after `docker compose build api`.
+# Write parity on Zakros. Run from /opt/trove after `docker compose build api api-py`
+# (IMG trove-app carries Python and the kiwi binaries; RS_IMG=trove-rust:latest tests the Rust image).
 # Only the kp-* containers and kiwi-parity* networks below are created or
 # removed: never a trove_* container, the trove_default network or a production
 # data directory (app, .gamedata and site are mounted read-only).

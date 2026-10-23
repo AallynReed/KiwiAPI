@@ -111,6 +111,11 @@ curl http://127.0.0.1:15546/health   # {"status":"ok"}
 Data lives under `./data` (bind-mounted). There's no migration code: **when a model's
 indexes change, wipe the data dir** and rebuild.
 
+The api, web and bot containers run the Rust binaries from `trove-rust:latest`, a slim Debian
+image with no Python. The Python app still runs behind them as `api-py`, `web-py` and
+`bot-py` (`trove-app:latest`) until it is retired; run Python one-offs there
+(`docker compose exec api-py python ...`).
+
 ### Key configuration
 
 See `.env.example` for the full list.
@@ -124,7 +129,7 @@ See `.env.example` for the full list.
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | no | Bootstraps the master superuser on startup |
 | `SMTP_HOST` (+ `SMTP_*`, `MAIL_FROM`) | prod | Mail relay; if unset, email is logged instead of sent |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | no | Enables "Sign in with GitHub" |
-| `KIWI_BOT` | no | `rust` runs the Discord bot container on the Rust `kiwi-bot`; anything else keeps `app.bot.runner`. Only one ever runs (`docker compose up -d bot` after changing it) |
+| `KIWI_BOT` | no | `rust` runs the Discord gateway bot in the `bot` container (Rust `kiwi-bot`); anything else runs it in `bot-py` (`app.bot.runner`). The other one idles, so only one ever runs (`docker compose up -d bot bot-py` after changing it) |
 
 ### Behind a reverse proxy
 

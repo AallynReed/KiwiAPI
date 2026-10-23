@@ -1,0 +1,21 @@
+[
+ {"name": "health", "path": "/health"},
+ {"name": "gamedata_baseline_stats", "path": "/v1/stats/classes", "headers": {"Authorization": "Bearer ${KIWI_PARITY_TOKEN}"}},
+ {"name": "gamedata_baseline_tomes", "path": "/site/tomes"},
+ {"name": "gamedata_sigil", "path": "/v1/stats/sigil?power_rank=40000&mastery=500"},
+ {"name": "decode_code_versions", "path": "/admin/gamedata", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
+ {"name": "rigs_graph", "path": "/site/rigs/adventurer/graph", "compare_headers": ["content-length"]},
+ {"name": "rigs_anim", "path": "/v1/mods/hub/rigs/adventurer/anim/mount_balance_idle"},
+ {"name": "fonts_locales_ru", "path": "/board.png?lang=ru&v=2"},
+ {"name": "fonts_locales_ja", "path": "/board.png?lang=ja&v=2"},
+ {"name": "fonts_locales_th", "path": "/board.png?lang=th&v=2"},
+ {"name": "bnk_manifest", "path": "/site/updates/live-us/file/bnk?path=audio/ui.bnk", "capture": {"SND_ID": "sounds[0].id"}},
+ {"name": "codebooks_bnk_audio", "path": "/site/updates/live-us/file/bnk/audio?path=audio/ui.bnk&id=${SND_ID}"},
+ {"name": "hub_pick", "path": "/v1/mods/hub/projects?sort=downloads&limit=3",
+  "capture": {"H": "items[0].handle", "S": "items[0].slug"}},
+ {"name": "releases", "path": "/v1/mods/hub/projects/${H}/${S}/releases", "capture": {"R": "items[0].id"}},
+ {"name": "ffdec_java_available", "path": "/v1/mods/hub/releases/${R}/swfs"},
+ {"name": "git_upload_pack", "path": "/git/mods/${H}/${S}.git/info/refs?service=git-upload-pack",
+  "compare_headers": ["www-authenticate", "pragma"], "allow_diff": ["body"],
+  "reason": "git's ref advertisement differs from dulwich's; the status shows git ran"}
+]

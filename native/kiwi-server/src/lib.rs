@@ -82,3 +82,5 @@ pub mod workshop;
 mod coverage_tests;
 #[cfg(test)]
 mod foundation_golden;
+#[cfg(test)]
+mod image_tests;

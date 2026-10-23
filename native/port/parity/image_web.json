@@ -1,0 +1,15 @@
+[
+ {"name": "health", "path": "/health"},
+ {"name": "mime_css", "path": "/static/style.min.css", "compare_headers": ["etag", "last-modified", "content-length"]},
+ {"name": "mime_js", "path": "/static/_site_util.min.js"},
+ {"name": "mime_json", "path": "/static/commands.json"},
+ {"name": "mime_md", "path": "/static/swf-docs/README.md"},
+ {"name": "mime_woff2", "path": "/static/fonts/inter-greek-400.woff2", "compare_headers": ["content-length"]},
+ {"name": "mime_png", "path": "/static/class-icons/bard.png", "compare_headers": ["content-length"]},
+ {"name": "mime_webp", "path": "/static/trove-screens/loading_conversion.webp", "compare_headers": ["content-length"]},
+ {"name": "mime_txt", "path": "/static/vendor/lame.LICENSE.txt"},
+ {"name": "gamedata_pvp", "path": "/gamedata/pvp.json", "compare_headers": ["etag", "last-modified", "accept-ranges"]},
+ {"name": "gamedata_gear", "path": "/gamedata/gear.json", "compare_headers": ["etag", "last-modified"]},
+ {"name": "gamedata_gem_upgrades", "path": "/gamedata/gem_upgrades.json", "compare_headers": ["etag", "last-modified"]},
+ {"name": "home", "path": "/"}
+]

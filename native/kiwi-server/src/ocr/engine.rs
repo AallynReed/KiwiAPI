@@ -1,9 +1,9 @@
 //! The three onnxruntime sessions, loaded once on first use like
 //! `engine._get_engine()`, with RapidOCR's session options.
 //!
-//! `KIWI_ORT_DYLIB` names the onnxruntime shared library (the Python wheel's
-//! `libonnxruntime.so.1.26.0`, so both servers run the same build) and
-//! `KIWI_OCR_MODEL_DIR` the folder holding RapidOCR's three ONNX files.
+//! `KIWI_ORT_DYLIB` names the onnxruntime shared library (1.26.0, the version
+//! Python pins) and `KIWI_OCR_MODEL_DIR` the folder holding RapidOCR's three
+//! ONNX files; the defaults are where the Rust image puts them.
 
 use std::{
     path::{Path, PathBuf},
@@ -22,8 +22,8 @@ pub const DET: &str = "ch_PP-OCRv4_det_mobile.onnx";
 pub const CLS: &str = "ch_ppocr_mobile_v2.0_cls_mobile.onnx";
 pub const REC: &str = "ch_PP-OCRv4_rec_mobile.onnx";
 
-const DEFAULT_DYLIB: &str = "/usr/local/lib/python3.13/site-packages/onnxruntime/capi/libonnxruntime.so.1.26.0";
-const DEFAULT_MODELS: &str = "/usr/local/lib/python3.13/site-packages/rapidocr/models";
+pub const DEFAULT_DYLIB: &str = "/opt/onnxruntime/lib/libonnxruntime.so.1.26.0";
+pub const DEFAULT_MODELS: &str = "/opt/rapidocr/models";
 
 pub struct OrtEngine {
     det: Mutex<Session>,

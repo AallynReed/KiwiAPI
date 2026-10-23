@@ -31,11 +31,15 @@
 # replaced bind-mounted directory can never leave them serving a stale/empty
 # mount (403).
 #
-# The api service is kiwi-server (Rust, built in the image) in front of api-py
-# (the Python app). Python's logs are under `api-py`. KIWI_PROXY_ALL=1 in .env,
-# then `./deploy.sh --no-pull --no-build`, sends every route back to Python.
-# The web service is kiwi-web in front of web-py the same way; KIWI_WEB_PROXY_ALL=1
-# sends every website request back to Python.
+# Images: trove-rust (api, web, bot; no Python), trove-builder (the rust image plus
+# SteamCMD) and trove-app (the Python fallback: api-py, web-py, bot-py).
+# The api service is kiwi-server in front of api-py (the Python app). Python's logs
+# are under `api-py`. KIWI_PROXY_ALL=1 in .env, then `./deploy.sh --no-pull
+# --no-build`, sends every route back to Python. The web service is kiwi-web in
+# front of web-py the same way; KIWI_WEB_PROXY_ALL=1 sends every website request
+# back to Python. KIWI_BOT=rust runs the gateway bot in `bot`, anything else in
+# `bot-py`. The Rust images bake in what they read from app/ (game data baseline,
+# rigs, locales...), so --no-build leaves them on the files of the last build.
 #
 set -euo pipefail
 
@@ -172,7 +176,7 @@ fi
 
 if [ "$PRUNE" -eq 1 ]; then
   echo ">> cleaning up old images + build cache"
-  # Dangling images = the previous app image, left untagged by each rebuild.
+  # Dangling images = the previous images, left untagged by each rebuild.
   # Safe: nothing references them once the new image is tagged + running.
   docker image prune -f >/dev/null 2>&1 || true
   # Cap the BuildKit cache so it can't balloon over time, but KEEP recent layers
@@ -187,7 +191,7 @@ fi
 echo
 $COMPOSE ps
 echo
-echo "Done. api -> 127.0.0.1:15546 (kiwi-server; Python behind it as api-py)   web -> 127.0.0.1:15547 (kiwi-web; web-py behind it)   docs -> 127.0.0.1:25468"
+echo "Done. api -> 127.0.0.1:15546 (kiwi-server, trove-rust; Python behind it as api-py)   web -> 127.0.0.1:15547 (kiwi-web; web-py behind it)   docs -> 127.0.0.1:25468"
 
 if [ "$FOLLOW" -eq 1 ]; then
   echo ">> following logs (Ctrl-C to stop)"

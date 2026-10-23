@@ -1,10 +1,10 @@
 # Production overrides. Apply with:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 #
-# Runs the Python app with several uvicorn workers. Code still comes from the
-# ./app bind mount (synced), so a deploy = sync + recreate; for fully immutable
-# deploys, bake the image instead. kiwi-server (api) and kiwi-web (web) need no
-# override: each is one multi-threaded process.
+# Runs the Python fallback (trove-app image) with several uvicorn workers; its code
+# comes from the ./app bind mount. The Rust services (trove-rust image: api, web,
+# bot; trove-builder) need no override: each is one multi-threaded process, and
+# what they read from app/ is baked in, so they pick up changes only on a rebuild.
 services:
   api-py:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000",
