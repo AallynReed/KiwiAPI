@@ -221,7 +221,7 @@ fn u16_at(b: &[u8], at: usize) -> Option<u16> {
 }
 
 /// `_iter_sprite_tags`: the nested body may come up short; the End tag stops.
-fn sprite_tags(body: &[u8]) -> Vec<(u16, &[u8])> {
+pub(crate) fn sprite_tags(body: &[u8]) -> Vec<(u16, &[u8])> {
     let mut out = Vec::new();
     let b = body.get(4..).unwrap_or(&[]);
     let mut p = 0;
@@ -327,18 +327,18 @@ fn inflate_strict(data: &[u8]) -> Option<Vec<u8>> {
     z.eof.then_some(z.data)
 }
 
-struct Decoded {
+pub(crate) struct Decoded {
     char_id: u16,
-    rgba: Vec<u8>,
-    width: usize,
-    height: usize,
+    pub(crate) rgba: Vec<u8>,
+    pub(crate) width: usize,
+    pub(crate) height: usize,
     codec: String,
     original: Option<Vec<u8>>,
     icc: Option<Vec<u8>>,
 }
 
 /// `_decode_lossless`; None where Python raises (the tag is skipped).
-fn decode_lossless(body: &[u8], tag: u16) -> Option<Decoded> {
+pub(crate) fn decode_lossless(body: &[u8], tag: u16) -> Option<Decoded> {
     if body.len() < 7 {
         return None;
     }
@@ -384,7 +384,7 @@ fn replace_once(hay: &[u8], needle: &[u8]) -> Option<Vec<u8>> {
 }
 
 /// `_decode_jpeg`; None where Python raises (the tag is skipped).
-fn decode_jpeg(body: &[u8], tag: u16, tables: Option<&[u8]>) -> Option<Decoded> {
+pub(crate) fn decode_jpeg(body: &[u8], tag: u16, tables: Option<&[u8]>) -> Option<Decoded> {
     let char_id = u16_at(body, 0)?;
     let mut off = 2;
     let (mut payload, alpha_blob): (Vec<u8>, &[u8]) = if tag == 35 || tag == 90 {

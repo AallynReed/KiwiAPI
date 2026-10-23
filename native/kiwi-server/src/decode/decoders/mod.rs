@@ -15,6 +15,7 @@ pub mod fish;
 pub mod gear;
 pub mod gem_abilities;
 pub mod gem_upgrades;
+pub mod insignia;
 pub mod items;
 pub mod leaderboards;
 pub mod lootbox_odds;

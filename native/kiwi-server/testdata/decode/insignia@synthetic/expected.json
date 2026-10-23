@@ -1,0 +1,26 @@
+{
+ "size": [
+  10,
+  6
+ ],
+ "mastery": [
+  {
+   "from": 0,
+   "image": "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAAJklEQVR42mNgwAJOyMn9r2f438BACKj7lzsw/Gf4X7///wmGIQQAvsUKMiU0jtUAAAAASUVORK5CYII="
+  },
+  {
+   "from": 10,
+   "image": "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAAOklEQVR42mNgQAJcInL/f3149p8BC2BC5nzLeYgieUJO7n89w/8GBkJA3b/cgeE/w//6/f9PMAwcAAD7JBGB6ETJpAAAAABJRU5ErkJggg=="
+  }
+ ],
+ "power_rank": [
+  {
+   "from": 0,
+   "image": "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAAJUlEQVR42mNgGHgQteDO/83//zcwMDAw/P//3wFdnolYg4hWCADgwAlIO7oMQwAAAABJRU5ErkJggg=="
+  },
+  {
+   "from": 250,
+   "image": "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAGCAYAAAD68A/GAAAAJklEQVR42mNgIBackJP7X8/wv4GgQnX/cgeG/wz/6/f/P8EwOAEA6LEKMlE0PesAAAAASUVORK5CYII="
+  }
+ ]
+}

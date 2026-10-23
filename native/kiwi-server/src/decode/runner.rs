@@ -5,8 +5,8 @@
 //! panel's Game data tab.
 //!
 //! The lock (`kiwi:decode:running`), the `decoder_runs` rows and the output
-//! files are shared with Python, which still runs decoders whose `build` is not
-//! ported. Unlike Python's, this lock is renewed while a run lasts.
+//! files are shared with Python's runner, the fallback. Unlike Python's, this
+//! lock is renewed while a run lasts.
 
 use std::{
     collections::HashMap,
@@ -174,7 +174,7 @@ async fn needs_run(state: &AppState, d: &Decoder, ordinal: i64) -> anyhow::Resul
 
 /// The post-sync hook: rebuild whatever is out of date for the live branch.
 /// The update archiver calls it after each branch sync (Python's
-/// `worker._sync_all_branches`). Decoders Python still builds are left to it.
+/// `worker._sync_all_branches`).
 pub async fn ensure_built(state: &AppState, branch: &str) -> anyhow::Result<()> {
     let settings = state.settings();
     if branch != settings.trove_render_branch || !enabled(settings) {
@@ -187,11 +187,7 @@ pub async fn ensure_built(state: &AppState, branch: &str) -> anyhow::Result<()> 
     let mut todo = Vec::new();
     for d in DECODERS {
         if needs_run(state, d, ordinal).await? {
-            if d.build.is_some() {
-                todo.push(d.name);
-            } else {
-                tracing::warn!("decode[{}]: out of date, but only Python builds it", d.name);
-            }
+            todo.push(d.name);
         }
     }
     if !todo.is_empty() {
@@ -305,7 +301,7 @@ async fn build(d: &'static Decoder, tree: Tree, baseline: PathBuf) -> Result<(St
     let spawned =
         std::thread::Builder::new().name(format!("decode-{}", d.name)).stack_size(64 << 20).spawn(move || {
             let out = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                let data: J = d.run(&tree, &baseline).expect("ported decoder")?;
+                let data: J = d.run(&tree, &baseline)?;
                 let n = (d.count)(&data).ok_or_else(|| DecodeError::key("count"))?;
                 Ok((d.dump(&data), n))
             }));

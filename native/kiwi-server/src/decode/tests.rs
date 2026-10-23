@@ -64,7 +64,7 @@ fn fixtures_match_python() {
         let d = registry::get(name).expect("decoder");
         let tree = dir_tree(&case.join("game"), d.prefixes);
         let want = String::from_utf8(std::fs::read(case.join("expected.json")).expect("expected.json")).expect("utf8");
-        let got = match d.run(&tree, &baseline()).expect("ported") {
+        let got = match d.run(&tree, &baseline()) {
             Ok(data) => d.dump(&data),
             Err(e) => format!("!{e}"),
         };
@@ -133,16 +133,46 @@ fn view_sample_matches_python() {
     assert!(bad.is_empty(), "{} differ: {:?}", bad.len(), &bad[..bad.len().min(20)]);
 }
 
-#[test]
-fn defers_unported_runs_to_python() {
-    use axum::http::{Method, Uri};
-    let run = |q: &str| super::routes::defers("/admin/gamedata/run", &Method::POST, &q.parse::<Uri>().unwrap());
-    assert!(run("/admin/gamedata/run"));
-    assert!(run("/admin/gamedata/run?name=insignia"));
-    assert!(run("/admin/gamedata/run?name=titles&name=insignia"));
-    assert!(!run("/admin/gamedata/run?name=titles"));
-    assert!(!run("/admin/gamedata/run?name=nope"));
-    assert!(!super::routes::defers("/admin/gamedata", &Method::GET, &"/admin/gamedata".parse::<Uri>().unwrap()));
+/// The web app's `HTTPException(404)` for a name it doesn't publish.
+#[tokio::test]
+async fn web_gamedata_unknown_name() {
+    use std::sync::Arc;
+
+    use axum::{body::Body, extract::Request};
+    use hyper_util::{client::legacy::Client, rt::TokioExecutor};
+    use tower::ServiceExt;
+
+    use crate::{
+        config::Settings,
+        db::Db,
+        state::{AppState, Inner},
+    };
+    let settings = Settings::from_vars([("PY_UPSTREAM", "http://py:8000")]).unwrap();
+    let upstream = Client::builder(TokioExecutor::new()).build_http();
+    let state =
+        AppState { inner: Arc::new(Inner { settings, db: Db { mongo: None, redis: None, pg: None }, upstream }) };
+    let app = super::routes::web_router().with_state(state);
+    let get = |path: &str, accept: Option<&str>| {
+        let mut req = Request::builder().uri(path);
+        if let Some(a) = accept {
+            req = req.header("accept", a);
+        }
+        let app = app.clone();
+        let req = req.body(Body::empty()).unwrap();
+        async move {
+            let resp = app.oneshot(req).await.unwrap();
+            let status = resp.status().as_u16();
+            let ctype = resp.headers()["content-type"].to_str().unwrap().to_owned();
+            let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+            (status, ctype, String::from_utf8(body.to_vec()).unwrap())
+        }
+    };
+    let (status, ctype, body) = get("/gamedata/insignia.json", Some("text/html,*/*")).await;
+    assert_eq!((status, ctype.as_str()), (404, "text/html; charset=utf-8"));
+    assert_eq!(body, crate::error::NOT_FOUND_HTML);
+    let (status, ctype, body) = get("/gamedata/nope.json", None).await;
+    assert_eq!((status, ctype.as_str()), (404, "application/json"));
+    assert!(body.starts_with(r#"{"error":{"code":"not_found","message":"Not Found","details":null"#), "{body}");
 }
 
 #[test]
@@ -250,7 +280,7 @@ fn full_tree_matches_python() {
             continue;
         }
         let t0 = std::time::Instant::now();
-        let Some(result) = d.run(&tree, &baseline()) else { continue };
+        let result = d.run(&tree, &baseline());
         let got = match result {
             Ok(data) => d.dump(&data),
             Err(e) => format!("!{e}"),

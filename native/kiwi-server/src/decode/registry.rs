@@ -64,8 +64,7 @@ pub struct Decoder {
     pub prefixes: &'static [&'static str],
     pub indent: Option<usize>,
     pub final_newline: bool,
-    /// `None`: not ported yet, Python still builds it.
-    pub build: Option<fn(&Ctx) -> Built>,
+    pub build: fn(&Ctx) -> Built,
     /// `module.count(data)`; `None` where Python raises.
     pub count: fn(&J) -> Option<usize>,
 }
@@ -80,9 +79,8 @@ impl Decoder {
         text
     }
 
-    pub fn run(&self, tree: &Tree, baseline: &Path) -> Option<Built> {
-        let build = self.build?;
-        Some(build(&Ctx { tree: tree.only(self.prefixes), baseline: baseline.to_path_buf() }))
+    pub fn run(&self, tree: &Tree, baseline: &Path) -> Built {
+        (self.build)(&Ctx { tree: tree.only(self.prefixes), baseline: baseline.to_path_buf() })
     }
 }
 
@@ -118,7 +116,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/class/"],
         Some(4),
         false,
-        Some(d::class_levels::build),
+        d::class_levels::build,
         count_len
     ),
     dec!(
@@ -128,7 +126,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/class/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/"],
         Some(4),
         false,
-        Some(d::class_abilities::build),
+        d::class_abilities::build,
         count_len
     ),
     dec!(
@@ -138,7 +136,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/"],
         Some(4),
         false,
-        Some(d::ally_abilities::build),
+        d::ally_abilities::build,
         count_len
     ),
     dec!(
@@ -148,7 +146,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/item/gem/large/", "prefabs/abilities/", "prefabs/class/", "prefabs/sfx/", "languages/en/"],
         Some(4),
         false,
-        Some(d::gem_abilities::build),
+        d::gem_abilities::build,
         count_len
     ),
     dec!(
@@ -158,7 +156,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/abilities/", "prefabs/class/", "prefabs/sfx/", "languages/en/"],
         Some(4),
         false,
-        Some(d::ring_abilities::build),
+        d::ring_abilities::build,
         count_len
     ),
     dec!(
@@ -168,7 +166,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/"],
         Some(4),
         false,
-        Some(d::mount_abilities::build),
+        d::mount_abilities::build,
         count_len
     ),
     dec!(
@@ -178,7 +176,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/pvp/data/stats/"],
         Some(1),
         true,
-        Some(d::pvp_stat_ranges::build),
+        d::pvp_stat_ranges::build,
         d::pvp_stat_ranges::count
     ),
     dec!(
@@ -188,7 +186,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/placeable/deco/delve/", "prefabs/abilities/delve/", "languages/en/"],
         Some(1),
         true,
-        Some(d::delve_modifiers::build),
+        d::delve_modifiers::build,
         |j| j.get("modifiers").map(J::len)
     ),
     dec!(
@@ -198,7 +196,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/collections/", "prefabs/item/", "prefabs/upgrade/", "prefabs/abilities/", "languages/en/"],
         Some(4),
         false,
-        Some(d::companions::build),
+        d::companions::build,
         count_len
     ),
     dec!(
@@ -208,7 +206,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/", "languages/en/", "Trove_x64.exe"],
         Some(4),
         false,
-        Some(d::badges::build),
+        d::badges::build,
         count_len
     ),
     dec!(
@@ -228,7 +226,7 @@ pub static DECODERS: &[Decoder] = &[
         ],
         Some(4),
         false,
-        Some(d::fish::build),
+        d::fish::build,
         |j| j.get("fish").map(J::len)
     ),
     dec!(
@@ -247,19 +245,12 @@ pub static DECODERS: &[Decoder] = &[
         ],
         Some(4),
         false,
-        Some(d::mementos::build),
+        d::mementos::build,
         |j| j.get("mementos").map(J::len)
     ),
-    dec!(
-        "recipes",
-        "Recipes",
-        "recipes.json",
-        ["prefabs/", "languages/en/"],
-        None,
-        true,
-        Some(d::recipes::build),
-        |j| Some(j.get("recipes").map_or(0, J::len))
-    ),
+    dec!("recipes", "Recipes", "recipes.json", ["prefabs/", "languages/en/"], None, true, d::recipes::build, |j| Some(
+        j.get("recipes").map_or(0, J::len)
+    )),
     dec!(
         "collectibles",
         "Wings, boats, sails and auras",
@@ -267,7 +258,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/collections/", "prefabs/abilities/", "prefabs/sfx/", "languages/en/", "particles/VFX/Particles/"],
         Some(4),
         false,
-        Some(d::collectibles::build),
+        d::collectibles::build,
         |j| j.as_dict().map(|m| m.values().map(J::len).sum())
     ),
     dec!(
@@ -277,10 +268,10 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/skins/", "prefabs/loot/", "prefabs/collections/", "prefabs/equipment/", "languages/en/"],
         Some(4),
         false,
-        Some(d::cosmetics::build),
+        d::cosmetics::build,
         d::cosmetics::count
     ),
-    dec!("titles", "Titles", "titles.json", ["languages/en/"], Some(4), false, Some(d::titles::build), count_len),
+    dec!("titles", "Titles", "titles.json", ["languages/en/"], Some(4), false, d::titles::build, count_len),
     dec!(
         "npcs",
         "NPCs and bosses",
@@ -295,7 +286,7 @@ pub static DECODERS: &[Decoder] = &[
         ],
         None,
         true,
-        Some(d::npcs::build),
+        d::npcs::build,
         |j| j.get("npcs").map(J::len)
     ),
     dec!(
@@ -319,7 +310,7 @@ pub static DECODERS: &[Decoder] = &[
         ],
         None,
         true,
-        Some(d::placeables::build),
+        d::placeables::build,
         count_placeables
     ),
     dec!(
@@ -329,7 +320,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/", "languages/en/", "Trove_x64.exe"],
         Some(4),
         false,
-        Some(d::quests::build),
+        d::quests::build,
         count_groups
     ),
     dec!(
@@ -347,7 +338,7 @@ pub static DECODERS: &[Decoder] = &[
         ],
         None,
         true,
-        Some(d::worlds::build),
+        d::worlds::build,
         count_worlds
     ),
     dec!(
@@ -357,7 +348,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/class/", "prefabs/abilities/subclass/", "languages/en/"],
         Some(4),
         false,
-        Some(d::subclass_abilities::build),
+        d::subclass_abilities::build,
         count_len
     ),
     dec!(
@@ -367,7 +358,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/loot/", "ui/", "languages/en/"],
         Some(1),
         true,
-        Some(d::daily_bonuses::build),
+        d::daily_bonuses::build,
         |j| j.get("days").map(J::len)
     ),
     dec!(
@@ -377,7 +368,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/leaderboard/", "languages/en/", "Trove_x64.exe"],
         Some(1),
         true,
-        Some(d::leaderboards::build),
+        d::leaderboards::build,
         |j| j.get("boards").map(J::len)
     ),
     dec!(
@@ -387,7 +378,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/gems/meta/", "prefabs/item/gem/", "prefabs/item/crafting/", "languages/en/"],
         Some(1),
         true,
-        Some(d::gem_upgrades::build),
+        d::gem_upgrades::build,
         |j| j.get("gems").map(J::len)
     ),
     dec!(
@@ -404,10 +395,10 @@ pub static DECODERS: &[Decoder] = &[
         ],
         Some(1),
         true,
-        Some(d::upgrade_trees::build),
+        d::upgrade_trees::build,
         count_upgrade_trees
     ),
-    dec!("items", "Items", "items.json", ["prefabs/", "languages/en/"], None, true, Some(d::items::build), |j| j
+    dec!("items", "Items", "items.json", ["prefabs/", "languages/en/"], None, true, d::items::build, |j| j
         .get("items")
         .map(J::len)),
     dec!(
@@ -417,7 +408,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/meta/", "prefabs/claim/", "prefabs/collections/", "prefabs/item/", "languages/en/"],
         None,
         true,
-        Some(d::mastery::build),
+        d::mastery::build,
         count_mastery
     ),
     dec!(
@@ -427,7 +418,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/class/", "prefabs/claim/", "prefabs/abilities/", "prefabs/item/", "languages/en/"],
         Some(1),
         true,
-        Some(d::class_rewards::build),
+        d::class_rewards::build,
         count_class_rewards
     ),
     dec!(
@@ -437,7 +428,7 @@ pub static DECODERS: &[Decoder] = &[
         ["languages/en/"],
         Some(1),
         true,
-        Some(d::lootbox_odds::build),
+        d::lootbox_odds::build,
         |j| j.get("boxes").map(J::len)
     ),
     dec!(
@@ -447,7 +438,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/pvp/", "prefabs/abilities/", "prefabs/effects/", "prefabs/sfx/", "languages/en/"],
         Some(1),
         true,
-        Some(d::pvp_powerups::build),
+        d::pvp_powerups::build,
         |j| j.get("powerups").map(J::len)
     ),
     dec!(
@@ -457,7 +448,7 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/"],
         Some(1),
         true,
-        Some(d::chat_commands::build),
+        d::chat_commands::build,
         |j| j.get("commands").map(J::len)
     ),
     dec!(
@@ -467,8 +458,8 @@ pub static DECODERS: &[Decoder] = &[
         ["prefabs/meta/insignia.binfab", "ui/nameplate.swf"],
         Some(1),
         true,
-        None,
-        |j| Some(j.get("power_rank").map_or(0, J::len) + j.get("mastery").map_or(0, J::len))
+        d::insignia::build,
+        d::insignia::count
     ),
     dec!(
         "gear",
@@ -486,7 +477,7 @@ pub static DECODERS: &[Decoder] = &[
         ],
         Some(1),
         true,
-        Some(d::gear::build),
+        d::gear::build,
         |j| Some(j.get("rarities").map_or(0, J::len) + j.get("banners").map_or(0, J::len))
     ),
 ];

@@ -1,0 +1,10 @@
+[
+ {"name": "gamedata_pvp", "path": "/gamedata/pvp.json", "compare_headers": ["etag", "last-modified", "accept-ranges"]},
+ {"name": "gamedata_gem_upgrades", "path": "/gamedata/gem_upgrades.json", "compare_headers": ["etag", "last-modified", "accept-ranges"]},
+ {"name": "gamedata_gear", "path": "/gamedata/gear.json", "headers": {"Accept-Encoding": "gzip"}, "compare_headers": ["etag", "last-modified"]},
+ {"name": "gamedata_head", "method": "HEAD", "path": "/gamedata/gear.json", "compare_headers": ["etag", "last-modified", "content-length"]},
+ {"name": "gamedata_range", "path": "/gamedata/pvp.json", "headers": {"Range": "bytes=0-99"}, "compare_headers": ["content-range", "content-length", "etag"]},
+ {"name": "gamedata_private_json", "path": "/gamedata/insignia.json"},
+ {"name": "gamedata_private_browser", "path": "/gamedata/insignia.json", "headers": {"Accept": "text/html,*/*"}},
+ {"name": "gamedata_encoded_name", "path": "/gamedata/pvp%2Ejson", "compare_headers": ["etag"]}
+]

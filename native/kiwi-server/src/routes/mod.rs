@@ -92,7 +92,6 @@ async fn defer_to_python(State(state): State<AppState>, mut req: Request, next: 
         crate::lbread::defers(m, req.method(), req.uri().path())
             || crate::events::defers(m)
             || crate::og::defers(m, req.uri())
-            || crate::decode::routes::defers(m, req.method(), req.uri())
             || crate::codexes::defers(m, req.uri())
             || crate::mods_catalog::defers(m, req.uri())
             || crate::mods_git::defers(m, req.uri())

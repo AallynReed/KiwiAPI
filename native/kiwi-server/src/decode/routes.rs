@@ -18,7 +18,7 @@ use crate::{
     gamedata::Gamedata,
     pyjson::PydanticJson,
     state::AppState,
-    validation::{FromParams, Params, parse_qsl},
+    validation::{FromParams, Params},
 };
 
 pub fn router() -> Router<AppState> {
@@ -75,20 +75,6 @@ async fn run(State(state): State<AppState>, _: Superuser, Args(q): Args<RunQuery
     Ok(PydanticJson(json!({"started": true, "message": message})))
 }
 
-/// A run Python must still do: one naming a decoder whose build isn't ported,
-/// or "all" while any isn't (FastAPI reads the last `name` given).
-pub fn defers(matched: &str, method: &Method, uri: &Uri) -> bool {
-    if matched != "/admin/gamedata/run" || method != Method::POST {
-        return false;
-    }
-    let name =
-        parse_qsl(uri.query().unwrap_or("")).into_iter().filter(|(k, _)| k == "name").map(|(_, v)| v).next_back();
-    match name {
-        Some(n) => registry::get(&n).is_some_and(|d| d.build.is_none()),
-        None => registry::DECODERS.iter().any(|d| d.build.is_none()),
-    }
-}
-
 const PUBLIC: [&str; 3] = ["pvp.json", "gem_upgrades.json", "gear.json"];
 
 /// The web container's routes (`app/web/main.py`); not mounted on the API host.
@@ -97,9 +83,17 @@ pub fn web_router() -> Router<AppState> {
 }
 
 /// `GET /gamedata/{name}`: the rebuild when there is one, else the repo copy.
-pub async fn gamedata_file(State(state): State<AppState>, Path(name): Path<String>, headers: HeaderMap) -> Response {
+/// Any other name is the web app's `HTTPException(404)`: the themed page for a
+/// browser, the envelope otherwise.
+pub async fn gamedata_file(
+    State(state): State<AppState>,
+    Path(name): Path<String>,
+    method: Method,
+    uri: Uri,
+    headers: HeaderMap,
+) -> Response {
     if !PUBLIC.contains(&name.as_str()) {
-        return ApiError::http(StatusCode::NOT_FOUND, None).into_response();
+        return crate::error::http_exception(StatusCode::NOT_FOUND, None, &method, uri.path(), &headers);
     }
     let path = Gamedata::global(state.settings()).path(&name);
     match crate::drops::download::file_response_with(&path, "application/json", None, "public, max-age=300", &headers)
