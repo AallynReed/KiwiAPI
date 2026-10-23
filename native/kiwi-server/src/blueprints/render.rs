@@ -265,7 +265,7 @@ pub async fn blueprint_png(
     let Some(data) = blueprint_bytes(state, name, branch).await else { return Ok(None) };
     let png = tokio::task::spawn_blocking(move || {
         kiwi_core::voxel::render_thumbnail(&data, dim as usize)
-            .map(|rgba| kiwi_pil::png::encode_rgba(&rgba, dim as usize, dim as usize))
+            .map(|rgba| kiwi_pil::png::encode_rgba_optimized(&rgba, dim as usize, dim as usize))
     })
     .await
     .map_err(|_| RenderError::Unhandled)?

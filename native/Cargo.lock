@@ -1396,10 +1396,12 @@ dependencies = [
 name = "kiwi-pil"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "cc",
  "crc32fast",
  "png",
  "serde_json",
+ "sha2",
  "zlib-rs",
 ]
 

@@ -5,11 +5,13 @@ edition = "2024"
 
 [dependencies]
 crc32fast = "1.5.0"
+png = "0.18.1"
 zlib-rs = { version = "0.6.8", default-features = false, features = ["rust-allocator"] }
 
 [build-dependencies]
 cc = "1.9.0"
 
 [dev-dependencies]
-png = "0.18.1"
+base64 = "0.22.1"
 serde_json = "1.0.154"
+sha2 = "0.11.1"

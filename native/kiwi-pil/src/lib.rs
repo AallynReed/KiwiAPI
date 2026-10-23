@@ -3,10 +3,14 @@
 //! layout, the `libImaging/Draw.c` primitives, `ImagingFill2` text blending and
 //! the PNG encoder's filter choice. Only what the Python renderers call.
 
+pub mod decode;
 pub mod draw;
 pub mod font;
 pub mod ft;
 pub mod image;
+pub mod ops;
+#[cfg(test)]
+mod ops_tests;
 pub mod png;
 #[cfg(test)]
 mod tests;
