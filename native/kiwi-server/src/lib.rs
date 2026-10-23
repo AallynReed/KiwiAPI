@@ -69,4 +69,6 @@ pub mod webhooks;
 pub mod workshop;
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
 mod foundation_golden;
