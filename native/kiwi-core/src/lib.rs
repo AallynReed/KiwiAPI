@@ -9,6 +9,7 @@ pub mod binfab;
 pub mod blueprint;
 pub mod btt;
 pub mod cheaters;
+pub mod codex;
 pub mod detection;
 pub mod drops;
 pub mod duplicates;

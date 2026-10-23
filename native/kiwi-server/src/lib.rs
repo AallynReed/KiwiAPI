@@ -7,6 +7,7 @@ pub mod admin;
 pub mod archiver;
 pub mod auth;
 pub mod cheaters;
+pub mod codexes;
 pub mod config;
 pub mod db;
 pub mod decode;

@@ -1,0 +1,12 @@
+{
+ "postgres": [
+  {"table": "codex_entry", "order_by": "branch, path", "mask": ["indexed_at"]},
+  {"table": "codex_stat", "order_by": "branch, path, ord"},
+  {"table": "codex_ability", "order_by": "branch, path, ord"},
+  {"table": "codex_link", "order_by": "branch, src_path, rel, dst_path, ord"},
+  {"table": "codex_requirement", "order_by": "branch, collection, rank"},
+  {"table": "codex_upgrade", "order_by": "branch, system_key, node_key"},
+  {"table": "codex_meta", "order_by": "branch", "mask": ["updated_at"]},
+  {"table": "rig_binding", "order_by": "branch, prefab, blueprint"}
+ ]
+}
