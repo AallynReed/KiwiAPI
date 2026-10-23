@@ -56,6 +56,7 @@ pub mod pyfloat;
 pub mod pyjson;
 pub mod ratelimit;
 pub mod request_id;
+pub mod rigs;
 pub mod routes;
 pub mod runtime_config;
 pub mod site_auth;
@@ -65,6 +66,7 @@ pub mod updates;
 pub mod usage;
 pub mod validation;
 pub mod webhooks;
+pub mod workshop;
 
 #[cfg(test)]
 mod foundation_golden;

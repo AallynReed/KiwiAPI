@@ -3,9 +3,9 @@
 //! `/site/codexes/render`), the viewer payload of an archived blueprint behind
 //! the shared payload cache (`app/trove/render/bp_cache.py`) and the BRDF atlas.
 //!
-//! Left in Python: `/site/blueprint-editor/{model,game-model,model-save}` (the
-//! Mods Hub rig index, baked rigs and archive reader/rebuilder), and an
-//! assembled-creature render (`?prefab=`) that isn't in the Redis cache yet.
+//! The model projects (`/site/blueprint-editor/{model,game-model,model-save}`)
+//! are in `crate::rigs::model`. Left in Python: an assembled-creature render
+//! (`?prefab=`) that isn't in the Redis cache yet.
 
 pub mod cache;
 pub mod dds;

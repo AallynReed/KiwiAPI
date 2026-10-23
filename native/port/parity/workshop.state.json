@@ -1,0 +1,9 @@
+{
+ "mongo": [
+  {"collection": "update_branches", "sort": ["branch"], "mask": ["_id"]}
+ ],
+ "redis": [
+  {"pattern": "rl:modworkshop:*", "mask_ttl": true, "mask_value": true},
+  {"pattern": "rl:swfcode:*", "mask_ttl": true, "mask_value": true}
+ ]
+}
