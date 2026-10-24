@@ -102,6 +102,17 @@ async fn put_commands(url: &str, payload: &Value, token: &str) -> Result<Value, 
     pyjson::loads(body.as_bytes()).map_err(|e| internal(format!("discord answer: {e:?}")))
 }
 
+/// The bulk-overwrite URL; a guild id must be a snowflake so it stays one path segment.
+pub fn commands_url(app: &str, guild: Option<&str>) -> Result<String, ApiError> {
+    match guild {
+        None => Ok(format!("{API}/applications/{app}/commands")),
+        Some(g) if g.bytes().all(|b| b.is_ascii_digit()) && !g.is_empty() => {
+            Ok(format!("{API}/applications/{app}/guilds/{g}/commands"))
+        }
+        Some(_) => Err(ApiError::bad_request("guild_id must be a Discord server ID (digits only).")),
+    }
+}
+
 fn echo(cmds: &Value) -> Result<(usize, Vec<Value>), ApiError> {
     let list = cmds.as_array().ok_or_else(|| internal("discord answer is not a list"))?;
     Ok((list.len(), list.iter().map(brief).collect()))
@@ -113,10 +124,7 @@ pub async fn register_commands(
     Args(OptGuild(guild)): Args<OptGuild>,
 ) -> Res {
     let (app, token) = creds(state.settings())?;
-    let url = match truthy(&guild) {
-        Some(g) => format!("{API}/applications/{app}/guilds/{g}/commands"),
-        None => format!("{API}/applications/{app}/commands"),
-    };
+    let url = commands_url(app, truthy(&guild))?;
     let cmds = put_commands(&url, &Value::Array(COMMAND_DEFS.clone()), token).await?;
     let (count, commands) = echo(&cmds)?;
     tracing::info!(
@@ -133,7 +141,7 @@ pub async fn register_commands(
 
 pub async fn clear_guild_commands(State(state): State<AppState>, _: Superuser, Args(Guild(guild)): Args<Guild>) -> Res {
     let (app, token) = creds(state.settings())?;
-    let url = format!("{API}/applications/{app}/guilds/{guild}/commands");
+    let url = commands_url(app, Some(&guild))?;
     put_commands(&url, &json!([]), token).await?;
     tracing::info!("Cleared guild-scoped Discord commands for guild {guild}");
     Ok(PydanticJson(json!({"cleared": true, "guild_id": guild})))

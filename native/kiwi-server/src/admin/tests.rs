@@ -328,6 +328,21 @@ fn discord_and_bot() {
     );
 }
 
+#[test]
+fn discord_commands_url_keeps_the_guild_in_its_segment() {
+    let api = "https://discord.com/api/v10/applications/42";
+    assert_eq!(discord::commands_url("42", None).unwrap(), format!("{api}/commands"));
+    assert_eq!(
+        discord::commands_url("42", Some("1188519470451785749")).unwrap(),
+        format!("{api}/guilds/1188519470451785749/commands")
+    );
+    for bad in ["", "..", ".", "../../users/@me", "1/2", "1?x=1", "1#", "%2e%2e", " 1", "1\\..", "-1", "١٢"] {
+        let e = discord::commands_url("42", Some(bad)).unwrap_err();
+        assert_eq!(e.status, StatusCode::BAD_REQUEST, "{bad:?}");
+        assert_eq!(e.message, "guild_id must be a Discord server ID (digits only).", "{bad:?}");
+    }
+}
+
 // --- pageviews -------------------------------------------------------------------------------
 
 fn params_from(url: &str) -> (Vec<(String, String)>, Option<String>) {
