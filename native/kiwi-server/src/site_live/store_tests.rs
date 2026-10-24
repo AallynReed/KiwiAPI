@@ -7,7 +7,7 @@ use serde_json::json;
 
 use crate::{config::Settings, pyjson, state::AppState};
 
-const SEED: &str = include_str!("../../../port/parity/site_live.seed.sql");
+const SEED: &str = include_str!("../../testdata/site_live/seed.sql");
 
 #[tokio::test]
 #[ignore = "writes to POSTGRES_DSN / REDIS_URL"]

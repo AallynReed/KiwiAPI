@@ -20,7 +20,7 @@ async fn state() -> AppState {
 }
 
 fn seed() -> String {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../port/parity/codexes.seed.sql");
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("testdata/codexes/seed.sql");
     let sql = std::fs::read_to_string(dir).unwrap();
     format!(
         "DROP TABLE IF EXISTS codex_entry, codex_stat, codex_ability, codex_link, codex_requirement, codex_upgrade, codex_meta, rig_binding;\n{sql}"

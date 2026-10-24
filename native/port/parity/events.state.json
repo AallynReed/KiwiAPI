@@ -1,7 +1,0 @@
-{
- "redis": [
-  {"pattern": "events:sig:*"},
-  {"pattern": "kiwi:webhooks:queue"},
-  {"pattern": "kiwi:dmsubs:queue"}
- ]
-}

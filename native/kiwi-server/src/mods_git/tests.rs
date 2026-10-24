@@ -822,8 +822,8 @@ async fn push_replies_match_dulwich() {
     let dir = repo(&scratch("smart_golden"), "smart");
     odb::Repo::ensure(&dir).unwrap();
     let bodies: [&[u8]; 2] = [
-        include_bytes!("../../../port/parity/data/mods_git/push_ok.bin"),
-        include_bytes!("../../../port/parity/data/mods_git/push_blocked.bin"),
+        include_bytes!("../../testdata/mods_git/push_ok.bin"),
+        include_bytes!("../../testdata/mods_git/push_blocked.bin"),
     ];
     for (body, want) in bodies.iter().zip(GOLDEN["smart"]["replies"].as_array().unwrap()) {
         let out = smart::receive_pack(&dir, Body::from(body.to_vec()), false).await.unwrap();

@@ -1,6 +1,0 @@
-{
- "mongo": [
-  {"collection": "runtime_config", "sort": ["key"], "mask": ["_id", "updated_at"],
-   "filter": {"key": {"$regex": "^feature_"}}}
- ]
-}

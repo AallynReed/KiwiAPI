@@ -1,5 +1,0 @@
-{
- "mongo": [
-  {"collection": "page_views", "sort": ["pid"], "mask": ["_id", "created_at", "last_at"]}
- ]
-}

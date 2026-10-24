@@ -1,9 +1,0 @@
-{
- "redis": [
-  {"pattern": "lb:cache:timestamps", "mask_ttl": true},
-  {"pattern": "lb:cache:days", "mask_ttl": true},
-  {"pattern": "lb:cache:boards:*", "mask_ttl": true},
-  {"pattern": "lb:cache:entries:*", "mask_ttl": true},
-  {"pattern": "lb:cache:ready_anchor", "mask_ttl": true}
- ]
-}

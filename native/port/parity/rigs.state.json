@@ -1,5 +1,0 @@
-{
- "redis": [
-  {"pattern": "rl:bpeditor:*", "mask_ttl": true, "mask_value": true}
- ]
-}

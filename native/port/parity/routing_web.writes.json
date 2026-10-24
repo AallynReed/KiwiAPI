@@ -1,9 +1,0 @@
-[
- {"name": "nf_post", "method": "POST", "path": "/definitely-not-a-page", "body": ""},
- {"name": "method_post", "method": "POST", "path": "/terms", "body": "", "compare_headers": ["allow"]},
- {"name": "static_post", "method": "POST", "path": "/static/app.js", "body": "", "compare_headers": ["allow"]},
- {"name": "static_dir_delete", "method": "DELETE", "path": "/static/", "compare_headers": ["allow"]},
- {"name": "slash_post", "method": "POST", "path": "/terms/", "body": ""},
- {"name": "nf_head", "method": "HEAD", "path": "/definitely-not-a-page"},
- {"name": "static_bare", "path": "/static"}
-]

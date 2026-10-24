@@ -1,5 +1,0 @@
-[
- {"name": "status_post_405", "method": "POST", "path": "/v1/misc/trove-status", "body": {}, "compare_headers": ["allow"]},
- {"name": "status_delete_405", "method": "DELETE", "path": "/v1/misc/trove-status", "compare_headers": ["allow"]},
- {"name": "history_put_405", "method": "PUT", "path": "/v1/misc/trove-status/history?env=eu", "body": {}, "compare_headers": ["allow"]}
-]

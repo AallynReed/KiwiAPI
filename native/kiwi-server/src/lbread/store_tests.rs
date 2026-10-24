@@ -8,7 +8,7 @@ use serde_json::json;
 use super::{Live, cache, service, store::Source};
 use crate::{config::Settings, pyjson, state::AppState};
 
-const SEED: &str = include_str!("../../../port/parity/lbread.seed.sql");
+const SEED: &str = include_str!("../../testdata/lbread/seed.sql");
 const TUE_13: i64 = 1_894_107_600;
 const TUE_11: i64 = 1_894_100_400;
 const MON_18: i64 = 1_894_039_200;

@@ -1,6 +1,0 @@
---kiwiParityBoundary
-Content-Disposition: form-data; name="file"; filename="x.png"
-Content-Type: image/png
-
-not an image at all
---kiwiParityBoundary--

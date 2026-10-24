@@ -1,9 +1,0 @@
---XyZ
-Content-Disposition: form-data; name="kind"
-
-team
---XyZ
-Content-Disposition: form-data; name="pfp"
-
-text
---XyZ--

@@ -1,5 +1,5 @@
 NotoSansCJK-subset-Regular.ttc, NotoSansCJK-subset-Bold.ttc, NotoSansThai-subset-Regular.ttf
-and NotoSansThai-subset-Bold.ttf are character subsets (native/port/parity/make_og_test_fonts.py)
+and NotoSansThai-subset-Bold.ttf are character subsets
 of Noto Sans JP (Pillow's Tests/fonts/NotoSansJP-Regular.otf), Noto Sans CJK JP (face 0 of the
 NotoSansCJK-Regular.ttc Android Studio ships) and Noto Sans Thai (Android Studio's copies).
 Noto is a trademark of Google Inc.; Source is a trademark of Adobe in the United States and/or other countries.

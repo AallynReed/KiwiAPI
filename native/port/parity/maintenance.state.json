@@ -1,7 +1,0 @@
-{
- "mongo": [
-  {"collection": "api_tokens", "sort": ["name"], "mask": ["_id", "user_id", "created_at", "last_used_at", "expires_at", "revoked_at"]},
-  {"collection": "email_outbox", "sort": ["subject", "to"], "mask": ["_id", "created_at", "next_attempt_at", "updated_at", "scheduled_at"]},
-  {"collection": "system_state", "sort": ["_id"], "mask": ["value"]}
- ]
-}

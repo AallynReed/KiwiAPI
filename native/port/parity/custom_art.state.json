@@ -1,9 +1,0 @@
-{
- "mongo": [
-  {"collection": "art_requests", "sort": ["name"], "mask": ["_id", "created_at", "decided_at"]},
-  {"collection": "email_outbox", "sort": ["to", "subject"], "mask": ["_id", "created_at", "next_attempt_at"]}
- ],
- "redis": [
-  {"pattern": "rl:custom-art:*", "mask_ttl": true, "mask_value": true}
- ]
-}

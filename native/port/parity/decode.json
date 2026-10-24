@@ -1,7 +1,0 @@
-[
- {"name": "gamedata_unauth", "path": "/admin/gamedata"},
- {"name": "gamedata_head_unauth", "method": "HEAD", "path": "/admin/gamedata"},
- {"name": "gamedata_status", "path": "/admin/gamedata", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
- {"name": "gamedata_run_wrong_method", "path": "/admin/gamedata/run", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}},
- {"name": "gamedata_status_trailing_slash", "path": "/admin/gamedata/", "headers": {"Authorization": "Bearer ${KIWI_PARITY_JWT}"}}
-]
