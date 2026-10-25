@@ -111,7 +111,7 @@
     });
   }
   function renderYouTube(d) { renderVideos("stm-videos", d, "fa-brands fa-youtube", false); }
-  function renderBili(d) { renderVideos("stm-bili", d, "fa-solid fa-tv", true); }
+  function renderBili(d) { renderVideos("stm-bili", d, "fa-solid fa-play", true); }
   (function () {
     if (!document.getElementById("stm-videos")) return;
     getJSON("/site/feeds/videos?platform=youtube").then(function (d) {
@@ -131,7 +131,7 @@
     if (!zh || biliRequested) return;
     biliRequested = true;
     getJSON("/site/feeds/videos?platform=bilibili").then(function (d) {
-      biliData = d || { items: [] };
+      biliData = d && d.platform === "bilibili" ? d : { items: [] };
       renderBili(biliData);
     }).catch(function () { setEmpty("stm-bili", tr("Couldn't load videos.")); });
   }
