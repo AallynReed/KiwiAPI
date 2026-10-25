@@ -1173,7 +1173,7 @@
       return '<li><a href="' + esc(n.url || "#") + '" target="_blank" rel="noopener"><span class="vx-t">' + esc(n.title) + '</span><span class="vx-meta">' +
         [n.category ? cube("var(--vx-accent)") + esc(n.category) : "", esc(ago(n.published_at))].filter(Boolean).join(" · ") + "</span></a></li>";
     }, "No news right now.");
-    fillList("#vx-videos", "/site/feeds/videos?platform=youtube", function (xs) { return xs.slice(0, 4); }, function (v) {
+    fillList("#vx-videos", "/site/feeds/videos?platform=youtube", function (xs) { return xs.slice(0, 5); }, function (v) {
       var th = (v.thumbnail_url || v.thumbnail || "").replace("{width}", "440").replace("{height}", "248");
       return '<li><a href="' + esc(v.url || "#") + '" target="_blank" rel="noopener"><span class="vx-thumb">' +
         (th ? '<img src="' + esc(th) + '" alt="" loading="lazy" decoding="async" width="148" height="83">' : "") +

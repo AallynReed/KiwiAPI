@@ -298,7 +298,7 @@
                 <div>
                     <h2 data-i18n>Community videos</h2>
                     <ul class="vx-rows vx-videos" id="vx-videos">
-                        {%- if ssr and ssr.videos %}{% for v in ssr.videos[:4] %}
+                        {%- if ssr and ssr.videos %}{% for v in ssr.videos[:5] %}
                         <li><a href="{{ v.url }}" target="_blank" rel="noopener"><span class="vx-thumb">{% if v.thumb %}<img src="{{ v.thumb }}" alt="" loading="lazy" decoding="async" width="148" height="83">{% endif %}</span><span><span class="vx-t">{{ v.title }}</span><span class="vx-meta">{{ v.channel }}</span></span></a></li>
                         {%- endfor %}{% endif %}
                     </ul>
