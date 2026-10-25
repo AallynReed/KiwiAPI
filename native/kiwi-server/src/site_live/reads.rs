@@ -80,7 +80,7 @@ pub fn videos_body(platform: &str, feed: Option<(Vec<Document>, chrono::DateTime
 }
 
 pub async fn videos(_: SiteGate, State(state): State<AppState>, Query(q): Query<VideosQuery>) -> Response {
-    let platform = if matches!(q.platform.as_str(), "youtube" | "twitch") { q.platform.as_str() } else { "youtube" };
+    let platform = if matches!(q.platform.as_str(), "youtube" | "twitch" | "bilibili") { q.platform.as_str() } else { "youtube" };
     let feed = feeds::feed(state.mongo(), platform).await;
     cached(videos_body(platform, feed), "public, max-age=300")
 }

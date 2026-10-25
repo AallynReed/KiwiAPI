@@ -1,8 +1,7 @@
 //! Pure pieces of the community-feed relays (`app/trove/feeds.py`,
-//! `app/trove/news.py`): Python's `html.unescape`, the `html.parser` +
-//! BeautifulSoup tree the Bilibili scrape reads, and the scrape's card fields.
+//! `app/trove/news.py`): Python's `html.unescape` and the `html.parser` +
+//! BeautifulSoup tree.
 
-pub mod bilibili;
 pub mod news;
 pub mod py;
 pub mod soup;

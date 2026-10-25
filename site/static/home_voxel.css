@@ -235,6 +235,7 @@ html[data-vx-tod="day"] .vx-home .nav-links a.nav-support { color: #c8264b; }
 .vx-sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 32px; margin-bottom: 20px; }
 .vx-sec-head p { max-width: 52ch; margin: 6px 0 0; color: var(--vx-ink-2); }
 .vx-go { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.vx-more { margin-top: 14px; }
 .vx-go:hover { text-decoration: underline; text-underline-offset: .2em; }
 .vx-go i { font-size: .85em; transition: transform .2s var(--vx-ease); }
 .vx-go:hover i { transform: translateX(2px); }

@@ -2,7 +2,7 @@
 //! (`src/feeds/tests.rs`).
 
 use super::soup::{AttrValue, Node, Soup, StrKind};
-use super::{bilibili, py, unescape};
+use super::{py, unescape};
 
 #[test]
 fn python_int() {
@@ -47,22 +47,6 @@ fn script_text_is_not_tag_text() {
     assert_eq!(soup.text(p), "ab");
     let script = soup.select_one(0, |t| t.name == "script").unwrap();
     assert!(matches!(&soup.tag(script).children[..], [Node::Text(StrKind::Script, s)] if s == "var x = '<b>';"));
-}
-
-#[test]
-fn card_fields() {
-    let html = r#"<div class="bili-video-card"><a href="//www.bilibili.com/video/BV1/"><picture><source srcset="//i0.hdslb.com/a.jpg@1w"></picture></a><h3 class="bili-video-card__info--tit" title="T &amp; U">T</h3><span class="bili-video-card__info--author">Au</span><span class="bili-video-card__info--date"> · 10-01</span></div>"#;
-    let cards = bilibili::cards(html).unwrap();
-    assert_eq!(
-        cards,
-        [bilibili::Card {
-            href: Some("//www.bilibili.com/video/BV1/".into()),
-            title: Some("T & U".into()),
-            author: Some("Au".into()),
-            date: Some(" \u{b7} 10-01".into()),
-            srcset: Some("//i0.hdslb.com/a.jpg@1w".into()),
-        }]
-    );
 }
 
 #[test]

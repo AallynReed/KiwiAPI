@@ -10,7 +10,6 @@ use kiwi_core::feeds::{
 };
 use mongodb::bson::{Bson, Document};
 use serde_json::{Value, json};
-use sha2::{Digest, Sha256};
 
 use super::{
     events::parse_events,
@@ -31,9 +30,6 @@ fn html_fixtures() -> &'static Value {
     static H: OnceLock<Value> = OnceLock::new();
     H.get_or_init(|| serde_json::from_str(include_str!("../../testdata/feeds/html.json")).expect("html.json"))
 }
-
-const PAGE: &str = include_str!("../../testdata/feeds/raw/bilibili_search.html");
-const BILI_REWRITE: (&str, &str) = ("//www.bilibili.com/zh-Hans/video/", "//www.bilibili.com/video/");
 
 fn arr<'a>(v: &'a Value, key: &str) -> &'a Vec<Value> {
     v[key].as_array().unwrap_or_else(|| panic!("fixture section {key}"))
@@ -85,25 +81,6 @@ fn soup_trees_match_bs4() {
     }
     for case in arr(html_fixtures(), "errors") {
         assert_eq!(Soup::parse(s(&case["html"])).is_err(), !case["error"].is_null(), "{}", case["html"]);
-    }
-}
-
-#[test]
-fn bilibili_page_tree_and_cards_match_bs4() {
-    for (name, html) in
-        [("page_raw", PAGE.to_owned()), ("page_rewritten", PAGE.replace(BILI_REWRITE.0, BILI_REWRITE.1))]
-    {
-        let want = &html_fixtures()[name];
-        let soup = Soup::parse(&html).expect("page parses");
-        let dumped = pyjson::dumps(&dump_root(&soup));
-        let sha = hex::encode(Sha256::digest(dumped.as_bytes()));
-        assert_eq!(sha, s(&want["tree_sha256"]), "{name} tree");
-        let cards = kiwi_core::feeds::bilibili::cards(&html).expect("cards");
-        let got: Vec<Value> = cards
-            .into_iter()
-            .map(|c| json!({"href": c.href, "title": c.title, "author": c.author, "date": c.date, "srcset": c.srcset}))
-            .collect();
-        assert_eq!(Value::Array(got), want["cards"], "{name} cards");
     }
 }
 
@@ -164,19 +141,6 @@ fn feed_normalizers_match_python() {
 }
 
 #[test]
-fn bilibili_dates_match_python() {
-    let dates = &golden()["bilibili_dates"];
-    let now = utc(&dates["now"]);
-    for case in arr(dates, "cases") {
-        let got = match relay::parse_bilibili_date(s(&case[0]), now) {
-            Ok(t) => dt::isoformat(&t),
-            Err(_) => "error:OverflowError".into(),
-        };
-        assert_eq!(got, s(&case[1]), "{case}");
-    }
-}
-
-#[test]
 fn youtube_curation_matches_python() {
     for sc in arr(golden(), "youtube") {
         let st = &sc["settings"];
@@ -208,22 +172,24 @@ fn youtube_curation_matches_python() {
 }
 
 #[test]
-fn bilibili_scrape_matches_python() {
-    for sc in arr(golden(), "bilibili") {
-        let html = match s(&sc["name"]) {
-            "raw" => PAGE.to_owned(),
-            "rewritten" | "rewritten_wide" => PAGE.replace(BILI_REWRITE.0, BILI_REWRITE.1),
-            _ => s(&sc["html"]).to_owned(),
-        };
-        let st = &sc["settings"];
-        let cfg = BiliConfig {
-            cutoff_days: st["feeds_video_cutoff_days"].as_i64().unwrap().into(),
-            per_channel_max: st["feeds_per_channel_max"].as_i64().unwrap().into(),
-            max_items: st["feeds_max_items"].as_i64().unwrap().into(),
-        };
-        let got = relay::bilibili_videos(&html, utc(&sc["now"]), cfg).unwrap();
-        assert_eq!(Value::Array(got), sc["out"], "{}", sc["name"]);
-    }
+fn bilibili_search_results() {
+    let now = utc(&json!("2026-10-25T00:00:00+00:00"));
+    let v = |bvid: &str, author: &str, pubdate: i64| {
+        json!({"bvid": bvid, "author": author, "pubdate": pubdate, "pic": "//i0.hdslb.com/a.jpg",
+               "title": "【<em class=\"keyword\">宝藏世界</em>】A &amp; B"})
+    };
+    let body = json!({"code": 0, "data": {"result": [
+        v("BV1", "a", 1_792_800_000), v("BV2", "a", 1_792_900_000), v("BV3", "a", 1_792_850_000),
+        v("BV4", "b", 1_700_000_000), v("", "c", 1_792_900_000),
+    ]}});
+    let cfg = BiliConfig { cutoff_days: 90, per_channel_max: 2, max_items: 10 };
+    let got = relay::bilibili_videos(&body, now, cfg).unwrap();
+    assert_eq!(got.len(), 2);
+    assert_eq!(got[0]["video_id"], "BV2");
+    assert_eq!(got[0]["title"], "【宝藏世界】A & B");
+    assert_eq!(got[0]["url"], "https://www.bilibili.com/video/BV2");
+    assert_eq!(got[0]["thumbnail_url"], "https://i0.hdslb.com/a.jpg");
+    assert!(relay::bilibili_videos(&json!({"code": -412, "message": "blocked"}), now, cfg).is_err());
 }
 
 #[test]
@@ -340,7 +306,7 @@ fn stored_items_use_python_int_widths() {
 }
 
 #[tokio::test]
-#[ignore = "reaches hdslb.com, trovesaurus.com and search.bilibili.com"]
+#[ignore = "reaches hdslb.com and trovesaurus.com"]
 async fn live_upstreams() {
     let ok = "https://i2.hdslb.com/bfs/archive/29a70a5bd0c85845ab9c0c01be985189576e6ed9.jpg@672w_378h_1c_!web-search-common-cover.webp";
     let (bytes, ctype) = super::image::fetch(ok).await.unwrap();
@@ -358,9 +324,4 @@ async fn live_upstreams() {
     let resp = clients.fetch.get("https://trovesaurus.com/calendar/feed").send().await.unwrap();
     let raw = super::http::json(super::http::check_status(resp).unwrap()).await.unwrap();
     parse_events(&raw).unwrap();
-    let resp =
-        clients.bilibili.get("https://search.bilibili.com/all").query(&[("keyword", "trove")]).send().await.unwrap();
-    let html = super::http::check_status(resp).unwrap().text().await.unwrap();
-    let cfg = BiliConfig { cutoff_days: 90, per_channel_max: 3, max_items: 10 };
-    relay::bilibili_videos(&html, Utc::now(), cfg).unwrap();
 }

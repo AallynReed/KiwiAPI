@@ -25,6 +25,7 @@
 }
 .stm-tw { color: #a970ff; }
 .stm-yt { color: #ff4e45; }
+.stm-bili { color: #00aeec; }
 .stm-count { font-size: .84rem; color: var(--text-mute); }
 .stm-loading, .stm-empty { color: var(--text-mute); font-size: .92rem; padding: 8px 2px; grid-column: 1 / -1; }
 

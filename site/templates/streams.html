@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Trove streams, videos & news - Better Trove Tools</title>
-    <meta name="description" content="Watch who's live streaming Trove on Twitch right now, catch up on the newest community YouTube videos, and read the latest official Trove news - all on one page.">
+    <meta name="description" content="Watch who's live streaming Trove on Twitch right now, catch up on the newest community videos, and read the latest official Trove news - all on one page.">
     <meta name="theme-color" content="#0a0e14">
     <meta name="color-scheme" content="dark">
 
@@ -67,6 +67,14 @@
                 <a class="ssr-prose" href="{{ v.url }}" target="_blank" rel="noopener">{{ v.title }} — {{ v.channel }}</a>
                 {% endfor %}{% else %}<p class="stm-loading" data-i18n>Loading videos…</p>{% endif %}
             </div>
+        </section>
+
+        <!-- ═══════════ Bilibili (Chinese only) ═══════════ -->
+        <section class="stm-block" id="stm-bili-block" aria-label="Bilibili videos" hidden>
+            <div class="stm-block-head">
+                <h2><i class="fa-solid fa-tv stm-bili" aria-hidden="true"></i> <span data-i18n>Bilibili videos</span></h2>
+            </div>
+            <div class="stm-grid" id="stm-bili"><p class="stm-loading" data-i18n>Loading videos…</p></div>
         </section>
 
         <!-- ═══════════ Latest news ═══════════ -->

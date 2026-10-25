@@ -302,6 +302,7 @@
                         <li><a href="{{ v.url }}" target="_blank" rel="noopener"><span class="vx-thumb">{% if v.thumb %}<img src="{{ v.thumb }}" alt="" loading="lazy" decoding="async" width="148" height="83">{% endif %}</span><span><span class="vx-t">{{ v.title }}</span><span class="vx-meta">{{ v.channel }}</span></span></a></li>
                         {%- endfor %}{% endif %}
                     </ul>
+                    {% if streams_enabled %}<a class="vx-go vx-more" href="/streams"><span data-i18n>All streams and videos</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{% endif %}
                 </div>
             </div>
         </section>

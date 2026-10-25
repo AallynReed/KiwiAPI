@@ -5,7 +5,7 @@
 use std::{collections::HashSet, sync::LazyLock};
 
 use anyhow::{Context, anyhow, bail};
-use chrono::{DateTime, Datelike, NaiveDate, TimeDelta, Utc};
+use chrono::{DateTime, Datelike, TimeDelta, Utc};
 use mongodb::bson::doc;
 use regex::Regex;
 use serde_json::{Value, json};
@@ -21,7 +21,8 @@ const TWITCH_TOKEN_URL: &str = "https://id.twitch.tv/oauth2/token";
 const TWITCH_STREAMS_URL: &str = "https://api.twitch.tv/helix/streams";
 const YOUTUBE_SEARCH_URL: &str = "https://www.googleapis.com/youtube/v3/search";
 const YOUTUBE_VIDEOS_URL: &str = "https://www.googleapis.com/youtube/v3/videos";
-const BILIBILI_SEARCH_URL: &str = "https://search.bilibili.com/all";
+const BILIBILI_SPI_URL: &str = "https://api.bilibili.com/x/frontend/finger/spi";
+const BILIBILI_SEARCH_URL: &str = "https://api.bilibili.com/x/web-interface/search/type";
 
 pub const FEEDS: [&str; 3] = ["twitch", "youtube", "bilibili"];
 
@@ -353,23 +354,6 @@ pub fn curate_youtube(snippets: &[(String, Value)], details: &Value, cfg: &YtCon
     Ok(normalize_videos(&Value::Array(pool)))
 }
 
-/// `datetime(y, m, d, tzinfo=utc)`: `Ok(None)` for Python's ValueError,
-/// `Err` for its OverflowError (C int range).
-fn make_date(y: i128, m: i128, d: i128) -> anyhow::Result<Option<DateTime<Utc>>> {
-    for v in [y, m, d] {
-        if i32::try_from(v).is_err() {
-            bail!("OverflowError: signed integer is greater than maximum");
-        }
-    }
-    if !(1..=9999).contains(&y) {
-        return Ok(None);
-    }
-    Ok(NaiveDate::from_ymd_opt(y as i32, m as u32, d as u32)
-        .filter(|_| (1..=12).contains(&m))
-        .and_then(|n| n.and_hms_opt(0, 0, 0))
-        .map(|n| n.and_utc()))
-}
-
 /// `now - timedelta(**{unit: amount})`, with Python's range errors.
 fn minus(now: DateTime<Utc>, amount: i128, unit_secs: i128) -> anyhow::Result<DateTime<Utc>> {
     let secs = amount * unit_secs;
@@ -381,40 +365,6 @@ fn minus(now: DateTime<Utc>, amount: i128, unit_secs: i128) -> anyhow::Result<Da
         Some(t) if (1..=9999).contains(&t.year()) => Ok(t),
         _ => bail!("OverflowError: date value out of range"),
     }
-}
-
-/// `_parse_bilibili_date(date_str, now)`.
-pub fn parse_bilibili_date(date_str: &str, now: DateTime<Utc>) -> anyhow::Result<DateTime<Utc>> {
-    let s = kiwi_core::feeds::py::strip(date_str);
-    let int = |p: &str| kiwi_core::feeds::py::int(p, 10);
-    if s.contains('-') {
-        let parts: Vec<&str> = s.split('-').collect();
-        if parts.len() == 2 {
-            let (Some(m), Some(d)) = (int(parts[0]), int(parts[1])) else { return Ok(now) };
-            let Some(date) = make_date(i128::from(now.year()), m, d)? else { return Ok(now) };
-            if date > now {
-                return Ok(make_date(i128::from(now.year()) - 1, m, d)?.unwrap_or(now));
-            }
-            return Ok(date);
-        }
-        if parts.len() == 3 {
-            let (Some(y), Some(m), Some(d)) = (int(parts[0]), int(parts[1]), int(parts[2])) else { return Ok(now) };
-            return Ok(make_date(y, m, d)?.unwrap_or(now));
-        }
-    } else if s.contains("昨天") {
-        return minus(now, 1, 86_400);
-    } else if s.contains("小时前") {
-        return match int(kiwi_core::feeds::py::strip(&s.replace("小时前", ""))) {
-            Some(h) => minus(now, h, 3600),
-            None => Ok(now),
-        };
-    } else if s.contains("分钟前") {
-        return match int(kiwi_core::feeds::py::strip(&s.replace("分钟前", ""))) {
-            Some(m) => minus(now, m, 60),
-            None => Ok(now),
-        };
-    }
-    Ok(now)
 }
 
 /// `date.isoformat().replace("+00:00", "Z")`.
@@ -430,26 +380,21 @@ pub struct BiliConfig {
     pub max_items: i128,
 }
 
-/// The scrape loop of `_fetch_bilibili` over the page HTML.
-pub fn bilibili_videos(html: &str, now: DateTime<Utc>, cfg: BiliConfig) -> anyhow::Result<Vec<Value>> {
-    let cards = kiwi_core::feeds::bilibili::cards(html).map_err(|e| anyhow!("bilibili page rejected: {e}"))?;
-    let cutoff = minus(now, cfg.cutoff_days, 86_400)?;
+/// Bilibili's `search/type` video results, newest first, as feed items.
+pub fn bilibili_videos(body: &Value, now: DateTime<Utc>, cfg: BiliConfig) -> anyhow::Result<Vec<Value>> {
+    if body["code"].as_i64() != Some(0) {
+        bail!("bilibili search rejected: code {} {}", body["code"], body["message"]);
+    }
+    let cutoff = minus(now, cfg.cutoff_days, 86_400)?.timestamp();
     let mut counts: Vec<(String, i128)> = Vec::new();
     let mut videos: Vec<Value> = Vec::new();
-    for card in cards {
-        let Some(href) = card.href else { continue };
-        if !href.starts_with("//www.bilibili.com/video/") {
+    for v in body["data"]["result"].as_array().map(Vec::as_slice).unwrap_or_default() {
+        let bvid = v["bvid"].as_str().unwrap_or_default();
+        let Some(pubdate) = v["pubdate"].as_i64() else { continue };
+        if bvid.is_empty() || pubdate < cutoff {
             continue;
         }
-        let bvid = href.split("/video/").nth(1).unwrap_or("").trim_matches('/').to_owned();
-        let title = card.title.unwrap_or_default();
-        let author = card.author.as_deref().map(kiwi_core::feeds::py::strip).unwrap_or("").to_owned();
-        let date_str =
-            card.date.map(|d| kiwi_core::feeds::py::strip(&d.replace('·', "")).to_owned()).unwrap_or_default();
-        let vid_date = parse_bilibili_date(&date_str, now)?;
-        if vid_date < cutoff {
-            continue;
-        }
+        let author = v["author"].as_str().unwrap_or_default().trim().to_owned();
         let count = counts.iter().find(|(a, _)| *a == author).map_or(0, |(_, n)| *n);
         if count >= cfg.per_channel_max {
             continue;
@@ -458,16 +403,18 @@ pub fn bilibili_videos(html: &str, now: DateTime<Utc>, cfg: BiliConfig) -> anyho
             Some((_, n)) => *n += 1,
             None => counts.push((author.clone(), 1)),
         }
-        let mut pic = card.srcset.map(|s| s.split('@').next().unwrap_or("").to_owned()).unwrap_or_default();
+        let title = TAG_RE.replace_all(v["title"].as_str().unwrap_or_default(), "");
+        let mut pic = v["pic"].as_str().unwrap_or_default().to_owned();
         if pic.starts_with("//") {
             pic = format!("https:{pic}");
         }
+        let published = DateTime::from_timestamp(pubdate, 0).context("pubdate out of range")?;
         videos.push(json!({
-            "title": title,
+            "title": kiwi_core::feeds::unescape::unescape(&title),
             "video_id": bvid,
-            "url": format!("https:{href}"),
+            "url": format!("https://www.bilibili.com/video/{bvid}"),
             "channel": author,
-            "published_at": iso_z(&vid_date),
+            "published_at": iso_z(&published),
             "thumbnail_url": pic,
         }));
         if videos.len() as i128 >= cfg.max_items {
@@ -477,6 +424,8 @@ pub fn bilibili_videos(html: &str, now: DateTime<Utc>, cfg: BiliConfig) -> anyho
     sort_desc(&mut videos)?;
     Ok(normalize_videos(&Value::Array(videos)))
 }
+
+static TAG_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"<[^>]*>").expect("tag regex"));
 
 // --- fetching ----------------------------------------------------------------
 
@@ -598,9 +547,19 @@ async fn fetch_bilibili(state: &AppState) -> anyhow::Result<Vec<Value>> {
         per_channel_max: setting_int(state, "feeds_per_channel_max").await?,
         max_items: setting_int(state, "feeds_max_items").await?,
     };
-    let resp = clients().bilibili.get(BILIBILI_SEARCH_URL).query(&[("keyword", keyword.as_str())]).send().await?;
-    let html = check_status(resp)?.text().await?;
-    bilibili_videos(&html, dt::now(), cfg)
+    // The search API answers anonymous callers only with a buvid3 cookie.
+    let spi = http::json(check_status(clients().bilibili.get(BILIBILI_SPI_URL).send().await?)?).await?;
+    let buvid3 = spi["data"]["b_3"].as_str().context("bilibili spi without b_3")?;
+    let resp = clients()
+        .bilibili
+        .get(BILIBILI_SEARCH_URL)
+        .header("Cookie", format!("buvid3={buvid3}"))
+        .header("Referer", "https://search.bilibili.com/")
+        .query(&[("search_type", "video"), ("order", "pubdate"), ("keyword", keyword.as_str())])
+        .send()
+        .await?;
+    let body = http::json(check_status(resp)?).await?;
+    bilibili_videos(&body, dt::now(), cfg)
 }
 
 /// `refresh_feed(feed)`: fetch at source, then upsert the `feed_cache` doc.
