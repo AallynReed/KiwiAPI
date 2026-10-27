@@ -872,11 +872,8 @@
     if (!prev) return false;
     _suppressHash = true;
     try {
-      ensureCompareOption(prev.ordinal, prev.version_tag);
-      ensureCompareOption(to, items[at].version_tag);
       $comparePath.value = path;
-      $compareFrom.value = String(prev.ordinal);
-      $compareTo.value = String(to);
+      setCompareVersions(prev.ordinal, to, prev.version_tag, items[at].version_tag);
       switchTab('compare');
       await runCompare();
     } finally {
@@ -1557,11 +1554,8 @@
     state.compare.to = b;
     state.compare.path = state.selectedPath;
     const tagOf = (o) => ((state.fileHistory && state.fileHistory.items) || []).find((x) => x.ordinal === o);
-    ensureCompareOption(a, (tagOf(a) || {}).version_tag);
-    ensureCompareOption(b, (tagOf(b) || {}).version_tag);
     $comparePath.value = state.selectedPath;
-    $compareFrom.value = String(a);
-    $compareTo.value = String(b);
+    setCompareVersions(a, b, (tagOf(a) || {}).version_tag, (tagOf(b) || {}).version_tag);
     switchTab('compare');
     runCompare();
   }
@@ -3031,11 +3025,8 @@
         && state.compare.from === h.from
         && state.compare.to === h.to
         && state.compare.path === h.path) return;   // already on screen
-    ensureCompareOption(h.from);
-    ensureCompareOption(h.to);
     $comparePath.value = h.path;
-    $compareFrom.value = String(h.from);
-    $compareTo.value = String(h.to);
+    setCompareVersions(h.from, h.to);
     await runCompare();
   }
 
@@ -3052,6 +3043,19 @@
       const label = v ? v.version_tag : tag;
       opt.textContent = label ? `#${ordinal} · ${label}` : `#${ordinal}`;
       sel.appendChild(opt);
+    }
+  }
+
+  // Setting .value from code fires nothing, so the shared dropdown is told to
+  // repaint or its trigger keeps showing the old pick.
+  function setCompareVersions(from, to, fromTag, toTag) {
+    ensureCompareOption(from, fromTag);
+    ensureCompareOption(to, toTag);
+    $compareFrom.value = String(from);
+    $compareTo.value = String(to);
+    if (window.BTTDropdown) {
+      window.BTTDropdown.refresh($compareFrom);
+      window.BTTDropdown.refresh($compareTo);
     }
   }
 
