@@ -74,21 +74,31 @@ impl<C: Cdn, R: Repo> Ctx<'_, C, R> {
         archive_dir: Option<&str>,
         archive_index: Option<i64>,
     ) -> Result<(), SyncError> {
+        let (b, o) = (self.branch, self.ordinal);
+        let prev = match change_type {
+            "modified" if path.starts_with("prefabs/plant/") && path.ends_with(".binfab") => {
+                self.repo.state_sha(b, path).await?
+            }
+            _ => None,
+        };
         let store = self.store.clone();
-        let (sha, created, len) = tokio::task::spawn_blocking(move || {
+        let (sha, created, len, stamp_only) = tokio::task::spawn_blocking(move || {
             let bytes = data.as_slice();
-            store.put(bytes).map(|(sha, created)| (sha, created, bytes.len() as i64))
+            let stamp_only = prev.and_then(|s| store.get(&s)).is_some_and(|old| ua::is_build_stamp_only(&old, bytes));
+            store.put(bytes).map(|(sha, created)| (sha, created, bytes.len() as i64, stamp_only))
         })
         .await
         .map_err(|e| SyncError::Io(e.to_string()))?
         .map_err(SyncError::io)?;
-        let (b, o) = (self.branch, self.ordinal);
-        self.repo.record_change(b, o, path, change_type, Some(&sha), fnv, len).await?;
+        if !stamp_only {
+            self.repo.record_change(b, o, path, change_type, Some(&sha), fnv, len).await?;
+        }
         self.repo.upsert_state(b, path, &sha, fnv, len, archive_dir, archive_index, o).await?;
         let (total, bytes) = {
             let mut c = self.counts.lock().expect("counts");
             match change_type {
                 "added" => c.added += 1,
+                _ if stamp_only => {}
                 _ => c.modified += 1,
             }
             if created {

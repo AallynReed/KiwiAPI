@@ -310,6 +310,10 @@ impl Repo for FakeRepo {
         Ok(self.0.lock().unwrap().state.get(path).is_some())
     }
 
+    async fn state_sha(&self, _: &str, path: &str) -> Result<Option<String>, SyncError> {
+        Ok(self.0.lock().unwrap().state.get(path).map(|r| r.sha.clone()))
+    }
+
     async fn get_archive_state(&self, _: &str, directory: &str) -> Result<Ordered<Option<i64>>, SyncError> {
         let d = self.0.lock().unwrap();
         Ok(d.state
@@ -1019,4 +1023,44 @@ async fn cdn_client_over_http() {
 
     let dead = cdn::CdnClient::new("http://127.0.0.1:9", prefix).fetch_pointer("kiwi-live-us.txt").await.unwrap_err();
     assert_eq!(dead, SyncError::Transport("All connection attempts failed".into()));
+}
+
+#[tokio::test]
+async fn plant_build_stamp_is_not_a_change() {
+    let prefab = |stamp: u64, tail: u8| {
+        let mut b = b"name\x10\x00\x26".to_vec();
+        b.extend(stamp.to_le_bytes());
+        b.extend([0, tail]);
+        Bytes::from(b)
+    };
+    let files = |v: u64, tail: u8| {
+        [
+            ("prefabs/plant/a.binfab", prefab(v, 1)),
+            ("prefabs/plant/b.binfab", prefab(v, tail)),
+            ("prefabs/item/c.binfab", prefab(v, 1)),
+        ]
+    };
+    let root = temp_dir("stamp");
+    let store = ContentStore::new(&root);
+    let repo = FakeRepo::default();
+    for (n, (stamp, tail)) in [(1_792_385_882_062, 1), (1_793_041_808_672, 2)].into_iter().enumerate() {
+        let cdn = FakeCdn {
+            version: format!("v{n}"),
+            content_path: "cp".into(),
+            manifest: files(stamp, tail)
+                .iter()
+                .map(|(p, d)| ManifestEntry { path: (*p).into(), sha1: format!("{n}{p}"), size: d.len() as i64 })
+                .collect(),
+            files: files(stamp, tail).into_iter().map(|(p, d)| (p.into(), d)).collect(),
+            fail: Default::default(),
+            pointer_error: None,
+        };
+        sync_branch("live-us", ua::BRANCHES[0].1, &cdn, &store, &repo, 3).await.unwrap();
+    }
+    let snap = repo.snapshot();
+    let mut second: Vec<&str> =
+        snap["changes"].as_array().unwrap().iter().filter(|c| c[0] == 2).map(|c| c[1].as_str().unwrap()).collect();
+    second.sort();
+    assert_eq!(second, ["prefabs/item/c.binfab", "prefabs/plant/b.binfab"]);
+    let _ = std::fs::remove_dir_all(&root);
 }

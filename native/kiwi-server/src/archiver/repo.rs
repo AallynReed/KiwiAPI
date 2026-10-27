@@ -30,6 +30,8 @@ pub trait Repo: Sync {
     fn get_manifest_sidecar(&self, branch: &str) -> impl Future<Output = Result<Ordered<Sidecar>, SyncError>> + Send;
     /// `state_get(...)` is truthy.
     fn state_exists(&self, branch: &str, path: &str) -> impl Future<Output = Result<bool, SyncError>> + Send;
+    /// The state row's `content_sha256`, if the path is in the tree.
+    fn state_sha(&self, branch: &str, path: &str) -> impl Future<Output = Result<Option<String>, SyncError>> + Send;
     /// `{path: fnv_hash}` of the state rows from one archive directory.
     fn get_archive_state(
         &self,
@@ -636,6 +638,13 @@ impl Repo for MongoRepo {
         match self.find_one(STATE, doc! {"branch": branch, "path": path}).await? {
             Some(d) => load_state(&d).map(|_| true),
             None => Ok(false),
+        }
+    }
+
+    async fn state_sha(&self, branch: &str, path: &str) -> Result<Option<String>, SyncError> {
+        match self.find_one(STATE, doc! {"branch": branch, "path": path}).await? {
+            Some(d) => load_state(&d).map(|_| d.get_str("content_sha256").ok().map(str::to_owned)),
+            None => Ok(None),
         }
     }
 

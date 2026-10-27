@@ -280,6 +280,25 @@ pub fn decompress_tfa(raw: &[u8], size_hint: u64) -> Result<Vec<u8>, String> {
 
 // --- diff ---------------------------------------------------------------------------
 
+/// `old` and `new` differ only inside one little-endian u64 that reads as a
+/// Unix-ms time (2010..2100) moving forward by under a year: the build stamp
+/// the game's compiler rewrites in some prefabs (all of `prefabs/plant/`).
+pub fn is_build_stamp_only(old: &[u8], new: &[u8]) -> bool {
+    const MS: std::ops::Range<u64> = 1_262_304_000_000..4_102_444_800_000;
+    const YEAR: u64 = 365 * 86_400_000;
+    if old.len() != new.len() {
+        return false;
+    }
+    let differs = |(a, b): (&u8, &u8)| a != b;
+    let Some(first) = old.iter().zip(new).position(differs) else { return false };
+    let last = old.len() - 1 - old.iter().rev().zip(new.iter().rev()).position(differs).unwrap_or(0);
+    let ms = |b: &[u8], s: usize| u64::from_le_bytes(b[s..s + 8].try_into().expect("8 bytes"));
+    (last.saturating_sub(7)..=first)
+        .filter(|&s| s + 8 <= old.len())
+        .map(|s| (ms(old, s), ms(new, s)))
+        .any(|(a, b)| MS.contains(&a) && MS.contains(&b) && a < b && b - a < YEAR)
+}
+
 pub fn is_tfa(path: &str) -> bool {
     path.ends_with(".tfa")
 }
@@ -405,6 +424,26 @@ mod tests {
         assert_eq!(read_leb128(&[0xff, 0xff, 0xff, 0xff, 0x7f], 0), Ok((u32::MAX, 5)));
         assert_eq!(read_leb128(&[0x80; 10], 0), Err("varint too long"));
         assert_eq!(read_leb128(&[0x80; 9], 0), Err("index out of range"));
+    }
+
+    #[test]
+    fn build_stamp_only() {
+        let file = |stamp: u64| {
+            let mut b = b"\x10\x00\x26".to_vec();
+            b.extend(stamp.to_le_bytes());
+            b.extend(b"\x00\x12\xbe");
+            b
+        };
+        let (a, b) = (file(1_792_385_882_062), file(1_793_041_808_672));
+        assert!(is_build_stamp_only(&a, &b));
+        assert!(!is_build_stamp_only(&a, &a));
+        assert!(!is_build_stamp_only(&b, &a));
+        assert!(!is_build_stamp_only(&a, &file(1_892_385_882_062)));
+        let mut c = b.clone();
+        c[0] = 0x11;
+        assert!(!is_build_stamp_only(&a, &c));
+        assert!(!is_build_stamp_only(&file(1), &file(2)));
+        assert!(!is_build_stamp_only(&a, &b[..b.len() - 1]));
     }
 
     #[test]
