@@ -842,7 +842,8 @@
   // Jump from the Changes tab to a file in the Explorer. Suppresses the
   // intermediate hash writes so the whole tab-switch + file-open lands as ONE
   // history entry - a single Back press then returns to the changes list.
-  async function openChangePath(path) {
+  async function openChangePath(path, type) {
+    if (type === 'modified' && await openChangeDiff(path)) return;
     _suppressHash = true;
     try {
       switchTab('explorer');
@@ -851,6 +852,38 @@
       _suppressHash = false;
     }
     scheduleHash(true);
+  }
+
+  // A modified row opens straight into the diff against the file's previous
+  // capture. False when there's no earlier capture to diff against.
+  async function openChangeDiff(path) {
+    const to = state.changes.ordinal;
+    let items;
+    try {
+      const data = await fetchJSON(
+        `/site/updates/${state.branch}/file/history?path=${encodeURIComponent(path)}`,
+      );
+      items = data.items || [];
+    } catch (_) {
+      return false;
+    }
+    const at = items.findIndex((it) => it.ordinal === to);
+    const prev = at >= 0 ? items.slice(at + 1).find((it) => it.type !== 'removed') : null;
+    if (!prev) return false;
+    _suppressHash = true;
+    try {
+      ensureCompareOption(prev.ordinal, prev.version_tag);
+      ensureCompareOption(to, items[at].version_tag);
+      $comparePath.value = path;
+      $compareFrom.value = String(prev.ordinal);
+      $compareTo.value = String(to);
+      switchTab('compare');
+      await runCompare();
+    } finally {
+      _suppressHash = false;
+    }
+    scheduleHash(true);
+    return true;
   }
 
   // ─── Explorer - file detail (history) ──────────────────────────────
@@ -873,11 +906,11 @@
       // Bail if user clicked away while the fetch was running.
       if (state.selectedPath !== path) return;
       state.fileHistory = data;
-      // Default pick: A = oldest, B = newest. Lets a single click on
-      // "Compare" diff the full history.
+      // Default pick: A = the capture before the newest, B = newest, so a
+      // single click on "Compare" shows the latest change.
       const items = data.items || [];
       if (items.length >= 2) {
-        state.historyPicks.a = items[items.length - 1].ordinal;
+        state.historyPicks.a = items[1].ordinal;
         state.historyPicks.b = items[0].ordinal;
       } else {
         state.historyPicks.a = null;
@@ -1523,6 +1556,9 @@
     state.compare.from = a;
     state.compare.to = b;
     state.compare.path = state.selectedPath;
+    const tagOf = (o) => ((state.fileHistory && state.fileHistory.items) || []).find((x) => x.ordinal === o);
+    ensureCompareOption(a, (tagOf(a) || {}).version_tag);
+    ensureCompareOption(b, (tagOf(b) || {}).version_tag);
     $comparePath.value = state.selectedPath;
     $compareFrom.value = String(a);
     $compareTo.value = String(b);
@@ -2786,7 +2822,7 @@
       }
       const file = e.target.closest('[data-path]');
       if (file && $changesBody.contains(file)) {
-        openChangePath(file.dataset.path);
+        openChangePath(file.dataset.path, file.dataset.type);
       }
     });
 
@@ -3006,14 +3042,15 @@
   // The compare selectors only list the visible version strip; a shared link
   // may name an ordinal outside it. Append a stub <option> so the control
   // reflects the shared choice (the backend compares by ordinal regardless).
-  function ensureCompareOption(ordinal) {
+  function ensureCompareOption(ordinal, tag) {
     for (const sel of [$compareFrom, $compareTo]) {
       if (!sel) continue;
       if ([...sel.options].some((o) => o.value === String(ordinal))) continue;
       const v = state.versions.find((x) => x.ordinal === ordinal);
       const opt = document.createElement('option');
       opt.value = String(ordinal);
-      opt.textContent = v ? `#${ordinal} · ${v.version_tag}` : `#${ordinal}`;
+      const label = v ? v.version_tag : tag;
+      opt.textContent = label ? `#${ordinal} · ${label}` : `#${ordinal}`;
       sel.appendChild(opt);
     }
   }

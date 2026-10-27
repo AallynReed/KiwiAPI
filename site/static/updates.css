@@ -270,7 +270,7 @@
 
 .up-layout {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
@@ -539,7 +539,7 @@
 /* Grid mode: the explorer collapses to a single column - the sidebar becomes a
    full-width gallery, and the detail pane stacks beneath it (only once a file
    is picked). */
-.up-view-grid .up-layout { grid-template-columns: 1fr; }
+.up-view-grid .up-layout { grid-template-columns: minmax(0, 1fr); }
 .up-view-grid .up-sidebar {
   position: static;
   max-height: none;
@@ -656,6 +656,7 @@
   color: var(--text-mute);
   text-align: center;
 }
+.up-detail-empty[hidden] { display: none; }
 .up-detail-empty i {
   font-size: 2rem;
   color: color-mix(in srgb, var(--accent-cyan, #4cc9f0) 50%, transparent);
@@ -1092,7 +1093,7 @@ body.up-modal-open { overflow: hidden; }
 }
 .up-history-row {
   display: grid;
-  grid-template-columns: 80px 1fr auto auto;
+  grid-template-columns: 80px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
   padding: 9px 12px;
@@ -1895,7 +1896,7 @@ body.up-modal-open { overflow: hidden; }
   .up-vfx-list { max-height: none; }
   .up-vfx-stage { height: min(420px, 56vh); }
   .up-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .up-sidebar {
     position: static;
@@ -1944,7 +1945,7 @@ body.up-modal-open { overflow: hidden; }
   }
   .up-compare-run { width: 100%; justify-content: center; }
   .up-history-row {
-    grid-template-columns: 80px 1fr auto;
+    grid-template-columns: 80px minmax(0, 1fr) auto;
   }
   .up-history-row .up-history-when { grid-column: 2 / -1; font-size: .7rem; }
 }
