@@ -378,7 +378,13 @@ services:
   # Developer portal SPA at dev.aallyn.net: serves the static app only. The SPA
   # calls api.aallyn.net directly (cross-origin; CORS-enabled).
   portal:
-    image: nginx:alpine
+    image: trove-nginx
+    # nginx:alpine plus Alpine security fixes that land before upstream rebuilds it.
+    build: &nginx-build
+      context: ./portal
+      dockerfile_inline: |
+        FROM nginx:alpine
+        RUN apk upgrade --no-cache
     restart: unless-stopped
     # Reverse-proxied (dev.aallyn.net) -> host :25470 -> container :80.
     ports:
@@ -391,7 +397,8 @@ services:
       - api
 
   docs:
-    image: nginx:alpine
+    image: trove-nginx
+    build: *nginx-build
     restart: unless-stopped
     # Reverse-proxied (docs.aallyn.net) -> host :25468 -> container :80.
     ports:

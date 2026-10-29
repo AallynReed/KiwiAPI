@@ -146,7 +146,8 @@ chmod -R a+rX portal/html docs 2>/dev/null || true
 
 if [ "$PULL" -eq 1 ]; then
   echo ">> pulling base images"
-  $COMPOSE pull --ignore-pull-failures mongo docs || true
+  $COMPOSE pull --ignore-pull-failures mongo redis || true
+  $COMPOSE build --pull portal docs
 fi
 
 echo ">> (re)creating the stack"
@@ -162,7 +163,7 @@ $COMPOSE $UP_ARGS
 # the whole site (directory-index-forbidden) until it's recreated. A plain `up -d`
 # won't fix it: their config is unchanged, so compose leaves them running on the
 # stale mount. Force-recreate them every deploy so they always re-resolve the bind
-# mount to the current tree - cheap (stock nginx:alpine, nothing to build). Skipped
+# mount to the current tree - cheap (prebuilt trove-nginx image). Skipped
 # when --force-recreate already did it.
 if [ "$FORCE" -ne 1 ]; then
   echo ">> refreshing static containers (portal + docs) so their bind mounts re-resolve"
