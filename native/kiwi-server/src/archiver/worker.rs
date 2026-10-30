@@ -8,7 +8,7 @@ use std::{future::Future, panic::AssertUnwindSafe, pin::Pin, sync::OnceLock, tim
 use futures::FutureExt;
 use kiwi_core::update_archive::BRANCHES;
 
-use super::{Summary, SyncError, cas::ContentStore, cdn::CdnClient, ingest::sync_branch, repo::MongoRepo};
+use super::{Summary, SyncError, cas::ContentStore, cdn::CdnClient, from_live, ingest::sync_branch, repo::MongoRepo};
 use crate::state::AppState;
 
 pub const LOCK_KEY: &str = "kiwi:updates:leader";
@@ -108,6 +108,11 @@ async fn sync_all_branches(state: &AppState, repo: &MongoRepo, store: &ContentSt
                     );
                 } else {
                     tracing::info!("updates[{branch}]: no change ({})", summary.version);
+                }
+                if let Some(db) = state.inner.db.mongo.as_ref()
+                    && let Err(e) = from_live::tag_pending(db, branch).await
+                {
+                    tracing::warn!("updates[{branch}] from-live tagging failed: {e}");
                 }
                 run_hooks(state, store, &summary).await;
             }

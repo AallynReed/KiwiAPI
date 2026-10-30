@@ -10657,6 +10657,18 @@
       "description": "Filter to one change type: added, modified, removed"
      },
      {
+      "name": "live",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": true,
+       "description": "false drops PTS changes that only repeat Live",
+       "title": "Live"
+      },
+      "description": "false drops PTS changes that only repeat Live"
+     },
+     {
       "name": "limit",
       "in": "query",
       "required": false,
@@ -23031,6 +23043,11 @@
      "size": {
       "type": "integer",
       "title": "Size"
+     },
+     "from_live": {
+      "type": "boolean",
+      "title": "From Live",
+      "description": "Present and true when this PTS change only brings the file up to what Live already had."
      }
     },
     "type": "object",
@@ -23081,6 +23098,21 @@
      "files_removed": {
       "type": "integer",
       "title": "Files Removed"
+     },
+     "from_live_added": {
+      "type": "integer",
+      "title": "From Live Added",
+      "description": "PTS only: added rows that only repeat a change Live already had. Absent until checked."
+     },
+     "from_live_modified": {
+      "type": "integer",
+      "title": "From Live Modified",
+      "description": "PTS only: modified rows that only repeat a change Live already had. Absent until checked."
+     },
+     "from_live_removed": {
+      "type": "integer",
+      "title": "From Live Removed",
+      "description": "PTS only: removed rows that only repeat a change Live already had. Absent until checked."
      }
     },
     "type": "object",
@@ -33187,6 +33219,21 @@
      "bytes_added": {
       "type": "integer",
       "title": "Bytes Added"
+     },
+     "from_live_added": {
+      "type": "integer",
+      "title": "From Live Added",
+      "description": "PTS only: added rows that only repeat a change Live already had. Absent until checked."
+     },
+     "from_live_modified": {
+      "type": "integer",
+      "title": "From Live Modified",
+      "description": "PTS only: modified rows that only repeat a change Live already had. Absent until checked."
+     },
+     "from_live_removed": {
+      "type": "integer",
+      "title": "From Live Removed",
+      "description": "PTS only: removed rows that only repeat a change Live already had. Absent until checked."
      }
     },
     "type": "object",

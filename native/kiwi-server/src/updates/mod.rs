@@ -136,6 +136,8 @@ pub struct ChangesQ<const DEF: i64, const MAX: i64> {
     pub ordinal: Option<i64>,
     pub version: Option<String>,
     pub kind: Option<String>,
+    /// `live=false` drops the rows that only repeat Live.
+    pub live: bool,
     pub limit: i64,
     pub offset: i64,
 }
@@ -146,6 +148,7 @@ impl<const DEF: i64, const MAX: i64> FromParams for ChangesQ<DEF, MAX> {
             ordinal: p.query("ordinal").int().optional(),
             version: p.query("version").str().optional(),
             kind: p.query("type").str().optional(),
+            live: p.query("live").bool().default(true),
             limit: p.query("limit").int().ge(1).le(MAX).default(DEF),
             offset: p.query("offset").int().ge(0).default(0),
         }
@@ -223,13 +226,23 @@ fn branch_json(b: &Branch, fl: Flavour) -> Value {
     })
 }
 
+fn from_live_json(v: &Version, out: &mut Value) {
+    if let Some([a, m, r]) = v.from_live {
+        out["from_live_added"] = a.into();
+        out["from_live_modified"] = m.into();
+        out["from_live_removed"] = r.into();
+    }
+}
+
 fn version_json(v: &Version, fl: Flavour) -> Value {
-    json!({
+    let mut out = json!({
         "branch": v.branch, "ordinal": v.ordinal, "version_tag": v.version_tag,
         "captured_at": fl.date(Some(&v.captured_at)), "completed_at": fl.date(v.completed_at.as_ref()),
         "files_added": v.files_added, "files_modified": v.files_modified,
         "files_removed": v.files_removed, "bytes_added": v.bytes_added,
-    })
+    });
+    from_live_json(v, &mut out);
+    out
 }
 
 fn tree_entry_json(e: &TreeEntry, fl: Flavour) -> Value {
@@ -303,16 +316,24 @@ pub async fn changes<F: Fetch, const D: i64, const M: i64>(
     let ver = read::resolve_version(f, branch, q.ordinal, q.version.as_deref())
         .await
         .ok_or_else(|| ApiError::not_found("No matching version for that branch"))?;
-    let (docs, total) = read::list_changes(f, branch, ver.ordinal, q.kind.as_deref(), q.limit, q.offset).await;
+    let (docs, total) = read::list_changes(f, branch, ver.ordinal, q.kind.as_deref(), q.live, q.limit, q.offset).await;
     let entries: Vec<Value> = docs
         .iter()
-        .map(|d| json!({"path": d.path, "type": d.kind, "content_sha256": d.content_sha256, "size": d.size}))
+        .map(|d| {
+            let mut e = json!({"path": d.path, "type": d.kind, "content_sha256": d.content_sha256, "size": d.size});
+            if d.from_live {
+                e["from_live"] = true.into();
+            }
+            e
+        })
         .collect();
-    Ok(json!({
+    let mut out = json!({
         "branch": branch, "ordinal": ver.ordinal, "version_tag": ver.version_tag,
         "entries": entries, "count": docs.len(), "total": total,
         "files_added": ver.files_added, "files_modified": ver.files_modified, "files_removed": ver.files_removed,
-    }))
+    });
+    from_live_json(&ver, &mut out);
+    Ok(out)
 }
 
 pub async fn tree<F: Fetch>(f: &F, branch: &str, prefix: &str, fl: Flavour) -> Result<Value, ApiError> {

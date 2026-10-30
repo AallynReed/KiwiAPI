@@ -6,6 +6,7 @@
 
 pub mod cas;
 pub mod cdn;
+pub mod from_live;
 pub mod ingest;
 pub mod maintenance;
 pub mod repo;

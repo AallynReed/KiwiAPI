@@ -18,21 +18,21 @@
   "feature_store_enabled",
   "feature_updates_enabled"
  ],
- "marked_sha256": "41541de5582c06fde653277aea9ad0aebec04cb1e49a783e15faada6da5d2ff8",
+ "marked_sha256": "aa48614f7abfc65857defbeff03bd139509cbfa60edd21d90c98ed03350a20c8",
  "cases": [
   {
    "name": "defaults",
    "disabled": [
     "feature_delves_enabled"
    ],
-   "len": 512697,
-   "sha256": "2223d0b7ccc098ed36aa357aa7353aff088997d7a0b83ef8da94292b576d53f2"
+   "len": 514106,
+   "sha256": "8c75e13790cff25b4c91ad0beeb63719828f473f18efefcdf05499c122c33442"
   },
   {
    "name": "all_on",
    "disabled": [],
-   "len": 515977,
-   "sha256": "41541de5582c06fde653277aea9ad0aebec04cb1e49a783e15faada6da5d2ff8"
+   "len": 517386,
+   "sha256": "aa48614f7abfc65857defbeff03bd139509cbfa60edd21d90c98ed03350a20c8"
   },
   {
    "name": "all_off",
@@ -51,16 +51,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 276228,
-   "sha256": "b05b74a898646ef59f9db846983ca1a3ca448d6c650a184ccfc2c925eb840480"
+   "len": 277409,
+   "sha256": "6f295e78519d3649f714824d94177f797893155840225a40d9a3c29ee8d1db59"
   },
   {
    "name": "only_off:feature_class_activity_enabled",
    "disabled": [
     "feature_class_activity_enabled"
    ],
-   "len": 509036,
-   "sha256": "0137bab4fcde970abe785bd7e51dda88c894776402949f72fe69574af5701837"
+   "len": 510445,
+   "sha256": "2585c2ecd539b709a92da27b9ad51e1e5009cded73e5bf03948297dfd113ceef"
   },
   {
    "name": "only_on:feature_class_activity_enabled",
@@ -78,16 +78,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 283169,
-   "sha256": "9a72d1db7673f79673b4fddfac629503e16fa8d580cfa9f57a0b1b8f7e5c9003"
+   "len": 284350,
+   "sha256": "5e7b59baed5cdc952dfbfe87dd17d5a10405e47176565159a4f907b174c13c77"
   },
   {
    "name": "only_off:feature_codexes_enabled",
    "disabled": [
     "feature_codexes_enabled"
    ],
-   "len": 486129,
-   "sha256": "d5b29b54c5ac1fc9e842afbbaeb9f4f4e9bf727a4436c58d4689373ce7e596ed"
+   "len": 487538,
+   "sha256": "a8eea4535f05e121dc502111152cb14c02bd1fe6339083af4a78ef4ee02a3433"
   },
   {
    "name": "only_on:feature_codexes_enabled",
@@ -105,16 +105,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 306076,
-   "sha256": "c104ced03e7e8105fbc268a419a1db5925ec3f11eed59ee7cb00dfa0b3dc0822"
+   "len": 307257,
+   "sha256": "c27c3517d0c8443b5ca38f3f2a69ca8eafd7c3e199c73ffa22900b13c0cc7454"
   },
   {
    "name": "only_off:feature_delves_enabled",
    "disabled": [
     "feature_delves_enabled"
    ],
-   "len": 512697,
-   "sha256": "2223d0b7ccc098ed36aa357aa7353aff088997d7a0b83ef8da94292b576d53f2"
+   "len": 514106,
+   "sha256": "8c75e13790cff25b4c91ad0beeb63719828f473f18efefcdf05499c122c33442"
   },
   {
    "name": "only_on:feature_delves_enabled",
@@ -132,16 +132,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 279508,
-   "sha256": "87fffe60563649cd4def3a71f648f7d18417dd4190524860ca8fe3873565e8ba"
+   "len": 280689,
+   "sha256": "864fe02a94b75ea9b85f8e4349bf34dd66c693997ea974ca889f570c72bd6ae5"
   },
   {
    "name": "only_off:feature_dressing_room_enabled",
    "disabled": [
     "feature_dressing_room_enabled"
    ],
-   "len": 494708,
-   "sha256": "618a2468426a595eff84f9dc71472f41d971a6d3783b160d09463b8fc1fd56b4"
+   "len": 496117,
+   "sha256": "cdd4bdf2f1459ff433461d66e145e22c95eb67811b8f8e9492d81c48c4b1bb4d"
   },
   {
    "name": "only_on:feature_dressing_room_enabled",
@@ -159,16 +159,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 297497,
-   "sha256": "8131595a16481737fc5a54c040ce4c66b7b96239a5cedba7ddb547c3e804cb64"
+   "len": 298678,
+   "sha256": "d6aeb3449f98e7dd88fd9872d6715131310f5b1f2de4a00493b7ff234d89f42a"
   },
   {
    "name": "only_off:feature_embed_viewer_enabled",
    "disabled": [
     "feature_embed_viewer_enabled"
    ],
-   "len": 512405,
-   "sha256": "798fa646aaa623b0fd6f69288a0fd03ea2c75a17465e5578b398f173cff1570b"
+   "len": 513814,
+   "sha256": "2ca2b8911a3efa22b482cc5bf60f64829ffe7d37e4309f57d1963c1afe54af3f"
   },
   {
    "name": "only_on:feature_embed_viewer_enabled",
@@ -186,16 +186,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 279800,
-   "sha256": "ce173d63e76b2b911c1bfe5d4e92e799b601bf704c7e8d9e57553e0e63fbcf29"
+   "len": 280981,
+   "sha256": "d7ffb623928425f3266babefeebb7d6d1eed4bbe109de5c68dc9fbad2848369d"
   },
   {
    "name": "only_off:feature_giveaways_enabled",
    "disabled": [
     "feature_giveaways_enabled"
    ],
-   "len": 510376,
-   "sha256": "5e4027eb319e8afd45632aea4d3229be17ca5636db7cdf5e77e9e9c0a11e4335"
+   "len": 511785,
+   "sha256": "9261e1f430ba26ad287bc66819377255770421af3456b9cc7f446316151c574a"
   },
   {
    "name": "only_on:feature_giveaways_enabled",
@@ -213,16 +213,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 281829,
-   "sha256": "19fe334ecc640000e9eb014a8de3251ab611d748d5817f80e776afdbc80fb1ae"
+   "len": 283010,
+   "sha256": "7c75fef79e00004b0866422a80e6e9eee9dc4fc3bb0c05f6756e4d2da68a8386"
   },
   {
    "name": "only_off:feature_leaderboards_enabled",
    "disabled": [
     "feature_leaderboards_enabled"
    ],
-   "len": 455665,
-   "sha256": "fc9e7d9c9db709d0440bf69fd1a9f581c71be9a7ee976c6f685dd0a583602b46"
+   "len": 457074,
+   "sha256": "feccd345a8dce6a601a5bb004067f5f5b7079d671c6395ed4a665f6ad2416e52"
   },
   {
    "name": "only_on:feature_leaderboards_enabled",
@@ -240,16 +240,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 336540,
-   "sha256": "e80d5fe0f14df61319c1a813870c244423111cbce8a0891b7ade42feb720c203"
+   "len": 337721,
+   "sha256": "ebf5a4d1bd2e57e2d51d9bc459d21bdbde88b837ec1a51d9422bdaf7d21bce69"
   },
   {
    "name": "only_off:feature_market_enabled",
    "disabled": [
     "feature_market_enabled"
    ],
-   "len": 506195,
-   "sha256": "22f57e1c7b6f1751b9631c5aead8c944ac110bae21fb6baf8c0785a3d80d552e"
+   "len": 507604,
+   "sha256": "a19e542423c14076fbc159d8c52e60224bf25e09ace41ae26f197aa5a1371d02"
   },
   {
    "name": "only_on:feature_market_enabled",
@@ -267,16 +267,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 286010,
-   "sha256": "f09849ca9a081074d97632f23d2860ddbde4def42eb43a2acd45e6f3f8f66942"
+   "len": 287191,
+   "sha256": "8d90a7136ced5f51469cd6eeac4c38e708126adf3915c7bc869e90cbaee01a63"
   },
   {
    "name": "only_off:feature_mods_hub_enabled",
    "disabled": [
     "feature_mods_hub_enabled"
    ],
-   "len": 458284,
-   "sha256": "3604ae2b77fe819754bdacf6b56fcf3fd847a31b30b5b99ccd4a72e6be95d38f"
+   "len": 459693,
+   "sha256": "4fc08b2f8468a0613b0e5dc3e2f1fdb9586b351c39dd66c9dd7b0334b1df3918"
   },
   {
    "name": "only_on:feature_mods_hub_enabled",
@@ -294,16 +294,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 333921,
-   "sha256": "b0de92d4873942dca6c9b45d04dae4b77905c8dbe01517ca470f9ad6fcce3333"
+   "len": 335102,
+   "sha256": "8c2fe8c91b9326056fe5b31aba4fece179b50b85bdb43f9eb2cb3aaa7d037d39"
   },
   {
    "name": "only_off:feature_player_activity_enabled",
    "disabled": [
     "feature_player_activity_enabled"
    ],
-   "len": 506306,
-   "sha256": "a8d83c51a7f4ca65b5e568e27a4c623e2704d84fcfa5ac5e64859e2c808aab80"
+   "len": 507715,
+   "sha256": "6f5ed6c40a391c8474def627740d7645d19f10040da44232086fa11fb99ea134"
   },
   {
    "name": "only_on:feature_player_activity_enabled",
@@ -321,16 +321,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 285899,
-   "sha256": "5a98c91f919ce0775a9ca2cd1ae8085c199fc564c2f5d600fae733cd30a1c9fa"
+   "len": 287080,
+   "sha256": "8fc05ee8ede740105515004593bc930b3938e98f36991d490493a0ee0fffe010"
   },
   {
    "name": "only_off:feature_server_status_enabled",
    "disabled": [
     "feature_server_status_enabled"
    ],
-   "len": 512029,
-   "sha256": "7ac3252d14cc06bbb402753556e4b8b79b1077577cb56ee42fa3854b5974c8b4"
+   "len": 513438,
+   "sha256": "707ba2a3667939227ff6361c7f0a308f752d25537e5bed065edfe2dd51d159e1"
   },
   {
    "name": "only_on:feature_server_status_enabled",
@@ -348,16 +348,16 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 280176,
-   "sha256": "901e1833735cb58927482f3aecef0bcf1e9369df41d285e46a5a4ef363aa7eec"
+   "len": 281357,
+   "sha256": "c8835f5cffea83953eea030d61b8a9de7ae471a92f147e384d5234983662c015"
   },
   {
    "name": "only_off:feature_store_enabled",
    "disabled": [
     "feature_store_enabled"
    ],
-   "len": 504420,
-   "sha256": "9829a8297de43f21f2ea81fb9b56346c7f6d09941364ae66f896c60e7e2b12bf"
+   "len": 505829,
+   "sha256": "f3034c02a27fea81977cda076219c9e5b036ec67e6ed2ed84f0dfeba33d23c94"
   },
   {
    "name": "only_on:feature_store_enabled",
@@ -375,16 +375,16 @@
     "feature_server_status_enabled",
     "feature_updates_enabled"
    ],
-   "len": 287785,
-   "sha256": "c5d2f7ab1d7385b68a65df665eced935d6a61f5720b270e1cfdc8b4af1516a14"
+   "len": 288966,
+   "sha256": "53e234ea016fddb7f2cc5aea0e93c3fbd373338cd3874a21c4680c4dfce0df7d"
   },
   {
    "name": "only_off:feature_updates_enabled",
    "disabled": [
     "feature_updates_enabled"
    ],
-   "len": 499702,
-   "sha256": "ae667766bc89174577496486e2ce3097f0837e7a0bf325d1950fcd86b1d735dc"
+   "len": 500883,
+   "sha256": "910a04613fdb2d559aa0d2bf8e83c2906173145a4d3b74b967e99c056de090ae"
   },
   {
    "name": "only_on:feature_updates_enabled",
@@ -402,8 +402,8 @@
     "feature_server_status_enabled",
     "feature_store_enabled"
    ],
-   "len": 292503,
-   "sha256": "7cc743386d9b3e822fcf48118deb6c2fefedde5e1b15212bfeccd3c92dc097f0"
+   "len": 293912,
+   "sha256": "34d9abd767b3126599bde34870f231ebe8a47c4410af731359601bb6f0df4b77"
   },
   {
    "name": "mixed_00",
@@ -416,8 +416,8 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 380975,
-   "sha256": "d385d1882d6fa46b29b93c55833310cf474232c74dd48d59e49819573a231cd0"
+   "len": 382156,
+   "sha256": "2f71feaa46734310a93d8745f6548054ba42c22d395e217d88fc4ac1e954260d"
   },
   {
    "name": "mixed_01",
@@ -429,8 +429,8 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 443851,
-   "sha256": "61ee47fcdb53e1ab2689482b3c06df0894a04cc8228fa5b530dd5799bf8d3eac"
+   "len": 445032,
+   "sha256": "646c13d15b23214f5225c76ae1e80e789c3f53f50f5102ecb1175ce5efd6ec3c"
   },
   {
    "name": "mixed_02",
@@ -445,8 +445,8 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 344068,
-   "sha256": "a62740ea9f09f5ca484df23568c6d577f78bae12a0564514f6f5bbabf81cc8cd"
+   "len": 345249,
+   "sha256": "55799aeb223197b92044af9fd04d2e8e323b604f469427a3b180c48e32c087b0"
   },
   {
    "name": "mixed_03",
@@ -458,8 +458,8 @@
     "feature_mods_hub_enabled",
     "feature_updates_enabled"
    ],
-   "len": 367904,
-   "sha256": "93cbc5aa6ad2ab0fba3ce2026516f4c1d845089a3835318f84d87a8c38c95da2"
+   "len": 369085,
+   "sha256": "03dcd8c1fcf05e482224c2d829b5119993a73d6914b3ea4fb9294d9dce855f2e"
   },
   {
    "name": "mixed_04",
@@ -474,8 +474,8 @@
     "feature_mods_hub_enabled",
     "feature_updates_enabled"
    ],
-   "len": 361716,
-   "sha256": "5c6ece20a33760c9b533d275b5fb49ad32129f5012ad6a54cfddead4171bd92b"
+   "len": 362897,
+   "sha256": "b2a12699275205101b23a46b00b79da315f967b19bd1f99833f15edfc5409153"
   },
   {
    "name": "mixed_05",
@@ -485,8 +485,8 @@
     "feature_server_status_enabled",
     "feature_store_enabled"
    ],
-   "len": 473602,
-   "sha256": "8df7d6e37e83f1c8bf5a20fd72d27eeda1ad6cdfd88ae9622a28467f1a7b38fd"
+   "len": 475011,
+   "sha256": "b7063b4c056ec18867e6503da5b7f6040a8d5b4d20854737aea82849ec769bc5"
   },
   {
    "name": "mixed_06",
@@ -498,8 +498,8 @@
     "feature_player_activity_enabled",
     "feature_updates_enabled"
    ],
-   "len": 391727,
-   "sha256": "a377cef3582957bb11404057fb4a3326861b044e8cf512a088d85c3c87b3f528"
+   "len": 392908,
+   "sha256": "f80739de9408e9f39708b7732d18c0a4d6936d270aaa327a85389f0a6ffef371"
   },
   {
    "name": "mixed_07",
@@ -509,8 +509,8 @@
     "feature_player_activity_enabled",
     "feature_store_enabled"
    ],
-   "len": 485576,
-   "sha256": "f7df1a51c26d556d11dc7842e26f468108c98a0878432b65536b2639bbdfbad0"
+   "len": 486985,
+   "sha256": "f5bb18e643226acc511011294036d79ae64614edd286a00586d1e67919ebbba6"
   },
   {
    "name": "mixed_08",
@@ -523,8 +523,8 @@
     "feature_leaderboards_enabled",
     "feature_market_enabled"
    ],
-   "len": 380973,
-   "sha256": "43fc8402857144a3e0794649f2c0db71248abd5a6d71f6d534bd29103d31b1cd"
+   "len": 382382,
+   "sha256": "26cc8d82345ecd43ce116db12789ac65c89dfdd7c0fce565a4b9179cd6486988"
   },
   {
    "name": "mixed_09",
@@ -535,8 +535,8 @@
     "feature_market_enabled",
     "feature_updates_enabled"
    ],
-   "len": 458430,
-   "sha256": "73922a4353b85d4aba2197946c26d53c62c7750b6c16297315ad01be6b25fedd"
+   "len": 459611,
+   "sha256": "38b35504c5089ff4d90898a1178b147c35f32185d9b378dc308acd7d36524959"
   },
   {
    "name": "mixed_10",
@@ -549,8 +549,8 @@
     "feature_market_enabled",
     "feature_mods_hub_enabled"
    ],
-   "len": 381563,
-   "sha256": "4417bd407d5cbfe736df0b5b6f8f3fa1f420d4ec8e72a1e2a9dabbfa2168a916"
+   "len": 382972,
+   "sha256": "91176457907b165059495df10854206a148a951537456571798c2b4a9ea52453"
   },
   {
    "name": "mixed_11",
@@ -563,8 +563,8 @@
     "feature_player_activity_enabled",
     "feature_server_status_enabled"
    ],
-   "len": 457514,
-   "sha256": "f80135086825aa6b00c0c7f2461b775697a611f8481920b2c78ecd7cebeadb06"
+   "len": 458923,
+   "sha256": "253c92cf7077ea358114618540209416be5e27181cdd6c2c3efc946f40291215"
   },
   {
    "name": "mixed_12",
@@ -578,8 +578,8 @@
     "feature_server_status_enabled",
     "feature_store_enabled"
    ],
-   "len": 369040,
-   "sha256": "f51fd80a47a7b24790b0c504147c355662c7dadc1e2d45adb7aff8a8eafaffbd"
+   "len": 370449,
+   "sha256": "a3759029769d9b41aefb09ecaabf5bbba7793267fcc50e8bdd66f4f51598a5a5"
   },
   {
    "name": "mixed_13",
@@ -591,8 +591,8 @@
     "feature_store_enabled",
     "feature_updates_enabled"
    ],
-   "len": 423409,
-   "sha256": "feda36b237ad1bf7e5f50cc0d9b4bafde0d4ffc9ed606f4d9887dd9c544fbb93"
+   "len": 424590,
+   "sha256": "dbfb86974c44b177e9f1728280a322028fd6cd3bd059edb03fb8ac76fa4d16d4"
   },
   {
    "name": "mixed_14",
@@ -603,8 +603,8 @@
     "feature_player_activity_enabled",
     "feature_server_status_enabled"
    ],
-   "len": 415176,
-   "sha256": "ac812541fb423b1f02aee64609281398bd881481680d45339a795feeea3f1f8e"
+   "len": 416585,
+   "sha256": "0c4b344f5b7cfd95c80bb27111c40d841532164f22f604d9c44c0d901ce4b943"
   },
   {
    "name": "mixed_15",
@@ -616,8 +616,8 @@
     "feature_player_activity_enabled",
     "feature_server_status_enabled"
    ],
-   "len": 438179,
-   "sha256": "3f4608bdd46ea125aa5ee7cb716e9211f20f870df37fd6f621f38e94c3cac437"
+   "len": 439588,
+   "sha256": "2a008e140e2643a0b00e61d01dd8efe2dbce534e74ba27f9c5fb949de3ff3d9f"
   },
   {
    "name": "mixed_16",
@@ -630,8 +630,8 @@
     "feature_mods_hub_enabled",
     "feature_store_enabled"
    ],
-   "len": 351353,
-   "sha256": "6b1a25b7736119ec6852a0a71ee89c7341e5c26ba20ea24f195061b91d4de740"
+   "len": 352762,
+   "sha256": "259cedfbafdabf2537324b6d3944bdd902d47d07051f97774a5e07a57269265f"
   },
   {
    "name": "mixed_17",
@@ -642,8 +642,8 @@
     "feature_market_enabled",
     "feature_player_activity_enabled"
    ],
-   "len": 409342,
-   "sha256": "1a07e0ed7beb61cc10df27b69dee4073a72ab0b9a9a2aecdf26f5b0bbbabe0ff"
+   "len": 410751,
+   "sha256": "11e1e4606a710eb087950ab13cde8c1b04cad37caa4103e8681ca6bcb7e25f7f"
   },
   {
    "name": "mixed_18",
@@ -654,8 +654,8 @@
     "feature_leaderboards_enabled",
     "feature_updates_enabled"
    ],
-   "len": 407900,
-   "sha256": "a821a35c18e00ad5e91df48522a0e5190df79cbf8f189510ec44e648f3b4a362"
+   "len": 409081,
+   "sha256": "6481c949d15a3985fd4ac7cc4843a5ac584c3721e688672b9bc93cd1ee4622f4"
   },
   {
    "name": "mixed_19",
@@ -668,8 +668,8 @@
     "feature_market_enabled",
     "feature_mods_hub_enabled"
    ],
-   "len": 344549,
-   "sha256": "f46b25f87d4557c32d1690b9dffd093a4233a630020268348c1be440c2db346c"
+   "len": 345958,
+   "sha256": "4596cf6fc3351d0532eda0e9b3b262d80334ee15c9293aad1c33c62683905835"
   },
   {
    "name": "mixed_20",
@@ -681,8 +681,8 @@
     "feature_leaderboards_enabled",
     "feature_store_enabled"
    ],
-   "len": 407017,
-   "sha256": "d44c09a12925af7273204e563ab9b7cc0e5dea5980206c51dacb7fc0f8520016"
+   "len": 408426,
+   "sha256": "8ce0547198561f206707f66f420367ec43103766dede9ba3f454ab0fd7768143"
   },
   {
    "name": "mixed_21",
@@ -697,8 +697,8 @@
     "feature_player_activity_enabled",
     "feature_updates_enabled"
    ],
-   "len": 318603,
-   "sha256": "3fd133ca532e7ea8d8f9f1ad697843adcf59929951eece9fdfc1b83ef905ca01"
+   "len": 319784,
+   "sha256": "746277641eb95884fb3eabec09aca81274a7aed93107c97e49a7f44ceee7f800"
   },
   {
    "name": "mixed_22",
@@ -710,8 +710,8 @@
     "feature_mods_hub_enabled",
     "feature_updates_enabled"
    ],
-   "len": 404106,
-   "sha256": "f094f164ab60a16c3240b02660f72024b9a59b3041880087503ba4507cd3893a"
+   "len": 405287,
+   "sha256": "47b15dd3c0f441c80f241428971073bfe0425331e9bc7f9eabb63fe2485adac5"
   },
   {
    "name": "mixed_23",
@@ -723,8 +723,8 @@
     "feature_player_activity_enabled",
     "feature_store_enabled"
    ],
-   "len": 415482,
-   "sha256": "879fd5ce9b52cdc77436d620d371ae4479907caa347766af099d16f415f295ae"
+   "len": 416891,
+   "sha256": "b2a57b781df4f504ab33c6fe8e2d20a7825b261c81a2a3f3b23870c04b1f051c"
   },
   {
    "name": "truthy_values",
@@ -738,8 +738,8 @@
     "feature_server_status_enabled",
     "feature_updates_enabled"
    ],
-   "len": 379289,
-   "sha256": "7a9c36d0e713478553c12649927875beebeb37667a6bae0b4997cce9a06161e7"
+   "len": 380470,
+   "sha256": "b1ee5bca76de34ae2f892b5841350cd70bc3dbe80fde6c9a0927e6bb54b367f4"
   }
  ]
 }

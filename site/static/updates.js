@@ -40,7 +40,8 @@
     versions: [],            // recent VersionInfo for the active branch
     versionsTotal: 0,
     selectedVersion: null,   // ordinal - drives the "Changes" tab + tree badges
-    activeTab: 'explorer',   // 'explorer' | 'changes' | 'compare'
+    activeTab: 'explorer',
+    showLive: false,         // PTS rows that only repeat Live   // 'explorer' | 'changes' | 'compare'
     viewMode: readViewMode(),// 'list' | 'grid' - explorer sidebar as rows vs a thumbnail gallery
     treeSort: readTreeSort(),// 'name' | 'modified' - order of the explorer listing
 
@@ -68,8 +69,8 @@
 
     // Changes tab
     changes: { entries: [], total: 0, ordinal: null, version_tag: null,
-               counts: {added: 0, modified: 0, removed: 0}, filter: 'all',
-               offset: 0, loading: false, token: 0 },
+               counts: {added: 0, modified: 0, removed: 0}, live: {added: 0, modified: 0, removed: 0},
+               filter: 'all', offset: 0, loading: false, token: 0 },
     // Which change-tree folders are collapsed, remembered PER VERSION (keyed by
     // ordinal) so it survives re-fetching the change-list, switching versions,
     // and the browser Back button. Lives outside `changes` (which gets rebuilt).
@@ -189,6 +190,8 @@
   const $countAdd = $('up-changes-count-added');
   const $countMod = $('up-changes-count-modified');
   const $countRem = $('up-changes-count-removed');
+  const $liveToggle = $('up-changes-live');
+  const $countLive = $('up-changes-count-live');
 
   const $comparePath = $('up-compare-path');
   const $compareFrom = $('up-compare-from');
@@ -349,8 +352,8 @@
     state.versionTouched = null;
     state.changes = {
       entries: [], total: 0, ordinal: null, version_tag: null,
-      counts: {added: 0, modified: 0, removed: 0}, filter: 'all',
-      offset: 0, loading: false, token: state.changes.token || 0,
+      counts: {added: 0, modified: 0, removed: 0}, live: {added: 0, modified: 0, removed: 0},
+      filter: 'all', offset: 0, loading: false, token: state.changes.token || 0,
     };
     state.changesCollapsed.clear();   // ordinals are per-branch
     state.compare = { from: null, to: null, path: '', payload: null, loading: false };
@@ -445,15 +448,26 @@
           <span class="up-version-tag">${esc(v.version_tag)}</span>
           <span class="up-version-when">${when ? esc(formatWhen(when)) : ''}</span>
           <span class="up-version-counts">
-            <span class="up-count-pill up-count-pill-add">+${formatInt(v.files_added)}</span>
-            <span class="up-count-pill up-count-pill-mod">~${formatInt(v.files_modified)}</span>
-            <span class="up-count-pill up-count-pill-rem">−${formatInt(v.files_removed)}</span>
+            <span class="up-count-pill up-count-pill-add">+${formatInt(shownCount(v, 'added'))}</span>
+            <span class="up-count-pill up-count-pill-mod">~${formatInt(shownCount(v, 'modified'))}</span>
+            <span class="up-count-pill up-count-pill-rem">−${formatInt(shownCount(v, 'removed'))}</span>
           </span>
         </button>`;
     }).join('');
     for (const btn of $versions.querySelectorAll('[data-ordinal]')) {
       btn.addEventListener('click', () => selectVersion(Number(btn.dataset.ordinal)));
     }
+  }
+
+  // PTS is its own branch: when it catches up to Live, its next capture repeats
+  // Live's changes. The server tags those rows; they stay hidden unless asked for.
+  function shownCount(v, type) {
+    const all = v[`files_${type}`] || 0;
+    return state.showLive ? all : all - (v[`from_live_${type}`] || 0);
+  }
+
+  function liveCounts(v) {
+    return { added: v.from_live_added || 0, modified: v.from_live_modified || 0, removed: v.from_live_removed || 0 };
   }
 
   async function selectVersion(ordinal) {
@@ -481,6 +495,7 @@
         modified: versionChanges.files_modified || 0,
         removed: versionChanges.files_removed || 0,
       },
+      live: liveCounts(versionChanges),
       filter,
       offset: (versionChanges.entries || []).length,
       loading: false,
@@ -493,14 +508,6 @@
     state.versionTouched = { ordinal, byPath };
 
     renderTree();
-    // The version's whole size, not the filtered slice - the badge counts the
-    // version, and the counts add up to it whatever chip is active.
-    if ($tabChangesBadge) {
-      const c = state.changes.counts;
-      const all = (c.added || 0) + (c.modified || 0) + (c.removed || 0);
-      $tabChangesBadge.hidden = all <= 0;
-      $tabChangesBadge.textContent = formatInt(all);
-    }
     // A chip left active from the previous version needs its own query - the
     // page above is sorted by type, so it can be all-"added" and hold nothing
     // of the type the user is looking at.
@@ -514,8 +521,9 @@
   // renders nothing while the chip beside it says 43.
   function changesUrl(ordinal, filter, offset) {
     const type = filter && filter !== 'all' ? `&type=${encodeURIComponent(filter)}` : '';
+    const live = state.showLive ? '' : '&live=false';
     return `/site/updates/${state.branch}/changes`
-      + `?ordinal=${ordinal}&limit=${CHANGES_PAGE}&offset=${offset}${type}`;
+      + `?ordinal=${ordinal}&limit=${CHANGES_PAGE}&offset=${offset}${type}${live}`;
   }
 
   // Load page one for a change type. `total` comes back already scoped to the
@@ -2233,10 +2241,21 @@
 
   // ─── Changes tab ───────────────────────────────────────────────────
   function renderChanges() {
-    const { entries, total, ordinal, version_tag, counts } = state.changes;
-    $countAdd.textContent = formatInt(counts.added);
-    $countMod.textContent = formatInt(counts.modified);
-    $countRem.textContent = formatInt(counts.removed);
+    const { entries, total, ordinal, version_tag, live } = state.changes;
+    $countAdd.textContent = formatInt(shownChangeCount('added'));
+    $countMod.textContent = formatInt(shownChangeCount('modified'));
+    $countRem.textContent = formatInt(shownChangeCount('removed'));
+    const liveTotal = live.added + live.modified + live.removed;
+    $liveToggle.hidden = !liveTotal;
+    $liveToggle.setAttribute('aria-pressed', String(state.showLive));
+    $countLive.textContent = formatInt(liveTotal);
+    // The version's whole size, not the filtered slice - the badge counts the
+    // version, and the counts add up to it whatever chip is active.
+    if ($tabChangesBadge) {
+      const all = ['added', 'modified', 'removed'].reduce((n, k) => n + shownChangeCount(k), 0);
+      $tabChangesBadge.hidden = all <= 0;
+      $tabChangesBadge.textContent = formatInt(all);
+    }
 
     if (ordinal == null) {
       $changesMeta.setAttribute('data-i18n', '');
@@ -2268,6 +2287,11 @@
     // Pagination: one page arrives per fetch, filtered to the active chip. If
     // the server's total outruns what we hold, offer the next page.
     $changesFoot.hidden = entries.length >= total;
+  }
+
+  function shownChangeCount(type) {
+    const { counts, live } = state.changes;
+    return state.showLive ? counts[type] : counts[type] - live[type];
   }
 
   // Build a directory tree from flat change entries. Each dir node carries the
@@ -2343,6 +2367,7 @@
           <span class="up-change-type up-change-type-${esc(e.type)}">${esc(t(e.type))}</span>
           <i class="fa-solid ${iconForName(e.name)} up-ctree-ficon" aria-hidden="true"></i>
           <span class="up-ctree-fname">${esc(e.name)}</span>
+          ${e.from_live ? `<span class="up-change-live">${esc(t('Live'))}</span>` : ''}
           <span class="up-change-size">${e.type === 'removed' ? '-' : esc(formatBytes(e.size))}</span>
         </div>`;
     }
@@ -2802,6 +2827,18 @@
       });
     }
     if ($changesMore) $changesMore.addEventListener('click', () => loadMoreChanges());
+    $liveToggle.addEventListener('click', async () => {
+      state.showLive = !state.showLive;
+      renderVersions();
+      const { ordinal } = state.changes;
+      if (ordinal == null) { renderChanges(); return; }
+      const data = await fetchJSON(changesUrl(ordinal, 'all', 0));
+      const byPath = new Map();
+      for (const e of data.entries || []) byPath.set(e.path, e.type);
+      state.versionTouched = { ordinal, byPath };
+      renderTree();
+      await loadChangeList(state.changes.filter || 'all');
+    });
 
     // Changes tree: one delegated handler - toggle folders, or jump a file into
     // the explorer. Delegation survives the tree re-rendering on every toggle.

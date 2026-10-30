@@ -41,8 +41,12 @@ const VERSION_FIELDS: &[&str] = &[
     "files_modified",
     "files_removed",
     "bytes_added",
+    "from_live_added",
+    "from_live_modified",
+    "from_live_removed",
 ];
-const CHANGE_FIELDS: &[&str] = &["branch", "ordinal", "path", "type", "content_sha256", "fnv_hash", "size"];
+const CHANGE_FIELDS: &[&str] =
+    &["branch", "ordinal", "path", "type", "content_sha256", "fnv_hash", "size", "from_live"];
 const STATE_FIELDS: &[&str] =
     &["branch", "path", "content_sha256", "fnv_hash", "size", "archive", "archive_index", "last_ordinal"];
 
@@ -145,6 +149,8 @@ pub struct Version {
     pub files_modified: i64,
     pub files_removed: i64,
     pub bytes_added: i64,
+    /// Added/modified/removed rows that only repeat Live; None until tagged.
+    pub from_live: Option<[i64; 3]>,
 }
 
 fn version(d: &Document) -> Version {
@@ -163,6 +169,9 @@ fn version(d: &Document) -> Version {
         files_modified: int(d, "files_modified", Some(0)),
         files_removed: int(d, "files_removed", Some(0)),
         bytes_added: int(d, "bytes_added", Some(0)),
+        from_live: d
+            .contains_key("from_live_added")
+            .then(|| ["from_live_added", "from_live_modified", "from_live_removed"].map(|k| int(d, k, Some(0)))),
     }
 }
 
@@ -174,6 +183,7 @@ pub struct Change {
     pub kind: String,
     pub content_sha256: Option<String>,
     pub size: i64,
+    pub from_live: bool,
 }
 
 fn change(d: &Document) -> Change {
@@ -184,6 +194,7 @@ fn change(d: &Document) -> Change {
         kind: string(d, "type", None),
         content_sha256: opt_string(d, "content_sha256"),
         size: int(d, "size", Some(0)),
+        from_live: d.get_bool("from_live").unwrap_or(false),
     }
 }
 
@@ -252,12 +263,16 @@ pub async fn list_changes<F: Fetch>(
     branch: &str,
     ordinal: i64,
     kind: Option<&str>,
+    with_live: bool,
     limit: i64,
     offset: i64,
 ) -> (Vec<Change>, u64) {
     let mut q = doc! {"branch": branch, "ordinal": bson_int(ordinal)};
     if let Some(k) = kind.filter(|k| !k.is_empty()) {
         q.insert("type", k);
+    }
+    if !with_live {
+        q.insert("from_live", doc! {"$ne": true});
     }
     let total = f.count(CHANGES, q.clone()).await;
     let sort = vec![("type", 1), ("path", 1)];
