@@ -679,11 +679,11 @@ async fn http_replay() {
 #[test]
 fn disposition_and_paths() {
     assert_eq!(
-        super::routes::disposition("A é.zip").as_bytes().to_vec(),
+        crate::media::disposition("attachment", "A é.zip").as_bytes().to_vec(),
         b"attachment; filename=\"A \xe9.zip\"".to_vec()
     );
     assert_eq!(
-        super::routes::disposition("日本 pack.zip").as_bytes().to_vec(),
+        crate::media::disposition("attachment", "日本 pack.zip").as_bytes().to_vec(),
         b"attachment; filename=\"__ pack.zip\"; filename*=UTF-8''%E6%97%A5%E6%9C%AC%20pack.zip".to_vec()
     );
 }

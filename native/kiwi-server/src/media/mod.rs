@@ -102,6 +102,19 @@ pub fn latin1_header(s: &str) -> Result<HeaderValue, ApiError> {
     bytes.and_then(|b| HeaderValue::from_bytes(&b).ok()).ok_or_else(ApiError::internal)
 }
 
+/// `<kind>; filename="..."`, latin-1 like Starlette sends it; a name outside
+/// latin-1 (a 500 there) gets a `_` fallback plus `filename*`.
+pub fn disposition(kind: &str, name: &str) -> HeaderValue {
+    let name: String = name.chars().filter(|c| !matches!(c, '"' | '\r' | '\n')).collect();
+    if let Ok(v) = latin1_header(&format!("{kind}; filename=\"{name}\"")) {
+        return v;
+    }
+    let fallback: String = name.chars().map(|c| if u32::from(c) < 0x100 { c } else { '_' }).collect();
+    let encoded = crate::middleware::pyurl::quote(&name, "");
+    latin1_header(&format!("{kind}; filename=\"{fallback}\"; filename*=UTF-8''{encoded}"))
+        .unwrap_or_else(|_| HeaderValue::from_static("attachment"))
+}
+
 /// `path.rsplit("/", 1)[-1].rsplit(".", 1)[0] or default`.
 pub fn file_stem<'a>(path: &'a str, default: &'a str) -> &'a str {
     let base = path.rsplit('/').next().unwrap_or(path);

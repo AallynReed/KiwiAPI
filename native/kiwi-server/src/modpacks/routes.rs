@@ -24,7 +24,7 @@ use crate::{
     auth::{CurrentSiteUser, OptionalSiteUser, extract::Public, scopes::MODS_READ},
     error::{self, ApiError},
     features::{self, ModsHub, RequireFeature},
-    middleware::pyurl::{quote, scope_path},
+    middleware::pyurl::scope_path,
     pyjson::{PyJson, PydanticJson},
     state::AppState,
     validation::{DepsThenBody, Query},
@@ -46,22 +46,11 @@ fn obj(m: Map<String, Value>) -> Value {
     Value::Object(m)
 }
 
-/// `Content-Disposition: attachment; filename="..."`. Starlette sends it
-/// latin-1; a name outside latin-1 (a 500 there) also gets `filename*`.
-pub fn disposition(name: &str) -> HeaderValue {
-    if let Ok(v) = crate::media::latin1_header(&format!("attachment; filename=\"{name}\"")) {
-        return v;
-    }
-    let fallback: String = name.chars().map(|c| if u32::from(c) < 0x100 { c } else { '_' }).collect();
-    crate::media::latin1_header(&format!("attachment; filename=\"{fallback}\"; filename*=UTF-8''{}", quote(name, "")))
-        .unwrap_or_else(|_| HeaderValue::from_static("attachment"))
-}
-
 fn artifact_response(blob: Vec<u8>, name: &str, media: &'static str, no_cache: bool) -> Response {
     let mut res = (StatusCode::OK, blob).into_response();
     let h = res.headers_mut();
     h.insert(header::CONTENT_TYPE, HeaderValue::from_static(media));
-    h.insert(header::CONTENT_DISPOSITION, disposition(name));
+    h.insert(header::CONTENT_DISPOSITION, crate::media::disposition("attachment", name));
     if no_cache {
         h.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     }

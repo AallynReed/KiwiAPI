@@ -609,11 +609,7 @@ fn site(max_age: Option<u32>, r: Result<Value, ApiError>) -> Response {
 }
 
 fn attachment(data: Vec<u8>, media_type: &'static str, filename: &str, cache: Option<&'static str>) -> Response {
-    let safe: String = filename.chars().filter(|c| !matches!(c, '"' | '\r' | '\n')).collect();
-    let disposition = match latin1_header(&format!("attachment; filename=\"{safe}\"")) {
-        Ok(h) => h,
-        Err(e) => return e.into_response(),
-    };
+    let disposition = crate::media::disposition("attachment", filename);
     let mut res = (StatusCode::OK, data).into_response();
     let h = res.headers_mut();
     h.insert(header::CONTENT_TYPE, HeaderValue::from_static(media_type));
@@ -637,10 +633,7 @@ async fn download(state: &AppState, viewer: Option<&SiteUser>, id: &str, cache: 
     };
     let media_type =
         if release.str("release_format") == "zip" { "application/zip" } else { "application/octet-stream" };
-    let disposition = match latin1_header(&format!("attachment; filename=\"{}\"", download_filename(&release))) {
-        Ok(h) => h,
-        Err(e) => return e.into_response(),
-    };
+    let disposition = crate::media::disposition("attachment", &download_filename(&release));
     let st = state.clone();
     tokio::spawn(async move { record_download(&st, &release, &project).await });
     let mut res = (StatusCode::OK, data).into_response();
@@ -702,10 +695,7 @@ pub fn sound_reply(headers: &HeaderMap, r: Result<(Vec<u8>, String, String, Stri
     if inm.as_deref() == Some(etag.as_str()) {
         return (StatusCode::NOT_MODIFIED, [(header::ETAG, etag_h)]).into_response();
     }
-    let disposition = match latin1_header(&format!("inline; filename=\"{filename}\"")) {
-        Ok(h) => h,
-        Err(e) => return e.into_response(),
-    };
+    let disposition = crate::media::disposition("inline", &filename);
     let ct = HeaderValue::from_str(&media_type).unwrap_or(HeaderValue::from_static("application/octet-stream"));
     (
         [

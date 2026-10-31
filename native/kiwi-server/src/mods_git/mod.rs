@@ -177,7 +177,7 @@ fn octet(data: Vec<u8>) -> Response {
 }
 
 fn zip_response(name: &str, data: Vec<u8>) -> Res<Response> {
-    let cd = crate::media::latin1_header(&format!("attachment; filename=\"{name}\"")).map_err(e)?;
+    let cd = crate::media::disposition("attachment", name);
     Ok(([(header::CONTENT_TYPE, HeaderValue::from_static("application/zip")), (header::CONTENT_DISPOSITION, cd)], data)
         .into_response())
 }
