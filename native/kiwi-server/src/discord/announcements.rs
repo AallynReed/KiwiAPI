@@ -122,7 +122,10 @@ pub async fn current_anchor(state: &AppState, key: &str, now_us: i64) -> anyhow:
             let c = data::chaos_chest(state, now_us).await?;
             truthy(get(get(&c, "item"), "name")).then(|| s(get(&c, "starts_at")))
         }
-        "daily_bonuses" | "activity" => Some(daily_window(now_us)),
+        "daily_bonuses" => Some(daily_window(now_us)),
+        "activity" => crate::features::is_enabled(state, crate::features::PLAYER_ACTIVITY_FLAG)
+            .await?
+            .then(|| daily_window(now_us)),
         "longshade" => current_start(&data::biome_rotation(now_us)?),
         "wild_mana" => current_start(&data::wild_mana(now_us)?),
         "stampy" => {

@@ -124,7 +124,15 @@ pub async fn anchor<S: Sources>(src: &S, kind: Kind) -> Result<Option<String>> {
                 None
             }
         }
-        Kind::Daily | Kind::Activity => Some((daily_reset(&src.server_time())? - DAY).to_string()),
+        Kind::Daily => Some((daily_reset(&src.server_time())? - DAY).to_string()),
+        Kind::Activity => {
+            let live = sources::activity_current(src).await;
+            if get(&live, "estimate_24h").is_number() {
+                Some((daily_reset(&src.server_time())? - DAY).to_string())
+            } else {
+                None
+            }
+        }
         Kind::Longshade => start_anchor(&current(&src.biome_rotation()?)),
         Kind::WildMana => start_anchor(&current(&src.wild_mana()?)),
         Kind::Stampy => {
