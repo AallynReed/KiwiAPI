@@ -20,8 +20,8 @@ use crate::{
     validation::{FromParams, Params, Query},
 };
 
-pub const RENDER_VERSION: &str = "r2";
-pub const STILL_VERSION: &str = "s2";
+pub const RENDER_VERSION: &str = "r3";
+pub const STILL_VERSION: &str = "s3";
 const BRANCHES: [&str; 2] = ["live-us", "pts"];
 const B64: base64::engine::GeneralPurpose = base64::engine::general_purpose::STANDARD;
 

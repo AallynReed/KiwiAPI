@@ -27,6 +27,16 @@ fn raster_draws_and_culls() {
 }
 
 #[test]
+fn tight_fit_keeps_long_models_in_frame() {
+    let rod: Vec<Rendered> =
+        (0..45).map(|z| Rendered { x: 0, y: 0, z, r: 120, g: 70, b: 40, kind: 0, level: 255, spec: 0 }).collect();
+    let dim = 256;
+    let img = raster::render(&rod, dim, true).unwrap();
+    let edge = (0..dim).flat_map(|i| [(0, i), (dim - 1, i), (i, 0), (i, dim - 1)]);
+    assert!(edge.into_iter().all(|(y, x)| img[(y * dim + x) * 4 + 3] == 0));
+}
+
+#[test]
 fn lanczos_keeps_flat_colour() {
     let img = pillow::Image { w: 7, h: 5, px: [10, 20, 30, 255].repeat(35) };
     let out = pillow::resize_lanczos(&img, 3, 9);

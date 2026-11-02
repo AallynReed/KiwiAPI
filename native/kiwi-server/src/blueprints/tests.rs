@@ -275,7 +275,8 @@ fn rgba(png: &[u8]) -> (u32, u32, Vec<u8>) {
     (img.width, img.height, img.pixels)
 }
 
-/// The fixtures come out byte-identical to Pillow's PNGs. On other models a
+/// The fixtures come out byte-identical to Pillow's PNGs, except the sword and
+/// `s_glass_160`, which Pillow clipped and are rendered whole now. On other models a
 /// rare edge sample may land differently (numpy/BLAS can round the projection
 /// in the last bit), so the pixel tolerance is what has to hold.
 #[test]
@@ -409,8 +410,8 @@ fn small_helpers() {
     assert_eq!(cache::key_for_assembly("sig", "game:Foo"), "v3:a22:asm:sig:game:foo");
     assert!(cache::etag_matches(Some("W/\"a\", \"b\""), "\"a\""));
     assert!(!cache::etag_matches(Some("W/W/\"a\""), "\"a\""));
-    assert_eq!(super::render::blueprint_key("pts", "A\\B", 64), "render:bp:r2:pts:64:a/b");
-    assert_eq!(super::render::creature_key("live-us", "Prefabs\\X", 160), "render:rig:a22:s2:live-us:160:prefabs/x");
+    assert_eq!(super::render::blueprint_key("pts", "A\\B", 64), "render:bp:r3:pts:64:a/b");
+    assert_eq!(super::render::creature_key("live-us", "Prefabs\\X", 160), "render:rig:a22:s3:live-us:160:prefabs/x");
     assert_eq!(
         super::editor::disposition("Épée \"best\".blueprint", "edited.blueprint"),
         "attachment; filename=\"_p_e best.blueprint\"; filename*=UTF-8''%C3%89p%C3%A9e%20%22best%22.blueprint"

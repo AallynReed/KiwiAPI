@@ -71,29 +71,30 @@ fn fit_scale(ext: V3) -> f64 {
     0.1057f64.exp() * d[0].powf(-0.8502) * d[1].powf(-0.0710) * d[2].powf(-0.0459)
 }
 
-/// `_fit_tight`: the scale at which the projected box fills the frame.
-fn fit_tight(cam: &Camera, center: V3, mn: V3, mx: V3, h: f64, margin: f64) -> f64 {
-    let mut corners = Vec::with_capacity(8);
+/// The screen box `(umin, umax, vmin, vmax)` of the model's bounding box at scale `s`.
+fn projected(cam: &Camera, center: V3, mn: V3, mx: V3, s: f64) -> (f64, f64, f64, f64) {
+    let (mut umin, mut umax, mut vmin, mut vmax) = (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
     for a in [mn[0], mx[0] + 1.0] {
         for b in [mn[1], mx[1] + 1.0] {
             for c in [mn[2], mx[2] + 1.0] {
-                corners.push([a, b, c]);
+                let ([u, v], _) = cam.project([(a - center[0]) * s, (b - center[1]) * s, (c - center[2]) * s]);
+                umin = umin.min(u);
+                umax = umax.max(u);
+                vmin = vmin.min(v);
+                vmax = vmax.max(v);
             }
         }
     }
+    (umin, umax, vmin, vmax)
+}
+
+/// `_fit_tight`: the scale at which the projected box fills the frame.
+fn fit_tight(cam: &Camera, center: V3, mn: V3, mx: V3, h: f64, margin: f64) -> f64 {
     let target = h - 2.0 * margin;
     let (mut lo, mut hi) = (1e-4, 50.0);
     for _ in 0..40 {
         let s = (lo + hi) / 2.0;
-        let (mut umin, mut umax, mut vmin, mut vmax) =
-            (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
-        for c in &corners {
-            let ([u, v], _) = cam.project([(c[0] - center[0]) * s, (c[1] - center[1]) * s, (c[2] - center[2]) * s]);
-            umin = umin.min(u);
-            umax = umax.max(u);
-            vmin = vmin.min(v);
-            vmax = vmax.max(v);
-        }
+        let (umin, umax, vmin, vmax) = projected(cam, center, mn, mx, s);
         if (umax - umin).max(vmax - vmin) <= target {
             lo = s;
         } else {
@@ -166,7 +167,7 @@ pub fn render_at(cells: &[Rendered], dim: usize, tight: bool, az: f64, el: f64) 
         return None;
     }
     let h = dim * SS;
-    let cam = Camera::new(dim, az, el);
+    let mut cam = Camera::new(dim, az, el);
     let (mut mn, mut mx) = ([f64::INFINITY; 3], [f64::NEG_INFINITY; 3]);
     for c in cells {
         for (k, v) in [c.x, c.y, c.z].into_iter().enumerate() {
@@ -176,7 +177,16 @@ pub fn render_at(cells: &[Rendered], dim: usize, tight: bool, az: f64, el: f64) 
     }
     let center = [0, 1, 2].map(|k| (mn[k] + mx[k] + 1.0) / 2.0);
     let s = if tight {
-        fit_tight(&cam, center, mn, mx, h as f64, (4 * SS) as f64)
+        let (hf, margin) = (h as f64, (4 * SS) as f64);
+        let s = fit_tight(&cam, center, mn, mx, hf, margin);
+        // Perspective pushes the box off-centre; recentre by whole pixels so models that fit stay identical.
+        let (u0, u1, v0, v1) = projected(&cam, center, mn, mx, s);
+        if u0 < margin || v0 < margin || u1 > hf - margin || v1 > hf - margin {
+            let px = |d: f64| (d / SS as f64).round() * SS as f64;
+            cam.cx += px((hf - u0 - u1) / 2.0);
+            cam.cy += px((hf - v0 - v1) / 2.0);
+        }
+        s
     } else {
         fit_scale([0, 1, 2].map(|k| mx[k] - mn[k] + 1.0))
     };

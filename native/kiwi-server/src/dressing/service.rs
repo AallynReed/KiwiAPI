@@ -39,7 +39,7 @@ const STYLE_SLOTS: [&str; 3] = ["hat", "face", "weapon"];
 const RACE_SLOTS: [&str; 3] = ["head", "hair", "eyes"];
 const SLOT_COLOR: [(&str, &str); 2] = [("hair", "hair_color"), ("eyes", "eye_color")];
 const BROW_MAX_OFF: i64 = 24;
-pub const STILL_VERSION: &str = "d1";
+pub const STILL_VERSION: &str = "d2";
 pub const STILL_MIN_DIM: i64 = 32;
 pub const STILL_MAX_DIM: i64 = 512;
 
