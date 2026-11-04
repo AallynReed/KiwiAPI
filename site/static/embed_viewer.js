@@ -53,6 +53,7 @@
     var v = shell.dataset[key];
     return acc || (v ? key + '=' + encodeURIComponent(v) : '');
   }, '');
+  if (srcQuery && shell.dataset.branch) srcQuery += '&branch=' + encodeURIComponent(shell.dataset.branch);
 
   var HINTS = {
     blueprint: 'Drag to rotate · scroll to zoom · right-drag to pan',

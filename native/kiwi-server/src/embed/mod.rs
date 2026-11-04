@@ -120,6 +120,10 @@ impl FromParams for ViewerQuery {
                 .one_of_pattern(&["auto", "blueprint", "assembled", "vfx", "audio"])
                 .default("auto".into()),
         ));
+        fields.push((
+            "branch",
+            p.query("branch").str().one_of_pattern(&crate::codexes::BRANCHES).optional().unwrap_or_default(),
+        ));
         fields.push(("theme", p.query("theme").str().one_of_pattern(&["dark", "light"]).default("dark".into())));
         ViewerQuery { fields }
     }

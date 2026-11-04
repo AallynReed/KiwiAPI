@@ -14,6 +14,7 @@
      data-sound     a sound id or name inside a .bnk — pins the player to that one
      data-mode      blueprint | assembled | vfx | audio   (default: auto)
      data-theme     dark | light                          (default: dark)
+     data-branch    live-us | pts — game files to read    (default: live-us)
      data-height    CSS height                            (default: 420px)
      data-title     iframe accessible name
 
@@ -28,7 +29,7 @@
   })();
 
   var SOURCES = ['release', 'tmod', 'game', 'prefab', 'dress'];
-  var PASS = ['path', 'sound', 'mode', 'theme'];
+  var PASS = ['path', 'sound', 'mode', 'theme', 'branch'];
 
   function build(el) {
     if (el.getAttribute('data-kiwi-mounted')) return;

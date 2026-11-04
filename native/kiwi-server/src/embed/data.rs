@@ -17,6 +17,7 @@ use serde_json::{Map, Value, json};
 use crate::{
     auth::client::client_ip,
     blueprints::cache::{self, BuildError, Cached, Fmt},
+    codexes::{BRANCHES, branch_message},
     creature::{self, LIVE_BRANCH},
     dressing::service::{self as dress, Outfit, Selection},
     error::ApiError,
@@ -80,15 +81,30 @@ pub struct Source {
     pub prefab: Option<String>,
     pub outfit: Option<Outfit>,
     pub tmod_sha: Option<String>,
+    pub branch: String,
 }
 
 impl Source {
     fn new(kind: Kind, ident: String, title: String) -> Source {
-        Source { kind, ident, title, tmod: None, game_path: None, prefab: None, outfit: None, tmod_sha: None }
+        Source {
+            kind,
+            ident,
+            title,
+            tmod: None,
+            game_path: None,
+            prefab: None,
+            outfit: None,
+            tmod_sha: None,
+            branch: LIVE_BRANCH.into(),
+        }
     }
 
     pub fn cache_key(&self) -> String {
-        format!("{}:{}", self.kind.as_str(), self.ident)
+        if self.branch == LIVE_BRANCH {
+            format!("{}:{}", self.kind.as_str(), self.ident)
+        } else {
+            format!("{}:{}:{}", self.kind.as_str(), self.branch, self.ident)
+        }
     }
 }
 
@@ -99,6 +115,7 @@ pub struct SourceQ {
     game: Option<String>,
     prefab: Option<String>,
     dress: Option<String>,
+    branch: String,
 }
 
 fn read_source(p: &mut Params<'_>) -> SourceQ {
@@ -108,6 +125,7 @@ fn read_source(p: &mut Params<'_>) -> SourceQ {
         game: p.query("game").str().max_len(400).optional(),
         prefab: p.query("prefab").str().max_len(400).optional(),
         dress: p.query("dress").str().max_len(700).optional(),
+        branch: p.query("branch").str().max_len(16).default(LIVE_BRANCH.into()),
     }
 }
 
@@ -121,6 +139,10 @@ pub async fn resolve(state: &AppState, q: &SourceQ) -> Result<Source, ApiError> 
     if all.iter().flatten().count() != 1 {
         return Err(bad("Pass exactly one source: release, tmod, game, prefab or dress."));
     }
+    let branch = q.branch.as_str();
+    if !BRANCHES.contains(&branch) {
+        return Err(missing(branch_message(branch)));
+    }
     if let Some(r) = given(&q.release) {
         return release_source(state, r).await;
     }
@@ -128,12 +150,12 @@ pub async fn resolve(state: &AppState, q: &SourceQ) -> Result<Source, ApiError> 
         return upload_source(state, t).await;
     }
     if let Some(p) = given(&q.prefab) {
-        return prefab_source(state, p).await;
+        return prefab_source(state, p, branch).await;
     }
     if let Some(d) = given(&q.dress) {
         return dress_source(state, d).await;
     }
-    game_source(state, given(&q.game).unwrap_or("")).await
+    game_source(state, given(&q.game).unwrap_or(""), branch).await
 }
 
 /// `parse_qs(token)` as `{key: first value}`, blanks dropped.
@@ -202,16 +224,16 @@ async fn dress_source(state: &AppState, token: &str) -> Result<Source, ApiError>
     Ok(src)
 }
 
-async fn rig_map(state: &AppState) -> Result<Arc<kiwi_core::rig::RigMap>, ApiError> {
-    crate::creature::rig_map(state, &state.settings().trove_render_branch).await.map_err(internal)
+async fn rig_map(state: &AppState, branch: &str) -> Result<Arc<kiwi_core::rig::RigMap>, ApiError> {
+    creature::rig_map(state, &creature::rig_branch(state, branch)).await.map_err(internal)
 }
 
-async fn prefab_source(state: &AppState, name: &str) -> Result<Source, ApiError> {
+async fn prefab_source(state: &AppState, name: &str, branch: &str) -> Result<Source, ApiError> {
     let name = kiwi_core::pystr::strip(name);
     if name.is_empty() || name.chars().count() > 400 {
         return Err(bad("Missing or over-long prefab path."));
     }
-    let (path, candidates) = rig_map(state).await?.prefab_path(name);
+    let (path, candidates) = rig_map(state, branch).await?.prefab_path(name);
     let Some(path) = path else {
         if let Some(first) = candidates.first() {
             return Err(bad(format!(
@@ -223,6 +245,7 @@ async fn prefab_source(state: &AppState, name: &str) -> Result<Source, ApiError>
     };
     let mut src = Source::new(Kind::Prefab, path.clone(), kiwi_core::rig::prefab_stem(&path));
     src.prefab = Some(path);
+    src.branch = branch.to_owned();
     Ok(src)
 }
 
@@ -255,7 +278,7 @@ async fn upload_source(state: &AppState, token: &str) -> Result<Source, ApiError
     Ok(src)
 }
 
-async fn game_source(state: &AppState, path: &str) -> Result<Source, ApiError> {
+async fn game_source(state: &AppState, path: &str, branch: &str) -> Result<Source, ApiError> {
     let path = kiwi_core::pystr::strip(path).replace('\\', "/");
     let path = path.trim_start_matches('/');
     if path.is_empty() || path.chars().count() > 400 {
@@ -265,27 +288,28 @@ async fn game_source(state: &AppState, path: &str) -> Result<Source, ApiError> {
     if ![".blueprint", ".pkfx", ".bnk"].iter().any(|e| low.ends_with(e)) {
         return Err(bad("Only .blueprint, .pkfx and .bnk game files can be previewed."));
     }
-    let resolved = if file_sha(state, path).await?.is_some() {
+    let resolved = if file_sha(state, branch, path).await?.is_some() {
         Some(path.to_owned())
     } else {
-        let idx = dress::game_paths(state, LIVE_BRANCH).await?;
+        let idx = dress::game_paths(state, branch).await?;
         idx.map.get(&pkfx::basename(path).to_lowercase()).cloned()
     };
     let resolved = resolved.ok_or_else(|| missing(format!("No '{path}' in the current game files.")))?;
     let title = resolved.rsplit('/').next().unwrap_or(&resolved).to_owned();
     let mut src = Source::new(Kind::Game, resolved.clone(), title);
     src.game_path = Some(resolved);
+    src.branch = branch.to_owned();
     Ok(src)
 }
 
-/// `updates_read.get_file_meta(LIVE_BRANCH, path)["content_sha256"]`.
-async fn file_sha(state: &AppState, path: &str) -> Result<Option<String>, ApiError> {
+/// `updates_read.get_file_meta(branch, path)["content_sha256"]`.
+async fn file_sha(state: &AppState, branch: &str, path: &str) -> Result<Option<String>, ApiError> {
     #[cfg(test)]
     if let Some(a) = dress::TEST_ARCHIVE.get() {
         use sha2::Digest;
         return Ok(a.files.get(path).map(|d| hex::encode(sha2::Sha256::digest(d))));
     }
-    crate::media::file_sha(state, LIVE_BRANCH, path).await
+    crate::media::file_sha(state, branch, path).await
 }
 
 async fn read_blob(state: &AppState, path: &str, sha: &str) -> Result<Option<Vec<u8>>, ApiError> {
@@ -389,7 +413,11 @@ async fn game_manifest(state: &AppState, src: &Source) -> Result<Value, ApiError
     }
     let base = pkfx::basename(&path).to_lowercase();
     let stem: String = base.chars().take(base.chars().count().saturating_sub(10)).collect();
-    let rig = rig_map(state).await?.creature_for(&stem).map(|(s, _, _)| s).filter(|s| crate::rigs::has_baked_rig(s));
+    let rig = rig_map(state, &src.branch)
+        .await?
+        .creature_for(&stem)
+        .map(|(s, _, _)| s)
+        .filter(|s| crate::rigs::has_baked_rig(s));
     let bp = json!({
         "items": [{"path": path, "size": null, "assembled": rig.is_some()}],
         "rig": rig, "animations": rig.as_deref().map(animations).unwrap_or_default(),
@@ -399,8 +427,8 @@ async fn game_manifest(state: &AppState, src: &Source) -> Result<Value, ApiError
 
 async fn prefab_manifest(state: &AppState, src: &Source) -> Result<Value, ApiError> {
     let prefab = src.prefab.clone().unwrap_or_default();
-    let (skeleton, parts) = rig_map(state).await?.creature_by_prefab(&prefab);
-    let paths = dress::game_paths(state, LIVE_BRANCH).await?;
+    let (skeleton, parts) = rig_map(state, &src.branch).await?.creature_by_prefab(&prefab);
+    let paths = dress::game_paths(state, &src.branch).await?;
     let mut names: Vec<&String> = parts.iter().map(|(b, _)| b).collect();
     names.sort();
     let found: Vec<String> = names
@@ -446,8 +474,8 @@ pub async fn manifest_route(State(s): State<AppState>, req: Request) -> Response
 
 // --- blueprint / assembled -------------------------------------------------------------------------
 
-async fn decode_game_path(state: &AppState, target: &str, fmt: Fmt) -> Result<Cached, BuildError> {
-    let sha = file_sha(state, target).await?.ok_or_else(|| missing("Game file not found."))?;
+async fn decode_game_path(state: &AppState, branch: &str, target: &str, fmt: Fmt) -> Result<Cached, BuildError> {
+    let sha = file_sha(state, branch, target).await?.ok_or_else(|| missing("Game file not found."))?;
     let (st, t, s2) = (state.clone(), target.to_owned(), sha.clone());
     let build = || async move {
         let raw = read_blob(&st, &t, &s2).await?.ok_or_else(|| missing("Game file not found."))?;
@@ -464,21 +492,21 @@ async fn blueprint(state: &AppState, src: &Source, path: &str, fmt: Fmt) -> Resu
             if !path.is_empty() && want != target.to_lowercase() && want != pkfx::basename(&target).to_lowercase() {
                 return Err(missing("That blueprint isn't part of this preview.").into());
             }
-            decode_game_path(state, &target, fmt).await
+            decode_game_path(state, &src.branch, &target, fmt).await
         }
         Kind::Prefab => {
             let prefab = src.prefab.clone().unwrap_or_default();
-            let (_, parts) = rig_map(state).await?.creature_by_prefab(&prefab);
+            let (_, parts) = rig_map(state, &src.branch).await?.creature_by_prefab(&prefab);
             let base = pkfx::basename(path).to_lowercase();
             let want = base.strip_suffix(".blueprint").unwrap_or(&base).to_owned();
             if want.is_empty() || !parts.iter().any(|(b, _)| *b == want) {
                 return Err(missing("That blueprint isn't part of this creature.").into());
             }
-            let paths = dress::game_paths(state, LIVE_BRANCH).await?;
+            let paths = dress::game_paths(state, &src.branch).await?;
             let cands = paths.all.get(&format!("{want}.blueprint")).cloned().unwrap_or_default();
             let target =
                 kiwi_core::workshop::nearest_path(&cands, &prefab).ok_or_else(|| missing("Game file not found."))?;
-            decode_game_path(state, target, fmt).await
+            decode_game_path(state, &src.branch, target, fmt).await
         }
         Kind::Dress => Err(missing("A dressed character has no separate blueprint to show.").into()),
         Kind::Release | Kind::Tmod => {
@@ -527,20 +555,21 @@ async fn assembled(state: &AppState, src: &Source, fmt: Fmt) -> Result<Option<Ca
             }
             let base = pkfx::basename(&path).to_lowercase();
             let stem: String = base.chars().take(base.chars().count().saturating_sub(10)).collect();
-            let found = rig_map(state).await.map_err(IntoResponse::into_response)?.creature_for(&stem);
+            let found = rig_map(state, &src.branch).await.map_err(IntoResponse::into_response)?.creature_for(&stem);
             match found {
                 Some((skel, prefab, parts)) if !skel.is_empty() && !prefab.is_empty() && !parts.is_empty() => {
-                    creature::game_creature(state, &prefab, &skel, parts, fmt).await
+                    creature::game_creature(state, &src.branch, &prefab, &skel, parts, fmt).await
                 }
                 _ => Ok(None),
             }
         }
         Kind::Prefab => {
             let prefab = src.prefab.clone().unwrap_or_default();
-            let (skel, parts) = rig_map(state).await.map_err(IntoResponse::into_response)?.creature_by_prefab(&prefab);
+            let (skel, parts) =
+                rig_map(state, &src.branch).await.map_err(IntoResponse::into_response)?.creature_by_prefab(&prefab);
             match skel {
                 Some(skel) if !skel.is_empty() && !parts.is_empty() => {
-                    creature::game_creature(state, &prefab, &skel, parts, fmt).await
+                    creature::game_creature(state, &src.branch, &prefab, &skel, parts, fmt).await
                 }
                 _ => Ok(None),
             }
@@ -596,12 +625,12 @@ async fn bank_index(state: &AppState, src: &Source, path: &str) -> Result<Value,
     if !path.is_empty() && pkfx::basename(path).to_lowercase() != pkfx::basename(&target).to_lowercase() {
         return Err(missing("That sound bank isn't part of this preview."));
     }
-    let sha = file_sha(state, &target).await?.ok_or_else(|| missing("Game file not found."))?;
+    let sha = file_sha(state, &src.branch, &target).await?.ok_or_else(|| missing("Game file not found."))?;
     let raw = read_blob(state, &target, &sha).await?.ok_or_else(|| missing("Game file not found."))?;
     let stem: String = target.chars().take(target.chars().count().saturating_sub(4)).collect();
     let side = format!("{stem}.txt");
     let (mut sidecar, mut sidecar_sha) = (None, None);
-    if let Some(ssha) = file_sha(state, &side).await?
+    if let Some(ssha) = file_sha(state, &src.branch, &side).await?
         && let Some(blob) = read_blob(state, &side, &ssha).await?
     {
         sidecar = Some(String::from_utf8_lossy(&blob).into_owned());
@@ -664,7 +693,7 @@ pub async fn audio_sound_route(State(s): State<AppState>, req: Request) -> Respo
 async fn vfx_index_and_text(state: &AppState, src: &Source, path: Option<&str>) -> Result<(Index, String), ApiError> {
     if src.kind == Kind::Game {
         let target = src.game_path.clone().unwrap_or_default();
-        let raw = match file_sha(state, &target).await? {
+        let raw = match file_sha(state, &src.branch, &target).await? {
             Some(sha) => read_blob(state, &target, &sha).await?,
             None => None,
         };
@@ -695,7 +724,7 @@ pub async fn vfx_manifest_route(State(s): State<AppState>, req: Request) -> Resp
     let (src, path) = tri!(begin(&s, &parts, |p| p.query("path").str().min_len(1).max_len(400).required()).await);
     let r = async {
         let (index, text) = vfx_index_and_text(&s, &src, Some(&path)).await?;
-        let res = Resolver::new(&s).await?;
+        let res = Resolver::for_branch(&s, &src.branch).await?;
         let (deps, missing) = hubvfx::manifest_deps(&index, &text, |bn| res.lookup(bn).is_some());
         let set = depset(&s, &index, &res).await?;
         hubvfx::remember(&src.cache_key(), Arc::new(set));
@@ -709,7 +738,7 @@ pub async fn vfx_asset_route(State(s): State<AppState>, req: Request) -> Respons
     let (src, rf) = tri!(begin(&s, &parts, |p| p.query("path").str().min_len(1).max_len(400).required()).await);
     let r = async {
         let (index, _) = vfx_index_and_text(&s, &src, None).await?;
-        let res = Resolver::new(&s).await?;
+        let res = Resolver::for_branch(&s, &src.branch).await?;
         let key = src.cache_key();
         let set = match hubvfx::cached(&key) {
             Some(set) => set,

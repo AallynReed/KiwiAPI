@@ -75,7 +75,11 @@ where
 }
 
 pub async fn signature(state: &AppState) -> Result<Option<String>, Response> {
-    crate::rigs::index_signature(state, &state.settings().trove_render_branch).await.map_err(internal)
+    branch_signature(state, &render_branch(state)).await
+}
+
+async fn branch_signature(state: &AppState, branch: &str) -> Result<Option<String>, Response> {
+    crate::rigs::index_signature(state, branch).await.map_err(internal)
 }
 
 #[cfg(test)]
@@ -92,6 +96,11 @@ pub async fn rig_map(state: &AppState, branch: &str) -> anyhow::Result<std::sync
 
 pub fn render_branch(state: &AppState) -> String {
     state.settings().trove_render_branch.clone()
+}
+
+/// The rig index for a game-file branch: live files keep the render branch's.
+pub fn rig_branch(state: &AppState, branch: &str) -> String {
+    if branch == LIVE_BRANCH { render_branch(state) } else { branch.to_owned() }
 }
 
 /// `assembly.assemble(files, rig_name, ap_overrides, part_scales)` off the runtime.
@@ -154,18 +163,19 @@ pub async fn release_model(state: &AppState, release: &Doc, fmt: Fmt) -> Result<
 }
 
 /// `embed.service._read_game_file(path)`.
-pub async fn read_game_file(state: &AppState, path: &str) -> Result<Option<Vec<u8>>, ApiError> {
+pub async fn read_game_file(state: &AppState, branch: &str, path: &str) -> Result<Option<Vec<u8>>, ApiError> {
     #[cfg(test)]
     if let Some(hit) = dress::test_game_file(path) {
         return Ok(hit);
     }
-    let Some(sha) = crate::media::file_sha(state, LIVE_BRANCH, path).await? else { return Ok(None) };
+    let Some(sha) = crate::media::file_sha(state, branch, path).await? else { return Ok(None) };
     crate::media::read_blob(crate::media::update_store(state), sha).await
 }
 
 /// `_assemble_creature(prefab, skeleton, parts, fmt)`.
 pub async fn game_creature(
     state: &AppState,
+    branch: &str,
     prefab: &str,
     skeleton: &str,
     parts: Vec<(String, String)>,
@@ -175,25 +185,25 @@ pub async fn game_creature(
         return Ok(None);
     }
     let st = state.clone();
-    let (p, s) = (prefab.to_owned(), skeleton.to_owned());
+    let (p, s, b) = (prefab.to_owned(), skeleton.to_owned(), branch.to_owned());
     let build = || async move {
-        let paths = dress::game_paths(&st, LIVE_BRANCH).await.map_err(BuildError::Api)?;
+        let paths = dress::game_paths(&st, &b).await.map_err(BuildError::Api)?;
         let mut files = Vec::new();
         for (basename, _) in &parts {
             let cands = paths.all.get(&format!("{basename}.blueprint")).cloned().unwrap_or_default();
             let Some(gp) = kiwi_core::workshop::nearest_path(&cands, &p) else { continue };
-            if let Some(raw) = read_game_file(&st, gp).await.map_err(BuildError::Api)? {
+            if let Some(raw) = read_game_file(&st, &b, gp).await.map_err(BuildError::Api)? {
                 files.push((format!("{basename}.blueprint"), raw));
             }
         }
         if files.is_empty() {
             return Err(no_payload());
         }
-        let rm = rig_map(&st, &render_branch(&st)).await.map_err(|e| BuildError::Other(internal(e)))?;
+        let rm = rig_map(&st, &rig_branch(&st, &b)).await.map_err(|e| BuildError::Other(internal(e)))?;
         let scales = rm.creature_scales(&p, crate::rigs::rig);
         assemble(Some(s), files, parts.into_iter().collect(), scales.parts).await
     };
-    let sig = signature(state).await?;
+    let sig = branch_signature(state, &rig_branch(state, branch)).await?;
     cached(state, sig.as_deref(), &format!("game:{prefab}"), fmt, build).await
 }
 

@@ -152,6 +152,7 @@ fn dev_index(root: &str) -> HashMap<String, PathBuf> {
 /// `_game_vfx_resolver()`.
 pub struct Resolver {
     fmap: FileMap,
+    branch: String,
     dev: HashMap<String, PathBuf>,
 }
 
@@ -162,10 +163,14 @@ pub enum Where {
 
 impl Resolver {
     pub async fn new(state: &AppState) -> Result<Resolver, ApiError> {
-        let fmap = game_file_map(state, LIVE_BRANCH).await?;
+        Self::for_branch(state, LIVE_BRANCH).await
+    }
+
+    pub async fn for_branch(state: &AppState, branch: &str) -> Result<Resolver, ApiError> {
+        let fmap = game_file_map(state, branch).await?;
         let root = state.settings().pkfx_dev_vfx_dir.clone();
         let dev = tokio::task::spawn_blocking(move || dev_index(&root)).await.map_err(internal)?;
-        Ok(Resolver { fmap, dev })
+        Ok(Resolver { fmap, branch: branch.to_owned(), dev })
     }
 
     pub fn available(&self) -> bool {
@@ -186,7 +191,7 @@ impl Resolver {
                 .map_err(internal)?
                 .map(Some)
                 .map_err(internal),
-            Where::Game(path) => match media::file_sha(state, LIVE_BRANCH, &path).await? {
+            Where::Game(path) => match media::file_sha(state, &self.branch, &path).await? {
                 Some(sha) => media::read_blob(media::update_store(state), sha).await,
                 None => Ok(None),
             },
