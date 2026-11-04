@@ -195,6 +195,7 @@ async fn embed_viewer(Gate(flags): Gate, State(web): State<Arc<Web>>, uri: Uri, 
     let mode = if MODES.contains(&mode.as_str()) { mode } else { "auto".into() };
     let theme = q("theme").unwrap_or_else(|| "dark".into());
     let theme = if theme == "dark" || theme == "light" { theme } else { "dark".into() };
+    let branch = q("branch").filter(|b| crate::codexes::BRANCHES.contains(&b.as_str())).unwrap_or_default();
     let ctx = vec![
         ("release", s("release")),
         ("tmod", s("tmod")),
@@ -205,6 +206,7 @@ async fn embed_viewer(Gate(flags): Gate, State(web): State<Arc<Web>>, uri: Uri, 
         ("sound", s("sound")),
         ("backdrop", Value::from(backdrop)),
         ("mode", Value::from(mode)),
+        ("branch", Value::from(branch)),
         ("theme", Value::from(theme)),
         ("api_base", Value::from(web.api_base())),
         ("app_url", Value::from(web.app_base())),
