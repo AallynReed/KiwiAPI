@@ -72,6 +72,14 @@ RUN curl -fsSL -o /tmp/tzdata.whl "$TZDATA_URL" \
     && rm /tmp/tzdata.whl \
     && test -f /opt/tzdata/zoneinfo/US/Eastern
 
+# Lumen-SWF's CLI compiles the mods in the builder image.
+ARG LUMEN_VERSION=0.8.9
+ARG LUMEN_SHA256=3f6da8f1ef492504fa47e50af914abeb20d012a07bad2f95b7366cb5d39127ad
+RUN curl -fsSL -o /opt/lumen-swf-cli \
+        "https://github.com/AallynReed/Lumen-SWF/releases/download/v${LUMEN_VERSION}/lumen-swf-cli" \
+    && echo "${LUMEN_SHA256}  /opt/lumen-swf-cli" | sha256sum -c - \
+    && chmod +x /opt/lumen-swf-cli
+
 # ---------------------------------------------------------------------------
 # The Rust image: api (kiwi-server), web (kiwi-web) and bot (kiwi-bot).
 # LANG keeps the JVM's file-name encoding UTF-8.
@@ -130,7 +138,9 @@ RUN python3 -m venv /opt/troveui \
     && /opt/troveui/bin/pip install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
 COPY builder/troveapi /opt/troveapi
+COPY --from=fetch /opt/lumen-swf-cli /usr/local/bin/lumen-swf-cli
 ENV KIWI_BUILDER_PYTHON=/opt/troveui/bin/python \
-    PYTHONPATH=/opt/troveapi
+    PYTHONPATH=/opt/troveapi \
+    LUMEN=/usr/local/bin/lumen-swf-cli
 
 CMD ["kiwi-builder"]
