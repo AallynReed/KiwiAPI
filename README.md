@@ -1,5 +1,7 @@
 # Kiwi API
 
+[![Discord](https://img.shields.io/badge/Discord-Foxhearth-5865F2?logo=discord&logoColor=white)](https://discord.gg/W5cP4DguEW)
+
 A developer-API platform with live **Trove** game data, plus the website and backend
 behind [Better Trove Tools](https://trove.aallyn.net).
 
