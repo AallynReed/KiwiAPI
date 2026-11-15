@@ -235,44 +235,6 @@ services:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
 
-  # Kiwi gateway bot (kiwi-bot): a separate always-on process sharing Mongo with
-  # the api. Handles proactive Discord work (announcements, live boards,
-  # guild/role events). Slash commands still go to the api's HTTP interactions
-  # endpoint - this is the gateway side only.
-  bot:
-    image: trove-rust:latest   # built by the api service
-    restart: unless-stopped
-    environment:
-      MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
-      MONGO_DB: ${MONGO_DB:-kiwi}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
-      GAMEDATA_DIR: /data/gamedata
-      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
-      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
-      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
-      # Read Postgres-backed data (activity) from the API over the compose network -
-      # the bot has no Postgres. Points at the api service; depends_on it below.
-      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
-      # Same off-site-render base as the api (the bot builds board/announcement
-      # embeds too). Empty => app_url. Set to the api host at cutover.
-      ASSET_BASE_URL: ${ASSET_BASE_URL:-}
-    depends_on:
-      mongo:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      # For the activity HTTP fallback. Soft dep (started, not healthy) - the
-      # internal_get calls fail gracefully if the API is briefly down.
-      api:
-        condition: service_started
-    volumes:
-      - ./.gamedata:/data/gamedata:ro
-    command: ["kiwi-bot"]
-    mem_limit: 512m
-    logging:
-      driver: json-file
-      options: { max-size: "10m", max-file: "3" }
-
   # BetterTroveTools showcase website (trove.aallyn.net) - the presentation plane,
   # split out from the api. Same Rust image, different entrypoint (kiwi-web): it
   # renders the HTML pages + serves /static and holds NO database connection.

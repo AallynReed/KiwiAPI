@@ -31,7 +31,7 @@
 # replaced bind-mounted directory can never leave them serving a stale/empty
 # mount (403).
 #
-# Images: trove-rust (api = kiwi-server, web = kiwi-web, bot = kiwi-bot) and
+# Images: trove-rust (api = kiwi-server, web = kiwi-web) and
 # trove-builder (the rust image plus SteamCMD). Both bake in assets/ (game data
 # baseline, rigs, locales...), so --no-build leaves them on the files of the last
 # build.
