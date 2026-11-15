@@ -1,10 +1,30 @@
-<p align="center"><img src="docs/icon.png" width="128" alt="KiwiAPI icon"></p>
+<div align="center">
+
+<img src="docs/icon.png" width="128" alt="KiwiAPI icon">
 
 # Kiwi API
 
-[![Discord](https://img.shields.io/badge/Discord-Foxhearth-5865F2?logo=discord&logoColor=white)](https://discord.gg/W5cP4DguEW)
-[![foxhearth.com](https://img.shields.io/badge/foxhearth.com-project_page-e8702a)](https://foxhearth.com/projects/kiwiapi)
-[![Website](https://img.shields.io/badge/website-trove.aallyn.net-f4b042)](https://trove.aallyn.net)
+<!-- Project status -->
+![GitHub Repo stars](https://img.shields.io/github/stars/AallynReed/KiwiAPI?style=for-the-badge&color=gold&cacheSeconds=21600)
+![GitHub last commit](https://img.shields.io/github/last-commit/AallynReed/KiwiAPI?style=for-the-badge&color=green&cacheSeconds=21600)
+![GitHub issues](https://img.shields.io/github/issues/AallynReed/KiwiAPI?style=for-the-badge&cacheSeconds=21600)
+
+<!-- Platforms -->
+![Web browser](https://img.shields.io/badge/Web_browser-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+
+<!-- Tech stack -->
+![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-FF4438?style=for-the-badge&logo=redis&logoColor=white)
+
+<!-- Project meta -->
+[![Discord](https://img.shields.io/badge/Discord-Foxhearth-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/W5cP4DguEW)
+[![foxhearth.com](https://img.shields.io/badge/foxhearth.com-project_page-E8702A?style=for-the-badge)](https://foxhearth.com/projects/kiwiapi)
+[![Website](https://img.shields.io/badge/Website-trove.aallyn.net-F4B042?style=for-the-badge)](https://trove.aallyn.net)
+
+</div>
 
 A developer-API platform with live **Trove** game data, plus the website and backend
 behind [Better Trove Tools](https://trove.aallyn.net).
