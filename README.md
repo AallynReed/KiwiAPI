@@ -1,6 +1,10 @@
+<p align="center"><img src="docs/icon.png" width="128" alt="KiwiAPI icon"></p>
+
 # Kiwi API
 
 [![Discord](https://img.shields.io/badge/Discord-Foxhearth-5865F2?logo=discord&logoColor=white)](https://discord.gg/W5cP4DguEW)
+[![foxhearth.com](https://img.shields.io/badge/foxhearth.com-project_page-e8702a)](https://foxhearth.com/projects/kiwiapi)
+[![Website](https://img.shields.io/badge/website-trove.aallyn.net-f4b042)](https://trove.aallyn.net)
 
 A developer-API platform with live **Trove** game data, plus the website and backend
 behind [Better Trove Tools](https://trove.aallyn.net).
