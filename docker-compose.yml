@@ -159,6 +159,7 @@ services:
       DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY:-}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
       DISCORD_INSTALL_URL: ${DISCORD_INSTALL_URL:-}
+      DISCORD_HOME_GUILD_ID: ${DISCORD_HOME_GUILD_ID:-}
       # Lists Trove's Steam Workshop for BTT's Steam tab. Blank = tab stays empty.
       STEAM_WEB_API_KEY: ${STEAM_WEB_API_KEY:-}
       # Game-file version archiver. OFF by default - set to true ONLY when the
@@ -231,6 +232,37 @@ services:
     # Graceful shutdown waits for open connections, and SSE streams never end.
     stop_grace_period: 5s
     mem_limit: 1g
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # Announcements and live boards in servers that invited Fox Hearth, on its token.
+  # Fox Hearth itself runs the gateway commands and its home server.
+  bot:
+    image: trove-rust:latest   # built by the api service
+    restart: unless-stopped
+    environment:
+      MONGO_URI: mongodb://${MONGO_APP_USER:-kiwi_app}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DB:-kiwi}?authSource=${MONGO_DB:-kiwi}
+      MONGO_DB: ${MONGO_DB:-kiwi}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      GAMEDATA_DIR: /data/gamedata
+      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_insecure_dev_secret_do_not_use_in_production}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_HOME_GUILD_ID: ${DISCORD_HOME_GUILD_ID:-}
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:8000}
+      ASSET_BASE_URL: ${ASSET_BASE_URL:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    volumes:
+      - ./.gamedata:/data/gamedata:ro
+    command: ["kiwi-bot"]
+    mem_limit: 512m
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }

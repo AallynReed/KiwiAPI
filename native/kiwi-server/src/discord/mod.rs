@@ -44,6 +44,7 @@ use crate::{
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/discord/interactions", post(interactions).fallback(|| async { method_not_allowed("POST") }))
+        .route("/internal/discord/interactions", post(forwarded))
         .merge(dashboard::router())
 }
 
@@ -93,7 +94,21 @@ async fn interactions(State(state): State<AppState>, headers: HeaderMap, body: B
     if !ok {
         return (StatusCode::UNAUTHORIZED, PyJson(json!({"error": "invalid request signature"}))).into_response();
     }
-    let raw: &[u8] = if body.is_empty() { b"{}" } else { &body };
+    respond(&state, &body).await
+}
+
+/// Fox Hearth relays the gateway interactions it gets outside its own server.
+async fn forwarded(State(state): State<AppState>, headers: HeaderMap, body: Bytes) -> Response {
+    let supplied = header(&headers, "x-internal-key").unwrap_or_default();
+    match crate::internal::internal_key_ok(&state.settings().internal_key, &supplied) {
+        Ok(true) => respond(&state, &body).await,
+        Ok(false) => crate::internal::not_found().into_response(),
+        Err(e) => e.into_response(),
+    }
+}
+
+async fn respond(state: &AppState, body: &Bytes) -> Response {
+    let raw: &[u8] = if body.is_empty() { b"{}" } else { body };
     let data = match pyjson::loads(raw) {
         Ok(Value::Object(m)) => Value::Object(m),
         Ok(_) | Err(LoadsError::NonFinite) => return ApiError::internal().into_response(),
@@ -105,7 +120,7 @@ async fn interactions(State(state): State<AppState>, headers: HeaderMap, body: B
     if commands::py_eq_int(data.get("type"), 1) {
         return PyJson(json!({"type": 1})).into_response();
     }
-    match commands::handle(&LiveDomain(&state), &data).await {
+    match commands::handle(&LiveDomain(state), &data).await {
         Ok(v) => PyJson(v).into_response(),
         Err(()) => ApiError::internal().into_response(),
     }

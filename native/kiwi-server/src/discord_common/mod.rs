@@ -9,3 +9,8 @@ pub mod models;
 pub mod pyfmt;
 pub mod reconcile;
 pub mod sources;
+
+/// `DISCORD_HOME_GUILD_ID`: the server Fox Hearth runs from its own config.
+pub fn home_guild(s: &crate::config::Settings) -> Option<i64> {
+    s.discord_home_guild_id.as_deref().and_then(|v| v.trim().parse().ok())
+}

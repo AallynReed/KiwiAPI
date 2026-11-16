@@ -190,7 +190,7 @@ endpoint that is **master-only** - it requires a superuser API token).
   when a `challenge`, `mod_release`, or `game_update` event fires - a push alternative to the SSE
   stream for "post it to my Discord channel". The embed is **fully customizable** (title, color,
   fields, footer, image, message text) with `{variable}` placeholders and a live preview; the same
-  editor customizes the Kiwi Discord **bot's** per-server announcements. The embed image can be a
+  editor customizes the Fox Hearth Discord **bot's** per-server announcements. The embed image can be a
   custom one from the **Image Studio** (Dashboard): a freeform, server-rendered image designer
   (background + text/shape/image layers) whose text can carry the same `{variables}`. Standalone, a
   design renders at a public URL (`GET /site/images/{id}.png`); as an embed image you pick the design

@@ -53,6 +53,10 @@ pub trait Deps: Rest {
     fn now(&self) -> DateTime<Utc>;
     fn invite_url(&self) -> Option<String>;
     fn reconnect_url(&self) -> Option<String>;
+    /// Fox Hearth's own server, set up in its config rather than here.
+    fn home_guild(&self) -> Option<i64> {
+        None
+    }
     fn discord_token(&self, user: ObjectId) -> impl Future<Output = Result<Option<String>, ApiError>> + Send;
     fn clear_token(&self, user: ObjectId) -> impl Future<Output = Result<(), ApiError>> + Send;
     fn find_config(&self, guild_id: i64) -> impl Future<Output = Result<Option<Document>, ApiError>> + Send;
@@ -144,6 +148,9 @@ async fn member_ctx<D: Deps, G: std::fmt::Display + Sync>(
     let Some(uid) = user.discord_id.filter(|i| *i != 0) else {
         return Err(ApiError::forbidden("Link your Discord account (sign in with Discord) to manage the bot."));
     };
+    if deps.home_guild().is_some_and(|h| h.to_string() == guild_id.to_string()) {
+        return Err(ApiError::forbidden("Fox Hearth's home server is set up in its own config, not here."));
+    }
     rest::guild_member_context(deps, guild_id, uid)
         .await
         .map_err(discord_err)?
@@ -642,6 +649,10 @@ impl Deps for Live<'_> {
         Some(format!("https://discord.com/oauth2/authorize?client_id={id}&scope=bot&permissions={INVITE_PERMS}"))
     }
 
+    fn home_guild(&self) -> Option<i64> {
+        crate::discord_common::home_guild(self.state.settings())
+    }
+
     fn reconnect_url(&self) -> Option<String> {
         let s = self.state.settings();
         s.discord_oauth_enabled().then(|| format!("{}/v1/site-auth/oauth/discord/start", s.api_url))
@@ -857,6 +868,9 @@ pub async fn list_guilds<D: Deps>(deps: &D, user: &SiteUser) -> Res {
     let mut guilds: Vec<Value> = Vec::new();
     for (g, gid) in user_guilds.iter().zip(&ids) {
         let gid = *gid;
+        if deps.home_guild() == Some(gid) {
+            continue;
+        }
         let oauth_admin = g.get("owner").is_some_and(crate::feeds::pyval::truthy)
             || perms_int(g.get("permissions")) & (PERM_ADMINISTRATOR | PERM_MANAGE_GUILD) != 0;
         let name = g.get("name").cloned().ok_or_else(|| internal("guild without name"))?;

@@ -28,6 +28,20 @@ pub struct Live {
 }
 
 impl Live {
+    /// Fox Hearth's own server, which it configures itself; this bot leaves it alone.
+    fn home(&self) -> Option<i64> {
+        crate::discord_common::home_guild(self.state.settings())
+    }
+
+    fn is_home(&self, d: &Document) -> bool {
+        let id = match d.get("guild_id") {
+            Some(mongodb::bson::Bson::Int64(v)) => Some(*v),
+            Some(mongodb::bson::Bson::Int32(v)) => Some(i64::from(*v)),
+            _ => None,
+        };
+        id.is_some() && id == self.home()
+    }
+
     pub fn new(state: AppState, token: &str) -> Self {
         let http = crate::http::client_builder().build().unwrap_or_else(|_| reqwest::Client::new());
         Live { state, rest: Rest::new(token), http }
@@ -145,10 +159,13 @@ impl Sources for Live {
 
 impl Backend for Live {
     async fn guild_configs(&self) -> Result<Vec<Document>> {
-        store::guild_configs(self.state.mongo()).await
+        Ok(store::guild_configs(self.state.mongo()).await?.into_iter().filter(|d| !self.is_home(d)).collect())
     }
 
     async fn guild_config(&self, guild_id: i64) -> Result<Option<Document>> {
+        if self.home() == Some(guild_id) {
+            return Ok(None);
+        }
         store::guild_config(self.state.mongo(), guild_id).await
     }
 
@@ -165,7 +182,7 @@ impl Backend for Live {
     }
 
     async fn tracked(&self, q: TrackedQuery) -> Result<Vec<Document>> {
-        store::tracked(self.state.mongo(), q).await
+        Ok(store::tracked(self.state.mongo(), q).await?.into_iter().filter(|d| !self.is_home(d)).collect())
     }
 
     async fn site_user_by_discord(&self, discord_id: i64) -> Result<Option<Document>> {

@@ -1227,7 +1227,7 @@
     const present = guilds.filter((g) => g.bot_present);
     const addable = guilds.filter((g) => !g.bot_present);
     const inviteBtn = data.invite_url
-      ? `<a class="dash-btn dash-btn-mini" href="${esc(data.invite_url)}" target="_blank" rel="noopener">${esc(t('Invite the bot to a server'))}</a>` : '';
+      ? `<a class="dash-btn dash-btn-mini" href="${esc(data.invite_url)}" target="_blank" rel="noopener">${esc(t('Invite Fox Hearth to a server'))}</a>` : '';
 
     if (!guilds.length) {
       el.innerHTML = `<article class="dash-card">
@@ -2406,7 +2406,7 @@
   }
 
   // DM Alerts section. Discord DM subscriptions: pick events (with per-type
-  // challenge filters and a market price watchlist) and the Kiwi bot DMs you
+  // challenge filters and a market price watchlist) and Fox Hearth DMs you
   // when they fire. Backend: app/dm_subs/router.py (site-JWT, /v1/dm-subscriptions/*).
   let _dmsubsLoaded = false;
   let _dmItems = [];

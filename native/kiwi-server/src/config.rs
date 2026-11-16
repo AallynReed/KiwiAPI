@@ -190,6 +190,7 @@ settings! {
     opt discord_bot_token;
     bool bot_members_intent = true;
     opt discord_install_url;
+    opt discord_home_guild_id;
     str api_token_prefix = "kiwi";
     int token_creation_daily_limit = 3;
     int token_inactivity_revoke_days = 182;

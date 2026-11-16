@@ -74,8 +74,11 @@ fn truthy(v: &Option<String>) -> Option<&str> {
     v.as_deref().filter(|s| !s.is_empty())
 }
 
-/// `_require_creds`.
+/// `_require_creds`. Fox Hearth owns the command set once it's the app.
 fn creds(s: &Settings) -> Result<(&str, &str), ApiError> {
+    if crate::discord_common::home_guild(s).is_some() {
+        return Err(ApiError::bad_request("Fox Hearth registers its own slash commands when it starts."));
+    }
     match (truthy(&s.discord_client_id), truthy(&s.discord_bot_token)) {
         (Some(app), Some(token)) => Ok((app, token)),
         _ => Err(ApiError::bad_request("discord_client_id and discord_bot_token must be set in the environment.")),

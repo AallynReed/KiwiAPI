@@ -120,6 +120,7 @@
   "discord_bot_token": null,
   "bot_members_intent": true,
   "discord_install_url": null,
+  "discord_home_guild_id": null,
   "api_token_prefix": "kiwi",
   "token_creation_daily_limit": 3,
   "token_inactivity_revoke_days": 182,
