@@ -40,15 +40,21 @@ RUN curl -fsSL -o /tmp/ffdec.zip \
     && rm /tmp/ffdec.zip \
     && test -f /opt/ffdec/ffdec.jar
 
+# Microsoft's NuGet package: the GitHub repo has returned 404 since 2026-11-20. Its
+# linux-x64 .so files are byte-identical to the GitHub 1.26.0 tarball's.
 ARG ORT_VERSION
-ARG ORT_SHA256=1254da24fb389cf39dc0ff3451ab48301740ffbfcbaf646849df92f80ee92c57
-RUN curl -fsSL -o /tmp/ort.tgz \
-        "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
-    && echo "${ORT_SHA256}  /tmp/ort.tgz" | sha256sum -c - \
-    && mkdir -p /opt/onnxruntime \
-    && tar xzf /tmp/ort.tgz -C /opt/onnxruntime --strip-components=1 \
-    && rm /tmp/ort.tgz \
-    && test -f "/opt/onnxruntime/lib/libonnxruntime.so.${ORT_VERSION}"
+ARG ORT_SHA256=50cc3772668f04b8373ad65a36793f94699bc4e818f6e691fc68f1578c38ce42
+RUN curl -fsSL -o /tmp/ort.nupkg \
+        "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/${ORT_VERSION}/microsoft.ml.onnxruntime.${ORT_VERSION}.nupkg" \
+    && echo "${ORT_SHA256}  /tmp/ort.nupkg" | sha256sum -c - \
+    && mkdir -p /opt/onnxruntime/lib \
+    && unzip -q -j /tmp/ort.nupkg 'runtimes/linux-x64/native/*' -d /opt/onnxruntime/lib \
+    && rm /tmp/ort.nupkg \
+    && cd /opt/onnxruntime/lib \
+    && mv libonnxruntime.so "libonnxruntime.so.${ORT_VERSION}" \
+    && ln -s "libonnxruntime.so.${ORT_VERSION}" libonnxruntime.so.1 \
+    && ln -s libonnxruntime.so.1 libonnxruntime.so \
+    && chmod 755 libonnxruntime*.so*
 
 # The det/cls/rec models RapidOCR 3.8.4's RapidOCR() downloads (its default_models.yaml).
 ARG RAPIDOCR_URL=https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.8.0/onnx/PP-OCRv4
