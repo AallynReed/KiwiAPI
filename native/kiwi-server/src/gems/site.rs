@@ -274,7 +274,7 @@ fn row_types(s: &Gamedata, req: &BuildReq, chart: Option<&kiwi_core::gems::build
         && let Some(ally) = allies.as_deref().and_then(|a| a.get(&c.ally))
     {
         for stat in ally.get("stats").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default() {
-            if !truthy(stat.get("percentage")) {
+            if !truthy(stat.get("percentage")) || stat.get("op").and_then(Value::as_str) == Some("Multiply") {
                 continue;
             }
             let raw = data::py_num(stat.get("value").unwrap_or(&Value::Null));

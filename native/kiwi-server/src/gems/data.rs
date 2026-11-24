@@ -204,6 +204,7 @@ fn bonuses(v: Option<&Value>) -> Vec<Bonus> {
                         name: text(s.get("name")),
                         value: num(s.get("value")),
                         percentage: truthy(s.get("percentage")),
+                        multiply: s.get("op").and_then(Value::as_str) == Some("Multiply"),
                     })
                     .collect(),
             })

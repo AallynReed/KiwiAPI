@@ -514,7 +514,7 @@ pub fn build_options_json(classes: &[String], allies: Vec<Value>, foods: Vec<Val
         "notes": {
             "subclass": "Same options as character.",
             "ally": "Use 'boot_clown' for no ally. Ally stats are the level-30 values.",
-            "ally_buff": "Blessing of the Lilypad, on by default: multiplies the ally's level-30 Light by 1.155 and its Physical/Magic/Critical Damage by 1.31. Ally stats only.",
+            "ally_buff": "Blessing of the Lilypad, on by default: multiplies the ally's level-30 Light by 1.155 and its Physical/Magic/Critical Damage by 1.31 (the whole factor for a Multiply stat). Ally stats only.",
             "food": "Use \"\" for none.",
             "high_precision": "Round every result field to 8 decimals instead of 1-2.",
             "light": "Farm builds only - target base light; 0 disables light targeting.",

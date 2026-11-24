@@ -53,6 +53,8 @@ pub struct Base {
     pub fourth: f64,
     pub fifth: f64,
     pub sixth: f64,
+    /// An ally's `Multiply` damage factor, applied after the class bonus.
+    pub multiplier: Option<f64>,
 }
 
 /// One ranked layout: the ten boost counts in Python's flattened order, then
@@ -165,6 +167,9 @@ pub fn rank(
             let mut fin = cfirst * (1.0 + base.fourth / 100.0);
             if let Some(cb) = class_bonus {
                 fin *= 1.0 + cb / 100.0;
+            }
+            if let Some(m) = base.multiplier {
+                fin *= m;
             }
             let coefficient = rd(fin * (1.0 + (csecond * (base.fifth / 100.0)) / 100.0), 2);
             (b, cfirst, csecond, rd(cthird * (base.sixth / 100.0), 2), fin, coefficient)

@@ -19,6 +19,8 @@ pub struct BonusStat {
     pub name: String,
     pub value: f64,
     pub percentage: bool,
+    /// The game's `Multiply` op: scales the stat itself, `× (1 + value/100)`.
+    pub multiply: bool,
 }
 
 /// A parsed star-chart code: stat name -> (flat, pct), and the Bounty Hunt
@@ -126,6 +128,7 @@ pub fn calculate(d: &BuildData<'_>, c: &BuildConfig, chart: Option<&Chart>) -> R
     let mut damage_type = if class.magic { "Magic Damage" } else { "Physical Damage" };
     let sum = d.sums;
     let (mut first, mut second, mut third, mut fourth, mut fifth, mut sixth);
+    let mut multiplier = None;
     if health {
         first = sum("health") + stat_value(&class.stats, "Maximum Health");
         second = sum("health_per") + stat_value(&class.stats, "Maximum Health %");
@@ -165,6 +168,13 @@ pub fn calculate(d: &BuildData<'_>, c: &BuildConfig, chart: Option<&Chart>) -> R
             && let Some((_, stats)) = d.allies.iter().find(|a| a.0 == c.ally)
         {
             for s in stats {
+                if s.multiply {
+                    if s.name == damage_type {
+                        let factor = lilypad(&s.name, 1.0 + s.value / 100.0, c.ally_buff);
+                        multiplier = Some(multiplier.map_or(factor, |m: f64| m * factor));
+                    }
+                    continue;
+                }
                 let value = lilypad(&s.name, s.value, c.ally_buff);
                 if s.name == damage_type {
                     fourth += if s.percentage { value } else { 0.0 };
@@ -231,7 +241,7 @@ pub fn calculate(d: &BuildData<'_>, c: &BuildConfig, chart: Option<&Chart>) -> R
         if health { ["Maximum Health", "Maximum Health %", "Light"] } else { ["Damage", "Critical Damage", "Light"] };
     let lines = |t: u8| names.map(|n| d.gem_stats.get(t, n));
     let gems = GemLines { empowered: lines(super::catalog::EMPOWERED), lesser: lines(super::catalog::LESSER) };
-    let base = Base { first, second, third, fourth, fifth, sixth };
+    let base = Base { first, second, third, fourth, fifth, sixth, multiplier };
     let ranked = rank(Some(&gems), &base, class_bonus, c.build_type == "Farm", c.light, c.high_precision, 200);
     let rd = |v: f64, digits: usize| py_round(v, if c.high_precision { 8 } else { digits });
     Ok(ranked
